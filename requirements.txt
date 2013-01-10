@@ -1,5 +1,5 @@
+iso8601==0.1.4
 Flask==0.9
 SQLAlchemy==0.8.0b2
 Flask-SQLAlchemy==0.16
-iso8601
-Flask-Admin
+Flask-Admin==1.0.4
