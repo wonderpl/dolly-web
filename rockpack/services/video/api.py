@@ -1,3 +1,6 @@
+import functools
+from collections import namedtuple
+
 from flask import Blueprint
 from flask import jsonify
 from flask import json
@@ -11,6 +14,65 @@ video = Blueprint('video_api', __name__)
 
 # TODO: do this someother way. hack for now
 PROTOCOL = 'http://localhost:5000' # leading slash already exists for root url
+
+service_urls = namedtuple('ServiceUrl', 'url func_name func methods')
+def expose(url, methods=['GET']):
+    def decorator(func):
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            return func(*args, **kwargs)
+
+        # attach the url details to the wrapper so we can use it later
+
+        if not hasattr(wrapper, '_service_urls'):
+            wrapper._service_urls = []
+        wrapper._service_urls.append(service_urls(url=url, func_name=func.__name__, func=func, methods=methods))
+
+        return wrapper
+
+    return decorator
+
+class APIMeta(type):
+    def __new__(cls, name, bases, dict_):
+        try:
+            WebService
+        except NameError:
+            return type.__new__(cls, name, bases, dict_)
+
+        routes = {}
+        # we need to get any service urls from expose()
+        for value in dict_.values():
+            if callable(value):
+                urls = getattr(value, '_service_urls', ())
+                for url in urls:
+                    routes.setdefault(url.url, url)
+
+        dict_['_routes'] = routes.values()
+        return type.__new__(cls, name, bases, dict_)
+
+import types
+
+class WebService(object):
+    __metaclass__ = APIMeta
+
+    def __init__(self, app, url_prefix, **kwargs):
+
+        bp = Blueprint(self.__class__.__name__ + '_api', self.__class__.__name__)
+        for route in self._routes:
+            bp.add_url_rule(route.url,
+                    route.func.__name__,
+                    view_func=types.MethodType(route.func, self, self.__class__),
+                    methods=route.methods)
+
+        app.register_blueprint(bp)
+
+
+class ChannelAPI(WebService):
+    @expose('/test_channel/', methods=('GET',))
+    def test_channel(self):
+        channels = session.query(Channel).all()
+        return jsonify({'items': [get_channel_dict(c) for c in channels]})
+
 
 
 def get_channel_dict(instance, route_func_name=None):
