@@ -18,6 +18,8 @@ def setup_auth(app):
     login_manager = login.LoginManager()
     login_manager.setup_app(app)
     login_manager.user_loader(load_user)
+    login_manager.anonymous_user = login.AnonymousUser
+    login_manager.login_view = '.login'
 
     app.add_url_rule('/login/', 'login', login_view)
     app.add_url_rule('/logout/', 'logout', logout_view)

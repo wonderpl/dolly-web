@@ -1,6 +1,8 @@
 from flask.ext.login import UserMixin
 
+from rockpack.core.dbapi import session
 import models
+
 
 class User(UserMixin):
     def __init__(self, id, username, email, active=True):
@@ -8,6 +10,8 @@ class User(UserMixin):
         self.username = username
         self.email = email
         self.active = active
+
+        self._roles = session.query(models.UserRole).filter_by(id=self.id)
 
     @classmethod
     def get_from_token(cls, token):
@@ -36,6 +40,10 @@ class User(UserMixin):
                 u.token = token
                 u.save()
         return User(u.id, u.username, u.email)
+
+    def has_permission(self, permission):
+        rperms = session.query(models.RolePermissions).filter(models.RolePermissions==permission)
+        return True
 
     def get_id(self):
         return self.id

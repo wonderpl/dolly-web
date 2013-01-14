@@ -7,7 +7,10 @@ import sqlalchemy
 from rockpack.core.dbapi import Base
 from rockpack.core.dbapi import db_engine
 
+required_modules = ['rockpack.auth', 'rockpack.admin']
+
 def dbsync(module_with_models):
+    # TODO: allow multiple module imports an iterate over them
     if not module_with_models:
         return
 

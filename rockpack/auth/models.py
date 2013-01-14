@@ -29,9 +29,9 @@ class User(Base):
         session.commit()
 
     @classmethod
-    def get_from_login(cls, username):
+    def get_from_login(cls, userid):
         try:
-            return session.query(cls).filter_by(username=username).one()
+            return session.query(cls).filter_by(id=userid).one()
         except NoResultFound:
             raise InvalidUserException
 

@@ -61,7 +61,7 @@ def authorised(response, access_token):
         if not user:
             return 'No registered email address found', 401
 
-    login.login_user(user)
+    login.login_user(user, remember=True)
     session['access_token'] = access_token
 
     # else redirect them to failed login page
