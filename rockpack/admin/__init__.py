@@ -3,7 +3,7 @@ from flask.ext.admin.contrib.sqlamodel import ModelView
 
 from rockpack.core.dbapi import session
 from rockpack.services.video import models
-from views import PermissionView
+import views
 
 def setup_admin(app):
     admin = Admin(app, endpoint='admin', name='Rockpack Admin')
@@ -14,6 +14,9 @@ def setup_admin(app):
     admin.add_view(ModelView(models.Locale, session))
     admin.add_view(ModelView(models.Channel, session))
 
-    admin.add_view(PermissionView(name='Roles', endpoint='a/roles', category='Permissions'))
-    admin.add_view(PermissionView(name='Needs', endpoint='a/needs', category='Permissions'))
-    admin.add_view(PermissionView(name='Access Rights', endpoint='a/access_rights', category='Permissions'))
+    admin.add_view(views.AdminView(name='Admin Home', endpoint='admin_test'))
+    admin.add_view(views.PermissionHomeView(name='Permission Home', endpoint='permissions', category='Permissions'))
+    admin.add_view(views.RoleView(name='Roles', endpoint='permissions/roles', category='Permissions'))
+    admin.add_view(views.PermissionView(name='Permissions', endpoint='permissions/permissions', category='Permissions'))
+    admin.add_view(views.RolePermissionView(name='RolePermissions', endpoint='permissions/role-permissions', category='Permissions'))
+    admin.add_view(views.UserRoleView(name='UserRoles', endpoint='permissions/user-permissions', category='Permissions'))
