@@ -11,19 +11,14 @@ from flask import session as flask_session
 from sqlalchemy.sql.expression import desc
 
 from rockpack.auth import models
-from rockpack.auth import google
+#from rockpack.auth.decorators import admin_required
 from rockpack.core.dbapi import session
 
 class AdminView(BaseView):
+
     @expose('/')
     def index(self):
-        import pdb;pdb.set_trace()
-        access_token = flask_session.get('access_token')
-        if access_token is None:
-            return redirect(url_for('login'))
-
-        userinfo = google.get('userinfo', access_token=access_token)
-        return Response(userinfo.content, mimetype='text/plain')
+        pass
 
 class PermissionHomeView(BaseView):
     @expose('/')

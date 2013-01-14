@@ -14,27 +14,40 @@ from rockpack.core.dbapi import Base
 class InvalidUserException(Exception):
     pass
 
-
 class User(Base):
     __tablename__ = 'users'
 
     id = Column(Integer, primary_key=True)
     username = Column(String(254))
     email = Column(String(254))
+    token = Column(String(254))
 
     userrole = relationship('UserRole', backref='users')
+
+    def save(self):
+        session.add(self)
+        session.commit()
 
     @classmethod
     def get_from_login(cls, username):
         try:
             return session.query(cls).filter_by(username=username).one()
         except NoResultFound:
-            return InvalidUserException
+            raise InvalidUserException
+
+    @classmethod
+    def get_from_email(cls, email):
+        try:
+            return session.query(cls).filter_by(email=email).one()
+        except NoResultFound:
+            raise InvalidUserException
 
     @classmethod
     def get_from_token(cls, token):
-        print 'wooooooo'
-        return session.query(cls).filter_by(token=token).one()
+        try:
+            return session.query(cls).filter_by(token=token).one()
+        except NoResultFound:
+            raise InvalidUserException
 
 
 class Role(Base):
