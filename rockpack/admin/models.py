@@ -12,6 +12,10 @@ class AdminView(ModelView):
     model_name = None
     model = None
 
+    can_create = True
+    can_edit   = True
+    can_delete = True
+
     def __init__(self, *args, **kwargs):
         super(AdminView, self).__init__(self.model, session, **kwargs)
 
@@ -21,6 +25,8 @@ class AdminView(ModelView):
     def is_accessible(self):
         return self.is_authenticated()
 
+# TODO: implement the below - ignoring for now, just let people sign in. allow everything else
+"""
     @property
     def can_create(self):
         permission = self.model_name.lower() + '_create'
@@ -44,6 +50,7 @@ class AdminView(ModelView):
             return login.current_user.has_permission(permission)
         except AttributeError:
             return False
+"""
 
 """
 class AdminModelView(BaseModelView, AdminView):

@@ -10,7 +10,7 @@ def setup_admin(app):
     admin = Admin(app, endpoint='admin', name='Rockpack Admin')
     admin.add_view(ModelView(video_models.Video, session))
     admin.add_view(ModelView(video_models.VideoInstance, session))
-    admin.add_view(ModelView(video_models.VideoSource, session))
+    admin.add_view(ModelView(video_models.Source, session))
     admin.add_view(ModelView(video_models.Category, session))
     admin.add_view(ModelView(video_models.Locale, session))
     admin.add_view(ModelView(video_models.Channel, session))
