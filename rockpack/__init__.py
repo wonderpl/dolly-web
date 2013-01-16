@@ -5,6 +5,9 @@ from flask import Flask
 app = Flask(__name__)
 app.secret_key = '456%4534345375gfd@#pfsef367tgu'
 
+app.config.from_pyfile('common.py')
+app.config.from_pyfile('local.py', silent=True)
+
 
 # Register blueprints
 #app.register_blueprint(video_api.video)
