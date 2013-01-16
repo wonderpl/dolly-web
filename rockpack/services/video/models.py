@@ -36,6 +36,8 @@ class Locale(Base):
     id = Column(String(16), primary_key=True)
     name = Column(String(32))
 
+    video = relationship('Video', backref='locales')
+
     def __unicode__(self):
         return self.name
 
@@ -47,11 +49,12 @@ class Category(Base):
 
     id = Column(Integer, primary_key=True)
     name = Column(String(32))
-    parent_id = Column(ForeignKey('category.id'), nullable=True)
-    locale_id = Column(ForeignKey('locale.id'), nullable=True)
+    parent = Column(ForeignKey('category.id'), nullable=True)
+    locale = Column(ForeignKey('locale.id'), nullable=True)
     priority = Column(Integer, default=0)
 
     external_category_maps = relationship('ExternalCategoryMap', backref='video_category')
+    video = relationship('Video', backref='categories')
 
     def __unicode__(self):
         return self.name
@@ -78,7 +81,8 @@ class Source(Base):
     label = Column(String(16))
     player_template = Column(Text)
 
-    external_category_maps = relationship('ExternalCategoryMap', backref='video_source')
+    external_category_maps = relationship('ExternalCategoryMap', backref='sources')
+    video = relationship('Video', backref='sources')
 
     def __unicode__(self):
         return self.label
@@ -92,22 +96,24 @@ class Video(Base):
 
     id = Column(String(40), primary_key=True)
     title = Column(String(1024), nullable=True)
-    thumbnail_url = Column(Text, nullable=True)
     source_videoid = Column(String(128))
     date_added = Column(TZDateTime(), nullable=False, default=lambda: datetime.now(UTC))
     date_updated = Column(TZDateTime(), nullable=False, default=lambda: datetime.now(UTC))
     star_count = Column(Integer, default=0)
     rockpack_curated = Column(Boolean, default=False)
 
-    source = Column('source', Integer, ForeignKey('source.id'))
-    locale = Column('locale', Integer, ForeignKey('locale.id'))
-    category = Column('category', Integer, ForeignKey('category.id'))
+    source = Column(ForeignKey('source.id'))
+    locale = Column(ForeignKey('locale.id'))
+    category = Column(ForeignKey('category.id'))
 
-    instances = relationship('VideoInstance', backref='video_instance')
-    thumbmails = relationship('VideoThumbnail', backref='video_thumbnail')
+    instances = relationship('VideoInstance', backref='videos')
+    thumbnails = relationship('VideoThumbnail', backref='videos')
 
     def __unicode__(self):
-        return self.title
+        return self.id
+
+    def __str__(self):
+        return self.id
 
 
 class VideoThumbnail(Base):
@@ -119,10 +125,11 @@ class VideoThumbnail(Base):
     url = Column(String(1024))
     width = Column(Integer)
     height = Column(Integer)
+
     video = Column(String(40), ForeignKey('video.id'))
 
     def __unicode__(self):
-        return '{}x{} : {}'.format(self.width, self.height, self.url)
+        return '({}x{}) {}'.format(self.width, self.height, self.url)
 
 
 class VideoInstance(Base):
@@ -133,8 +140,9 @@ class VideoInstance(Base):
 
     id = Column(String(40), primary_key=True, default=lambda: make_uuid())
     date_added = Column(TZDateTime(), nullable=False, default=lambda: datetime.now(UTC))
-    video = Column('video', String(40), ForeignKey('video.id'))
-    channel = Column('channel', ForeignKey('channel.id'))
+
+    video = Column(String(40), ForeignKey('video.id'))
+    channel = Column(String(32), ForeignKey('channel.id'))
 
     def __unicode__(self):
         return self.video
@@ -149,6 +157,8 @@ class Channel(Base):
     id = Column(String(32), primary_key=True, default=lambda: make_uuid())
     title = Column(String(1024))
     thumbnail_url = Column(Text, nullable=True)
+    locale = Column(String(16))
+    # user = Column(ForeignKey(models.User))
 
     video_instances = relationship('VideoInstance', backref='video_channel')
 
@@ -161,4 +171,10 @@ def add_video_pk(mapper, connection, instance):
     if not instance.id:
         instance.id = gen_videoid(instance.locale, instance.source, instance.source_videoid)
 
+def update_updated_date(mapper, connection, instance):
+    if instance.id:
+        instance.date_updated = datetime.now(UTC)
+
+
 event.listen(Video, 'before_insert', add_video_pk)
+event.listen(Video, 'before_update', add_video_pk)

@@ -1,0 +1,104 @@
+{% extends 'admin/master.html' %}
+{% import 'admin/lib.html' as lib with context %}
+
+{% block head %}
+<link href="{{ url_for('admin.static', filename='select2/select2.css') }}" rel="stylesheet">
+<link href="{{ url_for('admin.static', filename='css/datepicker.css') }}" rel="stylesheet">
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.6.1/jquery.js"></script>
+<script>window.jQuery || document.write('<script src="{{ url_for('static', filename='jquery.js') }}">\x3C/script>')</script>
+
+<script type=text/javascript>
+      var $SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
+</script>
+
+<script type='text/javascript'>
+
+$(document).ready(function() {
+
+
+        //<input id="thumbnails-0-width" name="thumbnails-0-width" type="text" value/>
+        //<input id="thumbnails-0-csrf_token" name="thumbnails-0-csfr_token" type="hidden" value=""/>
+
+
+$('#clicky').on('click', function () {
+    $.ajax({
+        type: "GET",
+        url: 'https://gdata.youtube.com/feeds/api/videos/' + $('#source_videoid')[0].value,
+        data: {'v': '2', 'alt': 'json'},
+        async: true,
+        success: function(data) {
+            //$('#foo').text(data.items[0].thumbnail_url);
+            var ydata = data['entry'];
+            var title = ydata['title']['$t'];
+            $('form #title')[0].value = title;
+            //alert(ydata['link']['category'][0]['schema']);
+            //$('#foo').text(
+            var thumbnails = ydata['media$group']['media$thumbnail'];
+
+            var thumb_text = [];
+            $.each(thumbnails, function(i, val) {
+                    //thumb_text.push('<p>width: ' + val['width']  + ' height: ' + val['height']  + ' url: <img src="' + val['url']  + '"/></p>');
+                    var thumb = '<div class="fa-inline-field">';
+                    //thumb = thumb + '<input id="thumbnails-' + i + '-width" name="thumbnails-' + i + '-width" type="text" value="'+ val['width']  +'"/>';
+                    thumb = thumb + '<input id="csrf_token" name="csrf_token" type="hidden" value="' + $('form #csrf_token')[0].value  + '">';
+                    thumb = thumb + '<div class="control-group"><div class="controls"><div><input id="width" name="width" type="text" value="'+ val['width']  +'"/></div></div></div>';
+                    thumb = thumb + '<div class="control-group"><div class="controls"><div><input id="height" name="height" type="text" value="'+ val['height']  +'"/></div></div></div>';
+                    thumb = thumb + '<div class="control-group"><div class="controls"><div><input id="url" name="url" type="text" value="'+ val['url']  +'"/></div></div></div>';
+                    thumb = thumb + '</div>';
+                    // from flask_admin/static/js/form.js
+                    faForm.addInlineField('thumbnails', '#thumbnails-fields', thumb);
+                    });
+            //$('form').push(thumb_text);
+            $('#foo').html(thumb_text);
+        },
+        error: function(data) {
+            alert(data);
+            $('#foo').text('failed to retrieve data');
+        }
+        });
+});
+
+
+//$('#cldicky').on('click', get_data($('#source_videoid')[0].value));
+        });
+</script>
+{% endblock %}
+
+{% block body%}
+<ul class="nav nav-tabs">
+    <li>
+    <a href="{{ return_url }}">{{ _gettext('List') }}</a>
+    </li>
+    <li class="active">
+    <a href="#">{{ _gettext('Create') }}</a>
+    </li>
+</ul>
+
+{% macro extra() %}
+<input name="_add_another" type="submit" class="btn btn-large" value="{{ _gettext('Save and Add') }}" />
+{% endmacro %}
+
+{% call lib.form_tag() %}
+<div>
+    <div style='border: 1px; float:left'>
+        {{ lib.render_form_fields(form) }}
+    </div>
+    <div style='align: left; width: 500px; border: 1px; float:right'>
+        <input type="button" name="button" value="Fetch info" id='clicky'/>
+        <p id='foo'></p>
+    </div>
+</div>
+<div style='clear: both'>
+    {{ lib.render_form_buttons(return_url, extra()) }}
+</div>
+{% endcall %}
+
+{{ super() }}
+{% endblock %}
+
+{% block tail %}
+    <script src="{{ url_for('admin.static', filename='js/bootstrap-datepicker.js') }}"></script>
+    <script src="{{ url_for('admin.static', filename='js/form.js') }}"></script>
+{% endblock %}
+

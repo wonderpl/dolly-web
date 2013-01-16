@@ -8,12 +8,15 @@ import views
 
 def setup_admin(app):
     admin = Admin(app, endpoint='admin', name='Rockpack Admin')
-    admin.add_view(ModelView(video_models.Video, session))
-    admin.add_view(ModelView(video_models.VideoInstance, session))
+    admin.add_view(ModelView(video_models.VideoInstance, session, category='Video'))
+    admin.add_view(ModelView(video_models.VideoThumbnail, session, category='Video'))
     admin.add_view(ModelView(video_models.Source, session))
     admin.add_view(ModelView(video_models.Category, session))
     admin.add_view(ModelView(video_models.Locale, session))
     admin.add_view(ModelView(video_models.Channel, session))
+    admin.add_view(ModelView(video_models.ExternalCategoryMap, session))
+
+    admin.add_view(views.VideoView(name='Video', endpoint='video', category='Video'))
 
     # auth
     admin.add_view(ModelView(auth.models.User, session))
