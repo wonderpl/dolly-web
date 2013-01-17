@@ -5,7 +5,7 @@ from sqlalchemy.ext.declarative import declarative_base
 
 from rockpack.mainsite import app
 
-db_engine = create_engine(app.config['DATABASE_CONNECTION_STRING'])
+db_engine = create_engine(app.config['DATABASE_URL'])
 
 Base = declarative_base(bind=db_engine)
 Session = scoped_session(sessionmaker(db_engine))

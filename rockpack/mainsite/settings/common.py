@@ -4,4 +4,4 @@
 
 
 
-DATABASE_CONNECTION_STRING = '' # e.g. postgresql://foo:bar@localhost:5432/rockpack
+DATABASE_URL = '' # e.g. postgresql://foo:bar@localhost:5432/rockpack
