@@ -25,3 +25,5 @@ def setup_admin(app):
     admin.add_view(views.PermissionView(name='Permissions', endpoint='permissions/permissions', category='Permissions'))
     admin.add_view(views.RolePermissionView(name='RolePermissions', endpoint='permissions/role-permissions', category='Permissions'))
     admin.add_view(views.UserRoleView(name='UserRoles', endpoint='permissions/user-permissions', category='Permissions'))
+
+    admin.add_view(views.ImportView(name='Import'))

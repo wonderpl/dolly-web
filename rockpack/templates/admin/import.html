@@ -1,0 +1,36 @@
+{% extends 'admin/master.html' %}
+{% import 'admin/lib.html' as lib with context %}
+
+{% block body %}
+  <div class="bookmarklet">
+    Add this link to your bookmarks:
+    <a href="
+      javascript:
+      (function () {
+        var d = document,
+          s = d.createElement('script');
+        s.src = '{{ url_for('.bookmarklet', _external=True) }}?' + Math.random();
+        d.body.appendChild(s);
+      }());
+      ">ROCKPACK IMPORT</a>
+  </div>
+
+  {% if form %}
+  {% if form.errors %}
+  <div class="import_form_error error">
+    {{ form.errors }}
+  </div>
+  {% endif %}
+  <div class="import_form">
+    {{ lib.render_form(form) }}
+  </div>
+  {% else %}
+  <div class="import_results">
+    {% if video_data %}
+    Video data:
+    {{ video_data.id }}
+    {% endif %}
+  </div>
+  {% endif %}
+
+{% endblock %}
