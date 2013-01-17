@@ -1,7 +1,5 @@
-from flask import flash
 from flask import redirect
 from flask import url_for
-from flask import render_template
 from flask import session
 from flask.ext import login
 from flask.ext.rauth import RauthOAuth2
@@ -13,7 +11,6 @@ import patching
 patching.patch_rauth()
 
 from user import User
-from forms import LoginForm
 
 google = RauthOAuth2(
     name='google',
@@ -29,18 +26,12 @@ def load_user(login_id):
     current_app.logger.debug('attempting to fetch user with id {}'.format(login_id))
     return User.get_from_login(login_id)
 
+
 def login_view():
     return google.authorize(
             callback=url_for('.authorised', _external=True),
             scope='https://www.googleapis.com/auth/userinfo.email')
-    """
-    form = LoginForm()
-    if form.validate_on_submit():
-        login.login_user(load_user(form.login.data))
-        flash("Logged in successfully.")
-        return redirect(url_for('admin.index'))
-    return render_template("login.html", form=form)
-    """
+
 
 @google.authorized_handler()
 def authorised(response, access_token):
@@ -79,4 +70,3 @@ def logout_view():
     response =  make_response(redirect(url_for('admin.index')))
     response.delete_cookie('access_token')
     return response
-
