@@ -2,8 +2,6 @@
 #
 # All variables must be uppercase
 
-DATABASE = ''
-HOST     = ''
-PORT     = ''
-USERNAME = ''
-PASSWORD = ''
+
+
+DATABASE_CONNECTION_STRING = '' # e.g. postgresql://foo:bar@localhost:5432/rockpack
