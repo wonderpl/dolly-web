@@ -11,11 +11,12 @@ from sqlalchemy import (
 )
 
 from sqlalchemy import event
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, aliased
 
 from rockpack.mainsite.helpers.db import UTC
 from rockpack.mainsite.helpers.db import TZDateTime
 from rockpack.mainsite.core.dbapi import Base
+
 
 def gen_videoid(locale, source, source_id):
     from base64 import b32encode
@@ -23,6 +24,7 @@ def gen_videoid(locale, source, source_id):
     prefix = locale.split('-')[1].upper()
     hash = b32encode(sha1(source_id).digest())
     return '%s%06X%s' % (prefix, source, hash)
+
 
 def make_uuid():
     return uuid.uuid4().hex
@@ -166,10 +168,14 @@ class Channel(Base):
         return self.title
 
 
+ParentCategory = aliased(Category)
+
+
 def add_video_pk(mapper, connection, instance):
     """ set up the primary key """
     if not instance.id:
         instance.id = gen_videoid(instance.locale, instance.source, instance.source_videoid)
+
 
 def update_updated_date(mapper, connection, instance):
     if instance.id:

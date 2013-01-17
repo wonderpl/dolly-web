@@ -2,6 +2,7 @@
 {% import 'admin/lib.html' as lib with context %}
 
 {% block body %}
+  {% if 1 %}
   <div class="bookmarklet">
     Add this link to your bookmarks:
     <a href="
@@ -9,26 +10,30 @@
       (function () {
         var d = document,
           s = d.createElement('script');
-        s.src = '{{ url_for('.bookmarklet', _external=True) }}?' + Math.random();
+        s.src = '{{ url_for('.bookmarklet', _external=True) }}?locale={{ form.data.locale }}&' + Math.random();
         d.body.appendChild(s);
       }());
-      ">ROCKPACK IMPORT</a>
-  </div>
-
-  {% if form %}
-  {% if form.errors %}
-  <div class="import_form_error error">
-    {{ form.errors }}
+      ">ROCKPACK IMPORT{% if form.locale %} ({{ form.locale.data }}){% endif %}</a>
   </div>
   {% endif %}
-  <div class="import_form">
-    {{ lib.render_form(form) }}
-  </div>
-  {% else %}
-  <div class="import_results">
-    {% if video_data %}
-    Video data:
-    {{ video_data.id }}
+
+  {% if form %}
+    {% if form.errors %}
+    <div class="import_form_error error">
+      {{ form.errors.__all__ }}
+    </div>
+    {% endif %}
+    <div class="import_form">
+      {{ lib.render_form(form) }}
+    </div>
+  {% endif %}
+
+  {% if import_preview %}
+  <div class="import_preview">
+    {% if form.data.type == 'playlist' %}
+    <h2>{{ import_preview.title }}</h2>
+    <p>Video count: {{ import_preview.video_count }}</p>
+    <img src="{{ import_preview.videos[0].thumbnails[0].url }}"/>
     {% endif %}
   </div>
   {% endif %}

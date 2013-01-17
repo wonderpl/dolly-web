@@ -12,7 +12,7 @@
 		l;
 
 	function importVideos(args) {
-		var qs = [], a;
+		var qs = ['locale={{ request.args.locale }}'], a;
 		for (a in args) {
 			if (args.hasOwnProperty(a)) {
 				qs.push(a + '=' + args[a]);
