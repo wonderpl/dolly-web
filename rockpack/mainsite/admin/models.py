@@ -1,11 +1,8 @@
-from flask import flash
 from flask.ext import login
-from flask.ext.admin import BaseView
-from flask.ext.admin.model import BaseModelView
-from sqlalchemy.sql.expression import desc
 from flask.ext.admin.contrib.sqlamodel import ModelView
 
 from rockpack.mainsite.core.dbapi import session
+
 
 class AdminView(ModelView):
 
@@ -13,7 +10,7 @@ class AdminView(ModelView):
     model = None
 
     can_create = True
-    can_edit   = True
+    can_edit = True
     can_delete = True
 
     def __init__(self, *args, **kwargs):
@@ -25,7 +22,8 @@ class AdminView(ModelView):
     def is_accessible(self):
         return self.is_authenticated()
 
-# TODO: implement the below - ignoring for now, just let people sign in. allow everything else
+# TODO: implement the below - ignoring for now, just let people sign in.
+# allow everything else
 """
     @property
     def can_create(self):
@@ -68,8 +66,8 @@ class AdminModelView(BaseModelView, AdminView):
     @property
     def can_delete(self):
         # if login.current_user.is_authenticated
-        #   and self.current_user.has_permission(self.__class__.__name__ + '_delete'):
-        #   return True
+        # and self.current_user.has_permission(self.__class__.__name__ + '_delete'):
+        # return True
         return False
 
     def get_pk_value(self, model):

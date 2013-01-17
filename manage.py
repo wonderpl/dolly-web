@@ -9,13 +9,15 @@ from rockpack.mainsite.core.dbapi import db_engine
 
 required_modules = ['rockpack.mainsite.auth', 'rockpack.mainsite.admin']
 
+
 def dbsync(module_with_models):
     # TODO: allow multiple module imports an iterate over them
     if not module_with_models:
         return
 
     try:
-        models =  __import__(module_with_models + '.models', fromlist=['models'])
+        models =  __import__(module_with_models + '.models',
+                fromlist=['models'])
     except ImportError as e:
         print >> sys.stderr, 'cannot import', module_with_models
         sys.exit(1)
@@ -24,7 +26,8 @@ def dbsync(module_with_models):
     for item in models.__dict__.itervalues():
         try:
             if (isinstance(item, type) and issubclass(item, Base)
-                    and hasattr(item, '__table__') and isinstance(item.__table__, sqlalchemy.schema.Table)):
+                    and hasattr(item, '__table__')
+                    and isinstance(item.__table__, sqlalchemy.schema.Table)):
                 table = item.__table__
                 table_list.append(table)
         except TypeError:
