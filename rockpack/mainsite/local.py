@@ -1,5 +1,0 @@
-DATABASE = 'rockpack'
-HOST     = 'localhost' 
-PORT     = '5432'
-USERNAME = 'rockpack'
-PASSWORD = 'rockpack'

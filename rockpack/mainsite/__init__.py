@@ -5,8 +5,8 @@ from flask import Flask
 app = Flask(__name__)
 app.secret_key = '456%4534345375gfd@#pfsef367tgu'
 
-app.config.from_pyfile('common.py')
-app.config.from_pyfile('local.py', silent=True)
+app.config.from_pyfile('settings/common.py')
+app.config.from_pyfile('settings/local.py', silent=True)
 
 
 # Register blueprints
