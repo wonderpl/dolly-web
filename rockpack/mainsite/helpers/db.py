@@ -16,7 +16,7 @@ def timezone_aware(dt):
 
 
 class UTCCoercingDateTime(types.TypeDecorator):
-    impl = types.DATETIME
+    impl = types.DateTime
 
     def process_bind_param(self, value, dialect):
         if (value is not None and isinstance(dialect, MySQLDialect)

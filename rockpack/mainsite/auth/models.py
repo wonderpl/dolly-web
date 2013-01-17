@@ -8,8 +8,8 @@ from sqlalchemy import (
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.orm import relationship
 
-from rockpack.core.dbapi import session
-from rockpack.core.dbapi import Base
+from rockpack.mainsite.core.dbapi import session
+from rockpack.mainsite.core.dbapi import Base
 
 class InvalidUserException(Exception):
     pass

@@ -5,7 +5,7 @@ from flask.ext.admin.model import BaseModelView
 from sqlalchemy.sql.expression import desc
 from flask.ext.admin.contrib.sqlamodel import ModelView
 
-from rockpack.core.dbapi import session
+from rockpack.mainsite.core.dbapi import session
 
 class AdminView(ModelView):
 

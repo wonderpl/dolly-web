@@ -2,11 +2,11 @@ from flask import Blueprint
 from flask import jsonify
 from flask import url_for
 
-from rockpack.core.webservice import WebService
-from rockpack.core.webservice import expose
-from rockpack.core.dbapi import session
-from rockpack.services.video.models import VideoInstance
-from rockpack.services.video.models import Channel
+from rockpack.mainsite.core.webservice import WebService
+from rockpack.mainsite.core.webservice import expose
+from rockpack.mainsite.core.dbapi import session
+from rockpack.mainsite.services.video.models import VideoInstance
+from rockpack.mainsite.services.video.models import Channel
 
 video = Blueprint('video_api', __name__)
 

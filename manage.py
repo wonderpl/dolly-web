@@ -4,10 +4,10 @@ import argparse
 
 import sqlalchemy
 
-from rockpack.core.dbapi import Base
-from rockpack.core.dbapi import db_engine
+from rockpack.mainsite.core.dbapi import Base
+from rockpack.mainsite.core.dbapi import db_engine
 
-required_modules = ['rockpack.auth', 'rockpack.admin']
+required_modules = ['rockpack.mainsite.auth', 'rockpack.mainsite.admin']
 
 def dbsync(module_with_models):
     # TODO: allow multiple module imports an iterate over them

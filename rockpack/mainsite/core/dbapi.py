@@ -3,7 +3,7 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm import scoped_session
 from sqlalchemy.ext.declarative import declarative_base
 
-from rockpack import app
+from rockpack.mainsite import app
 
 connection_string = 'postgresql://{}:{}@{}:{}/{}'.format(
         app.config['USERNAME'], app.config['PASSWORD'], app.config['HOST'], app.config['PORT'], app.config['DATABASE'])

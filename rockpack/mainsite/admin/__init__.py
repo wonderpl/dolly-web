@@ -1,9 +1,9 @@
 from flask.ext.admin import Admin
 from flask.ext.admin.contrib.sqlamodel import ModelView
 
-from rockpack.core.dbapi import session
-from rockpack.services.video import models as video_models
-from rockpack import auth
+from rockpack.mainsite.core.dbapi import session
+from rockpack.mainsite.services.video import models as video_models
+from rockpack.mainsite import auth
 import views
 
 def setup_admin(app):

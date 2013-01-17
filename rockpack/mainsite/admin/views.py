@@ -5,8 +5,8 @@ from flask.ext import wtf
 from flask.ext.admin import expose
 from flask.ext.admin.babel import gettext
 
-from rockpack.auth import models
-from rockpack.admin.models import AdminView
+from rockpack.mainsite.auth import models
+from rockpack.mainsite.admin.models import AdminView
 #from rockpack.admin.models import AdminModelView
 
 
@@ -30,7 +30,7 @@ class UserRoleView(AdminView):
 
 
 
-from rockpack.services.video import models as video_models
+from rockpack.mainsite.services.video import models as video_models
 
 class VideoView(AdminView):
     model_name = 'video'

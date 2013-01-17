@@ -13,9 +13,9 @@ from sqlalchemy import (
 from sqlalchemy import event
 from sqlalchemy.orm import relationship
 
-from rockpack.helpers.db import UTC
-from rockpack.helpers.db import TZDateTime
-from rockpack.core.dbapi import Base
+from rockpack.mainsite.helpers.db import UTC
+from rockpack.mainsite.helpers.db import TZDateTime
+from rockpack.mainsite.core.dbapi import Base
 
 def gen_videoid(locale, source, source_id):
     from base64 import b32encode

@@ -1,6 +1,6 @@
 from flask.ext.login import UserMixin
 
-from rockpack.core.dbapi import session
+from rockpack.mainsite.core.dbapi import session
 import models
 
 
