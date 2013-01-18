@@ -1,11 +1,9 @@
 from collections import namedtuple
 import requests
+from rockpack.mainsite.services.video.models import Video, VideoThumbnail, VideoRestriction
 
 
-Video = namedtuple('Video', 'title duration category thumbnails restrictions')
 Playlist = namedtuple('Playlist', 'title video_count videos')
-Thumbnail = namedtuple('Thumbnail', 'url width height')
-Restriction = namedtuple('Restriction', 'relationship country')
 
 
 def _youtube_feed(feed, id, params={}):
@@ -17,28 +15,33 @@ def _youtube_feed(feed, id, params={}):
     return response.json()
 
 
-def _get_video_data(youtube_data):
-    """Extract relevant data from youtube video json record."""
+def _get_video_data(youtube_data, playlist=None):
+    """Extract data from youtube video json record and return Video model."""
     def get_category(categories):
         for category in categories:
             if category['scheme'].endswith('categories.cat'):
                 return category['$t']   # TODO: map category
     media = youtube_data['media$group']
     video = Video(
-        youtube_data['title']['$t'],
-        media['yt$duration']['seconds'],
-        get_category(media.get('media$category', [])),
-        [],
-        [],
+        source_videoid=media['yt$videoid']['$t'],
+        source_listid=playlist,
+        title=youtube_data['title']['$t'],
+        duration=media['yt$duration']['seconds'] if 'yt$duration' in media else 0,
+        category=get_category(media.get('media$category', [])),
     )
     for thumbnail in media.get('media$thumbnail', []):
         if 'time' not in thumbnail:
             video.thumbnails.append(
-                Thumbnail(thumbnail['url'], thumbnail['width'], thumbnail['height']))
+                VideoThumbnail(
+                    url=thumbnail['url'],
+                    width=thumbnail['width'],
+                    height=thumbnail['height']))
     for restriction in media.get('media$restriction', []):
         if restriction['type'] == 'country':
-            video.restrictions.append(
-                Restriction(restriction['relationship'], restriction['$t']))
+            video.restrictions.extend(
+                VideoRestriction(
+                    relationship=restriction['relationship'],
+                    country=country) for country in restriction['$t'].split())
     return video
 
 
@@ -56,8 +59,9 @@ def get_playlist_data(id, fetch_all_videos=False, feed='playlists'):
     while True:
         youtube_data = _youtube_feed(feed, id, params)['feed']
         total = youtube_data['openSearch$totalResults']['$t']
-        videos.extend(_get_video_data(e) for e in youtube_data['entry'])
-        if fetch_all_videos and len(videos) < total:
+        entries = youtube_data.get('entry', [])
+        videos.extend(_get_video_data(e, id) for e in entries)
+        if entries and fetch_all_videos and len(videos) < total:
             params['start-index'] += params['max-results']
             continue
         break

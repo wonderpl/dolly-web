@@ -34,18 +34,26 @@
 	}
 
 	// Check if page url refers to youtube video:
-	checkMatch(/(youtube)\.com\S*(v)=([\w\-]{11})/);
+	if (checkMatch(/(youtube)\.com\S*(v)=([\w\-]{11})/)) {
+		return;
+	}
 
 	// Check if page url refers to youtube user/channel:
-	checkMatch(/(youtube)\.com\/(user)\/(\w+)/);
+	if (checkMatch(/(youtube)\.com\/(user)\/(\w+)/)) {
+		return;
+	}
 
 	// Check if page url refers to youtube playlist:
-	checkMatch(/(youtube)\.com\S*(list)=([\w\-]+)/);
+	if (checkMatch(/(youtube)\.com\S*(list)=([\w\-]+)/)) {
+		return;
+	}
 
 	// Else check the page for embedded video player:
 	iframes = document.getElementsByTagName('iframe');
 	for (i = 0, l = iframes.length; i < l; i++) {
-		checkMatch(/(youtube)\.com\/(embed)\/([\w\-]{11})/);
+		if (checkMatch(/(youtube)\.com\/(embed)\/([\w\-]{11})/, iframes[i].src)) {
+			return;
+		}
 	}
 
 	window.alert('No video found');

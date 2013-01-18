@@ -1,3 +1,4 @@
+drop table if exists video_restriction;
 drop table if exists video_thumbnail;
 drop table if exists video;
 
@@ -6,20 +7,29 @@ create table video (
 	locale varchar(16) not null references locale (id),
 	source integer not null default 0 references source (id),
 	source_videoid varchar(128) not null,
+	source_listid varchar(128),
 	title varchar(512) not null default '',
 	date_added timestamp not null default CURRENT_TIMESTAMP,
 	date_updated timestamp not null default CURRENT_TIMESTAMP,
 	category integer references category (id),
+	duration integer not null default 0,
 	star_count integer not null default 0,
 	rockpack_curated boolean not null default false
 );
 
 create table video_thumbnail (
-	id integer not null primary key,
+	id serial primary key,
 	video char(40) not null references video (id),
 	url varchar(1024) not null,
 	width integer not null,
 	height integer not null
+);
+
+create table video_restriction (
+	id serial primary key,
+	video char(40) not null references video (id),
+	relationship varchar(16) not null,
+	country varchar(8) not null
 );
 
 insert into video (id, locale, source, source_videoid, rockpack_curated, title) values
@@ -126,3 +136,6 @@ insert into video (id, locale, source, source_videoid, rockpack_curated, title) 
 	('RP000001PDGNLGIBGCZTBPN5JJDGLMGA7KCHZ36H', 'en-gb', 1, 'B0HroVzctps', true, 'Hindenburg Replica Construction | Curiosity: What Destroyed the Hindenburg?'),
 	('RP000001KLJJHV5XYK4J4E76IHUBXA73GBML7Y2Q', 'en-gb', 1, 'XAbqlDS7ZPk', true, 'Going All In | Bering Sea Gold'),
 	('RP000001BX43X2LOB5S5LGN25EPMZ5OMQ3E7EEUD', 'en-gb', 1, 'IyejCAWsN6U', true, 'Decorating Cupcakes #27 to 30 Cookie Monster, Elmo, Oscar the Grouch and Big Bird');
+
+insert into video_restriction (video, relationship, country) values
+	('RP000001RLYRRUDMSGXIMRYLYHAHTTE7WPMGY6BD', 'deny', 'DE');

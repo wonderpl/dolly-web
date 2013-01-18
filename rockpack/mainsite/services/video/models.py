@@ -1,6 +1,6 @@
+import logging
 import uuid
 from datetime import datetime
-
 from sqlalchemy import (
     Text,
     String,
@@ -8,11 +8,10 @@ from sqlalchemy import (
     Boolean,
     Integer,
     ForeignKey,
+    event
 )
-
-from sqlalchemy import event
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import relationship, aliased
-
 from rockpack.mainsite.helpers.db import UTC
 from rockpack.mainsite.helpers.db import TZDateTime
 from rockpack.mainsite.core.dbapi import Base, session
@@ -115,8 +114,10 @@ class Video(Base):
     id = Column(String(40), primary_key=True)
     title = Column(String(1024), nullable=True)
     source_videoid = Column(String(128))
+    source_listid = Column(String(128), nullable=True)
     date_added = Column(TZDateTime(), nullable=False, default=lambda: datetime.now(UTC))
     date_updated = Column(TZDateTime(), nullable=False, default=lambda: datetime.now(UTC))
+    duration = Column(Integer, default=0)
     star_count = Column(Integer, default=0)
     rockpack_curated = Column(Boolean, default=False)
 
@@ -126,12 +127,30 @@ class Video(Base):
 
     instances = relationship('VideoInstance', backref='videos')
     thumbnails = relationship('VideoThumbnail', backref='videos')
+    restrictions = relationship('VideoRestriction', backref='videos')
 
     def __unicode__(self):
         return self.id
 
     def __str__(self):
         return self.id
+
+    @classmethod
+    def add_videos(cls, videos, source, locale, category):
+        count = 0
+        for video in videos:
+            video.source = source
+            video.locale = locale
+            video.category = category
+            try:
+                session.add(video)
+            except IntegrityError, e:
+                # Video already exists.  XXX: Need to check column?
+                logging.warning(e)
+            else:
+                count += 1
+        session.commit()
+        return count
 
 
 class VideoThumbnail(Base):
@@ -148,6 +167,16 @@ class VideoThumbnail(Base):
 
     def __unicode__(self):
         return '({}x{}) {}'.format(self.width, self.height, self.url)
+
+
+class VideoRestriction(Base):
+
+    __tablename__ = 'video_restriction'
+
+    id = Column(Integer, primary_key=True)
+    video = Column(String(40), ForeignKey('video.id'))
+    relationship = Column(String(16))
+    country = Column(String(8))
 
 
 class VideoInstance(Base):

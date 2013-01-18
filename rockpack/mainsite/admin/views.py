@@ -1,12 +1,11 @@
 import logging
-from flask.ext import wtf
-from flask import request
-from flask.ext import login
+from flask import request, url_for, redirect, flash
+from flask.ext import wtf, login
 from flask.ext.admin import BaseView, expose
 from rockpack.mainsite.auth import models
 from rockpack.mainsite.admin.models import AdminView
-from rockpack.mainsite.core.youtube import get_playlist_data
-from rockpack.mainsite.services.video.models import Locale, Source, Category
+from rockpack.mainsite.core import youtube
+from rockpack.mainsite.services.video.models import Locale, Source, Category, Video
 
 
 class RoleView(AdminView):
@@ -40,18 +39,25 @@ class ImportForm(wtf.Form):
                            validators=[wtf.validators.required()])
     id = wtf.TextField(validators=[wtf.validators.required()])
     locale = wtf.SelectField(default='en-gb')
-    category = wtf.SelectField(coerce=int)
+    category = wtf.SelectField(coerce=int, default=-1)
+    commit = wtf.HiddenField()
 
     def validate(self):
         if not super(ImportForm, self).validate():
             return
+        if self.commit.data and self.category.data == -1:
+            # category is required before commit
+            self.category.errors = ['Please select a category']
+            return
         if self.source.data == 1:   # youtube
             if self.type.data == 'playlist':
                 try:
-                    self.import_data = get_playlist_data(self.id.data)
+                    # get all data only if we are ready to commit
+                    self.import_data = youtube.get_playlist_data(
+                        self.id.data, self.commit.data)
                 except Exception, ex:
                     logging.exception('Unable to import playlist: %s', self.id.data)
-                    self._errors = {'__all__': str(ex)}
+                    self._errors = {'__all__': 'Internal error: %r' % ex}
                 else:
                     return True
 
@@ -67,7 +73,7 @@ class ImportView(BaseView):
     @expose('/', ('GET', 'POST'))
     def index(self):
         ctx = {}
-        data = request.args.copy()
+        data = (request.form or request.args).copy()
         source_choices = Source.get_form_choices()
 
         # Ugly reverse mapping of source labels
@@ -80,11 +86,22 @@ class ImportView(BaseView):
         form = ImportForm(data, csrf_enabled=False)
         form.source.choices = source_choices
         form.locale.choices = Locale.get_form_choices()
-        form.category.choices = list(Category.get_form_choices(form.locale.data))
+        form.category.choices = [(-1, '')] +\
+            list(Category.get_form_choices(form.locale.data))
 
         ctx['form'] = form
         if 'source' in data and form.validate():
-            ctx['import_preview'] = form.import_data
+            if form.commit.data:
+                count = Video.add_videos(
+                    form.import_data.videos,
+                    form.source.data,
+                    form.locale.data,
+                    form.category.data)
+                flash('Imported %d videos' % count)
+                return redirect(url_for('video.index_view'))
+            else:
+                ctx['import_preview'] = form.import_data
+                form.commit.data = 'true'
 
         return self.render('admin/import.html', **ctx)
 
