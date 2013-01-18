@@ -15,7 +15,7 @@ from sqlalchemy.orm import relationship, aliased
 
 from rockpack.mainsite.helpers.db import UTC
 from rockpack.mainsite.helpers.db import TZDateTime
-from rockpack.mainsite.core.dbapi import Base
+from rockpack.mainsite.core.dbapi import Base, session
 
 
 def gen_videoid(locale, source, source_id):
@@ -43,6 +43,10 @@ class Locale(Base):
     def __unicode__(self):
         return self.name
 
+    @classmethod
+    def get_form_choices(cls):
+        return session.query(cls.id, cls.name)
+
 
 class Category(Base):
 
@@ -60,6 +64,14 @@ class Category(Base):
 
     def __unicode__(self):
         return self.name
+
+    @classmethod
+    def get_form_choices(cls, locale):
+        query = session.query(cls.id, cls.name, ParentCategory.name).\
+            filter(cls.parent == ParentCategory.id).\
+            filter(cls.locale == locale)
+        for id, name, parent in query:
+            yield id, '%s - %s' % (parent, name)
 
 
 class ExternalCategoryMap(Base):
@@ -88,6 +100,10 @@ class Source(Base):
 
     def __unicode__(self):
         return self.label
+
+    @classmethod
+    def get_form_choices(cls):
+        return session.query(cls.id, cls.label)
 
 
 class Video(Base):

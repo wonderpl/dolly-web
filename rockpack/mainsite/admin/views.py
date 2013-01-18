@@ -5,9 +5,8 @@ from flask.ext import login
 from flask.ext.admin import BaseView, expose
 from rockpack.mainsite.auth import models
 from rockpack.mainsite.admin.models import AdminView
-from rockpack.mainsite.core.dbapi import session
 from rockpack.mainsite.core.youtube import get_playlist_data
-from rockpack.mainsite.services.video.models import Locale, Source, Category, ParentCategory
+from rockpack.mainsite.services.video.models import Locale, Source, Category
 
 
 class RoleView(AdminView):
@@ -69,7 +68,7 @@ class ImportView(BaseView):
     def index(self):
         ctx = {}
         data = request.args.copy()
-        source_choices = session.query(Source.id, Source.label)
+        source_choices = Source.get_form_choices()
 
         # Ugly reverse mapping of source labels
         source = data.get('source')
@@ -80,13 +79,8 @@ class ImportView(BaseView):
 
         form = ImportForm(data, csrf_enabled=False)
         form.source.choices = source_choices
-        form.locale.choices = session.query(Locale.id, Locale.name)
-        form.category.choices = [
-            (id, '%s - %s' % (parent, name))
-                for id, name, parent in session.
-                    query(Category.id, Category.name, ParentCategory.name).
-                    filter(Category.parent == ParentCategory.id).
-                    filter(Category.locale == 'en-gb')]
+        form.locale.choices = Locale.get_form_choices()
+        form.category.choices = list(Category.get_form_choices(form.locale.data))
 
         ctx['form'] = form
         if 'source' in data and form.validate():
