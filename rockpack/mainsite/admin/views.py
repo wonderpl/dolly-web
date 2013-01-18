@@ -50,16 +50,15 @@ class ImportForm(wtf.Form):
             self.category.errors = ['Please select a category']
             return
         if self.source.data == 1:   # youtube
-            if self.type.data == 'playlist':
-                try:
-                    # get all data only if we are ready to commit
-                    self.import_data = youtube.get_playlist_data(
-                        self.id.data, self.commit.data)
-                except Exception, ex:
-                    logging.exception('Unable to import playlist: %s', self.id.data)
-                    self._errors = {'__all__': 'Internal error: %r' % ex}
-                else:
-                    return True
+            get_data = getattr(youtube, 'get_%s_data' % self.type.data)
+            try:
+                # get all data only if we are ready to commit
+                self.import_data = get_data(self.id.data, self.commit.data)
+            except Exception, ex:
+                logging.exception('Unable to import %s: %s', self.type.data, self.id.data)
+                self._errors = {'__all__': 'Internal error: %r' % ex}
+            else:
+                return True
 
 
 class ImportView(BaseView):

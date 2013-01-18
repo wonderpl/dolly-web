@@ -45,10 +45,10 @@ def _get_video_data(youtube_data, playlist=None):
     return video
 
 
-def get_video_data(id):
-    """Return video data from youtube api."""
+def get_video_data(id, fetch_all_videos=True):
+    """Return video data from youtube api as playlist of one."""
     youtube_data = _youtube_feed('videos', id)['entry']
-    return _get_video_data(youtube_data)
+    return Playlist(None, 1, [_get_video_data(youtube_data)])
 
 
 def get_playlist_data(id, fetch_all_videos=False, feed='playlists'):

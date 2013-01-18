@@ -30,8 +30,10 @@
 
   {% if import_preview %}
   <div class="import_preview">
-    {% if form.data.type == 'playlist' %}
     <h2>{{ import_preview.title }}</h2>
+    {% if form.data.type == 'video' %}
+    <img src="{{ import_preview.thumbnails[0].url }}"/>
+    {% else %}
     <p>Video count: {{ import_preview.video_count }}</p>
     <img src="{{ import_preview.videos[0].thumbnails[0].url }}"/>
     {% endif %}
