@@ -17,12 +17,14 @@ from rockpack.mainsite.helpers.db import UTC
 from rockpack.mainsite.helpers.db import TZDateTime
 from rockpack.mainsite.core.dbapi import Base
 
+
 def gen_videoid(locale, source, source_id):
     from base64 import b32encode
     from hashlib import sha1
     prefix = locale.split('-')[1].upper()
     hash = b32encode(sha1(source_id).digest())
     return '%s%06X%s' % (prefix, source, hash)
+
 
 def make_uuid():
     return uuid.uuid4().hex
@@ -36,28 +38,59 @@ class Locale(Base):
     id = Column(String(16), primary_key=True)
     name = Column(String(32))
 
-    video = relationship('Video', backref='locales')
+    video_locale_meta = relationship('VideoLocaleMeta', backref='locales')
 
     def __unicode__(self):
-        return self.name
-
+        return ':'.join([self.id, self.name])
 
 class Category(Base):
+    """ Categories for each `locale` """
 
     __tablename__ = 'category'
-    __table_args__ = {'mysql_engine': 'InnoDB', }
+    __table_args__ = {'mysql_engine': 'InnoDB',}
 
     id = Column(Integer, primary_key=True)
     name = Column(String(32))
-    parent = Column(ForeignKey('category.id'), nullable=True)
-    locale = Column(ForeignKey('locale.id'), nullable=True)
     priority = Column(Integer, default=0)
 
-    external_category_maps = relationship('ExternalCategoryMap', backref='video_category')
-    video = relationship('Video', backref='categories')
+    parent = Column(ForeignKey('category.id'), nullable=True)
+    locale = Column(ForeignKey('locale.id'))
+
+    parent_category = relationship('Category', remote_side=[id], backref='children')
+
+    video_locale_metas = relationship('VideoLocaleMeta', backref='category_ref')
+    locales = relationship('Locale', backref='category_ref')
+    channel_locale_metas = relationship('ChannelLocaleMeta', backref='category_ref')
+    external_category_maps = relationship('ExternalCategoryMap', backref='category_ref')
+
 
     def __unicode__(self):
-        return self.name
+        parent = ''
+        if self.parent_category:
+            parent = self.parent_category.name
+        r = ':'.join([parent, self.name, self.locale])
+        return r
+
+
+class CategoryMap(Base):
+    """ Mapping between localised categories """
+
+    __tablename__ = 'category_locale'
+    __table_args__ = {'mysql_engine': 'InnoDB', }
+
+    id = Column(Integer, primary_key=True)
+
+    here = Column(ForeignKey('category.id'))
+    there = Column(ForeignKey('category.id'))
+
+    category_here = relationship('Category', foreign_keys=[here])
+    category_there = relationship('Category', foreign_keys=[there])
+
+    def __unicode__(self):
+        return '{} translates to {}'.format(
+                ':'.join([self.here.name, self.here.locale]),
+                ':'.join([self.there.name, self.there.locale]),
+                )
 
 
 class ExternalCategoryMap(Base):
@@ -103,33 +136,27 @@ class Video(Base):
     rockpack_curated = Column(Boolean, default=False)
 
     source = Column(ForeignKey('source.id'))
-    locale = Column(ForeignKey('locale.id'))
-    category = Column(ForeignKey('category.id'))
 
-    instances = relationship('VideoInstance', backref='videos')
-    thumbnails = relationship('VideoThumbnail', backref='videos')
+    thumbnails = relationship('VideoThumbnail', backref='video_rel')
+    metas = relationship('VideoLocaleMeta', backref='video_rel')
+    instances = relationship('VideoInstance', backref='video_rel')
 
-    def __unicode__(self):
-        return self.id
 
     def __str__(self):
-        return self.id
+        return self.title
 
 
-class VideoThumbnail(Base):
+class VideoLocaleMeta(Base):
 
-    __tablename__ = 'video_thumbnail'
+    __tablename__ = 'video_locale_meta'
     __table_args__ = {'mysql_engine': 'InnoDB', }
 
     id = Column(Integer, primary_key=True)
-    url = Column(String(1024))
-    width = Column(Integer)
-    height = Column(Integer)
 
     video = Column(String(40), ForeignKey('video.id'))
-
-    def __unicode__(self):
-        return '({}x{}) {}'.format(self.width, self.height, self.url)
+    locale = Column(ForeignKey('locale.id'))
+    category = Column(ForeignKey('category.id'))
+    star_count = Column(Integer, default=0)
 
 
 class VideoInstance(Base):
@@ -147,6 +174,21 @@ class VideoInstance(Base):
     def __unicode__(self):
         return self.video
 
+class VideoThumbnail(Base):
+
+    __tablename__ = 'video_thumbnail'
+    __table_args__ = {'mysql_engine': 'InnoDB', }
+
+    id = Column(Integer, primary_key=True)
+    url = Column(String(1024))
+    width = Column(Integer)
+    height = Column(Integer)
+
+    video = Column(String(40), ForeignKey('video.id'))
+
+    def __unicode__(self):
+        return '({}x{}) {}'.format(self.width, self.height, self.url)
+
 
 class Channel(Base):
     """ A channel, which can contain many videos """
@@ -157,17 +199,37 @@ class Channel(Base):
     id = Column(String(32), primary_key=True, default=lambda: make_uuid())
     title = Column(String(1024))
     thumbnail_url = Column(Text, nullable=True)
-    locale = Column(String(16))
-    # user = Column(ForeignKey(models.User))
 
     video_instances = relationship('VideoInstance', backref='video_channel')
+    channel_locale_metas = relationship('ChannelLocaleMeta', backref='meta_parent')
 
     def __unicode__(self):
         return self.title
 
 
+class ChannelLocaleMeta(Base):
+
+    __tablename__ = 'channel_locale_meta'
+    __table_args__ = {'mysql_engine': 'InnoDB', }
+
+    id = Column(Integer, primary_key=True)
+
+    channel = Column(ForeignKey('channel.id'))
+    locale = Column(ForeignKey('locale.id'))
+    category = Column(ForeignKey('category.id'), nullable=True)
+
+    channel_locale = relationship('Locale', remote_side=[Locale.id], backref='channel_locale_meta')
+
+    def __unicode__(self):
+        return self.locale, 'for channel', self.channel
+
+
 def add_video_pk(mapper, connection, instance):
     """ set up the primary key """
+    if not instance.id:
+        instance.id = gen_videoid('is-p', instance.source, instance.source_videoid)
+
+def add_video_instance_pk(mapper, connection, instance):
     if not instance.id:
         instance.id = gen_videoid(instance.locale, instance.source, instance.source_videoid)
 
@@ -177,4 +239,4 @@ def update_updated_date(mapper, connection, instance):
 
 
 event.listen(Video, 'before_insert', add_video_pk)
-event.listen(Video, 'before_update', add_video_pk)
+event.listen(Video, 'before_insert', add_video_pk)

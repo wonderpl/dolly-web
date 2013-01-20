@@ -16,6 +16,11 @@ class VideoThumbnail(AdminView):
     model = models.VideoThumbnail
 
 
+class VideoLocaleMeta(AdminView):
+    model = models.VideoLocaleMeta
+    model_name = model.__tablename__
+
+
 class VideoInstance(AdminView):
     model_name = 'video_instance'
     model = models.VideoInstance
@@ -31,9 +36,16 @@ class Category(AdminView):
     model = models.Category
 
 
+class CategoryMap(AdminView):
+    model_name = models.CategoryMap.__tablename__
+    model = models.CategoryMap
+
+
 class Locale(AdminView):
     model_name = 'locale'
     model = models.Locale
+
+    column_display_pk = True
 
 
 class Channel(AdminView):
@@ -41,13 +53,19 @@ class Channel(AdminView):
     model = models.Channel
 
 
+class ChannelLocaleMeta(AdminView):
+    model_name = 'channel_locale_meta'
+    model = models.ChannelLocaleMeta
+
+
 class ExternalCategoryMap(AdminView):
     model_name = 'external_category_map'
     model = models.ExternalCategoryMap
 
 
-registered = [Video, VideoThumbnail, VideoInstance,
-        Source, Category, Locale, Channel, ExternalCategoryMap]
+registered = [Video, VideoLocaleMeta, VideoThumbnail, VideoInstance,
+        Source, Category, CategoryMap, Locale,
+        Channel, ChannelLocaleMeta, ExternalCategoryMap]
 
 
 def admin_views():
