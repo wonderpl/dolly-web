@@ -35,4 +35,4 @@ def setup_admin(app):
         category='Permissions'))
     """
 
-    admin.add_view(views.ImportView(name='Import'))
+    admin.add_view(views.ImportView(name='Import', endpoint='import'))
