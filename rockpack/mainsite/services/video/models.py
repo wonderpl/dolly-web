@@ -290,4 +290,3 @@ def update_updated_date(mapper, connection, instance):
 
 
 event.listen(Video, 'before_insert', add_video_pk)
-event.listen(Video, 'before_insert', add_video_pk)

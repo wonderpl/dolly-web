@@ -10,20 +10,20 @@ from rockpack.mainsite import app
 
 def drop_database(db_url):
     base, db_name = db_url.rsplit('/', 1)
-    engine = create_engine(base)
+    engine = create_engine(base + '/template1')
     command = 'DROP DATABASE IF EXISTS {}'.format(db_name)
     engine.raw_connection().set_isolation_level(
         psycopg2.extensions.ISOLATION_LEVEL_AUTOCOMMIT)
     print >> sys.stdout, command
     engine.execute(command)
+    engine.dispose()
 
 
 def create_database(db_url, drop_if_exists=False):
-    print db_url
     base, db_name = db_url.rsplit('/', 1)
     if drop_if_exists:
         drop_database(db_url)
-    engine = create_engine(base)
+    engine = create_engine(base + '/template1') #hack for now
     command = 'CREATE DATABASE {}'.format(db_name)
     engine.raw_connection().set_isolation_level(
         psycopg2.extensions.ISOLATION_LEVEL_AUTOCOMMIT)
