@@ -3,6 +3,8 @@ from sqlalchemy import (
     Column,
     Integer,
     ForeignKey,
+    Boolean,
+    event,
 )
 
 from sqlalchemy.orm.exc import NoResultFound
@@ -10,9 +12,31 @@ from sqlalchemy.orm import relationship
 
 from rockpack.mainsite.core.dbapi import session
 from rockpack.mainsite.core.dbapi import Base
+from rockpack.mainsite.helpers.db import add_base64_pk
+
 
 class InvalidAdminException(Exception):
     pass
+
+
+class PKPrefixLengthError(Exception):
+    pass
+
+
+class User(Base):
+    __tablename__ = 'users'
+
+    id = Column(String(24), primary_key=True)
+    username = Column(String(254))
+    email = Column(String(254))
+    first_name = Column(String(254))
+    last_name = Column(String(254))
+
+    is_active = Column(Boolean, default=True)
+
+
+event.listen(User, 'before_insert', lambda x, y, z: add_base64_pk(x, y, z))
+
 
 class Admin(Base):
     __tablename__ = 'admins'

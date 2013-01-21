@@ -33,6 +33,11 @@ class AdminView(AdminView):
     model_name = models.Admin.__tablename__
 
 
+class UserView(AdminView):
+    model = models.User
+    model_name = models.User.__tablename__
+
+
 class ImportForm(wtf.Form):
     source = wtf.SelectField(coerce=int, validators=[wtf.validators.required()])
     type = wtf.SelectField(choices=(('video', 'Video'), ('admin', 'Admin'), ('playlist', 'Playlist')),

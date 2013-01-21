@@ -1,7 +1,45 @@
+import base64
+import uuid
 from iso8601.iso8601 import UTC
 
 from sqlalchemy import types
 from sqlalchemy.dialects.mysql.base import MySQLDialect
+
+
+class PKPrefixLengthError(Exception):
+    pass
+
+
+def make_id(prefix=''):
+    """ Creates an id up to 24 chars long (20 without prefix) """
+    if prefix and not isinstance(prefix, str) and not len(prefix) == 2:
+        raise PKPrefixLengthError('{} prefix is not 2 chars'
+                                    'in length or string'.format(prefix))
+    return prefix + base64.b64encode(uuid.uuid4().bytes)[:-2]
+
+
+def add_base64_pk(mapper, connection, instance, prefix=''):
+    if not instance.id:
+        instance.id = make_id(prefix=prefix)
+
+
+def gen_videoid(locale, source, source_id):
+    from base64 import b32encode
+    from hashlib import sha1
+    prefix = locale.split('-')[1].upper()
+    hash = b32encode(sha1(source_id).digest())
+    return '%s%06X%s' % (prefix, source, hash)
+
+
+def add_video_pk(mapper, connection, instance):
+    """ set up the primary key """
+    if not instance.id:
+        instance.id = gen_videoid('is-p', instance.source, instance.source_videoid)
+
+def add_video_meta_pk(mapper, connection, instance):
+    if not instance.id:
+        instance.id = gen_videoid(instance.locale, instance.video_rel.source, instance.video_rel.source_videoid)
+
 
 def timezone_aware(dt):
     """ Determine if datetime is tz aware.
