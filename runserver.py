@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 from rockpack.mainsite import app
 from rockpack.mainsite import init_app
 

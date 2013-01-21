@@ -1,5 +1,6 @@
 import logging
 import uuid
+import base64
 from datetime import datetime
 from sqlalchemy import (
     Text,
@@ -17,6 +18,9 @@ from rockpack.mainsite.helpers.db import TZDateTime
 from rockpack.mainsite.core.dbapi import Base, session
 
 
+class PKPrefixLengthError(Exception):
+    pass
+
 
 def gen_videoid(locale, source, source_id):
     from base64 import b32encode
@@ -26,8 +30,11 @@ def gen_videoid(locale, source, source_id):
     return '%s%06X%s' % (prefix, source, hash)
 
 
-def make_uuid():
-    return uuid.uuid4().hex
+def make_id(prefix=''):
+    if prefix and not isinstance(prefix, str) and not len(prefix) == 2:
+        raise PKPrefixLengthError('{} prefix is not 2 chars'
+                                    'in length or string'.format(prefix))
+    return prefix + base64.b64encode(uuid.uuid4().bytes)[:-2]
 
 
 class Locale(Base):
@@ -35,7 +42,7 @@ class Locale(Base):
     __tablename__ = 'locale'
     __table_args__ = {'mysql_engine': 'InnoDB', }
 
-    id = Column(String(16), primary_key=True)
+    id = Column(String(5), primary_key=True)
     name = Column(String(32))
 
     video_locale_meta = relationship('VideoLocaleMeta', backref='locales')
@@ -123,7 +130,7 @@ class Source(Base):
     __tablename__ = 'source'
     __table_args__ = {'mysql_engine': 'InnoDB', }
 
-    id = Column(Integer(), primary_key=True)
+    id = Column(Integer, primary_key=True)
     label = Column(String(16))
     player_template = Column(Text)
 
@@ -154,7 +161,7 @@ class Video(Base):
     star_count = Column(Integer, default=0)
     rockpack_curated = Column(Boolean, default=False)
 
-    source = Column(ForeignKey('source.id'))
+    source = Column(ForeignKey('source.id'), nullable=False)
 
     thumbnails = relationship('VideoThumbnail', backref='video_rel')
     metas = relationship('VideoLocaleMeta', backref='video_rel')
@@ -188,7 +195,7 @@ class VideoLocaleMeta(Base):
     __tablename__ = 'video_locale_meta'
     __table_args__ = {'mysql_engine': 'InnoDB', }
 
-    id = Column(Integer, primary_key=True)
+    id = Column(String(40), primary_key=True)
 
     video = Column(String(40), ForeignKey('video.id'))
     locale = Column(ForeignKey('locale.id'))
@@ -200,7 +207,7 @@ class VideoRestriction(Base):
 
     __tablename__ = 'video_restriction'
 
-    id = Column(Integer, primary_key=True)
+    id = Column(String(24), primary_key=True)
     video = Column(String(40), ForeignKey('video.id'))
     relationship = Column(String(16))
     country = Column(String(8))
@@ -212,7 +219,7 @@ class VideoInstance(Base):
     __tablename__ = 'video_instance'
     __table_args__ = {'mysql_engine': 'InnoDB', }
 
-    id = Column(String(40), primary_key=True, default=lambda: make_uuid())
+    id = Column(String(24), primary_key=True)
     date_added = Column(TZDateTime(), nullable=False, default=lambda: datetime.now(UTC))
 
     video = Column(String(40), ForeignKey('video.id'))
@@ -226,7 +233,7 @@ class VideoThumbnail(Base):
     __tablename__ = 'video_thumbnail'
     __table_args__ = {'mysql_engine': 'InnoDB', }
 
-    id = Column(Integer, primary_key=True)
+    id = Column(String(24), primary_key=True)
     url = Column(String(1024))
     width = Column(Integer)
     height = Column(Integer)
@@ -243,7 +250,7 @@ class Channel(Base):
     __tablename__ = 'channel'
     __table_args__ = {'mysql_engine': 'InnoDB', }
 
-    id = Column(String(32), primary_key=True, default=lambda: make_uuid())
+    id = Column(String(24), primary_key=True)
     title = Column(String(1024))
     thumbnail_url = Column(Text, nullable=True)
 
@@ -259,7 +266,7 @@ class ChannelLocaleMeta(Base):
     __tablename__ = 'channel_locale_meta'
     __table_args__ = {'mysql_engine': 'InnoDB', }
 
-    id = Column(Integer, primary_key=True)
+    id = Column(String(24), primary_key=True)
 
     channel = Column(ForeignKey('channel.id'))
     locale = Column(ForeignKey('locale.id'))
@@ -279,10 +286,13 @@ def add_video_pk(mapper, connection, instance):
     if not instance.id:
         instance.id = gen_videoid('is-p', instance.source, instance.source_videoid)
 
-def add_video_instance_pk(mapper, connection, instance):
+def add_video_meta_pk(mapper, connection, instance):
     if not instance.id:
-        instance.id = gen_videoid(instance.locale, instance.source, instance.source_videoid)
+        instance.id = gen_videoid(instance.locale, instance.video_rel.source, instance.video_rel.source_videoid)
 
+def add_base64_pk(mapper, connection, instance, prefix=''):
+    if not instance.id:
+        instance.id = make_id(prefix=prefix)
 
 def update_updated_date(mapper, connection, instance):
     if instance.id:
@@ -290,3 +300,9 @@ def update_updated_date(mapper, connection, instance):
 
 
 event.listen(Video, 'before_insert', add_video_pk)
+event.listen(VideoLocaleMeta, 'before_insert', add_video_meta_pk)
+event.listen(VideoInstance, 'before_insert', lambda x, y, z: add_base64_pk(x, y, z, prefix='vi'))
+event.listen(VideoRestriction, 'before_insert', lambda x, y, z: add_base64_pk(x, y, z, prefix='vr'))
+event.listen(VideoThumbnail, 'before_insert', lambda x, y, z: add_base64_pk(x, y, z, prefix='vt'))
+event.listen(Channel, 'before_insert', lambda x, y, z: add_base64_pk(x, y, z, prefix='ch'))
+event.listen(ChannelLocaleMeta, 'before_insert', lambda x, y, z: add_base64_pk(x, y, z, prefix='cl'))
