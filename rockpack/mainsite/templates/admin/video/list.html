@@ -1,5 +1,9 @@
 {% extends 'admin/model/list.html' %}
 
+{% block list_header %}
+{{ super() }}
+<th>Thumbnail</th>
+{% endblock %}
 {% block list_row scoped %}
     {% if actions %}
     <td>
@@ -29,4 +33,5 @@
     <td>{{ get_value(row, c) }}</td>
     {% endif %}
     {% endfor %}
+    <td><img src="{{ row.default_thumbnail }}"/></td>
 {% endblock %}

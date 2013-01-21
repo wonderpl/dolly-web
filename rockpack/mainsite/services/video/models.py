@@ -165,6 +165,12 @@ class Video(Base):
     def __str__(self):
         return self.title
 
+    @property
+    def default_thumbnail(self):
+        for thumb in self.thumbnails:
+            if 'default.jpg' in thumb.url:
+                return thumb.url
+
     @classmethod
     def add_videos(cls, videos, source, locale, category):
         count = 0
