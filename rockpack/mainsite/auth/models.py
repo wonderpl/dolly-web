@@ -11,43 +11,43 @@ from sqlalchemy.orm import relationship
 from rockpack.mainsite.core.dbapi import session
 from rockpack.mainsite.core.dbapi import Base
 
-class InvalidUserException(Exception):
+class InvalidAdminException(Exception):
     pass
 
-class User(Base):
-    __tablename__ = 'users'
+class Admin(Base):
+    __tablename__ = 'admins'
 
     id = Column(Integer, primary_key=True)
     username = Column(String(254))
     email = Column(String(254))
     token = Column(String(254))
 
-    userrole = relationship('UserRole', backref='users')
+    adminrole = relationship('AdminRole', backref='admins')
 
     def save(self):
         session.add(self)
         session.commit()
 
     @classmethod
-    def get_from_login(cls, userid):
+    def get_from_login(cls, adminid):
         try:
-            return session.query(cls).filter_by(id=userid).one()
+            return session.query(cls).filter_by(id=adminid).one()
         except NoResultFound:
-            raise InvalidUserException
+            raise InvalidAdminException
 
     @classmethod
     def get_from_email(cls, email):
         try:
             return session.query(cls).filter_by(email=email).one()
         except NoResultFound:
-            raise InvalidUserException
+            raise InvalidAdminException
 
     @classmethod
     def get_from_token(cls, token):
         try:
             return session.query(cls).filter_by(token=token).one()
         except NoResultFound:
-            raise InvalidUserException
+            raise InvalidAdminException
 
 
 class Role(Base):
@@ -57,7 +57,7 @@ class Role(Base):
     id = Column(Integer, primary_key=True)
     name = Column(String(20))
 
-    userrole = relationship('UserRole')
+    adminrole = relationship('AdminRole')
     rolepermissions = relationship('RolePermissions')
 
 
@@ -83,10 +83,10 @@ class RolePermissions(Base):
     permission = Column(Integer, ForeignKey('auth_permissions.id'))
 
 
-class UserRole(Base):
+class AdminRole(Base):
 
-    __tablename__ = 'user_roles'
+    __tablename__ = 'admin_roles'
 
     id = Column(Integer, primary_key=True)
     role = Column(Integer, ForeignKey('auth_roles.id'))
-    user = Column(Integer, ForeignKey('users.id'))
+    admin = Column(Integer, ForeignKey('admins.id'))

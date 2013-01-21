@@ -12,9 +12,9 @@ def setup_admin(app):
         admin.add_view(v)
 
     # auth
-    admin.add_view(views.UserView(
-        name='User',
-        endpoint='user',))
+    admin.add_view(views.AdminView(
+        name='Admin Users',
+        endpoint='admin-user',))
 
     """ TODO: add these back in later
     admin.add_view(views.RoleView(
@@ -29,9 +29,9 @@ def setup_admin(app):
         name='RolePermissions',
         endpoint='permissions/role-permissions',
         category='Permissions'))
-    admin.add_view(views.UserRoleView(
-        name='UserRoles',
-        endpoint='permissions/user-permissions',
+    admin.add_view(views.AdminRoleView(
+        name='AdminRoles',
+        endpoint='permissions/admin-permissions',
         category='Permissions'))
     """
 

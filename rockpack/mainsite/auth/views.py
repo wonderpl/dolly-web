@@ -10,7 +10,7 @@ from flask import make_response
 import patching
 patching.patch_rauth()
 
-from user import User
+from user import Admin
 
 google = RauthOAuth2(
     name='google',
@@ -24,7 +24,7 @@ google = RauthOAuth2(
 
 def load_user(login_id):
     current_app.logger.debug('attempting to fetch user with id {}'.format(login_id))
-    return User.get_from_login(login_id)
+    return Admin.get_from_login(login_id)
 
 
 def login_view():
@@ -40,7 +40,7 @@ def authorised(response, access_token):
                 '<a href="{}">Login again</a>'.format(url_for('.login_view'))
 
     current_app.logger.debug('loggin in .... checking token')
-    user = User.get_from_token(access_token)
+    user = Admin.get_from_token(access_token)
     if not user:
         current_app.logger.debug('no token found, cross-referencing email against token')
         response = google.get('https://www.googleapis.com/oauth2/v1/userinfo?alt=json', access_token=access_token).response
@@ -48,7 +48,7 @@ def authorised(response, access_token):
             current_app.logger.error('Failed to retrieve userinfo with: {}'.format(response.content))
             return 'Error fetching userinfo', 500
         email = response.json().get('email')
-        user = User.register_token(access_token, email)
+        user = Admin.register_token(access_token, email)
         if not user:
             return 'No registered email address found', 401
 

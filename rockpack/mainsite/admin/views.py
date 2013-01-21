@@ -23,19 +23,19 @@ class PermissionView(AdminView):
     model = models.Permission
 
 
-class UserRoleView(AdminView):
-    model_name = 'user_role'
-    model = models.UserRole
+class AdminRoleView(AdminView):
+    model_name = 'admin_role'
+    model = models.AdminRole
 
 
-class UserView(AdminView):
-    model = models.User
-    model_name = models.User.__tablename__
+class AdminView(AdminView):
+    model = models.Admin
+    model_name = models.Admin.__tablename__
 
 
 class ImportForm(wtf.Form):
     source = wtf.SelectField(coerce=int, validators=[wtf.validators.required()])
-    type = wtf.SelectField(choices=(('video', 'Video'), ('user', 'User'), ('playlist', 'Playlist')),
+    type = wtf.SelectField(choices=(('video', 'Video'), ('admin', 'Admin'), ('playlist', 'Playlist')),
                            validators=[wtf.validators.required()])
     id = wtf.TextField(validators=[wtf.validators.required()])
     locale = wtf.SelectField(default='en-gb')
