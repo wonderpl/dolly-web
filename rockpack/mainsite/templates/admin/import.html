@@ -1,4 +1,4 @@
-{% extends 'admin/master.html' %}
+{% extends 'admin/model/edit.html' %}
 {% import 'admin/lib.html' as lib with context %}
 
 {% block body %}
@@ -30,14 +30,80 @@
 
   {% if import_preview %}
   <div class="import_preview">
-    <h2>{{ import_preview.title }}</h2>
     {% if form.data.type == 'video' %}
-    <img src="{{ import_preview.thumbnails[0].url }}"/>
+    <h2>{{ import_preview.videos[0].title }}</h2>
     {% else %}
+    <h2>{{ import_preview.title }}</h2>
     <p>Video count: {{ import_preview.video_count }}</p>
-    <img src="{{ import_preview.videos[0].thumbnails[0].url }}"/>
     {% endif %}
+    <img src="{{ import_preview.videos[0].thumbnails[0].url }}"/>
   </div>
   {% endif %}
 
+{% endblock %}
+
+{% block tail %}
+  {{ super() }}
+  <script>
+    $(function () {
+      var categoryField = $('#category'),
+          userField = $('#user'),
+          channelField = $('#channel');
+
+      function dataToResults (data, page) {
+        var results = $.map(data, function (text, id) {
+          return {id:id, text:text};
+        });
+        return {results: results};
+      }
+
+      userField.select2({
+        _placeholder: 'Search for user',
+        minimumInputLength: 3,
+        minimumResultsForSearch: 10,
+        ajax: {
+          url: '{{ url_for(".users") }}',
+          data: function (term, page) {
+            return {prefix: term};
+          },
+          results: dataToResults
+        },
+        width: 'element',
+        dropdownCssClass: 'bigdrop'
+      }).on('change', function (e) {
+        channelField.select2('data', {});
+      });
+
+      channelField.select2({
+        quietMillis: 1000,
+        ajax: {
+          url: '{{ url_for(".channels") }}',
+          data: function (term, page) {
+            return {user: userField.val()};
+          },
+          results: dataToResults
+        },
+        createSearchChoice: function (term) {
+          return {
+            id: '_new:' + term,
+            text: term + ' <span class="add-new">create new</span>'
+          };
+        },
+        width: 'element',
+        dropdownCssClass: 'bigdrop'
+      });
+
+      categoryField.select2('focus');
+    });
+  </script>
+  <style>
+    .add-new {
+      font-style: italic
+    }
+    .add-new:before {
+      content: '('
+    }
+    .add-new:after {
+      content: ')'
+    }
 {% endblock %}

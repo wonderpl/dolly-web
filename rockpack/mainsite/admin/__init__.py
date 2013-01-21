@@ -1,7 +1,5 @@
 from flask.ext.admin import Admin
-
-import views
-import video_views
+from . import views, video_views, import_views
 
 
 def setup_admin(app):
@@ -36,4 +34,4 @@ def setup_admin(app):
     """
 
     admin.add_view(views.UserView(name='Users', endpoint='user'))
-    admin.add_view(views.ImportView(name='Import', endpoint='import'))
+    admin.add_view(import_views.ImportView(name='Import', endpoint='import'))

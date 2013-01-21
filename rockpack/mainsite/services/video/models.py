@@ -1,4 +1,3 @@
-import logging
 from datetime import datetime
 from sqlalchemy import (
     Text,
@@ -17,8 +16,10 @@ from rockpack.mainsite.helpers.db import add_base64_pk
 from rockpack.mainsite.helpers.db import add_video_pk
 from rockpack.mainsite.helpers.db import add_video_meta_pk
 from rockpack.mainsite.core.dbapi import Base, session
+from rockpack.mainsite.auth.models import User
 
 from rockpack.mainsite import app
+
 
 @app.context_processor
 def proc():
@@ -69,7 +70,6 @@ class Category(Base):
     channel_locale_metas = relationship('ChannelLocaleMeta', backref='category_ref')
     external_category_maps = relationship('ExternalCategoryMap', backref='category_ref')
 
-
     def __unicode__(self):
         parent = ''
         if self.parent_category:
@@ -102,8 +102,8 @@ class CategoryMap(Base):
 
     def __unicode__(self):
         return '{} translates to {}'.format(
-                ':'.join([self.here.name, self.here.locale]),
-                ':'.join([self.there.name, self.there.locale]),)
+               ':'.join([self.here.name, self.here.locale]),
+               ':'.join([self.there.name, self.there.locale]),)
 
 
 class ExternalCategoryMap(Base):
@@ -161,7 +161,6 @@ class Video(Base):
     instances = relationship('VideoInstance', backref='video_rel')
     restrictions = relationship('VideoRestriction', backref='videos')
 
-
     def __str__(self):
         return self.title
 
@@ -173,18 +172,24 @@ class Video(Base):
 
     @classmethod
     def add_videos(cls, videos, source, locale, category):
-        count = 0
+        count = len(videos)
         for video in videos:
             video.source = source
             video.metas = [VideoLocaleMeta(locale=locale, category=category)]
-            try:
-                session.add(video)
-            except IntegrityError, e:
-                # Video already exists.  XXX: Need to check column?
-                logging.warning(e)
-            else:
-                count += 1
-        session.commit()
+
+        try:
+            # First try to add all...
+            with session.begin_nested():
+                session.add_all(videos)
+        except IntegrityError:
+            # Else explicitly check which videos already exist
+            all_ids = set(v.id for v in videos)
+            query = session.query(Video.id).filter(Video.id.in_(all_ids))
+            existing_ids = set(v.id for v in query)
+            new_ids = all_ids - existing_ids
+            session.add_all(v for v in videos if v.id in new_ids)
+            count = len(new_ids)
+
         return count
 
 
@@ -243,8 +248,6 @@ class VideoThumbnail(Base):
         return '({}x{}) {}'.format(self.width, self.height, self.url)
 
 
-from rockpack.mainsite.auth.models import User
-
 class Channel(Base):
     """ A channel, which can contain many videos """
 
@@ -255,14 +258,23 @@ class Channel(Base):
     title = Column(String(1024))
     thumbnail_url = Column(Text, nullable=True)
 
-    owner = Column(String(24), ForeignKey('users.id'), nullable=True)
-    owner_rel = relationship(User, primaryjoin=owner==User.id)
+    owner = Column(String(24), ForeignKey('user.id'))
+    owner_rel = relationship(User, primaryjoin=(owner == User.id))
 
     video_instances = relationship('VideoInstance', backref='video_channel')
     channel_locale_metas = relationship('ChannelLocaleMeta', backref='meta_parent')
 
     def __unicode__(self):
         return self.title
+
+    @classmethod
+    def get_form_choices(cls, owner):
+        return session.query(cls.id, cls.title).filter_by(owner=owner)
+
+    def add_videos(self, videos):
+        for video in videos:
+            self.video_instances.append(VideoInstance(video=video.id))
+        return self.save()
 
 
 class ChannelLocaleMeta(Base):
