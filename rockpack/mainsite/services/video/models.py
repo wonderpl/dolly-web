@@ -41,7 +41,7 @@ class Category(Base):
     """ Categories for each `locale` """
 
     __tablename__ = 'category'
-    __table_args__ = {'mysql_engine': 'InnoDB',}
+    __table_args__ = {'mysql_engine': 'InnoDB'}
 
     id = Column(Integer, primary_key=True)
     name = Column(String(32))
@@ -91,8 +91,7 @@ class CategoryMap(Base):
     def __unicode__(self):
         return '{} translates to {}'.format(
                 ':'.join([self.here.name, self.here.locale]),
-                ':'.join([self.there.name, self.there.locale]),
-                )
+                ':'.join([self.there.name, self.there.locale]),)
 
 
 class ExternalCategoryMap(Base):
@@ -209,6 +208,7 @@ class VideoInstance(Base):
     def __unicode__(self):
         return self.video
 
+
 class VideoThumbnail(Base):
 
     __tablename__ = 'video_thumbnail'
@@ -225,6 +225,8 @@ class VideoThumbnail(Base):
         return '({}x{}) {}'.format(self.width, self.height, self.url)
 
 
+from rockpack.mainsite.auth.models import User
+
 class Channel(Base):
     """ A channel, which can contain many videos """
 
@@ -234,6 +236,9 @@ class Channel(Base):
     id = Column(String(24), primary_key=True)
     title = Column(String(1024))
     thumbnail_url = Column(Text, nullable=True)
+
+    owner = Column(String(24), ForeignKey('users.id'), nullable=True)
+    owner_rel = relationship(User, primaryjoin=owner==User.id)
 
     video_instances = relationship('VideoInstance', backref='video_channel')
     channel_locale_metas = relationship('ChannelLocaleMeta', backref='meta_parent')

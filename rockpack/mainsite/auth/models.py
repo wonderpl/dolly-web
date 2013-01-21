@@ -34,6 +34,9 @@ class User(Base):
 
     is_active = Column(Boolean, default=True)
 
+    def __unicode__(self):
+        return self.username
+
 
 event.listen(User, 'before_insert', lambda x, y, z: add_base64_pk(x, y, z))
 
