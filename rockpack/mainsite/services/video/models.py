@@ -83,6 +83,14 @@ class Category(Base):
         r = ':'.join([parent, self.name, self.locale])
         return r
 
+    @classmethod
+    def get_form_choices(cls, locale):
+        query = session.query(cls.id, cls.name, ParentCategory.name).\
+            filter(cls.parent == ParentCategory.id).\
+            filter(cls.locale == locale)
+        for id, name, parent in query:
+            yield id, '%s - %s' % (parent, name)
+
 
 class CategoryMap(Base):
     """ Mapping between localised categories """
@@ -103,14 +111,6 @@ class CategoryMap(Base):
                 ':'.join([self.here.name, self.here.locale]),
                 ':'.join([self.there.name, self.there.locale]),
                 )
-
-    @classmethod
-    def get_form_choices(cls, locale):
-        query = session.query(cls.id, cls.name, ParentCategory.name).\
-            filter(cls.parent == ParentCategory.id).\
-            filter(cls.locale == locale)
-        for id, name, parent in query:
-            yield id, '%s - %s' % (parent, name)
 
 
 class ExternalCategoryMap(Base):
@@ -177,8 +177,7 @@ class Video(Base):
         count = 0
         for video in videos:
             video.source = source
-            video.locale = locale
-            video.category = category
+            video.metas = [VideoLocaleMeta(locale=locale, category=category)]
             try:
                 session.add(video)
             except IntegrityError, e:
