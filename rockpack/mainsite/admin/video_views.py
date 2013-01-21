@@ -6,7 +6,10 @@ class Video(AdminView):
     model_name = 'video'
     model = models.Video
 
+    list_columns = ['title', 'date_added', 'date_updated', 'duration', 'star_count', 'rockpack_curated', 'sources']
+
     create_template = 'admin/video/create.html'
+    list_template = 'admin/video/list.html'
 
     inline_models = (models.VideoThumbnail, )
 

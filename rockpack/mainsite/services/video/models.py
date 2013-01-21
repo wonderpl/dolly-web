@@ -18,6 +18,18 @@ from rockpack.mainsite.helpers.db import add_video_pk
 from rockpack.mainsite.helpers.db import add_video_meta_pk
 from rockpack.mainsite.core.dbapi import Base, session
 
+from rockpack.mainsite import app
+
+@app.context_processor
+def proc():
+    def url_to_source(id, source_id):
+        source = session.query(Source).get(source_id)
+        # TODO: get rid of this nasty hack
+        if source.label.lower() == 'youtube':
+            return 'http://www.youtube.com/watch?v=' + id
+        return id
+    return dict(url_to_source=url_to_source)
+
 
 class Locale(Base):
 
