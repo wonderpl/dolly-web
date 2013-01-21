@@ -45,7 +45,7 @@ insert into category (id, locale, name, parent) values
 	(63, 'en-gb', 'NBA', 6),
 	(64, 'en-gb', 'NHL', 6),
 	(65, 'en-gb', 'Nascar', 6),
-	(66, 'en-gb', 'Soccer', 6),
+	(66, 'en-gb', 'Football', 6),
 	(67, 'en-gb', 'Tennis', 6),
 	(68, 'en-gb', 'Skateboard', 6),
 	(71, 'en-gb', 'Fashion', 7),
@@ -63,3 +63,7 @@ insert into category (id, locale, name, parent) values
 	(93, 'en-gb', 'Tech', 9),
 	(94, 'en-gb', 'History', 9),
 	(95, 'en-gb', 'Nature', 9);
+
+DROP SEQUENCE IF EXISTS category_id_seq CASCADE;
+CREATE SEQUENCE category_id_seq START 96;
+ALTER TABLE category ALTER COLUMN id SET DEFAULT nextval('category_id_seq');

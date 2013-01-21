@@ -43,3 +43,7 @@ insert into external_category_map (id, locale, source, term, label, category) va
 	(29, 'en-gb', 1, 'Movies_shorts', 'Shorts', NULL),
 	(30, 'en-gb', 1, 'Shows', 'Shows', NULL),
 	(31, 'en-gb', 1, 'Trailers', 'Trailers', 51);
+
+DROP SEQUENCE IF EXISTS external_category_map_id_seq CASCADE;
+CREATE SEQUENCE external_category_map_id_seq START 32;
+ALTER TABLE category ALTER COLUMN id SET DEFAULT nextval('external_category_map_id_seq');
