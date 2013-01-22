@@ -82,7 +82,6 @@ class ImportView(BaseView):
                 if channel and user:
                     if channel.startswith('_new:'):
                         channel = Channel(title=channel.split(':', 1)[1], owner=user)
-                        channel.save()
                     else:
                         channel = Channel.get(channel)
                     channel.add_videos(form.import_data.videos)
