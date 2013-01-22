@@ -30,6 +30,11 @@ class VideoInstance(AdminView):
     model_name = 'video_instance'
     model = models.VideoInstance
 
+    column_list = ['video_rel', 'date_added', 'video_channel', 'default_thumbnail']
+    column_filters = ('video_channel',)
+
+    list_template = 'admin/video_instance/list.html'
+
 
 class Source(AdminView):
     model_name = 'source'
@@ -57,6 +62,9 @@ class Channel(AdminView):
     model_name = 'channel'
     model = models.Channel
 
+    column_filters = ('title',)
+
+    list_template = 'admin/channel/list.html'
 
 class ChannelLocaleMeta(AdminView):
     model_name = 'channel_locale_meta'

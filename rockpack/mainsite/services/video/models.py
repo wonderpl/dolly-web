@@ -228,6 +228,10 @@ class VideoInstance(Base):
     video = Column(String(40), ForeignKey('video.id'))
     channel = Column(String(32), ForeignKey('channel.id'))
 
+    @property
+    def default_thumbnail(self):
+        return self.video_rel.default_thumbnail
+
     def __unicode__(self):
         return self.video
 
