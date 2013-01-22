@@ -3,19 +3,23 @@ from flask import Flask
 #from rockpack.services.video import api
 
 app = Flask(__name__)
-app.secret_key = '456%4534345375gfd@#pfsef367tgu'
 
 app.config.from_pyfile('settings/common.py')
 app.config.from_pyfile('settings/local.py', silent=True)
+app.config.from_envvar('ROCKPACK_SETTINGS', silent=True)
 
 
-SERVICES = ['rockpack.mainsite.services.video']
-REGISTER_SETUPS = {'rockpack.mainsite.auth': 'setup_auth',  # {'path.to.module': 'setup_func'}
-        'rockpack.mainsite.admin': 'setup_admin'}
+SERVICES = (
+    'rockpack.mainsite.services.video',
+)
+REGISTER_SETUPS = (
+    ('rockpack.mainsite.auth', 'setup_auth'),
+    ('rockpack.mainsite.admin', 'setup_admin'),
+)
 
 
 def run_setups():
-    for import_name, name in REGISTER_SETUPS.iteritems():
+    for import_name, name in REGISTER_SETUPS:
         setup_func = getattr(__import__(
             import_name,
             fromlist=[import_name.rsplit('.')[1]]),

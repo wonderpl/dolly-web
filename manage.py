@@ -14,6 +14,7 @@ def dbsync(options):
     from rockpack.mainsite import SERVICES, REGISTER_SETUPS
 
     models = []
+
     def load_modules(module):
         try:
             models.append(__import__(module + '.models', fromlist=['models']))
@@ -21,7 +22,7 @@ def dbsync(options):
             print >> sys.stderr, 'cannot import', module, ':', e
             sys.exit(1)
 
-    for module in SERVICES + REGISTER_SETUPS.keys():
+    for module in SERVICES + zip(*REGISTER_SETUPS)[0]:
         load_modules(module)
 
     table_list = []
@@ -73,7 +74,7 @@ def recreate_db(options):
     answer = ''
     while answer not in ['y', 'n']:
         answer = raw_input("Are you sure you want to do this"
-                            " (this will nuke '{}')? [Y/N]".format(db_url.rsplit('/', 1)[1]))
+                           " (this will nuke '{}')? [Y/N]".format(db_url.rsplit('/', 1)[1]))
 
     if answer.lower() == 'y':
         create_database(db_url, drop_first=True)
