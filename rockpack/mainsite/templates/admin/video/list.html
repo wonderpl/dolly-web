@@ -1,8 +1,8 @@
 {% extends 'admin/model/list.html' %}
 
 {% block list_header %}
-{{ super() }}
-<th>Thumbnail</th>
+    {{ super() }}
+    <th>Default Thumbnail</th>
 {% endblock %}
 {% block list_row scoped %}
     {% if actions %}

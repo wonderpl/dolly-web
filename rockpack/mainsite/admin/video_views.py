@@ -6,7 +6,9 @@ class Video(AdminView):
     model_name = 'video'
     model = models.Video
 
-    list_columns = ['title', 'date_added', 'date_updated', 'duration', 'star_count', 'rockpack_curated', 'sources']
+    column_list = ['title', 'date_added', 'date_updated', 'duration', 'star_count', 'rockpack_curated', 'sources']
+    column_searchable_list = ('title',)
+    column_filters = ('sources', )
 
     create_template = 'admin/video/create.html'
     list_template = 'admin/video/list.html'
