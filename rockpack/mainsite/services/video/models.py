@@ -6,12 +6,12 @@ from sqlalchemy import (
     Boolean,
     Integer,
     ForeignKey,
-    event
+    event,
+    DateTime,
 )
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import relationship, aliased
 from rockpack.mainsite.helpers.db import UTC
-from rockpack.mainsite.helpers.db import TZDateTime
 from rockpack.mainsite.helpers.db import add_base64_pk
 from rockpack.mainsite.helpers.db import add_video_pk
 from rockpack.mainsite.helpers.db import add_video_meta_pk
@@ -148,8 +148,8 @@ class Video(Base):
     title = Column(String(1024), nullable=True)
     source_videoid = Column(String(128))
     source_listid = Column(String(128), nullable=True)
-    date_added = Column(TZDateTime(), nullable=False, default=lambda: datetime.now(UTC))
-    date_updated = Column(TZDateTime(), nullable=False, default=lambda: datetime.now(UTC))
+    date_added = Column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(UTC))
+    date_updated = Column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(UTC))
     duration = Column(Integer, default=0)
     star_count = Column(Integer, default=0)
     rockpack_curated = Column(Boolean, default=False)
@@ -223,7 +223,7 @@ class VideoInstance(Base):
     __table_args__ = {'mysql_engine': 'InnoDB', }
 
     id = Column(String(24), primary_key=True)
-    date_added = Column(TZDateTime(), nullable=False, default=lambda: datetime.now(UTC))
+    date_added = Column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(UTC))
 
     video = Column(String(40), ForeignKey('video.id'))
     channel = Column(String(32), ForeignKey('channel.id'))

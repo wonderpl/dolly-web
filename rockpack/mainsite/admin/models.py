@@ -11,7 +11,7 @@ class AdminView(ModelView):
 
     can_create = True
     can_edit = True
-    can_delete = True
+    can_delete = False
 
     def __init__(self, *args, **kwargs):
         super(AdminView, self).__init__(self.model, session, **kwargs)

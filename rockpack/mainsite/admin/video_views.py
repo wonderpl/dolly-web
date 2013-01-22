@@ -8,7 +8,7 @@ class Video(AdminView):
 
     column_list = ['title', 'date_added', 'date_updated', 'duration', 'star_count', 'rockpack_curated', 'sources']
     column_searchable_list = ('title',)
-    column_filters = ('sources', )
+    column_filters = ('sources', 'date_added',)
 
     create_template = 'admin/video/create.html'
     list_template = 'admin/video/list.html'
