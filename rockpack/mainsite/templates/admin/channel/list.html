@@ -26,7 +26,7 @@
     {% if c=='title' %}
     <td><a href="{{ url_for('video_instance.index_view') }}?flt1_0={{ row.title }}">{{ row.title }}</a></td>
     {% elif c=='thumbnail_url' %}
-    <td><img src="{{ row.thumbnail_url_full }}"/></td>
+    <td><img style="height: 100px" src="{{ row.thumbnail_url_full }}"/></td>
 
     {% else %}
     <td>{{ get_value(row, c) }}</td>

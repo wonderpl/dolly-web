@@ -11,9 +11,9 @@ def s3_connection():
 def s3_upload(filename, _file, path, acl='public-read'):
     conn = s3_connection()
     bucket = conn.get_bucket(current_app.config['S3_BUCKET'])
-
     new_file = bucket.new_key('/'.join([path, filename]))
-    new_file.set_contents_from_string(_file.readlines())
+
+    new_file.set_contents_from_file(_file, replace=True)
     new_file.set_acl(acl)
 
     return filename
