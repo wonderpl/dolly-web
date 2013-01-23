@@ -17,6 +17,7 @@ from rockpack.mainsite.helpers.db import add_video_pk
 from rockpack.mainsite.helpers.db import add_video_meta_pk
 from rockpack.mainsite.core.dbapi import Base, session
 from rockpack.mainsite.auth.models import User
+from rockpack.mainsite.core import s3
 
 from rockpack.mainsite import app
 
@@ -274,6 +275,12 @@ class Channel(Base):
     @classmethod
     def get_form_choices(cls, owner):
         return session.query(cls.id, cls.title).filter_by(owner=owner)
+
+    @property
+    def thumbnail_url_full(self):
+        if self.thumbnail_url:
+            return s3.full_thumbnail_path(self.thumbnail_url)
+        return ''
 
     def add_videos(self, videos):
         for video in videos:
