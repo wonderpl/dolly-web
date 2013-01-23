@@ -1,0 +1,97 @@
+#!/bin/bash
+
+# rockpack-mainsite - Use uwsgi to run rockpack wsgi web app.
+#
+# chkconfig: - 85 15
+# description: Use uwsgi to run rockpack wsgi web app.
+# processname: uwsgi
+
+
+. /etc/rc.d/init.d/functions
+
+NAME=uwsgi
+USER=rockpack-mainsite
+BIN=/usr/sbin/$NAME
+LOG=/var/log/$NAME.log
+PID=/var/run/$NAME.pid
+LOCK=/var/lock/subsys/$NAME
+RETVAL=0
+
+export ROCKPACK_SETTINGS=/etc/rockpack/mainsite/config.py
+CFG=/etc/rockpack/mainsite/$NAME.ini
+
+DAEMON_OPTS="--ini $CFG --daemonize /var/log/$NAME.log --pidfile /var/run/$NAME.pid --uid $USER"
+
+
+start() {
+	echo -n "Starting $NAME: "
+	daemon $BIN $DAEMON_OPTS
+	RETVAL=$?
+	echo
+	[ $RETVAL -eq 0 ] && touch $LOCK
+	return $RETVAL
+}
+
+stop() {
+	echo -n "Stopping $NAME: "
+	killproc $BIN
+	RETVAL=$?
+	echo
+	[ $RETVAL -eq 0 ] && rm -f $LOCK
+	return $RETVAL
+}
+
+reload() {
+	echo "Reloading $NAME" 
+	killproc $BIN -HUP
+	RETVAL=$?
+	echo
+}
+
+force-reload() {
+	echo "Reloading $NAME" 
+	killproc $BIN -TERM
+	RETVAL=$?
+	echo
+}
+
+restart() {
+	stop
+	start
+}
+
+rh_status() {
+	status $BIN
+}
+
+rh_status_q() {
+	rh_status >/dev/null 2>&1
+}
+
+case "$1" in
+	start)
+		rh_status_q && exit 0
+		$1
+		;;
+	stop)
+		rh_status_q || exit 0
+		$1
+		;;
+	restart|force-reload)
+		$1
+		;;
+	reload)
+		rh_status_q || exit 7
+		$1
+		;;
+	status)
+		rh_status
+		;;
+	*)	
+		echo "Usage: $0 {start|stop|restart|reload|force-reload|status}" >&2
+		exit 2
+		;;
+esac
+
+exit $RETVAL
+

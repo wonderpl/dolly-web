@@ -1,6 +1,5 @@
 #!/usr/bin/env python
-from rockpack.mainsite import app
-from rockpack.mainsite import init_app
+from rockpack.mainsite.wsgi import application
 
-init_app()
-app.run(debug=True)
+if __name__ == '__main__':
+    application.run(debug=True)
