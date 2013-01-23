@@ -57,6 +57,7 @@ def create_database(db_url, drop_first=False):
 def _patch_db_url(db_url):
     from rockpack.mainsite.core import dbapi
     dbapi.manager = dbapi.SessionManager(db_url)
+    dbapi.get_engine = dbapi.manager.get_engine
 
 
 def test(options):
@@ -65,6 +66,7 @@ def test(options):
     db_url = mainsite.app.config['TEST_DATABASE_URL']
     _patch_db_url(db_url)
     create_database(db_url, drop_first=True)
+    dbsync(None)
     pytest.main()
 
 
