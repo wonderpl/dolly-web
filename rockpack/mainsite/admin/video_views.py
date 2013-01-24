@@ -1,29 +1,29 @@
-from flask import url_for
-from flask import flash
-from flask import request
-from flask import redirect
-from flask import abort
+import jinja2
+from flask import url_for, flash, request, redirect, abort
 from flask.ext import wtf
-from flask.ext.admin import form
-from flask.ext.admin import expose
+from flask.ext.admin import form, expose
+from flask.ext.admin.model.form import InlineFormAdmin
 from rockpack.mainsite.core import s3
-from rockpack.mainsite.core.dbapi import session
-from rockpack.mainsite.core.dbapi import commit_on_success
+from rockpack.mainsite.core.dbapi import session, commit_on_success
 from rockpack.mainsite.admin.models import AdminView
 from rockpack.mainsite.auth.models import User
 from rockpack.mainsite.services.video import models
+
+
+def _format_video_thumbnail(context, video, name):
+    t = '<a target="_blank" href="%s"><img src="%s" width="160" height="90"/></a>'
+    return jinja2.Markup(t % (video.player_link, video.default_thumbnail))
 
 
 class Video(AdminView):
     model_name = 'video'
     model = models.Video
 
-    column_list = ['title', 'date_added', 'date_updated', 'duration', 'star_count', 'rockpack_curated', 'sources']
+    column_list = ('title', 'date_updated', 'thumbnail')
+    column_formatters = dict(thumbnail=_format_video_thumbnail)
+    column_filters = ('sources', 'date_added')
     column_searchable_list = ('title',)
-    column_filters = ('sources', 'date_added',)
-
-    create_template = 'admin/video/create.html'
-    list_template = 'admin/video/list.html'
+    form_columns = ('title', 'sources', 'source_videoid', 'rockpack_curated')
 
     inline_models = (models.VideoThumbnail, )
 
@@ -42,10 +42,9 @@ class VideoInstance(AdminView):
     model_name = 'video_instance'
     model = models.VideoInstance
 
-    column_list = ['video_rel', 'date_added', 'video_channel', 'default_thumbnail']
+    column_list = ('video_rel', 'video_channel', 'date_added', 'thumbnail')
+    column_formatters = dict(thumbnail=_format_video_thumbnail)
     column_filters = ('video_channel',)
-
-    list_template = 'admin/video_instance/list.html'
 
 
 class Source(AdminView):
@@ -53,9 +52,23 @@ class Source(AdminView):
     model = models.Source
 
 
+class ChildCategoryFormAdmin(InlineFormAdmin):
+    form_columns = ('name', 'priority')
+
+
 class Category(AdminView):
     model_name = 'category'
     model = models.Category
+    inline_models = (models.Category,)
+
+
+class _Category(AdminView):
+    column_list = ('name', 'parent', 'locale')
+    column_filters = ('locale', 'parent')
+    column_searchable_list = ('name',)
+    form_columns = ('name', 'priority', 'locales')
+
+    inline_models = (ChildCategoryFormAdmin(models.Category),)
 
 
 class CategoryMap(AdminView):
@@ -73,25 +86,32 @@ class Locale(AdminView):
 class ChannelForm(form.BaseForm):
     title = wtf.TextField()
     thumbnail_url = wtf.FileField()
-    user = form.Select2Field(choices=[('', '')] +\
-                [(u.id, u.username,) for u in User.get_form_choices()],
-                validators=[wtf.validators.required()])
+    user = form.Select2Field(
+        choices=[('', '')] + [(u.id, u.username) for u in User.get_form_choices()],
+        validators=[wtf.validators.required()])
+
+
+def _format_channel_thumbnail(context, channel, name):
+    t = '<img src="%s" width="241" height="171"/>'
+    return jinja2.Markup(t % channel.thumbnail_url_full) if channel.thumbnail_url else ''
 
 
 class Channel(AdminView):
     model_name = 'channel'
     model = models.Channel
 
+    column_list = ('title', 'owner_rel', 'thumbnail')
+    column_formatters = dict(thumbnail=_format_channel_thumbnail)
     column_filters = ('title',)
 
-    list_template = 'admin/channel/list.html'
+    #list_template = 'admin/channel/list.html'
 
     def _save_channel_data(self, _form, update_id=None):
         t = ''
         if request.files and request.files.get('thumbnail_url').filename:
             t = s3.thumbnail_upload(
-                    request.files.get('thumbnail_url').filename,
-                    request.files.get('thumbnail_url').stream)
+                request.files.get('thumbnail_url').filename,
+                request.files.get('thumbnail_url').stream)
         channel = self.model()
         if update_id:
             channel = session.query(self.model).get(update_id)
@@ -155,9 +175,10 @@ class ExternalCategoryMap(AdminView):
     model = models.ExternalCategoryMap
 
 
-registered = [Video, VideoLocaleMeta, VideoThumbnail, VideoInstance,
-        Source, Category, CategoryMap, Locale,
-        Channel, ChannelLocaleMeta, ExternalCategoryMap]
+registered = [
+    Video, VideoLocaleMeta, VideoThumbnail, VideoInstance,
+    Source, Category, CategoryMap, Locale,
+    Channel, ChannelLocaleMeta, ExternalCategoryMap]
 
 
 def admin_views():

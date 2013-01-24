@@ -19,24 +19,10 @@ from rockpack.mainsite.core.dbapi import Base, session
 from rockpack.mainsite.auth.models import User
 from rockpack.mainsite.core import s3
 
-from rockpack.mainsite import app
-
-
-@app.context_processor
-def proc():
-    def url_to_source(id, source_id):
-        source = session.query(Source).get(source_id)
-        # TODO: get rid of this nasty hack
-        if source.label.lower() == 'youtube':
-            return 'http://www.youtube.com/watch?v=' + id
-        return id
-    return dict(url_to_source=url_to_source)
-
 
 class Locale(Base):
 
     __tablename__ = 'locale'
-    __table_args__ = {'mysql_engine': 'InnoDB', }
 
     id = Column(String(5), primary_key=True)
     name = Column(String(32))
@@ -44,7 +30,7 @@ class Locale(Base):
     video_locale_meta = relationship('VideoLocaleMeta', backref='locales')
 
     def __unicode__(self):
-        return ':'.join([self.id, self.name])
+        return self.name
 
     @classmethod
     def get_form_choices(cls):
@@ -55,7 +41,6 @@ class Category(Base):
     """ Categories for each `locale` """
 
     __tablename__ = 'category'
-    __table_args__ = {'mysql_engine': 'InnoDB'}
 
     id = Column(Integer, primary_key=True)
     name = Column(String(32))
@@ -65,18 +50,14 @@ class Category(Base):
     locale = Column(ForeignKey('locale.id'))
 
     parent_category = relationship('Category', remote_side=[id], backref='children')
+    locales = relationship('Locale', backref='categories')
 
     video_locale_metas = relationship('VideoLocaleMeta', backref='category_ref')
-    locales = relationship('Locale', backref='category_ref')
     channel_locale_metas = relationship('ChannelLocaleMeta', backref='category_ref')
     external_category_maps = relationship('ExternalCategoryMap', backref='category_ref')
 
     def __unicode__(self):
-        parent = ''
-        if self.parent_category:
-            parent = self.parent_category.name
-        r = ':'.join([parent, self.name, self.locale])
-        return r
+        return self.name
 
     @classmethod
     def get_form_choices(cls, locale):
@@ -91,7 +72,6 @@ class CategoryMap(Base):
     """ Mapping between localised categories """
 
     __tablename__ = 'category_locale'
-    __table_args__ = {'mysql_engine': 'InnoDB', }
 
     id = Column(Integer, primary_key=True)
 
@@ -110,7 +90,6 @@ class CategoryMap(Base):
 class ExternalCategoryMap(Base):
 
     __tablename__ = 'external_category_map'
-    __table_args__ = {'mysql_engine': 'InnoDB', }
 
     id = Column(Integer, primary_key=True)
     term = Column(String(32))
@@ -122,7 +101,6 @@ class ExternalCategoryMap(Base):
 
 class Source(Base):
     __tablename__ = 'source'
-    __table_args__ = {'mysql_engine': 'InnoDB', }
 
     id = Column(Integer, primary_key=True)
     label = Column(String(16))
@@ -143,7 +121,6 @@ class Video(Base):
     """ Canonical reference to a video """
 
     __tablename__ = 'video'
-    __table_args__ = {'mysql_engine': 'InnoDB', }
 
     id = Column(String(40), primary_key=True)
     title = Column(String(1024), nullable=True)
@@ -171,6 +148,11 @@ class Video(Base):
             if 'default.jpg' in thumb.url:
                 return thumb.url
 
+    @property
+    def player_link(self):
+        # TODO: Use data from source
+        return 'http://www.youtube.com/watch?v=' + self.source_videoid
+
     @classmethod
     def add_videos(cls, videos, source, locale, category):
         count = len(videos)
@@ -197,7 +179,6 @@ class Video(Base):
 class VideoLocaleMeta(Base):
 
     __tablename__ = 'video_locale_meta'
-    __table_args__ = {'mysql_engine': 'InnoDB', }
 
     id = Column(String(40), primary_key=True)
 
@@ -221,7 +202,6 @@ class VideoInstance(Base):
     """ An instance of a video, which can belong to many channels """
 
     __tablename__ = 'video_instance'
-    __table_args__ = {'mysql_engine': 'InnoDB', }
 
     id = Column(String(24), primary_key=True)
     date_added = Column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(UTC))
@@ -233,6 +213,10 @@ class VideoInstance(Base):
     def default_thumbnail(self):
         return self.video_rel.default_thumbnail
 
+    @property
+    def player_link(self):
+        return self.video_rel.player_link
+
     def __unicode__(self):
         return self.video
 
@@ -240,7 +224,6 @@ class VideoInstance(Base):
 class VideoThumbnail(Base):
 
     __tablename__ = 'video_thumbnail'
-    __table_args__ = {'mysql_engine': 'InnoDB', }
 
     id = Column(String(24), primary_key=True)
     url = Column(String(1024))
@@ -257,7 +240,6 @@ class Channel(Base):
     """ A channel, which can contain many videos """
 
     __tablename__ = 'channel'
-    __table_args__ = {'mysql_engine': 'InnoDB', }
 
     id = Column(String(24), primary_key=True)
     title = Column(String(1024))
@@ -291,7 +273,6 @@ class Channel(Base):
 class ChannelLocaleMeta(Base):
 
     __tablename__ = 'channel_locale_meta'
-    __table_args__ = {'mysql_engine': 'InnoDB', }
 
     id = Column(String(24), primary_key=True)
 
