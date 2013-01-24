@@ -67,7 +67,7 @@ def test(options):
     _patch_db_url(db_url)
     create_database(db_url, drop_first=True)
     dbsync(None)
-    pytest.main()
+    pytest.main(options[1])
 
 
 def recreate_db(options):
@@ -97,8 +97,8 @@ def main():
     recreatedb_parser = subparsers.add_parser('recreatedb', help='drops and re-creates database')
     recreatedb_parser.set_defaults(func=recreate_db)
 
-    args = parser.parse_args()
-    args.func(args)
+    args = parser.parse_known_args()
+    args[0].func(args)
     parser.exit(1)
 
 
