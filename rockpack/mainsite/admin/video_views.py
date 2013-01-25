@@ -86,10 +86,15 @@ class Locale(AdminView):
 class ChannelForm(form.BaseForm):
     title = wtf.TextField()
     thumbnail_url = wtf.FileField()
-    user = form.Select2Field(
+
+    # TODO: remove this once selection options
+    # are gathered through the UI (js method)
+    # Also, lambda so that table isn't loaded
+    # during a dbsync. Probably should handle
+    # import more intelligently in __init__.py
+    user = lambda x: form.Select2Field(
         choices=[('', '')] + [(u.id, u.username) for u in User.get_form_choices()],
         validators=[wtf.validators.required()])
-
 
 def _format_channel_thumbnail(context, channel, name):
     t = '<img src="%s" width="241" height="171"/>'
