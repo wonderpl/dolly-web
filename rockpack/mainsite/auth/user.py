@@ -42,7 +42,8 @@ class Admin(UserMixin):
         return Admin(u.id, u.username, u.email)
 
     def has_permission(self, permission):
-        rperms = session.query(models.RolePermissions).filter(models.RolePermissions==permission)
+        # TODO
+        # session.query(models.RolePermissions).filter(models.RolePermissions==permission)
         return True
 
     def get_id(self):

@@ -1,4 +1,3 @@
-from datetime import datetime
 from sqlalchemy import (
     Text,
     String,
@@ -6,12 +5,12 @@ from sqlalchemy import (
     Boolean,
     Integer,
     ForeignKey,
-    event,
     DateTime,
+    event,
+    func,
 )
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import relationship, aliased
-from rockpack.mainsite.helpers.db import UTC
 from rockpack.mainsite.helpers.db import add_base64_pk
 from rockpack.mainsite.helpers.db import add_video_pk
 from rockpack.mainsite.helpers.db import add_video_meta_pk
@@ -25,7 +24,7 @@ class Locale(Base):
     __tablename__ = 'locale'
 
     id = Column(String(5), primary_key=True)
-    name = Column(String(32))
+    name = Column(String(32), nullable=False)
 
     video_locale_meta = relationship('VideoLocaleMeta', backref='locales')
 
@@ -43,17 +42,19 @@ class Category(Base):
     __tablename__ = 'category'
 
     id = Column(Integer, primary_key=True)
-    name = Column(String(32))
-    priority = Column(Integer, default=0)
+    name = Column(String(32), nullable=False)
+    priority = Column(Integer, nullable=False, default=10)
 
     parent = Column(ForeignKey('category.id'), nullable=True)
-    locale = Column(ForeignKey('locale.id'))
+    locale = Column(ForeignKey('locale.id'), nullable=False)
 
     parent_category = relationship('Category', remote_side=[id], backref='children')
     locales = relationship('Locale', backref='categories')
 
-    video_locale_metas = relationship('VideoLocaleMeta', backref='category_ref')
-    channel_locale_metas = relationship('ChannelLocaleMeta', backref='category_ref')
+    video_locale_metas = relationship('VideoLocaleMeta', backref='category_ref',
+                                      passive_deletes=True)
+    channel_locale_metas = relationship('ChannelLocaleMeta', backref='category_ref',
+                                        passive_deletes=True)
     external_category_maps = relationship('ExternalCategoryMap', backref='category_ref')
 
     def __unicode__(self):
@@ -75,8 +76,8 @@ class CategoryMap(Base):
 
     id = Column(Integer, primary_key=True)
 
-    here = Column(ForeignKey('category.id'))
-    there = Column(ForeignKey('category.id'))
+    here = Column(ForeignKey('category.id'), nullable=False)
+    there = Column(ForeignKey('category.id'), nullable=False)
 
     category_here = relationship('Category', foreign_keys=[here])
     category_there = relationship('Category', foreign_keys=[there])
@@ -92,19 +93,19 @@ class ExternalCategoryMap(Base):
     __tablename__ = 'external_category_map'
 
     id = Column(Integer, primary_key=True)
-    term = Column(String(32))
-    label = Column(String(64), nullable=True)
-    locale = Column(String(16), ForeignKey('locale.id'))
-    category = Column(Integer, ForeignKey('category.id'))
-    source = Column(Integer, ForeignKey('source.id'))
+    term = Column(String(32), nullable=False)
+    label = Column(String(64), nullable=False)
+    locale = Column(String(16), ForeignKey('locale.id'), nullable=False)
+    category = Column(Integer, ForeignKey('category.id'), nullable=False)
+    source = Column(Integer, ForeignKey('source.id'), nullable=False)
 
 
 class Source(Base):
     __tablename__ = 'source'
 
     id = Column(Integer, primary_key=True)
-    label = Column(String(16))
-    player_template = Column(Text)
+    label = Column(String(16), nullable=False)
+    player_template = Column(Text, nullable=False)
 
     external_category_maps = relationship('ExternalCategoryMap', backref='sources')
     video = relationship('Video', backref='sources')
@@ -123,14 +124,14 @@ class Video(Base):
     __tablename__ = 'video'
 
     id = Column(String(40), primary_key=True)
-    title = Column(String(1024), nullable=True)
-    source_videoid = Column(String(128))
+    title = Column(String(1024), nullable=False)
+    source_videoid = Column(String(128), nullable=False)
     source_listid = Column(String(128), nullable=True)
-    date_added = Column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(UTC))
-    date_updated = Column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(UTC))
-    duration = Column(Integer, default=0)
-    star_count = Column(Integer, default=0)
-    rockpack_curated = Column(Boolean, default=False)
+    date_added = Column(DateTime(timezone=True), nullable=False, default=func.now())
+    date_updated = Column(DateTime(timezone=True), nullable=False, default=func.now(), onupdate=func.now())
+    duration = Column(Integer, nullable=False, default=0)
+    star_count = Column(Integer, nullable=False, default=0)
+    rockpack_curated = Column(Boolean, nullable=False, default=False)
 
     source = Column(ForeignKey('source.id'), nullable=False)
 
@@ -182,10 +183,10 @@ class VideoLocaleMeta(Base):
 
     id = Column(String(40), primary_key=True)
 
-    video = Column(String(40), ForeignKey('video.id'))
-    locale = Column(ForeignKey('locale.id'))
-    category = Column(ForeignKey('category.id'))
-    star_count = Column(Integer, default=0)
+    video = Column(String(40), ForeignKey('video.id'), nullable=False)
+    locale = Column(ForeignKey('locale.id'), nullable=False)
+    category = Column(ForeignKey('category.id'), nullable=False)
+    star_count = Column(Integer, nullable=False, default=0)
 
 
 class VideoRestriction(Base):
@@ -193,9 +194,9 @@ class VideoRestriction(Base):
     __tablename__ = 'video_restriction'
 
     id = Column(String(24), primary_key=True)
-    video = Column(String(40), ForeignKey('video.id'))
-    relationship = Column(String(16))
-    country = Column(String(8))
+    video = Column(String(40), ForeignKey('video.id'), nullable=False)
+    relationship = Column(String(16), nullable=False)
+    country = Column(String(8), nullable=False)
 
 
 class VideoInstance(Base):
@@ -204,10 +205,10 @@ class VideoInstance(Base):
     __tablename__ = 'video_instance'
 
     id = Column(String(24), primary_key=True)
-    date_added = Column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(UTC))
+    date_added = Column(DateTime(timezone=True), nullable=False, default=func.now())
 
-    video = Column(String(40), ForeignKey('video.id'))
-    channel = Column(String(32), ForeignKey('channel.id'))
+    video = Column(String(40), ForeignKey('video.id'), nullable=False)
+    channel = Column(String(32), ForeignKey('channel.id'), nullable=False)
 
     @property
     def default_thumbnail(self):
@@ -226,11 +227,11 @@ class VideoThumbnail(Base):
     __tablename__ = 'video_thumbnail'
 
     id = Column(String(24), primary_key=True)
-    url = Column(String(1024))
-    width = Column(Integer)
-    height = Column(Integer)
+    url = Column(String(1024), nullable=False)
+    width = Column(Integer, nullable=False)
+    height = Column(Integer, nullable=False)
 
-    video = Column(String(40), ForeignKey('video.id'))
+    video = Column(String(40), ForeignKey('video.id'), nullable=False)
 
     def __unicode__(self):
         return '({}x{}) {}'.format(self.width, self.height, self.url)
@@ -242,10 +243,10 @@ class Channel(Base):
     __tablename__ = 'channel'
 
     id = Column(String(24), primary_key=True)
-    title = Column(String(1024))
-    thumbnail_url = Column(Text, nullable=True)
+    title = Column(String(1024), nullable=False)
+    thumbnail_url = Column(Text, nullable=False)
 
-    owner = Column(String(24), ForeignKey('user.id'))
+    owner = Column(String(24), ForeignKey('user.id'), nullable=False)
     owner_rel = relationship(User, primaryjoin=(owner == User.id))
 
     video_instances = relationship('VideoInstance', backref='video_channel')
@@ -276,9 +277,9 @@ class ChannelLocaleMeta(Base):
 
     id = Column(String(24), primary_key=True)
 
-    channel = Column(ForeignKey('channel.id'))
-    locale = Column(ForeignKey('locale.id'))
-    category = Column(ForeignKey('category.id'), nullable=True)
+    channel = Column(ForeignKey('channel.id'), nullable=False)
+    locale = Column(ForeignKey('locale.id'), nullable=False)
+    category = Column(ForeignKey('category.id'), nullable=False)
 
     channel_locale = relationship('Locale', remote_side=[Locale.id], backref='channel_locale_meta')
 
@@ -287,6 +288,12 @@ class ChannelLocaleMeta(Base):
 
 
 ParentCategory = aliased(Category)
+
+
+@event.listens_for(Category, 'before_insert')
+def _set_child_category_locale(mapper, connection, target):
+    if not target.locale and target.parent_category:
+        target.locale = target.parent_category.locale
 
 
 event.listen(Video, 'before_insert', add_video_pk)

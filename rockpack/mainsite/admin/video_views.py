@@ -53,16 +53,13 @@ class Source(AdminView):
 
 
 class ChildCategoryFormAdmin(InlineFormAdmin):
-    form_columns = ('name', 'priority')
+    form_columns = ('name', 'priority', 'id')
 
 
 class Category(AdminView):
     model_name = 'category'
     model = models.Category
-    inline_models = (models.Category,)
 
-
-class _Category(AdminView):
     column_list = ('name', 'parent', 'locale')
     column_filters = ('locale', 'parent')
     column_searchable_list = ('name',)
@@ -74,6 +71,9 @@ class _Category(AdminView):
 class CategoryMap(AdminView):
     model_name = models.CategoryMap.__tablename__
     model = models.CategoryMap
+
+    column_list = ('category_here.locale', 'category_here',
+                   'category_there.locale', 'category_there')
 
 
 class Locale(AdminView):

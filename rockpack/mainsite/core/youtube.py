@@ -28,7 +28,7 @@ def _get_video_data(youtube_data, playlist=None):
         title=youtube_data['title']['$t'],
         duration=media['yt$duration']['seconds'] if 'yt$duration' in media else 0,
     )
-    video.source_category = category=get_category(media.get('media$category', []))
+    video.source_category = get_category(media.get('media$category', []))
     for thumbnail in media.get('media$thumbnail', []):
         if 'time' not in thumbnail:
             video.thumbnails.append(
