@@ -72,6 +72,9 @@ class CategoryMap(AdminView):
     model_name = models.CategoryMap.__tablename__
     model = models.CategoryMap
 
+    column_list = ('category_here.locale', 'category_here',
+                   'category_there.locale', 'category_there')
+
 
 class Locale(AdminView):
     model_name = 'locale'

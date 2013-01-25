@@ -1,4 +1,3 @@
-from datetime import datetime
 from sqlalchemy import (
     Text,
     String,
@@ -12,7 +11,6 @@ from sqlalchemy import (
 )
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import relationship, aliased
-from rockpack.mainsite.helpers.db import UTC
 from rockpack.mainsite.helpers.db import add_base64_pk
 from rockpack.mainsite.helpers.db import add_video_pk
 from rockpack.mainsite.helpers.db import add_video_meta_pk
@@ -53,8 +51,10 @@ class Category(Base):
     parent_category = relationship('Category', remote_side=[id], backref='children')
     locales = relationship('Locale', backref='categories')
 
-    video_locale_metas = relationship('VideoLocaleMeta', backref='category_ref')
-    channel_locale_metas = relationship('ChannelLocaleMeta', backref='category_ref')
+    video_locale_metas = relationship('VideoLocaleMeta', backref='category_ref',
+                                      passive_deletes=True)
+    channel_locale_metas = relationship('ChannelLocaleMeta', backref='category_ref',
+                                        passive_deletes=True)
     external_category_maps = relationship('ExternalCategoryMap', backref='category_ref')
 
     def __unicode__(self):
