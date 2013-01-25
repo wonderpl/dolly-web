@@ -2,37 +2,32 @@ import boto
 from flask import current_app
 
 
-def s3_connection():
-    return boto.connect_s3(
+class S3Uploader(object):
+
+    def __init__(self):
+        self.conn = self._connection()
+        self.bucket = self.conn.get_bucket(current_app.config['S3_BUCKET'])
+
+    @staticmethod
+    def _connection():
+        return boto.connect_s3(
             current_app.config['AWS_ACCESS_KEY'],
             current_app.config['AWS_SECRET_KEY'])
 
+    def exists(self, name):
+        if self.bucket.get_key(name):
+            return True
+        return False
 
-def s3_upload(filename, _file, path, acl='public-read'):
-    conn = s3_connection()
-    bucket = conn.get_bucket(current_app.config['S3_BUCKET'])
-    new_file = bucket.new_key('/'.join([path, filename]))
+    def get_file(self, name):
+        f = self.bucket.get_key(name)
+        if f:
+            return f.get_contents_as_string()
+        return None
 
-    new_file.set_contents_from_file(_file, replace=True)
-    new_file.set_acl(acl)
+    def put_from_file(self, file_path, key_name,
+                      acl='public-read', replace=False):
 
-    return filename
-
-
-def path_to_asset():
-    return current_app.config['S3_BUCKET'] + '.s3.amazonaws.com' # HACK!
-
-
-def full_thumbnail_path(filename):
-    return '/'.join(['http://',
-        path_to_asset(),
-        current_app.config['S3_THUMBNAIL_DIR'],
-        filename
-        ])
-
-
-def thumbnail_upload(filename, _file):
-    return s3_upload(
-            filename,
-            _file,
-            current_app.config['S3_THUMBNAIL_DIR'])
+        new_file = self.bucket.new_key(key_name)
+        new_file.set_contents_from_filename(file_path, replace=replace)
+        new_file.set_acl(acl)

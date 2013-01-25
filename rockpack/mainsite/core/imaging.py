@@ -1,5 +1,10 @@
 import os
+import base64
+import uuid
 from PIL import Image
+
+from rockpack.mainsite.core.s3 import S3Uploader
+
 
 class Resizer(object):
 
@@ -25,7 +30,7 @@ class Resizer(object):
 
         if not configuration or not isinstance(configuration, dict):
             raise self.ConfigurationInvalid('Must be type dict'
-                    'and not empty')
+                                            'and not empty')
         self.configuration = configuration
 
     def add_configuration(self, configuration):
@@ -42,6 +47,7 @@ class Resizer(object):
         new_w, new_h = w, h
         old_ratio = float(old_w) / float(old_h)
         new_ratio = float(new_w) / float(new_h)
+
         if new_ratio < old_ratio:
             crop_height = old_h
             crop_width = crop_height * new_ratio
@@ -52,14 +58,14 @@ class Resizer(object):
             crop_height = crop_width / new_ratio
             x_offset = 0
             y_offset = int(float(old_h-crop_height) / 3)
-        new_img = img.crop(
-                (x_offset,
-                    y_offset,
-                    x_offset+int(crop_width),
-                    y_offset+int(crop_height))
-                )
-        return new_img.resize((w, h,), Image.ANTIALIAS)
 
+        new_img = img.crop(
+            (x_offset,
+                y_offset,
+                x_offset+int(crop_width),
+                y_offset+int(crop_height)))
+
+        return new_img.resize((w, h,), Image.ANTIALIAS)
 
     def resize(self):
         if not self.configuration:
@@ -75,3 +81,25 @@ class Resizer(object):
             resized.update({name: new_img})
 
         return resized
+
+
+class ImageUploader(object):
+
+    uploader = None
+
+    def __init__(self, uploader=S3Uploader):
+        self.uploader = uploader()
+
+    def from_file(self, path_to_file,
+                  target_path=None, target_filename=None, extension='jpg'):
+
+        # Construct a new filename
+        if not target_filename:
+            target_filename = base64.urlsafe_b64encode(
+                uuid.uuid4().bytes)[:-2] + extension
+
+        # Create a `key` from a target "path" and the filename
+        key_name = os.path.join(target_path, target_filename)
+
+        self.uploader.put_from_file(path_to_file, key_name)
+        return key_name

@@ -1,8 +1,11 @@
 import unittest
 import rockpack
+import pytest
 
 
 class RockPackTestCase(unittest.TestCase):
+
+    set_trace = pytest.set_trace
 
     def setUp(self):
         rockpack.mainsite.app.config['TESTING'] = True
