@@ -1,6 +1,7 @@
+from flask import g
 from flask.ext.login import UserMixin
 
-from rockpack.mainsite.core.dbapi import session
+from rockpack.mainsite.core.dbapi import get_session
 import models
 
 
@@ -11,7 +12,7 @@ class Admin(UserMixin):
         self.email = email
         self.active = active
 
-        self._roles = session.query(models.AdminRole).filter_by(id=self.id)
+        self._roles = g.session.query(models.AdminRole).filter_by(id=self.id)
 
     @classmethod
     def get_from_token(cls, token):

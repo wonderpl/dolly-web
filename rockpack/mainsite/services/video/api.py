@@ -1,10 +1,10 @@
-from flask import Blueprint
+from flask import Blueprint, g
 from flask import jsonify
 from flask import url_for
 
 from rockpack.mainsite.core.webservice import WebService
 from rockpack.mainsite.core.webservice import expose
-from rockpack.mainsite.core.dbapi import session
+from rockpack.mainsite.core.dbapi import get_session
 from rockpack.mainsite.services.video.models import VideoInstance
 from rockpack.mainsite.services.video.models import Channel
 
@@ -17,7 +17,7 @@ class ChannelAPI(WebService):
     endpoint = '/test'
     @expose('/test_channel/', methods=('GET',))
     def test_channel(self):
-        channels = session.query(Channel).all()
+        channels = g.session.query(Channel).all()
         return jsonify({'items': [get_channel_dict(c) for c in channels]})
 
 
@@ -45,17 +45,17 @@ def get_video_dict(instance, route_func_name=None):
 
 @video.route('/channels/')
 def channel_list():
-    channels = session.query(Channel).all()
+    channels = g.session.query(Channel).all()
     return jsonify({'items': [get_channel_dict(c, route_func_name='.channel_list') for c in channels]})
 
 @video.route('/channels/<channel_id>')
 def channel_item(channel_id):
-    channel = session.query(Channel).get(channel_id)
+    channel = g.session.query(Channel).get(channel_id)
     return jsonify(get_channel_dict(channel))
 
 @video.route('/videos/')
 def video_instances():
-    video_instances = session.query(VideoInstance).all()
+    video_instances = g.session.query(VideoInstance).all()
     video_list = []
     item_count = 0
     for v in video_instances:
@@ -67,7 +67,7 @@ def video_instances():
 
 @video.route('/videos/<item_id>')
 def video_instance(item_id):
-    video_instance = session.query(VideoInstance).get(item_id)
+    video_instance = g.session.query(VideoInstance).get(item_id)
     return jsonify(get_video_dict(video_instance))
 
 

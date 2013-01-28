@@ -1,3 +1,5 @@
+from flask import g
+
 from sqlalchemy import (
     String,
     Column,
@@ -10,7 +12,7 @@ from sqlalchemy import (
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.orm import relationship
 
-from rockpack.mainsite.core.dbapi import session
+from rockpack.mainsite.core.dbapi import get_session
 from rockpack.mainsite.core.dbapi import Base
 from rockpack.mainsite.helpers.db import add_base64_pk
 
@@ -39,10 +41,14 @@ class User(Base):
 
     @classmethod
     def get_form_choices(cls, prefix=None):
-        q = session.query(cls.id, cls.username)
+        q = g.session.query(cls.id, cls.username)
         if prefix:
             q = q.filter(cls.username.ilike(prefix + '%'))
         return q
+
+    @classmethod
+    def get_from_username(cls, username):
+        return g.session.query(cls).filter_by(username=username).one()
 
 
 event.listen(User, 'before_insert', lambda x, y, z: add_base64_pk(x, y, z))
@@ -61,21 +67,21 @@ class Admin(Base):
     @classmethod
     def get_from_login(cls, adminid):
         try:
-            return session.query(cls).filter_by(id=adminid).one()
+            return g.session.query(cls).filter_by(id=adminid).one()
         except NoResultFound:
             raise InvalidAdminException
 
     @classmethod
     def get_from_email(cls, email):
         try:
-            return session.query(cls).filter_by(email=email).one()
+            return g.session.query(cls).filter_by(email=email).one()
         except NoResultFound:
             raise InvalidAdminException
 
     @classmethod
     def get_from_token(cls, token):
         try:
-            return session.query(cls).filter_by(token=token).one()
+            return g.session.query(cls).filter_by(token=token).one()
         except NoResultFound:
             raise InvalidAdminException
 

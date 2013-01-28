@@ -11,12 +11,13 @@ from sqlalchemy import (
 )
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import relationship, aliased
+from flask import g
+from rockpack.mainsite.helpers.urls import image_url_from_path
 from rockpack.mainsite.helpers.db import add_base64_pk
 from rockpack.mainsite.helpers.db import add_video_pk
 from rockpack.mainsite.helpers.db import add_video_meta_pk
-from rockpack.mainsite.core.dbapi import Base, session
+from rockpack.mainsite.core.dbapi import Base, get_session
 from rockpack.mainsite.auth.models import User
-from rockpack.mainsite.core import s3
 
 
 class Locale(Base):
@@ -33,7 +34,7 @@ class Locale(Base):
 
     @classmethod
     def get_form_choices(cls):
-        return session.query(cls.id, cls.name)
+        return g.session.query(cls.id, cls.name)
 
 
 class Category(Base):
@@ -62,7 +63,7 @@ class Category(Base):
 
     @classmethod
     def get_form_choices(cls, locale):
-        query = session.query(cls.id, cls.name, ParentCategory.name).\
+        query = g.session.query(cls.id, cls.name, ParentCategory.name).\
             filter(cls.parent == ParentCategory.id).\
             filter(cls.locale == locale)
         for id, name, parent in query:
@@ -115,7 +116,7 @@ class Source(Base):
 
     @classmethod
     def get_form_choices(cls):
-        return session.query(cls.id, cls.label)
+        return g.session.query(cls.id, cls.label)
 
 
 class Video(Base):
@@ -163,15 +164,15 @@ class Video(Base):
 
         try:
             # First try to add all...
-            with session.begin_nested():
-                session.add_all(videos)
+            with g.session.begin_nested():
+                g.session.add_all(videos)
         except IntegrityError:
             # Else explicitly check which videos already exist
             all_ids = set(v.id for v in videos)
-            query = session.query(Video.id).filter(Video.id.in_(all_ids))
+            query = g.session.query(Video.id).filter(Video.id.in_(all_ids))
             existing_ids = set(v.id for v in query)
             new_ids = all_ids - existing_ids
-            session.add_all(v for v in videos if v.id in new_ids)
+            g.session.add_all(v for v in videos if v.id in new_ids)
             count = len(new_ids)
 
         return count
@@ -257,18 +258,52 @@ class Channel(Base):
 
     @classmethod
     def get_form_choices(cls, owner):
-        return session.query(cls.id, cls.title).filter_by(owner=owner)
+        return g.session.query(cls.id, cls.title).filter_by(owner=owner)
 
     @property
     def thumbnail_url_full(self):
-        if self.thumbnail_url:
-            return s3.full_thumbnail_path(self.thumbnail_url)
-        return ''
+        return self.channel_images.thumbnail_large_url
 
     def add_videos(self, videos):
         for video in videos:
             self.video_instances.append(VideoInstance(video=video.id))
         return self.save()
+
+
+class ChannelImage(Base):
+
+    __tablename__ = 'channel_image'
+
+    id = Column(String(24), primary_key=True)
+    original = Column(String(1024), nullable=False)
+    thumbnail_small = Column(String(1024), nullable=False)
+    thumbnail_large = Column(String(1024), nullable=False)
+    carousel = Column(String(1024), nullable=False)
+    cover = Column(String(1024), nullable=False)
+
+    owner = Column(String(24), ForeignKey('user.id'), nullable=False)
+    user = relationship(User, primaryjoin=(owner == User.id))
+    channels = relationship('Channel', backref='channel_images')
+
+    @property
+    def original_url(self):
+        return image_url_from_path(self.original)
+
+    @property
+    def thumbnail_small_url(self):
+        return image_url_from_path(self.thumbnail_small)
+
+    @property
+    def thumbnail_large_url(self):
+        return image_url_from_path(self.thumbnail_large)
+
+    @property
+    def carousel_url(self):
+        return image_url_from_path(self.carousel)
+
+    @property
+    def cover_url(self):
+        return image_url_from_path(self.cover)
 
 
 class ChannelLocaleMeta(Base):
@@ -302,4 +337,5 @@ event.listen(VideoInstance, 'before_insert', lambda x, y, z: add_base64_pk(x, y,
 event.listen(VideoRestriction, 'before_insert', lambda x, y, z: add_base64_pk(x, y, z, prefix='vr'))
 event.listen(VideoThumbnail, 'before_insert', lambda x, y, z: add_base64_pk(x, y, z, prefix='vt'))
 event.listen(Channel, 'before_insert', lambda x, y, z: add_base64_pk(x, y, z, prefix='ch'))
+event.listen(ChannelImage, 'before_insert', lambda x, y, z: add_base64_pk(x, y, z, prefix='ci'))
 event.listen(ChannelLocaleMeta, 'before_insert', lambda x, y, z: add_base64_pk(x, y, z, prefix='cl'))

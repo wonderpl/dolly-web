@@ -1,10 +1,12 @@
+import tempfile
 import jinja2
-from flask import url_for, flash, request, redirect, abort
+from flask import url_for, flash, request, redirect, abort, g
 from flask.ext import wtf
 from flask.ext.admin import form, expose
+from flask.ext.admin.babel import gettext
 from flask.ext.admin.model.form import InlineFormAdmin
 from rockpack.mainsite.core import s3
-from rockpack.mainsite.core.dbapi import session, commit_on_success
+from rockpack.mainsite.core.dbapi import get_session, commit_on_success
 from rockpack.mainsite.admin.models import AdminView
 from rockpack.mainsite.auth.models import User
 from rockpack.mainsite.services.video import models

@@ -1,7 +1,7 @@
 from flask.ext import login
 from flask.ext.admin.contrib.sqlamodel import ModelView
 
-from rockpack.mainsite.core.dbapi import session
+from rockpack.mainsite.core.dbapi import get_session
 
 
 class AdminView(ModelView):
@@ -14,7 +14,7 @@ class AdminView(ModelView):
     can_delete = False
 
     def __init__(self, *args, **kwargs):
-        super(AdminView, self).__init__(self.model, session, **kwargs)
+        super(AdminView, self).__init__(self.model, get_session(), **kwargs)
 
     def is_authenticated(self):
         return login.current_user.is_authenticated()

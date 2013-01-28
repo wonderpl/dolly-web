@@ -6,6 +6,8 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm import scoped_session
 from sqlalchemy.ext.declarative import declarative_base
 
+from flask import g
+
 from rockpack.mainsite import app
 
 
@@ -36,14 +38,31 @@ class _Base(object):
 
     @classmethod
     def get(cls, id):
-        return session.query(cls).get(id)
+        return g.session.query(cls).get(id)
 
     def save(self):
-        session.merge(self)      # XXX: Use session.add?
-        return session.commit()  # XXX: commit here or leave to view to handle?
+        g.session.merge(self)      # XXX: Use session.add?
+        return g.session.commit()  # XXX: commit here or leave to view to handle?
 
 
 Base = declarative_base(cls=_Base)
+
+
+class SessionProxy(object):
+    def __init__(self, session):
+        self.session = session
+
+    def __getattr__(self, key):
+        return getattr(self.session, key)
+
+    def __enter__(self):
+        return self
+
+    def __del__(self):
+        self.close()
+
+    def __exit__(self, exc_type, exc_value, exc_tb):
+        self.close()
 
 
 class SessionManager(object):
@@ -60,7 +79,7 @@ class SessionManager(object):
 
     def get_session(self):
         self._Session.configure(bind=self.get_engine())
-        return self._Session()
+        return SessionProxy(self._Session())
 
 
 manager = SessionManager(app.config['DATABASE_URL'])
@@ -70,7 +89,12 @@ manager = SessionManager(app.config['DATABASE_URL'])
 # want to change it after after
 # SessionManager is instantiated
 get_engine = manager.get_engine
-session = manager.get_session()
+get_session = manager.get_session
+
+
+@app.before_request
+def add_session_to_request_g():
+    g.session = get_session()
 
 
 def commit_on_success(f):
@@ -79,9 +103,9 @@ def commit_on_success(f):
         try:
             result = f(*args, **kwargs)
         except Exception:
-            session.rollback()
+            g.session.rollback()
             raise
         else:
-            session.commit()
+            g.session.commit()
             return result
     return wrapper
