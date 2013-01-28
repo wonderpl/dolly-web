@@ -26,7 +26,7 @@ class Locale(Base):
 
     __tablename__ = 'locale'
 
-    id = Column(String(5), primary_key=True)
+    id = Column(String(16), primary_key=True)
     name = Column(String(32), unique=True, nullable=False)
 
     video_locale_meta = relationship('VideoLocaleMeta', backref='locales')
@@ -106,7 +106,7 @@ class ExternalCategoryMap(Base):
 
     id = Column(Integer, primary_key=True)
     term = Column(String(32), nullable=False)
-    label = Column(String(64), nullable=False)
+    label = Column(String(32), nullable=False)
     locale = Column(String(16), ForeignKey('locale.id'), nullable=False)
     category = Column(Integer, ForeignKey('category.id'), nullable=False)
     source = Column(Integer, ForeignKey('source.id'), nullable=False)
@@ -216,7 +216,7 @@ class VideoRestriction(Base):
     id = Column(String(24), primary_key=True)
     video = Column(CHAR(40), ForeignKey('video.id'), nullable=False, index=True)
     relationship = Column(String(16), nullable=False)
-    country = Column(String(8), nullable=False)
+    country = Column(String(16), nullable=False)
 
 
 class VideoInstance(Base):
@@ -296,6 +296,7 @@ class Channel(Base):
 
     id = Column(String(24), primary_key=True)
     title = Column(String(1024), nullable=False)
+    description = Column(Text, nullable=False)
 
     images = Column(String(24), ForeignKey('channel_image.id'), nullable=False)
 
