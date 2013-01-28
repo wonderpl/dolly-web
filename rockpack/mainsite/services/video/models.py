@@ -6,6 +6,8 @@ from sqlalchemy import (
     Integer,
     ForeignKey,
     DateTime,
+    CHAR,
+    UniqueConstraint,
     event,
     func,
 )
@@ -25,7 +27,7 @@ class Locale(Base):
     __tablename__ = 'locale'
 
     id = Column(String(5), primary_key=True)
-    name = Column(String(32), nullable=False)
+    name = Column(String(32), unique=True, nullable=False)
 
     video_locale_meta = relationship('VideoLocaleMeta', backref='locales')
 
@@ -41,10 +43,13 @@ class Category(Base):
     """ Categories for each `locale` """
 
     __tablename__ = 'category'
+    __table_args__ = (
+        UniqueConstraint('locale', 'parent', 'name'),
+    )
 
     id = Column(Integer, primary_key=True)
     name = Column(String(32), nullable=False)
-    priority = Column(Integer, nullable=False, default=10)
+    priority = Column(Integer, nullable=False, server_default='0')
 
     parent = Column(ForeignKey('category.id'), nullable=True)
     locale = Column(ForeignKey('locale.id'), nullable=False)
@@ -74,6 +79,9 @@ class CategoryMap(Base):
     """ Mapping between localised categories """
 
     __tablename__ = 'category_locale'
+    __table_args__ = (
+        UniqueConstraint('here', 'there'),
+    )
 
     id = Column(Integer, primary_key=True)
 
@@ -92,6 +100,9 @@ class CategoryMap(Base):
 class ExternalCategoryMap(Base):
 
     __tablename__ = 'external_category_map'
+    __table_args__ = (
+        UniqueConstraint('locale', 'source', 'term'),
+    )
 
     id = Column(Integer, primary_key=True)
     term = Column(String(32), nullable=False)
@@ -105,7 +116,7 @@ class Source(Base):
     __tablename__ = 'source'
 
     id = Column(Integer, primary_key=True)
-    label = Column(String(16), nullable=False)
+    label = Column(String(16), unique=True, nullable=False)
     player_template = Column(Text, nullable=False)
 
     external_category_maps = relationship('ExternalCategoryMap', backref='sources')
@@ -123,16 +134,19 @@ class Video(Base):
     """ Canonical reference to a video """
 
     __tablename__ = 'video'
+    __table_args__ = (
+        UniqueConstraint('source', 'source_videoid'),
+    )
 
-    id = Column(String(40), primary_key=True)
+    id = Column(CHAR(40), primary_key=True)
     title = Column(String(1024), nullable=False)
     source_videoid = Column(String(128), nullable=False)
     source_listid = Column(String(128), nullable=True)
     date_added = Column(DateTime(timezone=True), nullable=False, default=func.now())
     date_updated = Column(DateTime(timezone=True), nullable=False, default=func.now(), onupdate=func.now())
-    duration = Column(Integer, nullable=False, default=0)
-    star_count = Column(Integer, nullable=False, default=0)
-    rockpack_curated = Column(Boolean, nullable=False, default=False)
+    duration = Column(Integer, nullable=False, server_default='0')
+    star_count = Column(Integer, nullable=False, server_default='0')
+    rockpack_curated = Column(Boolean, nullable=False, server_default='false')
 
     source = Column(ForeignKey('source.id'), nullable=False)
 
@@ -181,13 +195,18 @@ class Video(Base):
 class VideoLocaleMeta(Base):
 
     __tablename__ = 'video_locale_meta'
+    __table_args__ = (
+        UniqueConstraint('locale', 'video'),
+    )
 
-    id = Column(String(40), primary_key=True)
+    id = Column(CHAR(40), primary_key=True)
 
-    video = Column(String(40), ForeignKey('video.id'), nullable=False)
+    video = Column(CHAR(40), ForeignKey('video.id'), nullable=False)
     locale = Column(ForeignKey('locale.id'), nullable=False)
     category = Column(ForeignKey('category.id'), nullable=False)
-    star_count = Column(Integer, nullable=False, default=0)
+    visible = Column(Boolean(), nullable=False, server_default='true')
+    view_count = Column(Integer, nullable=False, server_default='0')
+    star_count = Column(Integer, nullable=False, server_default='0')
 
 
 class VideoRestriction(Base):
@@ -195,7 +214,7 @@ class VideoRestriction(Base):
     __tablename__ = 'video_restriction'
 
     id = Column(String(24), primary_key=True)
-    video = Column(String(40), ForeignKey('video.id'), nullable=False)
+    video = Column(CHAR(40), ForeignKey('video.id'), nullable=False, index=True)
     relationship = Column(String(16), nullable=False)
     country = Column(String(8), nullable=False)
 
@@ -204,11 +223,14 @@ class VideoInstance(Base):
     """ An instance of a video, which can belong to many channels """
 
     __tablename__ = 'video_instance'
+    __table_args__ = (
+        UniqueConstraint('channel', 'video'),
+    )
 
     id = Column(String(24), primary_key=True)
     date_added = Column(DateTime(timezone=True), nullable=False, default=func.now())
 
-    video = Column(String(40), ForeignKey('video.id'), nullable=False)
+    video = Column(CHAR(40), ForeignKey('video.id'), nullable=False)
     channel = Column(String(32), ForeignKey('channel.id'), nullable=False)
 
     @property
@@ -232,7 +254,7 @@ class VideoThumbnail(Base):
     width = Column(Integer, nullable=False)
     height = Column(Integer, nullable=False)
 
-    video = Column(String(40), ForeignKey('video.id'), nullable=False)
+    video = Column(CHAR(40), ForeignKey('video.id'), nullable=False, index=True)
 
     def __unicode__(self):
         return '({}x{}) {}'.format(self.width, self.height, self.url)
@@ -268,6 +290,9 @@ class Channel(Base):
     """ A channel, which can contain many videos """
 
     __tablename__ = 'channel'
+    __table_args__ = (
+        UniqueConstraint('owner', 'title'),
+    )
 
     id = Column(String(24), primary_key=True)
     title = Column(String(1024), nullable=False)
@@ -336,8 +361,14 @@ class ChannelImage(Base):
 class ChannelLocaleMeta(Base):
 
     __tablename__ = 'channel_locale_meta'
+    __table_args__ = (
+        UniqueConstraint('locale', 'channel'),
+    )
 
     id = Column(String(24), primary_key=True)
+    visible = Column(Boolean(), nullable=False, server_default='true')
+    view_count = Column(Integer, nullable=False, server_default='0')
+    star_count = Column(Integer, nullable=False, server_default='0')
 
     channel = Column(ForeignKey('channel.id'), nullable=False)
     locale = Column(ForeignKey('locale.id'), nullable=False)
