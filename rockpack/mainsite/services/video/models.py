@@ -245,7 +245,8 @@ class Channel(Base):
 
     id = Column(String(24), primary_key=True)
     title = Column(String(1024), nullable=False)
-    thumbnail_url = Column(Text, nullable=False)
+
+    images = Column(String(24), ForeignKey('channel_image.id'), nullable=False)
 
     owner = Column(String(24), ForeignKey('user.id'), nullable=False)
     owner_rel = relationship(User, primaryjoin=(owner == User.id))

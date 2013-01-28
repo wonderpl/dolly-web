@@ -4,6 +4,7 @@ import uuid
 from PIL import Image
 
 from rockpack.mainsite.core.s3 import S3Uploader
+from rockpack.mainsite.core.s3 import jpeg_policy
 
 
 class Resizer(object):
@@ -91,15 +92,17 @@ class ImageUploader(object):
         self.uploader = uploader()
 
     def from_file(self, path_to_file,
-                  target_path=None, target_filename=None, extension='jpg'):
+                  target_path=None, target_filename=None, extension=None):
 
         # Construct a new filename
         if not target_filename:
             target_filename = base64.urlsafe_b64encode(
-                uuid.uuid4().bytes)[:-2] + extension
+                uuid.uuid4().bytes)[:-2]
+            if extension:
+                target_filename += '.' + extension
 
         # Create a `key` from a target "path" and the filename
         key_name = os.path.join(target_path, target_filename)
 
-        self.uploader.put_from_file(path_to_file, key_name)
+        self.uploader.put_from_file(path_to_file, key_name, headers=jpeg_policy)
         return key_name

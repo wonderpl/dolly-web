@@ -88,45 +88,73 @@ class Locale(AdminView):
 class ChannelForm(form.BaseForm):
     title = wtf.TextField()
     thumbnail_url = wtf.FileField()
+    user = wtf.TextField()
 
-    # TODO: remove this once selection options
-    # are gathered through the UI (js method)
-    # Also, lambda so that table isn't loaded
-    # during a dbsync. Probably should handle
-    # import more intelligently in __init__.py
-    user = lambda x: form.Select2Field(
-        choices=[('', '')] + [(u.id, u.username) for u in User.get_form_choices()],
-        validators=[wtf.validators.required()])
+    def validate_user(form, field):
+        try:
+            User.get_from_username(field.data)
+        except Exception as e:
+            raise wtf.ValidationError(
+                    gettext('No user "' + field.data + '" found'))
+
 
 def _format_channel_thumbnail(context, channel, name):
     t = '<img src="%s" width="241" height="171"/>'
-    return jinja2.Markup(t % channel.thumbnail_url_full) if channel.thumbnail_url else ''
+    return jinja2.Markup(t % channel.thumbnail_url_full) if channel.thumbnail_url_full else ''
 
 
 class Channel(AdminView):
     model_name = 'channel'
     model = models.Channel
 
-    column_list = ('title', 'owner_rel', 'thumbnail')
-    column_formatters = dict(thumbnail=_format_channel_thumbnail)
+    column_list = ('title', 'owner_rel', 'channel_images')
+    column_formatters = dict(channel_images=_format_channel_thumbnail)
     column_filters = ('title',)
 
     #list_template = 'admin/channel/list.html'
 
     def _save_channel_data(self, _form, update_id=None):
-        t = ''
-        if request.files and request.files.get('thumbnail_url').filename:
-            t = s3.thumbnail_upload(
-                request.files.get('thumbnail_url').filename,
-                request.files.get('thumbnail_url').stream)
+        from rockpack.mainsite.core import imaging
+        from flask import current_app
+        owner = User.get_from_username(_form.user.data).id
         channel = self.model()
         if update_id:
-            channel = session.query(self.model).get(update_id)
+            channel = g.session.query(self.model).get(update_id)
+        channel.owner = owner
         channel.title = _form.title.data
-        channel.owner = _form.user.data
-        if t:
-            channel.thumbnail_url = t
-        session.add(channel)
+        ch = None
+        if request.files and request.files.get('thumbnail_url').filename:
+            # TODO: shove this in to a helper method/class
+            f = tempfile.NamedTemporaryFile(delete=False)
+            f.write(request.files.get('thumbnail_url').getvalue())
+            f.close()
+
+            img_resize_config = current_app.config['CHANNEL_IMAGES']
+            img_path_config = current_app.config['CHANNEL_IMG_PATHS']
+
+            resizer = imaging.Resizer(img_resize_config)
+            resizer.path_to_image(f.name)
+            resized = resizer.resize()
+
+            ch = models.ChannelImage()
+            uploader = imaging.ImageUploader()
+            full_path = uploader.from_file(f.name, target_path=img_path_config['original'], extension='')
+            ch.original = full_path
+            ch.owner = owner
+            for name, img in resized.iteritems():
+                f = tempfile.NamedTemporaryFile(delete=False)
+                img.save(f.name, 'JPEG', quality=100)
+                f.close()
+
+                full_path = uploader.from_file(f.name, target_path=img_path_config[name], extension='jpg')
+
+                setattr(ch, name, full_path)
+
+        if ch:
+            g.session.add(ch)
+            ch.channels.append(channel)
+        else:
+            g.session.add(channel)
 
     @expose('/new/', ('GET', 'POST',))
     @commit_on_success
@@ -160,7 +188,7 @@ class Channel(AdminView):
             channel = models.Channel.get(data.get('id'))
             ctx['form'] = ChannelForm(
                 title=channel.title,
-                thumbnail_url=channel.thumbnail_url)
+                thumbnail_url=channel.images)
             ctx['form'].user.data = channel.owner
 
         if request.method == 'POST':
@@ -171,6 +199,24 @@ class Channel(AdminView):
 
         return self.render(Channel.create_template, **ctx)
 
+
+class ChannelImage(AdminView):
+
+    def _format_image(context, instance, name):
+        t = '<img src="%s" height="171"/>'
+        string = getattr(instance, name + '_url')
+        return jinja2.Markup(t % string)
+
+    model_name = 'channel_image'
+    model = models.ChannelImage
+
+    column_formatters = dict(
+            original=_format_image,
+            thumbnail_small=_format_image,
+            thumbnail_large=_format_image,
+            carousel=_format_image,
+            cover=_format_image,
+            )
 
 class ChannelLocaleMeta(AdminView):
     model_name = 'channel_locale_meta'
@@ -185,7 +231,7 @@ class ExternalCategoryMap(AdminView):
 registered = [
     Video, VideoLocaleMeta, VideoThumbnail, VideoInstance,
     Source, Category, CategoryMap, Locale,
-    Channel, ChannelLocaleMeta, ExternalCategoryMap]
+    Channel, ChannelImage, ChannelLocaleMeta, ExternalCategoryMap]
 
 
 def admin_views():

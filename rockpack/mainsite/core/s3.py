@@ -1,5 +1,11 @@
+import datetime
 import boto
 from flask import current_app
+
+
+jpeg_policy = {'Expires': datetime.datetime.utcnow() + datetime.timedelta(days=(60 * 365)),
+        'Content-Type': 'image/jpeg',
+        'Cache-Control': 'max-age={}'.format((60*60*24*365*60))}
 
 
 class S3Uploader(object):
@@ -26,8 +32,7 @@ class S3Uploader(object):
         return None
 
     def put_from_file(self, file_path, key_name,
-                      acl='public-read', replace=False):
+                      acl='public-read', replace=False, headers=None):
 
         new_file = self.bucket.new_key(key_name)
-        new_file.set_contents_from_filename(file_path, replace=replace)
-        new_file.set_acl(acl)
+        new_file.set_contents_from_filename(file_path, policy=acl, replace=replace, headers=headers)
