@@ -238,6 +238,32 @@ class VideoThumbnail(Base):
         return '({}x{}) {}'.format(self.width, self.height, self.url)
 
 
+class Avatar(Base):
+
+    __tablename__ = 'avatar'
+
+    id = Column(String(24), primary_key=True)
+    original = Column(String(1024), nullable=False)
+    small = Column(String(1024), nullable=False)
+    medium = Column(String(1024), nullable=False)
+    large = Column(String(1024), nullable=False)
+
+    owner = Column(String(24), ForeignKey('user.id'), nullable=False)
+    user = relationship(User, primaryjoin=(owner == User.id))
+
+    @property
+    def small_url(self):
+        return image_url_from_path(self.small)
+
+    @property
+    def medium_url(self):
+        return image_url_from_path(self.medium)
+
+    @property
+    def large_url(self):
+        return image_url_from_path(self.large)
+
+
 class Channel(Base):
     """ A channel, which can contain many videos """
 
