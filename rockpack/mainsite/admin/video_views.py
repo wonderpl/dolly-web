@@ -88,6 +88,7 @@ class ChannelForm(form.BaseForm):
     title = wtf.TextField()
     image_url = wtf.FileField()
     user = wtf.TextField()
+    description = wtf.TextField()
 
     def validate_user(form, field):
         if not User.get(field.data):
@@ -112,19 +113,19 @@ class Channel(AdminView):
 
     def _save_channel_data(self, _form, update_id=None):
         from flask import current_app
-        owner = _form.user.data
         channel = self.model()
         if update_id:
             channel = g.session.query(self.model).get(update_id)
-        channel.owner = owner
+        channel.owner = _form.user.data
         channel.title = _form.title.data
+        channel.description = _form.description.data
         ch = None
         if request.files and request.files.get('image_url').filename:
             upload_name = resize_and_upload(request.files.get('image_url'),
                     current_app.config['CHANNEL_IMAGES'],
                     current_app.config['CHANNEL_IMG_PATHS'])
 
-            ch = models.ChannelImage(name=upload_name, owner=owner)
+            ch = models.ChannelImage(name=upload_name, owner=channel.owner)
 
         if ch:
             g.session.add(ch)
@@ -164,7 +165,8 @@ class Channel(AdminView):
             channel = models.Channel.get(data.get('id'))
             ctx['form'] = ChannelForm(
                 title=channel.title,
-                image_url=channel.image)
+                image_url=channel.image,
+                description=channel.description)
             ctx['form'].user.data = channel.owner
 
         if request.method == 'POST':
