@@ -36,5 +36,11 @@ CHANNEL_IMG_PATHS = {'original': 'images/channel/original/',
         'carousel': 'images/channel/carousel/',
         'cover': 'images/channel/background/'}
 
-AVATAR_IMAGES = {'avatar': (72, 72,)}
-AVATAR_IMG_PATHS = {'original': 'images/avatar/original/'}
+AVATAR_IMAGES = {'thumbnail_small': (72, 72,),
+        'thumbnail_medium': (94,94,),
+        'thumbnail_large':(114,114,)}
+
+AVATAR_IMG_PATHS = {'original': 'images/avatar/original/',
+        'thumbnail_small': 'images/avatar/thumbnail_small',
+        'thumbnail_medium': 'images/avatar/thumbnail_medium',
+        'thumbnail_large': 'images/avatar/thumbnail_large',}

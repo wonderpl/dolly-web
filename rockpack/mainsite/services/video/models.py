@@ -266,25 +266,25 @@ class Avatar(Base):
     __tablename__ = 'avatar'
 
     id = Column(CHAR(24), primary_key=True)
-    original = Column(String(1024), nullable=False)
-    small = Column(String(1024), nullable=False)
-    medium = Column(String(1024), nullable=False)
-    large = Column(String(1024), nullable=False)
+    name = Column(String(26), nullable=False)
 
     owner = Column(CHAR(24), ForeignKey('user.id'), nullable=False)
     user = relationship(User, primaryjoin=(owner == User.id))
 
     @property
     def small_url(self):
-        return image_url_from_path(self.small)
+        return image_url_from_path(
+                current_app.config['AVATAR_IMG_PATHS']['thumbnail_small'] + self.name)
 
     @property
     def medium_url(self):
-        return image_url_from_path(self.medium)
+        return image_url_from_path(
+                current_app.config['AVATAR_IMG_PATHS']['thumbnail_medium'] + self.name)
 
     @property
     def large_url(self):
-        return image_url_from_path(self.large)
+        return image_url_from_path(
+                current_app.config['AVATAR_IMG_PATHS']['thumbnail_large'] + self.name)
 
 
 class Channel(Base):
@@ -339,23 +339,28 @@ class ChannelImage(Base):
 
     @property
     def original_url(self):
-        return image_url_from_path(current_app.config['CHANNEL_IMG_PATHS']['original'] + self.name)
+        return image_url_from_path(
+                current_app.config['CHANNEL_IMG_PATHS']['original'] + self.name)
 
     @property
     def thumbnail_small_url(self):
-        return image_url_from_path(current_app.config['CHANNEL_IMG_PATHS']['thumbnail_small'] + self.name)
+        return image_url_from_path(
+                current_app.config['CHANNEL_IMG_PATHS']['thumbnail_small'] + self.name)
 
     @property
     def thumbnail_large_url(self):
-        return image_url_from_path(current_app.config['CHANNEL_IMG_PATHS']['thumbnail_large'] + self.name)
+        return image_url_from_path(
+                current_app.config['CHANNEL_IMG_PATHS']['thumbnail_large'] + self.name)
 
     @property
     def carousel_url(self):
-        return image_url_from_path(current_app.config['CHANNEL_IMG_PATHS']['carousel'] + self.name)
+        return image_url_from_path(
+                current_app.config['CHANNEL_IMG_PATHS']['carousel'] + self.name)
 
     @property
     def cover_url(self):
-        return image_url_from_path(current_app.config['CHANNEL_IMG_PATHS']['cover'] + self.name)
+        return image_url_from_path(
+                current_app.config['CHANNEL_IMG_PATHS']['cover'] + self.name)
 
 
 class ChannelLocaleMeta(Base):
