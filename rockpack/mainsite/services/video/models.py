@@ -213,7 +213,7 @@ class VideoRestriction(Base):
 
     __tablename__ = 'video_restriction'
 
-    id = Column(String(24), primary_key=True)
+    id = Column(CHAR(24), primary_key=True)
     video = Column(CHAR(40), ForeignKey('video.id'), nullable=False, index=True)
     relationship = Column(String(16), nullable=False)
     country = Column(String(16), nullable=False)
@@ -227,7 +227,7 @@ class VideoInstance(Base):
         UniqueConstraint('channel', 'video'),
     )
 
-    id = Column(String(24), primary_key=True)
+    id = Column(CHAR(24), primary_key=True)
     date_added = Column(DateTime(timezone=True), nullable=False, default=func.now())
 
     video = Column(CHAR(40), ForeignKey('video.id'), nullable=False)
@@ -249,7 +249,7 @@ class VideoThumbnail(Base):
 
     __tablename__ = 'video_thumbnail'
 
-    id = Column(String(24), primary_key=True)
+    id = Column(CHAR(24), primary_key=True)
     url = Column(String(1024), nullable=False)
     width = Column(Integer, nullable=False)
     height = Column(Integer, nullable=False)
@@ -264,13 +264,13 @@ class Avatar(Base):
 
     __tablename__ = 'avatar'
 
-    id = Column(String(24), primary_key=True)
+    id = Column(CHAR(24), primary_key=True)
     original = Column(String(1024), nullable=False)
     small = Column(String(1024), nullable=False)
     medium = Column(String(1024), nullable=False)
     large = Column(String(1024), nullable=False)
 
-    owner = Column(String(24), ForeignKey('user.id'), nullable=False)
+    owner = Column(CHAR(24), ForeignKey('user.id'), nullable=False)
     user = relationship(User, primaryjoin=(owner == User.id))
 
     @property
@@ -294,13 +294,13 @@ class Channel(Base):
         UniqueConstraint('owner', 'title'),
     )
 
-    id = Column(String(24), primary_key=True)
+    id = Column(CHAR(24), primary_key=True)
     title = Column(String(1024), nullable=False)
     description = Column(Text, nullable=False)
 
-    images = Column(String(24), ForeignKey('channel_image.id'), nullable=False)
+    images = Column(CHAR(24), ForeignKey('channel_image.id'), nullable=False)
 
-    owner = Column(String(24), ForeignKey('user.id'), nullable=False)
+    owner = Column(CHAR(24), ForeignKey('user.id'), nullable=False)
     owner_rel = relationship(User, primaryjoin=(owner == User.id))
 
     video_instances = relationship('VideoInstance', backref='video_channel')
@@ -327,14 +327,14 @@ class ChannelImage(Base):
 
     __tablename__ = 'channel_image'
 
-    id = Column(String(24), primary_key=True)
+    id = Column(CHAR(24), primary_key=True)
     original = Column(String(1024), nullable=False)
     thumbnail_small = Column(String(1024), nullable=False)
     thumbnail_large = Column(String(1024), nullable=False)
     carousel = Column(String(1024), nullable=False)
     cover = Column(String(1024), nullable=False)
 
-    owner = Column(String(24), ForeignKey('user.id'), nullable=False)
+    owner = Column(CHAR(24), ForeignKey('user.id'), nullable=False)
     user = relationship(User, primaryjoin=(owner == User.id))
     channels = relationship('Channel', backref='channel_images')
 
@@ -366,7 +366,7 @@ class ChannelLocaleMeta(Base):
         UniqueConstraint('locale', 'channel'),
     )
 
-    id = Column(String(24), primary_key=True)
+    id = Column(CHAR(24), primary_key=True)
     visible = Column(Boolean(), nullable=False, server_default='true')
     view_count = Column(Integer, nullable=False, server_default='0')
     star_count = Column(Integer, nullable=False, server_default='0')
