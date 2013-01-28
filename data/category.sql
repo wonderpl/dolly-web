@@ -27,7 +27,8 @@ insert into category (locale, priority, name, parent)
 		(40,  'World'),
 		(30,  'Latin'),
 		(20,  'Jazz'),
-		(10,  'Classical')
+		(10,  'Classical'),
+		(-1,  'Other')
 	) as c (name, priority) where locale = 'en-gb' and p.name = 'Music';
 
 
@@ -45,7 +46,8 @@ insert into category (locale, priority, name, parent)
 		(40,  'Retro'),
 		(30,  'Walkthroughs'),
 		(20,  'Esport'),
-		(10,  'Interview')
+		(10,  'Interview'),
+		(-1,  'Other')
 	) as c (name, priority) where locale = 'en-gb' and p.name = 'Gaming';
 
 insert into category (locale, priority, name) values ('en-gb', 9000, 'Movies');
@@ -61,7 +63,8 @@ insert into category (locale, priority, name, parent)
 		(40,  'Horror'),
 		(30,  'Romance'),
 		(20,  'Musicals'),
-		(10,  'World cinema')
+		(10,  'World cinema'),
+		(-1,  'Other')
 	) as c (name, priority) where locale = 'en-gb' and p.name = 'Movies';
 
 insert into category (locale, priority, name) values ('en-gb', 8000, 'TV');
@@ -71,7 +74,8 @@ insert into category (locale, priority, name, parent)
 		(40,  'Shows'),
 		(30,  'Reality show'),
 		(20,  'Ads'),
-		(10,  'Celebrities')
+		(10,  'Celebrities'),
+		(-1,  'Other')
 	) as c (name, priority) where locale = 'en-gb' and p.name = 'TV';
 
 insert into category (locale, priority, name) values ('en-gb', 7000, 'Animation');
@@ -80,7 +84,8 @@ insert into category (locale, priority, name, parent)
 		(40,  'Cartoons'),
 		(30,  'Anime'),
 		(20,  'Short movies'),
-		(10,  'Interview')
+		(10,  'Interview'),
+		(-1,  'Other')
 	) as c (name, priority) where locale = 'en-gb' and p.name = 'Animation';
 
 insert into category (locale, priority, name) values ('en-gb', 6000, 'Comedy');
@@ -89,7 +94,8 @@ insert into category (locale, priority, name, parent)
 		(40,  'Animals & pets'),
 		(30,  'Fails'),
 		(20,  'Sketches'),
-		(10,  'WTF')
+		(10,  'WTF'),
+		(-1,  'Other')
 	) as c (name, priority) where locale = 'en-gb' and p.name = 'Comedy';
 
 insert into category (locale, priority, name) values ('en-gb', 5000, 'Style');
@@ -103,7 +109,8 @@ insert into category (locale, priority, name, parent)
 		(40,  'Menswear'),
 		(30,  'Interview'),
 		(20,  'Accessories'),
-		(10,  'Beauty')
+		(10,  'Beauty'),
+		(-1,  'Other')
 	) as c (name, priority) where locale = 'en-gb' and p.name = 'Style';
 
 insert into category (locale, priority, name) values ('en-gb', 4000, 'Living');
@@ -117,7 +124,8 @@ insert into category (locale, priority, name, parent)
 		(40,  'Family'),
 		(30,  'Health'),
 		(20,  'Travel'),
-		(10,  'Craft')
+		(10,  'Craft'),
+		(-1,  'Other')
 	) as c (name, priority) where locale = 'en-gb' and p.name = 'Living';
 
 insert into category (locale, priority, name) values ('en-gb', 3000, 'Genius');
@@ -130,7 +138,8 @@ insert into category (locale, priority, name, parent)
 		(40,  'Talks'),
 		(30,  'Hands-on'),
 		(20,  'How to'),
-		(10,  'News')
+		(10,  'News'),
+		(-1,  'Other')
 	) as c (name, priority) where locale = 'en-gb' and p.name = 'Genius';
 
 insert into category (locale, priority, name) values ('en-gb', 2000, 'Sports');
@@ -148,7 +157,8 @@ insert into category (locale, priority, name, parent)
 		(40,  'NFL'),
 		(30,  'MLB'),
 		(20,  'NBA'),
-		(10,  'NHL')
+		(10,  'NHL'),
+		(-1,  'Other')
 	) as c (name, priority) where locale = 'en-gb' and p.name = 'Sports';
 
 insert into category (locale, priority, name) values ('en-gb', 1000, 'Food');
@@ -159,7 +169,8 @@ insert into category (locale, priority, name, parent)
 		(40,  'Healthy'),
 		(30,  'Drinks'),
 		(20,  'Cakes'),
-		(10,  'Restaurants')
+		(10,  'Restaurants'),
+		(-1,  'Other')
 	) as c (name, priority) where locale = 'en-gb' and p.name = 'Food';
 
 
@@ -182,7 +193,8 @@ insert into category (locale, priority, name, parent)
 		(40,  'World'),
 		(30,  'Latin'),
 		(20,  'Jazz'),
-		(10,  'Classical')
+		(10,  'Classical'),
+		(-1,  'Other')
 	) as c (name, priority) where locale = 'en-us' and p.name = 'Music';
 
 
@@ -200,7 +212,8 @@ insert into category (locale, priority, name, parent)
 		(40,  'Retro'),
 		(30,  'Walkthroughs'),
 		(20,  'Esport'),
-		(10,  'Interview')
+		(10,  'Interview'),
+		(-1,  'Other')
 	) as c (name, priority) where locale = 'en-us' and p.name = 'Gaming';
 
 insert into category (locale, priority, name) values ('en-us', 9000, 'Movies');
@@ -216,7 +229,8 @@ insert into category (locale, priority, name, parent)
 		(40,  'Horror'),
 		(30,  'Romance'),
 		(20,  'Musicals'),
-		(10,  'World cinema')
+		(10,  'World cinema'),
+		(-1,  'Other')
 	) as c (name, priority) where locale = 'en-us' and p.name = 'Movies';
 
 insert into category (locale, priority, name) values ('en-us', 8000, 'TV');
@@ -226,7 +240,8 @@ insert into category (locale, priority, name, parent)
 		(40,  'Shows'),
 		(30,  'Reality show'),
 		(20,  'Ads'),
-		(10,  'Celebrities')
+		(10,  'Celebrities'),
+		(-1,  'Other')
 	) as c (name, priority) where locale = 'en-us' and p.name = 'TV';
 
 insert into category (locale, priority, name) values ('en-us', 7000, 'Animation');
@@ -235,7 +250,8 @@ insert into category (locale, priority, name, parent)
 		(40,  'Cartoons'),
 		(30,  'Anime'),
 		(20,  'Short movies'),
-		(10,  'Interview')
+		(10,  'Interview'),
+		(-1,  'Other')
 	) as c (name, priority) where locale = 'en-us' and p.name = 'Animation';
 
 insert into category (locale, priority, name) values ('en-us', 6000, 'Comedy');
@@ -245,7 +261,8 @@ insert into category (locale, priority, name, parent)
 		(30,  'Fails'),
 		(20,  'Sketches'),
 		(10,  'WTF'),
-		(5,   'Geeky')
+		(5,   'Geeky'),
+		(-1,  'Other')
 	) as c (name, priority) where locale = 'en-us' and p.name = 'Comedy';
 
 insert into category (locale, priority, name) values ('en-us', 5000, 'Style');
@@ -259,7 +276,8 @@ insert into category (locale, priority, name, parent)
 		(40,  'Menswear'),
 		(30,  'Interview'),
 		(20,  'Accessories'),
-		(10,  'Beauty')
+		(10,  'Beauty'),
+		(-1,  'Other')
 	) as c (name, priority) where locale = 'en-us' and p.name = 'Style';
 
 insert into category (locale, priority, name) values ('en-us', 4000, 'Living');
@@ -273,7 +291,8 @@ insert into category (locale, priority, name, parent)
 		(40,  'Family'),
 		(30,  'Health'),
 		(20,  'Travel'),
-		(10,  'Craft')
+		(10,  'Craft'),
+		(-1,  'Other')
 	) as c (name, priority) where locale = 'en-us' and p.name = 'Living';
 
 insert into category (locale, priority, name) values ('en-us', 3000, 'Genius');
@@ -286,7 +305,8 @@ insert into category (locale, priority, name, parent)
 		(40,  'Talks'),
 		(30,  'Hands-on'),
 		(20,  'How to'),
-		(10,  'News')
+		(10,  'News'),
+		(-1,  'Other')
 	) as c (name, priority) where locale = 'en-us' and p.name = 'Genius';
 
 insert into category (locale, priority, name) values ('en-us', 2000, 'Sports');
@@ -302,7 +322,8 @@ insert into category (locale, priority, name, parent)
 		(40,  'Golf'),
 		(30,  'Soccer'),
 		(20,  'Tennis'),
-		(10,  'Boxing')
+		(10,  'Boxing'),
+		(-1,  'Other')
 	) as c (name, priority) where locale = 'en-us' and p.name = 'Sports';
 
 insert into category (locale, priority, name) values ('en-us', 1000, 'Food');
@@ -313,7 +334,8 @@ insert into category (locale, priority, name, parent)
 		(40,  'Healthy'),
 		(30,  'Drinks'),
 		(20,  'Cakes'),
-		(10,  'Restaurants')
+		(10,  'Restaurants'),
+		(-1,  'Other')
 	) as c (name, priority) where locale = 'en-us' and p.name = 'Food';
 
 
