@@ -1,15 +1,14 @@
-import tempfile
 import jinja2
 from flask import url_for, flash, request, redirect, abort, g
 from flask.ext import wtf
 from flask.ext.admin import form, expose
 from flask.ext.admin.babel import gettext
 from flask.ext.admin.model.form import InlineFormAdmin
-from rockpack.mainsite.core import s3
-from rockpack.mainsite.core.dbapi import get_session, commit_on_success
+from rockpack.mainsite.core.dbapi import commit_on_success
 from rockpack.mainsite.admin.models import AdminView
 from rockpack.mainsite.auth.models import User
 from rockpack.mainsite.services.video import models
+from rockpack.mainsite.helpers.urls import resize_and_upload
 
 
 def _format_video_thumbnail(context, video, name):
@@ -87,15 +86,13 @@ class Locale(AdminView):
 
 class ChannelForm(form.BaseForm):
     title = wtf.TextField()
-    thumbnail_url = wtf.FileField()
+    image_url = wtf.FileField()
     user = wtf.TextField()
 
     def validate_user(form, field):
-        try:
-            User.get_from_username(field.data)
-        except Exception as e:
+        if not User.get(field.data):
             raise wtf.ValidationError(
-                    gettext('No user "' + field.data + '" found'))
+                    gettext('User not found'))
 
 
 def _format_channel_thumbnail(context, channel, name):
@@ -114,41 +111,20 @@ class Channel(AdminView):
     #list_template = 'admin/channel/list.html'
 
     def _save_channel_data(self, _form, update_id=None):
-        from rockpack.mainsite.core import imaging
         from flask import current_app
-        owner = User.get_from_username(_form.user.data).id
+        owner = _form.user.data
         channel = self.model()
         if update_id:
             channel = g.session.query(self.model).get(update_id)
         channel.owner = owner
         channel.title = _form.title.data
         ch = None
-        if request.files and request.files.get('thumbnail_url').filename:
-            # TODO: shove this in to a helper method/class
-            f = tempfile.NamedTemporaryFile(delete=False)
-            f.write(request.files.get('thumbnail_url').getvalue())
-            f.close()
+        if request.files and request.files.get('image_url').filename:
+            upload_name = resize_and_upload(request.files.get('image_url'),
+                    current_app.config['CHANNEL_IMAGES'],
+                    current_app.config['CHANNEL_IMG_PATHS'])
 
-            img_resize_config = current_app.config['CHANNEL_IMAGES']
-            img_path_config = current_app.config['CHANNEL_IMG_PATHS']
-
-            resizer = imaging.Resizer(img_resize_config)
-            resizer.path_to_image(f.name)
-            resized = resizer.resize()
-
-            ch = models.ChannelImage()
-            uploader = imaging.ImageUploader()
-            full_path = uploader.from_file(f.name, target_path=img_path_config['original'], extension='')
-            ch.original = full_path
-            ch.owner = owner
-            for name, img in resized.iteritems():
-                f = tempfile.NamedTemporaryFile(delete=False)
-                img.save(f.name, 'JPEG', quality=100)
-                f.close()
-
-                full_path = uploader.from_file(f.name, target_path=img_path_config[name], extension='jpg')
-
-                setattr(ch, name, full_path)
+            ch = models.ChannelImage(name=upload_name, owner=owner)
 
         if ch:
             g.session.add(ch)
@@ -160,7 +136,7 @@ class Channel(AdminView):
     @commit_on_success
     def create_view(self):
         ctx = {}
-        data = (request.form or request.args).copy()
+        data = request.form.copy()
 
         _form = ChannelForm(data, csrf_enabled=False)
         ctx['form'] = _form
@@ -188,7 +164,7 @@ class Channel(AdminView):
             channel = models.Channel.get(data.get('id'))
             ctx['form'] = ChannelForm(
                 title=channel.title,
-                thumbnail_url=channel.images)
+                image_url=channel.image)
             ctx['form'].user.data = channel.owner
 
         if request.method == 'POST':
@@ -210,6 +186,9 @@ class ChannelImage(AdminView):
     model_name = 'channel_image'
     model = models.ChannelImage
 
+    column_list = ('thumbnail_small', 'thumbnail_large',
+                    'carousel', 'cover',)
+
     column_formatters = dict(
             original=_format_image,
             thumbnail_small=_format_image,
@@ -217,6 +196,7 @@ class ChannelImage(AdminView):
             carousel=_format_image,
             cover=_format_image,
             )
+
 
 class ChannelLocaleMeta(AdminView):
     model_name = 'channel_locale_meta'

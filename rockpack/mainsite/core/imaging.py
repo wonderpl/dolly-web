@@ -68,12 +68,16 @@ class Resizer(object):
 
         return new_img.resize((w, h,), Image.ANTIALIAS)
 
-    def resize(self):
+    def resize(self, image_path=None, f_obj=None):
         if not self.configuration:
             raise self.ConfigurationMissingError
 
-        if not self.image_path:
+        if not self.image_path and not image_path and not f_obj:
             raise self.ImagePathMissingError
+
+        if image_path or f_obj:
+            self.image_path = image_path or f_obj
+
 
         img = Image.open(self.image_path)
         resized = {}
@@ -91,7 +95,7 @@ class ImageUploader(object):
     def __init__(self, uploader=S3Uploader):
         self.uploader = uploader()
 
-    def from_file(self, path_to_file,
+    def from_string(self, obj,
                   target_path=None, target_filename=None, extension=None):
 
         # Construct a new filename
@@ -104,5 +108,5 @@ class ImageUploader(object):
         # Create a `key` from a target "path" and the filename
         key_name = os.path.join(target_path, target_filename)
 
-        self.uploader.put_from_file(path_to_file, key_name, headers=jpeg_policy)
+        self.uploader.put_from_string(obj, key_name, headers=jpeg_policy)
         return key_name

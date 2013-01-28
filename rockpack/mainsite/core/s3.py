@@ -36,3 +36,10 @@ class S3Uploader(object):
 
         new_file = self.bucket.new_key(key_name)
         new_file.set_contents_from_filename(file_path, policy=acl, replace=replace, headers=headers)
+
+    def put_from_string(self, obj, key_name,
+                      acl='public-read', replace=False, headers=None):
+
+        new_file = self.bucket.new_key(key_name)
+        current_app.logger.debug('putting key {}'.format(key_name))
+        new_file.set_contents_from_string(obj.read(), policy=acl, replace=replace, headers=headers)

@@ -14,6 +14,7 @@ from sqlalchemy import (
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import relationship, aliased
 from flask import g
+from flask import current_app
 from rockpack.mainsite.helpers.urls import image_url_from_path
 from rockpack.mainsite.helpers.db import add_base64_pk
 from rockpack.mainsite.helpers.db import add_video_pk
@@ -297,7 +298,7 @@ class Channel(Base):
     id = Column(String(24), primary_key=True)
     title = Column(String(1024), nullable=False)
 
-    images = Column(String(24), ForeignKey('channel_image.id'), nullable=False)
+    image = Column(String(24), ForeignKey('channel_image.id'), nullable=False)
 
     owner = Column(String(24), ForeignKey('user.id'), nullable=False)
     owner_rel = relationship(User, primaryjoin=(owner == User.id))
@@ -326,36 +327,34 @@ class ChannelImage(Base):
 
     __tablename__ = 'channel_image'
 
-    id = Column(String(24), primary_key=True)
-    original = Column(String(1024), nullable=False)
-    thumbnail_small = Column(String(1024), nullable=False)
-    thumbnail_large = Column(String(1024), nullable=False)
-    carousel = Column(String(1024), nullable=False)
-    cover = Column(String(1024), nullable=False)
+    id = Column(CHAR(24), primary_key=True)
+    name = Column(String(26), nullable=False)
 
     owner = Column(String(24), ForeignKey('user.id'), nullable=False)
     user = relationship(User, primaryjoin=(owner == User.id))
     channels = relationship('Channel', backref='channel_images')
 
+    # TODO: do this smarter. looks horrible
+
     @property
     def original_url(self):
-        return image_url_from_path(self.original)
+        return image_url_from_path(current_app.config['CHANNEL_IMG_PATHS']['original'] + self.name)
 
     @property
     def thumbnail_small_url(self):
-        return image_url_from_path(self.thumbnail_small)
+        return image_url_from_path(current_app.config['CHANNEL_IMG_PATHS']['thumbnail_small'] + self.name)
 
     @property
     def thumbnail_large_url(self):
-        return image_url_from_path(self.thumbnail_large)
+        return image_url_from_path(current_app.config['CHANNEL_IMG_PATHS']['thumbnail_large'] + self.name)
 
     @property
     def carousel_url(self):
-        return image_url_from_path(self.carousel)
+        return image_url_from_path(current_app.config['CHANNEL_IMG_PATHS']['carousel'] + self.name)
 
     @property
     def cover_url(self):
-        return image_url_from_path(self.cover)
+        return image_url_from_path(current_app.config['CHANNEL_IMG_PATHS']['cover'] + self.name)
 
 
 class ChannelLocaleMeta(Base):
@@ -365,7 +364,7 @@ class ChannelLocaleMeta(Base):
         UniqueConstraint('locale', 'channel'),
     )
 
-    id = Column(String(24), primary_key=True)
+    id = Column(CHAR(24), primary_key=True)
     visible = Column(Boolean(), nullable=False, server_default='true')
     view_count = Column(Integer, nullable=False, server_default='0')
     star_count = Column(Integer, nullable=False, server_default='0')

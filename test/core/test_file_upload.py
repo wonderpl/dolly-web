@@ -31,10 +31,6 @@ class TestImageResize(RockPackTestCase):
             self.assertEquals(img.size,
                 config['avatar'],
                 'background image should be resized to config dimensions')
-            #import tempfile
-            #f = tempfile.NamedTemporaryFile(delete=False)
-            #img.save(f.name, 'JPEG', quality=100)
-            #f.close()
 
 
 class TestFileUpload(RockPackTestCase):
