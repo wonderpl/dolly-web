@@ -1,13 +1,3 @@
-drop table if exists category;
-create table category (
-	id serial not null primary key,
-	locale varchar(16) not null references locale (id),
-	name varchar(32) not null,
-	parent integer references category (id),
-	priority integer not null default 0
-);
-
-
 -- ############################################################################
 -- UK
 
@@ -348,4 +338,3 @@ insert into category_locale (here, there)
 		a.locale = 'en-gb' and
 		b.locale = 'en-us' and
 		a.name = replace(b.name, 'Soccer', 'Football');
-

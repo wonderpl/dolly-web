@@ -108,7 +108,7 @@ class ExternalCategoryMap(Base):
     term = Column(String(32), nullable=False)
     label = Column(String(32), nullable=False)
     locale = Column(String(16), ForeignKey('locale.id'), nullable=False)
-    category = Column(Integer, ForeignKey('category.id'), nullable=False)
+    category = Column(Integer, ForeignKey('category.id'), nullable=True)
     source = Column(Integer, ForeignKey('source.id'), nullable=False)
 
 
