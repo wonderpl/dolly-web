@@ -33,7 +33,7 @@ class User(Base):
     first_name = Column(String(254), nullable=False)
     last_name = Column(String(254), nullable=False)
     avatar = Column(ImageType('AVATAR'), nullable=False)
-    is_active = Column(Boolean, nullable=False, default=True)
+    is_active = Column(Boolean, nullable=False, server_default='true')
 
     def __unicode__(self):
         return self.username
