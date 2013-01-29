@@ -1,5 +1,6 @@
 from collections import namedtuple
 import requests
+from rockpack.mainsite import app
 from rockpack.mainsite.services.video.models import Video, VideoThumbnail, VideoRestriction
 
 
@@ -59,9 +60,10 @@ def get_playlist_data(id, fetch_all_videos=False, feed='playlists'):
     while True:
         youtube_data = _youtube_feed(feed, id, params)['feed']
         total = youtube_data['openSearch$totalResults']['$t']
+        limit = min(total, app.config.get('YOUTUBE_IMPORT_LIMIT', 100))
         entries = youtube_data.get('entry', [])
         videos.extend(_get_video_data(e, id) for e in entries)
-        if entries and fetch_all_videos and len(videos) < total:
+        if entries and fetch_all_videos and len(videos) < limit:
             params['start-index'] += params['max-results']
             continue
         break
