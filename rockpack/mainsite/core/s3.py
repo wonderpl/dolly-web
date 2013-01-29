@@ -1,11 +1,11 @@
-import datetime
 import boto
 from flask import current_app
 
 
-jpeg_policy = {'Expires': datetime.datetime.utcnow() + datetime.timedelta(days=(60 * 365)),
-        'Content-Type': 'image/jpeg',
-        'Cache-Control': 'max-age={}'.format((60*60*24*365*60))}
+jpeg_policy = {
+    'Content-Type': 'image/jpeg',
+    'Cache-Control': 'max-age={}'.format((60 * 60 * 24 * 365 * 10)),
+}
 
 
 class S3Uploader(object):
@@ -31,15 +31,14 @@ class S3Uploader(object):
             return f.get_contents_as_string()
         return None
 
-    def put_from_file(self, file_path, key_name,
-                      acl='public-read', replace=False, headers=None):
-
+    def put_from_filename(self, file_path, key_name,
+                          acl='public-read', replace=False, headers=None):
         new_file = self.bucket.new_key(key_name)
         new_file.set_contents_from_filename(file_path, policy=acl, replace=replace, headers=headers)
 
-    def put_from_string(self, obj, key_name,
+    def put_from_file(self, fp, key_name,
                       acl='public-read', replace=False, headers=None):
-
-        new_file = self.bucket.new_key(key_name)
         current_app.logger.debug('putting key {}'.format(key_name))
-        new_file.set_contents_from_string(obj.read(), policy=acl, replace=replace, headers=headers)
+        fp.seek(0)
+        new_file = self.bucket.new_key(key_name)
+        new_file.set_contents_from_file(fp, policy=acl, replace=replace, headers=headers)

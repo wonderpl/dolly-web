@@ -1,7 +1,20 @@
-from flask.ext import login
-from flask.ext.admin.contrib.sqlamodel import ModelView
-
+from flask.ext import login, wtf
+from flask.ext.admin.model.typefmt import BASE_FORMATTERS, Markup
+from flask.ext.admin.model.form import converts
+from flask.ext.admin.contrib.sqlamodel import ModelView, form
+from rockpack.mainsite.helpers.db import ImageUrl
 from rockpack.mainsite.core.dbapi import get_session
+
+
+def _render_image(img):
+    # TODO: specify image width & height?
+    return Markup('<img src="%s"/>' % img)
+
+
+class AdminModelConverter(form.AdminModelConverter):
+    @converts('ImageType')
+    def conv_ImagePath(self, field_args, **extra):
+        return wtf.FileField(**field_args)
 
 
 class AdminView(ModelView):
@@ -12,6 +25,9 @@ class AdminView(ModelView):
     can_create = True
     can_edit = True
     can_delete = False
+
+    column_type_formatters = dict({ImageUrl: _render_image}, **BASE_FORMATTERS)
+    model_form_converter = AdminModelConverter
 
     def __init__(self, *args, **kwargs):
         super(AdminView, self).__init__(self.model, get_session(), **kwargs)

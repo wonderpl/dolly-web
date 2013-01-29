@@ -15,10 +15,8 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import relationship, aliased
 from flask import g
 from flask import current_app
-from rockpack.mainsite.helpers.urls import image_url_from_path
-from rockpack.mainsite.helpers.db import add_base64_pk
-from rockpack.mainsite.helpers.db import add_video_pk
-from rockpack.mainsite.helpers.db import add_video_meta_pk
+from rockpack.mainsite.helpers.db import (
+        add_base64_pk, add_video_pk, add_video_meta_pk, ImageType)
 from rockpack.mainsite.core.dbapi import Base, get_session
 from rockpack.mainsite.auth.models import User
 
@@ -29,8 +27,6 @@ class Locale(Base):
 
     id = Column(String(16), primary_key=True)
     name = Column(String(32), unique=True, nullable=False)
-
-    video_locale_meta = relationship('VideoLocaleMeta', backref='locales')
 
     def __unicode__(self):
         return self.name
@@ -261,32 +257,6 @@ class VideoThumbnail(Base):
         return '({}x{}) {}'.format(self.width, self.height, self.url)
 
 
-class Avatar(Base):
-
-    __tablename__ = 'avatar'
-
-    id = Column(CHAR(24), primary_key=True)
-    name = Column(String(26), nullable=False)
-
-    owner = Column(CHAR(24), ForeignKey('user.id'), nullable=False)
-    user = relationship(User, primaryjoin=(owner == User.id))
-
-    @property
-    def small_url(self):
-        return image_url_from_path(
-                current_app.config['AVATAR_IMG_PATHS']['thumbnail_small'] + self.name)
-
-    @property
-    def medium_url(self):
-        return image_url_from_path(
-                current_app.config['AVATAR_IMG_PATHS']['thumbnail_medium'] + self.name)
-
-    @property
-    def large_url(self):
-        return image_url_from_path(
-                current_app.config['AVATAR_IMG_PATHS']['thumbnail_large'] + self.name)
-
-
 class Channel(Base):
     """ A channel, which can contain many videos """
 
@@ -298,14 +268,13 @@ class Channel(Base):
     id = Column(CHAR(24), primary_key=True)
     title = Column(String(1024), nullable=False)
     description = Column(Text, nullable=False)
-
-    image = Column(CHAR(24), ForeignKey('channel_image.id'), nullable=False)
+    cover = Column(ImageType('CHANNEL'), nullable=False)
 
     owner = Column(CHAR(24), ForeignKey('user.id'), nullable=False)
     owner_rel = relationship(User, primaryjoin=(owner == User.id))
 
     video_instances = relationship('VideoInstance', backref='video_channel')
-    channel_locale_metas = relationship('ChannelLocaleMeta', backref='meta_parent')
+    metas = relationship('ChannelLocaleMeta', backref='channel_rel')
 
     def __unicode__(self):
         return self.title
@@ -314,53 +283,10 @@ class Channel(Base):
     def get_form_choices(cls, owner):
         return g.session.query(cls.id, cls.title).filter_by(owner=owner)
 
-    @property
-    def thumbnail_url_full(self):
-        return self.channel_images.thumbnail_large_url
-
     def add_videos(self, videos):
         for video in videos:
             self.video_instances.append(VideoInstance(video=video.id))
         return self.save()
-
-
-class ChannelImage(Base):
-
-    __tablename__ = 'channel_image'
-
-    id = Column(CHAR(24), primary_key=True)
-    name = Column(String(26), nullable=False)
-
-    owner = Column(CHAR(24), ForeignKey('user.id'), nullable=False)
-    user = relationship(User, primaryjoin=(owner == User.id))
-    channels = relationship('Channel', backref='channel_images')
-
-    # TODO: do this smarter. looks horrible
-
-    @property
-    def original_url(self):
-        return image_url_from_path(
-                current_app.config['CHANNEL_IMG_PATHS']['original'] + self.name)
-
-    @property
-    def thumbnail_small_url(self):
-        return image_url_from_path(
-                current_app.config['CHANNEL_IMG_PATHS']['thumbnail_small'] + self.name)
-
-    @property
-    def thumbnail_large_url(self):
-        return image_url_from_path(
-                current_app.config['CHANNEL_IMG_PATHS']['thumbnail_large'] + self.name)
-
-    @property
-    def carousel_url(self):
-        return image_url_from_path(
-                current_app.config['CHANNEL_IMG_PATHS']['carousel'] + self.name)
-
-    @property
-    def cover_url(self):
-        return image_url_from_path(
-                current_app.config['CHANNEL_IMG_PATHS']['cover'] + self.name)
 
 
 class ChannelLocaleMeta(Base):
@@ -400,5 +326,4 @@ event.listen(VideoInstance, 'before_insert', lambda x, y, z: add_base64_pk(x, y,
 event.listen(VideoRestriction, 'before_insert', lambda x, y, z: add_base64_pk(x, y, z, prefix='vr'))
 event.listen(VideoThumbnail, 'before_insert', lambda x, y, z: add_base64_pk(x, y, z, prefix='vt'))
 event.listen(Channel, 'before_insert', lambda x, y, z: add_base64_pk(x, y, z, prefix='ch'))
-event.listen(ChannelImage, 'before_insert', lambda x, y, z: add_base64_pk(x, y, z, prefix='ci'))
 event.listen(ChannelLocaleMeta, 'before_insert', lambda x, y, z: add_base64_pk(x, y, z, prefix='cl'))

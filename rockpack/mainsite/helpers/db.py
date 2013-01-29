@@ -1,10 +1,13 @@
 import base64
 import uuid
 import hashlib
+import cStringIO
 from iso8601.iso8601 import UTC
-
 from sqlalchemy import types
 from sqlalchemy.dialects.mysql.base import MySQLDialect
+from flask import current_app
+from rockpack.mainsite.core import imaging
+from .urls import image_url_from_path
 
 
 class PKPrefixLengthError(Exception):
@@ -71,3 +74,71 @@ class UTCCoercingDateTime(types.TypeDecorator):
         return value
 
 TZDateTime = UTCCoercingDateTime
+
+
+class ImageUrl(str):
+    # Type is used for matching with ModelView.column_type_formatters
+    pass
+
+
+class ImagePath(object):
+    """Wrapper around image path string that can generate thumbnail urls."""
+
+    def __init__(self, path, pathmap):
+        self.path = path
+        self.pathmap = pathmap
+
+    def __str__(self):
+        return self.path
+
+    def __getattr__(self, name):
+        try:
+            base = self.pathmap[name]
+        except KeyError, e:
+            raise AttributeError(e.message)
+        else:
+            url = image_url_from_path(base + self.path)
+            return ImageUrl(url)
+
+
+class ImageType(types.TypeDecorator):
+    """VARCHAR column which stores image base path."""
+
+    impl = types.String
+
+    def __init__(self, cfgkey):
+        super(ImageType, self).__init__(1024)
+        self.cfgkey = cfgkey
+
+    def process_bind_param(self, value, dialect):
+        if value:
+            value = resize_and_upload(value, self.cfgkey)
+        return value
+
+    def process_result_value(self, value, dialect):
+        return ImagePath(value, current_app.config['%s_IMG_PATHS' % self.cfgkey])
+
+
+def resize_and_upload(fp, cfgkey):
+    """Takes file-like object and uploads thumbnails to s3."""
+    uploader = imaging.ImageUploader()
+
+    img_resize_config = current_app.config['%s_IMAGES' % cfgkey]
+    img_path_config = current_app.config['%s_IMG_PATHS' % cfgkey]
+
+    new_name = make_id()
+
+    # Resize images
+    resizer = imaging.Resizer(img_resize_config)
+    resized = resizer.resize(fp)
+
+    # Upload original
+    orig_ext = getattr(fp, 'filename', '').rsplit('.', 1)[-1]
+    uploader.from_file(fp, img_path_config['original'], new_name, orig_ext)
+
+    for name, img in resized.iteritems():
+        f = cStringIO.StringIO()
+        img.save(f, 'JPEG', quality=90)
+        uploader.from_file(f, img_path_config[name], new_name, 'jpg')
+        f.close()
+    return new_name + '.jpg'

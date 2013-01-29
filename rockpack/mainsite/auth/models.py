@@ -12,9 +12,8 @@ from sqlalchemy import (
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.orm import relationship
 
-from rockpack.mainsite.core.dbapi import get_session
 from rockpack.mainsite.core.dbapi import Base
-from rockpack.mainsite.helpers.db import add_base64_pk
+from rockpack.mainsite.helpers.db import ImageType, add_base64_pk
 
 
 class InvalidAdminException(Exception):
@@ -29,12 +28,12 @@ class User(Base):
     __tablename__ = 'user'
 
     id = Column(String(24), primary_key=True)
-    username = Column(String(254))
-    email = Column(String(254))
-    first_name = Column(String(254))
-    last_name = Column(String(254))
-
-    is_active = Column(Boolean, default=True)
+    username = Column(String(254), unique=True, nullable=False)
+    email = Column(String(254), nullable=False)
+    first_name = Column(String(254), nullable=False)
+    last_name = Column(String(254), nullable=False)
+    avatar = Column(ImageType('AVATAR'), nullable=False)
+    is_active = Column(Boolean, nullable=False, default=True)
 
     def __unicode__(self):
         return self.username

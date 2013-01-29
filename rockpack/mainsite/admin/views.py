@@ -30,3 +30,5 @@ class AdminView(AdminView):
 class UserView(AdminView):
     model = models.User
     model_name = models.User.__tablename__
+
+    column_list = ('username', 'email', 'avatar.thumbnail_medium')

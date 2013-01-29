@@ -27,9 +27,9 @@ class TestImageResize(RockPackTestCase):
         converted_images = cu.resize()
 
         for name, img in converted_images.iteritems():
-            self.assertEquals(name, 'avatar', 'returned images key should match')
+            self.assertIn(name, config, 'returned images key should match')
             self.assertEquals(img.size,
-                config['avatar'],
+                config[name],
                 'background image should be resized to config dimensions')
 
 
@@ -39,7 +39,7 @@ class TestFileUpload(RockPackTestCase):
         with self.app.test_request_context():
             up = s3.S3Uploader()
             path_to_file, remote_name = PATH_TO_TEST_IMAGE.rsplit('/', 1)
-            up.put_from_file(PATH_TO_TEST_IMAGE, 'test_images/' + remote_name)
+            up.put_from_filename(PATH_TO_TEST_IMAGE, 'test_images/' + remote_name)
 
             self.assertTrue(up.exists('test_images/' + remote_name))
             self.assertFalse(up.exists('this_is_a_false_check_fjdfdsjkhjhu'))
@@ -48,4 +48,4 @@ class TestFileUpload(RockPackTestCase):
         with self.app.test_request_context():
             with self.assertRaises(IOError):
                 up = s3.S3Uploader()
-                up.put_from_file('/sddsdsadalitesties', 'foofoofoofootesties')
+                up.put_from_filename('/sddsdsadalitesties', 'foofoofoofootesties')

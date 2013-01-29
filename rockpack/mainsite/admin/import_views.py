@@ -5,7 +5,7 @@ from flask.ext import wtf, login
 from flask.ext.admin import BaseView, expose, form
 from rockpack.mainsite.core import youtube
 from rockpack.mainsite.services.video.models import (
-    Locale, Source, Category, Video, Channel)
+    Locale, Source, Category, Video, Channel, ChannelLocaleMeta)
 from rockpack.mainsite.auth.models import User
 from rockpack.mainsite.core.dbapi import commit_on_success
 
@@ -82,7 +82,10 @@ class ImportView(BaseView):
                 if channel and user:
                     if channel.startswith('_new:'):
                         channel = Channel(title=channel.split(':', 1)[1],
-                                          owner=user, thumbnail_url='')
+                                          owner=user, description='', cover='')
+                        channel.metas = [ChannelLocaleMeta(
+                                         locale=form.locale.data,
+                                         category=form.category.data)]
                     else:
                         channel = Channel.get(channel)
                     channel.add_videos(form.import_data.videos)

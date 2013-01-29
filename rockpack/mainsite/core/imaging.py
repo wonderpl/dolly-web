@@ -95,18 +95,18 @@ class ImageUploader(object):
     def __init__(self, uploader=S3Uploader):
         self.uploader = uploader()
 
-    def from_string(self, obj,
-                  target_path=None, target_filename=None, extension=None):
+    def from_file(self, fp, target_path=None, target_filename=None, extension=None):
 
         # Construct a new filename
         if not target_filename:
             target_filename = base64.urlsafe_b64encode(
                 uuid.uuid4().bytes)[:-2]
-            if extension:
-                target_filename += '.' + extension
+
+        if extension:
+            target_filename += '.' + extension
 
         # Create a `key` from a target "path" and the filename
         key_name = os.path.join(target_path, target_filename)
 
-        self.uploader.put_from_string(obj, key_name, headers=jpeg_policy)
+        self.uploader.put_from_file(fp, key_name, headers=jpeg_policy)
         return key_name
