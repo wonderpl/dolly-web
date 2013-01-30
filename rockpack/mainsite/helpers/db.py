@@ -112,7 +112,8 @@ class ImageType(types.TypeDecorator):
 
     def process_bind_param(self, value, dialect):
         if value:
-            return resize_and_upload(value, self.cfgkey)
+            value = resize_and_upload(value, self.cfgkey)
+        return value
 
     def process_result_value(self, value, dialect):
         return ImagePath(value, current_app.config['%s_IMG_PATHS' % self.cfgkey])
