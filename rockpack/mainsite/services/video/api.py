@@ -100,18 +100,15 @@ class VideoAPI(WebService):
                 thumbnail_url = t.url
                 break
 
-        response = jsonify({'source_id': instance.source_videoid,
+        return {'source_id': instance.source_videoid,
                 'source': instance.source,
                 'thumbnail_url': thumbnail_url,
                 'id': instance.id,
-                'star_count': instance.star_count})
-
-        response.headers['Cache-Control'] = 'max-age={}'.format(300)  # 5 Mins
-        return response
-
+                'star_count': instance.star_count}
 
     @expose('/', methods=('GET',))
     def video_list(self):
         data, total = self._get_local_videos(**request.args)
         response = jsonify({'videos': {'items': data, 'total': total}})
+        response.headers['Cache-Control'] = 'max-age={}'.format(300)  # 5 Mins
         return response
