@@ -270,7 +270,7 @@ class Channel(Base):
     description = Column(Text, nullable=False)
     cover = Column(ImageType('CHANNEL'), nullable=False)
 
-    owner = Column(CHAR(24), ForeignKey('user.id'), nullable=False)
+    owner = Column(CHAR(22), ForeignKey('user.id'), nullable=False)
     owner_rel = relationship(User, primaryjoin=(owner == User.id))
 
     video_instances = relationship('VideoInstance', backref='video_channel')

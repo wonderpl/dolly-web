@@ -27,7 +27,7 @@ class PKPrefixLengthError(Exception):
 class User(Base):
     __tablename__ = 'user'
 
-    id = Column(String(24), primary_key=True)
+    id = Column(String(22), primary_key=True)
     username = Column(String(254), unique=True, nullable=False)
     email = Column(String(254), nullable=False)
     first_name = Column(String(254), nullable=False)

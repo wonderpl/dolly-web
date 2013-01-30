@@ -15,7 +15,7 @@ class PKPrefixLengthError(Exception):
 
 
 def make_id(prefix=''):
-    """ Creates an id up to 24 chars long (20 without prefix) """
+    """ Creates an id up to 24 chars long (22 without prefix) """
     if prefix and not isinstance(prefix, str) and not len(prefix) == 2:
         raise PKPrefixLengthError('{} prefix is not 2 chars'
                                   'in length or string'.format(prefix))
