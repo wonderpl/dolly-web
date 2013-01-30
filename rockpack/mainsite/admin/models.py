@@ -14,6 +14,10 @@ def _render_image(img):
 class AdminModelConverter(form.AdminModelConverter):
     @converts('ImageType')
     def conv_ImagePath(self, field_args, **extra):
+        # XXX: Allow form to be edited without replacing existing image
+        # There must be a better way to do this!
+        field_args['validators'] = [v for v in field_args['validators']
+                                    if not isinstance(v, wtf.validators.Required)]
         return wtf.FileField(**field_args)
 
 
@@ -37,6 +41,15 @@ class AdminView(ModelView):
 
     def is_accessible(self):
         return self.is_authenticated()
+
+    def update_model(self, form, model):
+        # XXX: Allow form to be edited without replacing existing image
+        # There must be a better way to do this!
+        for field in form:
+            if isinstance(field, wtf.FileField) and not field.data:
+                form._fields.pop(field.name)
+        return super(AdminView, self).update_model(form, model)
+
 
 # TODO: implement the below - ignoring for now, just let people sign in.
 # allow everything else
