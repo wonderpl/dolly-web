@@ -32,6 +32,7 @@ def channel_dict(meta):
     images = {s: getattr(meta.channel_rel.cover, s) for s in sizes}
     return {'id': meta.id,
         'title': meta.channel_rel.title,
+        'thumbnail_url': meta.channel_rel.cover.thumbnail_large,
         'images': images,
         'subscribe_count': random.randint(1, 200),  #TODO: implement this for real
         'owner': {'id': meta.channel_rel.owner_rel.id,
