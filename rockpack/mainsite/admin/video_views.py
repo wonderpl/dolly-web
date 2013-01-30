@@ -74,7 +74,8 @@ class Locale(AdminView):
     model_name = 'locale'
     model = models.Locale
 
-    column_display_pk = True
+    column_list = ('id', 'name')
+    form_columns = ('id', 'name')
 
 
 class Channel(AdminView):
