@@ -80,6 +80,8 @@ class Resizer(object):
 
 
         img = Image.open(self.image_path)
+        if img.mode not in ('RGB', 'RGBA'):
+            img = img.convert('RGBA')
         resized = {}
         for name, sizing in self.configuration.iteritems():
             new_img = self.crop_and_scale(img, sizing[0], sizing[1])
