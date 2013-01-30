@@ -14,17 +14,21 @@ class ChannelAPI(WebService):
     @expose('/', methods=('GET',))
     def channel_list(self):
         data, total = get_local_channel(category=request.args.get('category'))
-        return jsonify({'channels': {
+        response = jsonify({'channels': {
             'items': data,
             'total': total},
             })
+        response.headers['Cache-Control'] = 'max-age={}'.format(300)  # 5 Mins
+        return response
 
     @expose('/<string:channel_id>/', methods=('GET',))
     def channel_item(self, channel_id):
         data = get_local_channel(channel_id)
         if not data:
             abort(404)
-        return jsonify({'channel': data})
+        response = jsonify({'channel': data})
+        response.headers['Cache-Control'] = 'max-age={}'.format(300)  # 5 Mins
+        return response
 
 
 def channel_dict(meta):
