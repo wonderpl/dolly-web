@@ -1,6 +1,6 @@
 import random
 
-from flask import (g, jsonify, url_for, abort)
+from flask import (g, jsonify, url_for, abort, request)
 
 from rockpack.mainsite.core.webservice import WebService
 from rockpack.mainsite.core.webservice import expose
@@ -13,7 +13,7 @@ class ChannelAPI(WebService):
     endpoint = '/channels'
     @expose('/', methods=('GET',))
     def channel_list(self):
-        data, total = get_local_channel()
+        data, total = get_local_channel(category=request.args.get('category'))
         return jsonify({'channels': {
             'items': data,
             'total': total},
@@ -36,12 +36,15 @@ def channel_dict(meta):
         'images': images,
         'subscribe_count': random.randint(1, 200),  #TODO: implement this for real
         'owner': {'id': meta.channel_rel.owner_rel.id,
-            'name': meta.channel_rel.owner_rel.username}
+            'name': meta.channel_rel.owner_rel.username},
+        'category': meta.category,
         }
 
 
-def get_local_channel(channel_id=None):
+def get_local_channel(channel_id=None, **filters):
     metas = g.session.query(models.ChannelLocaleMeta)
+    if filters.get('category'):
+        metas = metas.filter_by(category=filters['category'])
     if channel_id:
         metas = metas.get(channel_id)
         if not metas:
