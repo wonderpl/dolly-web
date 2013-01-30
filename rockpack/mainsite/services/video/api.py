@@ -1,5 +1,6 @@
 import random
 
+from sqlalchemy.sql.expression import desc
 from flask import (g, jsonify, url_for, abort, request, current_app)
 
 from rockpack.mainsite.core.webservice import WebService
@@ -78,6 +79,9 @@ class VideoAPI(WebService):
         if filters.get('category'):
             vlm = vlm.filter(models.VideoLocaleMeta.category==filters['category'][0])
 
+        if filters.get('date_order'):
+            vlm = vlm.order_by(desc(models.VideoInstance.date_added))
+
         vlm = vlm.limit(100)  # TODO: artificial limit. needs paging support
         data = []
         total = vlm.count()
@@ -109,6 +113,18 @@ class VideoAPI(WebService):
     @expose('/', methods=('GET',))
     def video_list(self):
         data, total = self._get_local_videos(**request.args)
+        response = jsonify({'videos': {'items': data, 'total': total}})
+        response.headers['Cache-Control'] = 'max-age={}'.format(300)  # 5 Mins
+        return response
+
+
+class UserAPI(VideoAPI):
+
+    endpoint = '/'
+
+    @expose('/<userid>/subscriptions/recent_videos/')
+    def recent_videos(self, userid):
+        data, total = self._get_local_videos(date_order=True, **request.args)
         response = jsonify({'videos': {'items': data, 'total': total}})
         response.headers['Cache-Control'] = 'max-age={}'.format(300)  # 5 Mins
         return response
