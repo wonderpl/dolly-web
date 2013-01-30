@@ -59,16 +59,16 @@ class SessionProxy(object):
         return self
 
     def __del__(self):
-        self.close()
+        manager._Session.remove()
 
     def __exit__(self, exc_type, exc_value, exc_tb):
-        self.close()
+        manager._Session.remove()
 
 
 class SessionManager(object):
     def __init__(self, connection_string):
         self.connection_string = connection_string
-        self._Session = scoped_session(sessionmaker())
+        self._Session = scoped_session(sessionmaker(bind=self.get_engine()))
 
     def get_engine(self):
         try:
@@ -78,7 +78,7 @@ class SessionManager(object):
         return engine
 
     def get_session(self):
-        self._Session.configure(bind=self.get_engine())
+        #self._Session.configure(bind=self.get_engine())
         return SessionProxy(self._Session())
 
 
@@ -95,6 +95,11 @@ get_session = manager.get_session
 @app.before_request
 def add_session_to_request_g():
     g.session = get_session()
+
+
+@app.teardown_appcontext
+def teardown_session(response):
+    manager._Session.remove()
 
 
 def commit_on_success(f):
