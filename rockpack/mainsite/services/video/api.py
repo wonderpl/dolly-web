@@ -73,29 +73,6 @@ class VideoAPI(WebService):
 
     endpoint = '/videos'
 
-    def _get_local_videos(self, **filters):
-        vlm = g.session.query(models.VideoInstance)
-        vlm = vlm.join(models.VideoLocaleMeta, models.VideoInstance.video == models.VideoLocaleMeta.video)
-        vlm = vlm.filter(models.VideoLocaleMeta.locale == self.get_locale())
-
-        if filters.get('category'):
-            vlm = vlm.filter(models.VideoLocaleMeta.category == filters['category'][0])
-
-        if filters.get('date_order'):
-            vlm = vlm.order_by(desc(models.VideoInstance.date_added))
-
-        vlm = vlm.limit(100)  # TODO: artificial limit. needs paging support
-        data = []
-        total = vlm.count()
-        for v in vlm:
-            data.append({
-                'date_added': v.date_added.isoformat(),
-                'video': self.video_dict(v.video_rel),
-                'id': v.id,
-                'channel': ChannelAPI.channel_dict(v.video_channel),
-                'title': v.video_rel.title})
-        return data, total
-
     @staticmethod
     def video_dict(instance):
         # TODO: unfudge this
@@ -110,12 +87,44 @@ class VideoAPI(WebService):
         return {'source_id': instance.source_videoid,
                 'source': instance.source,
                 'thumbnail_url': thumbnail_url,
-                'id': instance.id,
-                'star_count': instance.star_count}
+                'id': instance.id}
+
+    def _get_local_videos(self, **filters):
+        vlm = g.session.query(models.VideoInstance, models.VideoLocaleMeta)
+        vlm = vlm.filter(models.VideoInstance.video == models.VideoLocaleMeta.video)
+        vlm = vlm.filter(models.VideoLocaleMeta.locale == self.get_locale())
+
+        if filters.get('category'):
+            vlm = vlm.filter(models.VideoLocaleMeta.category == filters['category'][0])
+
+        if filters.get('date_order'):
+            vlm = vlm.order_by(desc(models.VideoInstance.date_added))
+
+        if filters.get('star_order'):
+            vlm = vlm.order_by(desc(models.VideoLocaleMeta.star_count))
+
+        vlm = vlm.limit(100)  # TODO: artificial limit. needs paging support
+        data = []
+        total = vlm.count()
+        position = 0
+        for v in vlm:
+            position += 1
+            video = self.video_dict(v.VideoInstance.video_rel)
+            video['star_count'] = v.VideoLocaleMeta.star_count
+            video['view_count'] = v.VideoLocaleMeta.star_count
+
+            data.append({
+                'position': position,
+                'date_added': v.VideoInstance.date_added.isoformat(),
+                'video': video,
+                'id': v.VideoInstance.id,
+                'channel': ChannelAPI.channel_dict(v.VideoInstance.video_channel),
+                'title': v.VideoInstance.video_rel.title})
+        return data, total
 
     @expose('/', methods=('GET',))
     def video_list(self):
-        data, total = self._get_local_videos(**request.args)
+        data, total = self._get_local_videos(star_order=True, **request.args)
         response = jsonify({'videos': {'items': data, 'total': total}})
         response.headers['Cache-Control'] = 'max-age={}'.format(300)  # 5 Mins
         return response
