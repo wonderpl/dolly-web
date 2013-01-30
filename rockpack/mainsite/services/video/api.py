@@ -1,12 +1,9 @@
 import random
 
 from sqlalchemy.sql.expression import desc
-from flask import (g, jsonify, url_for, abort, request, current_app)
-
+from flask import (g, jsonify, abort, request)
 from rockpack.mainsite.core.webservice import WebService
 from rockpack.mainsite.core.webservice import expose
-from rockpack.mainsite.services.video.models import VideoInstance
-from rockpack.mainsite.services.video.models import Channel
 from rockpack.mainsite.services.video import models
 
 
@@ -17,13 +14,17 @@ class ChannelAPI(WebService):
     @staticmethod
     def channel_dict(channel):
         sizes = ['thumbnail_large', 'thumbnail_small', 'background']
-        images = {s: getattr(channel.cover, s) for s in sizes}
-        ch_data = {'title': channel.title,
+        images = {'cover_%s_url' % s: getattr(channel.cover, s) for s in sizes}
+        ch_data = {
+            'title': channel.title,
             'thumbnail_url': channel.cover.thumbnail_large,
-            'subscribe_count': random.randint(1, 200),  #TODO: implement this for real
-            'owner': {'id': channel.owner_rel.id,
-                'name': channel.owner_rel.username},
+            'subscribe_count': random.randint(1, 200),  # TODO: implement this for real
+            'owner': {
+                'id': channel.owner_rel.id,
+                'name': channel.owner_rel.username,
+                'avatar_thumbnail_url': channel.owner_rel.avatar.thumbnail_small,
             }
+        }
         ch_data.update(images)
         return ch_data
 
@@ -50,10 +51,11 @@ class ChannelAPI(WebService):
     @expose('/', methods=('GET',))
     def channel_list(self):
         data, total = self._get_local_channel(category=request.args.get('category'))
-        response = jsonify({'channels': {
+        response = jsonify({
+            'channels': {
             'items': data,
             'total': total},
-            })
+        })
         response.headers['Cache-Control'] = 'max-age={}'.format(300)  # 5 Mins
         return response
 
@@ -74,10 +76,10 @@ class VideoAPI(WebService):
     def _get_local_videos(self, **filters):
         vlm = g.session.query(models.VideoInstance)
         vlm = vlm.join(models.VideoLocaleMeta, models.VideoInstance.video == models.VideoLocaleMeta.video)
-        vlm = vlm.filter(models.VideoLocaleMeta.locale==self.get_locale())
+        vlm = vlm.filter(models.VideoLocaleMeta.locale == self.get_locale())
 
         if filters.get('category'):
-            vlm = vlm.filter(models.VideoLocaleMeta.category==filters['category'][0])
+            vlm = vlm.filter(models.VideoLocaleMeta.category == filters['category'][0])
 
         if filters.get('date_order'):
             vlm = vlm.order_by(desc(models.VideoInstance.date_added))
@@ -86,7 +88,8 @@ class VideoAPI(WebService):
         data = []
         total = vlm.count()
         for v in vlm:
-            data.append({'date_added': v.date_added.isoformat(),
+            data.append({
+                'date_added': v.date_added.isoformat(),
                 'video': self.video_dict(v.video_rel),
                 'id': v.id,
                 'channel': ChannelAPI.channel_dict(v.video_channel),
