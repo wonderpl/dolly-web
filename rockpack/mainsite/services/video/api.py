@@ -1,7 +1,7 @@
 import random
 
 from sqlalchemy.sql.expression import desc
-from flask import (g, jsonify, abort, request)
+from flask import g, jsonify, abort, request, url_for
 from rockpack.mainsite.core.webservice import WebService
 from rockpack.mainsite.core.webservice import expose
 from rockpack.mainsite.services.video import models
@@ -15,7 +15,13 @@ class ChannelAPI(WebService):
     def channel_dict(channel):
         sizes = ['thumbnail_large', 'thumbnail_small', 'background']
         images = {'cover_%s_url' % s: getattr(channel.cover, s) for s in sizes}
+        url = url_for('UserAPI_api.channel_item',
+                      userid=channel.owner_rel.id,
+                      channelid=channel.id,
+                      _external=True)
         ch_data = {
+            'id': channel.id,
+            'resource_url': url,
             'title': channel.title,
             'thumbnail_url': channel.cover.thumbnail_large,
             'subscribe_count': random.randint(1, 200),  # TODO: implement this for real
@@ -28,23 +34,22 @@ class ChannelAPI(WebService):
         ch_data.update(images)
         return ch_data
 
-    def _get_local_channel(self, channel_id=None, **filters):
+    def _get_local_channel(self, **filters):
         metas = g.session.query(models.ChannelLocaleMeta)
         if filters.get('category'):
             metas = metas.filter_by(category=filters['category'])
-        if channel_id:
-            metas = metas.get(channel_id)
-            if not metas:
-                return None
-            return self.channel_dict(metas.channel_rel)
 
         metas = metas.filter_by(locale=self.get_locale())
         count = metas.count()
         channel_data = []
-        for meta in metas:
-            ch = {'category': meta.category, 'id': meta.id}
-            ch.update(self.channel_dict(meta.channel_rel))
-            channel_data.append(ch)
+        for position, meta in enumerate(metas, 1):
+            item = dict(
+                position=position,
+                id=meta.id,
+                category=meta.category,
+            )
+            item.update(self.channel_dict(meta.channel_rel))
+            channel_data.append(item)
 
         return channel_data, count
 
@@ -56,15 +61,6 @@ class ChannelAPI(WebService):
             'items': data,
             'total': total},
         })
-        response.headers['Cache-Control'] = 'max-age={}'.format(300)  # 5 Mins
-        return response
-
-    @expose('/<string:channel_id>/', methods=('GET',))
-    def channel_item(self, channel_id):
-        data = self._get_local_channel(channel_id)
-        if not data:
-            abort(404)
-        response = jsonify({'channel': data})
         response.headers['Cache-Control'] = 'max-age={}'.format(300)  # 5 Mins
         return response
 
@@ -89,10 +85,13 @@ class VideoAPI(WebService):
                 'thumbnail_url': thumbnail_url,
                 'id': instance.id}
 
-    def _get_local_videos(self, **filters):
+    def _get_local_videos(self, with_channel=True, **filters):
         vlm = g.session.query(models.VideoInstance, models.VideoLocaleMeta)
         vlm = vlm.filter(models.VideoInstance.video == models.VideoLocaleMeta.video)
         vlm = vlm.filter(models.VideoLocaleMeta.locale == self.get_locale())
+
+        if filters.get('channel'):
+            vlm = vlm.filter(models.VideoInstance.channel == filters['channel'])
 
         if filters.get('category'):
             vlm = vlm.filter(models.VideoLocaleMeta.category == filters['category'][0])
@@ -111,15 +110,18 @@ class VideoAPI(WebService):
             position += 1
             video = self.video_dict(v.VideoInstance.video_rel)
             video['star_count'] = v.VideoLocaleMeta.star_count
-            video['view_count'] = v.VideoLocaleMeta.star_count
+            video['view_count'] = v.VideoLocaleMeta.view_count
 
-            data.append({
-                'position': position,
-                'date_added': v.VideoInstance.date_added.isoformat(),
-                'video': video,
-                'id': v.VideoInstance.id,
-                'channel': ChannelAPI.channel_dict(v.VideoInstance.video_channel),
-                'title': v.VideoInstance.video_rel.title})
+            item = dict(
+                position=position,
+                date_added=v.VideoInstance.date_added.isoformat(),
+                video=video,
+                id=v.VideoInstance.id,
+                title=v.VideoInstance.video_rel.title,
+            )
+            if with_channel:
+                item['channel'] = ChannelAPI.channel_dict(v.VideoInstance.video_channel)
+            data.append(item)
         return data, total
 
     @expose('/', methods=('GET',))
@@ -138,5 +140,18 @@ class UserAPI(VideoAPI):
     def recent_videos(self, userid):
         data, total = self._get_local_videos(date_order=True, **request.args)
         response = jsonify({'videos': {'items': data, 'total': total}})
+        response.headers['Cache-Control'] = 'max-age={}'.format(300)  # 5 Mins
+        return response
+
+    @expose('/<userid>/channels/<string:channelid>/', methods=('GET',))
+    def channel_item(self, userid, channelid):
+        meta = g.session.query(models.ChannelLocaleMeta).filter_by(
+            channel=channelid).first()
+        if not meta:
+            abort(404)
+        data = ChannelAPI.channel_dict(meta.channel_rel)
+        items, total = self._get_local_videos(channel=channelid, with_channel=False)
+        data['videos'] = dict(items=items, total=total)
+        response = jsonify(data)
         response.headers['Cache-Control'] = 'max-age={}'.format(300)  # 5 Mins
         return response
