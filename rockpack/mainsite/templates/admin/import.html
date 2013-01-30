@@ -29,6 +29,7 @@
   {% endif %}
 
   {% if import_preview %}
+  {% if import_preview.videos %}
   <div class="import_preview">
     {% if form.data.type == 'video' %}
     <h2>{{ import_preview.videos[0].title }}</h2>
@@ -38,6 +39,9 @@
     {% endif %}
     <img src="{{ import_preview.videos[0].thumbnails[0].url }}"/>
   </div>
+  {% else %}
+  <div class="error">No videos found. :-(</div>
+  {% endif %}
   {% endif %}
 
 {% endblock %}
