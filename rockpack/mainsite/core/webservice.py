@@ -4,7 +4,7 @@ import functools
 import types
 from collections import namedtuple
 
-from flask import Blueprint
+from flask import Blueprint, request, current_app
 
 service_urls = namedtuple('ServiceUrl', 'url func_name func methods')
 
@@ -56,3 +56,11 @@ class WebService(object):
                     methods=route.methods)
 
         app.register_blueprint(bp)
+
+    def get_locale(self):
+        forced = current_app.config.get('FORCE_LOCALE')
+        if forced:
+            return forced
+        default = current_app.config.get('LOCALE_DEFAULT')
+        requested = request.args.get('locale')
+        return requested or default

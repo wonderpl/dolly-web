@@ -1,6 +1,6 @@
 import random
 
-from flask import (g, jsonify, url_for, abort, request)
+from flask import (g, jsonify, url_for, abort, request, current_app)
 
 from rockpack.mainsite.core.webservice import WebService
 from rockpack.mainsite.core.webservice import expose
@@ -10,10 +10,45 @@ from rockpack.mainsite.services.video import models
 
 
 class ChannelAPI(WebService):
+
     endpoint = '/channels'
+
+    @staticmethod
+    def channel_dict(channel):
+        sizes = ['thumbnail_large', 'thumbnail_small', 'background']
+        images = {s: getattr(channel.cover, s) for s in sizes}
+        ch_data = {'title': channel.title,
+            'thumbnail_url': channel.cover.thumbnail_large,
+            'subscribe_count': random.randint(1, 200),  #TODO: implement this for real
+            'owner': {'id': channel.owner_rel.id,
+                'name': channel.owner_rel.username},
+            }
+        ch_data.update(images)
+        return ch_data
+
+    def _get_local_channel(self, channel_id=None, **filters):
+        metas = g.session.query(models.ChannelLocaleMeta)
+        if filters.get('category'):
+            metas = metas.filter_by(category=filters['category'])
+        if channel_id:
+            metas = metas.get(channel_id)
+            if not metas:
+                return None
+            return self.channel_dict(metas.channel_rel)
+
+        metas = metas.filter_by(locale=self.get_locale())
+        count = metas.count()
+        channel_data = []
+        for meta in metas:
+            ch = {'category': meta.category, 'id': meta.id}
+            ch.update(self.channel_dict(meta.channel_rel))
+            channel_data.append(ch)
+
+        return channel_data, count
+
     @expose('/', methods=('GET',))
     def channel_list(self):
-        data, total = get_local_channel(category=request.args.get('category'))
+        data, total = self._get_local_channel(category=request.args.get('category'))
         response = jsonify({'channels': {
             'items': data,
             'total': total},
@@ -23,7 +58,7 @@ class ChannelAPI(WebService):
 
     @expose('/<string:channel_id>/', methods=('GET',))
     def channel_item(self, channel_id):
-        data = get_local_channel(channel_id)
+        data = self._get_local_channel(channel_id)
         if not data:
             abort(404)
         response = jsonify({'channel': data})
@@ -31,71 +66,52 @@ class ChannelAPI(WebService):
         return response
 
 
-def channel_dict(meta):
-    sizes = ['thumbnail_large', 'thumbnail_small', 'background']
-    images = {s: getattr(meta.channel_rel.cover, s) for s in sizes}
-    return {'id': meta.id,
-        'title': meta.channel_rel.title,
-        'thumbnail_url': meta.channel_rel.cover.thumbnail_large,
-        'images': images,
-        'subscribe_count': random.randint(1, 200),  #TODO: implement this for real
-        'owner': {'id': meta.channel_rel.owner_rel.id,
-            'name': meta.channel_rel.owner_rel.username},
-        'category': meta.category,
-        }
+class VideoAPI(WebService):
+
+    endpoint = '/videos'
+
+    def _get_local_videos(self, **filters):
+        vlm = g.session.query(models.VideoInstance)
+        vlm = vlm.join(models.VideoLocaleMeta, models.VideoInstance.video == models.VideoLocaleMeta.video)
+        vlm = vlm.filter(models.VideoLocaleMeta.locale==self.get_locale())
+
+        if filters.get('category'):
+            vlm = vlm.filter(models.VideoLocaleMeta.category==filters['category'][0])
+
+        vlm = vlm.limit(100)  # TODO: artificial limit. needs paging support
+        data = []
+        total = vlm.count()
+        for v in vlm:
+            data.append({'date_added': v.date_added.isoformat(),
+                'video': self.video_dict(v.video_rel),
+                'id': v.id,
+                'channel': ChannelAPI.channel_dict(v.video_channel),
+                'title': v.video_rel.title})
+        return data, total
+
+    @staticmethod
+    def video_dict(instance):
+        # TODO: unfudge this
+        thumbnail_url = None
+        for t in instance.thumbnails:
+            if not thumbnail_url:
+                thumbnail_url = t.url
+            if t.url.count('mqdefault.jpg'):
+                thumbnail_url = t.url
+                break
+
+        response = jsonify({'source_id': instance.source_videoid,
+                'source': instance.source,
+                'thumbnail_url': thumbnail_url,
+                'id': instance.id,
+                'star_count': instance.star_count})
+
+        response.headers['Cache-Control'] = 'max-age={}'.format(300)  # 5 Mins
+        return response
 
 
-def get_local_channel(channel_id=None, **filters):
-    metas = g.session.query(models.ChannelLocaleMeta)
-    if filters.get('category'):
-        metas = metas.filter_by(category=filters['category'])
-    if channel_id:
-        metas = metas.get(channel_id)
-        if not metas:
-            return None
-        return channel_dict(metas)
-
-    metas = metas.filter_by(locale='en-gb')
-    count = metas.count()
-    channel_data = []
-    for meta in metas:
-        channel_data.append(channel_dict(meta))
-
-    return channel_data, count
-
-
-def get_video_dict(instance, route_func_name=None):
-    data = {'title': instance.video_video.title,
-            'source_id': instance.video_video.source_videoid,
-            'date_added': str(instance.date_added),
-            'thumbnail_url': instance.video_video.thumbnail_url,
-            'star_count': instance.video_video.star_count,
-            'channel': get_channel_dict(instance.video_channel),
-            }
-    if isinstance(route_func_name, str):
-        data.update({'resource_uri': PROTOCOL + url_for(route_func_name) + instance.id})
-    return data
-
-
-def channel_item(channel_id):
-    channel = g.session.query(Channel).get(channel_id)
-    return jsonify(get_channel_dict(channel))
-
-
-def video_instances():
-    video_instances = g.session.query(VideoInstance).all()
-    video_list = []
-    item_count = 0
-    for v in video_instances:
-        item_count += 1
-        video_list.append(get_video_dict(v, route_func_name='.video_instances'))
-
-    return jsonify({'total': item_count,
-        'items': video_list})
-
-def video_instance(item_id):
-    video_instance = g.session.query(VideoInstance).get(item_id)
-    return jsonify(get_video_dict(video_instance))
-
-
-
+    @expose('/', methods=('GET',))
+    def video_list(self):
+        data, total = self._get_local_videos(**request.args)
+        response = jsonify({'videos': {'items': data, 'total': total}})
+        return response
