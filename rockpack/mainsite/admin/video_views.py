@@ -1,3 +1,4 @@
+from flask.ext import wtf
 from flask.ext.admin.model.typefmt import Markup
 from flask.ext.admin.model.form import InlineFormAdmin
 from rockpack.mainsite.admin.models import AdminView
@@ -7,6 +8,10 @@ from rockpack.mainsite.services.video import models
 def _format_video_thumbnail(context, video, name):
     t = '<a target="_blank" href="%s"><img src="%s" width="160" height="90"/></a>'
     return Markup(t % (video.player_link, video.default_thumbnail))
+
+
+class VideoLocaleMetaFormAdmin(InlineFormAdmin):
+    form_columns = ('id', 'category_ref', 'visible')
 
 
 class Video(AdminView):
@@ -19,7 +24,7 @@ class Video(AdminView):
     column_searchable_list = ('title',)
     form_columns = ('title', 'sources', 'source_videoid', 'rockpack_curated')
 
-    inline_models = (models.VideoThumbnail, )
+    inline_models = (VideoLocaleMetaFormAdmin(models.VideoLocaleMeta),)
 
 
 class VideoThumbnail(AdminView):
@@ -39,6 +44,7 @@ class VideoInstance(AdminView):
     column_list = ('video_rel', 'video_channel', 'date_added', 'thumbnail')
     column_formatters = dict(thumbnail=_format_video_thumbnail)
     column_filters = ('video_channel',)
+    form_columns = ('video_channel', 'video_rel')
 
 
 class Source(AdminView):
@@ -78,11 +84,22 @@ class Locale(AdminView):
     form_columns = ('id', 'name')
 
 
+class ChannelLocaleMetaFormAdmin(InlineFormAdmin):
+    form_columns = ('id', 'channel_locale', 'visible')
+
+    def postprocess_form(self, form):
+        # TODO: make category selection dynamic, based on locale
+        #form.category_ref = wtf.HiddenField()
+        return form
+
+
 class Channel(AdminView):
     model_name = 'channel'
     model = models.Channel
 
     column_list = ('title', 'owner_rel', 'cover.thumbnail_large')
+
+    inline_models = (ChannelLocaleMetaFormAdmin(models.ChannelLocaleMeta),)
 
 
 class ChannelLocaleMeta(AdminView):
