@@ -17,6 +17,8 @@ REGISTER_SETUPS = (
     ('rockpack.mainsite.admin', 'setup_admin'),
 )
 
+WEBSERVICE_BASE = '/ws'
+
 
 def run_setups():
     for import_name, name in REGISTER_SETUPS:
@@ -40,7 +42,7 @@ def import_services():
 
     for s in services:
         app.logger.debug('loading service: {}'.format(s.__name__))
-        s(app, s.endpoint)
+        s(app, WEBSERVICE_BASE + s.endpoint)
 
 
 def init_app():

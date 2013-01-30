@@ -14,10 +14,9 @@ from sqlalchemy import (
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import relationship, aliased
 from flask import g
-from flask import current_app
 from rockpack.mainsite.helpers.db import (
         add_base64_pk, add_video_pk, add_video_meta_pk, ImageType)
-from rockpack.mainsite.core.dbapi import Base, get_session
+from rockpack.mainsite.core.dbapi import Base
 from rockpack.mainsite.auth.models import User
 
 

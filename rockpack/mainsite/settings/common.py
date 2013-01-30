@@ -28,13 +28,13 @@ VIDEO_IMG_PATHS = {'original': 'images/videos/original/',
 CHANNEL_IMAGES = {'thumbnail_large': (241, 171,),
         'thumbnail_small': (48, 34,),
         'carousel': (341,190,),
-        'cover': (1024, 705,)}
+        'background': (1024, 705,)}
 
 CHANNEL_IMG_PATHS = {'original': 'images/channel/original/',
         'thumbnail_large': 'images/channel/thumbnail_large/',
         'thumbnail_small': 'images/channel/thumbnail_small/',
         'carousel': 'images/channel/carousel/',
-        'cover': 'images/channel/background/'}
+        'background': 'images/channel/background/'}
 
 AVATAR_IMAGES = {'thumbnail_small': (72, 72,),
         'thumbnail_medium': (94,94,),

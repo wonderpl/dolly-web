@@ -1,35 +1,60 @@
-from flask import Blueprint, g
-from flask import jsonify
-from flask import url_for
+import random
+
+from flask import (g, jsonify, url_for, abort)
 
 from rockpack.mainsite.core.webservice import WebService
 from rockpack.mainsite.core.webservice import expose
-from rockpack.mainsite.core.dbapi import get_session
 from rockpack.mainsite.services.video.models import VideoInstance
 from rockpack.mainsite.services.video.models import Channel
+from rockpack.mainsite.services.video import models
 
-video = Blueprint('video_api', __name__)
-
-# TODO: do this someother way. hack for now
-PROTOCOL = 'http://localhost:5000' # leading slash already exists for root url
 
 class ChannelAPI(WebService):
-    endpoint = '/test'
-    @expose('/test_channel/', methods=('GET',))
-    def test_channel(self):
-        channels = g.session.query(Channel).all()
-        return jsonify({'items': [get_channel_dict(c) for c in channels]})
+    endpoint = '/channels'
+    @expose('/', methods=('GET',))
+    def channel_list(self):
+        data, total = get_local_channel()
+        return jsonify({'channels': {
+            'items': data,
+            'total': total},
+            })
+
+    @expose('/<string:channel_id>/', methods=('GET',))
+    def channel_item(self, channel_id):
+        data = get_local_channel(channel_id)
+        if not data:
+            abort(404)
+        return jsonify({'channel': data})
 
 
+def channel_dict(meta):
+    sizes = ['thumbnail_large', 'thumbnail_small', 'background']
+    images = {s: getattr(meta.channel_rel.cover, s) for s in sizes}
+    return {'id': meta.id,
+        'title': meta.channel_rel.title,
+        'images': images,
+        'subscribe_count': random.randint(1, 200),  #TODO: implement this for real
+        'owner': {'id': meta.channel_rel.owner_rel.id,
+            'name': meta.channel_rel.owner_rel.username}
+        }
 
-def get_channel_dict(instance, route_func_name=None):
-    data = {'id': instance.id,
-            'title': instance.title,
-            'thumbnail_url': instance.thumbnail_url
-            }
-    if isinstance(route_func_name, str):
-        data.update({'resource_ur': PROTOCOL + url_for(route_func_name) + instance.id})
-    return data
+
+def get_local_channel(channel_id=None):
+    metas = g.session.query(models.ChannelLocaleMeta)
+    if channel_id:
+        metas = metas.get(channel_id)
+        if not metas:
+            return None
+        return channel_dict(metas)
+
+    metas = metas.filter_by(locale='en-gb')
+    count = metas.count()
+    channel_data = []
+    for meta in metas:
+        channel_data.append(channel_dict(meta))
+
+    return channel_data, count
+
 
 def get_video_dict(instance, route_func_name=None):
     data = {'title': instance.video_video.title,
@@ -43,17 +68,12 @@ def get_video_dict(instance, route_func_name=None):
         data.update({'resource_uri': PROTOCOL + url_for(route_func_name) + instance.id})
     return data
 
-@video.route('/channels/')
-def channel_list():
-    channels = g.session.query(Channel).all()
-    return jsonify({'items': [get_channel_dict(c, route_func_name='.channel_list') for c in channels]})
 
-@video.route('/channels/<channel_id>')
 def channel_item(channel_id):
     channel = g.session.query(Channel).get(channel_id)
     return jsonify(get_channel_dict(channel))
 
-@video.route('/videos/')
+
 def video_instances():
     video_instances = g.session.query(VideoInstance).all()
     video_list = []
@@ -65,7 +85,6 @@ def video_instances():
     return jsonify({'total': item_count,
         'items': video_list})
 
-@video.route('/videos/<item_id>')
 def video_instance(item_id):
     video_instance = g.session.query(VideoInstance).get(item_id)
     return jsonify(get_video_dict(video_instance))
