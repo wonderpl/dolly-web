@@ -1,7 +1,7 @@
 import unittest
 import rockpack
 import pytest
-from rockpack.mainsite.core.dbapi import get_session
+from rockpack.mainsite.core.dbapi import db
 
 
 class RockPackTestCase(unittest.TestCase):
@@ -12,4 +12,4 @@ class RockPackTestCase(unittest.TestCase):
         rockpack.mainsite.app.config['TESTING'] = True
         self.client = rockpack.mainsite.app.test_client()
         self.app = self.client.application
-        self.session = get_session()
+        self.session = db.session
