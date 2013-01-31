@@ -15,7 +15,8 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import relationship, aliased
 from flask import g
 from rockpack.mainsite.helpers.db import (
-        add_base64_pk, add_video_pk, add_video_meta_pk, ImageType)
+    add_base64_pk, add_video_pk, add_video_meta_pk,
+    gen_videoid, insert_new_only, ImageType)
 from rockpack.mainsite.core.dbapi import Base
 from rockpack.mainsite.auth.models import User
 
@@ -167,7 +168,6 @@ class Video(Base):
 
     @classmethod
     def add_videos(cls, videos, source, locale, category):
-        count = len(videos)
         for video in videos:
             video.source = source
             video.metas = [VideoLocaleMeta(locale=locale, category=category)]
@@ -176,13 +176,16 @@ class Video(Base):
             # First try to add all...
             with g.session.begin_nested():
                 g.session.add_all(videos)
+            count = len(videos)
         except IntegrityError:
             # Else explicitly check which videos already exist
-            all_ids = set(v.id for v in videos)
-            query = g.session.query(Video.id).filter(Video.id.in_(all_ids))
-            existing_ids = set(v.id for v in query)
-            new_ids = all_ids - existing_ids
-            g.session.add_all(v for v in videos if v.id in new_ids)
+            new_ids, existing_ids = insert_new_only(Video, videos)
+            # New metadata records may be needed for this locale
+            metas = [VideoLocaleMeta(
+                     id=gen_videoid(locale, source, video.source_videoid),
+                     video=video.id, locale=locale, category=category)
+                     for video in videos if video.id in existing_ids]
+            insert_new_only(VideoLocaleMeta, metas)
             count = len(new_ids)
 
         return count

@@ -5,7 +5,7 @@ import cStringIO
 from iso8601.iso8601 import UTC
 from sqlalchemy import types
 from sqlalchemy.dialects.mysql.base import MySQLDialect
-from flask import current_app
+from flask import current_app, g
 from rockpack.mainsite.core import imaging
 from .urls import image_url_from_path
 
@@ -42,6 +42,16 @@ def add_video_pk(mapper, connection, instance):
 def add_video_meta_pk(mapper, connection, instance):
     if not instance.id:
         instance.id = gen_videoid(instance.locale, instance.video_rel.source, instance.video_rel.source_videoid)
+
+
+def insert_new_only(model, instances):
+    """Check db for existing instances and insert new records only"""
+    all_ids = set(i.id for i in instances)
+    query = g.session.query(model.id).filter(model.id.in_(all_ids))
+    existing_ids = set(i.id for i in query)
+    new_ids = all_ids - existing_ids
+    g.session.add_all(i for i in instances if i.id in new_ids)
+    return new_ids, existing_ids
 
 
 def timezone_aware(dt):
