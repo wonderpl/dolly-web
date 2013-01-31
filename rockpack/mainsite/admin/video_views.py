@@ -20,7 +20,7 @@ class Video(AdminView):
 
     column_list = ('title', 'date_updated', 'thumbnail')
     column_formatters = dict(thumbnail=_format_video_thumbnail)
-    column_filters = ('sources', 'date_added')
+    column_filters = ('source_listid', 'source', 'date_added')
     column_searchable_list = ('title',)
     form_columns = ('title', 'sources', 'source_videoid', 'rockpack_curated')
 
@@ -43,7 +43,7 @@ class VideoInstance(AdminView):
 
     column_list = ('video_rel', 'video_channel', 'date_added', 'thumbnail')
     column_formatters = dict(thumbnail=_format_video_thumbnail)
-    column_filters = ('video_channel',)
+    column_filters = ('channel', 'video')
     form_columns = ('video_channel', 'video_rel')
 
 
@@ -98,10 +98,13 @@ class Channel(AdminView):
     model = models.Channel
 
     column_list = ('title', 'owner_rel', 'cover.thumbnail_large')
-    column_filters = ('owner_rel',)
+    column_filters = ('owner',)
     column_searchable_list = ('title',)
 
     inline_models = (ChannelLocaleMetaFormAdmin(models.ChannelLocaleMeta),)
+
+    edit_template = 'admin/edit_with_child_links.html'
+    child_links = (('Videos', 'video_instance'),)
 
 
 class ChannelLocaleMeta(AdminView):

@@ -48,8 +48,32 @@ class ImportView(BaseView):
     def is_accessible(self):
         return self.is_authenticated()
 
-    @expose('/', ('GET', 'POST'))
     @commit_on_success
+    def _import_videos(self, form):
+        count = Video.add_videos(
+            form.import_data.videos,
+            form.source.data,
+            form.locale.data,
+            form.category.data)
+
+        channel = form.channel.data   # XXX: Need to validate?
+        user = form.user.data
+        if channel and user:
+            if channel.startswith('_new:'):
+                channel = Channel(title=channel.split(':', 1)[1],
+                                  owner=user, description='', cover='')
+                channel.metas = [ChannelLocaleMeta(
+                                 locale=form.locale.data,
+                                 category=form.category.data)]
+            else:
+                channel = Channel.get(channel)
+            channel.add_videos(form.import_data.videos)
+        else:
+            channel = None
+
+        return count, channel
+
+    @expose('/', ('GET', 'POST'))
     def index(self):
         ctx = {}
         data = (request.form or request.args).copy()
@@ -71,27 +95,15 @@ class ImportView(BaseView):
         ctx['form'] = form
         if 'source' in data and form.validate():
             if form.commit.data:
-                count = Video.add_videos(
-                    form.import_data.videos,
-                    form.source.data,
-                    form.locale.data,
-                    form.category.data)
-
-                channel = form.channel.data   # XXX: Need to validate?
-                user = form.user.data
-                if channel and user:
-                    if channel.startswith('_new:'):
-                        channel = Channel(title=channel.split(':', 1)[1],
-                                          owner=user, description='', cover='')
-                        channel.metas = [ChannelLocaleMeta(
-                                         locale=form.locale.data,
-                                         category=form.category.data)]
-                    else:
-                        channel = Channel.get(channel)
-                    channel.add_videos(form.import_data.videos)
-
+                count, channel = self._import_videos(form)
+                if channel and channel.id:
+                    url = '%s?id=%s' % (url_for('channel.edit_view'), channel.id)
+                else:
+                    url = url_for('video.index_view')
+                    if form.type.data == 'playlist':
+                        url += '?flt0_0=' + form.id.data
                 flash('Imported %d videos' % count)
-                return redirect(url_for('video.index_view'))
+                return redirect(url)
             else:
                 ctx['import_preview'] = form.import_data
                 form.commit.data = 'true'

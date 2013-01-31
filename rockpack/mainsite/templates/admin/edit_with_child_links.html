@@ -1,0 +1,14 @@
+{% extends 'admin/model/edit.html' %}
+
+{% block body %}
+{{ super() }}
+{% if admin_view.child_links %}
+{% for label, base in admin_view.child_links %}
+<div class="child-link">
+  <a href="{{ url_for(base + '.index_view') }}?flt0_0={{ request.args.id }}">
+    {{ label }}
+  </a>
+</div>
+{% endfor %}
+{% endif %}
+{% endblock %}

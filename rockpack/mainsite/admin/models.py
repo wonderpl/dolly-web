@@ -1,7 +1,7 @@
 from flask.ext import login, wtf
 from flask.ext.admin.model.typefmt import BASE_FORMATTERS, Markup
 from flask.ext.admin.model.form import converts
-from flask.ext.admin.contrib.sqlamodel import ModelView, form
+from flask.ext.admin.contrib.sqlamodel import ModelView, form, filters
 from rockpack.mainsite.helpers.db import ImageUrl
 from rockpack.mainsite.core.dbapi import db
 
@@ -21,6 +21,12 @@ class AdminModelConverter(form.AdminModelConverter):
         return wtf.FileField(**field_args)
 
 
+class AdminFilterConverter(filters.FilterConverter):
+    @filters.filters.convert('CHAR')
+    def conv_char(self, column, name):
+        return [f(column, name) for f in self.strings]
+
+
 class AdminView(ModelView):
 
     model_name = None
@@ -32,6 +38,7 @@ class AdminView(ModelView):
 
     column_type_formatters = dict({ImageUrl: _render_image}, **BASE_FORMATTERS)
     model_form_converter = AdminModelConverter
+    filter_converter = AdminFilterConverter()
 
     def __init__(self, *args, **kwargs):
         super(AdminView, self).__init__(self.model, db.session, **kwargs)
