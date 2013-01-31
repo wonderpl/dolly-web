@@ -9,8 +9,7 @@ required_modules = ['rockpack.mainsite.auth', 'rockpack.mainsite.admin']
 
 
 def dbsync(options):
-    from rockpack.mainsite.core.dbapi import Base
-    from rockpack.mainsite.core.dbapi import get_engine
+    from rockpack.mainsite.core.dbapi import Base, db
     from rockpack.mainsite import SERVICES, REGISTER_SETUPS
 
     models = []
@@ -39,7 +38,7 @@ def dbsync(options):
 
     try:
         if table_list:
-            Base.metadata.create_all(get_engine(), tables=table_list, checkfirst=True)
+            Base.metadata.create_all(db.engine, tables=table_list, checkfirst=True)
         else:
             print >> sys.stderr, 'no tables to build'
     except Exception as e:
@@ -56,8 +55,7 @@ def create_database(db_url, drop_first=False):
 
 def _patch_db_url(db_url):
     from rockpack.mainsite.core import dbapi
-    dbapi.manager = dbapi.SessionManager(db_url)
-    dbapi.get_engine = dbapi.manager.get_engine
+    dbapi.db = dbapi.get_sessionmanager(db_url)
 
 
 def test(options):
