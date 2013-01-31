@@ -12,7 +12,7 @@ class ChannelAPI(WebService):
     endpoint = '/channels'
 
     @staticmethod
-    def channel_dict(channel):
+    def channel_dict(channel, full=False):
         sizes = ['thumbnail_large', 'thumbnail_small', 'background']
         images = {'cover_%s_url' % s: getattr(channel.cover, s) for s in sizes}
         url = url_for('UserAPI_api.channel_item',
@@ -32,6 +32,8 @@ class ChannelAPI(WebService):
             }
         }
         ch_data.update(images)
+        if full:
+            ch_data['description'] = channel.description
         return ch_data
 
     def _get_local_channel(self, **filters):
@@ -149,7 +151,7 @@ class UserAPI(VideoAPI):
             channel=channelid).first()
         if not meta:
             abort(404)
-        data = ChannelAPI.channel_dict(meta.channel_rel)
+        data = ChannelAPI.channel_dict(meta.channel_rel, full=True)
         items, total = self._get_local_videos(channel=channelid, with_channel=False)
         data['videos'] = dict(items=items, total=total)
         response = jsonify(data)
