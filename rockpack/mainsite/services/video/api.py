@@ -36,11 +36,11 @@ class ChannelAPI(WebService):
         return ch_data
 
     def _get_local_channel(self, **filters):
-        metas = g.session.query(models.ChannelLocaleMeta)
+        metas = g.session.query(models.ChannelLocaleMeta).\
+            filter_by(visible=True, locale=self.get_locale())
         if filters.get('category'):
             metas = metas.filter_by(category=filters['category'])
 
-        metas = metas.filter_by(locale=self.get_locale())
         count = metas.count()
         channel_data = []
         for position, meta in enumerate(metas, 1):
@@ -87,9 +87,10 @@ class VideoAPI(WebService):
                 'id': instance.id}
 
     def _get_local_videos(self, with_channel=True, **filters):
-        vlm = g.session.query(models.VideoInstance, models.VideoLocaleMeta)
-        vlm = vlm.filter(models.VideoInstance.video == models.VideoLocaleMeta.video)
-        vlm = vlm.filter(models.VideoLocaleMeta.locale == self.get_locale())
+        vlm = g.session.query(models.VideoInstance, models.VideoLocaleMeta).\
+            filter(models.VideoLocaleMeta.visible == True,
+                   models.VideoLocaleMeta.locale == self.get_locale(),
+                   models.VideoInstance.video == models.VideoLocaleMeta.video)
 
         if filters.get('channel'):
             vlm = vlm.filter(models.VideoInstance.channel == filters['channel'])
