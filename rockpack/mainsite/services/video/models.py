@@ -104,9 +104,9 @@ class ExternalCategoryMap(Base):
     id = Column(Integer, primary_key=True)
     term = Column(String(32), nullable=False)
     label = Column(String(32), nullable=False)
-    locale = Column(String(16), ForeignKey('locale.id'), nullable=False)
-    category = Column(Integer, ForeignKey('category.id'), nullable=True)
-    source = Column(Integer, ForeignKey('source.id'), nullable=False)
+    locale = Column(ForeignKey('locale.id'), nullable=False)
+    category = Column(ForeignKey('category.id'), nullable=True)
+    source = Column(ForeignKey('source.id'), nullable=False)
 
 
 class Source(Base):
@@ -200,7 +200,7 @@ class VideoLocaleMeta(Base):
 
     id = Column(CHAR(40), primary_key=True)
 
-    video = Column(CHAR(40), ForeignKey('video.id'), nullable=False)
+    video = Column(ForeignKey('video.id'), nullable=False)
     locale = Column(ForeignKey('locale.id'), nullable=False)
     category = Column(ForeignKey('category.id'), nullable=False)
     visible = Column(Boolean(), nullable=False, server_default='true')
@@ -213,7 +213,7 @@ class VideoRestriction(Base):
     __tablename__ = 'video_restriction'
 
     id = Column(CHAR(24), primary_key=True)
-    video = Column(CHAR(40), ForeignKey('video.id'), nullable=False, index=True)
+    video = Column(ForeignKey('video.id'), nullable=False, index=True)
     relationship = Column(String(16), nullable=False)
     country = Column(String(16), nullable=False)
 
@@ -229,8 +229,8 @@ class VideoInstance(Base):
     id = Column(CHAR(24), primary_key=True)
     date_added = Column(DateTime(timezone=True), nullable=False, default=func.now())
 
-    video = Column(CHAR(40), ForeignKey('video.id'), nullable=False)
-    channel = Column(String(32), ForeignKey('channel.id'), nullable=False)
+    video = Column(ForeignKey('video.id'), nullable=False)
+    channel = Column(ForeignKey('channel.id'), nullable=False)
 
     @property
     def default_thumbnail(self):
@@ -253,7 +253,7 @@ class VideoThumbnail(Base):
     width = Column(Integer, nullable=False)
     height = Column(Integer, nullable=False)
 
-    video = Column(CHAR(40), ForeignKey('video.id'), nullable=False, index=True)
+    video = Column(ForeignKey('video.id'), nullable=False, index=True)
 
     def __unicode__(self):
         return '({}x{}) {}'.format(self.width, self.height, self.url)
@@ -272,7 +272,7 @@ class Channel(Base):
     description = Column(Text, nullable=False)
     cover = Column(ImageType('CHANNEL'), nullable=False)
 
-    owner = Column(CHAR(22), ForeignKey('user.id'), nullable=False)
+    owner = Column(ForeignKey('user.id'), nullable=False)
     owner_rel = relationship(User, primaryjoin=(owner == User.id))
 
     video_instances = relationship('VideoInstance', backref='video_channel')
