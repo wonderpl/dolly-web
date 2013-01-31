@@ -1,11 +1,13 @@
 import sys
 import psycopg2
 from functools import wraps
+
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm import scoped_session
 from sqlalchemy.ext.declarative import declarative_base
 
+from flask.ext.sqlalchemy import SQLAlchemy
 from flask import g
 
 from rockpack.mainsite import app
@@ -89,17 +91,15 @@ manager = SessionManager(app.config['DATABASE_URL'])
 # want to change it after after
 # SessionManager is instantiated
 get_engine = manager.get_engine
-get_session = manager.get_session
+
+
+app.config['SQLALCHEMY_DATABASE_URI'] = app.config['DATABASE_URL']
+db = SQLAlchemy(app)
 
 
 @app.before_request
 def add_session_to_request_g():
-    g.session = get_session()
-
-
-@app.teardown_appcontext
-def teardown_session(response):
-    manager._Session.remove()
+    g.session = db.session
 
 
 def commit_on_success(f):

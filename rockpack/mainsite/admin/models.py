@@ -3,7 +3,7 @@ from flask.ext.admin.model.typefmt import BASE_FORMATTERS, Markup
 from flask.ext.admin.model.form import converts
 from flask.ext.admin.contrib.sqlamodel import ModelView, form
 from rockpack.mainsite.helpers.db import ImageUrl
-from rockpack.mainsite.core.dbapi import get_session
+from rockpack.mainsite.core.dbapi import db
 
 
 def _render_image(img):
@@ -34,7 +34,7 @@ class AdminView(ModelView):
     model_form_converter = AdminModelConverter
 
     def __init__(self, *args, **kwargs):
-        super(AdminView, self).__init__(self.model, get_session(), **kwargs)
+        super(AdminView, self).__init__(self.model, db.session, **kwargs)
 
     def is_authenticated(self):
         return login.current_user.is_authenticated()
