@@ -3,7 +3,6 @@ import psycopg2
 from functools import wraps
 
 from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
 
 from flask.ext.sqlalchemy import SQLAlchemy
 from flask import g
@@ -34,26 +33,18 @@ def create_database(db_url, drop_if_exists=False):
     engine.execute(command)
 
 
-class _Base(object):
-
-    @classmethod
-    def get(cls, id):
-        return g.session.query(cls).get(id)
-
-    def save(self):
-        g.session.merge(self)      # XXX: Use session.add?
-        return g.session.commit()  # XXX: commit here or leave to view to handle?
-
-
-Base = declarative_base(cls=_Base)
-
-
 def get_sessionmanager(config=app.config['DATABASE_URL']):
     app.config['SQLALCHEMY_DATABASE_URI'] = config
     return SQLAlchemy(app)
 
 
 db = get_sessionmanager()
+
+# Duck punch a save method into db.Model
+def _save(self):
+    g.session.merge(self)
+    return g.session.commit()
+db.Model.save = _save
 
 
 @app.before_request

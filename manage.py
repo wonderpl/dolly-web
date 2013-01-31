@@ -9,7 +9,7 @@ required_modules = ['rockpack.mainsite.auth', 'rockpack.mainsite.admin']
 
 
 def dbsync(options):
-    from rockpack.mainsite.core.dbapi import Base, db
+    from rockpack.mainsite.core.dbapi import db
     from rockpack.mainsite import SERVICES, REGISTER_SETUPS
 
     models = []
@@ -28,7 +28,7 @@ def dbsync(options):
     for model in models:
         for item in model.__dict__.itervalues():
             try:
-                if (isinstance(item, type) and issubclass(item, Base)
+                if (isinstance(item, type) and issubclass(item, db.Model)
                         and hasattr(item, '__table__')
                         and isinstance(item.__table__, sqlalchemy.schema.Table)):
                     table = item.__table__
@@ -38,7 +38,7 @@ def dbsync(options):
 
     try:
         if table_list:
-            Base.metadata.create_all(db.engine, tables=table_list, checkfirst=True)
+            db.Model.metadata.create_all(db.engine, tables=table_list, checkfirst=True)
         else:
             print >> sys.stderr, 'no tables to build'
     except Exception as e:
