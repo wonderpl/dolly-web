@@ -12,28 +12,27 @@ class ChannelAPI(WebService):
     endpoint = '/channels'
 
     @staticmethod
-    def channel_dict(channel, full=False):
+    def channel_dict(channel):
         sizes = ['thumbnail_large', 'thumbnail_small', 'background']
         images = {'cover_%s_url' % s: getattr(channel.cover, s) for s in sizes}
         url = url_for('UserAPI_api.channel_item',
                       userid=channel.owner_rel.id,
                       channelid=channel.id,
                       _external=True)
-        ch_data = {
-            'id': channel.id,
-            'resource_url': url,
-            'title': channel.title,
-            'thumbnail_url': channel.cover.thumbnail_large,
-            'subscribe_count': random.randint(1, 200),  # TODO: implement this for real
-            'owner': {
-                'id': channel.owner_rel.id,
-                'name': channel.owner_rel.username,
-                'avatar_thumbnail_url': channel.owner_rel.avatar.thumbnail_small,
-            }
-        }
+        ch_data = dict(
+            id=channel.id,
+            resource_url=url,
+            title=channel.title,
+            thumbnail_url=channel.cover.thumbnail_large,
+            description=channel.description,
+            subscribe_count=random.randint(1, 200),  # TODO: implement this for real
+            owner=dict(
+                id=channel.owner_rel.id,
+                name=channel.owner_rel.username,
+                avatar_thumbnail_url=channel.owner_rel.avatar.thumbnail_small,
+            )
+        )
         ch_data.update(images)
-        if full:
-            ch_data['description'] = channel.description
         return ch_data
 
     def _get_local_channel(self, **filters):
@@ -151,7 +150,7 @@ class UserAPI(VideoAPI):
             channel=channelid).first()
         if not meta:
             abort(404)
-        data = ChannelAPI.channel_dict(meta.channel_rel, full=True)
+        data = ChannelAPI.channel_dict(meta.channel_rel)
         items, total = self._get_local_videos(channel=channelid, with_channel=False)
         data['videos'] = dict(items=items, total=total)
         response = jsonify(data)
