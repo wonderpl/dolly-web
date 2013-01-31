@@ -98,6 +98,8 @@ class Channel(AdminView):
     model = models.Channel
 
     column_list = ('title', 'owner_rel', 'cover.thumbnail_large')
+    column_filters = ('owner_rel',)
+    column_searchable_list = ('title',)
 
     inline_models = (ChannelLocaleMetaFormAdmin(models.ChannelLocaleMeta),)
 
