@@ -124,6 +124,13 @@ class VideoAPI(WebService):
             if with_channel:
                 item['channel'] = ChannelAPI.channel_dict(v.VideoInstance.video_channel)
             data.append(item)
+        # XXX: Temporary hack to give nice time distribution for demo
+        if 'star_order' in filters:
+            from datetime import datetime, timedelta
+            now = datetime.now()
+            for item in data:
+                item['date_added'] = (now - timedelta(5*random.random())).isoformat()
+            data.sort(key=lambda i: i['date_added'], reverse=True)
         return data, total
 
     @expose('/', methods=('GET',))
