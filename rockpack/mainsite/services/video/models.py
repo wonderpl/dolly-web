@@ -142,6 +142,7 @@ class Video(Base):
     date_added = Column(DateTime(timezone=True), nullable=False, default=func.now())
     date_updated = Column(DateTime(timezone=True), nullable=False, default=func.now(), onupdate=func.now())
     duration = Column(Integer, nullable=False, server_default='0')
+    view_count = Column(Integer, nullable=False, server_default='0')
     star_count = Column(Integer, nullable=False, server_default='0')
     rockpack_curated = Column(Boolean, nullable=False, server_default='false')
 
