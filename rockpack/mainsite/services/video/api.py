@@ -135,6 +135,29 @@ class VideoAPI(WebService):
         return response
 
 
+class CoverArt(WebService):
+
+    endpoint = '/cover_art'
+
+    @staticmethod
+    def cover_art_dict(instance):
+        return {'id': instance.id,
+                'carousel_url': instance.cover.carousel,
+                'background_url': instance.cover.background}
+
+    @expose('/', methods=('GET',))
+    def cover_art(self):
+        covers = g.session.query(models.CoverArt).filter(
+                models.CoverArt.locale==self.get_locale())
+
+        if request.args.get('category'):
+            covers = covers.filter(models.CoverArt.category==request.args.get('category'))
+
+        response = jsonify({'cover_art': [CoverArt.cover_art_dict(c) for c in covers]})
+        response.headers['Cache-Control'] = 'max-age={}'.format(300)  # 5 Mins
+        return response
+
+
 class UserAPI(VideoAPI):
 
     endpoint = '/'
