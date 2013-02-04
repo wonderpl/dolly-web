@@ -134,6 +134,42 @@ class VideoAPI(WebService):
         return response
 
 
+class CategoryAPI(WebService):
+
+    endpoint = '/categories'
+
+    @staticmethod
+    def cat_dict(instance):
+        d = {'id': instance.id,
+                'name': instance.name}
+        if instance.children:
+            print '-------', instance.name
+            print len(instance.children), 'children'
+        else:
+            print instance.name
+            return d
+
+        for c in instance.children:
+            d.setdefault('sub-categories', []).append(CategoryAPI.cat_dict(c))
+
+        print d
+        return d
+
+    def _get_cats(self, **filters):
+        cats = g.session.query(models.Category).filter(
+                models.Category.locale==self.get_locale(),
+                models.Category.parent==None)
+
+        return [self.cat_dict(c) for c in cats]
+
+    @expose('/', methods=('GET',))
+    def category_list(self):
+        data = self._get_cats(**request.args)
+        response = jsonify({'categories': {'items': data}})
+        response.headers['Cache-Control'] = 'max-age={}'.format(300)  # 5 Mins
+        return response
+
+
 class UserAPI(VideoAPI):
 
     endpoint = '/'
