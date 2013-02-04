@@ -13,7 +13,7 @@ from sqlalchemy import (
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.orm import relationship
 
-from rockpack.mainsite.core.dbapi import Base
+from rockpack.mainsite.core.dbapi import db
 from rockpack.mainsite.helpers.db import ImageType, add_base64_pk
 
 
@@ -25,7 +25,7 @@ class PKPrefixLengthError(Exception):
     pass
 
 
-class User(Base):
+class User(db.Model):
     __tablename__ = 'user'
 
     id = Column(CHAR(22), primary_key=True)
@@ -54,7 +54,7 @@ class User(Base):
 event.listen(User, 'before_insert', lambda x, y, z: add_base64_pk(x, y, z))
 
 
-class Admin(Base):
+class Admin(db.Model):
     __tablename__ = 'adminuser'
 
     id = Column(Integer, primary_key=True)
@@ -63,6 +63,8 @@ class Admin(Base):
     token = Column(String(254))
 
     adminrole = relationship('AdminRole', backref='users')
+
+    # TODO: maybe change these to `get_from(col, val)`
 
     @classmethod
     def get_from_login(cls, adminid):
@@ -86,7 +88,7 @@ class Admin(Base):
             raise InvalidAdminException
 
 
-class Role(Base):
+class Role(db.Model):
 
     __tablename__ = 'auth_role'
 
@@ -97,7 +99,7 @@ class Role(Base):
     rolepermissions = relationship('RolePermissions')
 
 
-class Permission(Base):
+class Permission(db.Model):
     """ Permission for an action
             e.g. name `can delete video instance` """
 
@@ -108,7 +110,7 @@ class Permission(Base):
     rolepermission = relationship('RolePermissions')
 
 
-class RolePermissions(Base):
+class RolePermissions(db.Model):
     """ The need for the `role`
             e.g. `admin` needs `can_edit_post` """
 
@@ -119,7 +121,7 @@ class RolePermissions(Base):
     permission = Column(Integer, ForeignKey('auth_permission.id'))
 
 
-class AdminRole(Base):
+class AdminRole(db.Model):
 
     __tablename__ = 'admin_role'
 
