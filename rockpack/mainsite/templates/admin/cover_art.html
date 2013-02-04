@@ -1,0 +1,17 @@
+{% extends 'admin/model/edit.html' %}
+
+{% block body %}
+{{ super() }}
+<div class="cover-image-thumbnail-small">
+    <img src="{{ form.cover.data.thumbnail_small }}">
+</div>
+<div class="cover-image-thumbnail-large">
+    <img src="{{ form.cover.data.thumbnail_large }}">
+</div>
+<div class="cover-image-carousel">
+    <img src="{{ form.cover.data.carousel }}">
+</div>
+<div class="cover-image-background">
+    <img src="{{ form.cover.data.background }}">
+</div>
+{% endblock %}

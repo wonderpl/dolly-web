@@ -316,6 +316,19 @@ class ChannelLocaleMeta(db.Model):
 ParentCategory = aliased(Category)
 
 
+class CoverArt(db.Model):
+
+    __tablename__ = 'cover_art'
+
+    id = Column(Integer, primary_key=True)
+    cover = Column(ImageType('CHANNEL'), nullable=False)
+    locale = Column(ForeignKey('locale.id'), nullable=False)
+    category = Column(ForeignKey('category.id'), nullable=False)
+
+    locale_rel = relationship('Locale', backref='cover_art')
+    category_rel = relationship('Category', backref='cover_art')
+
+
 @event.listens_for(Category, 'before_insert')
 def _set_child_category_locale(mapper, connection, target):
     if not target.locale and target.parent_category:

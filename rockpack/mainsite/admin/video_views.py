@@ -107,6 +107,15 @@ class Channel(AdminView):
     child_links = (('Videos', 'video_instance'),)
 
 
+class CoverArt(AdminView):
+    model = models.CoverArt
+    model_name = models.CoverArt.__tablename__
+
+    column_filters = ('locale', 'category_rel',)
+
+    edit_template = 'admin/cover_art.html'
+
+
 class ChannelLocaleMeta(AdminView):
     model_name = 'channel_locale_meta'
     model = models.ChannelLocaleMeta
@@ -119,7 +128,7 @@ class ExternalCategoryMap(AdminView):
 
 registered = [
     Video, VideoLocaleMeta, VideoThumbnail, VideoInstance,
-    Source, Category, CategoryMap, Locale,
+    Source, Category, CategoryMap, Locale, CoverArt,
     Channel, ChannelLocaleMeta, ExternalCategoryMap]
 
 
