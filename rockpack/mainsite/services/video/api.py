@@ -143,13 +143,6 @@ class CategoryAPI(WebService):
     def cat_dict(instance):
         d = {'id': instance.id,
                 'name': instance.name}
-        if instance.children:
-            print '-------', instance.name
-            print len(instance.children), 'children'
-        else:
-            print instance.name
-            return d
-
         for c in instance.children:
             d.setdefault('sub-categories', []).append(CategoryAPI.cat_dict(c))
 
