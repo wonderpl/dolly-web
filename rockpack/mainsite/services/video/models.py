@@ -17,11 +17,11 @@ from flask import g
 from rockpack.mainsite.helpers.db import (
     add_base64_pk, add_video_pk, add_video_meta_pk,
     gen_videoid, insert_new_only, ImageType)
-from rockpack.mainsite.core.dbapi import Base
+from rockpack.mainsite.core.dbapi import db
 from rockpack.mainsite.auth.models import User
 
 
-class Locale(Base):
+class Locale(db.Model):
 
     __tablename__ = 'locale'
 
@@ -36,7 +36,7 @@ class Locale(Base):
         return g.session.query(cls.id, cls.name)
 
 
-class Category(Base):
+class Category(db.Model):
     """ Categories for each `locale` """
 
     __tablename__ = 'category'
@@ -72,7 +72,7 @@ class Category(Base):
             yield id, '%s - %s' % (parent, name)
 
 
-class CategoryMap(Base):
+class CategoryMap(db.Model):
     """ Mapping between localised categories """
 
     __tablename__ = 'category_locale'
@@ -94,7 +94,7 @@ class CategoryMap(Base):
                ':'.join([self.there.name, self.there.locale]),)
 
 
-class ExternalCategoryMap(Base):
+class ExternalCategoryMap(db.Model):
 
     __tablename__ = 'external_category_map'
     __table_args__ = (
@@ -109,7 +109,7 @@ class ExternalCategoryMap(Base):
     source = Column(ForeignKey('source.id'), nullable=False)
 
 
-class Source(Base):
+class Source(db.Model):
     __tablename__ = 'source'
 
     id = Column(Integer, primary_key=True)
@@ -127,7 +127,7 @@ class Source(Base):
         return g.session.query(cls.id, cls.label)
 
 
-class Video(Base):
+class Video(db.Model):
     """ Canonical reference to a video """
 
     __tablename__ = 'video'
@@ -147,9 +147,9 @@ class Video(Base):
 
     source = Column(ForeignKey('source.id'), nullable=False)
 
-    thumbnails = relationship('VideoThumbnail', backref='video_rel')
+    thumbnails = relationship('VideoThumbnail', backref='video_rel', lazy='joined')
     metas = relationship('VideoLocaleMeta', backref='video_rel')
-    instances = relationship('VideoInstance', backref='video_rel')
+    instances = relationship('VideoInstance', backref=db.backref('video_rel', lazy='joined'))
     restrictions = relationship('VideoRestriction', backref='videos')
 
     def __str__(self):
@@ -191,7 +191,7 @@ class Video(Base):
         return count
 
 
-class VideoLocaleMeta(Base):
+class VideoLocaleMeta(db.Model):
 
     __tablename__ = 'video_locale_meta'
     __table_args__ = (
@@ -208,7 +208,7 @@ class VideoLocaleMeta(Base):
     star_count = Column(Integer, nullable=False, server_default='0')
 
 
-class VideoRestriction(Base):
+class VideoRestriction(db.Model):
 
     __tablename__ = 'video_restriction'
 
@@ -218,7 +218,7 @@ class VideoRestriction(Base):
     country = Column(String(16), nullable=False)
 
 
-class VideoInstance(Base):
+class VideoInstance(db.Model):
     """ An instance of a video, which can belong to many channels """
 
     __tablename__ = 'video_instance'
@@ -244,7 +244,7 @@ class VideoInstance(Base):
         return self.video
 
 
-class VideoThumbnail(Base):
+class VideoThumbnail(db.Model):
 
     __tablename__ = 'video_thumbnail'
 
@@ -259,7 +259,7 @@ class VideoThumbnail(Base):
         return '({}x{}) {}'.format(self.width, self.height, self.url)
 
 
-class Channel(Base):
+class Channel(db.Model):
     """ A channel, which can contain many videos """
 
     __tablename__ = 'channel'
@@ -272,11 +272,11 @@ class Channel(Base):
     description = Column(Text, nullable=False)
     cover = Column(ImageType('CHANNEL'), nullable=False)
 
-    owner = Column(ForeignKey('user.id'), nullable=False)
-    owner_rel = relationship(User, primaryjoin=(owner == User.id))
+    owner = Column(CHAR(22), ForeignKey('user.id'), nullable=False)
+    owner_rel = relationship(User, primaryjoin=(owner == User.id), lazy='joined')
 
     video_instances = relationship('VideoInstance', backref='video_channel')
-    metas = relationship('ChannelLocaleMeta', backref='channel_rel')
+    metas = relationship('ChannelLocaleMeta', backref=db.backref('channel_rel', lazy='joined'))
 
     def __unicode__(self):
         return self.title
@@ -291,7 +291,7 @@ class Channel(Base):
         return self.save()
 
 
-class ChannelLocaleMeta(Base):
+class ChannelLocaleMeta(db.Model):
 
     __tablename__ = 'channel_locale_meta'
     __table_args__ = (

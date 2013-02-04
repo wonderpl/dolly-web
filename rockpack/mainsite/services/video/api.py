@@ -5,6 +5,7 @@ from flask import g, jsonify, abort, request, url_for
 from rockpack.mainsite.core.webservice import WebService
 from rockpack.mainsite.core.webservice import expose
 from rockpack.mainsite.services.video import models
+from flask.ext.sqlalchemy import get_debug_queries
 
 
 class ChannelAPI(WebService):
