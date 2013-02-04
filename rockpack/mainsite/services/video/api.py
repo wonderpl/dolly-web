@@ -99,7 +99,9 @@ class VideoAPI(WebService):
             vlm = vlm.filter(models.VideoLocaleMeta.category == filters['category'][0])
 
         if filters.get('date_order'):
-            vlm = vlm.order_by(desc(models.VideoInstance.date_added))
+            # XXX: See note below about temporary hack for time distribution
+            #vlm = vlm.order_by(desc(models.VideoInstance.date_added))
+            vlm = vlm.order_by(desc(models.VideoInstance.id))
 
         if filters.get('star_order'):
             vlm = vlm.order_by(desc(models.VideoLocaleMeta.star_count))
@@ -129,7 +131,7 @@ class VideoAPI(WebService):
             from datetime import datetime, timedelta
             now = datetime.now()
             for item in data:
-                item['date_added'] = (now - timedelta(5*random.random())).isoformat()
+                item['date_added'] = (now - timedelta(14*random.random())).isoformat()
             data.sort(key=lambda i: i['date_added'], reverse=True)
         return data, total
 
