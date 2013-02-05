@@ -19,7 +19,6 @@ def dbsync(options):
             models.append(__import__(module + '.models', fromlist=['models']))
         except ImportError as e:
             print >> sys.stderr, 'cannot import', module, ':', e
-            sys.exit(1)
 
     for module in SERVICES + zip(*REGISTER_SETUPS)[0]:
         load_modules(module)
@@ -65,6 +64,7 @@ def test(options):
     _patch_db_url(db_url)
     create_database(db_url, drop_first=True)
     dbsync(None)
+    mainsite.init_app()
     pytest.main(options[1])
 
 

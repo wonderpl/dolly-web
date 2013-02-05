@@ -18,6 +18,8 @@ GOOGLE_CONSUMER_SECRET = 'ja-jW0BDASKVIwIRFurpCaZi'
 LOCALE_DEFAULT = 'en-gb'
 FORCE_LOCALE = None
 
+TEST_S3_UPLOAD = False
+
 # TODO: rename to VIDEO_IMG_SIZES or similar
 VIDEO_IMAGES = {'thumbnail_small': (249, 140,),
         'thumbnail_large': (137, 77,),

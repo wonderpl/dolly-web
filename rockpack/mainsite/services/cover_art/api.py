@@ -18,7 +18,7 @@ class CoverArtAPI(WebService):
     @expose('/', methods=('GET',))
     @cache_for(seconds=300)
     def rockpack_cover_art(self):
-        covers = g.session.query(models.RockpackCoverArt).filter(
+        covers = models.RockpackCoverArt.query.filter(
                 models.RockpackCoverArt.locale == self.get_locale())
 
         response = jsonify({'cover_art': [cover_art_dict(c) for c in covers]})
