@@ -3,15 +3,15 @@
 {% block body %}
 {{ super() }}
 <div class="cover-image-thumbnail-small">
-    <img src="{{ form.cover.data.thumbnail_small }}">
+    <div style="border-bottom:1px solid #000000">thumbnail small</div><div><img src="{{ form.cover.data.thumbnail_small }}" /></div>
 </div>
 <div class="cover-image-thumbnail-large">
-    <img src="{{ form.cover.data.thumbnail_large }}">
+    <div style="border-bottom:1px solid #000000">thumbnail large</div><div><img src="{{ form.cover.data.thumbnail_large }}" /></div>
 </div>
 <div class="cover-image-carousel">
-    <img src="{{ form.cover.data.carousel }}">
+    <div style="border-bottom:1px solid #000000">carousel</div><div><img src="{{ form.cover.data.carousel }}" /></div>
 </div>
 <div class="cover-image-background">
-    <img src="{{ form.cover.data.background }}">
+    <div style="border-bottom:1px solid #000000">background</div><div><img src="{{ form.cover.data.background }}" /></div>
 </div>
 {% endblock %}

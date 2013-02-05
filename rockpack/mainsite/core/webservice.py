@@ -24,6 +24,7 @@ def expose(url, methods=['GET']):
 
     return decorator
 
+
 class APIMeta(type):
     def __new__(cls, name, bases, dict_):
         try:
@@ -41,6 +42,7 @@ class APIMeta(type):
 
         dict_['_routes'] = routes.values()
         return type.__new__(cls, name, bases, dict_)
+
 
 class WebService(object):
     __metaclass__ = APIMeta
