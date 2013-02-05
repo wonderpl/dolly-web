@@ -65,60 +65,80 @@ class ChannelAPI(WebService):
         })
         return response
 
-def get_local_videos(locale, with_channel=True, **filters):
-    vlm = g.session.query(models.VideoInstance, models.VideoLocaleMeta).\
-        filter(models.VideoLocaleMeta.visible == True,
-               models.VideoLocaleMeta.locale ==locale,
-               models.VideoInstance.video == models.VideoLocaleMeta.video)
+def video_dict(instance):
+    # TODO: unfudge this
+    thumbnail_url = None
+    for t in instance.thumbnails:
+        if not thumbnail_url:
+            thumbnail_url = t.url
+        if t.url.count('mqdefault.jpg'):
+            thumbnail_url = t.url
+            break
+
+    return dict(
+        id=instance.id,
+        source=instance.source,
+        source_id=instance.source_videoid,
+        view_count=instance.view_count,
+        star_count=instance.star_count,
+        thumbnail_url=thumbnail_url,
+    )
+
+
+def get_local_videos(locale, paging, with_channel=True, **filters):
+    videos = g.session.query(models.VideoInstance, models.Video,
+                             models.VideoLocaleMeta).join(models.Video)
 
     if filters.get('channel'):
-        vlm = vlm.filter(models.VideoInstance.channel == filters['channel'])
+        # If selecting videos from a specific channel then we want all videos
+        # except those explicitly visible=False for the requested locale.
+        # Videos without a locale metadata record will be included.
+        videos = videos.outerjoin(models.VideoLocaleMeta,
+                    (models.Video.id == models.VideoLocaleMeta.video) &
+                    (models.VideoLocaleMeta.locale == locale)).\
+            filter((models.VideoLocaleMeta.visible == True) |
+                   (models.VideoLocaleMeta.visible == None)).\
+            filter(models.VideoInstance.channel == filters['channel'])
+    else:
+        # For all other queries there must be an metadata record with visible=True
+        videos = videos.join(models.VideoLocaleMeta,
+                (models.Video.id == models.VideoLocaleMeta.video) &
+                (models.VideoLocaleMeta.locale == locale) &
+                (models.VideoLocaleMeta.visible == True))
 
     if filters.get('category'):
-        vlm = vlm.filter(models.VideoLocaleMeta.category == filters['category'][0])
-
-    if filters.get('date_order'):
-        vlm = vlm.order_by(desc(models.VideoInstance.date_added))
+        videos = videos.filter(models.VideoLocaleMeta.category == filters['category'][0])
 
     if filters.get('star_order'):
-        vlm = vlm.order_by(desc(models.VideoLocaleMeta.star_count))
+        videos = videos.order_by(desc(models.VideoLocaleMeta.star_count))
 
-    vlm = vlm.limit(100)  # TODO: artificial limit. needs paging support
+    if filters.get('date_order'):
+        # XXX: See note below about temporary hack for time distribution
+        #videos = videos.order_by(desc(models.VideoInstance.date_added))
+        videos = videos.order_by(desc(models.VideoInstance.id))
 
-    def video_dict(instance):
-        # TODO: unfudge this
-        thumbnail_url = None
-        for t in instance.thumbnails:
-            if not thumbnail_url:
-                thumbnail_url = t.url
-            if t.url.count('mqdefault.jpg'):
-                thumbnail_url = t.url
-                break
-
-        return {'source_id': instance.source_videoid,
-                'source': instance.source,
-                'thumbnail_url': thumbnail_url,
-                'id': instance.id}
-
+    total = videos.count()
+    offset, limit = paging
+    videos = videos.offset(offset).limit(limit)
     data = []
-    total = vlm.count()
-    position = 0
-    for v in vlm:
-        position += 1
-        video = video_dict(v.VideoInstance.video_rel)
-        video['star_count'] = v.VideoLocaleMeta.star_count
-        video['view_count'] = v.VideoLocaleMeta.view_count
-
+    for position, v in enumerate(videos, offset):
         item = dict(
             position=position,
             date_added=v.VideoInstance.date_added.isoformat(),
-            video=video,
+            video=video_dict(v.Video),
             id=v.VideoInstance.id,
-            title=v.VideoInstance.video_rel.title,
+            title=v.Video.title,
         )
         if with_channel:
-            item['channel'] = channel_dict(v.VideoInstance.video_channel)
+            item['channel'] = ChannelAPI.channel_dict(v.VideoInstance.video_channel)
         data.append(item)
+    # XXX: Temporary hack to give nice time distribution for demo
+    if 'date_order' in filters:
+        from datetime import datetime, timedelta
+        now = datetime.now()
+        for item in data:
+            item['date_added'] = (now - timedelta(14 * random.random())).isoformat()
+        data.sort(key=lambda i: i['date_added'], reverse=True)
     return data, total
 
 
@@ -129,6 +149,6 @@ class VideoAPI(WebService):
     @expose('/', methods=('GET',))
     @cache_for(seconds=300)
     def video_list(self):
-        data, total = get_local_videos(self.get_locale(), star_order=True, **request.args)
+        data, total = get_local_videos(self.get_locale(), self.get_page(), star_order=True, **request.args)
         response = jsonify({'videos': {'items': data, 'total': total}})
         return response
