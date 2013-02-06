@@ -3,9 +3,9 @@
 {% block body %}
 {{ super() }}
 {% if admin_view.child_links %}
-{% for label, base in admin_view.child_links %}
+{% for label, base, col in admin_view.child_links %}
 <div class="child-link">
-  <a href="{{ url_for(base + '.index_view') }}?flt0_0={{ form.title.data }}">
+  <a href="{{ url_for(base + '.index_view') }}?flt0_0={{ form[col].data }}">
     {{ label }}
   </a>
 </div>

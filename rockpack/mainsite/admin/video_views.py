@@ -104,7 +104,7 @@ class Channel(AdminView):
     inline_models = (ChannelLocaleMetaFormAdmin(models.ChannelLocaleMeta),)
 
     edit_template = 'admin/edit_with_child_links.html'
-    child_links = (('Videos', 'video_instance'),)
+    child_links = (('Videos', 'video_instance', 'title'),)
 
 
 class ChannelLocaleMeta(AdminView):
