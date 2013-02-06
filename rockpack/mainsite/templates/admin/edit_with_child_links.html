@@ -5,7 +5,7 @@
 {% if admin_view.child_links %}
 {% for label, base in admin_view.child_links %}
 <div class="child-link">
-  <a href="{{ url_for(base + '.index_view') }}?flt0_0={{ request.args.id }}">
+  <a href="{{ url_for(base + '.index_view') }}?flt0_0={{ form.title.data }}">
     {{ label }}
   </a>
 </div>

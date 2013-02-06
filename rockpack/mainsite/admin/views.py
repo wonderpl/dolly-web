@@ -32,6 +32,7 @@ class UserView(AdminView):
     model_name = models.User.__tablename__
 
     column_list = ('username', 'email', 'avatar.thumbnail_medium')
+    column_filters = ('username',)
 
     edit_template = 'admin/edit_with_child_links.html'
     child_links = (('Channels', 'channel'),)
