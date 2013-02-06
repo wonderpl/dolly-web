@@ -5,6 +5,8 @@ from rockpack.mainsite.core.dbapi import db
 from rockpack.mainsite.services.cover_art.models import RockpackCoverArt
 from rockpack.mainsite.services.video import models as video_models
 from rockpack.mainsite.auth.models import User
+
+
 class LocaleData(DataSet):
     class UK:
         id = 'en-gb'
@@ -51,6 +53,7 @@ def _record(self, mapper, model, operation):
 
 # duck punch
 _SignalTrackingMapperExtension._record = _record
+
 
 def install(*args):
 
