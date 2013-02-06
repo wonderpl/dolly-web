@@ -35,3 +35,12 @@ class UserCoverArtTestCase(base.RockPackTestCase):
             j = json.loads(r.data)
             assert j['cover_art'][0]['background_url'].startswith(
                      '{0}/images/channel/background/'.format(self.app.config['IMAGE_CDN']))
+
+    def test_failed_upload(self):
+        with self.app.test_client() as client:
+            user = User.query.filter(
+                User.username == UserData.test_user_a.username).first()
+
+            r = client.post('/ws/{}/cover_art/'.format(user.id), data={})
+
+            self.assertEquals(r.status_code, 400)
