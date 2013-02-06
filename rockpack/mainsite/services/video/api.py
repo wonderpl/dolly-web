@@ -42,9 +42,11 @@ class ChannelAPI(WebService):
         if filters.get('category'):
             metas = metas.filter_by(category=filters['category'])
 
-        count = metas.count()
+        total = metas.count()
+        offset, limit = self.get_page()
+        metas.offset(offset).limit(limit)
         channel_data = []
-        for position, meta in enumerate(metas, 1):
+        for position, meta in enumerate(metas, offset):
             item = dict(
                 position=position,
                 id=meta.id,
@@ -53,7 +55,7 @@ class ChannelAPI(WebService):
             item.update(self.channel_dict(meta.channel_rel))
             channel_data.append(item)
 
-        return channel_data, count
+        return channel_data, total
 
     @expose('/', methods=('GET',))
     def channel_list(self):
@@ -82,49 +84,69 @@ class VideoAPI(WebService):
                 thumbnail_url = t.url
                 break
 
-        return {'source_id': instance.source_videoid,
-                'source': instance.source,
-                'thumbnail_url': thumbnail_url,
-                'id': instance.id}
+        return dict(
+            id=instance.id,
+            source=instance.source,
+            source_id=instance.source_videoid,
+            view_count=instance.view_count,
+            star_count=instance.star_count,
+            thumbnail_url=thumbnail_url,
+        )
 
     def _get_local_videos(self, with_channel=True, **filters):
-        vlm = g.session.query(models.VideoInstance, models.VideoLocaleMeta).\
-            filter(models.VideoLocaleMeta.visible == True,
-                   models.VideoLocaleMeta.locale == self.get_locale(),
-                   models.VideoInstance.video == models.VideoLocaleMeta.video)
+        videos = g.session.query(models.VideoInstance, models.Video,
+                                 models.VideoLocaleMeta).join(models.Video)
 
         if filters.get('channel'):
-            vlm = vlm.filter(models.VideoInstance.channel == filters['channel'])
+            # If selecting videos from a specific channel then we want all videos
+            # except those explicitly visible=False for the requested locale.
+            # Videos without a locale metadata record will be included.
+            videos = videos.outerjoin(models.VideoLocaleMeta,
+                        (models.Video.id == models.VideoLocaleMeta.video) &
+                        (models.VideoLocaleMeta.locale == self.get_locale())).\
+                filter((models.VideoLocaleMeta.visible == True) |
+                       (models.VideoLocaleMeta.visible == None)).\
+                filter(models.VideoInstance.channel == filters['channel'])
+        else:
+            # For all other queries there must be an metadata record with visible=True
+            videos = videos.join(models.VideoLocaleMeta,
+                    (models.Video.id == models.VideoLocaleMeta.video) &
+                    (models.VideoLocaleMeta.locale == self.get_locale()) &
+                    (models.VideoLocaleMeta.visible == True))
 
         if filters.get('category'):
-            vlm = vlm.filter(models.VideoLocaleMeta.category == filters['category'][0])
-
-        if filters.get('date_order'):
-            vlm = vlm.order_by(desc(models.VideoInstance.date_added))
+            videos = videos.filter(models.VideoLocaleMeta.category == filters['category'][0])
 
         if filters.get('star_order'):
-            vlm = vlm.order_by(desc(models.VideoLocaleMeta.star_count))
+            videos = videos.order_by(desc(models.VideoLocaleMeta.star_count))
 
-        vlm = vlm.limit(100)  # TODO: artificial limit. needs paging support
+        if filters.get('date_order'):
+            # XXX: See note below about temporary hack for time distribution
+            #videos = videos.order_by(desc(models.VideoInstance.date_added))
+            videos = videos.order_by(desc(models.VideoInstance.id))
+
+        total = videos.count()
+        offset, limit = self.get_page()
+        videos = videos.offset(offset).limit(limit)
         data = []
-        total = vlm.count()
-        position = 0
-        for v in vlm:
-            position += 1
-            video = self.video_dict(v.VideoInstance.video_rel)
-            video['star_count'] = v.VideoLocaleMeta.star_count
-            video['view_count'] = v.VideoLocaleMeta.view_count
-
+        for position, v in enumerate(videos, offset):
             item = dict(
                 position=position,
                 date_added=v.VideoInstance.date_added.isoformat(),
-                video=video,
+                video=self.video_dict(v.Video),
                 id=v.VideoInstance.id,
-                title=v.VideoInstance.video_rel.title,
+                title=v.Video.title,
             )
             if with_channel:
                 item['channel'] = ChannelAPI.channel_dict(v.VideoInstance.video_channel)
             data.append(item)
+        # XXX: Temporary hack to give nice time distribution for demo
+        if 'date_order' in filters:
+            from datetime import datetime, timedelta
+            now = datetime.now()
+            for item in data:
+                item['date_added'] = (now - timedelta(14 * random.random())).isoformat()
+            data.sort(key=lambda i: i['date_added'], reverse=True)
         return data, total
 
     @expose('/', methods=('GET',))

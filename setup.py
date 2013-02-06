@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="rockpack-mainsite",
-    version="20130131.2",
+    version="20130205",
     author="rockpack ltd",
     author_email="developers@rockpack.com",
     description="Flask app for rockpack web services and content admin",
