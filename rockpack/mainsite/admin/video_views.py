@@ -1,4 +1,3 @@
-from flask.ext import wtf
 from flask.ext.admin.model.typefmt import Markup
 from flask.ext.admin.model.form import InlineFormAdmin
 from rockpack.mainsite.admin.models import AdminView
@@ -31,10 +30,14 @@ class VideoThumbnail(AdminView):
     model_name = 'video_thumbnail'
     model = models.VideoThumbnail
 
+    column_filters = ('video_rel',)
+
 
 class VideoLocaleMeta(AdminView):
     model = models.VideoLocaleMeta
     model_name = model.__tablename__
+
+    column_filters = ('video_rel', 'category_ref', 'locale_rel', 'visible',)
 
 
 class VideoInstance(AdminView):
@@ -98,7 +101,7 @@ class Channel(AdminView):
     model = models.Channel
 
     column_list = ('title', 'owner_rel', 'cover.thumbnail_large')
-    column_filters = ('owner_rel',)
+    column_filters = ('owner_rel', 'title',)
     column_searchable_list = ('title',)
 
     inline_models = (ChannelLocaleMetaFormAdmin(models.ChannelLocaleMeta),)
@@ -110,6 +113,8 @@ class Channel(AdminView):
 class ChannelLocaleMeta(AdminView):
     model_name = 'channel_locale_meta'
     model = models.ChannelLocaleMeta
+
+    column_filters = ('channel_rel',)
 
 
 class ExternalCategoryMap(AdminView):
