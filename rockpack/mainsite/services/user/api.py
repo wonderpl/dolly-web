@@ -33,9 +33,17 @@ class UserAPI(WebService):
         response = jsonify(data)
         return response
 
-    @expose('/<string:userid>/cover_art/', methods=('GET',))
+    @expose('/<string:userid>/cover_art/', methods=('GET', 'POST',))
     @cache_for(seconds=300)
     def user_cover_art(self, userid):
+        if request.method == 'POST':
+            uca = UserCoverArt(cover=request.files['file'], owner=userid)
+            g.session.add(uca)
+            g.session.commit()
+            response = jsonify({'cover_art': [cover_api.cover_art_dict(uca)]})
+            response.status_code = 201
+            return response
+
         covers = g.session.query(UserCoverArt).filter(
                 UserCoverArt.owner == userid)
 

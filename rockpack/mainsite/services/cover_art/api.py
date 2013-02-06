@@ -1,4 +1,4 @@
-from flask import g, jsonify
+from flask import jsonify
 
 from rockpack.mainsite.core.webservice import WebService, expose
 from rockpack.mainsite.services.cover_art import models
