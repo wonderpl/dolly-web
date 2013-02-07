@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 
 def get_git_version():
     from subprocess import check_output
-    return check_output(('git', 'describe')).strip()
+    return check_output(('git', 'describe', '--match', '[0-9].*')).strip()
 
 setup(
     name="rockpack-mainsite",
