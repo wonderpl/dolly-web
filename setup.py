@@ -1,9 +1,13 @@
 from setuptools import setup, find_packages
 
 
+def get_git_version():
+    from subprocess import check_output
+    return check_output(('git', 'describe')).strip()
+
 setup(
     name="rockpack-mainsite",
-    version="20130205",
+    version=get_git_version(),
     author="rockpack ltd",
     author_email="developers@rockpack.com",
     description="Flask app for rockpack web services and content admin",
