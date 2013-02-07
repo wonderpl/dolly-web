@@ -24,25 +24,43 @@
     </div>
     {% endif %}
     <div class="import_form">
-      {{ lib.render_form(form) }}
+        <form action="" method="POST" class="form-horizontal" enctype="multipart/form-data">
+            <fieldset>
+                {{ lib.render_form_fields(form) }}
+                <a href="#" onclick="$('#user_form')[0].style.display='block';" class="btn btn-large">add user</a>
+                <div id='user_form' {% if not user_form.errors %} style="display: none" {% endif %}>
+                    {{ lib.render_form_fields(user_form) }}
+                </div>
+                <div class="control-group">
+                    <div class="controls">
+                        {% if form.commit.data %}
+                        <input type="submit" class="btn btn-primary btn-large" value="{{ _gettext('Submit') }}" />
+                        {% else %}
+                        <input type="submit" class="btn btn-primary btn-large" value="{{ _gettext('Preview') }}" />
+                        {% endif %}
+                    </div>
+                </div>
+            </fieldset>
+        </form>
     </div>
   {% endif %}
 
   {% if import_preview %}
   {% if import_preview.videos %}
   <div class="import_preview">
-    {% if form.data.type == 'video' %}
-    <h2>{{ import_preview.videos[0].title }}</h2>
-    {% else %}
-    <h2>{{ import_preview.title }}</h2>
-    <p>Video count: {{ import_preview.video_count }}</p>
-    {% endif %}
-    <img src="{{ import_preview.videos[0].thumbnails[0].url }}"/>
+      {% if form.data.type == 'video' %}
+      <h2>{{ import_preview.videos[0].title }}</h2>
+      {% else %}
+      <h2>{{ import_preview.title }}</h2>
+      <p>Video count: {{ import_preview.video_count }}</p>
+      {% endif %}
+      <img src="{{ import_preview.videos[0].thumbnails[0].url }}"/>
   </div>
   {% else %}
   <div class="error">No videos found. :-(</div>
   {% endif %}
   {% endif %}
+
 
 {% endblock %}
 

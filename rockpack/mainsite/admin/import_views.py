@@ -1,13 +1,16 @@
 import re
 import logging
+
 from flask import request, url_for, redirect, flash, jsonify
 from flask.ext import wtf, login
 from flask.ext.admin import BaseView, expose, form
+from wtforms.validators import ValidationError
+
 from rockpack.mainsite.core import youtube
 from rockpack.mainsite.services.video.models import (
     Locale, Source, Category, Video, Channel, ChannelLocaleMeta)
 from rockpack.mainsite.auth.models import User
-from rockpack.mainsite.core.dbapi import commit_on_success
+from rockpack.mainsite.core.dbapi import commit_on_success, db
 
 
 class ImportForm(form.BaseForm):
@@ -38,6 +41,18 @@ class ImportForm(form.BaseForm):
                 self._errors = {'__all__': 'Internal error: %r' % ex}
             else:
                 return True
+
+
+class UserForm(form.BaseForm):
+    username = wtf.TextField(validators=[wtf.validators.required()])
+    first_name = wtf.TextField(validators=[wtf.validators.required()])
+    last_name = wtf.TextField(validators=[wtf.validators.required()])
+    email = wtf.TextField(validators=[wtf.validators.required()])
+    avatar = wtf.FileField()
+
+    def validate_avatar(form, field):
+        if not request.files.get('avatar'):
+            raise ValidationError('No file chosen')
 
 
 class ImportView(BaseView):
@@ -73,6 +88,17 @@ class ImportView(BaseView):
 
         return count, channel
 
+    def _create_user(self, form):
+        user = User(username=form.username.data,
+                first_name=form.first_name.data,
+                last_name=form.last_name.data,
+                email=form.email.data,
+                avatar=request.files.get('avatar'),
+                is_active=True)
+        db.session.add(user)
+        db.session.commit()
+        return user
+
     @expose('/', ('GET', 'POST'))
     def index(self):
         ctx = {}
@@ -92,21 +118,33 @@ class ImportView(BaseView):
         form.category.choices = [(-1, '')] +\
             list(Category.get_form_choices(form.locale.data))
 
+        user_form = UserForm(data, csrf_enabled=False)
+        ctx['user_form'] = user_form
         ctx['form'] = form
-        if 'source' in data and form.validate():
-            if form.commit.data:
-                count, channel = self._import_videos(form)
-                if channel and channel.id:
-                    url = '%s?id=%s' % (url_for('channel.edit_view'), channel.id)
+
+        if 'source' in data:
+            if form.commit.data and not form.user.data:
+                if not user_form.validate():
+                    return self.render('admin/import.html', **ctx)
+
+                user = self._create_user(user_form)
+                # update import form with new user
+                form.user.data = user.id
+
+            if form.validate():
+                if form.commit.data:
+                    count, channel = self._import_videos(form)
+                    if channel and channel.id:
+                        url = '%s?id=%s' % (url_for('channel.edit_view'), channel.id)
+                    else:
+                        url = url_for('video.index_view')
+                        if form.type.data == 'playlist':
+                            url += '?flt0_0=' + form.id.data
+                    flash('Imported %d videos' % count)
+                    return redirect(url)
                 else:
-                    url = url_for('video.index_view')
-                    if form.type.data == 'playlist':
-                        url += '?flt0_0=' + form.id.data
-                flash('Imported %d videos' % count)
-                return redirect(url)
-            else:
-                ctx['import_preview'] = form.import_data
-                form.commit.data = 'true'
+                    ctx['import_preview'] = form.import_data
+                    form.commit.data = 'true'
 
         return self.render('admin/import.html', **ctx)
 
