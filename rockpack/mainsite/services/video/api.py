@@ -166,7 +166,7 @@ class CategoryAPI(WebService):
         d = {'id': instance.id,
                 'name': instance.name}
         for c in instance.children:
-            d.setdefault('sub-categories', []).append(CategoryAPI.cat_dict(c))
+            d.setdefault('sub_categories', []).append(CategoryAPI.cat_dict(c))
 
         print d
         return d
