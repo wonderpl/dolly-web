@@ -5,6 +5,7 @@ from rockpack.mainsite.services.video.models import Video, VideoThumbnail, Video
 
 
 Playlist = namedtuple('Playlist', 'title video_count videos')
+Videolist = namedtuple('Videolist', 'video_count videos')
 
 
 def _youtube_feed(feed, id, params={}):
@@ -73,3 +74,18 @@ def get_playlist_data(id, fetch_all_videos=False, feed='playlists'):
 def get_user_data(id, fetch_all_videos=False):
     """Return data for users upload playlist."""
     return get_playlist_data('%s/uploads' % id, fetch_all_videos, 'users')
+
+
+def search(query, start=0, size=10, region=None, client_address=None, safe_search='strict'):
+    params = {
+        'q': query,
+        'start-index': start + 1,
+        'max-results': size,
+        'region': region,
+        'restriction': client_address,
+        'safeSearch': safe_search,
+    }
+    data = _youtube_feed('videos', '', params)['feed']
+    total = data['openSearch$totalResults']['$t']
+    videos = [_get_video_data(e, id) for e in data.get('entry', [])]
+    return Videolist(total, videos)

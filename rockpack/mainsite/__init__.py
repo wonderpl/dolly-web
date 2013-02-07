@@ -11,6 +11,7 @@ app.config.from_envvar('ROCKPACK_SETTINGS', silent=True)
 
 SERVICES = (
     'rockpack.mainsite.services.video',
+    'rockpack.mainsite.services.search',
 )
 REGISTER_SETUPS = (
     ('rockpack.mainsite.auth', 'setup_auth'),
