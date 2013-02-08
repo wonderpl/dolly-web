@@ -17,6 +17,32 @@ class LocaleData(DataSet):
         name = 'US'
 
 
+class SourceData(DataSet):
+    class Rockpack:
+        id = 0
+        label = 'rockpack'
+        player_template = 'r'
+
+    class Youtube:
+        id = 1
+        label = 'youtube'
+        player_template = 'y'
+
+
+class CategoryData(DataSet):
+    class TV:
+        id = 0
+        name = 'TV'
+        locale = LocaleData.US.id
+        parent = None
+
+    class Series:
+        id = 1
+        name = 'Series'
+        locale = LocaleData.US.id
+        parent = 1
+
+
 class RockpackCoverArtData(DataSet):
     class comic_cover:
         cover = 'image.jpg'
@@ -59,7 +85,9 @@ def install(*args):
 
     dbfixture = SQLAlchemyFixture(
             env={'LocaleData': video_models.Locale,
+                'CategoryData': video_models.Category,
                 'RockpackCoverArtData': RockpackCoverArt,
+                'SourceData': video_models.Source,
                 'UserData': User},
             engine=db.engine)
 

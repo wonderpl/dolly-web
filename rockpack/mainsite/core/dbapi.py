@@ -4,7 +4,7 @@ from functools import wraps
 
 from sqlalchemy import create_engine
 
-from flask.ext.sqlalchemy import SQLAlchemy
+from flask.ext import sqlalchemy
 from flask import g
 
 from rockpack.mainsite import app
@@ -35,16 +35,21 @@ def create_database(db_url, drop_if_exists=False):
 
 def get_sessionmanager(config=app.config['DATABASE_URL']):
     app.config['SQLALCHEMY_DATABASE_URI'] = config
-    return SQLAlchemy(app)
+    return sqlalchemy.SQLAlchemy(app)
 
 
+class _Model(sqlalchemy.Model):
+    @classmethod
+    def get(cls, id):
+        return g.session.query(cls).get(id)
+
+    def save(self):
+        g.session.merge(self)
+        return g.session.commit()
+
+
+sqlalchemy.Model = _Model
 db = get_sessionmanager()
-
-# Duck punch a save method into db.Model
-def _save(self):
-    g.session.merge(self)
-    return g.session.commit()
-db.Model.save = _save
 
 
 @app.before_request
