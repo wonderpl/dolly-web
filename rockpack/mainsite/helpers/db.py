@@ -11,6 +11,9 @@ from rockpack.mainsite.core import imaging
 from .urls import image_url_from_path
 
 
+IMAGE_CONVERSION_FORMAT = ('JPEG', 'jpg',)
+
+
 class PKPrefixLengthError(Exception):
     pass
 
@@ -84,6 +87,7 @@ class UTCCoercingDateTime(types.TypeDecorator):
                 pass
         return value
 
+
 TZDateTime = UTCCoercingDateTime
 
 
@@ -92,7 +96,7 @@ class ImageUrl(str):
     pass
 
 
-class ImagePath(object):
+class ImagePath:
     """Wrapper around image path string that can generate thumbnail urls."""
 
     def __init__(self, path, pathmap):
@@ -108,7 +112,11 @@ class ImagePath(object):
         except KeyError, e:
             raise AttributeError(e.message)
         else:
-            url = image_url_from_path(base + self.path)
+            # If the original image wasn't a jpg, we need
+            # to change the extension to grab the jpg versions
+            sans_ext = self.path.rsplit('.', 1)[0]
+            path = '.'.join([sans_ext, IMAGE_CONVERSION_FORMAT[1]])
+            url = image_url_from_path(base + path)
             return ImageUrl(url)
 
 
@@ -134,7 +142,7 @@ def resize_and_upload(fp, cfgkey):
     """Takes file-like object and uploads thumbnails to s3."""
     uploader = imaging.ImageUploader()
     if app.config.get('TESTING', False) and not app.config['TEST_S3_UPLOAD']:
-        return uploader.new_filename(extension='jpg')
+        return uploader.new_filename(extension='png')
 
     img_resize_config = app.config['%s_IMAGES' % cfgkey]
     img_path_config = app.config['%s_IMG_PATHS' % cfgkey]
@@ -151,7 +159,7 @@ def resize_and_upload(fp, cfgkey):
 
     for name, img in resized.iteritems():
         f = cStringIO.StringIO()
-        img.save(f, 'JPEG', quality=90)
-        uploader.from_file(f, img_path_config[name], new_name, 'jpg')
+        img.save(f, IMAGE_CONVERSION_FORMAT[0], quality=90)
+        uploader.from_file(f, img_path_config[name], new_name, IMAGE_CONVERSION_FORMAT[1])
         f.close()
-    return new_name + '.jpg'
+    return '.'.join([new_name, orig_ext])
