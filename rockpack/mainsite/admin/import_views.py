@@ -23,6 +23,7 @@ class ImportForm(form.BaseForm):
     commit = wtf.HiddenField()
     user = wtf.TextField()
     channel = wtf.TextField()
+    channel_description = wtf.TextAreaField()
 
     def validate(self):
         if not super(ImportForm, self).validate():
@@ -76,7 +77,9 @@ class ImportView(BaseView):
         if channel and user:
             if channel.startswith('_new:'):
                 channel = Channel(title=channel.split(':', 1)[1],
-                                  owner=user, description='', cover='')
+                                  owner=user,
+                                  description=form.channel_description.data,
+                                  cover='')
                 channel.metas = [ChannelLocaleMeta(
                                  locale=form.locale.data,
                                  category=form.category.data)]

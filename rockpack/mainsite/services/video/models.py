@@ -151,7 +151,8 @@ class Video(db.Model):
     thumbnails = relationship('VideoThumbnail', backref='video_rel',
             lazy='joined', passive_deletes=True, cascade="all, delete-orphan")
     metas = relationship('VideoLocaleMeta', backref='video_rel')
-    instances = relationship('VideoInstance', backref=db.backref('video_rel', lazy='joined'))
+    instances = relationship('VideoInstance', backref=db.backref('video_rel', lazy='joined'),
+            passive_deletes=True, cascade="all, delete-orphan")
     restrictions = relationship('VideoRestriction', backref='videos')
 
     def __str__(self):
@@ -231,7 +232,7 @@ class VideoInstance(db.Model):
     id = Column(CHAR(24), primary_key=True)
     date_added = Column(DateTime(timezone=True), nullable=False, default=func.now())
 
-    video = Column(ForeignKey('video.id'), nullable=False)
+    video = Column(ForeignKey('video.id', ondelete='CASCADE'), nullable=False)
     channel = Column(ForeignKey('channel.id'), nullable=False)
 
     @property
