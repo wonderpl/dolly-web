@@ -5,7 +5,7 @@ from rockpack.mainsite.services.video.models import ChannelLocaleMeta
 from rockpack.mainsite.services.cover_art.models import UserCoverArt
 from rockpack.mainsite.services.cover_art import api as cover_api
 from rockpack.mainsite.services.video import api as video_api
-from rockpack.mainsite.helpers.http import cache_for
+from rockpack.mainsite.helpers.http import cache_for, etag
 
 
 class UserAPI(WebService):
@@ -15,6 +15,7 @@ class UserAPI(WebService):
     # TODO: hack for recent videos. do this properly
     @expose('/<string:userid>/subscriptions/recent_videos/')
     @cache_for(seconds=300)
+    @etag
     def recent_videos(self, userid):
         data, total = video_api.get_local_videos(self.get_locale(), self.get_page(), date_order=True, **request.args)
         response = jsonify({'videos': {'items': data, 'total': total}})
@@ -22,6 +23,7 @@ class UserAPI(WebService):
 
     @expose('/<string:userid>/channels/<string:channelid>/', methods=('GET',))
     @cache_for(seconds=300)
+    @etag
     def channel_item(self, userid, channelid):
         meta = g.session.query(ChannelLocaleMeta).filter_by(
             channel=channelid).first()
@@ -35,6 +37,7 @@ class UserAPI(WebService):
 
     @expose('/<string:userid>/cover_art/', methods=('GET', 'POST',))
     @cache_for(seconds=300)
+    @etag
     def user_cover_art(self, userid):
         if request.method == 'POST':
             uca = UserCoverArt(cover=request.files['file'], owner=userid)

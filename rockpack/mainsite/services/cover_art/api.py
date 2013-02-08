@@ -2,7 +2,7 @@ from flask import jsonify
 
 from rockpack.mainsite.core.webservice import WebService, expose
 from rockpack.mainsite.services.cover_art import models
-from rockpack.mainsite.helpers.http import cache_for
+from rockpack.mainsite.helpers.http import cache_for, etag
 
 
 def cover_art_dict(instance):
@@ -17,6 +17,7 @@ class CoverArtAPI(WebService):
 
     @expose('/', methods=('GET',))
     @cache_for(seconds=300)
+    @etag
     def rockpack_cover_art(self):
         covers = models.RockpackCoverArt.query.filter(
                 models.RockpackCoverArt.locale == self.get_locale())

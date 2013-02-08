@@ -1,5 +1,7 @@
 import json
 
+from flask import url_for
+
 from rockpack.mainsite.auth.models import User
 
 from test import base
@@ -12,7 +14,9 @@ class CoverArtTestCase(base.RockPackTestCase):
 
     def test_rockpack_cover(self):
         with self.app.test_client() as client:
-            r = client.get('/ws/cover_art/')
+            ctx = self.app.test_request_context()
+            ctx.push()
+            r = client.get(url_for('CoverArtAPI_api.rockpack_cover_art'))
             j = json.loads(r.data)
             assert j['cover_art'][0]['background_url'].startswith(
                      '{0}/images/channel/background/'.format(self.app.config['IMAGE_CDN']))
