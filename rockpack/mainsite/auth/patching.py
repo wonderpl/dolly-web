@@ -1,6 +1,7 @@
 from flask.ext.rauth import RauthResponse
 from flask.ext.rauth import parse_response
 
+
 def patch_rauth():
     # We need to patch RauthResponse because obj.response
     # might be a callable which returns a dict (which Rauth

@@ -28,7 +28,7 @@ class Admin(UserMixin):
         except models.InvalidAdminException:
             return None
         return Admin(u.id, u.username, u.email)
-    
+
     @classmethod
     def register_token(cls, token, email):
         try:

@@ -7,6 +7,7 @@ from test.assets import AVATAR_IMG_PATH
 
 from test.fixtures import UserData
 
+
 class CoverArtTestCase(base.RockPackTestCase):
 
     def test_rockpack_cover(self):
