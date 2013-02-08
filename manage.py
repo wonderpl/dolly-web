@@ -19,7 +19,6 @@ def dbsync(options):
             models.append(__import__(module + '.models', fromlist=['models']))
         except ImportError as e:
             print >> sys.stderr, 'cannot import', module, ':', e
-            sys.exit(1)
 
     for module in SERVICES + zip(*REGISTER_SETUPS)[0]:
         load_modules(module)
@@ -61,10 +60,14 @@ def _patch_db_url(db_url):
 def test(options):
     import pytest
     from rockpack import mainsite
+    mainsite.app.config['TESTING'] = True
     db_url = mainsite.app.config['TEST_DATABASE_URL']
     _patch_db_url(db_url)
     create_database(db_url, drop_first=True)
     dbsync(None)
+    mainsite.init_app()
+    from test.fixtures import install, all_data
+    install(*all_data)
     pytest.main(options[1])
 
 

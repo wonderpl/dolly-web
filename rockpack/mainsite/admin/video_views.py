@@ -2,6 +2,7 @@ from flask.ext.admin.model.typefmt import Markup
 from flask.ext.admin.model.form import InlineFormAdmin
 from rockpack.mainsite.admin.models import AdminView
 from rockpack.mainsite.services.video import models
+from rockpack.mainsite.services.cover_art import models as coverart_models
 
 
 def _format_video_thumbnail(context, video, name):
@@ -110,6 +111,26 @@ class Channel(AdminView):
     child_links = (('Videos', 'video_instance', 'title'),)
 
 
+class RockpackCoverArt(AdminView):
+    model = coverart_models.RockpackCoverArt
+    model_name = coverart_models.RockpackCoverArt.__tablename__
+
+    column_list = ('locale_rel', 'cover.thumbnail_large')
+    column_filters = ('locale_rel',)
+
+    edit_template = 'admin/cover_art.html'
+
+
+class UserCoverArt(AdminView):
+    model = coverart_models.UserCoverArt
+    model_name = coverart_models.UserCoverArt.__tablename__
+
+    column_list = ('owner_rel', 'cover.thumbnail_large',)
+    column_filters = ('owner_rel',)
+
+    edit_template = 'admin/cover_art.html'
+
+
 class ChannelLocaleMeta(AdminView):
     model_name = 'channel_locale_meta'
     model = models.ChannelLocaleMeta
@@ -124,8 +145,8 @@ class ExternalCategoryMap(AdminView):
 
 registered = [
     Video, VideoLocaleMeta, VideoThumbnail, VideoInstance,
-    Source, Category, CategoryMap, Locale,
-    Channel, ChannelLocaleMeta, ExternalCategoryMap]
+    Source, Category, CategoryMap, Locale, RockpackCoverArt,
+    UserCoverArt, Channel, ChannelLocaleMeta, ExternalCategoryMap]
 
 
 def admin_views():
