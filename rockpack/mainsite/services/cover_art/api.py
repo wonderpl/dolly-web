@@ -6,8 +6,7 @@ from rockpack.mainsite.helpers.http import cache_for
 
 
 def cover_art_dict(instance):
-    return {'id': instance.id,
-            'cover_ref': str(instance.cover),
+    return {'cover_ref': str(instance.cover),
             'carousel_url': instance.cover.carousel,
             'background_url': instance.cover.background}
 

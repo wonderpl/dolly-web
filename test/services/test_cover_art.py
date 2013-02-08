@@ -13,7 +13,6 @@ class CoverArtTestCase(base.RockPackTestCase):
         with self.app.test_client() as client:
             r = client.get('/ws/cover_art/')
             j = json.loads(r.data)
-            self.assertEquals(j['cover_art'][0]['id'], 1, 'ids should match')
             assert j['cover_art'][0]['background_url'].startswith(
                      '{0}/images/channel/background/'.format(self.app.config['IMAGE_CDN']))
             assert j['cover_art'][0]['carousel_url'].startswith(
