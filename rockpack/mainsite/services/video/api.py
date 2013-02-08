@@ -133,7 +133,7 @@ def get_local_videos(loc, paging, with_channel=True, **filters):
             title=v.Video.title,
         )
         if with_channel:
-            item['channel'] = ChannelAPI.channel_dict(v.VideoInstance.video_channel)
+            item['channel'] = channel_dict(v.VideoInstance.video_channel)
         data.append(item)
     # XXX: Temporary hack to give nice time distribution for demo
     if 'date_order' in filters:
