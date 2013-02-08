@@ -28,7 +28,7 @@ class UserAPI(WebService):
         if not meta:
             abort(404)
         data = video_api.channel_dict(meta.channel_rel)
-        items, total = video_api._get_local_videos(self.get_locale(), self.get_page(), channel=channelid, with_channel=False)
+        items, total = video_api.get_local_videos(self.get_locale(), self.get_page(), channel=channelid, with_channel=False)
         data['videos'] = dict(items=items, total=total)
         response = jsonify(data)
         return response
