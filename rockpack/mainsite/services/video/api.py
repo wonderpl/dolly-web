@@ -43,7 +43,7 @@ def get_local_channel(locale, paging, **filters):
         # a lazy loaded join.
         metas = metas.join(models.Channel).\
             options(contains_eager(models.ChannelLocaleMeta.channel_rel))
-        metas = metas.filter(models.Channel.title.ilike('%fel%')) #'%%%s%%' % filters['query']))
+        metas = metas.filter(models.Channel.title.ilike('%%%s%%' % filters['query']))
 
     total = metas.count()
     offset, limit = paging

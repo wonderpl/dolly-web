@@ -23,7 +23,7 @@ class SearchAPI(WebService):
     default_page_size = 10
     max_page_size = 50
 
-    @expose('/video', methods=('GET',))
+    @expose('/videos', methods=('GET',))
     @cache_for(seconds=300)
     def search_videos(self):
         """Search youtube videos."""
