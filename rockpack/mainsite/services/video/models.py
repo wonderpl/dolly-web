@@ -208,6 +208,8 @@ class VideoLocaleMeta(db.Model):
     view_count = Column(Integer, nullable=False, server_default='0')
     star_count = Column(Integer, nullable=False, server_default='0')
 
+    locale_rel = relationship('Locale', backref='videolocalemetas')
+
 
 class VideoRestriction(db.Model):
 

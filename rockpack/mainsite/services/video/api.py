@@ -7,6 +7,7 @@ from rockpack.mainsite.core.webservice import expose
 from rockpack.mainsite.services.video import models
 from rockpack.mainsite.helpers.http import cache_for
 
+
 def channel_dict(channel):
     sizes = ['thumbnail_large', 'thumbnail_small', 'background']
     images = {'cover_%s_url' % s: getattr(channel.cover, s) for s in sizes}
@@ -29,6 +30,7 @@ def channel_dict(channel):
     )
     ch_data.update(images)
     return ch_data
+
 
 def get_local_channel(locale, **filters):
     metas = g.session.query(models.ChannelLocaleMeta).\
@@ -64,6 +66,7 @@ class ChannelAPI(WebService):
             'total': total},
         })
         return response
+
 
 def video_dict(instance):
     # TODO: unfudge this
@@ -151,4 +154,33 @@ class VideoAPI(WebService):
     def video_list(self):
         data, total = get_local_videos(self.get_locale(), self.get_page(), star_order=True, **request.args)
         response = jsonify({'videos': {'items': data, 'total': total}})
+        response.headers['Cache-Control'] = 'max-age={}'.format(300)  # 5 Mins
+        return response
+
+
+class CategoryAPI(WebService):
+
+    endpoint = '/categories'
+
+    @staticmethod
+    def cat_dict(instance):
+        d = {'id': instance.id,
+                'name': instance.name}
+        for c in instance.children:
+            d.setdefault('sub_categories', []).append(CategoryAPI.cat_dict(c))
+
+        return d
+
+    def _get_cats(self, **filters):
+        cats = g.session.query(models.Category).filter(
+                models.Category.locale == self.get_locale(),
+                models.Category.parent == None)
+
+        return [self.cat_dict(c) for c in cats]
+
+    @expose('/', methods=('GET',))
+    def category_list(self):
+        data = self._get_cats(**request.args)
+        response = jsonify({'categories': {'items': data}})
+        response.headers['Cache-Control'] = 'max-age={}'.format(300)  # 5 Mins
         return response
