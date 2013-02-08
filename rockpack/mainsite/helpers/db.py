@@ -96,7 +96,7 @@ class ImageUrl(str):
     pass
 
 
-class ImagePath:
+class ImagePath(object):
     """Wrapper around image path string that can generate thumbnail urls."""
 
     def __init__(self, path, pathmap):
