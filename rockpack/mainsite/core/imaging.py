@@ -52,19 +52,19 @@ class Resizer(object):
         if new_ratio < old_ratio:
             crop_height = old_h
             crop_width = crop_height * new_ratio
-            x_offset = int(float(old_w-crop_width) / 2)
+            x_offset = int(float(old_w - crop_width) / 2)
             y_offset = 0
         else:
             crop_width = old_w
             crop_height = crop_width / new_ratio
             x_offset = 0
-            y_offset = int(float(old_h-crop_height) / 3)
+            y_offset = int(float(old_h - crop_height) / 3)
 
         new_img = img.crop(
             (x_offset,
                 y_offset,
-                x_offset+int(crop_width),
-                y_offset+int(crop_height)))
+                x_offset + int(crop_width),
+                y_offset + int(crop_height)))
 
         return new_img.resize((w, h,), Image.ANTIALIAS)
 
@@ -77,7 +77,6 @@ class Resizer(object):
 
         if image_path or f_obj:
             self.image_path = image_path or f_obj
-
 
         img = Image.open(self.image_path)
         if img.mode not in ('RGB', 'RGBA'):
@@ -97,9 +96,8 @@ class ImageUploader(object):
     def __init__(self, uploader=S3Uploader):
         self.uploader = uploader()
 
-    def from_file(self, fp, target_path=None, target_filename=None, extension=None):
-
-        # Construct a new filename
+    @classmethod
+    def new_filename(cls, target_path=None, target_filename=None, extension=None):
         if not target_filename:
             target_filename = base64.urlsafe_b64encode(
                 uuid.uuid4().bytes)[:-2]
@@ -108,7 +106,11 @@ class ImageUploader(object):
             target_filename += '.' + extension
 
         # Create a `key` from a target "path" and the filename
-        key_name = os.path.join(target_path, target_filename)
+        if not target_path:
+            return target_filename
+        return os.path.join(target_path, target_filename)
 
+    def from_file(self, fp, target_path=None, target_filename=None, extension=None):
+        key_name = self.new_filename(target_path, target_filename, extension)
         self.uploader.put_from_file(fp, key_name, headers=jpeg_policy)
         return key_name

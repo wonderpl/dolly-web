@@ -1,6 +1,6 @@
-import urllib
 from test.base import RockPackTestCase
 from rockpack.mainsite.services.video import models
+
 
 class TestAdminChannel(RockPackTestCase):
 

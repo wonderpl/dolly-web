@@ -3,11 +3,8 @@ import psycopg2
 from functools import wraps
 
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.orm import scoped_session
-from sqlalchemy.ext.declarative import declarative_base
 
-from flask.ext.sqlalchemy import SQLAlchemy
+from flask.ext import sqlalchemy
 from flask import g
 
 from rockpack.mainsite import app
@@ -36,65 +33,23 @@ def create_database(db_url, drop_if_exists=False):
     engine.execute(command)
 
 
-class _Base(object):
+def get_sessionmanager(config=app.config['DATABASE_URL']):
+    app.config['SQLALCHEMY_DATABASE_URI'] = config
+    return sqlalchemy.SQLAlchemy(app)
 
+
+class _Model(sqlalchemy.Model):
     @classmethod
     def get(cls, id):
         return g.session.query(cls).get(id)
 
     def save(self):
-        g.session.merge(self)      # XXX: Use session.add?
-        return g.session.commit()  # XXX: commit here or leave to view to handle?
+        g.session.merge(self)
+        return g.session.commit()
 
 
-Base = declarative_base(cls=_Base)
-
-
-class SessionProxy(object):
-    def __init__(self, session):
-        self.session = session
-
-    def __getattr__(self, key):
-        return getattr(self.session, key)
-
-    def __enter__(self):
-        return self
-
-    def __del__(self):
-        manager._Session.remove()
-
-    def __exit__(self, exc_type, exc_value, exc_tb):
-        manager._Session.remove()
-
-
-class SessionManager(object):
-    def __init__(self, connection_string):
-        self.connection_string = connection_string
-        self._Session = scoped_session(sessionmaker(bind=self.get_engine()))
-
-    def get_engine(self):
-        try:
-            engine = self.engine
-        except AttributeError:
-            engine = self.engine = create_engine(self.connection_string)
-        return engine
-
-    def get_session(self):
-        #self._Session.configure(bind=self.get_engine())
-        return SessionProxy(self._Session())
-
-
-manager = SessionManager(app.config['DATABASE_URL'])
-
-# Only return the func so that we don't
-# commit to this engine now, in case we
-# want to change it after after
-# SessionManager is instantiated
-get_engine = manager.get_engine
-
-
-app.config['SQLALCHEMY_DATABASE_URI'] = app.config['DATABASE_URL']
-db = SQLAlchemy(app)
+sqlalchemy.Model = _Model
+db = get_sessionmanager()
 
 
 @app.before_request

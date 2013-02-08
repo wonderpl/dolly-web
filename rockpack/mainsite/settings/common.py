@@ -18,6 +18,8 @@ GOOGLE_CONSUMER_SECRET = 'ja-jW0BDASKVIwIRFurpCaZi'
 # Default is first locale
 ENABLED_LOCALES = ('en-us', 'en-gb')
 
+TEST_S3_UPLOAD = False
+
 # TODO: rename to VIDEO_IMG_SIZES or similar
 VIDEO_IMAGES = {'thumbnail_small': (249, 140,),
         'thumbnail_large': (137, 77,),
@@ -30,7 +32,7 @@ VIDEO_IMG_PATHS = {'original': 'images/videos/original/',
 
 CHANNEL_IMAGES = {'thumbnail_large': (241, 171,),
         'thumbnail_small': (48, 34,),
-        'carousel': (341,190,),
+        'carousel': (341, 190,),
         'background': (1024, 705,)}
 
 CHANNEL_IMG_PATHS = {'original': 'images/channel/original/',
@@ -40,10 +42,10 @@ CHANNEL_IMG_PATHS = {'original': 'images/channel/original/',
         'background': 'images/channel/background/'}
 
 AVATAR_IMAGES = {'thumbnail_small': (72, 72,),
-        'thumbnail_medium': (94,94,),
-        'thumbnail_large':(114,114,)}
+        'thumbnail_medium': (94, 94,),
+        'thumbnail_large': (114, 114,)}
 
 AVATAR_IMG_PATHS = {'original': 'images/avatar/original/',
         'thumbnail_small': 'images/avatar/thumbnail_small/',
         'thumbnail_medium': 'images/avatar/thumbnail_medium/',
-        'thumbnail_large': 'images/avatar/thumbnail_large/',}
+        'thumbnail_large': 'images/avatar/thumbnail_large/'}

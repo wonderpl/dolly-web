@@ -9,8 +9,7 @@ required_modules = ['rockpack.mainsite.auth', 'rockpack.mainsite.admin']
 
 
 def dbsync(options):
-    from rockpack.mainsite.core.dbapi import Base
-    from rockpack.mainsite.core.dbapi import get_engine
+    from rockpack.mainsite.core.dbapi import db
     from rockpack.mainsite import SERVICES, REGISTER_SETUPS
 
     models = []
@@ -20,7 +19,6 @@ def dbsync(options):
             models.append(__import__(module + '.models', fromlist=['models']))
         except ImportError as e:
             print >> sys.stderr, 'cannot import', module, ':', e
-            sys.exit(1)
 
     for module in SERVICES + zip(*REGISTER_SETUPS)[0]:
         load_modules(module)
@@ -29,7 +27,7 @@ def dbsync(options):
     for model in models:
         for item in model.__dict__.itervalues():
             try:
-                if (isinstance(item, type) and issubclass(item, Base)
+                if (isinstance(item, type) and issubclass(item, db.Model)
                         and hasattr(item, '__table__')
                         and isinstance(item.__table__, sqlalchemy.schema.Table)):
                     table = item.__table__
@@ -39,7 +37,7 @@ def dbsync(options):
 
     try:
         if table_list:
-            Base.metadata.create_all(get_engine(), tables=table_list, checkfirst=True)
+            db.Model.metadata.create_all(db.engine, tables=table_list, checkfirst=True)
         else:
             print >> sys.stderr, 'no tables to build'
     except Exception as e:
@@ -56,17 +54,20 @@ def create_database(db_url, drop_first=False):
 
 def _patch_db_url(db_url):
     from rockpack.mainsite.core import dbapi
-    dbapi.manager = dbapi.SessionManager(db_url)
-    dbapi.get_engine = dbapi.manager.get_engine
+    dbapi.db = dbapi.get_sessionmanager(db_url)
 
 
 def test(options):
     import pytest
     from rockpack import mainsite
+    mainsite.app.config['TESTING'] = True
     db_url = mainsite.app.config['TEST_DATABASE_URL']
     _patch_db_url(db_url)
     create_database(db_url, drop_first=True)
     dbsync(None)
+    mainsite.init_app()
+    from test.fixtures import install, all_data
+    install(*all_data)
     pytest.main(options[1])
 
 
