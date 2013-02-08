@@ -5,6 +5,7 @@ from flask import g, jsonify, abort, request, url_for
 from rockpack.mainsite.core.webservice import WebService
 from rockpack.mainsite.core.webservice import expose
 from rockpack.mainsite.services.video import models
+from flask.ext.sqlalchemy import get_debug_queries
 
 
 class ChannelAPI(WebService):
@@ -152,6 +153,35 @@ class VideoAPI(WebService):
     def video_list(self):
         data, total = self._get_local_videos(star_order=True, **request.args)
         response = jsonify({'videos': {'items': data, 'total': total}})
+        response.headers['Cache-Control'] = 'max-age={}'.format(300)  # 5 Mins
+        return response
+
+
+class CategoryAPI(WebService):
+
+    endpoint = '/categories'
+
+    @staticmethod
+    def cat_dict(instance):
+        d = {'id': instance.id,
+                'name': instance.name}
+        for c in instance.children:
+            d.setdefault('sub_categories', []).append(CategoryAPI.cat_dict(c))
+
+        print d
+        return d
+
+    def _get_cats(self, **filters):
+        cats = g.session.query(models.Category).filter(
+                models.Category.locale==self.get_locale(),
+                models.Category.parent==None)
+
+        return [self.cat_dict(c) for c in cats]
+
+    @expose('/', methods=('GET',))
+    def category_list(self):
+        data = self._get_cats(**request.args)
+        response = jsonify({'categories': {'items': data}})
         response.headers['Cache-Control'] = 'max-age={}'.format(300)  # 5 Mins
         return response
 
