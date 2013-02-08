@@ -12,7 +12,7 @@ def add_response_headers(headers={}, etag=False):
             for header, value in headers.items():
                 h[header] = value
             if etag:
-                h['Etag'] = hashlib.md5(resp.data).hexdigest()
+                h['ETag'] = hashlib.md5(resp.data).hexdigest()
             return resp
         return func
     return decorator
