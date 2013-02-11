@@ -6,7 +6,7 @@ from flask import g, jsonify, request, url_for
 from rockpack.mainsite.core.webservice import WebService
 from rockpack.mainsite.core.webservice import expose
 from rockpack.mainsite.services.video import models
-from rockpack.mainsite.helpers.http import cache_for
+from rockpack.mainsite.helpers.http import cache_for, etag
 
 
 def channel_dict(channel):
@@ -67,6 +67,7 @@ class ChannelAPI(WebService):
 
     @expose('/', methods=('GET',))
     @cache_for(seconds=300)
+    @etag
     def channel_list(self):
         data, total = get_local_channel(self.get_locale(),
                                         self.get_page(),
@@ -162,6 +163,7 @@ class VideoAPI(WebService):
 
     @expose('/', methods=('GET',))
     @cache_for(seconds=300)
+    @etag
     def video_list(self):
         data, total = get_local_videos(self.get_locale(), self.get_page(), star_order=True, **request.args)
         response = jsonify({'videos': {'items': data, 'total': total}})
@@ -180,7 +182,6 @@ class CategoryAPI(WebService):
         for c in instance.children:
             d.setdefault('sub_categories', []).append(CategoryAPI.cat_dict(c))
 
-        print d
         return d
 
     def _get_cats(self, **filters):
