@@ -100,7 +100,7 @@ def video_dict(instance):
     )
 
 
-def get_local_videos(locale, paging, with_channel=True, **filters):
+def get_local_videos(loc, paging, with_channel=True, **filters):
     videos = g.session.query(models.VideoInstance, models.Video,
                              models.VideoLocaleMeta).join(models.Video)
 
@@ -110,7 +110,7 @@ def get_local_videos(locale, paging, with_channel=True, **filters):
         # Videos without a locale metadata record will be included.
         videos = videos.outerjoin(models.VideoLocaleMeta,
                     (models.Video.id == models.VideoLocaleMeta.video) &
-                    (models.VideoLocaleMeta.locale == locale)).\
+                    (models.VideoLocaleMeta.locale == loc)).\
             filter((models.VideoLocaleMeta.visible == True) |
                    (models.VideoLocaleMeta.visible == None)).\
             filter(models.VideoInstance.channel == filters['channel'])
@@ -118,7 +118,7 @@ def get_local_videos(locale, paging, with_channel=True, **filters):
         # For all other queries there must be an metadata record with visible=True
         videos = videos.join(models.VideoLocaleMeta,
                 (models.Video.id == models.VideoLocaleMeta.video) &
-                (models.VideoLocaleMeta.locale == locale) &
+                (models.VideoLocaleMeta.locale == loc) &
                 (models.VideoLocaleMeta.visible == True))
 
     if filters.get('category'):
