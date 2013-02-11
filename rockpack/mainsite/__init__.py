@@ -13,6 +13,7 @@ SERVICES = (
     'rockpack.mainsite.services.video',
     'rockpack.mainsite.services.cover_art',
     'rockpack.mainsite.services.user',
+    'rockpack.mainsite.services.search',
 )
 REGISTER_SETUPS = (
     ('rockpack.mainsite.auth', 'setup_auth'),

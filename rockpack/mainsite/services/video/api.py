@@ -1,5 +1,6 @@
 import random
 
+from sqlalchemy.orm import contains_eager
 from sqlalchemy.sql.expression import desc
 from flask import g, jsonify, request, url_for
 from rockpack.mainsite.core.webservice import WebService
@@ -32,13 +33,21 @@ def channel_dict(channel):
     return ch_data
 
 
-def get_local_channel(locale, **filters):
+def get_local_channel(locale, paging, **filters):
     metas = g.session.query(models.ChannelLocaleMeta).\
         filter_by(visible=True, locale=locale)
     if filters.get('category'):
         metas = metas.filter_by(category=filters['category'])
+    if filters.get('query'):
+        # The contains_eager clause is necessary when filtering on
+        # a lazy loaded join.
+        metas = metas.join(models.Channel).\
+            options(contains_eager(models.ChannelLocaleMeta.channel_rel))
+        metas = metas.filter(models.Channel.title.ilike('%%%s%%' % filters['query']))
 
-    count = metas.count()
+    total = metas.count()
+    offset, limit = paging
+    metas = metas.offset(offset).limit(limit)
     channel_data = []
     for position, meta in enumerate(metas, 1):
         item = dict(
@@ -49,7 +58,7 @@ def get_local_channel(locale, **filters):
         item.update(channel_dict(meta.channel_rel))
         channel_data.append(item)
 
-    return channel_data, count
+    return channel_data, total
 
 
 class ChannelAPI(WebService):
@@ -60,7 +69,9 @@ class ChannelAPI(WebService):
     @cache_for(seconds=300)
     @etag
     def channel_list(self):
-        data, total = get_local_channel(self.get_locale(), category=request.args.get('category'))
+        data, total = get_local_channel(self.get_locale(),
+                                        self.get_page(),
+                                        category=request.args.get('category'))
         response = jsonify({
             'channels': {
             'items': data,
@@ -89,7 +100,7 @@ def video_dict(instance):
     )
 
 
-def get_local_videos(loc, paging, with_channel=True, **filters):
+def get_local_videos(locale, paging, with_channel=True, **filters):
     videos = g.session.query(models.VideoInstance, models.Video,
                              models.VideoLocaleMeta).join(models.Video)
 
@@ -99,7 +110,7 @@ def get_local_videos(loc, paging, with_channel=True, **filters):
         # Videos without a locale metadata record will be included.
         videos = videos.outerjoin(models.VideoLocaleMeta,
                     (models.Video.id == models.VideoLocaleMeta.video) &
-                    (models.VideoLocaleMeta.locale == loc)).\
+                    (models.VideoLocaleMeta.locale == locale)).\
             filter((models.VideoLocaleMeta.visible == True) |
                    (models.VideoLocaleMeta.visible == None)).\
             filter(models.VideoInstance.channel == filters['channel'])
@@ -107,7 +118,7 @@ def get_local_videos(loc, paging, with_channel=True, **filters):
         # For all other queries there must be an metadata record with visible=True
         videos = videos.join(models.VideoLocaleMeta,
                 (models.Video.id == models.VideoLocaleMeta.video) &
-                (models.VideoLocaleMeta.locale == loc) &
+                (models.VideoLocaleMeta.locale == locale) &
                 (models.VideoLocaleMeta.visible == True))
 
     if filters.get('category'):
@@ -167,7 +178,7 @@ class CategoryAPI(WebService):
     @staticmethod
     def cat_dict(instance):
         d = {'id': instance.id,
-                'name': instance.name}
+             'name': instance.name}
         for c in instance.children:
             d.setdefault('sub_categories', []).append(CategoryAPI.cat_dict(c))
 
