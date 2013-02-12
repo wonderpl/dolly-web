@@ -84,7 +84,7 @@ class ImportView(BaseView):
                                  locale=form.locale.data,
                                  category=form.category.data)]
             else:
-                channel = Channel.get(channel)
+                channel = Channel.query.get(channel)
             channel.add_videos(form.import_data.videos)
         else:
             channel = None

@@ -17,6 +17,46 @@ def _youtube_feed(feed, id, params={}):
     return response.json()
 
 
+def _get_atom_video_data(youtube_data, playlist=None):
+    def get_category(categories):
+        for category in categories:
+            if category.scheme.endswith('categories.cat'):
+                return category.text
+    media = youtube_data.media
+    video = Video(
+        source_videoid=media.FindExtensions('videoid')[0].text,
+        source_listid=playlist,
+        title=youtube_data.title.text,
+        duration=media.duration.seconds if media.duration else 0,
+    )
+    video.source_category = get_category(media.category)
+    for thumbnail in media.thumbnail:
+        if 'time' not in thumbnail.extension_attributes:
+            video.thumbnails.append(
+                VideoThumbnail(
+                    url=thumbnail.url,
+                    width=thumbnail.width,
+                    height=thumbnail.height))
+    for restriction in media.FindExtensions('restriction'):
+        if restriction.attributes['type'] == 'country':
+            video.restrictions.extend(
+                VideoRestriction(
+                    relationship=restriction.attributes['relationship'],
+                    country=country) for country in restriction.text.split())
+    return video
+
+
+def parse_atom_playlist_data(xml):
+    """Parse atom feed for youtube video data."""
+    import gdata.youtube
+    feed = gdata.youtube.YouTubePlaylistVideoFeedFromString(xml)
+    type, id = feed.id.text.split(':', 3)[2:]
+    if type == 'user':
+        id = id.replace(':', '/')
+    videos = [_get_atom_video_data(e, id) for e in feed.entry]
+    return Playlist(feed.title.text, len(videos), videos)
+
+
 def _get_video_data(youtube_data, playlist=None):
     """Extract data from youtube video json record and return Video model."""
     def get_category(categories):

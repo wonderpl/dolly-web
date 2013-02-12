@@ -6,5 +6,6 @@ create table push_subscription (
 	verified boolean not null default false,
 	date_added timestamp not null,
 	lease_expires timestamp not null,
+	channel char(24) not null references channel (id),
 	constraint hub_topic unique (hub, topic)
 );
