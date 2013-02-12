@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta
 import json, urllib, urlparse
 import flask
 from flask import request
@@ -24,14 +25,16 @@ class DummyEngine(object):
 
 
 class DummyAuthStore(object):
-    _dict = {}
+
+    def __init__(self):
+        self._dict = {}
 
     def _get_token(self, key):
-        return self._dict.get(key, None)
+        return self._dict.get(key, ())
 
     def _set_token(self, key, data):
         self._dict[key] = data
-        print 'set key', key
+        print 'set key', key, 'with', data
 
     def _delete_token(self, key):
         try:
@@ -42,10 +45,10 @@ class DummyAuthStore(object):
             print 'dropped key', key
 
     def set_auth_token(self, key, expires, data):
-        self._set_token(key, (expires, data,))
+        self._set_token(key, (datetime.utcnow() + timedelta(seconds=expires), data,))
 
     def get_auth_token(self, key):
-        return self._get_token(key)[1]
+        return self._get_token(key)
 
     def delete_auth_token(self, key):
         self._delete_token(key)
@@ -109,7 +112,7 @@ class RockpackAuthorisationProvider(AuthorizationProvider):
 
     def from_authorization_code(self, client_id, code, scope):
         key = 'oauth2.authorization_code.%s:%s' % (client_id, code)
-        data = self.store.get_auth_token(key)
+        _, data = self.store.get_auth_token(key)
         if data is not None:
             data = json.loads(data)
 
@@ -120,7 +123,7 @@ class RockpackAuthorisationProvider(AuthorizationProvider):
 
     def from_refresh_token(self, client_id, refresh_token, scope):
         key = 'oauth2.refresh_token.%s:%s' % (client_id, refresh_token)
-        data = self.store.get_auth_token(key)
+        _, data = self.store.get_auth_token(key)
         if data is not None:
             data = json.loads(data)
 
@@ -144,11 +147,24 @@ class RockpackAuthorisationProvider(AuthorizationProvider):
 
 class RockpackResourceProvider(ResourceProvider):
 
+    def __init__(self, store):
+        self.store = store
+
     def get_authorization_header(self):
-        return request.header.get('Authorization', None)
+        return request.headers.get('Authorization', None)
 
     def validate_access_token(self, access_token, authorization):
-        pass
+        try:
+            expires, raw_json = self.store.get_auth_token('oauth2.access_token:{}'.format(access_token))
+        except ValueError:
+            return
+        now = datetime.utcnow()
+        if now > expires:
+            return
+        data = json.loads(raw_json)
+        authorization.is_valid = True
+        authorization.client_id = data['client_id']
+        authorization.expires_in = (expires - now).total_seconds()
 
 
 class TestOauthProvider(RockPackTestCase):
@@ -157,14 +173,14 @@ class TestOauthProvider(RockPackTestCase):
         super(TestOauthProvider, self).setUp()
 
         self.test_client_id = 'some_client_id'
-        dummy_engine = DummyEngine(self.test_client_id)
-        dummy_auth_store = DummyAuthStore()
+        self.dummy_engine = DummyEngine(self.test_client_id)
+        self.dummy_auth_store = DummyAuthStore()
 
         from rockpack.mainsite import app
 
         @app.route('/test/oauth2/auth', methods=('GET',))
         def auth_code():
-            provider = RockpackAuthorisationProvider(dummy_engine, dummy_auth_store)
+            provider = RockpackAuthorisationProvider(self.dummy_engine, self.dummy_auth_store)
 
             response = provider.get_authorization_code_from_uri(request.url)
 
@@ -175,7 +191,7 @@ class TestOauthProvider(RockPackTestCase):
 
         @app.route('/test/oauth2/token', methods=('POST',))
         def token():
-            provider = RockpackAuthorisationProvider(dummy_engine, dummy_auth_store)
+            provider = RockpackAuthorisationProvider(self.dummy_engine, self.dummy_auth_store)
 
             data = {k: v for k, v in request.form.iteritems()}
 
@@ -185,6 +201,19 @@ class TestOauthProvider(RockPackTestCase):
             for k, v in response.headers.iteritems():
                 flask_res.headers[k] = v
             return flask_res
+
+        @app.route('/test/some/protected/resource', methods=('GET',))
+        def protected_resource():
+            provider = RockpackResourceProvider(self.dummy_auth_store)
+
+            auth = provider.get_authorization()
+            if not auth.is_valid:
+                raise Exception('Failed to auth')
+
+            # auth.client_id
+
+            return flask.make_response('Wee')
+
 
     def test_auth_flow(self):
         with self.app.test_client() as client:
@@ -196,14 +225,10 @@ class TestOauthProvider(RockPackTestCase):
 
             self.assertEquals(302, r.status_code, 'response status should be 302')
             redirect_data = dict(urlparse.parse_qsl(urlparse.urlparse(r.headers.get('Location')).query, True))
-            found = [v for v in DummyAuthStore._dict.keys() if v.find(redirect_data['code']) != -1]
+            found = [v for v in self.dummy_auth_store._dict.keys() if v.find(redirect_data['code']) != -1]
             assert found
 
             code = redirect_data.get('code')
-            print r.headers
-
-
-            print '------------------------------'
 
             # Returns:
             # code=hw87y9vtwnq7834oywv879ymo8l435sd
@@ -216,8 +241,11 @@ class TestOauthProvider(RockPackTestCase):
                         'client_id': self.test_client_id,
                         'client_secret': DummyEngine.secret,
                         'redirect_uri': DummyEngine.redirect_uri})
-            print r.headers
-            print r.data
+
+            assert 'access_token' in r.data
+            assert 'refresh_token' in r.data
+
+            response_data = json.loads(r.data)
 
             # Returns:
             # {"access_token": "78435n0q2vpo934po8um4j867qnpo9l345i",
@@ -225,5 +253,7 @@ class TestOauthProvider(RockPackTestCase):
 
             # Now that we have an access_token ...
 
-            r = client.get('/some/resource/') # access token as bearer header
-            print r.data
+            headers = [('Authorization', ' '.join(['Bearer', response_data['access_token']]))]
+            r = client.get('/test/some/protected/resource', headers=headers) # access token as bearer header
+
+            self.assertEquals(200, r.status_code)
