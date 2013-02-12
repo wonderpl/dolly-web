@@ -68,6 +68,10 @@ def get_playlist_data(id, fetch_all_videos=False, feed='playlists'):
             params['start-index'] += params['max-results']
             continue
         break
+    if False:
+        from rockpack.mainsite.services.pubsubhubbub.api import subscribe
+        links = dict((l['rel'], l['href']) for l in youtube_data['link'])
+        subscribe(links['hub'], links['self'])
     return Playlist(youtube_data['title']['$t'], total, videos)
 
 
