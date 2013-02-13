@@ -177,7 +177,7 @@ class CategoryAPI(WebService):
 
     @staticmethod
     def cat_dict(instance):
-        d = {'id': instance.id,
+        d = {'id': str(instance.id),
              'name': instance.name}
         for c in instance.children:
             d.setdefault('sub_categories', []).append(CategoryAPI.cat_dict(c))
