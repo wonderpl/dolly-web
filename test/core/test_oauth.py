@@ -206,19 +206,33 @@ class TestOauthProvider(RockPackTestCase):
 
             auth = provider.get_authorization()
             if not auth.is_valid:
-                raise Exception('Failed to auth')
+                flask.abort(400)
 
             # auth.client_id
 
             return flask.make_response('Wee')
 
+    def _call_auth(self, client, response_type='code', client_id=DummyEngine.client_id,
+            redirect_uri=DummyEngine.redirect_uri, rockpack_id='fv7j4uewhnr7rt34yklfyaiojkl'):
+        return client.get('/test/oauth2/auth?{}'.format(
+                urllib.urlencode({'response_type': response_type,
+                    'client_id': client_id,
+                    'redirect_uri': redirect_uri,
+                    'rockpack_id': rockpack_id})
+                ))
+
+    def _call_token(self, client, code, grant_type='authorization_code', client_id=DummyEngine.client_id,
+            client_secret=DummyEngine.secret, redirect_uri=DummyEngine.redirect_uri):
+        return client.post('/test/oauth2/token',
+                data={'code': code,
+                    'grant_type': grant_type,
+                    'client_id': client_id,
+                    'client_secret': client_secret,
+                    'redirect_uri': redirect_uri})
+
     def test_auth_flow(self):
         with self.app.test_client() as client:
-            r = client.get('/test/oauth2/auth?{}'.format(
-                    urllib.urlencode({'response_type': 'code',
-                        'client_id': DummyEngine.client_id,
-                        'redirect_uri': DummyEngine.redirect_uri,
-                        'rockpack_id': 'fv7j4uewhnr7rt34yklfyaiojkl'})))
+            r = self._call_auth(client)
 
             self.assertEquals(302, r.status_code, 'response status should be 302')
             redirect_data = dict(urlparse.parse_qsl(urlparse.urlparse(r.headers.get('Location')).query, True))
@@ -232,12 +246,7 @@ class TestOauthProvider(RockPackTestCase):
             # &rockpack_id=fv7j4uewhnr7rt34yklfyaiojkl
 
             # simulate backend calls - THIS IS NOT WHAT BROWSER SENDS
-            r = client.post('/test/oauth2/token',
-                    data={'code': code,
-                        'grant_type': 'authorization_code',
-                        'client_id': DummyEngine.client_id,
-                        'client_secret': DummyEngine.secret,
-                        'redirect_uri': DummyEngine.redirect_uri})
+            r = self._call_token(client, code)
 
             assert 'access_token' in r.data
             assert 'refresh_token' in r.data
@@ -263,4 +272,16 @@ class TestOauthProvider(RockPackTestCase):
                         'redirect_uri': DummyEngine.redirect_uri,
                         'rockpack_id': 'fv7j4uewhnr7rt34yklfyaiojkl'})))
 
+            self.assertEquals(400, r.status_code)
+
+    def test_bad_token(self):
+        with self.app.test_client() as client:
+            r = self._call_auth(client)
+            redirect_data = dict(urlparse.parse_qsl(urlparse.urlparse(r.headers.get('Location')).query, True))
+            code = redirect_data.get('code')
+
+            r = self._call_token(client, code)
+
+            headers = [('Authorization', ' '.join(['Bearer', 'this_is_a_bad_token']))]
+            r = client.get('/test/some/protected/resource', headers=headers)
             self.assertEquals(400, r.status_code)
