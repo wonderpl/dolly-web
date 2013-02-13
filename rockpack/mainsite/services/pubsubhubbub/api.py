@@ -30,12 +30,17 @@ class PubSubHubbub(WebService):
         except ValueError:
             return '', 400
         subs = Subscription.query.get_or_404(id)
-        if request.args.get('hub.mode') == 'subscribe':
+        if request.args.get('hub.mode') in ('subscribe', 'unsubscribe'):
             args = [request.args.get('hub.' + a, '') for a in
                     'topic', 'verify_token', 'lease_seconds', 'challenge']
             response = subs.verify(*args)
             return (response, 200) if response else ('', 404)
         elif request.mimetype == 'application/atom+xml':
+            sig = request.headers.get('X-Hub-Signature')
+            if sig and subs.check_signature(sig, request.data):
+                print 'SIG PASSED', sig
+            else:
+                print 'SIG FAILED', sig
             playlist = youtube.parse_atom_playlist_data(request.data)
             add_videos_to_channel(subs.channel, playlist.videos)
             return '', 204
