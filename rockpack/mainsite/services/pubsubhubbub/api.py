@@ -1,4 +1,4 @@
-from flask import request
+from flask import request, app
 from rockpack.mainsite.core import youtube
 from rockpack.mainsite.core.webservice import WebService, expose
 from rockpack.mainsite.core.dbapi import commit_on_success
@@ -38,11 +38,10 @@ class PubSubHubbub(WebService):
         elif request.mimetype == 'application/atom+xml':
             sig = request.headers.get('X-Hub-Signature')
             if sig and subs.check_signature(sig, request.data):
-                print 'SIG PASSED', sig
+                playlist = youtube.parse_atom_playlist_data(request.data)
+                add_videos_to_channel(subs.channel, playlist.videos)
             else:
-                print 'SIG FAILED', sig
-            playlist = youtube.parse_atom_playlist_data(request.data)
-            add_videos_to_channel(subs.channel, playlist.videos)
+                app.logger.warning('Failed to validate signature %s', sig)
             return '', 204
         else:
             return '', 400

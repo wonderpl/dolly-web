@@ -60,7 +60,7 @@ class Subscription(db.Model):
 
     def _ping_hub(self, mode):
         callback_url = url_for('PubSubHubbub_api.callback', _external=True)
-        callback_url = callback_url.replace('localhost', 'dev.rockpack.com')
+        callback_url = callback_url.replace('localhost', 'dev.rockpack.com').replace(':5000', '')
         data = {
             'hub.callback': callback_url + '?id=' + str(self.id),
             'hub.mode': mode,

@@ -5,12 +5,12 @@ from flask import request, url_for, redirect, flash, jsonify
 from flask.ext import wtf, login
 from flask.ext.admin import BaseView, expose, form
 from wtforms.validators import ValidationError
-
-from rockpack.mainsite.core import youtube
-from rockpack.mainsite.services.video.models import (
-    Locale, Source, Category, Video, Channel, ChannelLocaleMeta)
 from rockpack.mainsite.auth.models import User
 from rockpack.mainsite.core.dbapi import commit_on_success, db
+from rockpack.mainsite.core import youtube
+from rockpack.mainsite.services.pubsubhubbub.api import subscribe
+from rockpack.mainsite.services.video.models import (
+    Locale, Source, Category, Video, Channel, ChannelLocaleMeta)
 
 
 class ImportForm(form.BaseForm):
@@ -83,21 +83,26 @@ class ImportView(BaseView):
                 channel.metas = [ChannelLocaleMeta(
                                  locale=form.locale.data,
                                  category=form.category.data)]
+                channel = channel.save()
             else:
                 channel = Channel.query.get(channel)
             channel.add_videos(form.import_data.videos)
+            push_config = form.import_data.push_config
+            if push_config and channel.id:
+                subscribe(push_config.hub, push_config.topic, channel.id)
         else:
             channel = None
 
         return count, channel
 
     def _create_user(self, form):
-        user = User(username=form.username.data,
-                first_name=form.first_name.data,
-                last_name=form.last_name.data,
-                email=form.email.data,
-                avatar=request.files.get('avatar'),
-                is_active=True)
+        user = User(
+            username=form.username.data,
+            first_name=form.first_name.data,
+            last_name=form.last_name.data,
+            email=form.email.data,
+            avatar=request.files.get('avatar'),
+            is_active=True)
         db.session.add(user)
         db.session.commit()
         return user

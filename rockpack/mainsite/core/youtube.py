@@ -4,7 +4,8 @@ from rockpack.mainsite import app
 from rockpack.mainsite.services.video.models import Video, VideoThumbnail, VideoRestriction
 
 
-Playlist = namedtuple('Playlist', 'title video_count videos')
+PushConfig = namedtuple('PushConfig', 'hub topic')
+Playlist = namedtuple('Playlist', 'title video_count videos push_config')
 Videolist = namedtuple('Videolist', 'video_count videos')
 
 
@@ -54,7 +55,7 @@ def parse_atom_playlist_data(xml):
     if type == 'user':
         id = id.replace(':', '/')
     videos = [_get_atom_video_data(e, id) for e in feed.entry]
-    return Playlist(feed.title.text, len(videos), videos)
+    return Playlist(feed.title.text, len(videos), videos, None)
 
 
 def _get_video_data(youtube_data, playlist=None):
@@ -90,7 +91,7 @@ def _get_video_data(youtube_data, playlist=None):
 def get_video_data(id, fetch_all_videos=True):
     """Return video data from youtube api as playlist of one."""
     youtube_data = _youtube_feed('videos', id)['entry']
-    return Playlist(None, 1, [_get_video_data(youtube_data)])
+    return Playlist(None, 1, [_get_video_data(youtube_data)], None)
 
 
 def get_playlist_data(id, fetch_all_videos=False, feed='playlists'):
@@ -108,11 +109,14 @@ def get_playlist_data(id, fetch_all_videos=False, feed='playlists'):
             params['start-index'] += params['max-results']
             continue
         break
-    if False:
-        from rockpack.mainsite.services.pubsubhubbub.api import subscribe
-        links = dict((l['rel'], l['href']) for l in youtube_data['link'])
-        subscribe(links['hub'], links['self'])
-    return Playlist(youtube_data['title']['$t'], total, videos)
+    links = dict((l['rel'], l['href']) for l in youtube_data['link'])
+    if 'hub' in links:
+        # strip extraneous query params from topic url
+        topic_url = links['self'].split('?', 1)[0] + '?v=2'
+        push_config = PushConfig(links['hub'], topic_url)
+    else:
+        push_config = None
+    return Playlist(youtube_data['title']['$t'], total, videos, push_config)
 
 
 def get_user_data(id, fetch_all_videos=False):
