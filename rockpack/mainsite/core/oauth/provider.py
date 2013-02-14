@@ -1,25 +1,59 @@
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 import flask
 from pyoauth2.provider import AuthorizationProvider, ResourceProvider
 
 
+class RockpackAppSettings(object):
+    redirect_uri = ''
+    secret = '368c68dca9fc5b526fd6575c0b775476'
+    client_id = 'rockpack_h78nf34oqln3594aqf418e'
+
+
+class SQLAAppSettingsProxy(object):
+
+    def find(self, client_id):
+        if client_id == RockpackAppSettings.client_id:
+            return RockpackAppSettings
+        return None
+
+
+class TokenMapper(object):
+
+    def set_auth_token(self, key, expires, data):
+        raise NotImplementedError('Subclass must implement set_auth_token')
+
+    def get_auth_token(self, key):
+        """ Returns a tuple of either empty
+            or (expiry, data) """
+        raise NotImplementedError('Subclass must implement get_auth_token')
+
+    def delete_auth_token(self, key):
+        raise NotImplementedError('Subclass must implement delete_auth_token')
+
+    def set_access_refresh_pair(self, key, access_key, refresh_key):
+        raise NotImplementedError('Subclass must implement set_access_refresh_pair')
+
+    def delete_access_refresh_pair(self, key):
+        raise NotImplementedError('Subclass must implement delete_access_refresh_pair')
+
+
 class RockpackAuthorisationProvider(AuthorizationProvider):
-    def __init__(self, client_engine, store):
-        self.rockpack_client_engine = client_engine
-        self.store = store
+    def __init__(self, settings_engine, key_store):
+        self.app_settings = settings_engine
+        self.store = key_store
 
     def validate_client_id(self, client_id):
-        return self.rockpack_client_engine.find(client_id)
+        return self.app_settings.find(client_id)
 
     def validate_client_secret(self, client_id, client_secret):
-        app = self.rockpack_client_engine.find(client_id)
+        app = self.app_settings.find(client_id)
         if app is not None and app.secret == client_secret:
             return True
         return False
 
     def validate_redirect_uri(self, client_id, redirect_uri):
-        app = self.rockpack_client_engine.find(client_id)
+        app = self.app_settings.find(client_id)
 
         if app is not None and app.redirect_uri == redirect_uri.split('?')[0]:
             return True

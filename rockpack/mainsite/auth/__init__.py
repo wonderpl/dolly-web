@@ -22,11 +22,13 @@ def setup_auth(app):
     )
 
     # imported here to avoid circular dependency with google_oauth decorator
-    from .views import logout_view, login_view, load_user, authorised
+    from .views import (logout_view, login_view,
+            load_user, authorised, oauth_dialog)
 
-    app.add_url_rule('/login/', 'login', login_view)
-    app.add_url_rule('/logout/', 'logout', logout_view)
+    app.add_url_rule('/admin/login/', 'login', login_view)
+    app.add_url_rule('/admin/logout/', 'logout', logout_view)
     app.add_url_rule('/oauth2callback', 'oauth2callback', authorised)
+    app.add_url_rule('/dialog/oauth', 'oauthdialog', oauth_dialog, methods=('GET','POST',))
     login_manager = login.LoginManager()
     login_manager.setup_app(app)
     login_manager.user_loader(load_user)

@@ -1,0 +1,17 @@
+<html>
+    <head><title>Rockpack Login</title></head>
+    <body>
+        {% if not session.logged_in %}
+        <form action="{{ url_for('oauthdialog') }}" method="POST">
+            {% for error in  form.username.error %}
+            {{ error }}
+            {% endfor %}
+            {{ form.username }}
+            {{ form.password }} {{ form.password.error }}
+            <input type="submit" name="submit" value="submit"/>
+        </form>
+        {% else %}
+            You are logged in, {{ request.user }}
+        {% endif %}
+    </body>
+</html>

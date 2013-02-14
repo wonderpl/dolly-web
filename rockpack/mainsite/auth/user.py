@@ -4,6 +4,39 @@ from flask.ext.login import UserMixin
 import models
 
 
+class User(UserMixin):
+    def __init__(self, id, email, active):
+        self.id = id
+        self.email = email
+        self.active = active
+
+    @classmethod
+    def get_from_username(cls, username):
+        user = models.User.get_from_username(username)
+        if user:
+            cls(id=user.username, email=user.email, active=user.is_active)
+        return None
+
+    @classmethod
+    def from_model(cls, model):
+        if model:
+            return cls(id=model.username,
+                    email=model.email,
+                    active=model.is_active)
+
+    def get_id(self):
+        return self.id
+
+    def is_active(self):
+        return self.is_active
+
+    def is_authenticated(self):
+        return True
+
+    def is_anonymous(self):
+        return False
+
+
 class Admin(UserMixin):
     def __init__(self, id, username, email, active=True):
         self.id = id

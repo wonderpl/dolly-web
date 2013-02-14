@@ -1,4 +1,8 @@
 from flask import g
+from werkzeug.security import (
+        generate_password_hash,
+        check_password_hash)
+
 
 from sqlalchemy import (
     String,
@@ -8,6 +12,9 @@ from sqlalchemy import (
     Boolean,
     event,
     CHAR,
+    DateTime,
+    func,
+    Text,
 )
 
 from sqlalchemy.orm.exc import NoResultFound
@@ -30,6 +37,10 @@ class User(db.Model):
 
     id = Column(CHAR(22), primary_key=True)
     username = Column(String(254), unique=True, nullable=False)
+    # TODO: maybe generate a default password for rockpack accounts
+    # and possibly for any third-party api logins.
+    # nullable=True for now
+    password_hash = Column(String(60), nullable=True)
     email = Column(String(254), nullable=False)
     first_name = Column(String(254), nullable=False)
     last_name = Column(String(254), nullable=False)
@@ -48,7 +59,17 @@ class User(db.Model):
 
     @classmethod
     def get_from_username(cls, username):
-        return g.session.query(cls).filter_by(username=username).one()
+        try:
+            return g.session.query(cls).filter_by(username=str(username)).one()
+        except NoResultFound:
+            return None
+
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
+        self.save()
+
+    def check_password(self, password):
+        return check_password_hash(self.password_hash, password)
 
 
 event.listen(User, 'before_insert', lambda x, y, z: add_base64_pk(x, y, z))
@@ -86,6 +107,15 @@ class Admin(db.Model):
             return g.session.query(cls).filter_by(token=token).one()
         except NoResultFound:
             raise InvalidAdminException
+
+
+class OAuthToken(db.Model):
+    __tablename__ = 'oauth_token'
+
+    id = Column(Integer, primary_key=True)
+    key = Column(String(254), nullable=False)
+    expires = Column(DateTime(timezone=True), nullable=True, default=func.now())
+    data = Column(Text, nullable=True)
 
 
 class Role(db.Model):

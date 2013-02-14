@@ -7,7 +7,8 @@ from flask import request
 from test.base import RockPackTestCase
 
 from rockpack.mainsite.core.oauth.provider import (
-        RockpackAuthorisationProvider, RockpackResourceProvider)
+        RockpackAuthorisationProvider, RockpackResourceProvider,
+        TokenMapper)
 
 
 class DummyEngine(object):
@@ -20,7 +21,7 @@ class DummyEngine(object):
         return self if self.client_id == client_id else None
 
 
-class DummyAuthStore(object):
+class DummyAuthStore(TokenMapper):
 
     def __init__(self):
         self._dict = {}
@@ -145,6 +146,8 @@ class TestOauthProvider(RockPackTestCase):
             # &rockpack_id=fv7j4uewhnr7rt34yklfyaiojkl
 
             # simulate backend calls - THIS IS NOT WHAT BROWSER SENDS
+            # code is normally sent to server app and they make the
+            # follow call to the api
             r = self._call_token(client, code)
 
             assert 'access_token' in r.data
