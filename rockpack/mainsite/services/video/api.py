@@ -6,7 +6,17 @@ from flask import g, jsonify, request, url_for
 from rockpack.mainsite.core.webservice import WebService
 from rockpack.mainsite.core.webservice import expose
 from rockpack.mainsite.services.video import models
-from rockpack.mainsite.helpers.http import cache_for, etag
+from rockpack.mainsite.helpers.http import cache_for
+
+
+def _filter_by_category(query, type, category_id):
+    """Filter given query by the specified category.
+    If top-level category given, then filter by all sub categories.
+    """
+    sub_cats = list(models.Category.query.filter_by(parent=category_id).
+                    values(models.Category.id))
+    cat_ids = zip(*sub_cats)[0] if sub_cats else [category_id]
+    return query.filter(type.category.in_(cat_ids))
 
 
 def channel_dict(channel):
@@ -34,10 +44,9 @@ def channel_dict(channel):
 
 
 def get_local_channel(locale, paging, **filters):
-    metas = g.session.query(models.ChannelLocaleMeta).\
-        filter_by(visible=True, locale=locale)
+    metas = models.ChannelLocaleMeta.query.filter_by(visible=True, locale=locale)
     if filters.get('category'):
-        metas = metas.filter_by(category=filters['category'])
+        metas = _filter_by_category(metas, models.ChannelLocaleMeta, filters['category'])
     if filters.get('query'):
         # The contains_eager clause is necessary when filtering on
         # a lazy loaded join.
@@ -67,7 +76,6 @@ class ChannelAPI(WebService):
 
     @expose('/', methods=('GET',))
     @cache_for(seconds=300)
-    @etag
     def channel_list(self):
         data, total = get_local_channel(self.get_locale(),
                                         self.get_page(),
@@ -122,7 +130,7 @@ def get_local_videos(loc, paging, with_channel=True, **filters):
                 (models.VideoLocaleMeta.visible == True))
 
     if filters.get('category'):
-        videos = videos.filter(models.VideoLocaleMeta.category == filters['category'][0])
+        videos = _filter_by_category(videos, models.VideoLocaleMeta, filters['category'][0])
 
     if filters.get('star_order'):
         videos = videos.order_by(desc(models.VideoLocaleMeta.star_count))
@@ -163,11 +171,9 @@ class VideoAPI(WebService):
 
     @expose('/', methods=('GET',))
     @cache_for(seconds=300)
-    @etag
     def video_list(self):
         data, total = get_local_videos(self.get_locale(), self.get_page(), star_order=True, **request.args)
         response = jsonify({'videos': {'items': data, 'total': total}})
-        response.headers['Cache-Control'] = 'max-age={}'.format(300)  # 5 Mins
         return response
 
 
@@ -185,15 +191,12 @@ class CategoryAPI(WebService):
         return d
 
     def _get_cats(self, **filters):
-        cats = g.session.query(models.Category).filter(
-                models.Category.locale == self.get_locale(),
-                models.Category.parent == None)
-
+        cats = models.Category.query.filter_by(locale=self.get_locale(), parent=None)
         return [self.cat_dict(c) for c in cats]
 
     @expose('/', methods=('GET',))
+    @cache_for(seconds=3600)
     def category_list(self):
         data = self._get_cats(**request.args)
         response = jsonify({'categories': {'items': data}})
-        response.headers['Cache-Control'] = 'max-age={}'.format(300)  # 5 Mins
         return response
