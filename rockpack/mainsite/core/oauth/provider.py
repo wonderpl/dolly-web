@@ -1,6 +1,7 @@
 import json
-from datetime import datetime, timedelta
+from datetime import datetime
 import flask
+from flask.ext import login
 from pyoauth2.provider import AuthorizationProvider, ResourceProvider
 
 
@@ -60,7 +61,7 @@ class RockpackAuthorisationProvider(AuthorizationProvider):
         return False
 
     def validate_access(self):
-        return flask.session.user is not None
+        return not login.current_user.is_anonymous() or login.current_user.is_active()
 
     def validate_scope(self, client_id, scope):
         return True if scope == '' else False

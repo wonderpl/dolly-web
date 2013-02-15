@@ -14,7 +14,7 @@ class User(UserMixin):
     def get_from_username(cls, username):
         user = models.User.get_from_username(username)
         if user:
-            cls(id=user.username, email=user.email, active=user.is_active)
+            return cls(id=user.username, email=user.email, active=user.is_active)
         return None
 
     @classmethod
@@ -28,7 +28,7 @@ class User(UserMixin):
         return self.id
 
     def is_active(self):
-        return self.is_active
+        return self.active
 
     def is_authenticated(self):
         return True

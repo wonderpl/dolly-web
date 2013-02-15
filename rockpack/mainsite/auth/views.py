@@ -13,12 +13,7 @@ from . import google_oauth, models
 
 def load_user(login_id):
     current_app.logger.debug('attempting to fetch user with id {}'.format(login_id))
-
-    # Better way to do all this?
-    pos = request.path.lstrip('/').find('admin/')
-    if pos == 0 or request.path == url_for('oauth2callback'):
-        return Admin.get_from_login(login_id)
-    return User.get_from_username(login_id)
+    return Admin.get_from_login(login_id)
 
 
 def login_view():

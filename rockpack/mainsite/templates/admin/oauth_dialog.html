@@ -2,7 +2,7 @@
     <head><title>Rockpack Login</title></head>
     <body>
         {% if not session.logged_in %}
-        <form action="{{ url_for('oauthdialog') }}" method="POST">
+        <form action="{{ url_for('oauthdialog') }}?client_id=rockpack_h78nf34oqln3594aqf418e&response_type=code&redirect_uri=&rockpack_id=flange" method="POST">
             {% for error in  form.username.error %}
             {{ error }}
             {% endfor %}
