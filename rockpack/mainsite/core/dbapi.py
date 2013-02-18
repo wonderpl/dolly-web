@@ -44,7 +44,7 @@ class _Model(sqlalchemy.Model):
         return g.session.query(cls).get(id)
 
     def save(self):
-        g.session.merge(self)
+        g.session.add(self)
         return g.session.commit()
 
 

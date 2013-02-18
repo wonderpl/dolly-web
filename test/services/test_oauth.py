@@ -1,7 +1,9 @@
 import base64
+from cStringIO import StringIO
 from mock import Mock, patch
 
 from test import base
+from test.assets import AVATAR_IMG_PATH
 
 
 ACCESS_CREDENTIALS = {
@@ -41,3 +43,29 @@ class LoginTestCase(base.RockPackTestCase):
                 password='bar'))
 
             self.assertEquals(200, r.status_code)
+
+
+class RegisterTestCase(base.RockPackTestCase):
+
+    @patch('rockpack.mainsite.services.oauth.api.validate_client_id')
+    def test_successful_registration(self, validate_client_id):
+        validate_client_id = Mock()
+        validate_client_id.return_value = True
+
+        with self.app.test_client() as client:
+            encoded = base64.encodestring(DUMMY_CLIENT_ID + ':')
+            headers = [('Authorization', 'Basic {}'.format(encoded))]
+
+            r = client.post('/ws/register/',
+                    headers=headers,
+                    data=dict(
+                grant_type='password',
+                register='1',
+                username='foobar',
+                password='bar',
+                first_name='foo',
+                last_name='bar',
+                email='foo@bar.com',
+                avatar=(StringIO(AVATAR_IMG_PATH), 'avatar.jpg',)))
+
+            self.assertEquals(201, r.status_code)

@@ -4,6 +4,8 @@ import hashlib
 import hmac
 import time
 from flask import request, Response, jsonify
+import wtforms
+from wtforms import validators
 
 from rockpack.mainsite import app
 from rockpack.mainsite.core.webservice import WebService, expose
@@ -69,10 +71,8 @@ class AuthToken(object):
                 'expires_in': expires_in,
                 'refresh_token': self.refresh_token}
 
-
     def generate_refresh_token(self):
         self.refresh_token = uuid.uuid4().hex
-
 
     def generate_access_token(self, uid, client_id, expires_in):
         expiry = time.time() + expires_in
@@ -100,8 +100,35 @@ class Login(WebService):
         return response
 
 
+class RockRegistrationForm(wtforms.Form):
+    username = wtforms.TextField(validators=[validators.Required()])
+    password = wtforms.PasswordField(validators=[validators.Required()])
+    first_name = wtforms.TextField(validators=[validators.Required()])
+    last_name = wtforms.TextField(validators=[validators.Required()])
+    email = wtforms.TextField(validators=[validators.Required()])
+
+
 class Registration(WebService):
     endpoint = '/register'
+
+    @expose('/', methods=('POST',))
+    def register(self):
+        client_id = verify_authorization_header()
+        form = RockRegistrationForm(request.form)
+        if request.form.get('grant_type') == 'password' and\
+                request.form.get('register', '0') == '1' and form.validate():
+            user = User(username=form.username.data,
+                    first_name=form.first_name.data,
+                    last_name=form.last_name.data,
+                    email=form.email.data,
+                    is_active=True,
+                    avatar=request.files.get('avatar'))
+            user.save()
+            user.set_password(form.password.data)
+
+            return Response(status=201)
+
+        return Response(status=400)
 
 
 class Token(WebService):
