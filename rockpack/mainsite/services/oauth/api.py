@@ -16,8 +16,7 @@ def validate_client_id(client_id, password):
     """ Validate whether this client_id
         exists and is allowed """
 
-    raise NotImplementedError('client id check not implemented')
-    if client_id in '':
+    if client_id == app.config.get('ROCKPACK_APP_CLIENT_ID'):
         return True
     return False
 
@@ -113,9 +112,8 @@ class Registration(WebService):
 
     @expose('/', methods=('POST',))
     def register(self):
-        client_id = verify_authorization_header()
         form = RockRegistrationForm(request.form)
-        if request.form.get('grant_type') == 'password' and\
+        if verify_authorization_header() and request.form.get('grant_type') == 'password' and\
                 request.form.get('register', '0') == '1' and form.validate():
             user = User(username=form.username.data,
                     first_name=form.first_name.data,
@@ -123,7 +121,7 @@ class Registration(WebService):
                     email=form.email.data,
                     is_active=True,
                     avatar=request.files.get('avatar'))
-            user.save()
+            user = user.save()
             user.set_password(form.password.data)
 
             return Response(status=201)
