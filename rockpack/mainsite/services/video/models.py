@@ -291,9 +291,16 @@ class Channel(db.Model):
         return g.session.query(cls.id, cls.title).filter_by(owner=owner)
 
     def add_videos(self, videos):
-        for video in videos:
-            self.video_instances.append(VideoInstance(video=video.id))
-        return self.save()
+        instances = [VideoInstance(channel=self.id, video=v.id) for v in videos]
+        session = self.query.session
+        try:
+            with session.begin_nested():
+                session.add_all(instances)
+        except IntegrityError:
+            existing = [i.video for i in session.query(VideoInstance.video).
+                        filter_by(channel=self.id).
+                        filter(VideoInstance.video.in_(set(i.video for i in instances)))]
+            session.add_all(i for i in instances if i.video not in existing)
 
 
 class ChannelLocaleMeta(db.Model):

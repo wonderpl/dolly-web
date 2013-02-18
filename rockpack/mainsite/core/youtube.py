@@ -4,7 +4,8 @@ from rockpack.mainsite import app
 from rockpack.mainsite.services.video.models import Video, VideoThumbnail, VideoRestriction
 
 
-Playlist = namedtuple('Playlist', 'title video_count videos')
+PushConfig = namedtuple('PushConfig', 'hub topic')
+Playlist = namedtuple('Playlist', 'title video_count videos push_config')
 Videolist = namedtuple('Videolist', 'video_count videos')
 
 
@@ -15,6 +16,46 @@ def _youtube_feed(feed, id, params={}):
     response = requests.get(url, params=params)
     response.raise_for_status()
     return response.json()
+
+
+def _get_atom_video_data(youtube_data, playlist=None):
+    def get_category(categories):
+        for category in categories:
+            if category.scheme.endswith('categories.cat'):
+                return category.text
+    media = youtube_data.media
+    video = Video(
+        source_videoid=media.FindExtensions('videoid')[0].text,
+        source_listid=playlist,
+        title=youtube_data.title.text,
+        duration=media.duration.seconds if media.duration else 0,
+    )
+    video.source_category = get_category(media.category)
+    for thumbnail in media.thumbnail:
+        if 'time' not in thumbnail.extension_attributes:
+            video.thumbnails.append(
+                VideoThumbnail(
+                    url=thumbnail.url,
+                    width=thumbnail.width,
+                    height=thumbnail.height))
+    for restriction in media.FindExtensions('restriction'):
+        if restriction.attributes['type'] == 'country':
+            video.restrictions.extend(
+                VideoRestriction(
+                    relationship=restriction.attributes['relationship'],
+                    country=country) for country in restriction.text.split())
+    return video
+
+
+def parse_atom_playlist_data(xml):
+    """Parse atom feed for youtube video data."""
+    import gdata.youtube
+    feed = gdata.youtube.YouTubePlaylistVideoFeedFromString(xml)
+    type, id = feed.id.text.split(':', 3)[2:]
+    if type == 'user':
+        id = id.replace(':', '/')
+    videos = [_get_atom_video_data(e, id) for e in feed.entry]
+    return Playlist(feed.title.text, len(videos), videos, None)
 
 
 def _get_video_data(youtube_data, playlist=None):
@@ -50,7 +91,7 @@ def _get_video_data(youtube_data, playlist=None):
 def get_video_data(id, fetch_all_videos=True):
     """Return video data from youtube api as playlist of one."""
     youtube_data = _youtube_feed('videos', id)['entry']
-    return Playlist(None, 1, [_get_video_data(youtube_data)])
+    return Playlist(None, 1, [_get_video_data(youtube_data)], None)
 
 
 def get_playlist_data(id, fetch_all_videos=False, feed='playlists'):
@@ -68,7 +109,14 @@ def get_playlist_data(id, fetch_all_videos=False, feed='playlists'):
             params['start-index'] += params['max-results']
             continue
         break
-    return Playlist(youtube_data['title']['$t'], total, videos)
+    links = dict((l['rel'], l['href']) for l in youtube_data['link'])
+    if 'hub' in links:
+        # strip extraneous query params from topic url
+        topic_url = links['self'].split('?', 1)[0] + '?v=2'
+        push_config = PushConfig(links['hub'], topic_url)
+    else:
+        push_config = None
+    return Playlist(youtube_data['title']['$t'], total, videos, push_config)
 
 
 def get_user_data(id, fetch_all_videos=False):

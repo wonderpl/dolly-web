@@ -15,6 +15,7 @@ SERVICES = (
     'rockpack.mainsite.services.user',
     'rockpack.mainsite.services.search',
     'rockpack.mainsite.services.oauth',
+    'rockpack.mainsite.services.pubsubhubbub',
 )
 REGISTER_SETUPS = (
     ('rockpack.mainsite.auth', 'setup_auth'),

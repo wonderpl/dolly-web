@@ -39,13 +39,12 @@ def get_sessionmanager(config=app.config['DATABASE_URL']):
 
 
 class _Model(sqlalchemy.Model):
-    @classmethod
-    def get(cls, id):
-        return g.session.query(cls).get(id)
 
     def save(self):
-        g.session.add(self)
-        return g.session.commit()
+        session = self.query.session
+        merged = session.merge(self)
+        session.commit()
+        return merged
 
 
 sqlalchemy.Model = _Model

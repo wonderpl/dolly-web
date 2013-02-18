@@ -13,7 +13,7 @@ class HeaderTests(base.RockPackTestCase):
             ctx = self.app.test_request_context()
             ctx.push()
             r = client.get(url_for('CoverArtAPI_api.rockpack_cover_art'))
-            self.assertEquals(hashlib.md5(r.data).hexdigest(),
+            self.assertEquals('"%s"' % hashlib.md5(r.data).hexdigest(),
                     r.headers.get('ETag'),
                     'ETag header should match md5\'d content')
 
