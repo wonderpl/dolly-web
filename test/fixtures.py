@@ -4,7 +4,7 @@ from fixture import SQLAlchemyFixture
 from rockpack.mainsite.core.dbapi import db
 from rockpack.mainsite.services.cover_art.models import RockpackCoverArt
 from rockpack.mainsite.services.video import models as video_models
-from rockpack.mainsite.auth.models import User
+from rockpack.mainsite.services.user.models import User
 
 
 class LocaleData(DataSet):

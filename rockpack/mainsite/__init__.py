@@ -17,7 +17,7 @@ SERVICES = (
     'rockpack.mainsite.services.pubsubhubbub',
 )
 REGISTER_SETUPS = (
-    ('rockpack.mainsite.auth', 'setup_auth'),
+    ('rockpack.mainsite.admin.auth', 'setup_auth'),
     ('rockpack.mainsite.admin', 'setup_admin'),
 )
 

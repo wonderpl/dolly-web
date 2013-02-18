@@ -18,7 +18,7 @@ from rockpack.mainsite.helpers.db import (
     add_base64_pk, add_video_pk, add_video_meta_pk,
     gen_videoid, insert_new_only, ImageType)
 from rockpack.mainsite.core.dbapi import db
-from rockpack.mainsite.auth.models import User
+from rockpack.mainsite.services.user.models import User
 
 
 class Locale(db.Model):

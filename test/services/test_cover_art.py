@@ -1,12 +1,8 @@
 import json
-
 from flask import url_for
-
-from rockpack.mainsite.auth.models import User
-
+from rockpack.mainsite.services.user.models import User
 from test import base
 from test.assets import AVATAR_IMG_PATH
-
 from test.fixtures import UserData
 
 
@@ -18,6 +14,7 @@ class CoverArtTestCase(base.RockPackTestCase):
             ctx.push()
             r = client.get(url_for('CoverArtAPI_api.rockpack_cover_art'))
             j = json.loads(r.data)
+            print r.data
             assert j['cover_art'][0]['background_url'].startswith(
                      '{0}/images/channel/background/'.format(self.app.config['IMAGE_CDN']))
             assert j['cover_art'][0]['carousel_url'].startswith(

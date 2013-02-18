@@ -2,7 +2,7 @@
 {% block body %}
 <div>
     {% if not current_user.is_authenticated() %}
-    <a href="{{ url_for('login') }}">Sign in with your Google ID</a>
+    <a href="{{ url_for('.login') }}">Sign in with your Google ID</a>
     {% else %}
     Welcome to Rockpack Admin. We hope you enjoy your stay.
     {% endif %}
