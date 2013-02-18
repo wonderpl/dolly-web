@@ -14,10 +14,9 @@ class CoverArtTestCase(base.RockPackTestCase):
             ctx.push()
             r = client.get(url_for('CoverArtAPI_api.rockpack_cover_art'))
             j = json.loads(r.data)
-            print r.data
-            assert j['cover_art'][0]['background_url'].startswith(
+            assert j['cover_art']['items'][0]['background_url'].startswith(
                      '{0}/images/channel/background/'.format(self.app.config['IMAGE_CDN']))
-            assert j['cover_art'][0]['carousel_url'].startswith(
+            assert j['cover_art']['items'][0]['carousel_url'].startswith(
                      '{0}/images/channel/carousel/'.format(self.app.config['IMAGE_CDN']))
 
 
@@ -34,7 +33,7 @@ class UserCoverArtTestCase(base.RockPackTestCase):
             self.assertEquals(r.status_code, 201)
 
             j = json.loads(r.data)
-            assert j['cover_art'][0]['background_url'].startswith(
+            assert j['background_url'].startswith(
                      '{0}/images/channel/background/'.format(self.app.config['IMAGE_CDN']))
 
 
@@ -55,13 +54,13 @@ class UserCoverArtTestCase(base.RockPackTestCase):
             self.assertEquals(r.status_code, 201)
 
             j = json.loads(r.data)
-            assert j['cover_art'][0]['background_url'].startswith(
+            assert j['background_url'].startswith(
                      '{0}/images/channel/background/'.format(self.app.config['IMAGE_CDN']))
 
-            cover_ref = j['cover_art'][0]['cover_ref']
+            cover_ref = j['cover_ref']
             assert cover_ref.endswith('.png')
 
-            assert j['cover_art'][0]['background_url'].endswith('.jpg')
+            assert j['background_url'].endswith('.jpg')
 
 
     def test_failed_upload(self):
