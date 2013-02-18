@@ -1,10 +1,14 @@
 import base64
+import json
 from cStringIO import StringIO
 from mock import Mock, patch
+
+from flask import Response
 
 from test import base
 from test.assets import AVATAR_IMG_PATH
 from rockpack.mainsite import app
+from rockpack.mainsite.services.oauth.api import verify_authorization_header
 
 
 ACCESS_CREDENTIALS = {
@@ -12,6 +16,41 @@ ACCESS_CREDENTIALS = {
         "token_type": "Bearer",
         "expires_in": 3600,
         "refresh_token": "tGzv3JOkF0XG5Qx2TlKWIA"}
+
+
+class HeadersTestCase(base.RockPackTestCase):
+
+    def _call_url(self, client, headers=None,
+            encoded_id=base64.encodestring(app.config['ROCKPACK_APP_CLIENT_ID'] + ':'),
+            data={}):
+
+        if headers is None:
+            headers = [('Authorization', 'Basic {}'.format(encoded_id))]
+        return client.post('/test/oauth2/header/?grant_type=password', headers=headers, data=data)
+
+    @app.route('/test/oauth2/header/', methods=('GET', 'POST',))
+    @verify_authorization_header
+    def some_view():
+        return Response()
+
+    def test_authentication_success(self):
+        with self.app.test_client() as client:
+            r = self._call_url(client)
+            self.assertEquals(200, r.status_code)
+
+    def test_authentication_failed(self):
+
+        def _error_dict(error):
+            return {'error': error}
+
+        with self.app.test_client() as client:
+            r = self._call_url(client, headers=[])
+            self.assertEquals(400, r.status_code)
+            self.assertEquals(_error_dict('invalid_request'), json.loads(r.data))
+
+            r = self._call_url(client, encoded_id=base64.encodestring('username:password'))
+            self.assertEquals(401, r.status_code)
+            self.assertEquals(_error_dict('unauthorized_client'), json.loads(r.data))
 
 
 class LoginTestCase(base.RockPackTestCase):

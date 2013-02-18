@@ -1,11 +1,14 @@
 import uuid
-import base64
 import hashlib
 import hmac
 import time
-from flask import request, Response, jsonify
-import wtforms
+import json
+from functools import wraps
+from flask import request, Response, jsonify, g
 from wtforms import validators
+import wtforms
+
+from sqlalchemy.orm.exc import NoResultFound
 
 from rockpack.mainsite import app
 from rockpack.mainsite.core.webservice import WebService, expose
@@ -21,21 +24,39 @@ def validate_client_id(client_id, password):
     return False
 
 
-def verify_authorization_header():
+AUTHORIZATION_ERRORS = {'invalid_request': 400,
+        'invalid_token': 401,
+        'unauthorized_client': 401,
+        'invalid_scope': 403,
+        'unsupported_response_type': 401}
+
+
+def authentication_response(error):
+    return Response(json.dumps({'error': error}),
+            AUTHORIZATION_ERRORS[error],
+            {'WWW-Authenticate': 'Basic realm="rockpack.com" error="{}"'.format(error)})
+
+
+def verify_authorization_header(func):
     """ Checks Authorization header for Basic auth
         credentials
 
-        Returns a client_id or `False`"""
+        Adds app_client_id to flask.g is authorized
+        or 4xx response """
 
-    try:
-        _type, token = request.headers.get('Authorization', '').split()
-        client_id, password = base64.decodestring(token).split(':')
-    except ValueError:
-        pass
-    else:
-        if _type == 'Basic' and validate_client_id(client_id, password):
-            return client_id
-    return False
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        auth = request.authorization
+        error = None
+        if not auth or auth.type != 'basic':
+            error = 'invalid_request'
+        else:
+            if validate_client_id(auth.username, auth.password):
+                g.app_client_id = auth.username
+                return func(*args, **kwargs)
+            error = 'unauthorized_client'
+        return authentication_response(error)
+    return wrapper
 
 
 def user_authenticated():
@@ -56,11 +77,12 @@ class AuthToken(object):
     def store_refresh_token(self):
         return NotImplementedError('store_refresh_token must be defined')
 
-    def get_credentials(self, uid, client_id, expires_in=3600):
+    def get_credentials(self, uid, client_id, expires_in=3600, new_refresh_token=False):
         if not self.credentials:
             self.generate_access_token(uid, client_id, expires_in)
             self.generate_refresh_token()
-            self.store_refresh_token()
+            if new_refresh_token:
+                self.store_refresh_token()
             self.credentials = self.token_dict(expires_in)
         return self.credentials
 
@@ -73,11 +95,19 @@ class AuthToken(object):
     def generate_refresh_token(self):
         self.refresh_token = uuid.uuid4().hex
 
-    def generate_access_token(self, uid, client_id, expires_in):
+    def generate_access_token(self, uid, client_id, expires_in=3600):
         expiry = time.time() + expires_in
         payload = '%s:%s:%f' % (uid, client_id, expiry)
         sig = hmac.new(app.secret_key, payload, hashlib.sha1).hexdigest()
         self.access_token = sig + payload
+
+    def get_credentials_from_refresh_token(self, client_id, refresh_token):
+        try:
+            user = User.query.filter_by(refresh_token=refresh_token).one()
+        except NoResultFound:
+            return None
+        else:
+            return self.get_credentials(user.id, client_id)
 
 
 class Login(WebService):
@@ -85,18 +115,18 @@ class Login(WebService):
     endpoint = '/login'
 
     @expose('/', methods=('POST',))
+    @verify_authorization_header
     def login(self):
-        response = Response(content_type='application/json', status=400)
-
-        client_id = verify_authorization_header()
-        if client_id and request.form.get('grant_type', '') == 'password'\
-                and user_authenticated(request.form.get('username'),
+        if g.app_client_id and user_authenticated(request.form.get('username'),
                         request.form.get('password')):
             a = AuthToken()
-            credentials = a.get_credentials(request.form.get('username'), client_id, 3600)
+            credentials = a.get_credentials(
+                    request.form.get('username'),
+                    g.app_client_id,
+                    new_refresh_token=True)
             return jsonify(credentials)
 
-        return response
+        return Response(json.dumps({'error': 'access_denied'}), 401)
 
 
 class RockRegistrationForm(wtforms.Form):
@@ -111,10 +141,10 @@ class Registration(WebService):
     endpoint = '/register'
 
     @expose('/', methods=('POST',))
+    @verify_authorization_header
     def register(self):
         form = RockRegistrationForm(request.form)
-        if verify_authorization_header() and request.form.get('grant_type') == 'password' and\
-                request.form.get('register', '0') == '1' and form.validate():
+        if request.form.get('register', '0') == '1' and form.validate():
             user = User(username=form.username.data,
                     first_name=form.first_name.data,
                     last_name=form.last_name.data,
@@ -131,3 +161,11 @@ class Registration(WebService):
 
 class Token(WebService):
     endpoint = '/token'
+
+    @expose('/', methods=('POST',))
+    @verify_authorization_header
+    def token(self):
+        refresh_token = request.form.get('refresh_token')
+        if refresh_token:
+            a = AuthToken()
+            a.get_credentials_from_refresh_token(g.app_client_id, refresh_token)
