@@ -24,7 +24,7 @@ def validate_client_id(client_id, password):
     return False
 
 
-AUTHORIZATION_ERRORS = {'invalid_request': 400,
+AUTHORIZATION_ERRORS = {'invalid_request': 401,
         'invalid_token': 401,
         'unauthorized_client': 401,
         'invalid_scope': 403,

@@ -45,7 +45,7 @@ class HeadersTestCase(base.RockPackTestCase):
 
         with self.app.test_client() as client:
             r = self._call_url(client, headers=[])
-            self.assertEquals(400, r.status_code)
+            self.assertEquals(401, r.status_code)
             self.assertEquals(_error_dict('invalid_request'), json.loads(r.data))
 
             r = self._call_url(client, encoded_id=base64.encodestring('username:password'))
@@ -132,4 +132,4 @@ class RegisterTestCase(base.RockPackTestCase):
                     headers=headers,
                     data=dict(refresh_token='7348957nev9o3874nqlvcfh47lmqa'))
 
-            self.assertEquals(400, r.status_code)
+            self.assertEquals(401, r.status_code)
