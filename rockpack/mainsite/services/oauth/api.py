@@ -4,7 +4,7 @@ import hmac
 import time
 import json
 from functools import wraps
-from flask import request, Response, jsonify, g
+from flask import request, Response, g
 from wtforms import validators
 import wtforms
 
@@ -31,10 +31,36 @@ AUTHORIZATION_ERRORS = {'invalid_request': 401,
         'unsupported_response_type': 401}
 
 
+# TODO: merge with http_response_from_data or something?
 def authentication_response(error):
     return Response(json.dumps({'error': error}),
             AUTHORIZATION_ERRORS[error],
-            {'WWW-Authenticate': 'Basic realm="rockpack.com" error="{}"'.format(error)})
+            {'WWW-Authenticate': 'Basic realm="rockpack.com" error="{}"'.format(error)},
+            mimetype='application/json')
+
+
+def http_response_from_data(data):
+    """ Returns a Response() object based
+        on data type:
+
+        {'some': 'json style dict'}
+        ('content body', 200, {'SOME': 'header'}, 'mime/type',)
+        200
+        FlaskResponseObject() """
+
+    if isinstance(data, dict):
+        response = Response(json.dumps(data), mimetype='application/json')
+    elif isinstance(data, tuple):
+        response = Response(data[0], status=data[1], headers=data[2], mimetype=data[3])
+    elif isinstance(data, int):
+        response = Response(status=data)
+    elif isinstance(data, Response):
+        response = data
+    elif isinstance(data, str):
+        response = Response(data)
+    else:
+        raise TypeError('Type {} is not supported for Response'.format(type(data)))
+    return response
 
 
 def verify_authorization_header(func):
@@ -53,7 +79,8 @@ def verify_authorization_header(func):
         else:
             if validate_client_id(auth.username, auth.password):
                 g.app_client_id = auth.username
-                return func(*args, **kwargs)
+                r = func(*args, **kwargs)
+                return http_response_from_data(r)
             error = 'unauthorized_client'
         return authentication_response(error)
     return wrapper
@@ -122,11 +149,10 @@ class Login(WebService):
             user = user_authenticated(request.form.get('username'), request.form.get('password'))
             if user:
                 a = AuthToken()
-                credentials = a.get_credentials(
-                        user,
+                credentials = a.get_credentials(user,
                         g.app_client_id,
                         new_refresh_token=True)
-                return jsonify(credentials)
+                return credentials
 
         return Response(json.dumps({'error': 'access_denied'}), 401)
 
@@ -156,9 +182,13 @@ class Registration(WebService):
             user = user.save()
             user.set_password(form.password.data)
 
-            return Response(status=201)
+            a = AuthToken()
+            credentials = a.get_credentials(user,
+                    g.app_client_id,
+                    new_refresh_token=True)
+            return credentials
 
-        return Response(status=400)
+        return 400
 
 
 class Token(WebService):
@@ -172,6 +202,6 @@ class Token(WebService):
             a = AuthToken()
             credentials = a.get_credentials_from_refresh_token(g.app_client_id, refresh_token)
             if credentials:
-                return jsonify(credentials)
+                return credentials
 
         return authentication_response('invalid_request')

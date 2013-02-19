@@ -101,7 +101,10 @@ class RegisterTestCase(base.RockPackTestCase):
                         email='foo@bar.com',
                         avatar=(StringIO(AVATAR_IMG_DATA), 'avatar.jpg',)))
 
-            self.assertEquals(201, r.status_code)
+            creds = json.loads(r.data)
+            self.assertEquals(200, r.status_code)
+            self.assertNotEquals(None, creds['refresh_token'])
+            creds = json.loads(r.data)
 
             r = client.post('/ws/login/',
                     headers=headers,
