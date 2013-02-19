@@ -59,13 +59,10 @@ def verify_authorization_header(func):
     return wrapper
 
 
-def user_authenticated():
-    username = request.form.get('username', '')
-    password = request.form.get('password', '')
-
+def user_authenticated(username, password):
     user = User.get_from_username(username)
-    if user and user.check_password_hash(password):
-        return True
+    if user and user.check_password(password):
+        return user
     return False
 
 
@@ -73,16 +70,19 @@ class AuthToken(object):
 
     def __init__(self):
         self.credentials = {}
+        self.refresh_token = None
 
-    def store_refresh_token(self):
-        return NotImplementedError('store_refresh_token must be defined')
+    def store_refresh_token(self, user, refresh_token):
+        user.refresh_token = refresh_token
+        user.save()
 
-    def get_credentials(self, uid, client_id, expires_in=3600, new_refresh_token=False):
+    def get_credentials(self, user, client_id, expires_in=3600, new_refresh_token=False):
         if not self.credentials:
-            self.generate_access_token(uid, client_id, expires_in)
-            self.generate_refresh_token()
-            if new_refresh_token:
-                self.store_refresh_token()
+            self.generate_access_token(user.id, client_id, expires_in)
+            if not user.refresh_token or new_refresh_token:
+                self.store_refresh_token(user, self.generate_refresh_token())
+            else:
+                self.refresh_token = user.refresh_token
             self.credentials = self.token_dict(expires_in)
         return self.credentials
 
@@ -94,6 +94,7 @@ class AuthToken(object):
 
     def generate_refresh_token(self):
         self.refresh_token = uuid.uuid4().hex
+        return self.refresh_token
 
     def generate_access_token(self, uid, client_id, expires_in=3600):
         expiry = time.time() + expires_in
@@ -107,7 +108,7 @@ class AuthToken(object):
         except NoResultFound:
             return None
         else:
-            return self.get_credentials(user.id, client_id)
+            return self.get_credentials(user, client_id)
 
 
 class Login(WebService):
@@ -117,14 +118,15 @@ class Login(WebService):
     @expose('/', methods=('POST',))
     @verify_authorization_header
     def login(self):
-        if g.app_client_id and user_authenticated(request.form.get('username'),
-                        request.form.get('password')):
-            a = AuthToken()
-            credentials = a.get_credentials(
-                    request.form.get('username'),
-                    g.app_client_id,
-                    new_refresh_token=True)
-            return jsonify(credentials)
+        if request.form.get('grant_type') == 'password':
+            user = user_authenticated(request.form.get('username'), request.form.get('password'))
+            if user:
+                a = AuthToken()
+                credentials = a.get_credentials(
+                        user,
+                        g.app_client_id,
+                        new_refresh_token=True)
+                return jsonify(credentials)
 
         return Response(json.dumps({'error': 'access_denied'}), 401)
 
@@ -166,6 +168,10 @@ class Token(WebService):
     @verify_authorization_header
     def token(self):
         refresh_token = request.form.get('refresh_token')
-        if refresh_token:
+        if request.form.get('grant_type') == 'refresh_token' and refresh_token:
             a = AuthToken()
-            a.get_credentials_from_refresh_token(g.app_client_id, refresh_token)
+            credentials = a.get_credentials_from_refresh_token(g.app_client_id, refresh_token)
+            if credentials:
+                return jsonify(credentials)
+
+        return authentication_response('invalid_request')

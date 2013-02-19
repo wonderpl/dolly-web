@@ -103,3 +103,34 @@ class RegisterTestCase(base.RockPackTestCase):
                         avatar=(StringIO(AVATAR_IMG_PATH), 'avatar.jpg',)))
 
             self.assertEquals(201, r.status_code)
+
+            r = client.post('/ws/login/',
+                    headers=headers,
+                    data=dict(
+                        grant_type='password',
+                        username='foobar',
+                        password='bar'))
+
+            creds = json.loads(r.data)
+            self.assertNotEquals(None, creds['refresh_token'])
+
+            r = client.post('/ws/token/',
+                    headers=headers,
+                    data=dict(refresh_token=creds['refresh_token'],
+                        grant_type='refresh_token'))
+
+            new_creds = json.loads(r.data)
+
+            self.assertEquals('Bearer', new_creds['token_type'], 'token type should be Bearer')
+            self.assertEquals(new_creds['refresh_token'], creds['refresh_token'], 'refresh tokens should be the same')
+            self.assertNotEquals(new_creds['access_token'],
+                    creds['access_token'],
+                    'old access token should not be the same at the new one')
+
+
+            # Try and get a refresh token with an invalid token
+            r = client.post('/ws/token/',
+                    headers=headers,
+                    data=dict(refresh_token='7348957nev9o3874nqlvcfh47lmqa'))
+
+            self.assertEquals(400, r.status_code)
