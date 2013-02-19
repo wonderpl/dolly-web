@@ -1,11 +1,7 @@
 #!/usr/bin/env python
 import sys
 import argparse
-
 import sqlalchemy
-
-
-required_modules = ['rockpack.mainsite.auth', 'rockpack.mainsite.admin']
 
 
 def dbsync(options):

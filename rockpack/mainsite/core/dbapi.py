@@ -3,7 +3,8 @@ import psycopg2
 from functools import wraps
 
 from sqlalchemy import create_engine
-
+from sqlalchemy.exc import StatementError
+from werkzeug.exceptions import HTTPException
 from flask.ext import sqlalchemy
 from flask import g
 
@@ -43,7 +44,14 @@ class _Model(sqlalchemy.Model):
     def save(self):
         session = self.query.session
         merged = session.merge(self)
-        session.commit()
+        try:
+            session.commit()
+        except StatementError, e:
+            # Check if the statement value bind mapping threw a bad request
+            if isinstance(e.orig, HTTPException):
+                raise e.orig
+            else:
+                raise
         return merged
 
 

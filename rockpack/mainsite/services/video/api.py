@@ -1,5 +1,3 @@
-import random
-
 from sqlalchemy.orm import contains_eager
 from sqlalchemy.sql.expression import desc
 from flask import g, jsonify, request, url_for
@@ -32,7 +30,7 @@ def channel_dict(channel):
         title=channel.title,
         thumbnail_url=channel.cover.thumbnail_large,
         description=channel.description,
-        subscribe_count=random.randint(1, 200),  # TODO: implement this for real
+        subscribe_count=0,  # TODO: implement this for real
         owner=dict(
             id=channel.owner_rel.id,
             name=channel.owner_rel.username,
@@ -136,9 +134,7 @@ def get_local_videos(loc, paging, with_channel=True, **filters):
         videos = videos.order_by(desc(models.VideoLocaleMeta.star_count))
 
     if filters.get('date_order'):
-        # XXX: See note below about temporary hack for time distribution
-        #videos = videos.order_by(desc(models.VideoInstance.date_added))
-        videos = videos.order_by(desc(models.VideoInstance.id))
+        videos = videos.order_by(desc(models.VideoInstance.date_added))
 
     total = videos.count()
     offset, limit = paging
@@ -155,13 +151,6 @@ def get_local_videos(loc, paging, with_channel=True, **filters):
         if with_channel:
             item['channel'] = channel_dict(v.VideoInstance.video_channel)
         data.append(item)
-    # XXX: Temporary hack to give nice time distribution for demo
-    if 'date_order' in filters:
-        from datetime import datetime, timedelta
-        now = datetime.now()
-        for item in data:
-            item['date_added'] = (now - timedelta(14 * random.random())).isoformat()
-        data.sort(key=lambda i: i['date_added'], reverse=True)
     return data, total
 
 

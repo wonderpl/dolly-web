@@ -37,15 +37,11 @@ class UserAPI(WebService):
     @cache_for(seconds=60)
     def user_cover_art(self, userid):
         if request.method == 'POST':
-            uca = UserCoverArt(cover=request.files['file'], owner=userid)
-            g.session.add(uca)
-            g.session.commit()
-            response = jsonify({'cover_art': [cover_api.cover_art_dict(uca)]})
+            cover = UserCoverArt(cover=request.files['file'], owner=userid)
+            cover = cover.save()
+            response = jsonify(cover_api.cover_art_dict(cover))
             response.status_code = 201
             return response
-
-        covers = g.session.query(UserCoverArt).filter(
-                UserCoverArt.owner == userid)
-
-        response = jsonify({'cover_art': [cover_api.cover_art_dict(c) for c in covers]})
-        return response
+        else:
+            covers = UserCoverArt.query.filter_by(owner=userid)
+            return cover_api.cover_art_response(covers, self.get_page())

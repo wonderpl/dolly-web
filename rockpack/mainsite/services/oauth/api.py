@@ -12,7 +12,7 @@ from sqlalchemy.orm.exc import NoResultFound
 
 from rockpack.mainsite import app
 from rockpack.mainsite.core.webservice import WebService, expose
-from rockpack.mainsite.auth.models import User
+from rockpack.mainsite.services.user.models import User
 
 
 def validate_client_id(client_id, password):

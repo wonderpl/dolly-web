@@ -5,12 +5,12 @@ from flask import request, url_for, redirect, flash, jsonify
 from flask.ext import wtf, login
 from flask.ext.admin import BaseView, expose, form
 from wtforms.validators import ValidationError
-from rockpack.mainsite.auth.models import User
 from rockpack.mainsite.core.dbapi import commit_on_success, db
 from rockpack.mainsite.core import youtube
 from rockpack.mainsite.services.pubsubhubbub.api import subscribe
 from rockpack.mainsite.services.video.models import (
     Locale, Source, Category, Video, Channel, ChannelLocaleMeta)
+from rockpack.mainsite.services.user.models import User
 
 
 class ImportForm(form.BaseForm):

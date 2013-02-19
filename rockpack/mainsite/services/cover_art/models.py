@@ -8,7 +8,7 @@ from sqlalchemy.orm import relationship
 
 from rockpack.mainsite.core.dbapi import db
 from rockpack.mainsite.helpers.db import ImageType
-from rockpack.mainsite.auth.models import User
+from rockpack.mainsite.services.user.models import User
 
 
 class RockpackCoverArt(db.Model):

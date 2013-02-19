@@ -3,11 +3,11 @@ from cStringIO import StringIO
 
 from test import base
 from test.fixtures import UserData
-from test.assets import AVATAR_IMG_PATH
+from test.assets import AVATAR_IMG_DATA
 
 from rockpack.mainsite.admin.import_views import ImportView
 from rockpack.mainsite.services.video.models import Video, VideoInstance, Channel
-from rockpack.mainsite.auth.models import User
+from rockpack.mainsite.services.user.models import User
 
 
 class ImportFromYoutubeTestCase(base.RockPackTestCase):
@@ -44,7 +44,7 @@ class ImportFromYoutubeTestCase(base.RockPackTestCase):
             with self.app.test_client() as client:
                 data = self.data_video.copy()
                 data.update(self.data_user.copy())
-                data.update({'avatar': (StringIO(AVATAR_IMG_PATH), 'avatar.jpg',)})
+                data.update({'avatar': (StringIO(AVATAR_IMG_DATA), 'avatar.jpg',)})
 
                 r = client.post('/admin/import/', data=data)
 
@@ -59,7 +59,8 @@ class ImportFromYoutubeTestCase(base.RockPackTestCase):
             with self.app.test_client() as client:
                 data = self.data_video.copy()
                 data.update(self.data_user.copy())
-                data.update({'avatar': (StringIO(AVATAR_IMG_PATH), 'avatar.jpg',)})
+                data['username'] += '_'
+                data.update({'avatar': (StringIO(AVATAR_IMG_DATA), 'avatar.jpg',)})
                 del data['category']
                 r = client.post('/admin/import/', data=data)
 

@@ -6,7 +6,7 @@ from mock import Mock, patch
 from flask import Response
 
 from test import base
-from test.assets import AVATAR_IMG_PATH
+from test.assets import AVATAR_IMG_DATA
 from rockpack.mainsite import app
 from rockpack.mainsite.services.oauth.api import verify_authorization_header
 
@@ -93,14 +93,13 @@ class RegisterTestCase(base.RockPackTestCase):
             r = client.post('/ws/register/',
                     headers=headers,
                     data=dict(
-                        grant_type='password',
                         register='1',
-                        username='foobar',
+                        username='foobarbarbar',
                         password='bar',
                         first_name='foo',
                         last_name='bar',
                         email='foo@bar.com',
-                        avatar=(StringIO(AVATAR_IMG_PATH), 'avatar.jpg',)))
+                        avatar=(StringIO(AVATAR_IMG_DATA), 'avatar.jpg',)))
 
             self.assertEquals(201, r.status_code)
 
@@ -108,7 +107,7 @@ class RegisterTestCase(base.RockPackTestCase):
                     headers=headers,
                     data=dict(
                         grant_type='password',
-                        username='foobar',
+                        username='foobarbarbar',
                         password='bar'))
 
             creds = json.loads(r.data)
