@@ -26,7 +26,7 @@ class User(db.Model):
     email = Column(String(254), nullable=False)
     first_name = Column(String(254), nullable=False)
     last_name = Column(String(254), nullable=False)
-    avatar = Column(ImageType('AVATAR'), nullable=False)
+    avatar = Column(ImageType('AVATAR'), nullable=True)
     is_active = Column(Boolean, nullable=False, server_default='true')
     refresh_token = Column(String(1024), nullable=True)
 

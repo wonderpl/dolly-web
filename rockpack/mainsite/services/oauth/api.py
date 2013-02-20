@@ -4,15 +4,18 @@ import hmac
 import time
 import json
 from functools import wraps
-from flask import request, Response, g
-from wtforms import validators
+
 import wtforms
+from wtforms import validators
+from flask import request, Response, g
 
 from sqlalchemy.orm.exc import NoResultFound
 
 from rockpack.mainsite import app
 from rockpack.mainsite.core.webservice import WebService, expose
 from rockpack.mainsite.services.user.models import User
+from . import models
+from .exceptions import InvalidExternalSystem
 
 
 def validate_client_id(client_id, password):
@@ -156,6 +159,20 @@ class Login(WebService):
 
         return Response(json.dumps({'error': 'access_denied'}), 401)
 
+    @expose('/external/', methods=('POST',))
+    @verify_authorization_header
+    def exeternal(self):
+        if request.form.get('grant_type') == 'token':
+            user = models.ExternalToken.user_from_token()
+            if user:
+                a = AuthToken()
+                credentials = a.get_credentials(user,
+                        g.app_client_id,
+                        new_refresh_token=True)
+                return credentials
+
+        return 400
+
 
 class RockRegistrationForm(wtforms.Form):
     username = wtforms.TextField(validators=[validators.Required()])
@@ -163,6 +180,17 @@ class RockRegistrationForm(wtforms.Form):
     first_name = wtforms.TextField(validators=[validators.Required()])
     last_name = wtforms.TextField(validators=[validators.Required()])
     email = wtforms.TextField(validators=[validators.Required()])
+
+
+class ExternalRegistrationForm(RockRegistrationForm):
+    external_system = wtforms.TextField(validators=[validators.Required()])
+    external_token = wtforms.TextField(validators=[validators.Required()])
+
+    password = wtforms.PasswordField()
+
+    def validate_external_system(form, value):
+        if value in models.EXTERNAL_SYSTEM_NAMES:
+            return validators.ValidationError('external system invalid')
 
 
 class Registration(WebService):
@@ -177,8 +205,7 @@ class Registration(WebService):
                     first_name=form.first_name.data,
                     last_name=form.last_name.data,
                     email=form.email.data,
-                    is_active=True,
-                    avatar=request.files.get('avatar'))
+                    is_active=True)
             user = user.save()
             user.set_password(form.password.data)
 
@@ -187,6 +214,32 @@ class Registration(WebService):
                     g.app_client_id,
                     new_refresh_token=True)
             return credentials
+
+        return 400
+
+    @expose('/external/', methods=('POST',))
+    @verify_authorization_header
+    def external(self):
+        form = ExternalRegistrationForm(request.form)
+        if request.form.get('register', '0') == '1' and form.validate():
+            user = User(username=form.username.data,
+                    first_name=form.first_name.data,
+                    last_name=form.last_name.data,
+                    email=form.email.data,
+                    is_active=True)
+            user = user.save()
+
+            try:
+                models.ExternalToken.update_token(user,
+                        form.external_system.data, form.external_token.data)
+            except InvalidExternalSystem:
+                pass
+            else:
+                a = AuthToken()
+                credentials = a.get_credentials(user,
+                        g.app_client_id,
+                        new_refresh_token=True)
+                return credentials
 
         return 400
 
