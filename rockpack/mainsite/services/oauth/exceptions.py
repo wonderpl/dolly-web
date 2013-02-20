@@ -1,0 +1,2 @@
+class InvalidExternalSystem(Exception):
+    pass
