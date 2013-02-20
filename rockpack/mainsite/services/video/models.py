@@ -233,6 +233,8 @@ class VideoInstance(db.Model):
 
     id = Column(CHAR(24), primary_key=True)
     date_added = Column(DateTime(timezone=True), nullable=False, default=func.now())
+    view_count = Column(Integer, nullable=False, server_default='0')
+    star_count = Column(Integer, nullable=False, server_default='0')
 
     video = Column(ForeignKey('video.id', ondelete='CASCADE'), nullable=False)
     channel = Column(ForeignKey('channel.id'), nullable=False)

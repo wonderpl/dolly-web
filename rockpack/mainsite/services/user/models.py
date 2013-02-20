@@ -1,15 +1,5 @@
-from flask import g
-
 from sqlalchemy import (
-    String,
-    Column,
-    Integer,
-    ForeignKey,
-    Boolean,
-    event,
-    CHAR,
-)
-
+    String, Column, Integer, Boolean, DateTime, ForeignKey, CHAR, event, func)
 from rockpack.mainsite.core.dbapi import db
 from rockpack.mainsite.helpers.db import ImageType, add_base64_pk
 
@@ -30,15 +20,25 @@ class User(db.Model):
 
     @classmethod
     def get_form_choices(cls, prefix=None):
-        q = g.session.query(cls.id, cls.username)
+        q = cls.query
         if prefix:
             q = q.filter(cls.username.ilike(prefix + '%'))
-        return q
+        return q.values(cls.id, cls.username)
 
     @classmethod
     def get_from_username(cls, username):
-        return g.session.query(cls).filter_by(username=username).one()
+        return cls.query.filter_by(username=username).one()
+
+
+class UserActivity(db.Model):
+    __tablename__ = 'user_activity'
+
+    id = Column(Integer, primary_key=True)
+    user = Column(CHAR(22), ForeignKey('user.id'), nullable=False)
+    action = Column(String(16), nullable=False)
+    date_actioned = Column(DateTime(), nullable=False, default=func.now())
+    object_type = Column(String(16), nullable=False)
+    object_id = Column(String(32), nullable=False)
 
 
 event.listen(User, 'before_insert', lambda x, y, z: add_base64_pk(x, y, z))
-
