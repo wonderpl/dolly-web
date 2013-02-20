@@ -90,6 +90,23 @@ def verify_authorization_header(func):
     return wrapper
 
 
+def access_token_authentication(f):
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        auth = request.authorisation
+        # some check to bypass if USERID is in the url
+        if (auth and auth.type == 'bearer'):
+            # TODO: I bet this doesnt work
+            # write a test
+            data = AuthToken.verify_access_token(auth.token)
+            if data:
+                uid, client_id, expiry = data
+                g.user = User.get(uid)
+                f(*args, **kwargs)
+        return authentication_response('invalid_request')
+    return wrapper
+
+
 def user_authenticated(username, password):
     user = User.get_from_username(username)
     if user and user.check_password(password):
@@ -132,6 +149,13 @@ class AuthToken(object):
         payload = '%s:%s:%f' % (uid, client_id, expiry)
         sig = hmac.new(app.secret_key, payload, hashlib.sha1).hexdigest()
         self.access_token = sig + payload
+
+    @classmethod
+    def verify_access_token(cls, token):
+        sig, payload = token[:40], token[40:]
+        if hmac.new(app.secret_key, payload, hashlib.sha1) == sig:
+            return payload.split(':')
+        return None
 
     def get_credentials_from_refresh_token(self, client_id, refresh_token):
         try:
