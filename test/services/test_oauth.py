@@ -10,6 +10,7 @@ from test import base
 from test.assets import AVATAR_IMG_DATA
 from rockpack.mainsite import app
 from rockpack.mainsite.services.user.models import User
+from rockpack.mainsite.services.video.models import Channel
 from rockpack.mainsite.services.oauth.models import ExternalToken
 from rockpack.mainsite.services.oauth import exceptions
 from rockpack.mainsite.services.oauth.api import verify_authorization_header
@@ -179,6 +180,10 @@ class RegisterTestCase(base.RockPackTestCase):
             creds = json.loads(r.data)
             self.assertEquals(200, r.status_code)
             self.assertNotEquals(None, creds['refresh_token'])
+            self.assertEquals(1,
+                    Channel.query.filter_by(owner_rel=User.get_from_username('foobarbarbar')).count(),
+                    'default user channel should be created')
+
             creds = json.loads(r.data)
 
             r = client.post('/ws/login/',

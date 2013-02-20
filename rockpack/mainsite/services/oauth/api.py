@@ -13,6 +13,7 @@ from sqlalchemy.orm.exc import NoResultFound
 
 from rockpack.mainsite import app
 from rockpack.mainsite.core.webservice import WebService, expose
+from rockpack.mainsite.services.video.models import Channel
 from rockpack.mainsite.services.user.models import User
 from . import models
 from .exceptions import InvalidExternalSystem
@@ -193,6 +194,29 @@ class ExternalRegistrationForm(RockRegistrationForm):
             return validators.ValidationError('external system invalid')
 
 
+DEFAULT_USER_CHANNEL = ('favourites', 'starred videos on rockpack by me')
+
+
+def new_user_setup(form):
+    """ Creates a new user and sets up
+        and related assets, like default channels """
+
+    user = User(username=form.username.data,
+            first_name=form.first_name.data,
+            last_name=form.last_name.data,
+            email=form.email.data,
+            is_active=True)
+    user = user.save()
+    user.set_password(form.password.data)
+
+    channel = Channel(title=DEFAULT_USER_CHANNEL[0],
+            description=DEFAULT_USER_CHANNEL[1],
+            cover='',
+            owner=user.id)
+    channel.save()
+    return user
+
+
 class Registration(WebService):
     endpoint = '/register'
 
@@ -201,13 +225,7 @@ class Registration(WebService):
     def register(self):
         form = RockRegistrationForm(request.form)
         if request.form.get('register', '0') == '1' and form.validate():
-            user = User(username=form.username.data,
-                    first_name=form.first_name.data,
-                    last_name=form.last_name.data,
-                    email=form.email.data,
-                    is_active=True)
-            user = user.save()
-            user.set_password(form.password.data)
+            user = new_user_setup(form)
 
             a = AuthToken()
             credentials = a.get_credentials(user,
@@ -222,12 +240,7 @@ class Registration(WebService):
     def external(self):
         form = ExternalRegistrationForm(request.form)
         if request.form.get('register', '0') == '1' and form.validate():
-            user = User(username=form.username.data,
-                    first_name=form.first_name.data,
-                    last_name=form.last_name.data,
-                    email=form.email.data,
-                    is_active=True)
-            user = user.save()
+            user = new_user_setup(form)
 
             try:
                 models.ExternalToken.update_token(user,
