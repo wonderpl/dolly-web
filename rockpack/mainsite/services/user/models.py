@@ -38,7 +38,7 @@ class UserActivity(db.Model):
     action = Column(String(16), nullable=False)
     date_actioned = Column(DateTime(), nullable=False, default=func.now())
     object_type = Column(String(16), nullable=False)
-    object_id = Column(String(32), nullable=False)
+    object_id = Column(String(64), nullable=False)
 
 
 event.listen(User, 'before_insert', lambda x, y, z: add_base64_pk(x, y, z))

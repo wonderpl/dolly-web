@@ -13,7 +13,6 @@ from sqlalchemy import (
 )
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import relationship, aliased
-from flask import g
 from rockpack.mainsite.helpers.db import (
     add_base64_pk, add_video_pk, add_video_meta_pk,
     gen_videoid, insert_new_only, ImageType)
@@ -33,7 +32,7 @@ class Locale(db.Model):
 
     @classmethod
     def get_form_choices(cls):
-        return g.session.query(cls.id, cls.name)
+        return cls.query.values(cls.id, cls.name)
 
 
 class Category(db.Model):
@@ -64,10 +63,18 @@ class Category(db.Model):
         return self.name
 
     @classmethod
+    def map_to(cls, category, locale):
+        """Return the equivalent category for the given locale"""
+        map = lambda here, there: cls.query.join(
+            CategoryMap, (there == cls.id) & (cls.locale == locale)).\
+            filter(here == category).value(there)
+        return map(CategoryMap.here, CategoryMap.there) or \
+            map(CategoryMap.there, CategoryMap.here)
+
+    @classmethod
     def get_form_choices(cls, locale):
-        query = g.session.query(cls.id, cls.name, ParentCategory.name).\
-            filter(cls.parent == ParentCategory.id).\
-            filter(cls.locale == locale)
+        query = cls.query.filter_by(parent=ParentCategory.id, locale=locale).\
+            values(cls.id, cls.name, ParentCategory.name)
         for id, name, parent in query:
             yield id, '%s - %s' % (parent, name)
 
@@ -124,7 +131,7 @@ class Source(db.Model):
 
     @classmethod
     def get_form_choices(cls):
-        return g.session.query(cls.id, cls.label)
+        return cls.query.values(cls.id, cls.label)
 
 
 class Video(db.Model):
@@ -149,10 +156,11 @@ class Video(db.Model):
     source = Column(ForeignKey('source.id'), nullable=False)
 
     thumbnails = relationship('VideoThumbnail', backref='video_rel',
-            lazy='joined', passive_deletes=True, cascade="all, delete-orphan")
+                              lazy='joined', passive_deletes=True,
+                              cascade="all, delete-orphan")
     metas = relationship('VideoLocaleMeta', backref='video_rel')
     instances = relationship('VideoInstance', backref=db.backref('video_rel', lazy='joined'),
-            passive_deletes=True, cascade="all, delete-orphan")
+                             passive_deletes=True, cascade="all, delete-orphan")
     restrictions = relationship('VideoRestriction', backref='videos')
 
     def __str__(self):
@@ -169,16 +177,31 @@ class Video(db.Model):
         # TODO: Use data from source
         return 'http://www.youtube.com/watch?v=' + self.source_videoid
 
+    def add_meta(self, locale):
+        # Try mapping category from existing meta record to new locale
+        category = VideoLocaleMeta.query.filter_by(video=self.id).value('category')
+        if category:
+            category = Category.map_to(category, locale)
+        # Else fall back on default "Other"
+        else:
+            category = Category.query.filter_by(
+                locale=locale, name='Other', parent=None).value('id')
+        meta = VideoLocaleMeta(locale=locale, category=category)
+        self.metas.append(meta)
+        self.save()
+        return meta
+
     @classmethod
     def add_videos(cls, videos, source, locale, category):
         for video in videos:
             video.source = source
             video.metas = [VideoLocaleMeta(locale=locale, category=category)]
 
+        session = cls.query.session
         try:
             # First try to add all...
-            with g.session.begin_nested():
-                g.session.add_all(videos)
+            with session.begin_nested():
+                session.add_all(videos)
             count = len(videos)
         except IntegrityError:
             # Else explicitly check which videos already exist
@@ -290,10 +313,10 @@ class Channel(db.Model):
 
     @classmethod
     def get_form_choices(cls, owner):
-        return g.session.query(cls.id, cls.title).filter_by(owner=owner)
+        return cls.query.filter_by(owner=owner).values(cls.id, cls.title)
 
     def add_videos(self, videos):
-        instances = [VideoInstance(channel=self.id, video=v.id) for v in videos]
+        instances = [VideoInstance(channel=self.id, video=getattr(v, 'id', v)) for v in videos]
         session = self.query.session
         try:
             with session.begin_nested():
@@ -303,6 +326,11 @@ class Channel(db.Model):
                         filter_by(channel=self.id).
                         filter(VideoInstance.video.in_(set(i.video for i in instances)))]
             session.add_all(i for i in instances if i.video not in existing)
+
+    def remove_videos(self, videos):
+        VideoInstance.query.filter_by(channel=self.id).filter(
+            VideoInstance.video.in_(set(getattr(v, 'id', v) for v in videos))).\
+            delete(synchronize_session=False)
 
 
 class ChannelLocaleMeta(db.Model):

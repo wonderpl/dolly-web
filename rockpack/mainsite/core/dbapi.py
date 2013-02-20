@@ -45,6 +45,7 @@ class _Model(sqlalchemy.Model):
         session = self.query.session
         merged = session.merge(self)
         try:
+            # commit is called here so that we can get the id of the new record
             session.commit()
         except StatementError, e:
             # Check if the statement value bind mapping threw a bad request

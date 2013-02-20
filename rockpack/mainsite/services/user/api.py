@@ -1,15 +1,17 @@
+from sqlalchemy import desc
 from flask import jsonify, abort, request
-
 from rockpack.mainsite.core.dbapi import commit_on_success
 from rockpack.mainsite.core.webservice import WebService, expose
 from rockpack.mainsite.services.video.models import (
-    ChannelLocaleMeta, Video, VideoInstance, VideoLocaleMeta)
+    Channel, ChannelLocaleMeta, Video, VideoInstance, VideoLocaleMeta)
 from rockpack.mainsite.services.cover_art.models import UserCoverArt
 from rockpack.mainsite.services.cover_art import api as cover_api
 from rockpack.mainsite.services.video import api as video_api
 from rockpack.mainsite.helpers.http import cache_for
 from .models import UserActivity
 
+
+FAVOURITE_CHANNEL_TITLE = 'favourites'
 
 ACTION_COLUMN_VALUE_MAP = dict(
     view=('view_count', 1),
@@ -19,16 +21,49 @@ ACTION_COLUMN_VALUE_MAP = dict(
 
 
 @commit_on_success
-def _increment_video_count(instance_id, locale, column, value=1):
+def save_video_activity(user, action, instance_id, locale):
+    try:
+        column, value = ACTION_COLUMN_VALUE_MAP[action]
+    except KeyError:
+        abort(400)
+
     instance = VideoInstance.query.filter_by(id=instance_id)
     video_id = instance.value(VideoInstance.video)
-    video = Video.query.filter_by(id=video_id)
-    meta = VideoLocaleMeta.query.filter_by(video=video_id, locale=locale)
+    if not video_id:
+        abort(400)
 
-    incr_count = lambda m: {getattr(m, column): getattr(m, column) + value}
-    instance.update(incr_count(VideoInstance))
-    video.update(incr_count(Video))
-    meta.update(incr_count(VideoLocaleMeta))
+    if action == 'view':
+        object_type = 'video_instance'
+        object_id = instance_id
+    else:
+        object_type = 'video'
+        object_id = video_id
+
+    activity = dict(user=user, action=action,
+                    object_type=object_type, object_id=object_id)
+    if not UserActivity.query.filter_by(**activity).count():
+        # Increment value on each of instance, video, & locale meta
+        video = Video.query.filter_by(id=video_id)
+        meta = VideoLocaleMeta.query.filter_by(video=video_id, locale=locale)
+        incr = lambda m: {getattr(m, column): getattr(m, column) + value}
+        instance.update(incr(VideoInstance))
+        updated = video.update(incr(Video))
+        assert updated
+        updated = meta.update(incr(VideoLocaleMeta))
+        if not updated:
+            meta = Video.query.get(video_id).add_meta(locale)
+            setattr(meta, column, 1)
+
+    UserActivity(**activity).save()
+
+    if action in ('star', 'unstar'):
+        channel = Channel.query.filter_by(
+            owner=user, title=FAVOURITE_CHANNEL_TITLE).first()
+        if channel:
+            if action == 'unstar':
+                channel.remove_videos([object_id])
+            else:
+                channel.add_videos([object_id])
 
 
 class UserAPI(WebService):
@@ -47,24 +82,20 @@ class UserAPI(WebService):
     @cache_for(seconds=60, private=True)
     def activity(self, userid):
         if request.method == 'POST':
-            action = request.form['action']
-            if action not in ACTION_COLUMN_VALUE_MAP:
-                abort(400)
-
-            instance_id = request.form['video_instance']
-            if not VideoInstance.query.filter_by(id=instance_id).count():
-                abort(400)
-
-            activity = dict(user=userid, action=action,
-                            object_type='video_instance', object_id=instance_id)
-            if not UserActivity.query.filter_by(**activity).count():
-                column, value = ACTION_COLUMN_VALUE_MAP[action]
-                _increment_video_count(instance_id, self.get_locale(), column, value)
-            UserActivity(**activity).save()
+            save_video_activity(userid,
+                                request.form['action'],
+                                request.form['video_instance'],
+                                self.get_locale())
             return jsonify()
         else:
-            # Return list of recent views?
-            return jsonify([])
+            base = UserActivity.query.filter_by(user=userid).order_by(desc('id'))
+            actions = lambda action: zip(*base.filter_by(action=action).limit(
+                self.max_page_size).values('object_id'))[0]
+            return jsonify(
+                recently_viewed=actions('view'),
+                recently_starred=actions('star'),
+                subscribed='',
+            )
 
     @expose('/<string:userid>/channels/<string:channelid>/', methods=('GET',))
     @cache_for(seconds=60)
