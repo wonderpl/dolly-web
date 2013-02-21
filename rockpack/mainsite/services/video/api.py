@@ -17,7 +17,7 @@ def _filter_by_category(query, type, category_id):
     return query.filter(type.category.in_(cat_ids))
 
 
-def channel_dict(channel):
+def channel_dict(channel, with_owner=True):
     sizes = ['thumbnail_large', 'thumbnail_small', 'background']
     images = {'cover_%s_url' % s: getattr(channel.cover, s) for s in sizes}
     url = url_for('UserAPI_api.channel_item',
@@ -31,12 +31,13 @@ def channel_dict(channel):
         thumbnail_url=channel.cover.thumbnail_large,
         description=channel.description,
         subscribe_count=0,  # TODO: implement this for real
-        owner=dict(
+    )
+    if with_owner:
+        ch_data['owner'] = dict(
             id=channel.owner_rel.id,
             name=channel.owner_rel.username,
             avatar_thumbnail_url=channel.owner_rel.avatar.thumbnail_small,
         )
-    )
     ch_data.update(images)
     return ch_data
 

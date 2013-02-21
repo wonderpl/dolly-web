@@ -8,7 +8,7 @@ from rockpack.mainsite.services.cover_art.models import UserCoverArt
 from rockpack.mainsite.services.cover_art import api as cover_api
 from rockpack.mainsite.services.video import api as video_api
 from rockpack.mainsite.helpers.http import cache_for
-from .models import UserActivity
+from .models import User, UserActivity
 
 
 FAVOURITE_CHANNEL_TITLE = 'favourites'
@@ -66,9 +66,29 @@ def save_video_activity(user, action, instance_id, locale):
                 channel.add_videos([object_id])
 
 
+def action_object_list(user, action, limit):
+    query = UserActivity.query.filter_by(user=user, action=action).\
+        order_by(desc('id')).limit(limit)
+    id_list = zip(*query.values('object_id'))
+    return id_list[0] if id_list else []
+
+
 class UserAPI(WebService):
 
     endpoint = '/'
+
+    @expose('/<string:userid>/')
+    @cache_for(seconds=60, private=True)
+    def user_info(self, userid):
+        user = User.query.get_or_404(userid)
+        # TODO: we'll need to check if authenticated user is owner and include private channels
+        channels = [video_api.channel_dict(c, with_owner=False) for c in user.channels]
+        return jsonify(
+            name=user.username,
+            display_name=user.display_name,
+            avatar_thumbnail_url=user.avatar.thumbnail_small,
+            channels=channels,
+        )
 
     # TODO: hack for recent videos. do this properly
     @expose('/<string:userid>/subscriptions/recent_videos/')
@@ -88,13 +108,10 @@ class UserAPI(WebService):
                                 self.get_locale())
             return jsonify()
         else:
-            base = UserActivity.query.filter_by(user=userid).order_by(desc('id'))
-            actions = lambda action: zip(*base.filter_by(action=action).limit(
-                self.max_page_size).values('object_id'))[0]
             return jsonify(
-                recently_viewed=actions('view'),
-                recently_starred=actions('star'),
-                subscribed='',
+                recently_viewed=action_object_list(userid, 'view', self.max_page_size),
+                recently_starred=action_object_list(userid, 'star', self.max_page_size),
+                subscribed=[],
             )
 
     @expose('/<string:userid>/channels/<string:channelid>/', methods=('GET',))

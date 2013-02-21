@@ -1,5 +1,6 @@
 from sqlalchemy import (
     String, Column, Integer, Boolean, DateTime, ForeignKey, CHAR, event, func)
+from sqlalchemy.orm import relationship
 from rockpack.mainsite.core.dbapi import db
 from rockpack.mainsite.helpers.db import ImageType, add_base64_pk
 
@@ -15,6 +16,8 @@ class User(db.Model):
     avatar = Column(ImageType('AVATAR'), nullable=False)
     is_active = Column(Boolean, nullable=False, server_default='true')
 
+    channels = relationship('Channel')
+
     def __unicode__(self):
         return self.username
 
@@ -28,6 +31,14 @@ class User(db.Model):
     @classmethod
     def get_from_username(cls, username):
         return cls.query.filter_by(username=username).one()
+
+    @property
+    def display_name(self):
+        # XXX: Needs to be more general?
+        if self.first_name:
+            return u'%s %s' % (self.first_name, self.last_name)
+        else:
+            return self.username
 
 
 class UserActivity(db.Model):
