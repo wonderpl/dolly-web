@@ -56,6 +56,19 @@ class UserForm(form.BaseForm):
             raise ValidationError('No file chosen')
 
 
+# TODO: stick this on channel model
+def create_channel(title, owner, description,
+        locale, category, cover='', push_notifications=True):
+    channel = Channel(title=title,
+                      owner=owner,
+                      description=description,
+                      cover=cover)
+    channel.metas = [ChannelLocaleMeta(
+                     locale=locale,
+                     category=category)]
+    return channel.save()
+
+
 class ImportView(BaseView):
 
     def is_authenticated(self):
@@ -76,14 +89,11 @@ class ImportView(BaseView):
         user = form.user.data
         if channel and user:
             if channel.startswith('_new:'):
-                channel = Channel(title=channel.split(':', 1)[1],
-                                  owner=user,
-                                  description=form.channel_description.data,
-                                  cover='')
-                channel.metas = [ChannelLocaleMeta(
-                                 locale=form.locale.data,
-                                 category=form.category.data)]
-                channel = channel.save()
+                channel = create_channel(title=channel.split(':', 1)[1],
+                        owner=user,
+                        description=form.channel_description.data,
+                        locale=form.locale.data,
+                        category=form.category.data)
             else:
                 channel = Channel.query.get(channel)
             channel.add_videos(form.import_data.videos)

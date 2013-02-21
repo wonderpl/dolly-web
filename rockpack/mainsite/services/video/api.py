@@ -1,9 +1,11 @@
+import json
 from sqlalchemy.orm import contains_eager
 from sqlalchemy.sql.expression import desc
-from flask import g, jsonify, request, url_for
+from flask import g, jsonify, request, url_for, Response
 from rockpack.mainsite.core.webservice import WebService
 from rockpack.mainsite.core.webservice import expose
 from rockpack.mainsite.services.video import models
+from rockpack.mainsite.services.user.models import User
 from rockpack.mainsite.helpers.http import cache_for
 
 
@@ -68,6 +70,19 @@ def get_local_channel(locale, paging, **filters):
     return channel_data, total
 
 
+from flask.ext.admin import form
+from flask.ext import wtf
+
+
+class ChannelForm(form.BaseForm):
+    title = wtf.TextField(validators=[wtf.validators.required()])
+    description = wtf.TextField(validators=[wtf.validators.required()])
+    user = wtf.TextField(validators=[wtf.validators.required()])
+    locale = wtf.TextField(validators=[wtf.validators.required()])
+    category = wtf.TextField(validators=[wtf.validators.required()])
+    cover = wtf.TextField()
+
+
 class ChannelAPI(WebService):
 
     endpoint = '/channels'
@@ -84,6 +99,35 @@ class ChannelAPI(WebService):
             'total': total},
         })
         return response
+
+    @expose('/', methods=('POST',))
+    def channel_add(self):
+        return Response()
+
+    @expose('/<string:channel_id>/', methods=('GET',))
+    def channel_item(self, channel_id):
+        pass
+
+    @expose('/', methods=('POST',))
+    def channel_item_edit(self):
+        form = ChannelForm(request.form, csrf_enabled=False)
+        if form.validate():
+            from rockpack.mainsite.admin.import_views import create_channel
+            # TODO: validate user against access token
+            cover = request.files.get('cover', '')
+            channel = create_channel(title=form.title.data,
+                    description=form.description.data,
+                    owner=form.user.data,
+                    locale=form.locale.data,
+                    category=form.category.data,
+                    cover=cover).save()
+
+            return Response(json.dumps({
+                'channels': {
+                'items': [channel_dict(channel)],
+                'total': 1},
+            }), mimetype='application/json', status=201)
+        return Response(form.errors, status=400)
 
 
 def video_dict(instance):

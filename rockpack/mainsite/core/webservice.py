@@ -40,7 +40,7 @@ class APIMeta(type):
             if callable(value):
                 urls = getattr(value, '_service_urls', ())
                 for url in urls:
-                    routes.setdefault(url.url, url)
+                    routes.setdefault(url.func.__name__, url)
 
         dict_['_routes'] = routes.values()
         return type.__new__(cls, name, bases, dict_)
