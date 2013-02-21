@@ -90,6 +90,27 @@ class HeadersTestCase(base.RockPackTestCase):
                     headers={'Authorization': 'Bearer {}'.format('foo')})
             self.assertEquals(401, r.status_code)
 
+    @app.route('/test/oauth2/access_token/bypass/', methods=('GET', 'POST',))
+    @access_token_authentication
+    def access_bypass():
+        return Response()
+
+    def test_access_token_bypass(self):
+        with self.app.test_client() as client:
+            _old = app.config.get('IGNORE_ACCESS_TOKEN')
+            app.config['IGNORE_ACCESS_TOKEN'] = True
+            r = self._call_url(client,
+                    '/test/oauth2/access_token/bypass/',
+                    headers=[])
+            self.assertEquals(200, r.status_code)
+
+            app.config['IGNORE_ACCESS_TOKEN'] = False
+            r = self._call_url(client,
+                    '/test/oauth2/access_token/bypass/',
+                    headers=[])
+            self.assertEquals(401, r.status_code)
+
+            app.config['IGNORE_ACCESS_TOKEN'] = _old
 
 class LoginTestCase(base.RockPackTestCase):
 

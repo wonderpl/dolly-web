@@ -18,6 +18,8 @@ GOOGLE_CONSUMER_SECRET = 'ja-jW0BDASKVIwIRFurpCaZi'
 # Client ID for the iOS app
 ROCKPACK_APP_CLIENT_ID = None
 
+IGNORE_ACCESS_TOKEN = False
+
 # Default is first locale
 ENABLED_LOCALES = ('en-us', 'en-gb')
 

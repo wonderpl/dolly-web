@@ -151,7 +151,7 @@ def parse_access_token_header(auth):
     try:
         auth_type, auth_val = auth.split(None, 1)
         auth_type = auth_type.lower()
-    except ValueError:
+    except (AttributeError, ValueError):
         return
     else:
         if auth_type == 'bearer':
@@ -161,6 +161,8 @@ def parse_access_token_header(auth):
 def access_token_authentication(f):
     @wraps(f)
     def wrapper(*args, **kwargs):
+        if app.config.get('IGNORE_ACCESS_TOKEN'):
+            return f(*args, **kwargs)
         auth = parse_access_token_header(request.headers.get('Authorization'))
         if auth:
             if time.time() > auth.expiry:
