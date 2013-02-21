@@ -99,7 +99,7 @@ def video_dict(instance):
 
     return dict(
         id=instance.id,
-        source=instance.source,
+        source=['rockpack', 'youtube'][instance.source],    # TODO: read source map from db
         source_id=instance.source_videoid,
         view_count=instance.view_count,
         star_count=instance.star_count,
@@ -173,12 +173,14 @@ class CategoryAPI(WebService):
 
     @staticmethod
     def cat_dict(instance):
-        d = {'id': str(instance.id),
-             'name': instance.name}
+        data = dict(
+            id=str(instance.id),
+            name=instance.name,
+            priority=instance.priority,
+        )
         for c in instance.children:
-            d.setdefault('sub_categories', []).append(CategoryAPI.cat_dict(c))
-
-        return d
+            data.setdefault('sub_categories', []).append(CategoryAPI.cat_dict(c))
+        return data
 
     def _get_cats(self, **filters):
         cats = models.Category.query.filter_by(locale=self.get_locale(), parent=None)
