@@ -3,20 +3,11 @@ from sqlalchemy import (
 from sqlalchemy.orm import relationship
 from sqlalchemy.orm.exc import NoResultFound
 from werkzeug.security import generate_password_hash, check_password_hash
+from flask import g
+from rockpack.mainsite import app
+from rockpack.mainsite.core.token import create_access_token
 from rockpack.mainsite.core.dbapi import db
 from rockpack.mainsite.helpers.db import ImageType, add_base64_pk
-
-
-class LazyUser(object):
-    def __init__(self, user_id):
-        self.user_id = user_id
-        self.user = None
-
-    def __getattr__(self, key):
-        if not getattr(self, 'user'):
-            print 'setting user'
-            setattr(self, 'user', User.query.get(self.user_id))
-        return getattr(self.user, key)
 
 
 class User(db.Model):
@@ -65,6 +56,17 @@ class User(db.Model):
             return u'%s %s' % (self.first_name, self.last_name)
         else:
             return self.username
+
+    def get_credentials(self):
+        expires_in = app.config.get('ACCESS_TOKEN_EXPIRY', 3600)
+        access_token = create_access_token(self.id, g.app_client_id, expires_in)
+        return dict(
+            token_type='Bearer',
+            access_token=access_token,
+            expires_in=expires_in,
+            refresh_token=self.refresh_token,
+            user_id=self.id,
+        )
 
 
 class UserActivity(db.Model):

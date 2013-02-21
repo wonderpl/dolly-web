@@ -16,7 +16,7 @@ GOOGLE_CONSUMER_KEY = '902099289100.apps.googleusercontent.com'
 GOOGLE_CONSUMER_SECRET = 'ja-jW0BDASKVIwIRFurpCaZi'
 
 # Client ID for the iOS app
-ROCKPACK_APP_CLIENT_ID = None
+ROCKPACK_APP_CLIENT_ID = 'c8fe5f6rock873dpack19Q'
 
 IGNORE_ACCESS_TOKEN = False
 

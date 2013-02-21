@@ -2,19 +2,19 @@ import base64
 import json
 import uuid
 from cStringIO import StringIO
-from mock import Mock, patch
+from mock import patch
 
 from flask import Response
 
 from test import base
 from test.assets import AVATAR_IMG_DATA
 from rockpack.mainsite import app
+from rockpack.mainsite.core.token import create_access_token
 from rockpack.mainsite.services.user.models import User
 from rockpack.mainsite.services.video.models import Channel
 from rockpack.mainsite.services.oauth.models import ExternalToken
 from rockpack.mainsite.services.oauth import exceptions
 from rockpack.mainsite.services.oauth.http import (
-        AuthToken,
         verify_authorization_header,
         access_token_authentication)
 
@@ -69,15 +69,14 @@ class HeadersTestCase(base.RockPackTestCase):
     def access_token_view():
         from flask import request, g
         user_id = request.args.get('user_id')
-        assert g.lazy_user.id == user_id
+        assert g.authorized.user.id == user_id
         return Response()
 
     def test_access_token_authentication(self):
         with self.app.test_client() as client:
             client_id = uuid.uuid4().hex
             user = self.create_test_user()
-            a = AuthToken()
-            token = a.generate_access_token(user.id, client_id)
+            token = create_access_token(user.id, client_id, 3600)
             r = self._call_url(client,
                     '/test/oauth2/access_token_header/?user_id={}'.format(user.id),
                     headers={'Authorization': 'Bearer {}'.format(token)})
@@ -114,18 +113,8 @@ class HeadersTestCase(base.RockPackTestCase):
 
 class LoginTestCase(base.RockPackTestCase):
 
-    @patch('rockpack.mainsite.services.oauth.api.AuthToken.store_refresh_token')
-    @patch('rockpack.mainsite.services.oauth.api.user_authenticated')
-    def test_succesful_login(self, user_authenticated, store_refresh_token):
-        validate_client_id = Mock()
-        validate_client_id.return_value = True
-
-        user_authenticated = Mock()
-        user_authenticated.return_value = True
-
-        store_refresh_token = Mock()
-        store_refresh_token.return_value = None
-
+    @patch('rockpack.mainsite.services.oauth.api.user_authenticated', return_value=User())
+    def test_succesful_login(self, user_authenticated):
         with self.app.test_client() as client:
             encoded = base64.encodestring(app.config['ROCKPACK_APP_CLIENT_ID'] + ':')
             headers = [('Authorization', 'Basic {}'.format(encoded))]
