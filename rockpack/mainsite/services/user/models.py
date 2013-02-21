@@ -17,6 +17,18 @@ from rockpack.mainsite.core.dbapi import db
 from rockpack.mainsite.helpers.db import ImageType, add_base64_pk
 
 
+class LazyUser(object):
+    def __init__(self, user_id):
+        self.user_id = user_id
+        self.user = None
+
+    def __getattr__(self, key):
+        if not getattr(self, 'user'):
+            print 'setting user'
+            setattr(self, 'user', User.query.get(self.user_id))
+        return getattr(self.user, key)
+
+
 class User(db.Model):
     __tablename__ = 'user'
 

@@ -13,7 +13,10 @@ from rockpack.mainsite.services.user.models import User
 from rockpack.mainsite.services.video.models import Channel
 from rockpack.mainsite.services.oauth.models import ExternalToken
 from rockpack.mainsite.services.oauth import exceptions
-from rockpack.mainsite.services.oauth.api import verify_authorization_header
+from rockpack.mainsite.services.oauth.http import (
+        AuthToken,
+        verify_authorization_header,
+        access_token_authentication)
 
 
 ACCESS_CREDENTIALS = {
@@ -25,13 +28,13 @@ ACCESS_CREDENTIALS = {
 
 class HeadersTestCase(base.RockPackTestCase):
 
-    def _call_url(self, client, headers=None,
+    def _call_url(self, client, path, headers=None,
             encoded_id=base64.encodestring(app.config['ROCKPACK_APP_CLIENT_ID'] + ':'),
             data={}):
 
         if headers is None:
             headers = [('Authorization', 'Basic {}'.format(encoded_id))]
-        return client.post('/test/oauth2/header/?grant_type=password', headers=headers, data=data)
+        return client.post(path, headers=headers, data=data)
 
     @app.route('/test/oauth2/header/', methods=('GET', 'POST',))
     @verify_authorization_header
@@ -40,7 +43,7 @@ class HeadersTestCase(base.RockPackTestCase):
 
     def test_authentication_success(self):
         with self.app.test_client() as client:
-            r = self._call_url(client)
+            r = self._call_url(client, '/test/oauth2/header/?grant_type=password')
             self.assertEquals(200, r.status_code)
 
     def test_authentication_failed(self):
@@ -49,13 +52,43 @@ class HeadersTestCase(base.RockPackTestCase):
             return {'error': error}
 
         with self.app.test_client() as client:
-            r = self._call_url(client, headers=[])
+            r = self._call_url(client,
+                    '/test/oauth2/header/?grant_type=password',
+                    headers=[])
             self.assertEquals(401, r.status_code)
             self.assertEquals(_error_dict('invalid_request'), json.loads(r.data))
 
-            r = self._call_url(client, encoded_id=base64.encodestring('username:password'))
+            r = self._call_url(client,
+                    '/test/oauth2/header/?grant_type=password',
+                    encoded_id=base64.encodestring('username:password'))
             self.assertEquals(401, r.status_code)
             self.assertEquals(_error_dict('unauthorized_client'), json.loads(r.data))
+
+    @app.route('/test/oauth2/access_token_header/', methods=('GET', 'POST',))
+    @access_token_authentication
+    def access_token_view():
+        from flask import request, g
+        user_id = request.args.get('user_id')
+        assert g.lazy_user.id == user_id
+        return Response()
+
+    def test_access_token_authentication(self):
+        with self.app.test_client() as client:
+            client_id = uuid.uuid4().hex
+            user = self.create_test_user()
+            a = AuthToken()
+            token = a.generate_access_token(user.id, client_id)
+            r = self._call_url(client,
+                    '/test/oauth2/access_token_header/?user_id={}'.format(user.id),
+                    headers={'Authorization': 'Bearer {}'.format(token)})
+            self.assertEquals(200, r.status_code)
+
+    def test_failed_access_token(self):
+        with self.app.test_client() as client:
+            r = self._call_url(client,
+                    '/test/oauth2/access_token_header/',
+                    headers={'Authorization': 'Bearer {}'.format('foo')})
+            self.assertEquals(401, r.status_code)
 
 
 class LoginTestCase(base.RockPackTestCase):

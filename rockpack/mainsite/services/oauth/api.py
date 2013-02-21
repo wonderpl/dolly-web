@@ -1,110 +1,16 @@
-import uuid
-import hashlib
-import hmac
-import time
 import json
-from functools import wraps
 
 import wtforms
 from wtforms import validators
 from flask import request, Response, g
 
-from sqlalchemy.orm.exc import NoResultFound
 
-from rockpack.mainsite import app
 from rockpack.mainsite.core.webservice import WebService, expose
 from rockpack.mainsite.services.video.models import Channel
 from rockpack.mainsite.services.user.models import User
 from . import models
+from .http import verify_authorization_header, authentication_response, AuthToken
 from .exceptions import InvalidExternalSystem
-
-
-def validate_client_id(client_id, password):
-    """ Validate whether this client_id
-        exists and is allowed """
-
-    if client_id == app.config.get('ROCKPACK_APP_CLIENT_ID'):
-        return True
-    return False
-
-
-AUTHORIZATION_ERRORS = {'invalid_request': 401,
-        'invalid_token': 401,
-        'unauthorized_client': 401,
-        'invalid_scope': 403,
-        'unsupported_response_type': 401}
-
-
-# TODO: merge with http_response_from_data or something?
-def authentication_response(error):
-    return Response(json.dumps({'error': error}),
-            AUTHORIZATION_ERRORS[error],
-            {'WWW-Authenticate': 'Basic realm="rockpack.com" error="{}"'.format(error)},
-            mimetype='application/json')
-
-
-def http_response_from_data(data):
-    """ Returns a Response() object based
-        on data type:
-
-        {'some': 'json style dict'}
-        ('content body', 200, {'SOME': 'header'}, 'mime/type',)
-        200
-        FlaskResponseObject() """
-
-    if isinstance(data, dict):
-        response = Response(json.dumps(data), mimetype='application/json')
-    elif isinstance(data, tuple):
-        response = Response(data[0], status=data[1], headers=data[2], mimetype=data[3])
-    elif isinstance(data, int):
-        response = Response(status=data)
-    elif isinstance(data, Response):
-        response = data
-    elif isinstance(data, str):
-        response = Response(data)
-    else:
-        raise TypeError('Type {} is not supported for Response'.format(type(data)))
-    return response
-
-
-def verify_authorization_header(func):
-    """ Checks Authorization header for Basic auth
-        credentials
-
-        Adds app_client_id to flask.g is authorized
-        or 4xx response """
-
-    @wraps(func)
-    def wrapper(*args, **kwargs):
-        auth = request.authorization
-        error = None
-        if not auth or auth.type != 'basic':
-            error = 'invalid_request'
-        else:
-            if validate_client_id(auth.username, auth.password):
-                g.app_client_id = auth.username
-                r = func(*args, **kwargs)
-                return http_response_from_data(r)
-            error = 'unauthorized_client'
-        return authentication_response(error)
-    return wrapper
-
-
-def access_token_authentication(f):
-    @wraps(f)
-    def wrapper(*args, **kwargs):
-        auth = request.authorisation
-        # some check to bypass if USERID is in the url
-        if (auth and auth.type == 'bearer'):
-            # TODO: I bet this doesnt work
-            # write a test
-            data = AuthToken.verify_access_token(auth.token)
-            if data:
-                uid, client_id, expiry = data
-                g.user = User.get(uid)
-                f(*args, **kwargs)
-        return authentication_response('invalid_request')
-    return wrapper
 
 
 def user_authenticated(username, password):
@@ -112,58 +18,6 @@ def user_authenticated(username, password):
     if user and user.check_password(password):
         return user
     return False
-
-
-class AuthToken(object):
-
-    def __init__(self):
-        self.credentials = {}
-        self.refresh_token = None
-
-    def store_refresh_token(self, user, refresh_token):
-        user.refresh_token = refresh_token
-        user.save()
-
-    def get_credentials(self, user, client_id, expires_in=3600, new_refresh_token=False):
-        if not self.credentials:
-            self.generate_access_token(user.id, client_id, expires_in)
-            if not user.refresh_token or new_refresh_token:
-                self.store_refresh_token(user, self.generate_refresh_token())
-            else:
-                self.refresh_token = user.refresh_token
-            self.credentials = self.token_dict(expires_in)
-        return self.credentials
-
-    def token_dict(self, expires_in):
-        return {'access_token': self.access_token,
-                'token_type': 'Bearer',
-                'expires_in': expires_in,
-                'refresh_token': self.refresh_token}
-
-    def generate_refresh_token(self):
-        self.refresh_token = uuid.uuid4().hex
-        return self.refresh_token
-
-    def generate_access_token(self, uid, client_id, expires_in=3600):
-        expiry = time.time() + expires_in
-        payload = '%s:%s:%f' % (uid, client_id, expiry)
-        sig = hmac.new(app.secret_key, payload, hashlib.sha1).hexdigest()
-        self.access_token = sig + payload
-
-    @classmethod
-    def verify_access_token(cls, token):
-        sig, payload = token[:40], token[40:]
-        if hmac.new(app.secret_key, payload, hashlib.sha1) == sig:
-            return payload.split(':')
-        return None
-
-    def get_credentials_from_refresh_token(self, client_id, refresh_token):
-        try:
-            user = User.query.filter_by(refresh_token=refresh_token).one()
-        except NoResultFound:
-            return None
-        else:
-            return self.get_credentials(user, client_id)
 
 
 class Login(WebService):
