@@ -7,6 +7,18 @@ from rockpack.mainsite.core.dbapi import db
 from rockpack.mainsite.helpers.db import ImageType, add_base64_pk
 
 
+class LazyUser(object):
+    def __init__(self, user_id):
+        self.user_id = user_id
+        self.user = None
+
+    def __getattr__(self, key):
+        if not getattr(self, 'user'):
+            print 'setting user'
+            setattr(self, 'user', User.query.get(self.user_id))
+        return getattr(self.user, key)
+
+
 class User(db.Model):
     __tablename__ = 'user'
 
@@ -16,7 +28,7 @@ class User(db.Model):
     email = Column(String(254), nullable=False)
     first_name = Column(String(254), nullable=False)
     last_name = Column(String(254), nullable=False)
-    avatar = Column(ImageType('AVATAR'), nullable=False)
+    avatar = Column(ImageType('AVATAR'), nullable=True)
     is_active = Column(Boolean, nullable=False, server_default='true')
     refresh_token = Column(String(1024), nullable=True)
 

@@ -1,5 +1,6 @@
 import base64
 import json
+import uuid
 from cStringIO import StringIO
 from mock import Mock, patch
 
@@ -8,7 +9,14 @@ from flask import Response
 from test import base
 from test.assets import AVATAR_IMG_DATA
 from rockpack.mainsite import app
-from rockpack.mainsite.services.oauth.api import verify_authorization_header
+from rockpack.mainsite.services.user.models import User
+from rockpack.mainsite.services.video.models import Channel
+from rockpack.mainsite.services.oauth.models import ExternalToken
+from rockpack.mainsite.services.oauth import exceptions
+from rockpack.mainsite.services.oauth.http import (
+        AuthToken,
+        verify_authorization_header,
+        access_token_authentication)
 
 
 ACCESS_CREDENTIALS = {
@@ -20,13 +28,13 @@ ACCESS_CREDENTIALS = {
 
 class HeadersTestCase(base.RockPackTestCase):
 
-    def _call_url(self, client, headers=None,
+    def _call_url(self, client, path, headers=None,
             encoded_id=base64.encodestring(app.config['ROCKPACK_APP_CLIENT_ID'] + ':'),
             data={}):
 
         if headers is None:
             headers = [('Authorization', 'Basic {}'.format(encoded_id))]
-        return client.post('/test/oauth2/header/?grant_type=password', headers=headers, data=data)
+        return client.post(path, headers=headers, data=data)
 
     @app.route('/test/oauth2/header/', methods=('GET', 'POST',))
     @verify_authorization_header
@@ -35,7 +43,7 @@ class HeadersTestCase(base.RockPackTestCase):
 
     def test_authentication_success(self):
         with self.app.test_client() as client:
-            r = self._call_url(client)
+            r = self._call_url(client, '/test/oauth2/header/?grant_type=password')
             self.assertEquals(200, r.status_code)
 
     def test_authentication_failed(self):
@@ -44,13 +52,43 @@ class HeadersTestCase(base.RockPackTestCase):
             return {'error': error}
 
         with self.app.test_client() as client:
-            r = self._call_url(client, headers=[])
+            r = self._call_url(client,
+                    '/test/oauth2/header/?grant_type=password',
+                    headers=[])
             self.assertEquals(401, r.status_code)
             self.assertEquals(_error_dict('invalid_request'), json.loads(r.data))
 
-            r = self._call_url(client, encoded_id=base64.encodestring('username:password'))
+            r = self._call_url(client,
+                    '/test/oauth2/header/?grant_type=password',
+                    encoded_id=base64.encodestring('username:password'))
             self.assertEquals(401, r.status_code)
             self.assertEquals(_error_dict('unauthorized_client'), json.loads(r.data))
+
+    @app.route('/test/oauth2/access_token_header/', methods=('GET', 'POST',))
+    @access_token_authentication
+    def access_token_view():
+        from flask import request, g
+        user_id = request.args.get('user_id')
+        assert g.lazy_user.id == user_id
+        return Response()
+
+    def test_access_token_authentication(self):
+        with self.app.test_client() as client:
+            client_id = uuid.uuid4().hex
+            user = self.create_test_user()
+            a = AuthToken()
+            token = a.generate_access_token(user.id, client_id)
+            r = self._call_url(client,
+                    '/test/oauth2/access_token_header/?user_id={}'.format(user.id),
+                    headers={'Authorization': 'Bearer {}'.format(token)})
+            self.assertEquals(200, r.status_code)
+
+    def test_failed_access_token(self):
+        with self.app.test_client() as client:
+            r = self._call_url(client,
+                    '/test/oauth2/access_token_header/',
+                    headers={'Authorization': 'Bearer {}'.format('foo')})
+            self.assertEquals(401, r.status_code)
 
 
 class LoginTestCase(base.RockPackTestCase):
@@ -80,11 +118,82 @@ class LoginTestCase(base.RockPackTestCase):
             self.assertEquals(200, r.status_code)
 
 
+class ExternalTokenTestCase(base.RockPackTestCase):
+
+    def _new_user(self):
+        u = User(username=uuid.uuid4().hex,
+                first_name='first',
+                last_name='last',
+                email='em@ail.com',
+                is_active=True)
+        return u.save()
+
+    def test_facebook_token(self):
+        user = self._new_user()
+        token = uuid.uuid4().hex
+        ExternalToken.update_token(user, 'facebook', token)
+
+        e = ExternalToken.query.filter_by(external_token=token).one()
+        self.assertEquals('facebook', e.external_system)
+        self.assertEquals(user.username, e.user_rel.username)
+
+        # test we can overwrite token
+        new_token = uuid.uuid4().hex
+        ExternalToken.update_token(user, 'facebook', new_token)
+
+        e = ExternalToken.query.filter_by(user=user.id)
+        self.assertEquals(1, e.count(), 'only one token should exist')
+        e = e.one()
+        self.assertEquals(new_token, e.external_token, 'saved token should match new token')
+
+    def test_invalid_token(self):
+        with self.assertRaises(exceptions.InvalidExternalSystem):
+            ExternalToken.update_token(None, 'HandLeaflet', None)
+
+
 class RegisterTestCase(base.RockPackTestCase):
 
+    def test_facebook_registration(self):
+        with self.app.test_client() as client:
+            encoded = base64.encodestring(app.config['ROCKPACK_APP_CLIENT_ID'] + ':')
+            headers = [('Authorization', 'Basic {}'.format(encoded))]
+
+            facebook_token = uuid.uuid4().hex
+            r = client.post('/ws/register/external/',
+                    headers=headers,
+                    data=dict(
+                        register='1',
+                        username='facebook_user',
+                        first_name='face',
+                        last_name='book',
+                        email='foo@bar.com',
+                        external_system='facebook',
+                        external_token=facebook_token))
+
+            creds = json.loads(r.data)
+            self.assertEquals(200, r.status_code)
+            self.assertNotEquals(None, creds['refresh_token'])
+
+    def test_invalid_external_system(self):
+        with self.app.test_client() as client:
+            encoded = base64.encodestring(app.config['ROCKPACK_APP_CLIENT_ID'] + ':')
+            headers = [('Authorization', 'Basic {}'.format(encoded))]
+
+            facebook_token = uuid.uuid4().hex
+            r = client.post('/ws/register/external/',
+                    headers=headers,
+                    data=dict(
+                        register='1',
+                        username='pantsbake_user',
+                        first_name='pants',
+                        last_name='bake',
+                        email='foo@bar.com',
+                        external_system='PantsBake',
+                        external_token=facebook_token))
+
+            self.assertEquals(400, r.status_code)
+
     def test_successful_registration(self):
-        validate_client_id = Mock()
-        validate_client_id.return_value = True
 
         with self.app.test_client() as client:
             encoded = base64.encodestring(app.config['ROCKPACK_APP_CLIENT_ID'] + ':')
@@ -104,6 +213,10 @@ class RegisterTestCase(base.RockPackTestCase):
             creds = json.loads(r.data)
             self.assertEquals(200, r.status_code)
             self.assertNotEquals(None, creds['refresh_token'])
+            self.assertEquals(1,
+                    Channel.query.filter_by(owner_rel=User.get_from_username('foobarbarbar')).count(),
+                    'default user channel should be created')
+
             creds = json.loads(r.data)
 
             r = client.post('/ws/login/',
@@ -128,7 +241,6 @@ class RegisterTestCase(base.RockPackTestCase):
             self.assertNotEquals(new_creds['access_token'],
                     creds['access_token'],
                     'old access token should not be the same at the new one')
-
 
             # Try and get a refresh token with an invalid token
             r = client.post('/ws/token/',
