@@ -172,12 +172,14 @@ class CategoryAPI(WebService):
 
     @staticmethod
     def cat_dict(instance):
-        d = {'id': str(instance.id),
-             'name': instance.name}
+        data = dict(
+            id=str(instance.id),
+            name=instance.name,
+            priority=instance.priority,
+        )
         for c in instance.children:
-            d.setdefault('sub_categories', []).append(CategoryAPI.cat_dict(c))
-
-        return d
+            data.setdefault('sub_categories', []).append(CategoryAPI.cat_dict(c))
+        return data
 
     def _get_cats(self, **filters):
         cats = models.Category.query.filter_by(locale=self.get_locale(), parent=None)
