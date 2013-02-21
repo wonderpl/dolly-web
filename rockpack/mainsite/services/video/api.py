@@ -98,7 +98,7 @@ def video_dict(instance):
 
     return dict(
         id=instance.id,
-        source=instance.source,
+        source=['rockpack', 'youtube'][instance.source],    # TODO: read source map from db
         source_id=instance.source_videoid,
         view_count=instance.view_count,
         star_count=instance.star_count,
