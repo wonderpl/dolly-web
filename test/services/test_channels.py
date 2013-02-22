@@ -2,7 +2,6 @@ import uuid
 import json
 from test import base
 from rockpack.mainsite.services.user.models import User
-from rockpack.mainsite.services.video.models import Channel
 
 
 class ChannelCreateTestCase(base.RockPackTestCase):
@@ -14,19 +13,49 @@ class ChannelCreateTestCase(base.RockPackTestCase):
                     last_name='shitpeas',
                     avatar='',
                     email='em@il.com').save()
-            #channel = Channel(title=uuid.uuid4().hex,
-            #        description='test channel for user {}'.format(user.id))
+
             channel_title = uuid.uuid4().hex
             r = client.post('/ws/channels/',
                     data=dict(title=channel_title,
                         description='test channel for user {}'.format(user.id),
-                        user=user.id,
+                        owner=user.id,
                         locale='en-us',
                         category=0))
 
-            print r.data
             self.assertEquals(201, r.status_code)
             new_ch = json.loads(r.data)
             self.assertEquals(1, new_ch['channels']['total'], 'one channel should be returned')
             self.assertEquals(channel_title, new_ch['channels']['items'][0]['title'],
                     'channel titles should match')
+
+            # test channel update
+            r = client.put('/ws/channels/{}/'.format(new_ch['channels']['items'][0]['id']),
+                    data=dict(title='',
+                        description='this is a new description!',
+                    owner=user.id,
+                    category='',
+                    locale=''))
+
+            print r.data
+            self.assertEquals(200, r.status_code)
+
+    def test_failed_channel_create(self):
+        with self.app.test_client() as client:
+            user = User(username=uuid.uuid4().hex,
+                    first_name='barry',
+                    last_name='shitpeas',
+                    avatar='',
+                    email='em@il.com').save()
+
+            channel_title = uuid.uuid4().hex
+            r = client.post('/ws/channels/',
+                    data=dict(title=channel_title,
+                        owner=user.id,
+                        locale='en-us'))
+
+            self.assertEquals(400, r.status_code)
+            errors = json.loads(r.data)['errors']
+            self.assertEquals({
+                "category": ["This field is required."],
+                "description": ["This field is required."]},
+                errors)

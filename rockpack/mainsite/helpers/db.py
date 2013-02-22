@@ -113,6 +113,8 @@ class ImagePath(object):
         except KeyError, e:
             raise AttributeError(e.message)
         else:
+            if not self.path:
+                return ''
             # If the original image wasn't a jpg, we need
             # to change the extension to grab the jpg versions
             sans_ext = self.path.rsplit('.', 1)[0]
