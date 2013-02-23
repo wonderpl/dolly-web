@@ -4,11 +4,14 @@ from rockpack.mainsite import app
 from rockpack.mainsite.core.dbapi import commit_on_success
 from rockpack.mainsite.core.webservice import WebService, expose_ajax
 from rockpack.mainsite.core.oauth.decorators import check_authorization
+from rockpack.mainsite.core.youtube import get_video_data
+from rockpack.mainsite.helpers.db import gen_videoid
 from rockpack.mainsite.services.video.models import (
     Channel, ChannelLocaleMeta, Video, VideoInstance, VideoLocaleMeta)
 from rockpack.mainsite.services.cover_art.models import UserCoverArt
 from rockpack.mainsite.services.cover_art import api as cover_api
 from rockpack.mainsite.services.video import api as video_api
+from rockpack.mainsite.services.search import api as search_api
 from .models import User, UserActivity
 
 
@@ -19,17 +22,34 @@ ACTION_COLUMN_VALUE_MAP = dict(
 )
 
 
+def get_or_create_video_record(search_instance_id, locale):
+    try:
+        prefix, source, source_videoid = search_instance_id.split('-', 2)
+        source = int(source)
+    except ValueError:
+        abort(400)
+    assert source == 1
+    video_id = gen_videoid(None, source, source_videoid)
+    if not Video.query.filter_by(id=video_id).count():
+        video_data = get_video_data(source_videoid)
+        Video.add_videos(video_data.videos, source, locale)
+    return video_id
+
+
 @commit_on_success
 def save_video_activity(user, action, instance_id, locale):
     try:
         column, value = ACTION_COLUMN_VALUE_MAP[action]
     except KeyError:
-        abort(400)
+        abort(400, message='invalid action')
 
     instance = VideoInstance.query.filter_by(id=instance_id)
-    video_id = instance.value(VideoInstance.video)
-    if not video_id:
-        abort(400)
+    if instance_id.startswith(search_api.VIDEO_INSTANCE_PREFIX):
+        video_id = get_or_create_video_record(instance_id, locale)
+    else:
+        video_id = instance.value(VideoInstance.video)
+        if not video_id:
+            abort(400, message='video_instance not found')
 
     if action == 'view':
         object_type = 'video_instance'

@@ -79,10 +79,10 @@ class ChannelAPI(WebService):
         return dict(channels=dict(items=data, total=total))
 
 
-def video_dict(instance):
+def video_dict(video):
     # TODO: unfudge this
     thumbnail_url = None
-    for t in instance.thumbnails:
+    for t in video.thumbnails:
         if not thumbnail_url:
             thumbnail_url = t.url
         if t.url.count('mqdefault.jpg'):
@@ -90,11 +90,12 @@ def video_dict(instance):
             break
 
     return dict(
-        id=instance.id,
-        source=['rockpack', 'youtube'][instance.source],    # TODO: read source map from db
-        source_id=instance.source_videoid,
-        view_count=instance.view_count,
-        star_count=instance.star_count,
+        id=video.id,
+        source=['rockpack', 'youtube'][video.source],    # TODO: read source map from db
+        source_id=video.source_videoid,
+        duration=video.duration,
+        view_count=video.view_count,
+        star_count=video.star_count,
         thumbnail_url=thumbnail_url,
     )
 

@@ -72,6 +72,11 @@ class Category(db.Model):
             map(CategoryMap.there, CategoryMap.here)
 
     @classmethod
+    def get_default_category_id(cls, locale):
+        # TODO: cache/memoize
+        return cls.query.filter_by(locale=locale, name='Other', parent=None).value('id')
+
+    @classmethod
     def get_form_choices(cls, locale):
         query = cls.query.filter_by(parent=ParentCategory.id, locale=locale).\
             values(cls.id, cls.name, ParentCategory.name)
@@ -184,15 +189,16 @@ class Video(db.Model):
             category = Category.map_to(category, locale)
         # Else fall back on default "Other"
         else:
-            category = Category.query.filter_by(
-                locale=locale, name='Other', parent=None).value('id')
+            category = Category.get_default_category_id(locale)
         meta = VideoLocaleMeta(locale=locale, category=category)
         self.metas.append(meta)
         self.save()
         return meta
 
     @classmethod
-    def add_videos(cls, videos, source, locale, category):
+    def add_videos(cls, videos, source, locale, category=None):
+        if not category:
+            category = Category.get_default_category_id(locale)
         for video in videos:
             video.source = source
             video.metas = [VideoLocaleMeta(locale=locale, category=category)]

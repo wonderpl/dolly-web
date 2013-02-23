@@ -9,6 +9,8 @@ from rockpack.mainsite.services.video.models import Channel
 
 SEARCH_TERM_RE = re.compile('^[\w ]+$')
 
+VIDEO_INSTANCE_PREFIX = 'Svi0xYzZY'
+
 
 def _query_term(default=''):
     query = request.args.get('q', '')
@@ -22,7 +24,7 @@ class SearchAPI(WebService):
     default_page_size = 10
     max_page_size = 50
 
-    @expose_ajax('/videos', cache_age=300)
+    @expose_ajax('/videos/', cache_age=300)
     def search_videos(self):
         """Search youtube videos."""
         start, size = self.get_page()
@@ -34,15 +36,22 @@ class SearchAPI(WebService):
             items.append(
                 dict(
                     position=position,
-                    id=gen_videoid(None, 1, video.source_videoid),
-                    source=1,
-                    source_id=video.source_videoid,
-                    thumbnail_url=video.default_thumbnail,
+                    id='%s-%02d-%s' % (VIDEO_INSTANCE_PREFIX, 1, video.source_videoid),
+                    title=video.title,
+                    video=dict(
+                        id=gen_videoid(None, 1, video.source_videoid),
+                        source='youtube',
+                        source_id=video.source_videoid,
+                        source_date_uploaded=video.source_date_uploaded,
+                        source_view_count=video.source_view_count,
+                        duration=int(video.duration),
+                        thumbnail_url=video.default_thumbnail,
+                    )
                 )
             )
         return {'videos': {'items': items, 'total': result.video_count}}
 
-    @expose_ajax('/channels', cache_age=300)
+    @expose_ajax('/channels/', cache_age=300)
     def search_channels(self):
         # XXX: Obviously this needs to be replaced by a search engine
         items, total = get_local_channel(self.get_locale(),
@@ -55,14 +64,14 @@ class CompleteAPI(WebService):
 
     endpoint = '/complete'
 
-    @expose_ajax('/videos', cache_age=3600)
+    @expose_ajax('/videos/', cache_age=3600)
     def complete_video_terms(self):
         # Client should hit youtube service directly because this service
         # is likely to be throttled by IP address
         result = youtube.complete(_query_term())
         return Response(result, mimetype='text/javascript')
 
-    @expose_ajax('/channels', cache_age=3600)
+    @expose_ajax('/channels/', cache_age=3600)
     def complete_channel_terms(self):
         # Use same javascript format as google complete for the sake of
         # consistency with /complete/videos
