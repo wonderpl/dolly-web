@@ -1,12 +1,12 @@
-import json
 import uuid
-from flask import request, Response
+from flask import request, abort
 from flask.ext import wtf
-from rockpack.mainsite.core.webservice import WebService, expose
+from rockpack.mainsite import app
+from rockpack.mainsite.core.oauth.decorators import check_client_authorization
+from rockpack.mainsite.core.webservice import WebService, expose_ajax
 from rockpack.mainsite.services.video.models import Channel
 from rockpack.mainsite.services.user.models import User
 from . import models
-from .http import verify_authorization_header, authentication_response
 from .exceptions import InvalidExternalSystem
 
 
@@ -21,23 +21,25 @@ class Login(WebService):
 
     endpoint = '/login'
 
-    @expose('/', methods=('POST',))
-    @verify_authorization_header
+    @expose_ajax('/', methods=['POST'])
+    @check_client_authorization
     def login(self):
-        if request.form.get('grant_type') == 'password':
-            user = user_authenticated(request.form.get('username'), request.form.get('password'))
-            if user:
-                return user.get_credentials()
-        return Response(json.dumps({'error': 'access_denied'}), 401)
+        if not request.form['grant_type'] == 'password':
+            abort(400)
+        user = user_authenticated(request.form['username'], request.form['password'])
+        if not user:
+            abort(400, error='invalid_grant')
+        return user.get_credentials()
 
-    @expose('/external/', methods=('POST',))
-    @verify_authorization_header
+    @expose_ajax('/external/', methods=['POST'])
+    @check_client_authorization
     def exeternal(self):
-        if request.form.get('grant_type') == 'token':
-            user = models.ExternalToken.user_from_token()
-            if user:
-                return user.get_credentials()
-        return 400
+        if not request.form['grant_type'] == 'token':
+            abort(400)
+        user = models.ExternalToken.user_from_token()
+        if not user:
+            abort(400, error='invalid_grant')
+        return user.get_credentials()
 
 
 class RockRegistrationForm(wtf.Form):
@@ -63,13 +65,9 @@ class ExternalRegistrationForm(RockRegistrationForm):
             return wtf.ValidationError('external system invalid')
 
 
-DEFAULT_USER_CHANNEL = ('favourites', 'starred videos on rockpack by me')
-
-
 def new_user_setup(form):
     """ Creates a new user and sets up
         and related assets, like default channels """
-
     user = User(
         username=form.username.data,
         first_name=form.first_name.data,
@@ -82,53 +80,55 @@ def new_user_setup(form):
     user = user.save()
     user.set_password(form.password.data)
 
+    title, description, cover = app.config['FAVOURITE_CHANNEL']
     channel = Channel(
-        title=DEFAULT_USER_CHANNEL[0],
-        description=DEFAULT_USER_CHANNEL[1],
-        cover='',
+        title=title,
+        description=description,
+        cover=cover,
         owner=user.id)
     channel.save()
+
     return user
 
 
 class Registration(WebService):
     endpoint = '/register'
 
-    @expose('/', methods=('POST',))
-    @verify_authorization_header
+    @expose_ajax('/', methods=['POST'])
+    @check_client_authorization
     def register(self):
         form = RockRegistrationForm(request.form, csrf_enabled=False)
-        if form.validate():
-            user = new_user_setup(form)
-            return user.get_credentials()
-        # XXX: Need to return to the client some message about invalid data
-        return 400
+        if not form.validate():
+            abort(400, form_errors=form.errors)
+        user = new_user_setup(form)
+        return user.get_credentials()
 
-    @expose('/external/', methods=('POST',))
-    @verify_authorization_header
+    @expose_ajax('/external/', methods=['POST'])
+    @check_client_authorization
     def external(self):
         form = ExternalRegistrationForm(request.form, csrf_enabled=False)
-        if form.validate():
-            user = new_user_setup(form)
-            try:
-                models.ExternalToken.update_token(
-                    user, form.external_system.data, form.external_token.data)
-            except InvalidExternalSystem:
-                pass
-            else:
-                return user.get_credentials()
-        return 400
+        if not form.validate():
+            abort(400)
+        user = new_user_setup(form)
+        try:
+            models.ExternalToken.update_token(
+                user, form.external_system.data, form.external_token.data)
+        except InvalidExternalSystem:
+            abort(400)
+        else:
+            return user.get_credentials()
 
 
 class Token(WebService):
     endpoint = '/token'
 
-    @expose('/', methods=('POST',))
-    @verify_authorization_header
+    @expose_ajax('/', methods=['POST'])
+    @check_client_authorization
     def token(self):
-        refresh_token = request.form.get('refresh_token')
-        if request.form.get('grant_type') == 'refresh_token' and refresh_token:
-            user = User.query.filter_by(refresh_token=refresh_token).first()
-            if user:
-                return user.get_credentials()
-        return authentication_response('invalid_request')
+        refresh_token = request.form['refresh_token']
+        if request.form['grant_type'] != 'refresh_token' or not refresh_token:
+            abort(400)
+        user = User.query.filter_by(refresh_token=refresh_token).first()
+        if not user:
+            abort(400, error='invalid_grant')
+        return user.get_credentials()

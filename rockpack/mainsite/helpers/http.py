@@ -11,15 +11,18 @@ def add_response_headers(headers={}, cache_max_age=None, cache_private=False):
             h = resp.headers
             for header, value in headers.items():
                 h[header] = value
-            if cache_private:
-                resp.cache_control.private = True
-            if cache_max_age:
-                if not resp.cache_control.private:
-                    resp.cache_control.public = True
-                resp.cache_control.max_age = cache_max_age
-                # Always add ETag to cached responses
-                resp.add_etag()
-                resp.make_conditional(request)
+            if '_nc' in request.args or request.is_secure:
+                resp.cache_control.no_cache = True
+            else:
+                if cache_private:
+                    resp.cache_control.private = True
+                if cache_max_age:
+                    if not resp.cache_control.private:
+                        resp.cache_control.public = True
+                    resp.cache_control.max_age = cache_max_age
+                    # Always add ETag to cached responses
+                    resp.add_etag()
+                    resp.make_conditional(request)
             return resp
         return func
     return decorator

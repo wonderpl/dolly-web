@@ -54,3 +54,6 @@ AVATAR_IMG_PATHS = {'original': 'images/avatar/original/',
         'thumbnail_small': 'images/avatar/thumbnail_small/',
         'thumbnail_medium': 'images/avatar/thumbnail_medium/',
         'thumbnail_large': 'images/avatar/thumbnail_large/'}
+
+# Title, description, and cover image for default favourites channel
+FAVOURITE_CHANNEL = 'Favourites', 'My favourite videos', ''

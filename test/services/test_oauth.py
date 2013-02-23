@@ -9,14 +9,13 @@ from flask import Response
 from test import base
 from test.assets import AVATAR_IMG_DATA
 from rockpack.mainsite import app
+from rockpack.mainsite.core.webservice import ajax
 from rockpack.mainsite.core.token import create_access_token
+from rockpack.mainsite.core.oauth.decorators import check_authorization, check_client_authorization
 from rockpack.mainsite.services.user.models import User
 from rockpack.mainsite.services.video.models import Channel
 from rockpack.mainsite.services.oauth.models import ExternalToken
 from rockpack.mainsite.services.oauth import exceptions
-from rockpack.mainsite.services.oauth.http import (
-        verify_authorization_header,
-        access_token_authentication)
 
 
 ACCESS_CREDENTIALS = {
@@ -37,7 +36,8 @@ class HeadersTestCase(base.RockPackTestCase):
         return client.post(path, headers=headers, data=data)
 
     @app.route('/test/oauth2/header/', methods=('GET', 'POST',))
-    @verify_authorization_header
+    @ajax
+    @check_client_authorization
     def some_view():
         return Response()
 
@@ -65,7 +65,7 @@ class HeadersTestCase(base.RockPackTestCase):
             self.assertEquals(_error_dict('unauthorized_client'), json.loads(r.data))
 
     @app.route('/test/oauth2/access_token_header/', methods=('GET', 'POST',))
-    @access_token_authentication
+    @check_authorization()
     def access_token_view():
         from flask import request, g
         user_id = request.args.get('user_id')
@@ -89,27 +89,6 @@ class HeadersTestCase(base.RockPackTestCase):
                     headers={'Authorization': 'Bearer {}'.format('foo')})
             self.assertEquals(401, r.status_code)
 
-    @app.route('/test/oauth2/access_token/bypass/', methods=('GET', 'POST',))
-    @access_token_authentication
-    def access_bypass():
-        return Response()
-
-    def test_access_token_bypass(self):
-        with self.app.test_client() as client:
-            _old = app.config.get('IGNORE_ACCESS_TOKEN')
-            app.config['IGNORE_ACCESS_TOKEN'] = True
-            r = self._call_url(client,
-                    '/test/oauth2/access_token/bypass/',
-                    headers=[])
-            self.assertEquals(200, r.status_code)
-
-            app.config['IGNORE_ACCESS_TOKEN'] = False
-            r = self._call_url(client,
-                    '/test/oauth2/access_token/bypass/',
-                    headers=[])
-            self.assertEquals(401, r.status_code)
-
-            app.config['IGNORE_ACCESS_TOKEN'] = _old
 
 class LoginTestCase(base.RockPackTestCase):
 
@@ -257,4 +236,4 @@ class RegisterTestCase(base.RockPackTestCase):
                     headers=headers,
                     data=dict(refresh_token='7348957nev9o3874nqlvcfh47lmqa'))
 
-            self.assertEquals(401, r.status_code)
+            self.assertEquals(400, r.status_code)

@@ -1,10 +1,8 @@
 from sqlalchemy.orm import contains_eager
 from sqlalchemy.sql.expression import desc
-from flask import g, jsonify, request, url_for
-from rockpack.mainsite.core.webservice import WebService
-from rockpack.mainsite.core.webservice import expose
+from flask import g, request, url_for
+from rockpack.mainsite.core.webservice import WebService, expose_ajax
 from rockpack.mainsite.services.video import models
-from rockpack.mainsite.helpers.http import cache_for
 
 
 def _filter_by_category(query, type, category_id):
@@ -73,18 +71,12 @@ class ChannelAPI(WebService):
 
     endpoint = '/channels'
 
-    @expose('/', methods=('GET',))
-    @cache_for(seconds=300)
+    @expose_ajax('/', cache_age=300)
     def channel_list(self):
         data, total = get_local_channel(self.get_locale(),
                                         self.get_page(),
                                         category=request.args.get('category'))
-        response = jsonify({
-            'channels': {
-            'items': data,
-            'total': total},
-        })
-        return response
+        return dict(channels=dict(items=data, total=total))
 
 
 def video_dict(instance):
@@ -159,12 +151,10 @@ class VideoAPI(WebService):
 
     endpoint = '/videos'
 
-    @expose('/', methods=('GET',))
-    @cache_for(seconds=300)
+    @expose_ajax('/', cache_age=300)
     def video_list(self):
         data, total = get_local_videos(self.get_locale(), self.get_page(), star_order=True, **request.args)
-        response = jsonify({'videos': {'items': data, 'total': total}})
-        return response
+        return dict(videos=dict(items=data, total=total))
 
 
 class CategoryAPI(WebService):
@@ -186,9 +176,7 @@ class CategoryAPI(WebService):
         cats = models.Category.query.filter_by(locale=self.get_locale(), parent=None)
         return [self.cat_dict(c) for c in cats]
 
-    @expose('/', methods=('GET',))
-    @cache_for(seconds=3600)
+    @expose_ajax('/', cache_age=3600)
     def category_list(self):
         data = self._get_cats(**request.args)
-        response = jsonify({'categories': {'items': data}})
-        return response
+        return dict(categories=dict(items=data))

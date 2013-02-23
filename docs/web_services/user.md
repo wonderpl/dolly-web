@@ -111,11 +111,8 @@ action         | yes       | `star` or `view`  | Specifies the action type
 video_instance | no        | instance id       | The id of the video instance that was viewed or starred
 
 ```http
-HTTP/1.1 200 OK
+HTTP/1.1 204 NO CONTENT
 Content-Type: application/json
-Cache-Control: private, max-age=60
-
-{}
 ```
 
 Get list of item identifies associated with recent activity: views, stars & subscriptions.
