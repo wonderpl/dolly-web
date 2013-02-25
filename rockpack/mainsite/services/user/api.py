@@ -110,8 +110,6 @@ def verify_id_on_model(model, col='id'):
     return f
 
 
-# TODO: check if we've duplicated this in import view
-# and refactor as appropriate
 class ChannelForm(form.BaseForm):
     title = wtf.TextField(validators=[check_present])
     description = wtf.TextField(validators=[check_present])
@@ -170,8 +168,10 @@ class UserAPI(WebService):
     def channel_item_create(self, userid):
         form = ChannelForm(request.form, csrf_enabled=False)
         if form.validate():
-            # TODO: validate user id against access token
-            # once it's merged in
+            # Maybe move this into @check_authorization?
+            if form.owner.data != userid:
+                abort(400, message='resource user doesn\'t match owner field sent')
+
             channel = create_channel(title=form.title.data,
                     description=form.description.data,
                     owner=form.owner.data,
@@ -179,8 +179,6 @@ class UserAPI(WebService):
                     category=form.category.data,
                     cover=form.cover.data).save()
 
-            # TODO: change this to reflect the upcoming
-            # return values allowed in @expose
             return {'channels': {
                 'items': [video_api.channel_dict(channel)],
                 'total': 1},
