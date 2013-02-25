@@ -1,5 +1,8 @@
 from sqlalchemy import desc
 from flask import abort, request, g
+from flask.ext import wtf
+from flask.ext.admin import form
+from wtforms.validators import ValidationError
 from rockpack.mainsite import app
 from rockpack.mainsite.core.dbapi import commit_on_success
 from rockpack.mainsite.core.webservice import WebService, expose_ajax
@@ -7,11 +10,13 @@ from rockpack.mainsite.core.oauth.decorators import check_authorization
 from rockpack.mainsite.core.youtube import get_video_data
 from rockpack.mainsite.helpers.db import gen_videoid
 from rockpack.mainsite.services.video.models import (
-    Channel, ChannelLocaleMeta, Video, VideoInstance, VideoLocaleMeta)
+    Channel, ChannelLocaleMeta, Video, VideoInstance, VideoLocaleMeta,
+    Locale, Category)
 from rockpack.mainsite.services.cover_art.models import UserCoverArt
 from rockpack.mainsite.services.cover_art import api as cover_api
 from rockpack.mainsite.services.video import api as video_api
 from rockpack.mainsite.services.search import api as search_api
+from rockpack.mainsite.admin.import_views import create_channel
 from .models import User, UserActivity
 
 
@@ -92,6 +97,30 @@ def action_object_list(user, action, limit):
     return id_list[0] if id_list else []
 
 
+def check_present(form, field):
+    if field.name not in request.form:
+        raise ValidationError('This field is required, but can be an empty string.')
+
+
+def verify_id_on_model(model, col='id'):
+    def f(form, field):
+        if field.data:
+            if not model.query.filter_by(**{col: field.data}).count():
+                raise ValidationError('Invalid {} "{}"'.format(field, field.data))
+    return f
+
+
+# TODO: check if we've duplicated this in import view
+# and refactor as appropriate
+class ChannelForm(form.BaseForm):
+    title = wtf.TextField(validators=[check_present])
+    description = wtf.TextField(validators=[check_present])
+    owner = wtf.TextField(validators=[check_present, verify_id_on_model(User)])
+    locale = wtf.TextField(validators=[check_present, verify_id_on_model(Locale)])
+    category = wtf.TextField(validators=[check_present, verify_id_on_model(Category)])
+    cover = wtf.TextField(validators=[check_present])
+
+
 class UserAPI(WebService):
 
     endpoint = '/'
@@ -136,6 +165,29 @@ class UserAPI(WebService):
                             request.form['video_instance'],
                             self.get_locale())
 
+    @expose_ajax('/<userid>/channels/', methods=('POST',))
+    @check_authorization(self_auth=True)
+    def channel_item_create(self, userid):
+        form = ChannelForm(request.form, csrf_enabled=False)
+        if form.validate():
+            # TODO: validate user id against access token
+            # once it's merged in
+            channel = create_channel(title=form.title.data,
+                    description=form.description.data,
+                    owner=form.owner.data,
+                    locale=form.locale.data,
+                    category=form.category.data,
+                    cover=form.cover.data).save()
+
+            # TODO: change this to reflect the upcoming
+            # return values allowed in @expose
+            return {'channels': {
+                'items': [video_api.channel_dict(channel)],
+                'total': 1},
+                }, 201
+
+        return abort(400, messages=form.errors)
+
     @expose_ajax('/<userid>/channels/<channelid>/', cache_age=0)
     @check_authorization(abort_on_fail=False)
     def channel_item(self, userid, channelid):
@@ -144,6 +196,32 @@ class UserAPI(WebService):
         items, total = video_api.get_local_videos(self.get_locale(), self.get_page(), channel=channelid, with_channel=False)
         data['videos'] = dict(items=items, total=total)
         return data
+
+    @expose_ajax('/<userid>/channels/<channelid>/', methods=('PUT',))
+    @check_authorization(self_auth=True)
+    def channel_item_edit(self, userid, channelid):
+        channel = Channel.query.get(channelid)
+        if not channel:
+            abort(404, message='channel not found')
+
+        form = ChannelForm(request.form, csrf_enabled=False)
+        if not form.validate():
+            return abort(400, message=form.errors)
+
+        if form.owner.data != userid:
+            abort(400, message='resource user doesn\'t match owner field sent')
+
+        channel.title = form.title.data
+        channel.description = form.description.data
+        channel.locale = form.locale.data
+        channel.category = form.category.data
+        channel.cover = form.cover.data
+        channel.save()
+
+        return {'channels': {
+            'items': [video_api.channel_dict(channel)],
+            'total': 1},
+            }
 
     @expose_ajax('/<userid>/cover_art/', cache_age=60, cache_private=True)
     @check_authorization(self_auth=True)

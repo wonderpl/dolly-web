@@ -1,27 +1,24 @@
 import uuid
 import json
 from test import base
-from rockpack.mainsite.services.user.models import User
+from test.test_helpers import get_auth_header
 
 
 class ChannelCreateTestCase(base.RockPackTestCase):
 
     def test_new_channel(self):
         with self.app.test_client() as client:
-            user = User(username=uuid.uuid4().hex,
-                    first_name='barry',
-                    last_name='shitpeas',
-                    avatar='',
-                    email='em@il.com').save()
+            user = self.create_test_user()
 
             channel_title = uuid.uuid4().hex
-            r = client.post('/ws/channels/',
+            r = client.post('/ws/{}/channels/'.format(user.id),
                     data=dict(title=channel_title,
                         description='test channel for user {}'.format(user.id),
                         owner=user.id,
                         locale='en-us',
                         category=0,
-                        cover=''))
+                        cover=''),
+                    headers=[get_auth_header(user.id)])
 
             self.assertEquals(201, r.status_code)
             new_ch = json.loads(r.data)
@@ -33,13 +30,14 @@ class ChannelCreateTestCase(base.RockPackTestCase):
 
             # test channel update
             new_description = 'this is a new description!'
-            r = client.put('/ws/channels/{}/'.format(new_ch['channels']['items'][0]['id']),
+            r = client.put('/ws/{}/channels/{}/'.format(user.id, new_ch['channels']['items'][0]['id']),
                     data=dict(title='',
                         description=new_description,
                     owner=user.id,
                     category='',
                     locale='',
-                    cover='this_is_a_cover.jpg'))
+                    cover='this_is_a_cover.jpg'),
+                    headers=[get_auth_header(user.id)])
             updated_ch = json.loads(r.data)
 
             self.assertEquals(200, r.status_code)
@@ -50,21 +48,19 @@ class ChannelCreateTestCase(base.RockPackTestCase):
 
     def test_failed_channel_create(self):
         with self.app.test_client() as client:
-            user = User(username=uuid.uuid4().hex,
-                    first_name='barry',
-                    last_name='shitpeas',
-                    avatar='',
-                    email='em@il.com').save()
+            user = self.create_test_user()
 
             channel_title = uuid.uuid4().hex
-            r = client.post('/ws/channels/',
+            r = client.post('/ws/{}/channels/'.format(user.id),
                     data=dict(title=channel_title,
                         owner=user.id,
-                        locale='en-us'))
+                        locale='en-us'),
+                    headers=[get_auth_header(user.id)])
 
             self.assertEquals(400, r.status_code)
-            errors = json.loads(r.data)['errors']
+            errors = json.loads(r.data)['messages']
             self.assertEquals({
-                "category": ["This field is required."],
-                "description": ["This field is required."]},
+                "category": ["This field is required, but can be an empty string."],
+                "description": ["This field is required, but can be an empty string."],
+                "cover":["This field is required, but can be an empty string."]},
                 errors)

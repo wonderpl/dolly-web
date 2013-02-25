@@ -1,15 +1,9 @@
-import json
 from sqlalchemy.orm import contains_eager
 from sqlalchemy.sql.expression import desc
-from flask.ext.admin import form
-from flask.ext import wtf
-from flask import g, request, url_for, Response, abort
-from wtforms.validators import ValidationError
+from flask import g, request, url_for
 
 from rockpack.mainsite.core.webservice import WebService, expose_ajax
 from rockpack.mainsite.services.video import models
-from rockpack.mainsite.services.user.models import User
-from rockpack.mainsite.admin.import_views import create_channel
 
 
 def _filter_by_category(query, type, category_id):
@@ -74,30 +68,6 @@ def get_local_channel(locale, paging, **filters):
     return channel_data, total
 
 
-def check_present(form, field):
-    if field.name not in request.form:
-        raise ValidationError('{} must be present'.format(field.data))
-
-
-def verify_id_on_model(model, col='id'):
-    def f(form, field):
-        if field.data:
-            if not model.query.filter_by(**{col: field.data}).count():
-                raise ValidationError('Invalid {} "{}"'.format(field, field.data))
-    return f
-
-
-# TODO: check if we've duplicated this in import view
-# and refactor as appropriate
-class ChannelForm(form.BaseForm):
-    title = wtf.TextField(validators=[check_present])
-    description = wtf.TextField(validators=[check_present])
-    owner = wtf.TextField(validators=[check_present, verify_id_on_model(User)])
-    locale = wtf.TextField(validators=[check_present, verify_id_on_model(models.Locale)])
-    category = wtf.TextField(validators=[check_present, verify_id_on_model(models.Category)])
-    cover  = wtf.TextField(validators=[check_present])
-
-
 class ChannelAPI(WebService):
 
     endpoint = '/channels'
@@ -108,53 +78,6 @@ class ChannelAPI(WebService):
                                         self.get_page(),
                                         category=request.args.get('category'))
         return dict(channels=dict(items=data, total=total))
-
-    @expose('/<string:channel_id>/', methods=('PUT',))
-    def channel_item(self, channel_id):
-        channel = models.Channel.query.get(channel_id)
-        if not channel:
-            abort(404)
-
-        form = ChannelForm(request.form, csrf_enabled=False)
-        if not form.validate():
-            return Response(json.dumps(form.errors), 400)
-
-        channel.title = form.title.data
-        channel.description = form.description.data
-        channel.locale = form.locale.data
-        channel.category = form.category.data
-        channel.cover = form.cover.data
-        channel.save()
-
-        return Response(json.dumps({
-            'channels': {
-                'items': [channel_dict(channel)],
-                'total': 1},
-            }), mimetype='application/json', status=200)
-
-    @expose('/', methods=('POST',))
-    def channel_item_edit(self):
-        form = ChannelForm(request.form, csrf_enabled=False)
-        if form.validate():
-            # TODO: validate user id against access token
-            # once it's merged in
-            channel = create_channel(title=form.title.data,
-                    description=form.description.data,
-                    owner=form.owner.data,
-                    locale=form.locale.data,
-                    category=form.category.data,
-                    cover=form.cover.data).save()
-
-            # TODO: change this to reflect the upcoming
-            # return values allowed in @expose
-            return Response(json.dumps({
-                'channels': {
-                'items': [channel_dict(channel)],
-                'total': 1},
-            }), mimetype='application/json', status=201)
-
-        return Response(json.dumps({'errors': form.errors}),
-                status=400)
 
 
 def video_dict(video):
