@@ -29,15 +29,18 @@ class ChannelCreateTestCase(base.RockPackTestCase):
                     'channel titles should match')
 
             # test channel update
+            new_description = 'this is a new description!'
             r = client.put('/ws/channels/{}/'.format(new_ch['channels']['items'][0]['id']),
                     data=dict(title='',
-                        description='this is a new description!',
+                        description=new_description,
                     owner=user.id,
                     category='',
                     locale=''))
+            updated_ch = json.loads(r.data)
 
-            print r.data
             self.assertEquals(200, r.status_code)
+            self.assertEquals(new_description, updated_ch['channels']['items'][0]['description'],
+                    'channel descriptions should match')
 
     def test_failed_channel_create(self):
         with self.app.test_client() as client:

@@ -1,8 +1,11 @@
 import json
 from sqlalchemy.orm import contains_eager
 from sqlalchemy.sql.expression import desc
+from flask.ext.admin import form
+from flask.ext import wtf
 from flask import g, jsonify, request, url_for, Response, abort
 from wtforms.validators import ValidationError
+
 from rockpack.mainsite.core.webservice import WebService
 from rockpack.mainsite.core.webservice import expose
 from rockpack.mainsite.services.video import models
@@ -70,10 +73,6 @@ def get_local_channel(locale, paging, **filters):
         channel_data.append(item)
 
     return channel_data, total
-
-
-from flask.ext.admin import form
-from flask.ext import wtf
 
 
 def check_present(form, field):
