@@ -275,7 +275,7 @@ class Channel(db.Model):
     id = Column(CHAR(24), primary_key=True)
     title = Column(String(1024), nullable=False)
     description = Column(Text, nullable=False)
-    cover = Column(ImageType('CHANNEL'), nullable=False)
+    cover = Column(ImageType('CHANNEL', reference_only=True), nullable=False)
 
     owner = Column(CHAR(22), ForeignKey('user.id'), nullable=False)
     owner_rel = relationship(User, primaryjoin=(owner == User.id), lazy='joined', innerjoin=True)

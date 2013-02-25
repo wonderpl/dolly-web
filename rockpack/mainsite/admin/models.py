@@ -2,7 +2,7 @@ from flask.ext import login, wtf
 from flask.ext.admin.model.typefmt import BASE_FORMATTERS, Markup
 from flask.ext.admin.model.form import converts
 from flask.ext.admin.contrib.sqlamodel import ModelView, form, filters
-from rockpack.mainsite.helpers.db import ImageUrl
+from rockpack.mainsite.helpers.db import ImageUrl, ImageType
 from rockpack.mainsite.core.dbapi import db
 
 
@@ -18,6 +18,14 @@ class AdminModelConverter(form.AdminModelConverter):
         # There must be a better way to do this!
         field_args['validators'] = [v for v in field_args['validators']
                                     if not isinstance(v, wtf.validators.Required)]
+        try:
+            # Check for `reference_only` on the col type obj
+            # and return a text field if true, else a file field
+            for k, v in self.__dict__['view'].model.__table__.c.items():
+                if isinstance(v.type, ImageType) and v.type.reference_only:
+                    return wtf.TextField(**field_args)
+        except:
+            pass
         return wtf.FileField(**field_args)
 
 

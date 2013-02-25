@@ -128,12 +128,13 @@ class ImageType(types.TypeDecorator):
 
     impl = types.String
 
-    def __init__(self, cfgkey):
+    def __init__(self, cfgkey, reference_only=False):
         super(ImageType, self).__init__(1024)
+        self.reference_only = reference_only
         self.cfgkey = cfgkey
 
     def process_bind_param(self, value, dialect):
-        if value:
+        if value and not self.reference_only:
             try:
                 value = resize_and_upload(value, self.cfgkey)
             except IOError, e:
