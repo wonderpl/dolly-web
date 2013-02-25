@@ -16,6 +16,7 @@ def check_client_authorization(f):
             abort(401, error='unauthorized_client')
         g.app_client_id = auth.username
         return f(*args, **kwargs)
+    wrapper._secure = True
     return wrapper
 
 

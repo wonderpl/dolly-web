@@ -81,12 +81,14 @@ class WebService(object):
     max_page_size = 1000
 
     def __init__(self, app, url_prefix, **kwargs):
-
+        secure_subdomain = app.config.get('SECURE_SUBDOMAIN')
         bp = Blueprint(self.__class__.__name__ + '_api', self.__class__.__name__, url_prefix=url_prefix)
         for route in self._routes:
+            subdomain = getattr(route.func, '_secure', None) and secure_subdomain
             bp.add_url_rule(route.url,
                             route.func.__name__,
                             view_func=types.MethodType(route.func, self, self.__class__),
+                            subdomain=subdomain,
                             methods=route.methods)
 
         app.register_blueprint(bp)
