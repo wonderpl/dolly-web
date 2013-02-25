@@ -80,10 +80,10 @@ def check_present(form, field):
         raise ValidationError('{} must be present'.format(field.data))
 
 
-def verify_id_on_model(model):
+def verify_id_on_model(model, col='id'):
     def f(form, field):
         if field.data:
-            if not model.query.get(field.data):
+            if not model.query.filter_by(**{col: field.data}).count():
                 raise ValidationError('Invalid {} "{}"'.format(field, field.data))
     return f
 
@@ -96,6 +96,7 @@ class ChannelForm(form.BaseForm):
     owner = wtf.TextField(validators=[check_present, verify_id_on_model(User)])
     locale = wtf.TextField(validators=[check_present, verify_id_on_model(models.Locale)])
     category = wtf.TextField(validators=[check_present, verify_id_on_model(models.Category)])
+    cover  = wtf.TextField(validators=[check_present])
 
 
 class ChannelAPI(WebService):
@@ -129,6 +130,7 @@ class ChannelAPI(WebService):
         channel.description = form.description.data
         channel.locale = form.locale.data
         channel.category = form.category.data
+        channel.cover = form.cover.data
         channel.save()
 
         return Response(json.dumps({
@@ -143,13 +145,12 @@ class ChannelAPI(WebService):
         if form.validate():
             # TODO: validate user id against access token
             # once it's merged in
-            cover = request.files.get('cover', '')
             channel = create_channel(title=form.title.data,
                     description=form.description.data,
                     owner=form.owner.data,
                     locale=form.locale.data,
                     category=form.category.data,
-                    cover=cover).save()
+                    cover=form.cover.data).save()
 
             # TODO: change this to reflect the upcoming
             # return values allowed in @expose
