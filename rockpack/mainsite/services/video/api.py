@@ -3,15 +3,13 @@ from sqlalchemy.orm import contains_eager
 from sqlalchemy.sql.expression import desc
 from flask.ext.admin import form
 from flask.ext import wtf
-from flask import g, jsonify, request, url_for, Response, abort
+from flask import g, request, url_for, Response, abort
 from wtforms.validators import ValidationError
 
-from rockpack.mainsite.core.webservice import WebService
-from rockpack.mainsite.core.webservice import expose
+from rockpack.mainsite.core.webservice import WebService, expose_ajax
 from rockpack.mainsite.services.video import models
 from rockpack.mainsite.services.user.models import User
 from rockpack.mainsite.admin.import_views import create_channel
-from rockpack.mainsite.helpers.http import cache_for
 
 
 def _filter_by_category(query, type, category_id):
@@ -24,7 +22,7 @@ def _filter_by_category(query, type, category_id):
     return query.filter(type.category.in_(cat_ids))
 
 
-def channel_dict(channel):
+def channel_dict(channel, with_owner=True):
     sizes = ['thumbnail_large', 'thumbnail_small', 'background']
     images = {'cover_%s_url' % s: getattr(channel.cover, s) for s in sizes}
     url = url_for('UserAPI_api.channel_item',
@@ -38,12 +36,13 @@ def channel_dict(channel):
         thumbnail_url=channel.cover.thumbnail_large,
         description=channel.description,
         subscribe_count=0,  # TODO: implement this for real
-        owner=dict(
+    )
+    if with_owner:
+        ch_data['owner'] = dict(
             id=channel.owner_rel.id,
             name=channel.owner_rel.username,
             avatar_thumbnail_url=channel.owner_rel.avatar.thumbnail_small,
         )
-    )
     ch_data.update(images)
     return ch_data
 
@@ -103,18 +102,12 @@ class ChannelAPI(WebService):
 
     endpoint = '/channels'
 
-    @expose('/', methods=('GET',))
-    @cache_for(seconds=300)
+    @expose_ajax('/', cache_age=300)
     def channel_list(self):
         data, total = get_local_channel(self.get_locale(),
                                         self.get_page(),
                                         category=request.args.get('category'))
-        response = jsonify({
-            'channels': {
-            'items': data,
-            'total': total},
-        })
-        return response
+        return dict(channels=dict(items=data, total=total))
 
     @expose('/<string:channel_id>/', methods=('PUT',))
     def channel_item(self, channel_id):
@@ -164,10 +157,10 @@ class ChannelAPI(WebService):
                 status=400)
 
 
-def video_dict(instance):
+def video_dict(video):
     # TODO: unfudge this
     thumbnail_url = None
-    for t in instance.thumbnails:
+    for t in video.thumbnails:
         if not thumbnail_url:
             thumbnail_url = t.url
         if t.url.count('mqdefault.jpg'):
@@ -175,11 +168,12 @@ def video_dict(instance):
             break
 
     return dict(
-        id=instance.id,
-        source=['rockpack', 'youtube'][instance.source],    # TODO: read source map from db
-        source_id=instance.source_videoid,
-        view_count=instance.view_count,
-        star_count=instance.star_count,
+        id=video.id,
+        source=['rockpack', 'youtube'][video.source],    # TODO: read source map from db
+        source_id=video.source_videoid,
+        duration=video.duration,
+        view_count=video.view_count,
+        star_count=video.star_count,
         thumbnail_url=thumbnail_url,
     )
 
@@ -236,12 +230,10 @@ class VideoAPI(WebService):
 
     endpoint = '/videos'
 
-    @expose('/', methods=('GET',))
-    @cache_for(seconds=300)
+    @expose_ajax('/', cache_age=300)
     def video_list(self):
         data, total = get_local_videos(self.get_locale(), self.get_page(), star_order=True, **request.args)
-        response = jsonify({'videos': {'items': data, 'total': total}})
-        return response
+        return dict(videos=dict(items=data, total=total))
 
 
 class CategoryAPI(WebService):
@@ -263,9 +255,7 @@ class CategoryAPI(WebService):
         cats = models.Category.query.filter_by(locale=self.get_locale(), parent=None)
         return [self.cat_dict(c) for c in cats]
 
-    @expose('/', methods=('GET',))
-    @cache_for(seconds=3600)
+    @expose_ajax('/', cache_age=3600)
     def category_list(self):
         data = self._get_cats(**request.args)
-        response = jsonify({'categories': {'items': data}})
-        return response
+        return dict(categories=dict(items=data))

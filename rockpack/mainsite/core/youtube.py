@@ -28,7 +28,7 @@ def _get_atom_video_data(youtube_data, playlist=None):
         source_videoid=media.FindExtensions('videoid')[0].text,
         source_listid=playlist,
         title=youtube_data.title.text,
-        duration=media.duration.seconds if media.duration else 0,
+        duration=int(media.duration.seconds) if media.duration else 0,
     )
     video.source_category = get_category(media.category)
     for thumbnail in media.thumbnail:
@@ -69,9 +69,11 @@ def _get_video_data(youtube_data, playlist=None):
         source_videoid=media['yt$videoid']['$t'],
         source_listid=playlist,
         title=youtube_data['title']['$t'],
-        duration=media['yt$duration']['seconds'] if 'yt$duration' in media else 0,
+        duration=int(media['yt$duration']['seconds']) if 'yt$duration' in media else 0,
     )
     video.source_category = get_category(media.get('media$category', []))
+    video.source_view_count = int(youtube_data['yt$statistics']['viewCount'])
+    video.source_date_uploaded = media['yt$uploaded']['$t']
     for thumbnail in media.get('media$thumbnail', []):
         if 'time' not in thumbnail:
             video.thumbnails.append(

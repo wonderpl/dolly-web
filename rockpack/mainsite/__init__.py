@@ -14,9 +14,11 @@ SERVICES = (
     'rockpack.mainsite.services.cover_art',
     'rockpack.mainsite.services.user',
     'rockpack.mainsite.services.search',
+    'rockpack.mainsite.services.oauth',
     'rockpack.mainsite.services.pubsubhubbub',
 )
 REGISTER_SETUPS = (
+    ('rockpack.mainsite.core.webservice', 'setup_abort_mapping'),
     ('rockpack.mainsite.admin.auth', 'setup_auth'),
     ('rockpack.mainsite.admin', 'setup_admin'),
 )
@@ -45,7 +47,6 @@ def import_services():
                 services.append(a)
 
     for s in services:
-        app.logger.debug('loading service: {}'.format(s.__name__))
         endpoint = WEBSERVICE_BASE
         if s.endpoint.lstrip('/'):
             endpoint += s.endpoint

@@ -2,13 +2,13 @@ import sys
 import psycopg2
 from functools import wraps
 
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, schema
 from sqlalchemy.exc import StatementError
 from werkzeug.exceptions import HTTPException
 from flask.ext import sqlalchemy
 from flask import g
 
-from rockpack.mainsite import app
+from rockpack.mainsite import app, SERVICES, REGISTER_SETUPS
 
 
 def drop_database(db_url):
@@ -34,6 +34,40 @@ def create_database(db_url, drop_if_exists=False):
     engine.execute(command)
 
 
+def sync_database():
+    models = []
+
+    def load_modules(module):
+        try:
+            models.append(__import__(module + '.models', fromlist=['models']))
+        except ImportError as e:
+            #print >> sys.stderr, 'cannot import', module, ':', e
+            pass
+
+    for module in SERVICES + zip(*REGISTER_SETUPS)[0]:
+        load_modules(module)
+
+    table_list = []
+    for model in models:
+        for item in model.__dict__.itervalues():
+            try:
+                if (isinstance(item, type) and issubclass(item, db.Model)
+                        and hasattr(item, '__table__')
+                        and isinstance(item.__table__, schema.Table)):
+                    table = item.__table__
+                    table_list.append(table)
+            except TypeError:
+                continue
+
+    try:
+        if table_list:
+            db.Model.metadata.create_all(db.engine, tables=table_list, checkfirst=True)
+        else:
+            print >> sys.stderr, 'no tables to build'
+    except Exception as e:
+        print >> sys.stderr, 'failed to build tables with:', str(e)
+
+
 def get_sessionmanager(config=app.config['DATABASE_URL']):
     app.config['SQLALCHEMY_DATABASE_URI'] = config
     return sqlalchemy.SQLAlchemy(app)
@@ -45,6 +79,7 @@ class _Model(sqlalchemy.Model):
         session = self.query.session
         merged = session.merge(self)
         try:
+            # commit is called here so that we can get the id of the new record
             session.commit()
         except StatementError, e:
             # Check if the statement value bind mapping threw a bad request

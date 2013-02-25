@@ -1,9 +1,6 @@
 import os
 from test.base import RockPackTestCase
-
-from rockpack.mainsite import app
-from rockpack.mainsite.core import imaging
-from rockpack.mainsite.core import s3
+from rockpack.mainsite.core import imaging, s3
 
 
 PATH_TO_TEST_IMAGE = os.path.join(
@@ -12,14 +9,6 @@ PATH_TO_TEST_IMAGE = os.path.join(
 
 
 class TestImageResize(RockPackTestCase):
-
-    def setUp(self):
-        super(TestImageResize, self).setUp()
-        app.config['TEST_S3_UPLOAD'] = True
-
-    def tearDOwn(self):
-        super(TestImageResize, self).tearDown()
-        app.config['TEST_S3_UPLOAD'] = False
 
     def test_resize_invalid(self):
         with self.assertRaises(imaging.Resizer.ConfigurationInvalid):
@@ -37,20 +26,12 @@ class TestImageResize(RockPackTestCase):
 
         for name, img in converted_images.iteritems():
             self.assertIn(name, config, 'returned images key should match')
-            self.assertEquals(img.size,
-                config[name],
+            self.assertEquals(
+                img.size, config[name],
                 'background image should be resized to config dimensions')
 
 
 class TestFileUpload(RockPackTestCase):
-
-    def setUp(self):
-        super(TestFileUpload, self).setUp()
-        app.config['TEST_S3_UPLOAD'] = True
-
-    def tearDOwn(self):
-        super(TestFileUpload, self).tearDown()
-        app.config['TEST_S3_UPLOAD'] = False
 
     def test_put_file(self):
         with self.app.test_request_context():

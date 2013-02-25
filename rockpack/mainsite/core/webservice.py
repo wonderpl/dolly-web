@@ -1,7 +1,10 @@
-import functools
 import types
+import simplejson as json
+from functools import wraps
 from collections import namedtuple
-from flask import Blueprint, request, current_app
+from werkzeug.exceptions import HTTPException, Unauthorized, BadRequest, Forbidden
+from flask import Blueprint, Response, request, current_app, abort
+from rockpack.mainsite.helpers.http import cache_for
 
 
 __all__ = ['WebService', 'expose']
@@ -10,20 +13,45 @@ __all__ = ['WebService', 'expose']
 service_urls = namedtuple('ServiceUrl', 'url func_name func methods')
 
 
+class JsonReponse(Response):
+    def __init__(self, data, status=None, headers=None):
+        super(JsonReponse, self).__init__(
+            json.dumps(data, separators=(',', ':')),
+            status, headers, 'application/json')
+
+
+def ajax(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        try:
+            response = func(*args, **kwargs)
+            if isinstance(response, Response):
+                return response
+            if response is None:
+                response = (response, 204)
+            if not isinstance(response, tuple):
+                response = (response,)
+            return JsonReponse(*response)
+        except HTTPException, e:
+            body = dict(error=getattr(e, 'error', e.name),
+                        **getattr(e, 'extra', {}))
+            return JsonReponse(body, e.code, e.get_headers(None))
+    return wrapper
+
+
 def expose(url, methods=['GET']):
     def decorator(func):
-        @functools.wraps(func)
-        def wrapper(*args, **kwargs):
-            return func(*args, **kwargs)
+        # attach the url details to the func so we can use it later
+        if not hasattr(func, '_service_urls'):
+            func._service_urls = []
+        func._service_urls.append(service_urls(url=url, func_name=func.__name__, func=func, methods=methods))
+        return func
+    return decorator
 
-        # attach the url details to the wrapper so we can use it later
 
-        if not hasattr(wrapper, '_service_urls'):
-            wrapper._service_urls = []
-        wrapper._service_urls.append(service_urls(url=url, func_name=func.__name__, func=func, methods=methods))
-
-        return wrapper
-
+def expose_ajax(url, methods=['GET'], cache_age=None, cache_private=False):
+    def decorator(func):
+        return expose(url, methods)(cache_for(cache_age, cache_private)(ajax(func)))
     return decorator
 
 
@@ -56,7 +84,6 @@ class WebService(object):
 
         bp = Blueprint(self.__class__.__name__ + '_api', self.__class__.__name__, url_prefix=url_prefix)
         for route in self._routes:
-            app.logger.debug('adding route for {} on endpoint {}'.format(route.url, url_prefix))
             bp.add_url_rule(route.url,
                             route.func.__name__,
                             view_func=types.MethodType(route.func, self, self.__class__),
@@ -81,3 +108,42 @@ class WebService(object):
         except ValueError:
             size = self.default_page_size
         return start, size
+
+
+class Unauthorized_(Unauthorized):
+    def __init__(self, description=None, error='access_denied', scheme='basic', realm='rockpack'):
+        super(Unauthorized_, self).__init__(description)
+        self.error = error
+        self.scheme = scheme
+        self.realm = realm
+
+    def get_headers(self, environ):
+        auth = '%s realm="%s"' % (self.scheme.capitalize(), self.realm)
+        if self.error:
+            auth += ' error="%s"' % self.error
+        return super(Unauthorized_, self).get_headers(environ) +\
+            [('WWW-Authenticate', auth)]
+
+
+class BadRequest_(BadRequest):
+    def __init__(self, description=None, error='invalid_request', **kwargs):
+        super(BadRequest_, self).__init__(description)
+        self.error = error
+        self.extra = kwargs
+
+
+class Forbidden_(Forbidden):
+    def __init__(self, description=None, error='insufficient_scope'):
+        super(Forbidden_, self).__init__(description)
+        self.error = error
+
+
+def setup_abort_mapping(app):
+    # Some BadRequest excpetions are raised directly, not with abort
+    # so we set json error label here
+    BadRequest.error = 'invalid_request'
+    abort.mapping.update({
+        400: BadRequest_,
+        401: Unauthorized_,
+        403: Forbidden_,
+    })

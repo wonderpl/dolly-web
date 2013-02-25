@@ -6,7 +6,7 @@ from iso8601.iso8601 import UTC
 from sqlalchemy import types
 from sqlalchemy.dialects.mysql.base import MySQLDialect
 from flask import g
-from flask.exceptions import JSONBadRequest
+from flask.exceptions import BadRequest
 from rockpack.mainsite import app
 from rockpack.mainsite.core import imaging
 from .urls import image_url_from_path
@@ -140,7 +140,7 @@ class ImageType(types.TypeDecorator):
             except IOError, e:
                 # XXX: We should probably parse the request and
                 # catch image errors much earlier.
-                raise JSONBadRequest('Invalid image: %s' % e)
+                raise BadRequest('Invalid image: %s' % e)
         return value
 
     def process_result_value(self, value, dialect):
@@ -150,8 +150,6 @@ class ImageType(types.TypeDecorator):
 def resize_and_upload(fp, cfgkey):
     """Takes file-like object and uploads thumbnails to s3."""
     uploader = imaging.ImageUploader()
-    if app.config.get('TESTING', False) and not app.config['TEST_S3_UPLOAD']:
-        return uploader.new_filename(extension='png')
 
     img_resize_config = app.config['%s_IMAGES' % cfgkey]
     img_path_config = app.config['%s_IMG_PATHS' % cfgkey]

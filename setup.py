@@ -1,4 +1,16 @@
+import sys
 from setuptools import setup, find_packages
+from setuptools.command.test import test as TestCommand
+
+
+class TestCommand_(TestCommand):
+    def finalize_options(self):
+        self.test_args = []
+        self.test_suite = True
+
+    def run_tests(self):
+        import pytest
+        sys.exit(pytest.main(self.test_args))
 
 
 def get_git_version():
@@ -22,4 +34,8 @@ setup(
         ('/etc/init.d', ['rockpack-mainsite'])],
     #package_data={'': ['templates/*/*.html', '*.html']},
     setup_requires=['setuptools_git'],
+    tests_require=['pytest'],
+    cmdclass={
+        'test': TestCommand_,
+    },
 )
