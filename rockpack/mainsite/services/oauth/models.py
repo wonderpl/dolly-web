@@ -20,7 +20,7 @@ class ExternalToken(db.Model):
 
     id = Column(Integer, primary_key=True)
     user = Column(ForeignKey('user.id'), nullable=False)
-    external_system = Column(Enum(EXTERNAL_SYSTEM_NAMES, name='external_system_names'), nullable=False)
+    external_system = Column(Enum(*EXTERNAL_SYSTEM_NAMES, name='external_system_names'), nullable=False)
     external_token = Column(String(1024), nullable=False)
 
     user_rel = relationship('User', remote_side=[User.id], backref='external_tokens')

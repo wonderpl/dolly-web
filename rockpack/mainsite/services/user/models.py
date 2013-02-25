@@ -15,13 +15,13 @@ class User(db.Model):
 
     id = Column(CHAR(22), primary_key=True)
     username = Column(String(254), unique=True, nullable=False)
-    password_hash = Column(String(60), nullable=True)
+    password_hash = Column(String(60), nullable=False)
     email = Column(String(254), nullable=False)
     first_name = Column(String(254), nullable=False)
     last_name = Column(String(254), nullable=False)
-    avatar = Column(ImageType('AVATAR'), nullable=True)
+    avatar = Column(ImageType('AVATAR'), nullable=False)
     is_active = Column(Boolean, nullable=False, server_default='true')
-    refresh_token = Column(String(1024), nullable=True)
+    refresh_token = Column(String(1024), nullable=False)
 
     channels = relationship('Channel')
 

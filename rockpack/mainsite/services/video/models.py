@@ -156,7 +156,7 @@ class Video(db.Model):
     duration = Column(Integer, nullable=False, server_default='0')
     view_count = Column(Integer, nullable=False, server_default='0')
     star_count = Column(Integer, nullable=False, server_default='0')
-    rockpack_curated = Column(Boolean, nullable=False, server_default='false')
+    rockpack_curated = Column(Boolean, nullable=False, server_default='false', default=False)
 
     source = Column(ForeignKey('source.id'), nullable=False)
 
@@ -235,7 +235,7 @@ class VideoLocaleMeta(db.Model):
     video = Column(ForeignKey('video.id', ondelete='CASCADE'), nullable=False)
     locale = Column(ForeignKey('locale.id'), nullable=False)
     category = Column(ForeignKey('category.id'), nullable=False)
-    visible = Column(Boolean(), nullable=False, server_default='true')
+    visible = Column(Boolean(), nullable=False, server_default='true', default=True)
     view_count = Column(Integer, nullable=False, server_default='0')
     star_count = Column(Integer, nullable=False, server_default='0')
 
@@ -347,7 +347,7 @@ class ChannelLocaleMeta(db.Model):
     )
 
     id = Column(CHAR(24), primary_key=True)
-    visible = Column(Boolean(), nullable=False, server_default='true')
+    visible = Column(Boolean(), nullable=False, server_default='true', default=True)
     view_count = Column(Integer, nullable=False, server_default='0')
     star_count = Column(Integer, nullable=False, server_default='0')
 

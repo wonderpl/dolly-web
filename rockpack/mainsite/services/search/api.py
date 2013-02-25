@@ -44,7 +44,7 @@ class SearchAPI(WebService):
                         source_id=video.source_videoid,
                         source_date_uploaded=video.source_date_uploaded,
                         source_view_count=video.source_view_count,
-                        duration=int(video.duration),
+                        duration=video.duration,
                         thumbnail_url=video.default_thumbnail,
                     )
                 )

@@ -2,9 +2,7 @@ import os
 import base64
 import uuid
 from PIL import Image
-
-from rockpack.mainsite.core.s3 import S3Uploader
-from rockpack.mainsite.core.s3 import jpeg_policy
+from rockpack.mainsite.core import s3
 
 
 class Resizer(object):
@@ -93,8 +91,8 @@ class ImageUploader(object):
 
     uploader = None
 
-    def __init__(self, uploader=S3Uploader):
-        self.uploader = uploader()
+    def __init__(self, uploader=None):
+        self.uploader = uploader() if uploader else s3.S3Uploader()
 
     @classmethod
     def new_filename(cls, target_path=None, target_filename=None, extension=None):
@@ -112,5 +110,5 @@ class ImageUploader(object):
 
     def from_file(self, fp, target_path=None, target_filename=None, extension=None):
         key_name = self.new_filename(target_path, target_filename, extension)
-        self.uploader.put_from_file(fp, key_name, headers=jpeg_policy)
+        self.uploader.put_from_file(fp, key_name, headers=s3.jpeg_policy)
         return key_name

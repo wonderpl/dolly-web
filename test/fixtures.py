@@ -42,20 +42,35 @@ class CategoryData(DataSet):
         locale = LocaleData.US.id
         parent = 1
 
+    class Music:
+        id = 2
+        name = 'Music'
+        locale = LocaleData.UK.id
+        parent = None
+
+    class Rock:
+        id = 3
+        name = 'Rock'
+        locale = LocaleData.UK.id
+        parent = 2
+
 
 class RockpackCoverArtData(DataSet):
     class comic_cover:
-        cover = 'image.jpg'
+        cover = ''
         locale = LocaleData.US.id
 
 
 class UserData(DataSet):
     class test_user_a:
         username = 'test_user_1'
+        password_hash = ''
         email = 'test@user.com'
         first_name = 'test'
         last_name = 'user'
-        avatar = 'avatar.jpg'
+        avatar = ''
+        is_active = True
+        refresh_token = ''
 
 
 all_data = [v for k, v in globals().copy().iteritems() if k.endswith('Data')]
@@ -84,12 +99,14 @@ _SignalTrackingMapperExtension._record = _record
 def install(*args):
 
     dbfixture = SQLAlchemyFixture(
-            env={'LocaleData': video_models.Locale,
-                'CategoryData': video_models.Category,
-                'RockpackCoverArtData': RockpackCoverArt,
-                'SourceData': video_models.Source,
-                'UserData': User},
-            engine=db.engine)
+        env={
+            'LocaleData': video_models.Locale,
+            'CategoryData': video_models.Category,
+            'RockpackCoverArtData': RockpackCoverArt,
+            'SourceData': video_models.Source,
+            'UserData': User,
+        },
+        engine=db.engine)
 
     data = dbfixture.data(*args)
     data.setup()

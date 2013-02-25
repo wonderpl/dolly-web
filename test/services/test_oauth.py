@@ -111,9 +111,12 @@ class ExternalTokenTestCase(base.RockPackTestCase):
 
     def _new_user(self):
         u = User(username=uuid.uuid4().hex,
+                password_hash='',
                 first_name='first',
                 last_name='last',
                 email='em@ail.com',
+                avatar='',
+                refresh_token='',
                 is_active=True)
         return u.save()
 

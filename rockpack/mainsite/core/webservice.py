@@ -84,7 +84,6 @@ class WebService(object):
 
         bp = Blueprint(self.__class__.__name__ + '_api', self.__class__.__name__, url_prefix=url_prefix)
         for route in self._routes:
-            app.logger.debug('adding route for {} on endpoint {}'.format(route.url, url_prefix))
             bp.add_url_rule(route.url,
                             route.func.__name__,
                             view_func=types.MethodType(route.func, self, self.__class__),

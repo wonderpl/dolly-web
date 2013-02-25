@@ -16,8 +16,13 @@ class RockPackTestCase(unittest.TestCase):
 
     def create_test_user(self):
         postfix = uuid.uuid4().hex
-        return User(username='test_' + postfix,
-                first_name='foo',
-                last_name='bar',
-                email='test_' + postfix + '@test.rockpack.com',
-                is_active=True).save()
+        return User(
+            username='test_' + postfix,
+            password_hash='',
+            first_name='foo',
+            last_name='bar',
+            email='test_' + postfix + '@test.rockpack.com',
+            avatar='',
+            refresh_token='',
+            is_active=True,
+        ).save()

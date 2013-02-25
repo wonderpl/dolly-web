@@ -47,7 +47,6 @@ def import_services():
                 services.append(a)
 
     for s in services:
-        app.logger.debug('loading service: {}'.format(s.__name__))
         endpoint = WEBSERVICE_BASE
         if s.endpoint.lstrip('/'):
             endpoint += s.endpoint

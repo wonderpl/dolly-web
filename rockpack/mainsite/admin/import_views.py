@@ -98,10 +98,12 @@ class ImportView(BaseView):
     def _create_user(self, form):
         user = User(
             username=form.username.data,
+            password_hash='',
             first_name=form.first_name.data,
             last_name=form.last_name.data,
             email=form.email.data,
             avatar=request.files.get('avatar'),
+            refresh_token='',
             is_active=True)
         db.session.add(user)
         db.session.commit()
@@ -111,17 +113,16 @@ class ImportView(BaseView):
     def index(self):
         ctx = {}
         data = (request.form or request.args).copy()
-        source_choices = Source.get_form_choices()
 
         # Ugly reverse mapping of source labels
         source = data.get('source')
         if source:
-            for id, label in source_choices:
+            for id, label in Source.get_form_choices():
                 if source == label:
                     data['source'] = id
 
         form = ImportForm(data, csrf_enabled=False)
-        form.source.choices = source_choices
+        form.source.choices = Source.get_form_choices()
         form.locale.choices = Locale.get_form_choices()
         form.category.choices = [(-1, '')] +\
             list(Category.get_form_choices(form.locale.data))
