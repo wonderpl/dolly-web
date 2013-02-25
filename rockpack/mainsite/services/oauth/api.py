@@ -34,9 +34,9 @@ class Login(WebService):
     @expose_ajax('/external/', methods=['POST'])
     @check_client_authorization
     def exeternal(self):
-        if not request.form['grant_type'] == 'token':
-            abort(400)
-        user = models.ExternalToken.user_from_token()
+        user = models.ExternalToken.user_from_token(
+                request.form.get('external_system'),
+                request.form.get('external_token'))
         if not user:
             abort(400, error='invalid_grant')
         return user.get_credentials()

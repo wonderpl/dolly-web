@@ -166,6 +166,13 @@ class RegisterTestCase(base.RockPackTestCase):
             self.assertEquals(200, r.status_code)
             self.assertNotEquals(None, creds['refresh_token'])
 
+            r = client.post('/ws/login/external/',
+                    headers=headers,
+                    data=dict(
+                        external_system='facebook',
+                        external_token=facebook_token))
+            self.assertEquals(200, r.status_code)
+
     def test_invalid_external_system(self):
         with self.app.test_client() as client:
             encoded = base64.encodestring(app.config['ROCKPACK_APP_CLIENT_ID'] + ':')
