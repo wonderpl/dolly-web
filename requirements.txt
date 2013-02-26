@@ -11,3 +11,4 @@ boto==2.7.0
 Pillow==1.7.8
 fixture==1.4
 git+git://github.com/StartTheShift/pyoauth2.git@94b1e8e5bfe0a1aa220f1645c810ab2f609db281
+facebook-sdk==0.4.0

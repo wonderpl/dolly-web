@@ -22,6 +22,7 @@ class ExternalToken(db.Model):
     user = Column(ForeignKey('user.id'), nullable=False)
     external_system = Column(Enum(*EXTERNAL_SYSTEM_NAMES, name='external_system_names'), nullable=False)
     external_token = Column(String(1024), nullable=False)
+    external_uid = Column(String(1024), nullable=False)
 
     user_rel = relationship('User', remote_side=[User.id], backref='external_tokens')
 
@@ -38,7 +39,7 @@ class ExternalToken(db.Model):
         return e.user_rel
 
     @classmethod
-    def update_token(cls, user, external_system, token):
+    def update_token(cls, user, external_system, token, external_uid):
         """ Updates an existing token (or creates a new one)
             and returns the token object """
 
@@ -46,11 +47,12 @@ class ExternalToken(db.Model):
             raise exceptions.InvalidExternalSystem('{} is not a valid name'.format(external_system))
 
         try:
-            e = cls.query.filter_by(user=user.id, external_system=external_system).one()
+            e = cls.query.filter_by(user=user.id, external_uid=external_uid, external_system=external_system).one()
         except exc.NoResultFound:
             c = cls(user=user.id,
                     external_system='facebook',
-                    external_token=token)
+                    external_token=token,
+                    external_uid=external_uid)
             return c.save()
         else:
             e.external_token = token
