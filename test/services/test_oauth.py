@@ -2,7 +2,7 @@ import base64
 import json
 import uuid
 from cStringIO import StringIO
-from mock import patch
+from mock import patch, Mock
 
 from flask import Response
 
@@ -145,7 +145,10 @@ class ExternalTokenTestCase(base.RockPackTestCase):
 
 class RegisterTestCase(base.RockPackTestCase):
 
-    def test_facebook_registration(self):
+    @patch('rockpack.mainsite.services.oauth.api.ExternalUser._get_external_data')
+    def test_facebook_registration(self, _get_external_data):
+        _get_external_data.return_value = {'username': 'al.bri.12', 'first_name': 'Al', 'last_name': 'Bri', 'verified': True, 'name': 'Al Bri', 'locale': 'en_GB', 'gender': 'male', 'updated_time': '2013-02-25T10:31:31+0000', 'link': 'http://www.facebook.com/al.bri.12', 'timezone': 0, 'id': '100005332297459'}
+
         with self.app.test_client() as client:
             encoded = base64.encodestring(app.config['ROCKPACK_APP_CLIENT_ID'] + ':')
             headers = [('Authorization', 'Basic {}'.format(encoded))]

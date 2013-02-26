@@ -112,13 +112,17 @@ class ExternalUser:
     def __init__(self, token):
         self._user_data = {}
         self.token = token
+
+        self._user_data = self._get_external_data(token)
+        if self._user_data:
+            self.valid_token = True
+
+    def _get_external_data(self, token):
         try:
             graph = facebook.GraphAPI(token)
         except facebook.GraphAPIError:
-            return
-        else:
-            self.valid_token = True
-            self._user_data = graph.get_object('me')
+            return {}
+        return graph.get_object('me')
 
     id = property(lambda x: x._user_data.get('id'))
     username = property(lambda x: x._user_data.get('username'))
