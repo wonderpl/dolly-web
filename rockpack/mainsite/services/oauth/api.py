@@ -11,8 +11,6 @@ from rockpack.mainsite.core.webservice import expose_ajax
 from rockpack.mainsite.services.video.models import Channel
 from rockpack.mainsite.services.user.models import User
 from . import models
-from .exceptions import InvalidExternalSystem
-from .exceptions import InvalidExternalToken
 
 
 def user_authenticated(username, password):
@@ -132,7 +130,7 @@ class ExternalUser:
 def sanitise_or_suggest_username(name):
     new_name = re.sub(r'\W+', '', name)
     if User.query.filter_by(username=new_name).count():
-        user = User.query.filter(User.username.like('{}%'.format(new_name))).order_by("username desc").first()
+        user = User.query.filter(User.username.like('{}%'.format(new_name))).order_by("username desc").limit(1).one()
         match = re.findall(r"[a-zA-Z]+|\d+", user.username)
         try:
             postfix_number = int(match[-1])
@@ -140,6 +138,7 @@ def sanitise_or_suggest_username(name):
             new_name = match + '1'
         else:
             new_name = ''.join(match[:-1]) + str(postfix_number + 1)
+            return sanitise_or_suggest_username(new_name)
     return new_name
 
 
