@@ -2,7 +2,7 @@ import base64
 import json
 import uuid
 from cStringIO import StringIO
-from mock import patch, Mock
+from mock import patch
 
 from flask import Response
 
@@ -147,6 +147,7 @@ class RegisterTestCase(base.RockPackTestCase):
 
     @patch('rockpack.mainsite.services.oauth.api.ExternalUser._get_external_data')
     def test_facebook_registration(self, _get_external_data):
+        # TODO: clean this up, preferably something generated
         _get_external_data.return_value = {'username': 'al.bri.12', 'first_name': 'Al', 'last_name': 'Bri', 'verified': True, 'name': 'Al Bri', 'locale': 'en_GB', 'gender': 'male', 'updated_time': '2013-02-25T10:31:31+0000', 'link': 'http://www.facebook.com/al.bri.12', 'timezone': 0, 'id': '100005332297459'}
 
         with self.app.test_client() as client:
@@ -175,6 +176,10 @@ class RegisterTestCase(base.RockPackTestCase):
                         external_system='facebook',
                         external_token=facebook_token))
             self.assertEquals(200, r.status_code)
+
+            # TODO: test duplicate fb id
+
+            # TODO: test duplicate username, different fb id
 
     def test_invalid_external_system(self):
         with self.app.test_client() as client:
