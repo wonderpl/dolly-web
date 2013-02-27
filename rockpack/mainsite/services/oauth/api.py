@@ -1,4 +1,3 @@
-import uuid
 from flask import request
 from flask import abort
 from flask.ext import wtf
@@ -7,7 +6,6 @@ from rockpack.mainsite import app
 from rockpack.mainsite.core.oauth.decorators import check_client_authorization
 from rockpack.mainsite.core.webservice import WebService
 from rockpack.mainsite.core.webservice import expose_ajax
-from rockpack.mainsite.services.video.models import Channel
 from rockpack.mainsite.services.user.models import User
 from . import models
 
@@ -98,7 +96,7 @@ class Registration(WebService):
     def register(self):
         form = RockRegistrationForm(request.form, csrf_enabled=False)
         if not form.validate():
-            return abort(400, form_errors=form.errors)
+            abort(400, form_errors=form.errors)
 
         user = User.create_with_channel(
                 username=form.username.data,
@@ -127,7 +125,7 @@ class Registration(WebService):
                             external_uid=eu.id,
                             )
                     if not user:
-                        return abort(400, message='User is already '
+                        abort(400, message='User is already '
                                 'registered for {} account'.format(
                                     form.external_system.data)
                                 )
@@ -135,7 +133,7 @@ class Registration(WebService):
                 except:
                     g.session.rollback()
                     raise
-        return abort(400)
+        abort(400)
 
 
 class Token(WebService):

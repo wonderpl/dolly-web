@@ -123,7 +123,7 @@ class ExternalTokenTestCase(base.RockPackTestCase):
     def test_facebook_token(self):
         user = self._new_user()
         token = uuid.uuid4().hex
-        ExternalToken.update_token(user, 'facebook', token)
+        ExternalToken.update_token(user, 'facebook', token, 1111)
 
         e = ExternalToken.query.filter_by(external_token=token).one()
         self.assertEquals('facebook', e.external_system)
@@ -131,7 +131,7 @@ class ExternalTokenTestCase(base.RockPackTestCase):
 
         # test we can overwrite token
         new_token = uuid.uuid4().hex
-        ExternalToken.update_token(user, 'facebook', new_token)
+        ExternalToken.update_token(user, 'facebook', new_token, 1111)
 
         e = ExternalToken.query.filter_by(user=user.id)
         self.assertEquals(1, e.count(), 'only one token should exist')
@@ -140,7 +140,7 @@ class ExternalTokenTestCase(base.RockPackTestCase):
 
     def test_invalid_token(self):
         with self.assertRaises(exceptions.InvalidExternalSystem):
-            ExternalToken.update_token(None, 'HandLeaflet', None)
+            ExternalToken.update_token(None, 'HandLeaflet', None, 0000)
 
 
 FACEBOOK_GRAPH_DATA = {'username': 'tony.start.01',
