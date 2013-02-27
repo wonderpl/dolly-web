@@ -143,12 +143,23 @@ class ExternalTokenTestCase(base.RockPackTestCase):
             ExternalToken.update_token(None, 'HandLeaflet', None)
 
 
+FACEBOOK_GRAPH_DATA = {'username': 'tony.start.01',
+    'first_name': 'Tony', 'last_name': 'Stark',
+    'verified': True,
+    'name': 'I am IronMan',
+    'locale': 'en_US',
+    'gender': 'male',
+    'updated_time': '2013-02-25T10:31:31+0000',
+    'link': 'http://www.facebook.com/tony.stark.01',
+    'timezone': 0,
+    'id': '100005332297459'}
+
+
 class RegisterTestCase(base.RockPackTestCase):
 
     @patch('rockpack.mainsite.services.oauth.api.ExternalUser._get_external_data')
     def test_facebook_registration(self, _get_external_data):
-        # TODO: clean this up, preferably something generated
-        _get_external_data.return_value = {'username': 'al.bri.12', 'first_name': 'Al', 'last_name': 'Bri', 'verified': True, 'name': 'Al Bri', 'locale': 'en_GB', 'gender': 'male', 'updated_time': '2013-02-25T10:31:31+0000', 'link': 'http://www.facebook.com/al.bri.12', 'timezone': 0, 'id': '100005332297459'}
+        _get_external_data.return_value = FACEBOOK_GRAPH_DATA
 
         with self.app.test_client() as client:
             encoded = base64.encodestring(app.config['ROCKPACK_APP_CLIENT_ID'] + ':')
@@ -181,7 +192,9 @@ class RegisterTestCase(base.RockPackTestCase):
 
             # TODO: test duplicate username, different fb id
 
-    def test_invalid_external_system(self):
+    @patch('rockpack.mainsite.services.oauth.api.ExternalUser._get_external_data')
+    def test_invalid_external_system(self, _get_external_data):
+        _get_external_data.return_value = FACEBOOK_GRAPH_DATA
         with self.app.test_client() as client:
             encoded = base64.encodestring(app.config['ROCKPACK_APP_CLIENT_ID'] + ':')
             headers = [('Authorization', 'Basic {}'.format(encoded))]
@@ -190,11 +203,6 @@ class RegisterTestCase(base.RockPackTestCase):
             r = client.post('/ws/register/external/',
                     headers=headers,
                     data=dict(
-                        register='1',
-                        username='pantsbake_user',
-                        first_name='pants',
-                        last_name='bake',
-                        email='foo@bar.com',
                         external_system='PantsBake',
                         external_token=facebook_token))
 

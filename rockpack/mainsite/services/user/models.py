@@ -1,3 +1,4 @@
+import re
 from sqlalchemy import (
     String, Column, Integer, Boolean, DateTime, ForeignKey, CHAR, event, func)
 from sqlalchemy.orm import relationship
@@ -67,6 +68,30 @@ class User(db.Model):
             refresh_token=self.refresh_token,
             user_id=self.id,
         )
+
+    @classmethod
+    def suggested_username(cls, source_name):
+        if not cls.query.filter_by(username=source_name).count():
+            return source_name
+
+        user = cls.query.filter(
+                cls.username.like('{}%'.format(source_name))
+                ).order_by("username desc").limit(1).one()
+        match = re.findall(r"[a-zA-Z]+|\d+", user.username)
+
+        try:
+            postfix_number = int(match[-1])
+        except TypeError:
+            new_name = match + '1'
+        else:
+            new_name = ''.join(match[:-1]) + str(postfix_number + 1)
+            return cls.suggested_username(new_name)
+
+        return new_name
+
+    @classmethod
+    def sanitise_username(cls, name):
+        return re.sub(r'\W+', '', name)
 
 
 class UserActivity(db.Model):

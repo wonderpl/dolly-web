@@ -1,5 +1,4 @@
 import uuid
-import re
 from flask import request
 from flask import abort
 from flask.ext import wtf
@@ -62,8 +61,8 @@ class ExternalRegistrationForm(wtf.Form):
     external_token = wtf.TextField(validators=[wtf.Required()])
 
     def validate_external_system(form, value):
-        if value in models.EXTERNAL_SYSTEM_NAMES:
-            return wtf.ValidationError('external system invalid')
+        if value.data not in models.EXTERNAL_SYSTEM_NAMES:
+            raise wtf.ValidationError('external system invalid')
 
 
 class UIDForExternalTokenExistsError(Exception):
@@ -131,21 +130,6 @@ class ExternalUser:
     display_name = property(lambda x: x._user_data.get('name', ''))
 
 
-def sanitise_or_suggest_username(name):
-    new_name = re.sub(r'\W+', '', name)
-    if User.query.filter_by(username=new_name).count():
-        user = User.query.filter(User.username.like('{}%'.format(new_name))).order_by("username desc").limit(1).one()
-        match = re.findall(r"[a-zA-Z]+|\d+", user.username)
-        try:
-            postfix_number = int(match[-1])
-        except TypeError:
-            new_name = match + '1'
-        else:
-            new_name = ''.join(match[:-1]) + str(postfix_number + 1)
-            return sanitise_or_suggest_username(new_name)
-    return new_name
-
-
 class Registration(WebService):
     endpoint = '/register'
 
@@ -154,7 +138,8 @@ class Registration(WebService):
     def register(self):
         form = RockRegistrationForm(request.form, csrf_enabled=False)
         if not form.validate():
-            abort(400, form_errors=form.errors)
+            return abort(400, form_errors=form.errors)
+
         user = new_user_setup(
                 username=form.username.data,
                 first_name=form.first_name.data,
@@ -174,7 +159,9 @@ class Registration(WebService):
             if eu.valid_token:
                 try:
                     user = new_user_setup(
-                            username=sanitise_or_suggest_username(eu.username),
+                            username=User.suggested_username(
+                                User.sanitise_username(eu.username)
+                                ),
                             first_name=eu.first_name,
                             last_name=eu.last_name,
                             external_system=form.external_system.data,
@@ -183,11 +170,11 @@ class Registration(WebService):
                             )
                     return user.get_credentials()
                 except UIDForExternalTokenExistsError:
-                    abort(400, message='User is already registered for {} account'.format(form.external_system.data))
+                    return abort(400, message='User is already registered for {} account'.format(form.external_system.data))
                 except:
                     g.session.rollback()
                     raise
-        abort(400)
+        return abort(400)
 
 
 class Token(WebService):
