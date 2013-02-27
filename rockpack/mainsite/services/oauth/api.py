@@ -1,5 +1,6 @@
 from flask import request
 from flask import abort
+from flask import g
 from flask.ext import wtf
 import facebook
 from rockpack.mainsite import app
@@ -35,8 +36,8 @@ class Login(WebService):
     @check_client_authorization
     def exeternal(self):
         user = models.ExternalToken.user_from_token(
-                request.form.get('external_system'),
-                request.form.get('external_token'))
+            request.form.get('external_system'),
+            request.form.get('external_token'))
         if not user:
             abort(400, error='invalid_grant')
         return user.get_credentials()
@@ -99,41 +100,38 @@ class Registration(WebService):
             abort(400, form_errors=form.errors)
 
         user = User.create_with_channel(
-                username=form.username.data,
-                first_name=form.first_name.data,
-                last_name=form.last_name.data,
-                email=form.email.data,
-                password=form.password.data
-                )
+            username=form.username.data,
+            first_name=form.first_name.data,
+            last_name=form.last_name.data,
+            email=form.email.data,
+            password=form.password.data)
         return user.get_credentials()
 
     @expose_ajax('/external/', methods=['POST'])
     @check_client_authorization
     def external(self):
-        from flask import g
         form = ExternalRegistrationForm(request.form, csrf_enabled=False)
-        if form.validate():
-            eu = ExternalUser(form.external_token.data)
-            if eu.valid_token:
-                try:
-                    user = User.create_from_external_system(
-                            username=eu.username,
-                            first_name=eu.first_name,
-                            last_name=eu.last_name,
-                            external_system=form.external_system.data,
-                            external_token=form.external_token.data,
-                            external_uid=eu.id,
-                            )
-                    if not user:
-                        abort(400, message='User is already '
-                                'registered for {} account'.format(
-                                    form.external_system.data)
-                                )
-                    return user.get_credentials()
-                except:
-                    g.session.rollback()
-                    raise
-        abort(400)
+
+        if not form.validate():
+            abort(400, form_errors=form.errors)
+
+        eu = ExternalUser(form.external_token.data)
+        if not eu.valid_token:
+            abort(400, error='invalid {} token'.format(form.external_system.data))
+
+        user = User.create_from_external_system(
+            username=eu.username,
+            first_name=eu.first_name,
+            last_name=eu.last_name,
+            external_system=form.external_system.data,
+            external_token=form.external_token.data,
+            external_uid=eu.id)
+
+        if not user:
+            abort(400, message='User is already registered for {} account'.format(
+                form.external_system.data))
+
+        return user.get_credentials()
 
 
 class Token(WebService):

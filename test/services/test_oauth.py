@@ -5,6 +5,8 @@ from cStringIO import StringIO
 from mock import patch
 
 from flask import Response
+from flask import request
+from flask import g
 
 from test import base
 from test.assets import AVATAR_IMG_DATA
@@ -67,7 +69,6 @@ class HeadersTestCase(base.RockPackTestCase):
     @app.route('/test/oauth2/access_token_header/', methods=('GET', 'POST',))
     @check_authorization()
     def access_token_view():
-        from flask import request, g
         user_id = request.args.get('user_id')
         assert g.authorized.user.id == user_id
         return Response()
