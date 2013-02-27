@@ -2,7 +2,7 @@ from flask.ext import login, wtf
 from flask.ext.admin.model.typefmt import BASE_FORMATTERS, Markup
 from flask.ext.admin.model.form import converts
 from flask.ext.admin.contrib.sqlamodel import ModelView, form, filters
-from rockpack.mainsite.helpers.db import ImageUrl, ImageType
+from rockpack.mainsite.helpers.db import ImageUrl, ImageType, resize_and_upload
 from rockpack.mainsite.core.dbapi import db
 
 
@@ -57,13 +57,31 @@ class AdminView(ModelView):
     def is_accessible(self):
         return self.is_authenticated()
 
-    def update_model(self, form, model):
-        # XXX: Allow form to be edited without replacing existing image
-        # There must be a better way to do this!
+    def _process_image_data(self, form):
         for field in form:
-            if isinstance(field, wtf.FileField) and not field.data:
-                form._fields.pop(field.name)
-        return super(AdminView, self).update_model(form, model)
+            if isinstance(field, wtf.FileField):
+                if field.data:
+                    cfgkey = self.model.__table__.columns.get(field.name).type.cfgkey
+                    try:
+                        field.data = resize_and_upload(field.data, cfgkey)
+                    except IOError, e:
+                        # The form has already been validated at this stage but
+                        # if we return False then BaseModelView.create_view will
+                        # still drop through and render the errors
+                        field.errors = [getattr(e, 'message', str(e))]
+                        return False
+                else:
+                    # Allow form to be edited without replacing existing image
+                    form._fields.pop(field.name)
+        return True
+
+    def create_model(self, form):
+        if self._process_image_data(form):
+            return super(AdminView, self).create_model(form)
+
+    def update_model(self, form, model):
+        if self._process_image_data(form):
+            return super(AdminView, self).update_model(form, model)
 
 
 # TODO: implement the below - ignoring for now, just let people sign in.

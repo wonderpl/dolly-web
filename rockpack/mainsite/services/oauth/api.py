@@ -97,7 +97,7 @@ class Registration(WebService):
     @expose_ajax('/', methods=['POST'])
     @check_client_authorization
     def register(self):
-        form = RockRegistrationForm(request.form, csrf_enabled=False)
+        form = RockRegistrationForm(csrf_enabled=False)
         if not form.validate():
             abort(400, form_errors=form.errors)
         user = new_user_setup(form)
@@ -106,7 +106,7 @@ class Registration(WebService):
     @expose_ajax('/external/', methods=['POST'])
     @check_client_authorization
     def external(self):
-        form = ExternalRegistrationForm(request.form, csrf_enabled=False)
+        form = ExternalRegistrationForm(csrf_enabled=False)
         if not form.validate():
             abort(400)
         user = new_user_setup(form)

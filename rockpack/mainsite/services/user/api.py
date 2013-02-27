@@ -5,18 +5,16 @@ from flask.ext.admin import form
 from wtforms.validators import ValidationError
 from rockpack.mainsite import app
 from rockpack.mainsite.core.dbapi import commit_on_success
-from rockpack.mainsite.core.webservice import WebService, expose_ajax
+from rockpack.mainsite.core.webservice import WebService, expose_ajax, ajax_create_response, process_image
 from rockpack.mainsite.core.oauth.decorators import check_authorization
 from rockpack.mainsite.core.youtube import get_video_data
-from rockpack.mainsite.helpers.db import gen_videoid
+from rockpack.mainsite.helpers.db import gen_videoid, resize_and_upload
 from rockpack.mainsite.services.video.models import (
-    Channel, ChannelLocaleMeta, Video, VideoInstance, VideoLocaleMeta,
-    Locale, Category)
-from rockpack.mainsite.services.cover_art.models import UserCoverArt
+    Channel, Video, VideoInstance, VideoLocaleMeta, Category)
+from rockpack.mainsite.services.cover_art.models import UserCoverArt, RockpackCoverArt
 from rockpack.mainsite.services.cover_art import api as cover_api
 from rockpack.mainsite.services.video import api as video_api
 from rockpack.mainsite.services.search import api as search_api
-from rockpack.mainsite.admin.import_views import create_channel
 from .models import User, UserActivity
 
 
@@ -98,7 +96,7 @@ def action_object_list(user, action, limit):
 
 
 def check_present(form, field):
-    if field.name not in request.form:
+    if field.name not in (request.json or request.form):
         raise ValidationError('This field is required, but can be an empty string.')
 
 
@@ -113,10 +111,22 @@ def verify_id_on_model(model, col='id'):
 class ChannelForm(form.BaseForm):
     title = wtf.TextField(validators=[check_present])
     description = wtf.TextField(validators=[check_present])
-    owner = wtf.TextField(validators=[check_present, verify_id_on_model(User)])
-    locale = wtf.TextField(validators=[check_present, verify_id_on_model(Locale)])
     category = wtf.TextField(validators=[check_present, verify_id_on_model(Category)])
     cover = wtf.TextField(validators=[check_present])
+
+    def validate_cover(self, field):
+        exists = lambda m: m.query.filter_by(cover=field.data).count()
+        if field.data and not (exists(RockpackCoverArt) or exists(UserCoverArt)):
+            raise ValidationError('invalid cover reference')
+
+    def validate_title(self, field):
+        user_channels = Channel.query.filter_by(owner=self.userid)
+        if not field.data:
+            untitled_channel = app.config['UNTITLED_CHANNEL'] + ' '
+            count = user_channels.filter(Channel.title.like(untitled_channel + '%')).count()
+            field.data = untitled_channel + str(count + 1)
+        if user_channels.filter_by(title=field.data).count():
+            raise ValidationError('duplicate title')
 
 
 class UserAPI(WebService):
@@ -166,31 +176,24 @@ class UserAPI(WebService):
     @expose_ajax('/<userid>/channels/', methods=('POST',))
     @check_authorization(self_auth=True)
     def channel_item_create(self, userid):
-        form = ChannelForm(request.form, csrf_enabled=False)
-        if form.validate():
-            # Maybe move this into @check_authorization?
-            if form.owner.data != userid:
-                abort(400, message='resource user doesn\'t match owner field sent')
-
-            channel = create_channel(title=form.title.data,
-                    description=form.description.data,
-                    owner=form.owner.data,
-                    locale=form.locale.data,
-                    category=form.category.data,
-                    cover=form.cover.data).save()
-
-            return {'channels': {
-                'items': [video_api.channel_dict(channel)],
-                'total': 1},
-                }, 201
-
-        return abort(400, messages=form.errors)
+        form = ChannelForm(csrf_enabled=False)
+        form.userid = g.authorized.userid
+        if not form.validate():
+            abort(400, form_errors=form.errors)
+        channel = Channel.create(
+            owner=form.userid,
+            title=form.title.data,
+            description=form.description.data,
+            cover=form.cover.data,
+            category=form.category.data,
+            locale=request.args.get('locale'))
+        return ajax_create_response(channel)
 
     @expose_ajax('/<userid>/channels/<channelid>/', cache_age=0)
     @check_authorization(abort_on_fail=False)
     def channel_item(self, userid, channelid):
-        meta = ChannelLocaleMeta.query.filter_by(channel=channelid).first_or_404()
-        data = video_api.channel_dict(meta.channel_rel)
+        channel = Channel.query.get_or_404(channelid)
+        data = video_api.channel_dict(channel)
         items, total = video_api.get_local_videos(self.get_locale(), self.get_page(), channel=channelid, with_channel=False)
         data['videos'] = dict(items=items, total=total)
         return data
@@ -198,28 +201,20 @@ class UserAPI(WebService):
     @expose_ajax('/<userid>/channels/<channelid>/', methods=('PUT',))
     @check_authorization(self_auth=True)
     def channel_item_edit(self, userid, channelid):
-        channel = Channel.query.get(channelid)
-        if not channel:
-            abort(404, message='channel not found')
-
-        form = ChannelForm(request.form, csrf_enabled=False)
+        channel = Channel.query.get_or_404(channelid)
+        if not channel.owner == g.authorized.userid:
+            abort(403)
+        form = ChannelForm(csrf_enabled=False)
         if not form.validate():
-            return abort(400, message=form.errors)
-
-        if form.owner.data != userid:
-            abort(400, message='resource user doesn\'t match owner field sent')
+            abort(400, form_errors=form.errors)
 
         channel.title = form.title.data
         channel.description = form.description.data
+        channel.cover = form.cover.data
+        # XXX: This is broken!
         channel.locale = form.locale.data
         channel.category = form.category.data
-        channel.cover = form.cover.data
         channel.save()
-
-        return {'channels': {
-            'items': [video_api.channel_dict(channel)],
-            'total': 1},
-            }
 
     @expose_ajax('/<userid>/cover_art/', cache_age=60, cache_private=True)
     @check_authorization(self_auth=True)
@@ -230,6 +225,7 @@ class UserAPI(WebService):
     @expose_ajax('/<userid>/cover_art/', methods=['POST'])
     @check_authorization(self_auth=True)
     def post_user_cover_art(self, userid):
-        cover = UserCoverArt(cover=request.files['file'], owner=userid)
+        image_data = process_image(UserCoverArt.cover)
+        cover = UserCoverArt(cover=path, owner=userid)
         cover = cover.save()
         return cover_api.cover_art_dict(cover), 201

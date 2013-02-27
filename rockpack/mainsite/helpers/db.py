@@ -6,7 +6,6 @@ from iso8601.iso8601 import UTC
 from sqlalchemy import types
 from sqlalchemy.dialects.mysql.base import MySQLDialect
 from flask import g
-from flask.exceptions import BadRequest
 from rockpack.mainsite import app
 from rockpack.mainsite.core import imaging
 from .urls import image_url_from_path
@@ -132,16 +131,6 @@ class ImageType(types.TypeDecorator):
         super(ImageType, self).__init__(1024)
         self.reference_only = reference_only
         self.cfgkey = cfgkey
-
-    def process_bind_param(self, value, dialect):
-        if value and not self.reference_only:
-            try:
-                value = resize_and_upload(value, self.cfgkey)
-            except IOError, e:
-                # XXX: We should probably parse the request and
-                # catch image errors much earlier.
-                raise BadRequest('Invalid image: %s' % e)
-        return value
 
     def process_result_value(self, value, dialect):
         return ImagePath(value, app.config['%s_IMG_PATHS' % self.cfgkey])

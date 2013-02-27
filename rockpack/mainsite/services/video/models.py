@@ -1,3 +1,4 @@
+from flask import url_for
 from sqlalchemy import (
     Text,
     String,
@@ -320,6 +321,25 @@ class Channel(db.Model):
     @classmethod
     def get_form_choices(cls, owner):
         return cls.query.filter_by(owner=owner).values(cls.id, cls.title)
+
+    @classmethod
+    def create(cls, category, locale=None, **kwargs):
+        """Create & save a new channel record along with appropriate category metadata"""
+        channel = Channel(**kwargs)
+        if category:
+            if locale is None:
+                locale = Category.query.filter_by(id=category).value('locale')
+            channel.metas = [ChannelLocaleMeta(
+                             locale=locale,
+                             category=category)]
+        return channel.save()
+
+    @property
+    def resource_url(self):
+        return url_for('UserAPI_api.channel_item',
+                       userid=self.owner_rel.id,
+                       channelid=self.id,
+                       _external=True)
 
     def add_videos(self, videos):
         instances = [VideoInstance(channel=self.id, video=getattr(v, 'id', v)) for v in videos]

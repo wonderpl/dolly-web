@@ -1,6 +1,6 @@
 from sqlalchemy.orm import contains_eager
 from sqlalchemy.sql.expression import desc
-from flask import g, request, url_for
+from flask import g, request
 
 from rockpack.mainsite.core.webservice import WebService, expose_ajax
 from rockpack.mainsite.services.video import models
@@ -19,13 +19,9 @@ def _filter_by_category(query, type, category_id):
 def channel_dict(channel, with_owner=True):
     sizes = ['thumbnail_large', 'thumbnail_small', 'background']
     images = {'cover_%s_url' % s: getattr(channel.cover, s) for s in sizes}
-    url = url_for('UserAPI_api.channel_item',
-                  userid=channel.owner_rel.id,
-                  channelid=channel.id,
-                  _external=True)
     ch_data = dict(
         id=channel.id,
-        resource_url=url,
+        resource_url=channel.resource_url,
         title=channel.title,
         thumbnail_url=channel.cover.thumbnail_large,
         description=channel.description,
