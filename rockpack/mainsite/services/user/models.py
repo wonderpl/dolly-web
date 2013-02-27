@@ -97,7 +97,7 @@ class User(db.Model):
     @classmethod
     def create_with_channel(cls, username, first_name='',
             last_name='', email='', password=None, avatar=''):
-        user = User(
+        user = cls(
             username=username,
             first_name=first_name,
             last_name=last_name,
