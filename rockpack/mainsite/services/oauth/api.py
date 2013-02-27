@@ -1,6 +1,5 @@
 from flask import request
 from flask import abort
-from flask import g
 from flask.ext import wtf
 import facebook
 from rockpack.mainsite import app
@@ -48,11 +47,19 @@ class RockRegistrationForm(wtf.Form):
     password = wtf.PasswordField(validators=[wtf.Required()])
     first_name = wtf.TextField()
     last_name = wtf.TextField()
+    locale = wtf.TextField(validators=[wtf.Required()])
     email = wtf.TextField(validators=[wtf.Required(), wtf.Email()])
 
     def validate_username(form, field):
         if User.query.filter_by(username=field.data).count():
             raise wtf.ValidationError('"%s" already taken' % field.data)
+
+        if field.data != User.sanitise_username(field.data):
+            raise wtf.ValidationError('Username can only contain alphanumerics')
+
+    def validate_email(form, field):
+        if User.query.filter_by(email=field.data).count():
+            raise wtf.ValidationError('Email address already registered')
 
 
 class ExternalRegistrationForm(wtf.Form):
@@ -88,6 +95,12 @@ class ExternalUser:
     last_name = property(lambda x: x._user_data.get('last_name', ''))
     display_name = property(lambda x: x._user_data.get('name', ''))
 
+    def locale(self):
+        l = self._user_data.get('locale', '').lower().replace('_', '-')
+        if not models.Locale.objects.get(l):
+            l = ''
+        return l
+
 
 class Registration(WebService):
     endpoint = '/register'
@@ -104,7 +117,8 @@ class Registration(WebService):
             first_name=form.first_name.data,
             last_name=form.last_name.data,
             email=form.email.data,
-            password=form.password.data)
+            password=form.password.data,
+            locale=form.locale.data)
         return user.get_credentials()
 
     @expose_ajax('/external/', methods=['POST'])
@@ -123,6 +137,7 @@ class Registration(WebService):
             username=eu.username,
             first_name=eu.first_name,
             last_name=eu.last_name,
+            locale=eu.locale,
             external_system=form.external_system.data,
             external_token=form.external_token.data,
             external_uid=eu.id)

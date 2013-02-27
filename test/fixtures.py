@@ -71,6 +71,7 @@ class UserData(DataSet):
         avatar = ''
         is_active = True
         refresh_token = ''
+        locale = LocaleData.US.id
 
 
 all_data = [v for k, v in globals().copy().iteritems() if k.endswith('Data')]

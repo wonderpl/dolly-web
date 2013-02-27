@@ -1,4 +1,5 @@
 from mock import patch
+import uuid
 from cStringIO import StringIO
 
 from test import base
@@ -11,6 +12,11 @@ from rockpack.mainsite.services.user.models import User
 
 
 class ImportFromYoutubeTestCase(base.RockPackTestCase):
+
+    def _new_user_data(self):
+        data = self.data_user.copy()
+        data['email'] = 'flarn{}@flagger.com'.format(uuid.uuid4().hex)
+        return data
 
     data_video = {
         'source': 1,
@@ -34,7 +40,8 @@ class ImportFromYoutubeTestCase(base.RockPackTestCase):
         'username': 'test_user_flarnflagger',
         'first_name': 'flarn',
         'last_name': 'flagger',
-        'email': 'flarn@flagger.com',
+        'email': '',
+        'locale': 'en-us'
     }
 
     data_channel = {
@@ -51,7 +58,7 @@ class ImportFromYoutubeTestCase(base.RockPackTestCase):
             mock_prop.return_value = True
             with self.app.test_client() as client:
                 data = self.data_video.copy()
-                data.update(self.data_user.copy())
+                data.update(self._new_user_data())
                 data.update({'avatar': (StringIO(AVATAR_IMG_DATA), 'avatar.jpg',)})
 
                 r = client.post('/admin/import/', data=data)
@@ -66,7 +73,7 @@ class ImportFromYoutubeTestCase(base.RockPackTestCase):
             mock_prop.return_value = True
             with self.app.test_client() as client:
                 data = self.data_video.copy()
-                data.update(self.data_user.copy())
+                data.update(self._new_user_data())
                 data['username'] += '_'
                 data.update({'avatar': (StringIO(AVATAR_IMG_DATA), 'avatar.jpg',)})
                 del data['category']

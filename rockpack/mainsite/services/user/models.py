@@ -25,6 +25,8 @@ class User(db.Model):
     is_active = Column(Boolean, nullable=False, server_default='true')
     refresh_token = Column(String(1024), nullable=False)
 
+    locale = Column(ForeignKey('locale.id'), nullable=False, server_default='')
+
     channels = relationship('Channel')
 
     def __unicode__(self):
@@ -76,8 +78,8 @@ class User(db.Model):
             return source_name
 
         user = cls.query.filter(
-                cls.username.like('{}%'.format(source_name))
-                ).order_by("username desc").limit(1).one()
+            cls.username.like('{}%'.format(source_name))
+        ).order_by("username desc").limit(1).one()
         match = re.findall(r"[a-zA-Z]+|\d+", user.username)
 
         try:
@@ -96,13 +98,14 @@ class User(db.Model):
 
     @classmethod
     def create_with_channel(cls, username, first_name='',
-            last_name='', email='', password=None, avatar=''):
+            last_name='', email='', locale='', password=None, avatar=''):
         user = cls(
             username=username,
             first_name=first_name,
             last_name=last_name,
             email=email,
             password_hash='',
+            locale='',
             refresh_token=uuid.uuid4().hex,
             avatar=avatar,
             is_active=True)
@@ -126,7 +129,7 @@ class User(db.Model):
 
     @classmethod
     def create_from_external_system(cls, username, external_system, external_token, external_uid,
-            first_name='', last_name='', email='', avatar=''):
+            first_name='', last_name='', email='', locale='', avatar=''):
 
         from rockpack.mainsite.services.oauth.models import ExternalToken
 

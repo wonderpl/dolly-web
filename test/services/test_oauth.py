@@ -170,11 +170,6 @@ class RegisterTestCase(base.RockPackTestCase):
             r = client.post('/ws/register/external/',
                     headers=headers,
                     data=dict(
-                        register='1',
-                        username='facebook_user',
-                        first_name='face',
-                        last_name='book',
-                        email='foo@bar.com',
                         external_system='facebook',
                         external_token=facebook_token))
 
@@ -223,7 +218,8 @@ class RegisterTestCase(base.RockPackTestCase):
                         password='bar',
                         first_name='foo',
                         last_name='bar',
-                        email='foo@bar.com',
+                        locale='en-us',
+                        email='foo{}@bar.com'.format(uuid.uuid4().hex),
                         avatar=(StringIO(AVATAR_IMG_DATA), 'avatar.jpg',)))
 
             creds = json.loads(r.data)
