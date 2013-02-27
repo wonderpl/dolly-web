@@ -69,10 +69,10 @@ def _get_video_data(youtube_data, playlist=None):
         source_videoid=media['yt$videoid']['$t'],
         source_listid=playlist,
         title=youtube_data['title']['$t'],
-        duration=int(media['yt$duration']['seconds']) if 'yt$duration' in media else 0,
+        duration=int(media['yt$duration']['seconds']) if 'yt$duration' in media else -1,
     )
     video.source_category = get_category(media.get('media$category', []))
-    video.source_view_count = int(youtube_data['yt$statistics']['viewCount'])
+    video.source_view_count = int(youtube_data['yt$statistics']['viewCount']) if 'yt$statistics' in youtube_data else -1
     video.source_date_uploaded = media['yt$uploaded']['$t']
     for thumbnail in media.get('media$thumbnail', []):
         if 'time' not in thumbnail:
