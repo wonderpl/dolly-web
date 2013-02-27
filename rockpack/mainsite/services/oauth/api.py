@@ -65,46 +65,6 @@ class ExternalRegistrationForm(wtf.Form):
             raise wtf.ValidationError('external system invalid')
 
 
-class UIDForExternalTokenExistsError(Exception):
-    pass
-
-
-def new_user_setup(username, first_name='', last_name='', email='', password=None, avatar='',
-        external_system='', external_token='', external_uid=''):
-    """ Creates a new user and sets up
-        and related assets, like default channels """
-
-    if models.ExternalToken.query.filter_by(external_uid=external_uid).count():
-        raise UIDForExternalTokenExistsError('Token for ')
-
-    user = User(
-        username=username,
-        first_name=first_name,
-        last_name=last_name,
-        email=email,
-        password_hash='',
-        refresh_token=uuid.uuid4().hex,
-        avatar=avatar,
-        is_active=True)
-    user = user.save()
-    if password:
-        user.set_password(password)
-
-    title, description, cover = app.config['FAVOURITE_CHANNEL']
-    channel = Channel(
-        title=title,
-        description=description,
-        cover=cover,
-        owner=user.id)
-    channel.save()
-
-    if external_system and external_token and external_uid:
-        models.ExternalToken.update_token(
-            user, external_system, external_token, external_uid)
-
-    return user
-
-
 class ExternalUser:
     valid_token = False
 
@@ -140,7 +100,7 @@ class Registration(WebService):
         if not form.validate():
             return abort(400, form_errors=form.errors)
 
-        user = new_user_setup(
+        user = User.create_with_channel(
                 username=form.username.data,
                 first_name=form.first_name.data,
                 last_name=form.last_name.data,
@@ -158,19 +118,20 @@ class Registration(WebService):
             eu = ExternalUser(form.external_token.data)
             if eu.valid_token:
                 try:
-                    user = new_user_setup(
-                            username=User.suggested_username(
-                                User.sanitise_username(eu.username)
-                                ),
+                    user = User.create_from_external_system(
+                            username=eu.username,
                             first_name=eu.first_name,
                             last_name=eu.last_name,
                             external_system=form.external_system.data,
                             external_token=form.external_token.data,
                             external_uid=eu.id,
                             )
+                    if not user:
+                        return abort(400, message='User is already '
+                                'registered for {} account'.format(
+                                    form.external_system.data)
+                                )
                     return user.get_credentials()
-                except UIDForExternalTokenExistsError:
-                    return abort(400, message='User is already registered for {} account'.format(form.external_system.data))
                 except:
                     g.session.rollback()
                     raise

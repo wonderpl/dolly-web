@@ -1,4 +1,5 @@
 import re
+import uuid
 from sqlalchemy import (
     String, Column, Integer, Boolean, DateTime, ForeignKey, CHAR, event, func)
 from sqlalchemy.orm import relationship
@@ -92,6 +93,57 @@ class User(db.Model):
     @classmethod
     def sanitise_username(cls, name):
         return re.sub(r'\W+', '', name)
+
+    @classmethod
+    def create_with_channel(cls, username, first_name='',
+            last_name='', email='', password=None, avatar=''):
+        user = User(
+            username=username,
+            first_name=first_name,
+            last_name=last_name,
+            email=email,
+            password_hash='',
+            refresh_token=uuid.uuid4().hex,
+            avatar=avatar,
+            is_active=True)
+        user = user.save()
+        if password:
+            user.set_password(password)
+
+        title, description, cover = app.config['FAVOURITE_CHANNEL']
+
+        # Prevent circular import
+        from rockpack.mainsite.services.video.models import Channel
+
+        channel = Channel(
+            title=title,
+            description=description,
+            cover=cover,
+            owner=user.id)
+        channel.save()
+
+        return user
+
+    @classmethod
+    def create_from_external_system(
+            cls, username, external_system, external_token, external_uid,
+            first_name='', last_name='', email='', avatar=''):
+
+        from rockpack.mainsite.services.oauth.models import ExternalToken
+
+        if ExternalToken.query.filter_by(external_uid=external_uid).count():
+            return None
+
+        new_username = cls.suggested_username(
+                cls.sanitise_username(username))
+
+        user = cls.create_with_channel(new_username, first_name=first_name,
+                last_name=last_name, email=email, avatar=avatar)
+
+        ExternalToken.update_token(
+
+            user, external_system, external_token, external_uid)
+        return user
 
 
 class UserActivity(db.Model):

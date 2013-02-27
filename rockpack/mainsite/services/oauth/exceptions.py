@@ -4,3 +4,7 @@ class InvalidExternalSystem(Exception):
 
 class InvalidExternalToken(Exception):
     pass
+
+
+class UIDForExternalTokenExistsError(Exception):
+    pass
