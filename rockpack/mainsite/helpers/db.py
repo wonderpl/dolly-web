@@ -166,4 +166,6 @@ def resize_and_upload(fp, cfgkey):
         img.save(f, IMAGE_CONVERSION_FORMAT[0], quality=90)
         uploader.from_file(f, img_path_config[name], new_name, IMAGE_CONVERSION_FORMAT[1])
         f.close()
-    return '.'.join([new_name, orig_ext])
+    if orig_ext:
+        return '.'.join([new_name, orig_ext])
+    return new_name

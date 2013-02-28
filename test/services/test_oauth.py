@@ -186,9 +186,8 @@ class RegisterTestCase(base.RockPackTestCase):
             self.assertNotEquals(None, creds['refresh_token'])
 
             et = ExternalToken.query.filter_by(
-                    external_system='facebook',
-                    external_token=facebook_token,
-                    )
+                external_system='facebook',
+                external_token=facebook_token)
 
             self.assertEquals(1, et.count(), 'should only be one token for user')
             uid = et.one().user

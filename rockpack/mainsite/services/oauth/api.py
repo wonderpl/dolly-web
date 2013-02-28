@@ -1,12 +1,16 @@
+from cStringIO import StringIO
 from flask import request
 from flask import abort
 from flask.ext import wtf
+import requests
 import facebook
+from rockpack.mainsite.helpers.db import resize_and_upload
 from rockpack.mainsite import app
 from rockpack.mainsite.core.oauth.decorators import check_client_authorization
 from rockpack.mainsite.core.webservice import WebService
 from rockpack.mainsite.core.webservice import expose_ajax
 from rockpack.mainsite.services.user.models import User
+from rockpack.mainsite.services.video.models import Locale
 from . import models
 
 
@@ -53,16 +57,17 @@ class Login(WebService):
                 first_name=eu.first_name,
                 last_name=eu.last_name,
                 locale=eu.locale,
+                avatar=eu.avatar,
                 external_system=form.external_system.data,
                 external_token=form.external_token.data,
                 external_uid=eu.id)
         else:
             # Update the token record
             models.ExternalToken.update_token(
-                    user=user,
-                    external_system=form.external_system.data,
-                    token=form.external_token.data,
-                    external_uid=eu.id)
+                user=user,
+                external_system=form.external_system.data,
+                token=form.external_token.data,
+                external_uid=eu.id)
 
         return user.get_credentials()
 
@@ -121,11 +126,19 @@ class ExternalUser:
     last_name = property(lambda x: x._user_data.get('last_name', ''))
     display_name = property(lambda x: x._user_data.get('name', ''))
 
+    @property
     def locale(self):
         l = self._user_data.get('locale', '').lower().replace('_', '-')
-        if not models.Locale.objects.get(l):
-            l = ''
+        if not Locale.query.get(l):
+            return ''
         return l
+
+    @property
+    def avatar(self):
+        r = requests.get('http://graph.facebook.com/{}/picture/?type=large'.format(self.id))
+        if r.status_code == 200 and r.headers.get('content-type', '').startswith('image/'):
+            return StringIO(r.content)
+        return ''
 
 
 class Registration(WebService):
