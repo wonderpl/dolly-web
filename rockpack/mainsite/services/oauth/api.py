@@ -34,11 +34,36 @@ class Login(WebService):
     @expose_ajax('/external/', methods=['POST'])
     @check_client_authorization
     def exeternal(self):
-        user = models.ExternalToken.user_from_token(
+        form = ExternalRegistrationForm(request.form, csrf_enabled=False)
+        if not form.validate():
+            abort(400, form_errors=form.errors)
+
+        eu = ExternalUser(form.external_system.data, form.external_token.data)
+        if not eu.valid_token:
+            abort(400, error='unauthorized_client')
+
+        user = models.ExternalToken.user_from_uid(
             request.form.get('external_system'),
-            request.form.get('external_token'))
+            eu.id)
+
         if not user:
-            abort(400, error='invalid_grant')
+            # New user
+            user = User.create_from_external_system(
+                username=eu.username,
+                first_name=eu.first_name,
+                last_name=eu.last_name,
+                locale=eu.locale,
+                external_system=form.external_system.data,
+                external_token=form.external_token.data,
+                external_uid=eu.id)
+        else:
+            # Update the token record
+            models.ExternalToken.update_token(
+                    user=user,
+                    external_system=form.external_system.data,
+                    token=form.external_token.data,
+                    external_uid=eu.id)
+
         return user.get_credentials()
 
 
@@ -71,18 +96,19 @@ class ExternalRegistrationForm(wtf.Form):
             raise wtf.ValidationError('external system invalid')
 
 
+# TODO: currently only Facebook - change
 class ExternalUser:
     valid_token = False
 
-    def __init__(self, token):
+    def __init__(self, system, token):
         self._user_data = {}
         self.token = token
 
-        self._user_data = self._get_external_data(token)
+        self._user_data = self._get_external_data(system, token)
         if self._user_data:
             self.valid_token = True
 
-    def _get_external_data(self, token):
+    def _get_external_data(self, system, token):
         try:
             graph = facebook.GraphAPI(token)
         except facebook.GraphAPIError:
@@ -119,33 +145,6 @@ class Registration(WebService):
             email=form.email.data,
             password=form.password.data,
             locale=form.locale.data)
-        return user.get_credentials()
-
-    @expose_ajax('/external/', methods=['POST'])
-    @check_client_authorization
-    def external(self):
-        form = ExternalRegistrationForm(request.form, csrf_enabled=False)
-
-        if not form.validate():
-            abort(400, form_errors=form.errors)
-
-        eu = ExternalUser(form.external_token.data)
-        if not eu.valid_token:
-            abort(400, error='invalid {} token'.format(form.external_system.data))
-
-        user = User.create_from_external_system(
-            username=eu.username,
-            first_name=eu.first_name,
-            last_name=eu.last_name,
-            locale=eu.locale,
-            external_system=form.external_system.data,
-            external_token=form.external_token.data,
-            external_uid=eu.id)
-
-        if not user:
-            abort(400, message='User is already registered for {} account'.format(
-                form.external_system.data))
-
         return user.get_credentials()
 
 

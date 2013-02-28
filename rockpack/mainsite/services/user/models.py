@@ -133,14 +133,12 @@ class User(db.Model):
 
         from rockpack.mainsite.services.oauth.models import ExternalToken
 
-        if ExternalToken.query.filter_by(external_uid=external_uid).count():
+        if ExternalToken.query.filter_by(external_system=external_system, external_uid=external_uid).count():
             return None
 
         new_username = cls.suggested_username(cls.sanitise_username(username))
-
         user = cls.create_with_channel(new_username, first_name=first_name,
                 last_name=last_name, email=email, avatar=avatar)
-
         ExternalToken.update_token(user, external_system, external_token, external_uid)
         return user
 

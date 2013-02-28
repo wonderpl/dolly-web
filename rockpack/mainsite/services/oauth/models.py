@@ -39,6 +39,15 @@ class ExternalToken(db.Model):
         return e.user_rel
 
     @classmethod
+    def user_from_uid(cls, external_system, uid):
+        try:
+            e = cls.query.filter_by(external_system=external_system,
+                    external_uid=uid).one()
+        except exc.NoResultFound:
+            return None
+        return e.user_rel
+
+    @classmethod
     def update_token(cls, user, external_system, token, external_uid):
         """ Updates an existing token (or creates a new one)
             and returns the token object """
