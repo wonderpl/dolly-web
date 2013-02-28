@@ -369,6 +369,17 @@ def _set_child_category_locale(mapper, connection, target):
     if not target.locale and target.parent_category:
         target.locale = target.parent_category.locale
 
+@event.listens_for(ChannelLocaleMeta, 'before_update')
+def _update_video_visibility(mapper, connection, target):
+    # If a channel is marked invisible then mark all the videos it references too
+    # XXX: We probably want to remove this again before launch because a video
+    # can be in many channels
+    if not target.visible:
+        VideoLocaleMeta.query.\
+            filter_by(locale=target.locale).\
+            join(Video, VideoInstance).\
+            filter_by(channel=target.channel).\
+            update(dict(visible=target.visible))
 
 event.listen(Video, 'before_insert', add_video_pk)
 event.listen(VideoLocaleMeta, 'before_insert', add_video_meta_pk)
