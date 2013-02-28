@@ -55,3 +55,7 @@ AVATAR_IMG_PATHS = {'original': 'images/avatar/original/',
 
 # Title, description, and cover image for default favourites channel
 FAVOURITE_CHANNEL = 'Favourites', 'My favourite videos', ''
+
+
+# Toggle to enable test url
+TEST_EXTERNAL_SYSTEM = False

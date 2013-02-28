@@ -1,0 +1,87 @@
+<html>
+    <head>
+        <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+    </head>
+    <div id="fb-root"></div>
+    <body>
+        <script>
+        window.fbAsyncInit = function() {
+            // init the FB JS SDK
+            FB.init({
+                appId      : '427076090711891', // App ID from the App Dashboard
+                channelUrl : 'localhost.com', // Channel File for x-domain communication
+                status     : true, // check the login status upon init?
+                cookie     : true, // set sessions cookies to allow your server to access the session?
+                xfbml      : true  // parse XFBML tags on this page?
+            });
+
+            // Additional initialization code such as adding Event Listeners goes here
+            FB.getLoginStatus(function(response) {
+                if (response.status === 'connected') {
+                    // connected
+                    } else if (response.status === 'not_authorized') {
+                    // not_authorized
+                    login();
+                    } else {
+                    // not_logged_in
+                    login();
+                }
+            });
+
+        };
+
+        // Load the SDK's source Asynchronously
+        // Note that the debug version is being actively developed and might 
+        // contain some type checks that are overly strict. 
+        // Please report such bugs using the bugs tool.
+        (function(d, debug){
+            var js, id = 'facebook-jssdk', ref = d.getElementsByTagName('script')[0];
+            if (d.getElementById(id)) {return;}
+            js = d.createElement('script'); js.id = id; js.async = true;
+            js.src = "http://connect.facebook.net/en_US/all" + (debug ? "/debug" : "") + ".js";
+            ref.parentNode.insertBefore(js, ref);
+        }(document, /*debug*/ true));
+
+        function login() {
+            FB.login(function(response) {
+                if (response.authResponse) {
+                    // connected
+                    } else {
+                    // cancelled
+                }
+            });
+        };
+
+        function testAPI() {
+            console.log('Welcome!  Fetching your information.... ');
+            FB.api('/me', function(response) {
+                console.log('Good to see you, ' + response.name + '.');
+                $.ajax({
+                    url: 'http://localhost:5000/ws/login/external/',
+                    type: 'post',
+                    data: {'external_system': 'facebook', 'external_token': FB.getAuthResponse()['accessToken']},
+                    beforeSend: function(xhr) {
+                        $('#name').html('<p>Logging in ...</p>')
+                        xhr.setRequestHeader("Authorization", "Basic NTI3ZDQxYzc5MTI1NDI0M2IzNmQ0YjczNmQ2ZWFlYTI6\n");
+                    },
+                    success: function(data) {
+                        var text = '';
+                        $.each($.param(data).split("&"), function(index, val) {
+                            text = text + '<p>' + val + '</p>';
+                        })
+                        $('#name').html(text)
+                    },
+                    error: function(data) {
+                        $('#name').html($.param(data))
+                    }
+                });
+            });
+        };
+    </script>
+    <div style="width:100%; text-align: center">
+        <h2>Rockpack facebook login test</h2>
+        <div><input type="button" value="login with facebook" onclick="testAPI();"/></div>
+        <div id="name"></div>
+    </div>
+</body>
+</html>

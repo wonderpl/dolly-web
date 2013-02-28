@@ -4,7 +4,6 @@ from flask import abort
 from flask.ext import wtf
 import requests
 import facebook
-from rockpack.mainsite.helpers.db import resize_and_upload
 from rockpack.mainsite import app
 from rockpack.mainsite.core.oauth.decorators import check_client_authorization
 from rockpack.mainsite.core.webservice import WebService
@@ -19,6 +18,13 @@ def user_authenticated(username, password):
     if user and user.check_password(password):
         return user
     return False
+
+
+if app.config.get('TEST_EXTERNAL_SYSTEM'):
+    @app.route('/test/fb/login/')
+    def test_fb():
+        from flask import render_template
+        return render_template('fb_test.html')
 
 
 class Login(WebService):
