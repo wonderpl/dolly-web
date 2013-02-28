@@ -122,8 +122,8 @@ class ImportView(BaseView):
                     data['source'] = id
 
         form = ImportForm(data, csrf_enabled=False)
-        form.source.choices = Source.get_form_choices()
-        form.locale.choices = Locale.get_form_choices()
+        form.source.choices = list(Source.get_form_choices())
+        form.locale.choices = list(Locale.get_form_choices())
         form.category.choices = [(-1, '')] +\
             list(Category.get_form_choices(form.locale.data))
 
