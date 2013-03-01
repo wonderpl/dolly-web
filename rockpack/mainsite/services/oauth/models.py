@@ -27,7 +27,7 @@ class ExternalToken(db.Model):
     external_system = Column(Enum(*EXTERNAL_SYSTEM_NAMES, name='external_system_names'), nullable=False)
     external_token = Column(String(1024), nullable=False)
     external_uid = Column(String(1024), nullable=False)
-    expires = Column(DateTime(timezone=True), nullable=True)
+    expires = Column(DateTime(), nullable=True)
 
     user_rel = relationship('User', remote_side=[User.id], backref='external_tokens')
 
