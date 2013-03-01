@@ -155,13 +155,14 @@ FACEBOOK_GRAPH_DATA = {
     'updated_time': '2013-02-25T10:31:31+0000',
     'link': 'http://www.facebook.com/tony.stark.01',
     'timezone': 0,
-    'id': '100005332297459'}
+    'id': '100005340012137'}
 
 
 class RegisterTestCase(base.RockPackTestCase):
 
+    @patch('rockpack.mainsite.services.oauth.api.ExternalUser.get_new_token')
     @patch('rockpack.mainsite.services.oauth.api.ExternalUser._get_external_data')
-    def test_facebook_login_registration(self, _get_external_data):
+    def test_facebook_login_registration(self, _get_external_data, get_new_token):
         """ Registration and login is handled in the same view.
 
             If a facebook token validates on their end, and we don't have a record
@@ -169,17 +170,20 @@ class RegisterTestCase(base.RockPackTestCase):
             If the user already exists on our system, we return and access token."""
 
         _get_external_data.return_value = FACEBOOK_GRAPH_DATA
+        from rockpack.mainsite.services.oauth.api import ExternalUser
+        long_lived_fb_token = 'fdsuioncf3w8ryl38yb7y4eius'
+        get_new_token.return_value = ExternalUser('facebook', token=long_lived_fb_token, expires_in=3600)
 
         with self.app.test_client() as client:
             encoded = base64.encodestring(app.config['ROCKPACK_APP_CLIENT_ID'] + ':')
             headers = [('Authorization', 'Basic {}'.format(encoded))]
 
-            facebook_token = uuid.uuid4().hex
+            initial_fb_token = uuid.uuid4().hex
             r = client.post('/ws/login/external/',
                     headers=headers,
                     data=dict(
                         external_system='facebook',
-                        external_token=facebook_token))
+                        external_token=initial_fb_token))
 
             creds = json.loads(r.data)
             self.assertEquals(200, r.status_code)
@@ -187,7 +191,7 @@ class RegisterTestCase(base.RockPackTestCase):
 
             et = ExternalToken.query.filter_by(
                 external_system='facebook',
-                external_token=facebook_token)
+                external_token=long_lived_fb_token)
 
             self.assertEquals(1, et.count(), 'should only be one token for user')
             uid = et.one().user
@@ -206,7 +210,7 @@ class RegisterTestCase(base.RockPackTestCase):
             et = ExternalToken.query.filter_by(user=uid)
             self.assertEquals(1, et.count(), 'should only be one token for user')
             et = et.one()
-            self.assertEquals(new_facebook_token, et.external_token, 'token should be updated')
+            self.assertEquals(long_lived_fb_token, et.external_token, 'token should be updated')
 
     @patch('rockpack.mainsite.services.oauth.api.ExternalUser._get_external_data')
     def test_unauthorized_facebook_registration(self, _get_external_data):

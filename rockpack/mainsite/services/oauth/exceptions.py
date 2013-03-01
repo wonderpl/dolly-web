@@ -8,3 +8,7 @@ class InvalidExternalToken(Exception):
 
 class UIDForExternalTokenExistsError(Exception):
     pass
+
+
+class InvalidUserForExternalToken(Exception):
+    pass

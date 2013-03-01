@@ -1,9 +1,11 @@
+from datetime import datetime
+from datetime import timedelta
 from cStringIO import StringIO
 from flask import request
 from flask import abort
 from flask.ext import wtf
 import requests
-import facebook
+from . import facebook
 from rockpack.mainsite import app
 from rockpack.mainsite.core.oauth.decorators import check_client_authorization
 from rockpack.mainsite.core.webservice import WebService
@@ -58,22 +60,10 @@ class Login(WebService):
 
         if not user:
             # New user
-            user = User.create_from_external_system(
-                username=eu.username,
-                first_name=eu.first_name,
-                last_name=eu.last_name,
-                locale=eu.locale,
-                avatar=eu.avatar,
-                external_system=form.external_system.data,
-                external_token=form.external_token.data,
-                external_uid=eu.id)
+            user = User.create_from_external_system(eu)
         else:
-            # Update the token record
-            models.ExternalToken.update_token(
-                user=user,
-                external_system=form.external_system.data,
-                token=form.external_token.data,
-                external_uid=eu.id)
+            # Update the token record if needed
+            models.ExternalToken.update_token(user, eu)
 
         return user.get_credentials()
 
@@ -109,28 +99,46 @@ class ExternalRegistrationForm(wtf.Form):
 
 # TODO: currently only Facebook - change
 class ExternalUser:
-    valid_token = False
 
-    def __init__(self, system, token):
+    def __init__(self, system, token, expires_in=None):
         self._user_data = {}
-        self.token = token
+        self._valid_token = False
+        self._token = token
+        self._system = system
 
-        self._user_data = self._get_external_data(system, token)
+        if expires_in:
+            self._expires = datetime.utcnow() + timedelta(seconds=expires_in)
+        else:
+            self._expires = None
+
+        self._user_data = self._get_external_data()
         if self._user_data:
-            self.valid_token = True
+            self._valid_token = True
 
-    def _get_external_data(self, system, token):
+    def _get_external_data(self):
         try:
-            graph = facebook.GraphAPI(token)
+            graph = facebook.GraphAPI(self._token)
         except facebook.GraphAPIError:
             return {}
         return graph.get_object('me')
+
+    def get_new_token(self):
+        # abstract this out to not be fb specific
+        token, expires = facebook.renew_token(
+            self._token,
+            app.config.get('FACEBOOK_APP_ID'),
+            app.config.get('FACEBOOK_APP_SECRET'))
+        return self.__class__('facebook', token, expires)
 
     id = property(lambda x: x._user_data.get('id'))
     username = property(lambda x: x._user_data.get('username'))
     first_name = property(lambda x: x._user_data.get('first_name', ''))
     last_name = property(lambda x: x._user_data.get('last_name', ''))
     display_name = property(lambda x: x._user_data.get('name', ''))
+    valid_token = property(lambda x: x._valid_token)
+    token = property(lambda x: x._token)
+    system = property(lambda x: x._system)
+    expires = property(lambda x: x._expires)
 
     @property
     def locale(self):

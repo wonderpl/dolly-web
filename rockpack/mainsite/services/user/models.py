@@ -97,8 +97,16 @@ class User(db.Model):
         return re.sub(r'\W+', '', name)
 
     @classmethod
-    def create_with_channel(cls, username, first_name='',
-            last_name='', email='', locale='', password=None, avatar=''):
+    def create_with_channel(
+            cls,
+            username,
+            first_name='',
+            last_name='',
+            email='',
+            locale='',
+            password=None,
+            avatar=''):
+
         user = cls(
             username=username,
             first_name=first_name,
@@ -128,18 +136,20 @@ class User(db.Model):
         return user
 
     @classmethod
-    def create_from_external_system(cls, username, external_system, external_token, external_uid,
-            first_name='', last_name='', email='', locale='', avatar=''):
+    def create_from_external_system(cls, eu):
 
         from rockpack.mainsite.services.oauth.models import ExternalToken
 
-        if ExternalToken.query.filter_by(external_system=external_system, external_uid=external_uid).count():
+        if ExternalToken.query.filter_by(external_system=eu.system, external_uid=eu.id).count():
             return None
 
-        new_username = cls.suggested_username(cls.sanitise_username(username))
-        user = cls.create_with_channel(new_username, first_name=first_name,
-                last_name=last_name, email=email, avatar=avatar)
-        ExternalToken.update_token(user, external_system, external_token, external_uid)
+        new_username = cls.suggested_username(cls.sanitise_username(eu.username))
+        user = cls.create_with_channel(
+            new_username,
+            first_name=eu.first_name,
+            last_name=eu.last_name,
+            avatar=eu.avatar)
+        ExternalToken.update_token(user, eu)
         return user
 
 

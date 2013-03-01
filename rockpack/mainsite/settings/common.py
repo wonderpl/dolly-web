@@ -59,3 +59,6 @@ FAVOURITE_CHANNEL = 'Favourites', 'My favourite videos', ''
 
 # Toggle to enable test url
 TEST_EXTERNAL_SYSTEM = False
+
+FACEBOOK_APP_ID = ''
+FACEBOOK_APP_SECRET = ''
