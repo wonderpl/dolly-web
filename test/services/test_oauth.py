@@ -27,6 +27,20 @@ ACCESS_CREDENTIALS = {
     "refresh_token": "tGzv3JOkF0XG5Qx2TlKWIA"}
 
 
+FACEBOOK_GRAPH_DATA = {
+    'username': 'tony.start.01',
+    'first_name': 'Tony',
+    'last_name': 'Stark',
+    'verified': True,
+    'name': 'I am IronMan',
+    'locale': 'en_US',
+    'gender': 'male',
+    'updated_time': '2013-02-25T10:31:31+0000',
+    'link': 'http://www.facebook.com/tony.stark.01',
+    'timezone': 0,
+    'id': '100005340012137'}
+
+
 class HeadersTestCase(base.RockPackTestCase):
 
     def _call_url(self, client, path, headers=None,
@@ -121,41 +135,45 @@ class ExternalTokenTestCase(base.RockPackTestCase):
                 is_active=True)
         return u.save()
 
-    def test_facebook_token(self):
+    @patch('rockpack.mainsite.services.oauth.api.ExternalUser.get_new_token')
+    @patch('rockpack.mainsite.services.oauth.api.ExternalUser._get_external_data')
+    def test_facebook_token(self, _get_external_data, get_new_token):
+        _get_external_data.return_value = FACEBOOK_GRAPH_DATA
+        from rockpack.mainsite.services.oauth.api import ExternalUser
+        long_lived_fb_token = 'fdsuioncf3w8ryl38yb7y4eius'
+        get_new_token.return_value = ExternalUser('facebook', token=long_lived_fb_token, expires_in=3600)
+
         user = self._new_user()
         token = uuid.uuid4().hex
-        ExternalToken.update_token(user, 'facebook', token, 1111)
+        eu = ExternalUser('facebook', token=token, expires_in='')
+        eu._user_data = FACEBOOK_GRAPH_DATA.copy()
+        ExternalToken.update_token(user, eu)
 
-        e = ExternalToken.query.filter_by(external_token=token).one()
+        e = ExternalToken.query.filter_by(external_token=long_lived_fb_token).one()
         self.assertEquals('facebook', e.external_system)
         self.assertEquals(user.username, e.user_rel.username)
 
         # test we can overwrite token
         new_token = uuid.uuid4().hex
-        ExternalToken.update_token(user, 'facebook', new_token, 1111)
+        eu = ExternalUser('facebook', token=new_token, expires_in=7200)
+        eu._user_data = FACEBOOK_GRAPH_DATA.copy()
+        ExternalToken.update_token(user, eu)
 
         e = ExternalToken.query.filter_by(user=user.id)
         self.assertEquals(1, e.count(), 'only one token should exist')
         e = e.one()
-        self.assertEquals(new_token, e.external_token, 'saved token should match new token')
+        self.assertEquals(long_lived_fb_token, e.external_token, 'saved token should match new token')
 
-    def test_invalid_token(self):
+    @patch('rockpack.mainsite.services.oauth.api.ExternalUser.get_new_token')
+    @patch('rockpack.mainsite.services.oauth.api.ExternalUser._get_external_data')
+    def test_invalid_token(self, _get_external_data, get_new_token):
+        _get_external_data.return_value = FACEBOOK_GRAPH_DATA
+        from rockpack.mainsite.services.oauth.api import ExternalUser
+        eu = ExternalUser('handleaflet', token='')
+        long_lived_fb_token = 'fdsuioncf3w8ryl38yb7y4eius'
+        get_new_token.return_value = ExternalUser('facebook', token=long_lived_fb_token, expires_in=3600)
         with self.assertRaises(exceptions.InvalidExternalSystem):
-            ExternalToken.update_token(None, 'HandLeaflet', None, 0000)
-
-
-FACEBOOK_GRAPH_DATA = {
-    'username': 'tony.start.01',
-    'first_name': 'Tony',
-    'last_name': 'Stark',
-    'verified': True,
-    'name': 'I am IronMan',
-    'locale': 'en_US',
-    'gender': 'male',
-    'updated_time': '2013-02-25T10:31:31+0000',
-    'link': 'http://www.facebook.com/tony.stark.01',
-    'timezone': 0,
-    'id': '100005340012137'}
+            ExternalToken.update_token(None, eu)
 
 
 class RegisterTestCase(base.RockPackTestCase):
