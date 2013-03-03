@@ -1,3 +1,5 @@
+import re
+import uuid
 from sqlalchemy import (
     String, Column, Integer, Boolean, DateTime, ForeignKey, CHAR, event, func)
 from sqlalchemy.orm import relationship
@@ -7,7 +9,8 @@ from flask import g
 from rockpack.mainsite import app
 from rockpack.mainsite.core.token import create_access_token
 from rockpack.mainsite.core.dbapi import db
-from rockpack.mainsite.helpers.db import ImageType, add_base64_pk
+from rockpack.mainsite.helpers.db import ImageType, add_base64_pk, resize_and_upload
+from rockpack.mainsite.helpers.urls import url_for
 
 
 class User(db.Model):
@@ -20,8 +23,10 @@ class User(db.Model):
     first_name = Column(String(254), nullable=False)
     last_name = Column(String(254), nullable=False)
     avatar = Column(ImageType('AVATAR'), nullable=False)
-    is_active = Column(Boolean, nullable=False, server_default='true')
+    is_active = Column(Boolean, nullable=False, server_default='true', default=True)
     refresh_token = Column(String(1024), nullable=False)
+
+    locale = Column(ForeignKey('locale.id'), nullable=False, server_default='')
 
     channels = relationship('Channel')
 
@@ -44,7 +49,6 @@ class User(db.Model):
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
-        self.save()
 
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
@@ -57,6 +61,11 @@ class User(db.Model):
         else:
             return self.username
 
+    def get_resource_url(self, own=False):
+        view = 'userws.own_user_info' if own else 'userws.user_info'
+        return url_for(view, userid=self.id)
+    resource_url = property(get_resource_url)
+
     def get_credentials(self):
         expires_in = app.config.get('ACCESS_TOKEN_EXPIRY', 3600)
         access_token = create_access_token(self.id, g.app_client_id, expires_in)
@@ -66,7 +75,73 @@ class User(db.Model):
             expires_in=expires_in,
             refresh_token=self.refresh_token,
             user_id=self.id,
+            resource_url=self.get_resource_url(own=True),
         )
+
+    @classmethod
+    def suggested_username(cls, source_name):
+        if not cls.query.filter_by(username=source_name).count():
+            return source_name
+
+        user = cls.query.filter(
+            cls.username.like('{}%'.format(source_name))
+        ).order_by("username desc").limit(1).one()
+        match = re.findall(r"[a-zA-Z]+|\d+", user.username)
+
+        try:
+            postfix_number = int(match[-1])
+        except (ValueError, TypeError):
+            new_name = ''.join(match) + '1'
+        else:
+            new_name = ''.join(match[:-1]) + str(postfix_number + 1)
+            return cls.suggested_username(new_name)
+
+        return new_name
+
+    @classmethod
+    def sanitise_username(cls, name):
+        return re.sub(r'\W+', '', name)
+
+    @classmethod
+    def create_with_channel(cls, password=None, **kwargs):
+        kwargs.setdefault('avatar', app.config['DEFAULT_AVATAR'])
+        kwargs.setdefault('password_hash', '')
+        kwargs.setdefault('refresh_token', uuid.uuid4().hex)
+        user = cls(**kwargs)
+        if password:
+            user.set_password(password)
+        user = user.save()
+
+        # Prevent circular import
+        from rockpack.mainsite.services.video.models import Channel
+        title, description, cover = app.config['FAVOURITE_CHANNEL']
+        channel = Channel(
+            title=title,
+            description=description,
+            cover=cover,
+            owner=user.id)
+        channel.save()
+
+        return user
+
+    @classmethod
+    def create_from_external_system(cls, eu):
+        from rockpack.mainsite.services.oauth.models import ExternalToken
+        if ExternalToken.query.filter_by(external_system=eu.system, external_uid=eu.id).count():
+            return None
+
+        avatar = eu.avatar
+        if avatar:
+            avatar = resize_and_upload(avatar, 'AVATAR')
+
+        new_username = cls.suggested_username(cls.sanitise_username(eu.username))
+
+        return cls.create_with_channel(
+            username=new_username,
+            first_name=eu.first_name,
+            last_name=eu.last_name,
+            email=eu.email,
+            avatar=avatar)
 
 
 class UserActivity(db.Model):

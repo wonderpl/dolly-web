@@ -1,14 +1,18 @@
 from sqlalchemy import desc
 from flask import abort, request, g
+from flask.ext import wtf
+from flask.ext.admin import form
+from wtforms.validators import ValidationError
 from rockpack.mainsite import app
 from rockpack.mainsite.core.dbapi import commit_on_success
-from rockpack.mainsite.core.webservice import WebService, expose_ajax
+from rockpack.mainsite.core.webservice import WebService, expose_ajax, ajax_create_response, process_image
 from rockpack.mainsite.core.oauth.decorators import check_authorization
 from rockpack.mainsite.core.youtube import get_video_data
+from rockpack.mainsite.helpers.urls import url_for
 from rockpack.mainsite.helpers.db import gen_videoid
 from rockpack.mainsite.services.video.models import (
-    Channel, ChannelLocaleMeta, Video, VideoInstance, VideoLocaleMeta)
-from rockpack.mainsite.services.cover_art.models import UserCoverArt
+    Channel, ChannelLocaleMeta, Video, VideoInstance, VideoLocaleMeta, Category)
+from rockpack.mainsite.services.cover_art.models import UserCoverArt, RockpackCoverArt
 from rockpack.mainsite.services.cover_art import api as cover_api
 from rockpack.mainsite.services.video import api as video_api
 from rockpack.mainsite.services.search import api as search_api
@@ -92,29 +96,88 @@ def action_object_list(user, action, limit):
     return id_list[0] if id_list else []
 
 
-class UserAPI(WebService):
+def check_present(form, field):
+    if field.name not in (request.json or request.form):
+        raise ValidationError('This field is required, but can be an empty string.')
+
+
+def verify_id_on_model(model, col='id'):
+    def f(form, field):
+        if field.data:
+            if not model.query.filter_by(**{col: field.data}).count():
+                raise ValidationError('Invalid {} "{}"'.format(field, field.data))
+    return f
+
+
+class ChannelForm(form.BaseForm):
+    title = wtf.TextField(validators=[check_present])
+    description = wtf.TextField(validators=[check_present])
+    category = wtf.TextField(validators=[check_present, verify_id_on_model(Category)])
+    cover = wtf.TextField(validators=[check_present])
+
+    def validate_cover(self, field):
+        exists = lambda m: m.query.filter_by(cover=field.data).count()
+        if field.data and not (exists(RockpackCoverArt) or exists(UserCoverArt)):
+            raise ValidationError('invalid cover reference')
+
+    def validate_title(self, field):
+        user_channels = Channel.query.filter_by(owner=self.userid)
+        if not field.data:
+            untitled_channel = app.config['UNTITLED_CHANNEL'] + ' '
+            count = user_channels.filter(Channel.title.like(untitled_channel + '%')).count()
+            field.data = untitled_channel + str(count + 1)
+        if user_channels.filter_by(title=field.data).count():
+            raise ValidationError('duplicate title')
+
+
+def _channel_info_response(channelid, meta, locale, paging, owner_url):
+    data = video_api.channel_dict(meta.channel_rel, owner_url=owner_url)
+    items, total = video_api.get_local_videos(locale, paging, channel=channelid, with_channel=False)
+    data['videos'] = dict(items=items, total=total)
+    return data
+
+
+def _user_info_response(user, channels):
+    return dict(
+        name=user.username,
+        display_name=user.display_name,
+        avatar_thumbnail_url=user.avatar.thumbnail_small,
+        channels=channels,
+    )
+
+
+class UserWS(WebService):
 
     endpoint = '/'
 
-    @expose_ajax('/<userid>/', cache_age=60, cache_private=True)
-    @check_authorization(abort_on_fail=False)
+    @expose_ajax('/<userid>/', cache_age=60, secure=False)
     def user_info(self, userid):
         user = User.query.get_or_404(userid)
-        channels = Channel.query.filter_by(owner=user.id)
-        if not g.authorized.userid == userid:
-            channels = channels     # TODO: .filter_by(public=True)
-        # TODO: Use secure resource_urls when owner is accessing
-        channels = [video_api.channel_dict(c, with_owner=False) for c in user.channels]
-        # TODO: Include additional personal info like email when owner?
-        return dict(
-            name=user.username,
-            display_name=user.display_name,
-            avatar_thumbnail_url=user.avatar.thumbnail_small,
-            channels=channels,
-        )
+        channels = [video_api.channel_dict(c, with_owner=False, owner_url=False) for c in
+                    Channel.query.filter_by(owner=user.id)]   # TODO: .filter_by(public=True)
+        return _user_info_response(user, channels)
 
-    # TODO: hack for recent videos. do this properly
+    @expose_ajax('/<userid>/', cache_private=True)
+    @check_authorization()
+    def own_user_info(self, userid):
+        if not userid == g.authorized.userid:
+            return self.user_info(userid)
+        user = g.authorized.user
+        channels = [video_api.channel_dict(c, with_owner=False, owner_url=True) for c in
+                    Channel.query.filter_by(owner=user.id)]
+        response = _user_info_response(user, channels)
+        for key in 'activity', 'cover_art':
+            response[key] = dict(resource_url=url_for('userws.get_%s' % key, userid=userid))
+        return response
+
+    # TODO: remove me
+    @expose_ajax('/USERID/subscriptions/recent_videos/', cache_age=60)
+    def all_recent_videos(self):
+        data, total = video_api.get_local_videos(self.get_locale(), self.get_page(), date_order=True, **request.args)
+        return {'videos': {'items': data, 'total': total}}
+
     @expose_ajax('/<userid>/subscriptions/recent_videos/', cache_age=60, cache_private=True)
+    @check_authorization(self_auth=True)
     def recent_videos(self, userid):
         data, total = video_api.get_local_videos(self.get_locale(), self.get_page(), date_order=True, **request.args)
         return {'videos': {'items': data, 'total': total}}
@@ -136,24 +199,61 @@ class UserAPI(WebService):
                             request.form['video_instance'],
                             self.get_locale())
 
-    @expose_ajax('/<userid>/channels/<channelid>/', cache_age=0)
-    @check_authorization(abort_on_fail=False)
-    def channel_item(self, userid, channelid):
+    @expose_ajax('/<userid>/channels/', methods=('POST',))
+    @check_authorization(self_auth=True)
+    def channel_item_create(self, userid):
+        form = ChannelForm(csrf_enabled=False)
+        form.userid = g.authorized.userid
+        if not form.validate():
+            abort(400, form_errors=form.errors)
+        channel = Channel.create(
+            owner=form.userid,
+            title=form.title.data,
+            description=form.description.data,
+            cover=form.cover.data,
+            category=form.category.data,
+            locale=request.args.get('locale'))
+        return ajax_create_response(channel)
+
+    @expose_ajax('/<userid>/channels/<channelid>/', cache_age=60, secure=False)
+    def channel_info(self, userid, channelid):
         meta = ChannelLocaleMeta.query.filter_by(channel=channelid).first_or_404()
-        data = video_api.channel_dict(meta.channel_rel)
-        items, total = video_api.get_local_videos(self.get_locale(), self.get_page(), channel=channelid, with_channel=False)
-        data['videos'] = dict(items=items, total=total)
-        return data
+        return _channel_info_response(channelid, meta, self.get_locale(), self.get_page(), False)
+
+    @expose_ajax('/<userid>/channels/<channelid>/', cache_age=0)
+    @check_authorization()
+    def owner_channel_info(self, userid, channelid):
+        meta = ChannelLocaleMeta.query.filter_by(channel=channelid).first_or_404()
+        return _channel_info_response(channelid, meta, self.get_locale(), self.get_page(), True)
+
+    @expose_ajax('/<userid>/channels/<channelid>/', methods=('PUT',))
+    @check_authorization(self_auth=True)
+    def channel_item_edit(self, userid, channelid):
+        channel = Channel.query.get_or_404(channelid)
+        if not channel.owner == g.authorized.userid:
+            abort(403)
+        form = ChannelForm(csrf_enabled=False)
+        form.userid = g.authorized.userid
+        if not form.validate():
+            abort(400, form_errors=form.errors)
+
+        channel.title = form.title.data
+        channel.description = form.description.data
+        channel.cover = form.cover.data
+        # XXX: This is broken!
+        #channel.locale = form.locale.data
+        #channel.category = form.category.data
+        channel.save()
 
     @expose_ajax('/<userid>/cover_art/', cache_age=60, cache_private=True)
     @check_authorization(self_auth=True)
-    def get_user_cover_art(self, userid):
+    def get_cover_art(self, userid):
         covers = UserCoverArt.query.filter_by(owner=userid)
         return cover_api.cover_art_response(covers, self.get_page())
 
     @expose_ajax('/<userid>/cover_art/', methods=['POST'])
     @check_authorization(self_auth=True)
-    def post_user_cover_art(self, userid):
-        cover = UserCoverArt(cover=request.files['file'], owner=userid)
-        cover = cover.save()
+    def post_cover_art(self, userid):
+        path = process_image(UserCoverArt.cover)
+        cover = UserCoverArt(cover=path, owner=userid).save()
         return cover_api.cover_art_dict(cover), 201

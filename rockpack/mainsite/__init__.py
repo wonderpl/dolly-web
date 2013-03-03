@@ -10,6 +10,7 @@ app.config.from_envvar('ROCKPACK_SETTINGS', silent=True)
 
 
 SERVICES = (
+    'rockpack.mainsite.services.base',
     'rockpack.mainsite.services.video',
     'rockpack.mainsite.services.cover_art',
     'rockpack.mainsite.services.user',

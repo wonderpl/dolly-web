@@ -1,5 +1,7 @@
 import hashlib
+import base64
 from flask import url_for
+from rockpack.mainsite import app
 from test import base
 
 
@@ -26,6 +28,11 @@ def get_auth_header(userid):
     return 'Authorization', 'Bearer %s' % create_access_token(userid, '', 60)
 
 
+def get_client_auth_header():
+    credentials = base64.b64encode(app.config['ROCKPACK_APP_CLIENT_ID'] + ':')
+    return 'Authorization', 'Basic %s' % credentials
+
+
 class HeaderTests(base.RockPackTestCase):
     def test_etag(self):
         """ Check existance of ETag in headers
@@ -34,7 +41,7 @@ class HeaderTests(base.RockPackTestCase):
         with self.app.test_client() as client:
             ctx = self.app.test_request_context()
             ctx.push()
-            r = client.get(url_for('CoverArtAPI_api.rockpack_cover_art'))
+            r = client.get(url_for('coverartws.rockpack_cover_art'))
             self.assertEquals(
                 '"%s"' % hashlib.md5(r.data).hexdigest(),
                 r.headers.get('ETag'),
@@ -45,5 +52,5 @@ class HeaderTests(base.RockPackTestCase):
         with self.app.test_client() as client:
             ctx = self.app.test_request_context()
             ctx.push()
-            r = client.get(url_for('CoverArtAPI_api.rockpack_cover_art'))
+            r = client.get(url_for('coverartws.rockpack_cover_art'))
             assert r.headers.get('Cache-Control')

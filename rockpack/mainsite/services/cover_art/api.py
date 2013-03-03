@@ -15,7 +15,7 @@ def cover_art_response(covers, paging):
     return dict(cover_art=dict(items=items, total=total))
 
 
-class CoverArtAPI(WebService):
+class CoverArtWS(WebService):
 
     endpoint = '/cover_art'
 

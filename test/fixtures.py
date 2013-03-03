@@ -57,7 +57,7 @@ class CategoryData(DataSet):
 
 class RockpackCoverArtData(DataSet):
     class comic_cover:
-        cover = ''
+        cover = 'comic.png'
         locale = LocaleData.US.id
 
 
@@ -71,6 +71,7 @@ class UserData(DataSet):
         avatar = ''
         is_active = True
         refresh_token = ''
+        locale = LocaleData.US.id
 
 
 all_data = [v for k, v in globals().copy().iteritems() if k.endswith('Data')]

@@ -2,13 +2,13 @@ from datetime import datetime, timedelta
 import hmac
 import hashlib
 import requests
-from flask import url_for
 from sqlalchemy import (Column, Integer, String, Boolean,
                         DateTime, ForeignKey, UniqueConstraint, func)
 from sqlalchemy.orm import relationship
 from rockpack.mainsite import app
 from rockpack.mainsite.core.dbapi import db
 from rockpack.mainsite.helpers.db import make_id
+from rockpack.mainsite.helpers.urls import url_for
 
 
 LEASE_SECONDS = 60 * 60 * 24
@@ -59,8 +59,7 @@ class Subscription(db.Model):
         self._ping_hub('unsubscribe')
 
     def _ping_hub(self, mode):
-        callback_url = url_for('PubSubHubbub_api.callback', _external=True)
-        callback_url = callback_url.replace('localhost', 'dev.rockpack.com').replace(':5000', '')
+        callback_url = url_for('pubsubhubbubws.callback')
         data = {
             'hub.callback': callback_url + '?id=' + str(self.id),
             'hub.mode': mode,

@@ -91,6 +91,9 @@ Cache-Control: max-age=60
 }
 ```
 
+Create a new channel.
+```http
+
 User Activity
 =============
 
