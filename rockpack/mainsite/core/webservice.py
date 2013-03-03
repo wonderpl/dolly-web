@@ -7,9 +7,6 @@ from flask import Blueprint, Response, request, current_app, abort
 from rockpack.mainsite.helpers.http import cache_for
 
 
-__all__ = ['WebService', 'expose']
-
-
 service_urls = namedtuple('ServiceUrl', 'url func_name func methods')
 
 
@@ -39,6 +36,14 @@ def ajax(func):
     return wrapper
 
 
+def secure_view(secure=True):
+    def decorator(func):
+        if not hasattr(func, '_secure'):
+            func._secure = secure
+        return func
+    return decorator
+
+
 def expose(url, methods=['GET']):
     def decorator(func):
         # attach the url details to the func so we can use it later
@@ -49,9 +54,9 @@ def expose(url, methods=['GET']):
     return decorator
 
 
-def expose_ajax(url, methods=['GET'], cache_age=None, cache_private=False):
+def expose_ajax(url, methods=['GET'], secure=None, cache_age=None, cache_private=False):
     def decorator(func):
-        return expose(url, methods)(cache_for(cache_age, cache_private)(ajax(func)))
+        return expose(url, methods)(secure_view(secure)(cache_for(cache_age, cache_private)(ajax(func))))
     return decorator
 
 
@@ -82,14 +87,24 @@ class WebService(object):
 
     def __init__(self, app, url_prefix, **kwargs):
         secure_subdomain = app.config.get('SECURE_SUBDOMAIN')
-        bp = Blueprint(self.__class__.__name__ + '_api', self.__class__.__name__, url_prefix=url_prefix)
+        bp = Blueprint(self.__class__.__name__.lower(), self.__class__.__name__, url_prefix=url_prefix)
         for route in self._routes:
-            subdomain = getattr(route.func, '_secure', None) and secure_subdomain
-            bp.add_url_rule(route.url,
-                            route.func.__name__,
-                            view_func=types.MethodType(route.func, self, self.__class__),
-                            subdomain=subdomain,
-                            methods=route.methods)
+            # If secure is None then view should be available on all domains,
+            # if True then only available on secure, if False then non-secure only
+            subdomains = [None]     # None refers to default subdomain
+            if secure_subdomain:
+                secure = getattr(route.func, '_secure', None)
+                if secure is True:
+                    subdomains = [secure_subdomain]
+                elif secure is None:
+                    # Order is important here - the default should be first
+                    subdomains = [None, secure_subdomain]
+            for subdomain in subdomains:
+                bp.add_url_rule(route.url,
+                                route.func.__name__,
+                                view_func=types.MethodType(route.func, self, self.__class__),
+                                subdomain=subdomain,
+                                methods=route.methods)
 
         app.register_blueprint(bp)
 

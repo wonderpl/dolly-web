@@ -17,7 +17,7 @@ def user_authenticated(username, password):
     return False
 
 
-class Login(WebService):
+class LoginWS(WebService):
 
     endpoint = '/login'
 
@@ -91,7 +91,7 @@ def new_user_setup(form):
     return user
 
 
-class Registration(WebService):
+class RegistrationWS(WebService):
     endpoint = '/register'
 
     @expose_ajax('/', methods=['POST'])
@@ -119,7 +119,7 @@ class Registration(WebService):
             return user.get_credentials()
 
 
-class Token(WebService):
+class TokenWS(WebService):
     endpoint = '/token'
 
     @expose_ajax('/', methods=['POST'])

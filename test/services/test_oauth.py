@@ -93,7 +93,8 @@ class HeadersTestCase(base.RockPackTestCase):
 class LoginTestCase(base.RockPackTestCase):
 
     @patch('rockpack.mainsite.services.oauth.api.user_authenticated', return_value=User())
-    def test_succesful_login(self, user_authenticated):
+    @patch('rockpack.mainsite.services.user.models.User.get_resource_url')
+    def test_succesful_login(self, get_resource_url, user_authenticated):
         with self.app.test_client() as client:
             encoded = base64.encodestring(app.config['ROCKPACK_APP_CLIENT_ID'] + ':')
             headers = [('Authorization', 'Basic {}'.format(encoded))]
@@ -105,6 +106,7 @@ class LoginTestCase(base.RockPackTestCase):
                         password='bar'))
 
             self.assertEquals(200, r.status_code)
+            get_resource_url.assert_called_with(own=True)
 
 
 class ExternalTokenTestCase(base.RockPackTestCase):

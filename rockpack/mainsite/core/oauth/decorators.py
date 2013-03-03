@@ -16,6 +16,7 @@ def check_client_authorization(f):
             abort(401, error='unauthorized_client')
         g.app_client_id = auth.username
         return f(*args, **kwargs)
+    # All views decorated with this are secure by default
     wrapper._secure = True
     return wrapper
 
@@ -57,5 +58,7 @@ def check_authorization(abort_on_fail=True, self_auth=False):
             if not g.authorized and abort_on_fail:
                 abort(401, scheme='bearer', error='invalid_token')
             return f(*args, **kwargs)
+        # require secure unless abort_on_fail is False
+        wrapper._secure = None if abort_on_fail is False else True
         return wrapper
     return decorator

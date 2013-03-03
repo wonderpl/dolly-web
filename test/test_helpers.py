@@ -34,7 +34,7 @@ class HeaderTests(base.RockPackTestCase):
         with self.app.test_client() as client:
             ctx = self.app.test_request_context()
             ctx.push()
-            r = client.get(url_for('CoverArtAPI_api.rockpack_cover_art'))
+            r = client.get(url_for('coverartws.rockpack_cover_art'))
             self.assertEquals(
                 '"%s"' % hashlib.md5(r.data).hexdigest(),
                 r.headers.get('ETag'),
@@ -45,5 +45,5 @@ class HeaderTests(base.RockPackTestCase):
         with self.app.test_client() as client:
             ctx = self.app.test_request_context()
             ctx.push()
-            r = client.get(url_for('CoverArtAPI_api.rockpack_cover_art'))
+            r = client.get(url_for('coverartws.rockpack_cover_art'))
             assert r.headers.get('Cache-Control')

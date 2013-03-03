@@ -1,7 +1,8 @@
 from sqlalchemy.orm import contains_eager
 from sqlalchemy.sql.expression import desc
-from flask import g, request, url_for
+from flask import g, request
 from rockpack.mainsite.core.webservice import WebService, expose_ajax
+from rockpack.mainsite.helpers.urls import url_for
 from rockpack.mainsite.services.video import models
 
 
@@ -15,16 +16,12 @@ def _filter_by_category(query, type, category_id):
     return query.filter(type.category.in_(cat_ids))
 
 
-def channel_dict(channel, with_owner=True):
+def channel_dict(channel, with_owner=True, owner_url=False):
     sizes = ['thumbnail_large', 'thumbnail_small', 'background']
     images = {'cover_%s_url' % s: getattr(channel.cover, s) for s in sizes}
-    url = url_for('UserAPI_api.channel_item',
-                  userid=channel.owner_rel.id,
-                  channelid=channel.id,
-                  _external=True)
     ch_data = dict(
         id=channel.id,
-        resource_url=url,
+        resource_url=channel.get_resource_url(owner_url),
         title=channel.title,
         thumbnail_url=channel.cover.thumbnail_large,
         description=channel.description,
@@ -33,7 +30,8 @@ def channel_dict(channel, with_owner=True):
     if with_owner:
         ch_data['owner'] = dict(
             id=channel.owner_rel.id,
-            name=channel.owner_rel.username,
+            resource_url=channel.owner_rel.get_resource_url(owner_url),
+            name=channel.owner_rel.display_name,
             avatar_thumbnail_url=channel.owner_rel.avatar.thumbnail_small,
         )
     ch_data.update(images)
@@ -67,7 +65,7 @@ def get_local_channel(locale, paging, **filters):
     return channel_data, total
 
 
-class ChannelAPI(WebService):
+class ChannelWS(WebService):
 
     endpoint = '/channels'
 
@@ -148,7 +146,7 @@ def get_local_videos(loc, paging, with_channel=True, **filters):
     return data, total
 
 
-class VideoAPI(WebService):
+class VideoWS(WebService):
 
     endpoint = '/videos'
 
@@ -158,7 +156,7 @@ class VideoAPI(WebService):
         return dict(videos=dict(items=data, total=total))
 
 
-class CategoryAPI(WebService):
+class CategoryWS(WebService):
 
     endpoint = '/categories'
 
@@ -170,7 +168,7 @@ class CategoryAPI(WebService):
             priority=instance.priority,
         )
         for c in instance.children:
-            data.setdefault('sub_categories', []).append(CategoryAPI.cat_dict(c))
+            data.setdefault('sub_categories', []).append(CategoryWS.cat_dict(c))
         return data
 
     def _get_cats(self, **filters):

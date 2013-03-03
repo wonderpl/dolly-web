@@ -8,6 +8,7 @@ from rockpack.mainsite import app
 from rockpack.mainsite.core.token import create_access_token
 from rockpack.mainsite.core.dbapi import db
 from rockpack.mainsite.helpers.db import ImageType, add_base64_pk
+from rockpack.mainsite.helpers.urls import url_for
 
 
 class User(db.Model):
@@ -57,6 +58,11 @@ class User(db.Model):
         else:
             return self.username
 
+    def get_resource_url(self, own=False):
+        view = 'userws.own_user_info' if own else 'userws.user_info'
+        return url_for(view, userid=self.id)
+    resource_url = property(get_resource_url)
+
     def get_credentials(self):
         expires_in = app.config.get('ACCESS_TOKEN_EXPIRY', 3600)
         access_token = create_access_token(self.id, g.app_client_id, expires_in)
@@ -66,6 +72,7 @@ class User(db.Model):
             expires_in=expires_in,
             refresh_token=self.refresh_token,
             user_id=self.id,
+            resource_url=self.get_resource_url(own=True),
         )
 
 

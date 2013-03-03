@@ -11,7 +11,7 @@ def add_response_headers(headers={}, cache_max_age=None, cache_private=False):
             h = resp.headers
             for header, value in headers.items():
                 h[header] = value
-            if '_nc' in request.args or request.is_secure:
+            if '_nc' in request.args:
                 resp.cache_control.no_cache = True
             else:
                 if cache_private:

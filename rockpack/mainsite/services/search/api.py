@@ -17,7 +17,7 @@ def _query_term(default=''):
     return query if SEARCH_TERM_RE.match(query) else default
 
 
-class SearchAPI(WebService):
+class SearchWS(WebService):
 
     endpoint = '/search'
 
@@ -60,7 +60,7 @@ class SearchAPI(WebService):
         return {'channels': {'items': items, 'total': total}}
 
 
-class CompleteAPI(WebService):
+class CompleteWS(WebService):
 
     endpoint = '/complete'
 

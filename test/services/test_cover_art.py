@@ -13,7 +13,7 @@ class CoverArtTestCase(base.RockPackTestCase):
         with self.app.test_client() as client:
             ctx = self.app.test_request_context()
             ctx.push()
-            r = client.get(url_for('CoverArtAPI_api.rockpack_cover_art'))
+            r = client.get(url_for('coverartws.rockpack_cover_art'))
             j = json.loads(r.data)
             assert j['cover_art']['items'][0]['background_url'].startswith(
                 '{0}/images/channel/background/'.format(self.app.config['IMAGE_CDN']))

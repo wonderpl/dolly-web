@@ -13,10 +13,11 @@ from sqlalchemy import (
 )
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import relationship, aliased
+from rockpack.mainsite.core.dbapi import db
 from rockpack.mainsite.helpers.db import (
     add_base64_pk, add_video_pk, add_video_meta_pk,
     gen_videoid, insert_new_only, ImageType)
-from rockpack.mainsite.core.dbapi import db
+from rockpack.mainsite.helpers.urls import url_for
 from rockpack.mainsite.services.user.models import User
 
 
@@ -320,6 +321,11 @@ class Channel(db.Model):
     @classmethod
     def get_form_choices(cls, owner):
         return cls.query.filter_by(owner=owner).values(cls.id, cls.title)
+
+    def get_resource_url(self, own=False):
+        view = 'userws.owner_channel_info' if own else 'userws.channel_info'
+        return url_for(view, userid=self.owner_rel.id, channelid=self.id)
+    resource_url = property(get_resource_url)
 
     def add_videos(self, videos):
         instances = [VideoInstance(channel=self.id, video=getattr(v, 'id', v)) for v in videos]

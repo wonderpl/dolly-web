@@ -19,7 +19,7 @@ def add_videos_to_channel(channel, videos):
     channel.add_videos(videos)
 
 
-class PubSubHubbub(WebService):
+class PubSubHubbubWS(WebService):
 
     endpoint = '/pubsubhubbub'
 
