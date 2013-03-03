@@ -1,10 +1,11 @@
 import types
-import simplejson as json
+from cStringIO import StringIO
 from functools import wraps
 from collections import namedtuple
 from werkzeug.exceptions import HTTPException, Unauthorized, BadRequest, Forbidden
-from flask import Blueprint, Response, request, current_app, abort
+from flask import Blueprint, Response, request, current_app, abort, json
 from rockpack.mainsite.helpers.http import cache_for
+from rockpack.mainsite.helpers.db import resize_and_upload
 
 
 service_urls = namedtuple('ServiceUrl', 'url func_name func methods')
@@ -58,6 +59,29 @@ def expose_ajax(url, methods=['GET'], secure=None, cache_age=None, cache_private
     def decorator(func):
         return expose(url, methods)(secure_view(secure)(cache_for(cache_age, cache_private)(ajax(func))))
     return decorator
+
+
+def ajax_create_response(instance):
+    return (dict(id=instance.id, resource_url=instance.resource_url),
+            201, [('Location', instance.resource_url)])
+
+
+def process_image(field, data=None):
+    if not data:
+        if request.mimetype.startswith('image/'):
+            # PIL needs to seek on the data and request.stream doesn't have that
+            data = StringIO(request.data)
+        elif request.mimetype.startswith('multipart/form-data'):
+            data = request.files['image']
+        else:
+            abort(400, message='no image data')
+
+    cfgkey = field.class_.__table__.columns.get(field.key).type.cfgkey
+
+    try:
+        return resize_and_upload(data, cfgkey)
+    except IOError, e:
+        abort(400, message=e.message or str(e))
 
 
 class APIMeta(type):

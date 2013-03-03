@@ -29,7 +29,7 @@ class UserCoverArtTestCase(base.RockPackTestCase):
                 User.username == UserData.test_user_a.username).first()
 
             r = client.post('/ws/{}/cover_art/'.format(user.id),
-                            data={'file': (AVATAR_IMG_PATH, 'img.jpg')},
+                            data={'image': (AVATAR_IMG_PATH, 'img.jpg')},
                             headers=[get_auth_header(user.id)])
 
             self.assertEquals(r.status_code, 201)
@@ -50,7 +50,7 @@ class UserCoverArtTestCase(base.RockPackTestCase):
                 User.username == UserData.test_user_a.username).first()
 
             r = client.post('/ws/{}/cover_art/'.format(user.id),
-                            data={'file': (AVATAR_IMG_PATH, 'img.png')},
+                            data={'image': (AVATAR_IMG_PATH, 'img.png')},
                             headers=[get_auth_header(user.id)])
 
             self.assertEquals(r.status_code, 201)

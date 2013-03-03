@@ -7,9 +7,10 @@ from flask.ext.admin import BaseView, expose, form
 from wtforms.validators import ValidationError
 from rockpack.mainsite.core.dbapi import commit_on_success, db
 from rockpack.mainsite.core import youtube
+from rockpack.mainsite.helpers.db import resize_and_upload
 from rockpack.mainsite.services.pubsubhubbub.api import subscribe
 from rockpack.mainsite.services.video.models import (
-    Locale, Source, Category, Video, Channel, ChannelLocaleMeta)
+    Locale, Source, Category, Video, Channel)
 from rockpack.mainsite.services.user.models import User
 
 
@@ -76,14 +77,13 @@ class ImportView(BaseView):
         user = form.user.data
         if channel and user:
             if channel.startswith('_new:'):
-                channel = Channel(title=channel.split(':', 1)[1],
-                                  owner=user,
-                                  description=form.channel_description.data,
-                                  cover='')
-                channel.metas = [ChannelLocaleMeta(
-                                 locale=form.locale.data,
-                                 category=form.category.data)]
-                channel = channel.save()
+                channel = Channel.create(
+                    title=channel.split(':', 1)[1],
+                    owner=user,
+                    description=form.channel_description.data,
+                    cover='',
+                    locale=form.locale.data,
+                    category=form.category.data)
             else:
                 channel = Channel.query.get(channel)
             channel.add_videos(form.import_data.videos)
@@ -96,13 +96,17 @@ class ImportView(BaseView):
         return count, channel
 
     def _create_user(self, form):
+        if 'avatar' in request.files:
+            avatar = resize_and_upload(request.files['avatar'], 'AVATAR')
+        else:
+            avatar = ''
         user = User(
             username=form.username.data,
             password_hash='',
             first_name=form.first_name.data,
             last_name=form.last_name.data,
             email=form.email.data,
-            avatar=request.files.get('avatar'),
+            avatar=avatar,
             refresh_token='',
             is_active=True)
         db.session.add(user)

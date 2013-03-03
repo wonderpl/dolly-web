@@ -57,7 +57,7 @@ class CategoryData(DataSet):
 
 class RockpackCoverArtData(DataSet):
     class comic_cover:
-        cover = ''
+        cover = 'comic.png'
         locale = LocaleData.US.id
 
 

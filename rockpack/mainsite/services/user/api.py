@@ -1,15 +1,18 @@
 from sqlalchemy import desc
 from flask import abort, request, g
+from flask.ext import wtf
+from flask.ext.admin import form
+from wtforms.validators import ValidationError
 from rockpack.mainsite import app
 from rockpack.mainsite.core.dbapi import commit_on_success
-from rockpack.mainsite.core.webservice import WebService, expose_ajax
+from rockpack.mainsite.core.webservice import WebService, expose_ajax, ajax_create_response, process_image
 from rockpack.mainsite.core.oauth.decorators import check_authorization
 from rockpack.mainsite.core.youtube import get_video_data
-from rockpack.mainsite.helpers.db import gen_videoid
 from rockpack.mainsite.helpers.urls import url_for
+from rockpack.mainsite.helpers.db import gen_videoid
 from rockpack.mainsite.services.video.models import (
-    Channel, ChannelLocaleMeta, Video, VideoInstance, VideoLocaleMeta)
-from rockpack.mainsite.services.cover_art.models import UserCoverArt
+    Channel, ChannelLocaleMeta, Video, VideoInstance, VideoLocaleMeta, Category)
+from rockpack.mainsite.services.cover_art.models import UserCoverArt, RockpackCoverArt
 from rockpack.mainsite.services.cover_art import api as cover_api
 from rockpack.mainsite.services.video import api as video_api
 from rockpack.mainsite.services.search import api as search_api
@@ -93,6 +96,40 @@ def action_object_list(user, action, limit):
     return id_list[0] if id_list else []
 
 
+def check_present(form, field):
+    if field.name not in (request.json or request.form):
+        raise ValidationError('This field is required, but can be an empty string.')
+
+
+def verify_id_on_model(model, col='id'):
+    def f(form, field):
+        if field.data:
+            if not model.query.filter_by(**{col: field.data}).count():
+                raise ValidationError('Invalid {} "{}"'.format(field, field.data))
+    return f
+
+
+class ChannelForm(form.BaseForm):
+    title = wtf.TextField(validators=[check_present])
+    description = wtf.TextField(validators=[check_present])
+    category = wtf.TextField(validators=[check_present, verify_id_on_model(Category)])
+    cover = wtf.TextField(validators=[check_present])
+
+    def validate_cover(self, field):
+        exists = lambda m: m.query.filter_by(cover=field.data).count()
+        if field.data and not (exists(RockpackCoverArt) or exists(UserCoverArt)):
+            raise ValidationError('invalid cover reference')
+
+    def validate_title(self, field):
+        user_channels = Channel.query.filter_by(owner=self.userid)
+        if not field.data:
+            untitled_channel = app.config['UNTITLED_CHANNEL'] + ' '
+            count = user_channels.filter(Channel.title.like(untitled_channel + '%')).count()
+            field.data = untitled_channel + str(count + 1)
+        if user_channels.filter_by(title=field.data).count():
+            raise ValidationError('duplicate title')
+
+
 def _channel_info_response(channelid, meta, locale, paging, owner_url):
     data = video_api.channel_dict(meta.channel_rel, owner_url=owner_url)
     items, total = video_api.get_local_videos(locale, paging, channel=channelid, with_channel=False)
@@ -162,6 +199,22 @@ class UserWS(WebService):
                             request.form['video_instance'],
                             self.get_locale())
 
+    @expose_ajax('/<userid>/channels/', methods=('POST',))
+    @check_authorization(self_auth=True)
+    def channel_item_create(self, userid):
+        form = ChannelForm(csrf_enabled=False)
+        form.userid = g.authorized.userid
+        if not form.validate():
+            abort(400, form_errors=form.errors)
+        channel = Channel.create(
+            owner=form.userid,
+            title=form.title.data,
+            description=form.description.data,
+            cover=form.cover.data,
+            category=form.category.data,
+            locale=request.args.get('locale'))
+        return ajax_create_response(channel)
+
     @expose_ajax('/<userid>/channels/<channelid>/', cache_age=60, secure=False)
     def channel_info(self, userid, channelid):
         meta = ChannelLocaleMeta.query.filter_by(channel=channelid).first_or_404()
@@ -173,7 +226,26 @@ class UserWS(WebService):
         meta = ChannelLocaleMeta.query.filter_by(channel=channelid).first_or_404()
         return _channel_info_response(channelid, meta, self.get_locale(), self.get_page(), True)
 
-    @expose_ajax('/<userid>/cover_art/', cache_private=True)
+    @expose_ajax('/<userid>/channels/<channelid>/', methods=('PUT',))
+    @check_authorization(self_auth=True)
+    def channel_item_edit(self, userid, channelid):
+        channel = Channel.query.get_or_404(channelid)
+        if not channel.owner == g.authorized.userid:
+            abort(403)
+        form = ChannelForm(csrf_enabled=False)
+        form.userid = g.authorized.userid
+        if not form.validate():
+            abort(400, form_errors=form.errors)
+
+        channel.title = form.title.data
+        channel.description = form.description.data
+        channel.cover = form.cover.data
+        # XXX: This is broken!
+        #channel.locale = form.locale.data
+        #channel.category = form.category.data
+        channel.save()
+
+    @expose_ajax('/<userid>/cover_art/', cache_age=60, cache_private=True)
     @check_authorization(self_auth=True)
     def get_cover_art(self, userid):
         covers = UserCoverArt.query.filter_by(owner=userid)
@@ -182,6 +254,6 @@ class UserWS(WebService):
     @expose_ajax('/<userid>/cover_art/', methods=['POST'])
     @check_authorization(self_auth=True)
     def post_cover_art(self, userid):
-        cover = UserCoverArt(cover=request.files['file'], owner=userid)
-        cover = cover.save()
+        path = process_image(UserCoverArt.cover)
+        cover = UserCoverArt(cover=path, owner=userid).save()
         return cover_api.cover_art_dict(cover), 201

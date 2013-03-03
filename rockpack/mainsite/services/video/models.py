@@ -1,16 +1,6 @@
 from sqlalchemy import (
-    Text,
-    String,
-    Column,
-    Boolean,
-    Integer,
-    ForeignKey,
-    DateTime,
-    CHAR,
-    UniqueConstraint,
-    event,
-    func,
-)
+    Text, String, Column, Boolean, Integer, ForeignKey, DateTime, CHAR,
+    UniqueConstraint, event, func)
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import relationship, aliased
 from rockpack.mainsite.core.dbapi import db
@@ -307,7 +297,7 @@ class Channel(db.Model):
     id = Column(CHAR(24), primary_key=True)
     title = Column(String(1024), nullable=False)
     description = Column(Text, nullable=False)
-    cover = Column(ImageType('CHANNEL'), nullable=False)
+    cover = Column(ImageType('CHANNEL', reference_only=True), nullable=False)
 
     owner = Column(CHAR(22), ForeignKey('user.id'), nullable=False)
     owner_rel = relationship(User, primaryjoin=(owner == User.id), lazy='joined', innerjoin=True)
@@ -321,6 +311,18 @@ class Channel(db.Model):
     @classmethod
     def get_form_choices(cls, owner):
         return cls.query.filter_by(owner=owner).values(cls.id, cls.title)
+
+    @classmethod
+    def create(cls, category, locale=None, **kwargs):
+        """Create & save a new channel record along with appropriate category metadata"""
+        channel = Channel(**kwargs)
+        if category:
+            if locale is None:
+                locale = Category.query.filter_by(id=category).value('locale')
+            channel.metas = [ChannelLocaleMeta(
+                             locale=locale,
+                             category=category)]
+        return channel.save()
 
     def get_resource_url(self, own=False):
         view = 'userws.owner_channel_info' if own else 'userws.channel_info'
@@ -374,6 +376,7 @@ ParentCategory = aliased(Category)
 def _set_child_category_locale(mapper, connection, target):
     if not target.locale and target.parent_category:
         target.locale = target.parent_category.locale
+
 
 @event.listens_for(ChannelLocaleMeta, 'before_update')
 def _update_video_visibility(mapper, connection, target):

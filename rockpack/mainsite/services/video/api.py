@@ -2,7 +2,6 @@ from sqlalchemy.orm import contains_eager
 from sqlalchemy.sql.expression import desc
 from flask import g, request
 from rockpack.mainsite.core.webservice import WebService, expose_ajax
-from rockpack.mainsite.helpers.urls import url_for
 from rockpack.mainsite.services.video import models
 
 
