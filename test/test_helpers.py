@@ -1,5 +1,7 @@
 import hashlib
+import base64
 from flask import url_for
+from rockpack.mainsite import app
 from test import base
 
 
@@ -24,6 +26,11 @@ def install_mocks():
 def get_auth_header(userid):
     from rockpack.mainsite.core.token import create_access_token
     return 'Authorization', 'Bearer %s' % create_access_token(userid, '', 60)
+
+
+def get_client_auth_header():
+    credentials = base64.b64encode(app.config['ROCKPACK_APP_CLIENT_ID'] + ':')
+    return 'Authorization', 'Basic %s' % credentials
 
 
 class HeaderTests(base.RockPackTestCase):

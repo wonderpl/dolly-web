@@ -1,13 +1,12 @@
 import base64
 import json
 import uuid
-from cStringIO import StringIO
 from mock import patch
 
 from flask import Response
+from flask import request
+from flask import g
 
-from test import base
-from test.assets import AVATAR_IMG_DATA
 from rockpack.mainsite import app
 from rockpack.mainsite.core.webservice import ajax
 from rockpack.mainsite.core.token import create_access_token
@@ -16,13 +15,29 @@ from rockpack.mainsite.services.user.models import User
 from rockpack.mainsite.services.video.models import Channel
 from rockpack.mainsite.services.oauth.models import ExternalToken
 from rockpack.mainsite.services.oauth import exceptions
+from test import base
+from test.test_helpers import get_client_auth_header
 
 
 ACCESS_CREDENTIALS = {
-        "access_token": "2YotnFZFEjr1zCsicMWpAA",
-        "token_type": "Bearer",
-        "expires_in": 3600,
-        "refresh_token": "tGzv3JOkF0XG5Qx2TlKWIA"}
+    "access_token": "2YotnFZFEjr1zCsicMWpAA",
+    "token_type": "Bearer",
+    "expires_in": 3600,
+    "refresh_token": "tGzv3JOkF0XG5Qx2TlKWIA"}
+
+
+FACEBOOK_GRAPH_DATA = {
+    'username': 'tony.start.01',
+    'first_name': 'Tony',
+    'last_name': 'Stark',
+    'verified': True,
+    'name': 'I am IronMan',
+    'locale': 'en_US',
+    'gender': 'male',
+    'updated_time': '2013-02-25T10:31:31+0000',
+    'link': 'http://www.facebook.com/tony.stark.01',
+    'timezone': 0,
+    'id': '100005340012137'}
 
 
 class HeadersTestCase(base.RockPackTestCase):
@@ -67,7 +82,6 @@ class HeadersTestCase(base.RockPackTestCase):
     @app.route('/test/oauth2/access_token_header/', methods=('GET', 'POST',))
     @check_authorization()
     def access_token_view():
-        from flask import request, g
         user_id = request.args.get('user_id')
         assert g.authorized.user.id == user_id
         return Response()
@@ -96,10 +110,8 @@ class LoginTestCase(base.RockPackTestCase):
     @patch('rockpack.mainsite.services.user.models.User.get_resource_url')
     def test_succesful_login(self, get_resource_url, user_authenticated):
         with self.app.test_client() as client:
-            encoded = base64.encodestring(app.config['ROCKPACK_APP_CLIENT_ID'] + ':')
-            headers = [('Authorization', 'Basic {}'.format(encoded))]
             r = client.post('/ws/login/',
-                    headers=headers,
+                    headers=[get_client_auth_header()],
                     data=dict(
                         grant_type='password',
                         username='foo',
@@ -122,66 +134,122 @@ class ExternalTokenTestCase(base.RockPackTestCase):
                 is_active=True)
         return u.save()
 
-    def test_facebook_token(self):
+    @patch('rockpack.mainsite.services.oauth.api.ExternalUser.get_new_token')
+    @patch('rockpack.mainsite.services.oauth.api.ExternalUser._get_external_data')
+    def test_facebook_token(self, _get_external_data, get_new_token):
+        _get_external_data.return_value = FACEBOOK_GRAPH_DATA
+        from rockpack.mainsite.services.oauth.api import ExternalUser
+        long_lived_fb_token = 'fdsuioncf3w8ryl38yb7y4eius'
+        get_new_token.return_value = ExternalUser('facebook', token=long_lived_fb_token, expires_in=3600)
+
         user = self._new_user()
         token = uuid.uuid4().hex
-        ExternalToken.update_token(user, 'facebook', token)
+        eu = ExternalUser('facebook', token=token, expires_in='')
+        eu._user_data = FACEBOOK_GRAPH_DATA.copy()
+        ExternalToken.update_token(user, eu)
 
-        e = ExternalToken.query.filter_by(external_token=token).one()
+        e = ExternalToken.query.filter_by(external_token=long_lived_fb_token).one()
         self.assertEquals('facebook', e.external_system)
         self.assertEquals(user.username, e.user_rel.username)
 
         # test we can overwrite token
         new_token = uuid.uuid4().hex
-        ExternalToken.update_token(user, 'facebook', new_token)
+        eu = ExternalUser('facebook', token=new_token, expires_in=7200)
+        eu._user_data = FACEBOOK_GRAPH_DATA.copy()
+        ExternalToken.update_token(user, eu)
 
         e = ExternalToken.query.filter_by(user=user.id)
         self.assertEquals(1, e.count(), 'only one token should exist')
         e = e.one()
-        self.assertEquals(new_token, e.external_token, 'saved token should match new token')
+        self.assertEquals(long_lived_fb_token, e.external_token, 'saved token should match new token')
 
-    def test_invalid_token(self):
+    @patch('rockpack.mainsite.services.oauth.api.ExternalUser.get_new_token')
+    @patch('rockpack.mainsite.services.oauth.api.ExternalUser._get_external_data')
+    def test_invalid_token(self, _get_external_data, get_new_token):
+        _get_external_data.return_value = FACEBOOK_GRAPH_DATA
+        from rockpack.mainsite.services.oauth.api import ExternalUser
+        eu = ExternalUser('handleaflet', token='')
+        long_lived_fb_token = 'fdsuioncf3w8ryl38yb7y4eius'
+        get_new_token.return_value = ExternalUser('facebook', token=long_lived_fb_token, expires_in=3600)
         with self.assertRaises(exceptions.InvalidExternalSystem):
-            ExternalToken.update_token(None, 'HandLeaflet', None)
+            ExternalToken.update_token(None, eu)
 
 
 class RegisterTestCase(base.RockPackTestCase):
 
-    def test_facebook_registration(self):
-        with self.app.test_client() as client:
-            encoded = base64.encodestring(app.config['ROCKPACK_APP_CLIENT_ID'] + ':')
-            headers = [('Authorization', 'Basic {}'.format(encoded))]
+    @patch('rockpack.mainsite.services.oauth.api.ExternalUser.get_new_token')
+    @patch('rockpack.mainsite.services.oauth.api.ExternalUser._get_external_data')
+    def test_facebook_login_registration(self, _get_external_data, get_new_token):
+        """ Registration and login is handled in the same view.
 
-            facebook_token = uuid.uuid4().hex
-            r = client.post('/ws/register/external/',
-                    headers=headers,
+            If a facebook token validates on their end, and we don't have a record
+            for it on our end, we register the user and return an access token.
+            If the user already exists on our system, we return and access token."""
+
+        _get_external_data.return_value = FACEBOOK_GRAPH_DATA
+        from rockpack.mainsite.services.oauth.api import ExternalUser
+        long_lived_fb_token = 'fdsuioncf3w8ryl38yb7y4eius'
+        get_new_token.return_value = ExternalUser('facebook', token=long_lived_fb_token, expires_in=3600)
+
+        with self.app.test_client() as client:
+            initial_fb_token = uuid.uuid4().hex
+            r = client.post('/ws/login/external/',
+                    headers=[get_client_auth_header()],
                     data=dict(
-                        register='1',
-                        username='facebook_user',
-                        first_name='face',
-                        last_name='book',
-                        email='foo@bar.com',
                         external_system='facebook',
-                        external_token=facebook_token))
+                        external_token=initial_fb_token))
 
             creds = json.loads(r.data)
             self.assertEquals(200, r.status_code)
             self.assertNotEquals(None, creds['refresh_token'])
 
-    def test_invalid_external_system(self):
-        with self.app.test_client() as client:
-            encoded = base64.encodestring(app.config['ROCKPACK_APP_CLIENT_ID'] + ':')
-            headers = [('Authorization', 'Basic {}'.format(encoded))]
+            et = ExternalToken.query.filter_by(
+                external_system='facebook',
+                external_token=long_lived_fb_token)
 
-            facebook_token = uuid.uuid4().hex
-            r = client.post('/ws/register/external/',
-                    headers=headers,
+            self.assertEquals(1, et.count(), 'should only be one token for user')
+            uid = et.one().user
+
+            # We pretend that the new token represents the same user,
+            # so we should still get a valid login
+            new_facebook_token = uuid.uuid4().hex
+            r = client.post('/ws/login/external/',
+                    headers=[get_client_auth_header()],
                     data=dict(
-                        register='1',
-                        username='pantsbake_user',
-                        first_name='pants',
-                        last_name='bake',
-                        email='foo@bar.com',
+                        external_system='facebook',
+                        external_token=new_facebook_token))
+            self.assertEquals(200, r.status_code)
+            self.assertNotEquals(None, creds['refresh_token'])
+
+            et = ExternalToken.query.filter_by(user=uid)
+            self.assertEquals(1, et.count(), 'should only be one token for user')
+            et = et.one()
+            self.assertEquals(long_lived_fb_token, et.external_token, 'token should be updated')
+
+    @patch('rockpack.mainsite.services.oauth.api.ExternalUser._get_external_data')
+    def test_unauthorized_facebook_registration(self, _get_external_data):
+        _get_external_data.return_value = {}
+
+        with self.app.test_client() as client:
+            facebook_token = uuid.uuid4().hex
+            r = client.post('/ws/login/external/',
+                    headers=[get_client_auth_header()],
+                    data=dict(
+                        external_system='facebook',
+                        external_token=facebook_token))
+
+            error = json.loads(r.data)
+            self.assertEquals(400, r.status_code)
+            self.assertEquals('unauthorized_client', error['error'])
+
+    @patch('rockpack.mainsite.services.oauth.api.ExternalUser._get_external_data')
+    def test_invalid_external_system(self, _get_external_data):
+        _get_external_data.return_value = FACEBOOK_GRAPH_DATA
+        with self.app.test_client() as client:
+            facebook_token = uuid.uuid4().hex
+            r = client.post('/ws/login/external/',
+                    headers=[get_client_auth_header()],
+                    data=dict(
                         external_system='PantsBake',
                         external_token=facebook_token))
 
@@ -190,19 +258,15 @@ class RegisterTestCase(base.RockPackTestCase):
     def test_successful_registration(self):
 
         with self.app.test_client() as client:
-            encoded = base64.encodestring(app.config['ROCKPACK_APP_CLIENT_ID'] + ':')
-            headers = [('Authorization', 'Basic {}'.format(encoded))]
-
             r = client.post('/ws/register/',
-                    headers=headers,
+                    headers=[get_client_auth_header()],
                     data=dict(
-                        register='1',
                         username='foobarbarbar',
                         password='bar',
                         first_name='foo',
                         last_name='bar',
-                        email='foo@bar.com',
-                        avatar=(StringIO(AVATAR_IMG_DATA), 'avatar.jpg',)))
+                        locale='en-us',
+                        email='foo{}@bar.com'.format(uuid.uuid4().hex)))
 
             creds = json.loads(r.data)
             self.assertEquals(200, r.status_code)
@@ -214,7 +278,7 @@ class RegisterTestCase(base.RockPackTestCase):
             creds = json.loads(r.data)
 
             r = client.post('/ws/login/',
-                    headers=headers,
+                    headers=[get_client_auth_header()],
                     data=dict(
                         grant_type='password',
                         username='foobarbarbar',
@@ -224,7 +288,7 @@ class RegisterTestCase(base.RockPackTestCase):
             self.assertNotEquals(None, creds['refresh_token'])
 
             r = client.post('/ws/token/',
-                    headers=headers,
+                    headers=[get_client_auth_header()],
                     data=dict(refresh_token=creds['refresh_token'],
                         grant_type='refresh_token'))
 
@@ -233,12 +297,12 @@ class RegisterTestCase(base.RockPackTestCase):
             self.assertEquals('Bearer', new_creds['token_type'], 'token type should be Bearer')
             self.assertEquals(new_creds['refresh_token'], creds['refresh_token'], 'refresh tokens should be the same')
             self.assertNotEquals(new_creds['access_token'],
-                    creds['access_token'],
-                    'old access token should not be the same at the new one')
+                creds['access_token'],
+                'old access token should not be the same at the new one')
 
             # Try and get a refresh token with an invalid token
             r = client.post('/ws/token/',
-                    headers=headers,
+                    headers=[get_client_auth_header()],
                     data=dict(refresh_token='7348957nev9o3874nqlvcfh47lmqa'))
 
             self.assertEquals(400, r.status_code)

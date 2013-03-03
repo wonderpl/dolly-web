@@ -59,3 +59,13 @@ UNTITLED_CHANNEL = 'Untitled'
 
 # Title, description, and cover image for default favourites channel
 FAVOURITE_CHANNEL = 'Favourites', 'My favourite videos', ''
+
+# Path to default avatar image used when creating users
+DEFAULT_AVATAR = ''
+
+# Toggle to enable test url
+TEST_EXTERNAL_SYSTEM = False
+
+# Credentials for "rockpack-dev" app on facebook
+FACEBOOK_APP_ID = '131721883664256'
+FACEBOOK_APP_SECRET = '9dc1d5cf8d5f9b96284303b3ab4d1d15'

@@ -1,13 +1,18 @@
-import uuid
-from flask import request, abort
+from datetime import datetime
+from datetime import timedelta
+from cStringIO import StringIO
+from flask import request
+from flask import abort
 from flask.ext import wtf
+import requests
+from . import facebook
 from rockpack.mainsite import app
 from rockpack.mainsite.core.oauth.decorators import check_client_authorization
-from rockpack.mainsite.core.webservice import WebService, expose_ajax
-from rockpack.mainsite.services.video.models import Channel
+from rockpack.mainsite.core.webservice import WebService
+from rockpack.mainsite.core.webservice import expose_ajax
 from rockpack.mainsite.services.user.models import User
+from rockpack.mainsite.services.video.models import Locale
 from . import models
-from .exceptions import InvalidExternalSystem
 
 
 def user_authenticated(username, password):
@@ -15,6 +20,15 @@ def user_authenticated(username, password):
     if user and user.check_password(password):
         return user
     return False
+
+
+if app.config.get('TEST_EXTERNAL_SYSTEM'):
+    @app.route('/test/fb/login/')
+    def test_fb():
+        from flask import render_template
+        from test.test_helpers import get_client_auth_header
+        return render_template('fb_test.html',
+                               client_auth_headers=[get_client_auth_header()])
 
 
 class LoginWS(WebService):
@@ -34,11 +48,25 @@ class LoginWS(WebService):
     @expose_ajax('/external/', methods=['POST'])
     @check_client_authorization
     def exeternal(self):
-        if not request.form['grant_type'] == 'token':
-            abort(400)
-        user = models.ExternalToken.user_from_token()
+        form = ExternalRegistrationForm(request.form, csrf_enabled=False)
+        if not form.validate():
+            abort(400, form_errors=form.errors)
+
+        eu = ExternalUser(form.external_system.data, form.external_token.data)
+        if not eu.valid_token:
+            abort(400, error='unauthorized_client')
+
+        user = models.ExternalToken.user_from_uid(
+            request.form.get('external_system'),
+            eu.id)
+
         if not user:
-            abort(400, error='invalid_grant')
+            # New user
+            user = User.create_from_external_system(eu)
+
+        # Update the token record if needed
+        models.ExternalToken.update_token(user, eu)
+
         return user.get_credentials()
 
 
@@ -47,48 +75,95 @@ class RockRegistrationForm(wtf.Form):
     password = wtf.PasswordField(validators=[wtf.Required()])
     first_name = wtf.TextField()
     last_name = wtf.TextField()
+    locale = wtf.TextField(validators=[wtf.Required()])
     email = wtf.TextField(validators=[wtf.Required(), wtf.Email()])
 
     def validate_username(form, field):
         if User.query.filter_by(username=field.data).count():
             raise wtf.ValidationError('"%s" already taken' % field.data)
 
+        if field.data != User.sanitise_username(field.data):
+            raise wtf.ValidationError('Username can only contain alphanumerics')
 
-class ExternalRegistrationForm(RockRegistrationForm):
+    def validate_email(form, field):
+        if User.query.filter_by(email=field.data).count():
+            raise wtf.ValidationError('Email address already registered')
+
+
+class ExternalRegistrationForm(wtf.Form):
     external_system = wtf.TextField(validators=[wtf.Required()])
     external_token = wtf.TextField(validators=[wtf.Required()])
 
-    password = wtf.PasswordField()
-
     def validate_external_system(form, value):
-        if value in models.EXTERNAL_SYSTEM_NAMES:
-            return wtf.ValidationError('external system invalid')
+        if value.data not in models.EXTERNAL_SYSTEM_NAMES:
+            raise wtf.ValidationError('external system invalid')
 
 
-def new_user_setup(form):
-    """ Creates a new user and sets up
-        and related assets, like default channels """
-    user = User(
-        username=form.username.data,
-        first_name=form.first_name.data,
-        last_name=form.last_name.data,
-        email=form.email.data,
-        password_hash='',
-        refresh_token=uuid.uuid4().hex,
-        avatar='',
-        is_active=True)
-    user = user.save()
-    user.set_password(form.password.data)
+# TODO: currently only Facebook - change
+class ExternalUser:
 
-    title, description, cover = app.config['FAVOURITE_CHANNEL']
-    channel = Channel(
-        title=title,
-        description=description,
-        cover=cover,
-        owner=user.id)
-    channel.save()
+    def __init__(self, system, token, expires_in=None):
+        self._user_data = {}
+        self._valid_token = False
+        self._token = token
+        self._system = system
 
-    return user
+        if expires_in:
+            self._expires = datetime.utcnow() + timedelta(seconds=expires_in)
+        else:
+            self._expires = None
+
+        self._user_data = self._get_external_data()
+        if self._user_data:
+            self._valid_token = True
+
+    def _get_external_data(self):
+        try:
+            graph = facebook.GraphAPI(self._token)
+        except facebook.GraphAPIError:
+            return {}
+        return graph.get_object('me')
+
+    def get_new_token(self):
+        # abstract this out to not be fb specific
+        token, expires = facebook.renew_token(
+            self._token,
+            app.config['FACEBOOK_APP_ID'],
+            app.config['FACEBOOK_APP_SECRET'])
+        return self.__class__('facebook', token, expires)
+
+    id = property(lambda x: x._user_data.get('id'))
+    username = property(lambda x: x._user_data.get('username'))
+    first_name = property(lambda x: x._user_data.get('first_name', ''))
+    last_name = property(lambda x: x._user_data.get('last_name', ''))
+    display_name = property(lambda x: x._user_data.get('name', ''))
+    valid_token = property(lambda x: x._valid_token)
+    token = property(lambda x: x._token)
+    system = property(lambda x: x._system)
+    expires = property(lambda x: x._expires)
+
+    @property
+    def email(self):
+        if 'email' in self._user_data:
+            return self._user_data['email']
+        elif 'username' in self._user_data:
+            return '%s@facebook.com' % self._user_data['username']
+        else:
+            return ''
+
+    @property
+    def locale(self):
+        l = self._user_data.get('locale', '').lower().replace('_', '-')
+        if not Locale.query.get(l):
+            return ''
+        return l
+
+    @property
+    def avatar(self):
+        r = requests.get('http://graph.facebook.com/{}/picture/?type=large'.format(self.id))
+        if r.status_code == 200 and r.headers.get('content-type', '').startswith('image/'):
+            return StringIO(r.content)
+        return ''
 
 
 class RegistrationWS(WebService):
@@ -100,23 +175,14 @@ class RegistrationWS(WebService):
         form = RockRegistrationForm(csrf_enabled=False)
         if not form.validate():
             abort(400, form_errors=form.errors)
-        user = new_user_setup(form)
+        user = User.create_with_channel(
+            username=form.username.data,
+            first_name=form.first_name.data,
+            last_name=form.last_name.data,
+            email=form.email.data,
+            password=form.password.data,
+            locale=form.locale.data)
         return user.get_credentials()
-
-    @expose_ajax('/external/', methods=['POST'])
-    @check_client_authorization
-    def external(self):
-        form = ExternalRegistrationForm(csrf_enabled=False)
-        if not form.validate():
-            abort(400)
-        user = new_user_setup(form)
-        try:
-            models.ExternalToken.update_token(
-                user, form.external_system.data, form.external_token.data)
-        except InvalidExternalSystem:
-            abort(400)
-        else:
-            return user.get_credentials()
 
 
 class TokenWS(WebService):
