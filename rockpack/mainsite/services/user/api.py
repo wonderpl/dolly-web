@@ -16,7 +16,7 @@ from rockpack.mainsite.services.cover_art.models import UserCoverArt, RockpackCo
 from rockpack.mainsite.services.cover_art import api as cover_api
 from rockpack.mainsite.services.video import api as video_api
 from rockpack.mainsite.services.search import api as search_api
-from .models import User, UserActivity
+from .models import User, UserActivity, Subscription
 
 
 ACTION_COLUMN_VALUE_MAP = dict(
@@ -268,4 +268,39 @@ class UserWS(WebService):
     @commit_on_success
     def delete_cover_art_item(self, userid, ref):
         if not UserCoverArt.query.filter_by(cover=ref).delete():
+            abort(404)
+
+    @expose_ajax('/<userid>/subscriptions/')
+    @check_authorization(self_auth=True)
+    def get_subscriptions(self, userid):
+        channels = Subscription.query.filter_by(user=g.authorized.userid).\
+            join(Channel).values('id', 'owner')
+        items = [dict(resource_url=url_for('userws.delete_subscription_item',
+                                           userid=g.authorized.userid, channelid=channelid),
+                      channel_url=url_for('userws.channel_info',
+                                          userid=owner, channelid=channelid))
+                 for channelid, owner in channels]
+        return dict(subscriptions=dict(items=items, total=len(items)))
+
+    @expose_ajax('/<userid>/subscriptions/', methods=['POST'])
+    @check_authorization(self_auth=True)
+    def create_subscription(self, userid):
+        channelid = request.form['channel']
+        if not Channel.query.filter_by(id=channelid).count():
+            abort(400, message='Invalid channel id')
+        subs = Subscription(user=g.authorized.userid, channel=channelid).save()
+        return ajax_create_response(subs)
+
+    @expose_ajax('/<userid>/subscriptions/<channelid>/')
+    @check_authorization(self_auth=True)
+    def redirect_subscription_item(self, userid, channelid):
+        channel = Channel.query.get_or_404(channelid)
+        return None, 302, [('Location', channel.resource_url)]
+
+    @expose_ajax('/<userid>/subscriptions/<channelid>/', methods=['DELETE'])
+    @check_authorization(self_auth=True)
+    @commit_on_success
+    def delete_subscription_item(self, userid, channelid):
+        if not Subscription.query.filter_by(
+                user=g.authorized.userid, channel=channelid).delete():
             abort(404)
