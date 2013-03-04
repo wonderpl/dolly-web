@@ -13,7 +13,7 @@
         s.src = '{{ url_for('.bookmarklet', _external=True) }}?locale={{ form.data.locale }}&' + Math.random();
         d.body.appendChild(s);
       }());
-      ">ROCKPACK IMPORT{% if form.locale %} ({{ form.locale.data }}){% endif %}</a>
+      ">{% if form.locale %}{{ form.locale.data }} {% endif %}rockpack import</a>
   </div>
   {% endif %}
 
