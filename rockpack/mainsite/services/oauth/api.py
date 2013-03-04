@@ -193,7 +193,7 @@ class TokenWS(WebService):
     def token(self):
         refresh_token = request.form['refresh_token']
         if request.form['grant_type'] != 'refresh_token' or not refresh_token:
-            abort(400)
+            abort(400, error='unsupported_grant_type')
         user = User.query.filter_by(refresh_token=refresh_token).first()
         if not user:
             abort(400, error='invalid_grant')
