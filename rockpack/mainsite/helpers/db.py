@@ -150,7 +150,7 @@ def resize_and_upload(fp, cfgkey):
     resized = resizer.resize(fp)
 
     # Upload original
-    orig_ext = getattr(fp, 'filename', '').rsplit('.', 1)[-1]
+    orig_ext = resizer.original_extension
     uploader.from_file(fp, img_path_config['original'], new_name, orig_ext)
 
     for name, img in resized.iteritems():
