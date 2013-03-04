@@ -105,7 +105,7 @@ def verify_id_on_model(model, col='id'):
     def f(form, field):
         if field.data:
             if not model.query.filter_by(**{col: field.data}).count():
-                raise ValidationError('Invalid {} "{}"'.format(field, field.data))
+                raise ValidationError('Invalid {}: {}'.format(field.name, field.data))
     return f
 
 
@@ -118,7 +118,7 @@ class ChannelForm(form.BaseForm):
     def validate_cover(self, field):
         exists = lambda m: m.query.filter_by(cover=field.data).count()
         if field.data and not (exists(RockpackCoverArt) or exists(UserCoverArt)):
-            raise ValidationError('invalid cover reference')
+            raise ValidationError('Invalid cover reference')
 
     def validate_title(self, field):
         user_channels = Channel.query.filter_by(owner=self.userid)
@@ -127,7 +127,7 @@ class ChannelForm(form.BaseForm):
             count = user_channels.filter(Channel.title.like(untitled_channel + '%')).count()
             field.data = untitled_channel + str(count + 1)
         if user_channels.filter_by(title=field.data).count():
-            raise ValidationError('duplicate title')
+            raise ValidationError('Duplicate title')
 
 
 def _channel_info_response(channelid, meta, locale, paging, owner_url):
@@ -249,11 +249,23 @@ class UserWS(WebService):
     @check_authorization(self_auth=True)
     def get_cover_art(self, userid):
         covers = UserCoverArt.query.filter_by(owner=userid)
-        return cover_api.cover_art_response(covers, self.get_page())
+        return cover_api.cover_art_response(covers, self.get_page(), own=True)
 
     @expose_ajax('/<userid>/cover_art/', methods=['POST'])
     @check_authorization(self_auth=True)
     def post_cover_art(self, userid):
         path = process_image(UserCoverArt.cover)
         cover = UserCoverArt(cover=path, owner=userid).save()
-        return cover_api.cover_art_dict(cover), 201
+        return ajax_create_response(cover, cover_api.cover_art_dict(cover, own=True))
+
+    @expose_ajax('/<userid>/cover_art/<ref>', cache_age=3600)
+    def redirect_cover_art_item(self, userid, ref):
+        cover = UserCoverArt.query.filter_by(cover=ref).first_or_404()
+        return None, 302, [('Location', cover.cover.background)]
+
+    @expose_ajax('/<userid>/cover_art/<ref>', methods=['DELETE'])
+    @check_authorization(self_auth=True)
+    @commit_on_success
+    def delete_cover_art_item(self, userid, ref):
+        if not UserCoverArt.query.filter_by(cover=ref).delete():
+            abort(404)

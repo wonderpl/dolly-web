@@ -14,7 +14,7 @@ service_urls = namedtuple('ServiceUrl', 'url func_name func methods')
 class JsonReponse(Response):
     def __init__(self, data, status=None, headers=None):
         super(JsonReponse, self).__init__(
-            json.dumps(data, separators=(',', ':')),
+            json.dumps(data, separators=(',', ':')) if data else '',
             status, headers, 'application/json')
 
 
@@ -61,9 +61,9 @@ def expose_ajax(url, methods=['GET'], secure=None, cache_age=None, cache_private
     return decorator
 
 
-def ajax_create_response(instance):
-    resource_url = instance.get_resource_url(True)
-    return (dict(id=instance.id, resource_url=resource_url),
+def ajax_create_response(instance, extra={}):
+    resource_url = extra.pop('resource_url', instance.get_resource_url(True))
+    return (dict(id=instance.id, resource_url=resource_url, **extra),
             201, [('Location', resource_url)])
 
 
