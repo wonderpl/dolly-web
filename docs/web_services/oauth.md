@@ -1,3 +1,43 @@
+Log in User
+===========
+
+Retrieve access token credentials for a user.
+
+```http
+POST /ws/login/ HTTP/1.1
+Authorization: Basic TOKEN
+```
+
+Parameter  | Required | Value      | Description
+:--------- | :------- | :--------- | :----------
+grant_type | Yes      | `password` | The type of grant that will be used when accessing the resource
+username   | Yes      | String
+password   | Yes      | String
+
+Possible errors.
+
+The credentials supplied invalid for the user, or the user does not exists.
+
+```http
+HTTP/1.1 400 BAD REQUEST
+Content-Type: application/json
+
+{
+    "error": "invalid_grant"
+}
+```
+
+The `grant_type` specified for this request is invalid or not supported.
+
+```http
+HTTP/1.1 400 BAD REQUEST
+Content-Type: application/json
+
+{
+    "error": "unsupported_grant_type"
+}
+```
+
 Register User
 =============
 
@@ -95,8 +135,7 @@ Content-Type: application/json
 {
   "form_errors":
     {
-      "external_system":
-        ["external system invalid"]
+      "external_system": ["external system invalid"]
     }
 }
 ```
@@ -112,3 +151,40 @@ Content-Type: application/json
 }
 ```
 
+Refreshing Tokens
+=================
+
+```http
+POST /ws/token/ HTTP/1.1
+Authorization: Bearer TOKEN
+
+```
+
+Parameter       | Required | Value           | Description
+:-------------- | :------- | :-------------- | :----------
+grant_type      | Yes      | `refresh_token` | The type of grant that will be used when accessing the resource
+refresh_token   | Yes      | String          | The `refresh_token` supplied along with the `access_token` at login
+
+Possible errors.
+
+The credentials supplied invalid for the user, or the user does not exists.
+
+```http
+HTTP/1.1 400 BAD REQUEST
+Content-Type: application/json
+
+{
+    "error": "invalid_grant"
+}
+```
+
+The `grant_type` specified for this request is invalid or not supported.
+
+```http
+HTTP/1.1 400 BAD REQUEST
+Content-Type: application/json
+
+{
+    "error": "unsupported_grant_type"
+}
+```

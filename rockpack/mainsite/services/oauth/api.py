@@ -39,7 +39,7 @@ class LoginWS(WebService):
     @check_client_authorization
     def login(self):
         if not request.form['grant_type'] == 'password':
-            abort(400)
+            abort(400, error='unsupported_grant_type')
         user = user_authenticated(request.form['username'], request.form['password'])
         if not user:
             abort(400, error='invalid_grant')
