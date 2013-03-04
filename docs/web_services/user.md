@@ -1,4 +1,4 @@
-USER
+User
 ====
 
 Get data for a specific user.
@@ -10,11 +10,12 @@ Authorization: Bearer TOKEN
 
 Responds with user information (names & avatar) and channels.
 If `Bearer` token matches requested `USERID` then private channels will be included.
+The token is not required when accessing other user's data.
 
 ```http
 HTTP/1.1 200 OK
 Content-Type: application/json
-Cache-Control: private, max-age=60
+Cache-Control: public, max-age=60
 
 {
   "name": "username",
@@ -24,9 +25,9 @@ Cache-Control: private, max-age=60
     {
       "id": "channelid",
       "resource_url": "http://path/to/users/channels/channelid/",
-      "description": "",
-      "title": "lotr",
-      "subscribe_count": 0,
+      "description": "channel description",
+      "title": "channel title",
+      "subscribe_count": 123,
       "cover_background_url": "http://path/to/channel/bg.jpg",
       "cover_thumbnail_small_url": "http://path/to/channel/small.jpg",
       "cover_thumbnail_large_url": "http://path/to/channel/large.jpg"
@@ -35,14 +36,19 @@ Cache-Control: private, max-age=60
 }
 ```
 
-CHANNEL
+Channel
 =======
+
+### Get
 
 Get data for an individual channel.
 
 ```http
-GET /ws/USERID/channels/CID/?locale=LOCALE HTTP/1.1
+GET /ws/USERID/channels/CID/?locale=LOCALE&start=START&size=SIZE HTTP/1.1
+Authorization: Bearer TOKEN
 ```
+
+`Bearer` token is required only when accessing a private channel.
 
 Parameter      | Required? | Value             | Description
 :------------- | :-------- | :---------------- | :----------
@@ -50,12 +56,21 @@ locale         | yes       | IETF language tag | Some videos may be excluded if 
 start          | no        | 0-based integer   | Used for paging through the channel's video items
 size           | no        | video page size   | Number of videos to return - 100 by default
 
-Returns metadata and video list for the requested channel.
+If the channel is private and the owner's token is not provided then a `403` will be returned.
+
+```http
+HTTP/1.1 403 FORBIDDEN
+Content-Type: application/json
+
+{"error":"insufficient_scope"}
+```
+
+Otherwise returns metadata and video list for the requested channel.
 
 ```http
 HTTP/1.1 200 OK
 Content-Type: application/json
-Cache-Control: max-age=60
+Cache-Control: public, max-age=60
 
 {
  "id": "Unique channel id",
@@ -91,7 +106,83 @@ Cache-Control: max-age=60
 }
 ```
 
-Create a new channel.
+### Create
+
+To create a new channel `POST` json data to channels service.
+
+```http
+POST /ws/USERID/channels/ HTTP/1.1
+Content-Type: application/json
+Authorization: Bearer TOKEN
+
+{
+ "title": "new title",
+ "description": "",
+ "cover": "coverimageref.png",
+ "category": 1
+}
+```
+
+Parameter      | Required? | Value             | Description
+:------------- | :-------- | :---------------- | :----------
+title          | yes       | unicode string    | May be empty string, in which case a default title will be used
+description    | yes       | unicode string    | May be empty string
+cover          | yes       | cover reference   | A string identifying a user or global cover image - `cover_ref` key from cover_art service
+category       | yes       | category id       | The id of the assigned category. May be empty to leave unassigned
+
+If any of the body parameters are invalid then a 400 response will list the error messages per field:
+
+```http
+HTTP/1.1 400 BAD REQUEST
+Content-Type: application/json
+
+{
+ "error": "invalid_request",
+ "form_errors": {
+  "category": ["Invalid category: 111111111"],
+  "cover": ["Invalid cover reference"],
+  "description": ["This field is required, but can be an empty string."],
+  "title": ["Duplicate title"]
+ }
+}
+```
+
+On success:
+
+```http
+HTTP/1.1 201 CREATED
+Content-Type: application/json
+Location: http://path/to/resource/url/for/new/channel/
+
+{
+ "resource_url": "http://path/to/resource/url/for/new/channel/",
+ "id": "chxrE1zIf1TaK-pe_C_YyXmw"
+}
+```
+
+### Edit
+
+To change the data for a channel `PUT` new json data to the resource url.
+
+```http
+PUT /ws/USERID/channels/CHANNELID/ HTTP/1.1
+Content-Type: application/json
+Authorization: Bearer TOKEN
+
+{
+ "title": "new title",
+ "description": "",
+ "cover": "coverimageref.png",
+ "category": 1
+}
+```
+
+The json format is the same as for creating a new channel.
+
+```http
+HTTP/1.1 204 NO CONTENT
+Content-Type: application/json
+```
 
 User Activity
 =============
@@ -110,7 +201,7 @@ Parameter      | Required? | Value             | Description
 :------------- | :-------- | :---------------- | :----------
 locale         | yes       | IETF language tag | The action will be recorded for the given locale
 action         | yes       | `star` or `view`  | Specifies the action type
-video_instance | no        | instance id       | The id of the video instance that was viewed or starred
+video_instance | yes       | instance id       | The id of the video instance that was viewed or starred
 
 ```http
 HTTP/1.1 204 NO CONTENT
@@ -149,24 +240,31 @@ List of all video instances recently added to user's subscribed channels.
 User Cover Art
 ==============
 
+### Get
+
 Get list of users uploaded cover images.
 
 ```http
-GET /ws/USERID/cover_art/ HTTP/1.1
+GET /ws/USERID/cover_art/?start=START&size=SIZE HTTP/1.1
 Authorization: Bearer TOKEN
 ```
+
+Parameter      | Required? | Value             | Description
+:------------- | :-------- | :---------------- | :----------
+start          | no        | 0-based integer   | Used for paging through the user's cover art items
+size           | no        | video page size   | Number of items to return - 100 by default
 
 ```http
 HTTP/1.1 200 OK
 Content-Type: application/json
-Cache-Control: public, max-age=60
+Cache-Control: private, max-age=60
 
 {
   "cover_art": {
     "total": 1,
     "items": [
       {
-        "cover_ref": "img.png",
+        "cover_ref": "coverartref",
         "background_url": "http://path/to/background/img.jpg",
         "carousel_url": "http://path/to/carousel/img.jpg"
       }
@@ -175,4 +273,54 @@ Cache-Control: public, max-age=60
 }
 ```
 
+### Upload
 
+`POST` image data to cover_art service:
+
+```http
+POST /ws/USERID/cover_art/ HTTP/1.1
+Content-Type: image/png
+Authorization: Bearer TOKEN
+
+.........IMAGE DATA....
+```
+
+If the image data cannot be processed you'll get an `400` response:
+```http
+HTTP/1.1 400 BAD REQUEST
+Content-Type: application/json
+
+{
+ "error": "invalid_request",
+ "message": "cannot identify image file"
+}
+```
+
+On success a `201` will include the `cover_ref` value for adding to a channel.
+
+```http
+HTTP/1.1 201 CREATED
+Content-Type: application/json
+Location: http://path/to/cover/art/resource/url.png
+
+{
+ "cover_ref": "coverartref",
+ "resource_url": "http://path/to/cover/art/resource/url.png",
+ "background_url": "http://path/to/uploaded/image/background/size.jpg",
+ "carousel_url": "http://path/to/uploaded/image/carousel/size.jpg"
+}
+```
+
+### Remove
+
+Remove a users cover art item with a `DELETE` request:
+
+```http
+DELETE /ws/USERID/cover_art/COVER_REF HTTP/1.1
+Authorization: Bearer TOKEN
+```
+
+```http
+HTTP/1.1 204 NO CONTENT
+Content-Type: application/json
+```
