@@ -1,11 +1,17 @@
-Log in User
+Log-in User
 ===========
 
 Retrieve access token credentials for a user.
 
 ```http
 POST /ws/login/ HTTP/1.1
-Authorization: Basic TOKEN
+Authorization: Basic CLIENT_APP_CREDENTIALS
+Content-Type: application/x-www-form-urlencoded
+
+{
+    "username": "ironman",
+    "password": "pepperpots"
+}
 ```
 
 Parameter  | Required | Value      | Description
@@ -14,7 +20,34 @@ grant_type | Yes      | `password` | The type of grant that will be used when ac
 username   | Yes      | String
 password   | Yes      | String
 
+Responds with an access token information.
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{
+  "token_type": "Bearer",
+  "access_token": "some_access_token",
+  "expires_in": "3600",
+  "refresh_token": "some_refresh_token",
+  "user_id": "USERID",
+  "resource_url:" "/ws/USERID/"
+}
+```
+
 Possible errors.
+
+Insufficient content was passed to perform the log-in.
+
+```http
+HTTP/1.1 400 BAD REQUEST
+Content-Type: application/json
+
+{
+    "error": "invalid_request"
+}
+```
 
 The credentials supplied invalid for the user, or the user does not exists.
 
@@ -45,7 +78,17 @@ Register a user.
 
 ```http
 POST /ws/register/ HTTP/1.1
-Authorization: Basic TOKEN
+Authorization: Basic CLIENT_APP_CREDENTIALS
+Content-Type: application/x-www-form-urlencoded
+
+{
+    "username": "theamazingspiderman",
+    "password": "venom",
+    "first_name": "Peter",
+    "last_name": "Parker",
+    "locale": "en-us",
+    "spidey@theavengers.com"
+}
 ```
 
 Parameter  | Required | Value  | Description
@@ -75,17 +118,16 @@ Content-Type: application/json
 
 Possible errors.
 
+Errors occurred with the form data.
 ```http
 HTTP/1.1 400 BAD REQUEST
 Content-Type: application/json
 
 {
-  "form_errors":
-    {
-      "email": [
-        "Email address already registered"
-      ]
-    }
+  "form_errors": {
+      "email": ["Email address already registered"]
+    },
+  "error": "invalid_request"
 }
 ```
 
@@ -98,7 +140,13 @@ Registrering a Facebook user.
 
 ```http
 POST /ws/login/external/ HTTP/1.1
-Authorization: Basic TOKEN
+Authorization: Basic CLIENT_APP_CREDENTIALS
+Content-Type: application/x-www-form-urlencoded
+
+{
+    "external_system": "facebook",
+    "external_token": "some_fb_access_token"
+}
 ```
 
 Parameter       | Required | Value     | Description
@@ -136,7 +184,8 @@ Content-Type: application/json
   "form_errors":
     {
       "external_system": ["external system invalid"]
-    }
+    },
+  "error": "invalid_request"
 }
 ```
 
@@ -157,7 +206,12 @@ Refreshing Tokens
 ```http
 POST /ws/token/ HTTP/1.1
 Authorization: Bearer TOKEN
+Content-Type: application/x-www-form-urlencoded
 
+{
+    "grant_type": "refresh_token",
+    "refresh_token": "some_long_string"
+}
 ```
 
 Parameter       | Required | Value           | Description
@@ -166,6 +220,17 @@ grant_type      | Yes      | `refresh_token` | The type of grant that will be us
 refresh_token   | Yes      | String          | The `refresh_token` supplied along with the `access_token` at login
 
 Possible errors.
+
+
+Insufficient content was passed.
+```http
+HTTP/1.1 400 BAD REQUEST
+Content-Type: application/json
+
+{
+  "error": "invalid_request"
+}
+```
 
 The credentials supplied invalid for the user, or the user does not exists.
 
