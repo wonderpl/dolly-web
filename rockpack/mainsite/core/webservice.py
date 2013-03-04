@@ -62,8 +62,9 @@ def expose_ajax(url, methods=['GET'], secure=None, cache_age=None, cache_private
 
 
 def ajax_create_response(instance):
-    return (dict(id=instance.id, resource_url=instance.resource_url),
-            201, [('Location', instance.resource_url)])
+    resource_url = instance.get_resource_url(True)
+    return (dict(id=instance.id, resource_url=resource_url),
+            201, [('Location', resource_url)])
 
 
 def process_image(field, data=None):
@@ -111,18 +112,19 @@ class WebService(object):
 
     def __init__(self, app, url_prefix, **kwargs):
         secure_subdomain = app.config.get('SECURE_SUBDOMAIN')
+        default_subdomain = app.config.get('DEFAULT_SUBDOMAIN')
         bp = Blueprint(self.__class__.__name__.lower(), self.__class__.__name__, url_prefix=url_prefix)
         for route in self._routes:
             # If secure is None then view should be available on all domains,
             # if True then only available on secure, if False then non-secure only
-            subdomains = [None]     # None refers to default subdomain
+            subdomains = [None] + ([default_subdomain] if default_subdomain else [])
             if secure_subdomain:
                 secure = getattr(route.func, '_secure', None)
                 if secure is True:
                     subdomains = [secure_subdomain]
                 elif secure is None:
                     # Order is important here - the default should be first
-                    subdomains = [None, secure_subdomain]
+                    subdomains += [secure_subdomain]
             for subdomain in subdomains:
                 bp.add_url_rule(route.url,
                                 route.func.__name__,

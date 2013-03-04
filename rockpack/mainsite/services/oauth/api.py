@@ -23,7 +23,7 @@ def user_authenticated(username, password):
 
 
 if app.config.get('TEST_EXTERNAL_SYSTEM'):
-    @app.route('/test/fb/login/')
+    @app.route('/test/fb/login/', subdomain=app.config.get('SECURE_SUBDOMAIN'))
     def test_fb():
         from flask import render_template
         from test.test_helpers import get_client_auth_header
