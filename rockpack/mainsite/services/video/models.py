@@ -9,6 +9,7 @@ from rockpack.mainsite.helpers.db import (
     gen_videoid, insert_new_only, ImageType)
 from rockpack.mainsite.helpers.urls import url_for
 from rockpack.mainsite.services.user.models import User
+from rockpack.mainsite import app
 
 
 class Locale(db.Model):
@@ -345,6 +346,17 @@ class Channel(db.Model):
         VideoInstance.query.filter_by(channel=self.id).filter(
             VideoInstance.video.in_(set(getattr(v, 'id', v) for v in videos))).\
             delete(synchronize_session=False)
+
+    def should_be_visible(self, request_visibility):
+        """ Return False if conditions for
+            visibility are not met """
+        if not (self.description and\
+                self.cover and\
+                (self.title and not self.title.startswith(app.config['UNTITLED_CHANNEL']))
+                ):
+            return False
+
+        return request_visibility
 
 
 class ChannelLocaleMeta(db.Model):

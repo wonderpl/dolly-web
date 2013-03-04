@@ -19,7 +19,8 @@ class ChannelCreateTestCase(base.RockPackTestCase):
                         owner=user.id,
                         locale='en-us',
                         category=0,
-                        cover=''),
+                        cover='',
+                        visible=False),
                     headers=[get_auth_header(user.id)])
 
             self.assertEquals(201, r.status_code)
@@ -37,9 +38,10 @@ class ChannelCreateTestCase(base.RockPackTestCase):
                     data=dict(title='',
                         description=new_description,
                     owner=user.id,
-                    category='',
+                    category=1,
                     locale='',
-                    cover=RockpackCoverArtData.comic_cover.cover),
+                    cover=RockpackCoverArtData.comic_cover.cover,
+                    visible=False),
                     headers=[get_auth_header(user.id)])
             self.assertEquals(204, r.status_code)
 
