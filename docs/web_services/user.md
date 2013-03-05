@@ -59,6 +59,8 @@ Cache-Control: max-age=60
 
 {
  "id": "Unique channel id",
+ "public": 1,
+ "description": "Channel description",
  "resource_url": "http://base/ws/USERID/channels/CHANNELID/",
  "title": "Channel title",
  "cover_background_url": "http://path/to/channel/bg.jpg",
