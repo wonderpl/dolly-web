@@ -217,7 +217,8 @@ class UserWS(WebService):
             description=form.description.data,
             cover=form.cover.data,
             category=form.category.data,
-            locale=request.args.get('locale'))
+            locale=request.args.get('locale'),
+            visible=form.visible.data)
         return ajax_create_response(channel)
 
     @expose_ajax('/<userid>/channels/<channelid>/', cache_age=60, secure=False)
@@ -248,11 +249,17 @@ class UserWS(WebService):
         channel.save()
 
         visible = channel.should_be_visible(form.visible.data)
-        # Update the old categories based on the mapping from
-        # the the new cateogry, and also update the visibility
-        for m in ChannelLocaleMeta.query.filter_by(channel=channelid):
-            m.category = Category.map_to(form.category.data, m.locale) or ''
-            m.visible = visible
+        # Update metas to a new category if necessary
+        for m in list(ChannelLocaleMeta.query.filter_by(channel=channelid)):
+
+            # NOTE: If we change the category, and there isn't a mapping to
+            # a locale for it, set it as per the form
+            if int(form.category.data) != m.category:
+                m.category = Category.map_to(int(form.category.data), m.locale)\
+                    or form.category.data
+
+            # TODO: this doesn't seem to work in SQLITE. FIX
+            #.visible = visible
             m.save()
 
     @expose_ajax('/<userid>/cover_art/', cache_age=60, cache_private=True)

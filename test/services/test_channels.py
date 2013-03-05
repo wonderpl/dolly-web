@@ -4,6 +4,7 @@ from urlparse import urlsplit
 from test import base
 from test.fixtures import RockpackCoverArtData
 from test.test_helpers import get_auth_header
+from rockpack.mainsite.services.video import models
 
 
 class ChannelCreateTestCase(base.RockPackTestCase):
@@ -18,7 +19,7 @@ class ChannelCreateTestCase(base.RockPackTestCase):
                         description='test channel for user {}'.format(user.id),
                         owner=user.id,
                         locale='en-us',
-                        category=0,
+                        category=1,
                         cover='',
                         visible=False),
                     headers=[get_auth_header(user.id)])
@@ -38,7 +39,7 @@ class ChannelCreateTestCase(base.RockPackTestCase):
                     data=dict(title='',
                         description=new_description,
                     owner=user.id,
-                    category=1,
+                    category=3,
                     locale='',
                     cover=RockpackCoverArtData.comic_cover.cover,
                     visible=False),
@@ -51,6 +52,10 @@ class ChannelCreateTestCase(base.RockPackTestCase):
                     'channel descriptions should match')
             self.assertNotEquals('', updated_ch['cover_background_url'],
                     'channel cover should not be blank')
+            metas = models.ChannelLocaleMeta.query.filter_by(channel=new_ch['id'])
+            assert metas.count() > 0
+            for m in metas:
+                self.assertEquals(m.category, 3)
 
     def test_failed_channel_create(self):
         with self.app.test_client() as client:

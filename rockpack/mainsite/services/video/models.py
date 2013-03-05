@@ -314,15 +314,21 @@ class Channel(db.Model):
         return cls.query.filter_by(owner=owner).values(cls.id, cls.title)
 
     @classmethod
-    def create(cls, category, locale=None, **kwargs):
+    def channelmeta_for_category(cls, category, locale):
+        if locale is None:
+            locale = Category.query.filter_by(id=category).value('locale')
+        return [ChannelLocaleMeta(
+            locale=locale,
+            category=category)]
+
+    @classmethod
+    def create(cls, category, locale=None, visible=True, **kwargs):
         """Create & save a new channel record along with appropriate category metadata"""
         channel = Channel(**kwargs)
         if category:
-            if locale is None:
-                locale = Category.query.filter_by(id=category).value('locale')
-            channel.metas = [ChannelLocaleMeta(
-                             locale=locale,
-                             category=category)]
+            channel.metas = cls.channelmeta_for_category(category, locale)
+            for meta in channel.metas:
+                meta.visible = channel.should_be_visible(visible)
         return channel.save()
 
     def get_resource_url(self, own=False):
@@ -350,10 +356,8 @@ class Channel(db.Model):
     def should_be_visible(self, request_visibility):
         """ Return False if conditions for
             visibility are not met """
-        if not (self.description and\
-                self.cover and\
-                (self.title and not self.title.startswith(app.config['UNTITLED_CHANNEL']))
-                ):
+        if not (self.description and self.cover and
+                (self.title and not self.title.startswith(app.config['UNTITLED_CHANNEL']))):
             return False
 
         return request_visibility
