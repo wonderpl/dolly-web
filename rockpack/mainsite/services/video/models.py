@@ -299,6 +299,7 @@ class Channel(db.Model):
     title = Column(String(1024), nullable=False)
     description = Column(Text, nullable=False)
     cover = Column(ImageType('CHANNEL', reference_only=True), nullable=False)
+    public = Column(Boolean(), nullable=False, server_default='true', default=True)
 
     owner = Column(CHAR(22), ForeignKey('user.id'), nullable=False)
     owner_rel = relationship(User, primaryjoin=(owner == User.id), lazy='joined', innerjoin=True)
@@ -322,13 +323,12 @@ class Channel(db.Model):
             category=category)]
 
     @classmethod
-    def create(cls, category, locale=None, visible=True, **kwargs):
+    def create(cls, category, locale=None, public=True, **kwargs):
         """Create & save a new channel record along with appropriate category metadata"""
         channel = Channel(**kwargs)
+        channel.public = channel.should_be_public(channel, public)
         if category:
             channel.metas = cls.channelmeta_for_category(category, locale)
-            for meta in channel.metas:
-                meta.visible = channel.should_be_visible(visible)
         return channel.save()
 
     def get_resource_url(self, own=False):
@@ -353,14 +353,15 @@ class Channel(db.Model):
             VideoInstance.video.in_(set(getattr(v, 'id', v) for v in videos))).\
             delete(synchronize_session=False)
 
-    def should_be_visible(self, request_visibility):
+    @classmethod
+    def should_be_public(self, channel, public):
         """ Return False if conditions for
             visibility are not met """
-        if not (self.description and self.cover and
-                (self.title and not self.title.startswith(app.config['UNTITLED_CHANNEL']))):
+        if not (channel.description and channel.cover and
+                (channel.title and not channel.title.startswith(app.config['UNTITLED_CHANNEL']))):
             return False
 
-        return request_visibility
+        return public
 
 
 class ChannelLocaleMeta(db.Model):

@@ -17,11 +17,10 @@ class ChannelCreateTestCase(base.RockPackTestCase):
             r = client.post('/ws/{}/channels/'.format(user.id),
                     data=dict(title=channel_title,
                         description='test channel for user {}'.format(user.id),
-                        owner=user.id,
                         locale='en-us',
                         category=1,
                         cover='',
-                        visible=False),
+                        public=False),
                     headers=[get_auth_header(user.id)])
 
             self.assertEquals(201, r.status_code)
@@ -38,11 +37,10 @@ class ChannelCreateTestCase(base.RockPackTestCase):
             r = client.put(resource,
                     data=dict(title='',
                         description=new_description,
-                    owner=user.id,
                     category=3,
                     locale='',
                     cover=RockpackCoverArtData.comic_cover.cover,
-                    visible=False),
+                    public=False),
                     headers=[get_auth_header(user.id)])
             self.assertEquals(204, r.status_code)
 
@@ -64,14 +62,14 @@ class ChannelCreateTestCase(base.RockPackTestCase):
             channel_title = uuid.uuid4().hex
             r = client.post('/ws/{}/channels/'.format(user.id),
                     data=dict(title=channel_title,
-                        owner=user.id,
                         locale='en-us'),
                     headers=[get_auth_header(user.id)])
 
             self.assertEquals(400, r.status_code)
             errors = json.loads(r.data)['form_errors']
             self.assertEquals({
-                "category": ["This field is required, but can be an empty string."],
+                "category": ["This field is required, but can be an empty string.", "invalid category"],
+                "public": ["This field is required, but can be an empty string."],
                 "description": ["This field is required, but can be an empty string."],
                 "cover":["This field is required, but can be an empty string."]},
                 errors)

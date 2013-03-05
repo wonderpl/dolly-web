@@ -93,7 +93,53 @@ Cache-Control: max-age=60
 }
 ```
 
-Create a new channel.
+Possible errors.
+
+If accessed via the secure sub-domain, and `public` is `1`,
+resource will return
+
+```http
+HTTP/1.1 404 NOT FOUND
+```
+
+Channel Create
+==============
+
+```http
+POST /ws/USERID/channel/ HTTP/1.1
+Authorization: Bearer TOKEN
+Content-Type: application/x-www-form-urlencoded
+
+{
+    "title": "channel title",
+    "description": "channel description",
+    "locale": "en-us",
+    "category": 1,
+    "cover": "COVERARTID",
+    "public": 1
+}
+```
+
+Parameter      | Required? | Value             | Description
+:------------- | :-------- | :---------------- | :----------
+title          | No        | String            | If not specified, a default title will be assigned
+description    | No        | String
+category       | No        | Integer
+cover          | No        | COVERARTID
+public         | No        | `0` or `1`
+locale         | Yes       | IETF language tag |
+
+Responds with a channel resource url.
+
+```http
+HTTP/1.1 201 CREATED
+Location: /ws/USERID/channels/CHANNELID/
+
+{
+    "id": "CHANNELID",
+    "resource_url": "/ws/USERID/channels/CHANNELID/"
+}
+```
 
 User Activity
 =============

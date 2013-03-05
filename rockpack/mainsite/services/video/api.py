@@ -39,6 +39,8 @@ def channel_dict(channel, with_owner=True, owner_url=False):
 
 def get_local_channel(locale, paging, **filters):
     metas = models.ChannelLocaleMeta.query.filter_by(visible=True, locale=locale)
+    # TODO: check this is correct
+    metas = metas.filter(models.Channel.public==True)
     if filters.get('category'):
         metas = _filter_by_category(metas, models.ChannelLocaleMeta, filters['category'])
     if filters.get('query'):

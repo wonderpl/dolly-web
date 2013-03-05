@@ -114,7 +114,7 @@ class ChannelForm(form.BaseForm):
     description = wtf.TextField(validators=[check_present])
     category = wtf.TextField(validators=[check_present, verify_id_on_model(Category)])
     cover = wtf.TextField(validators=[check_present])
-    visible = wtf.BooleanField(validators=[check_present])
+    public = wtf.BooleanField(validators=[check_present])
 
     def validate_cover(self, field):
         exists = lambda m: m.query.filter_by(cover=field.data).count()
@@ -218,18 +218,20 @@ class UserWS(WebService):
             cover=form.cover.data,
             category=form.category.data,
             locale=request.args.get('locale'),
-            visible=form.visible.data)
+            public=form.public.data)
         return ajax_create_response(channel)
 
     @expose_ajax('/<userid>/channels/<channelid>/', cache_age=60, secure=False)
     def channel_info(self, userid, channelid):
-        channel = Channel.query.get_or_404(channelid)
+        channel = Channel.query.filter_by(channel=channelid, public=True).first_or_404()
         return _channel_info_response(channel, self.get_locale(), self.get_page(), False)
 
     @expose_ajax('/<userid>/channels/<channelid>/', cache_age=0)
     @check_authorization()
     def owner_channel_info(self, userid, channelid):
         channel = Channel.query.get_or_404(channelid)
+        if g.authorized.userid != userid and not channel.public:
+            abort(404)
         return _channel_info_response(channel, self.get_locale(), self.get_page(), True)
 
     @expose_ajax('/<userid>/channels/<channelid>/', methods=('PUT',))
@@ -246,21 +248,18 @@ class UserWS(WebService):
         channel.title = form.title.data
         channel.description = form.description.data
         channel.cover = form.cover.data
+        channel.public = Channel.should_be_public(channel, form.public.data)
         channel.save()
 
-        visible = channel.should_be_visible(form.visible.data)
         # Update metas to a new category if necessary
         for m in list(ChannelLocaleMeta.query.filter_by(channel=channelid)):
-
             # NOTE: If we change the category, and there isn't a mapping to
             # a locale for it, set it as per the form
             if int(form.category.data) != m.category:
                 m.category = Category.map_to(int(form.category.data), m.locale)\
                     or form.category.data
 
-            # TODO: this doesn't seem to work in SQLITE. FIX
-            #.visible = visible
-            m.save()
+                m.save()
 
     @expose_ajax('/<userid>/cover_art/', cache_age=60, cache_private=True)
     @check_authorization(self_auth=True)
