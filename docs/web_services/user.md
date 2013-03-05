@@ -228,15 +228,6 @@ Cache-Control: private, max-age=60
 }
 ```
 
-Subscription Updates
-====================
-
-```http
-GET /ws/USERID/subscriptions/recent_videos/ HTTP/1.1
-```
-
-List of all video instances recently added to user's subscribed channels.
-
 User Cover Art
 ==============
 
@@ -323,4 +314,146 @@ Authorization: Bearer TOKEN
 ```http
 HTTP/1.1 204 NO CONTENT
 Content-Type: application/json
+```
+
+Subscriptions
+=============
+
+### List
+
+Get a list of all channel subscriptions for the user.
+
+```http
+GET /ws/USERID/subscriptions/ HTTP/1.1
+Authorization: Bearer TOKEN
+```
+
+Each item in the response includes a `resource_url`, used for deleting/unsubscribing,
+and a `channel_url` for retrieving detail about the channel.
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{
+ "subscriptions": {
+  "items": [
+   {
+    "resource_url": "http://path/to/channel/subscription/item/",
+    "channel_url": "http://path/to/associated/channel/info/"
+   }
+  ],
+  "total": 1
+ }
+}
+```
+
+### Subscribe
+
+`POST` the channel url to create a new subscription.
+
+```http
+POST /ws/USERID/subscriptions/ HTTP/1.1
+Content-Type: application/json
+Authorization: Bearer TOKEN
+
+"http://path/to/channel"
+```
+
+If the channel url is invalid a `400` will be returned:
+
+```http
+HTTP/1.1 400 BAD REQUEST
+Content-Type: application/json
+
+{
+ "error": "invalid_request",
+ "message": "Invalid channel url"
+}
+```
+
+If the subscription is created a `201` with the new resource url will be returned.
+
+```http
+HTTP/1.1 201 CREATED
+Location: http://resource/url/for/new/subscription/
+Content-Type: application/json
+
+{
+ "resource_url": "http://resource/url/for/new/subscription/",
+ "id": "ID"
+}
+```
+
+### Unsubscribe
+
+Delete the subscription resource to unsubscribe.
+
+```http
+DELETE /ws/USERID/subscriptions/SUBSCRIPTION/ HTTP/1.1
+Authorization: Bearer TOKEN
+```
+
+```http
+HTTP/1.1 204 NO CONTENT
+Content-Type: application/json
+```
+
+### Subscription Updates
+
+```http
+GET /ws/USERID/subscriptions/recent_videos/?locale=LOCALE&start=START&size=SIZE HTTP/1.1
+```
+
+Parameter      | Required? | Value             | Description
+:------------- | :-------- | :---------------- | :----------
+locale         | yes       | IETF language tag | Some videos may be excluded if not marked as visible for the specified locale
+start          | no        | 0-based integer   | Used for paging through the result items
+size           | no        | video page size   | Number of items to return - 100 by default
+
+List of all video instances recently added to user's subscribed channels.
+
+```http
+HTTP/1.0 200 OK
+Content-Type: application/json
+Cache-Control: private, max-age=60
+
+{
+ "videos": {
+  "total": 71,
+  "items": [
+   {
+    "position": 0,
+    "id": "viYMCzy5ZwQ_6HWBhaIcWI5g",
+    "title": "I Wasn't Talking To You",
+    "date_added": "2013-02-20T22:57:08.197668+00:00",
+    "video": {
+     "id": "RP000001ZALXK3ETZHWTCI6MVJSOBRVZY5KNL7DK",
+     "source": "youtube",
+     "source_id": "vSV8un-UscU",
+     "duration": 62,
+     "thumbnail_url": "http://i.ytimg.com/vi/vSV8un-UscU/mqdefault.jpg",
+     "view_count": 2,
+     "star_count": 6
+    },
+    "channel": {
+     "id": "chEK9lwEXBTNCBp9Xp8g1FAV",
+     "resource_url": "http://rockpack.com/ws/BJsFQkw7SpyNfi6xOBlA1Q/channels/chEK9lwEXBTNCBp9Xp8g1FAV/",
+     "title": "favourites",
+     "description": "",
+     "cover_background_url": "",
+     "cover_thumbnail_large_url": "",
+     "cover_thumbnail_small_url": "",
+     "subscribe_count": 0,
+     "owner": {
+      "id": "BJsFQkw7SpyNfi6xOBlA1Q",
+      "resource_url": "http://rockpack.com/ws/BJsFQkw7SpyNfi6xOBlA1Q/",
+      "name": "some user",
+      "avatar_thumbnail_url": "http://media.rockpack.com/images/avatar/thumbnail_small/b1V2MgQqT5u-gT2iTFUjJw.jpg"
+     }
+    }
+   }
+  ]
+ }
+}
 ```

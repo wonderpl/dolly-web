@@ -8,7 +8,7 @@ from rockpack.mainsite.core.dbapi import commit_on_success
 from rockpack.mainsite.core.webservice import WebService, expose_ajax, ajax_create_response, process_image
 from rockpack.mainsite.core.oauth.decorators import check_authorization
 from rockpack.mainsite.core.youtube import get_video_data
-from rockpack.mainsite.helpers.urls import url_for
+from rockpack.mainsite.helpers.urls import url_for, url_to_endpoint
 from rockpack.mainsite.helpers.db import gen_videoid
 from rockpack.mainsite.services.video.models import (
     Channel, ChannelLocaleMeta, Video, VideoInstance, VideoLocaleMeta, Category)
@@ -96,6 +96,10 @@ def action_object_list(user, action, limit):
     return id_list[0] if id_list else []
 
 
+def user_subscriptions(userid):
+    return Subscription.query.filter_by(user=userid)
+
+
 def check_present(form, field):
     if field.name not in (request.json or request.form):
         raise ValidationError('This field is required, but can be an empty string.')
@@ -166,29 +170,19 @@ class UserWS(WebService):
         channels = [video_api.channel_dict(c, with_owner=False, owner_url=True) for c in
                     Channel.query.filter_by(owner=user.id)]
         response = _user_info_response(user, channels)
-        for key in 'activity', 'cover_art':
+        for key in 'activity', 'cover_art', 'subscriptions':
             response[key] = dict(resource_url=url_for('userws.get_%s' % key, userid=userid))
         return response
-
-    # TODO: remove me
-    @expose_ajax('/USERID/subscriptions/recent_videos/', cache_age=60)
-    def all_recent_videos(self):
-        data, total = video_api.get_local_videos(self.get_locale(), self.get_page(), date_order=True, **request.args)
-        return {'videos': {'items': data, 'total': total}}
-
-    @expose_ajax('/<userid>/subscriptions/recent_videos/', cache_age=60, cache_private=True)
-    @check_authorization(self_auth=True)
-    def recent_videos(self, userid):
-        data, total = video_api.get_local_videos(self.get_locale(), self.get_page(), date_order=True, **request.args)
-        return {'videos': {'items': data, 'total': total}}
 
     @expose_ajax('/<userid>/activity/', cache_age=60, cache_private=True)
     @check_authorization(self_auth=True)
     def get_activity(self, userid):
+        subscriptions = user_subscriptions(userid).\
+            order_by(desc('date_created')).limit(self.max_page_size)
         return dict(
             recently_viewed=action_object_list(userid, 'view', self.max_page_size),
             recently_starred=action_object_list(userid, 'star', self.max_page_size),
-            subscribed=[],
+            subscribed=[id for (id,) in subscriptions.values('channel')],
         )
 
     @expose_ajax('/<userid>/activity/', methods=['POST'])
@@ -203,7 +197,7 @@ class UserWS(WebService):
     @check_authorization(self_auth=True)
     def channel_item_create(self, userid):
         form = ChannelForm(csrf_enabled=False)
-        form.userid = g.authorized.userid
+        form.userid = userid
         if not form.validate():
             abort(400, form_errors=form.errors)
         channel = Channel.create(
@@ -230,10 +224,10 @@ class UserWS(WebService):
     @check_authorization(self_auth=True)
     def channel_item_edit(self, userid, channelid):
         channel = Channel.query.get_or_404(channelid)
-        if not channel.owner == g.authorized.userid:
+        if not channel.owner == userid:
             abort(403)
         form = ChannelForm(csrf_enabled=False)
-        form.userid = g.authorized.userid
+        form.userid = userid
         if not form.validate():
             abort(400, form_errors=form.errors)
 
@@ -273,10 +267,9 @@ class UserWS(WebService):
     @expose_ajax('/<userid>/subscriptions/')
     @check_authorization(self_auth=True)
     def get_subscriptions(self, userid):
-        channels = Subscription.query.filter_by(user=g.authorized.userid).\
-            join(Channel).values('id', 'owner')
+        channels = user_subscriptions(userid).join(Channel).values('id', 'owner')
         items = [dict(resource_url=url_for('userws.delete_subscription_item',
-                                           userid=g.authorized.userid, channelid=channelid),
+                                           userid=userid, channelid=channelid),
                       channel_url=url_for('userws.channel_info',
                                           userid=owner, channelid=channelid))
                  for channelid, owner in channels]
@@ -285,22 +278,41 @@ class UserWS(WebService):
     @expose_ajax('/<userid>/subscriptions/', methods=['POST'])
     @check_authorization(self_auth=True)
     def create_subscription(self, userid):
-        channelid = request.form['channel']
+        endpoint, args = url_to_endpoint(request.json or '')
+        if endpoint not in ('userws.owner_channel_info', 'userws.channel_info'):
+            abort(400, message='Invalid channel url')
+        channelid = args['channelid']
         if not Channel.query.filter_by(id=channelid).count():
-            abort(400, message='Invalid channel id')
-        subs = Subscription(user=g.authorized.userid, channel=channelid).save()
+            abort(400, message='Channel not found')
+        subs = Subscription(user=userid, channel=channelid).save()
         return ajax_create_response(subs)
 
     @expose_ajax('/<userid>/subscriptions/<channelid>/')
     @check_authorization(self_auth=True)
     def redirect_subscription_item(self, userid, channelid):
         channel = Channel.query.get_or_404(channelid)
-        return None, 302, [('Location', channel.resource_url)]
+        return channel.resource_url, 302, [('Location', channel.resource_url)]
 
     @expose_ajax('/<userid>/subscriptions/<channelid>/', methods=['DELETE'])
     @check_authorization(self_auth=True)
     @commit_on_success
     def delete_subscription_item(self, userid, channelid):
-        if not Subscription.query.filter_by(
-                user=g.authorized.userid, channel=channelid).delete():
+        if not user_subscriptions(userid).filter_by(channel=channelid).delete():
             abort(404)
+
+    # TODO: remove me - needed for backwards compatibility with iOS app prototype
+    @expose_ajax('/USERID/subscriptions/recent_videos/', cache_age=60)
+    def all_recent_videos(self):
+        data, total = video_api.get_local_videos(self.get_locale(), self.get_page(), date_order=True, **request.args)
+        return {'videos': {'items': data, 'total': total}}
+
+    @expose_ajax('/<userid>/subscriptions/recent_videos/', cache_age=60, cache_private=True)
+    @check_authorization(self_auth=True)
+    def recent_videos(self, userid):
+        channels = user_subscriptions(userid)
+        if channels.count():
+            data, total = video_api.get_local_videos(self.get_locale(), self.get_page(),
+                                                     date_order=True, channels=channels.values('channel'))
+        else:
+            data, total = [], 0
+        return {'videos': {'items': data, 'total': total}}
