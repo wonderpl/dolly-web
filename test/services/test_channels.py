@@ -15,12 +15,13 @@ class ChannelCreateTestCase(base.RockPackTestCase):
             user = self.create_test_user()
 
             r = client.post('/ws/{}/channels/'.format(user.id),
-                    data=dict(title='',
+                    data=json.dumps(dict(title='',
                         description='test channel for user {}'.format(user.id),
                         locale='en-us',
                         category=1,
                         cover='',
-                        public=False),
+                        public=False)),
+                    content_type='application/json',
                     headers=[get_auth_header(user.id)])
 
             self.assertEquals(201, r.status_code)
@@ -36,12 +37,13 @@ class ChannelCreateTestCase(base.RockPackTestCase):
             # test channel update
             new_description = 'this is a new description!'
             r = client.put(resource,
-                    data=dict(title='a new channel title',
+                    data=json.dumps(dict(title='a new channel title',
                         description=new_description,
                     category=3,
                     locale='en-us',
                     cover=RockpackCoverArtData.comic_cover.cover,
-                    public=False),
+                    public=False)),
+                    content_type='application/json',
                     headers=[get_auth_header(user.id)])
             self.assertEquals(204, r.status_code)
 
@@ -60,24 +62,27 @@ class ChannelCreateTestCase(base.RockPackTestCase):
             # but not changing the title
             new_description = 'this is a new description!'
             r = client.put(resource,
-                    data=dict(title='',
+                    data=json.dumps(dict(title='',
                         description=new_description,
                     category=3,
                     locale='',
                     cover=RockpackCoverArtData.comic_cover.cover,
-                    public=False),
+                    public=False)),
+                    content_type='application/json',
                     headers=[get_auth_header(user.id)])
             self.assertEquals(204, r.status_code)
 
             # test public toggle
             r = client.put(resource + 'public/',
-                    data=dict(public=False),
+                    data=json.dumps(dict(public=False)),
+                    content_type='application/json',
                     headers=[get_auth_header(user.id)])
             data = json.loads(r.data)
             self.assertEquals(data['public'], False)
 
             r = client.put(resource + 'public/',
-                    data=dict(public=True),
+                    data=json.dumps(dict(public=True)),
+                    content_type='application/json',
                     headers=[get_auth_header(user.id)])
             data = json.loads(r.data)
             self.assertEquals(data['public'], True)

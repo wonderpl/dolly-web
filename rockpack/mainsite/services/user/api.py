@@ -242,12 +242,9 @@ class UserWS(WebService):
     @check_authorization(self_auth=True)
     def channel_public_toggle(self, userid, channelid):
         channel = Channel.query.get_or_404(channelid)
-        tf = {'true': True, 'false': False}
-        try:
-            public = tf[request.form.get('public').lower()]
-        except KeyError:
+        if not request.json and isinstance(request.json.get('public'), bool):
             abort(400, form_errors={"public": ["Value should be 'true' or 'false'"]})
-        channel.public = public
+        channel.public = request.json.get('public')
         channel.save()
         return {"public": channel.public}
 
