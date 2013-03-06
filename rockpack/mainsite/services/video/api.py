@@ -102,6 +102,9 @@ def get_local_videos(loc, paging, with_channel=True, **filters):
                              models.VideoLocaleMeta).join(models.Video)
 
     if filters.get('channel'):
+        filters.setdefault('channels', [filters['channel']])
+
+    if filters.get('channels'):
         # If selecting videos from a specific channel then we want all videos
         # except those explicitly visible=False for the requested locale.
         # Videos without a locale metadata record will be included.
@@ -110,7 +113,7 @@ def get_local_videos(loc, paging, with_channel=True, **filters):
                     (models.VideoLocaleMeta.locale == loc)).\
             filter((models.VideoLocaleMeta.visible == True) |
                    (models.VideoLocaleMeta.visible == None)).\
-            filter(models.VideoInstance.channel == filters['channel'])
+            filter(models.VideoInstance.channel.in_(filters['channels']))
     else:
         # For all other queries there must be an metadata record with visible=True
         videos = videos.join(models.VideoLocaleMeta,

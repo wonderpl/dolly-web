@@ -76,7 +76,7 @@ class Resizer(object):
         if image_path or f_obj:
             self.image_path = image_path or f_obj
 
-        img = Image.open(self.image_path)
+        self.orig_img = img = Image.open(self.image_path)
         if img.mode not in ('RGB', 'RGBA'):
             img = img.convert('RGBA')
         resized = {}
@@ -85,6 +85,14 @@ class Resizer(object):
             resized.update({name: new_img})
 
         return resized
+
+    @property
+    def original_extension(self):
+        orig_ext = getattr(self.image_path, 'filename', '').rsplit('.', 1)[-1]
+        if not orig_ext:
+            format = self.orig_img.format
+            orig_ext = next(e for e, f in Image.EXTENSION.items() if f == format)[1:]
+        return orig_ext
 
 
 class ImageUploader(object):

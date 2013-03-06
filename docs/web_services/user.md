@@ -1,4 +1,4 @@
-USER
+User
 ====
 
 Get data for a specific user.
@@ -10,11 +10,12 @@ Authorization: Bearer TOKEN
 
 Responds with user information (names & avatar) and channels.
 If `Bearer` token matches requested `USERID` then private channels will be included.
+The token is not required when accessing other user's data.
 
 ```http
 HTTP/1.1 200 OK
 Content-Type: application/json
-Cache-Control: private, max-age=60
+Cache-Control: public, max-age=60
 
 {
   "name": "username",
@@ -24,9 +25,9 @@ Cache-Control: private, max-age=60
     {
       "id": "channelid",
       "resource_url": "http://path/to/users/channels/channelid/",
-      "description": "",
-      "title": "lotr",
-      "subscribe_count": 0,
+      "description": "channel description",
+      "title": "channel title",
+      "subscribe_count": 123,
       "cover_background_url": "http://path/to/channel/bg.jpg",
       "cover_thumbnail_small_url": "http://path/to/channel/small.jpg",
       "cover_thumbnail_large_url": "http://path/to/channel/large.jpg"
@@ -35,14 +36,19 @@ Cache-Control: private, max-age=60
 }
 ```
 
-CHANNEL
+Channel
 =======
+
+### Get
 
 Get data for an individual channel.
 
 ```http
-GET /ws/USERID/channels/CID/?locale=LOCALE HTTP/1.1
+GET /ws/USERID/channels/CID/?locale=LOCALE&start=START&size=SIZE HTTP/1.1
+Authorization: Bearer TOKEN
 ```
+
+`Bearer` token is required only when accessing a private channel.
 
 Parameter      | Required? | Value             | Description
 :------------- | :-------- | :---------------- | :----------
@@ -50,12 +56,21 @@ locale         | yes       | IETF language tag | Some videos may be excluded if 
 start          | no        | 0-based integer   | Used for paging through the channel's video items
 size           | no        | video page size   | Number of videos to return - 100 by default
 
-Returns metadata and video list for the requested channel.
+If the channel is private and the owner's token is not provided then a `403` will be returned.
+
+```http
+HTTP/1.1 403 FORBIDDEN
+Content-Type: application/json
+
+{"error":"insufficient_scope"}
+```
+
+Otherwise returns metadata and video list for the requested channel.
 
 ```http
 HTTP/1.1 200 OK
 Content-Type: application/json
-Cache-Control: max-age=60
+Cache-Control: public, max-age=60
 
 {
  "id": "Unique channel id",
@@ -105,12 +120,12 @@ HTTP/1.1 404 NOT FOUND
 Channel Create
 ==============
 
-Create a new channel.
+To create a new channel `POST` json data to channels service.
 
 ```http
-POST /ws/USERID/channel/ HTTP/1.1
+POST /ws/USERID/channels/ HTTP/1.1
+Content-Type: application/json
 Authorization: Bearer TOKEN
-Content-Type: application/x-www-form-urlencoded
 
 {
     "title": "channel title",
@@ -118,28 +133,28 @@ Content-Type: application/x-www-form-urlencoded
     "locale": "en-us",
     "category": 1,
     "cover": "COVERARTID",
-    "public": 1
+    "public": true
 }
 ```
 
 Parameter      | Required? | Value             | Description
 :------------- | :-------- | :---------------- | :----------
-title          | No        | String            | If not specified, a default title will be assigned.
-description    | No        | String
-category       | No        | Integer
-cover          | No        | COVERARTID
-public         | No        | `0` or `1`
-locale         | Yes       | IETF language tag |
+title          | Yes       | unicode string    | May be empty string. If not specified, a default title will be assigned.
+description    | Yes       | unicode string    | May be empty string.
+category       | Yes       | category id       | Id of assigned category. May be empty string to leave unassigned.
+cover          | Yes       | cover image ref   | Reference for cover art image. May be empty string to leave unassigned.
+public         | Yes       | `true` or `false` | Toggles whether a channel is public. May be empty string, but will default to `true`. If other fields are unassigned, field will default to `false`.
+locale         | Yes       | IETF language tag | May be empty string.
 
 Responds with a channel resource url.
 
 ```http
 HTTP/1.1 201 CREATED
-Location: /ws/USERID/channels/CHANNELID/
+Location: http://some_doman/ws/USERID/channels/CHANNELID/
 
 {
     "id": "CHANNELID",
-    "resource_url": "/ws/USERID/channels/CHANNELID/"
+    "resource_url": "http://some_domain/ws/USERID/channels/CHANNELID/"
 }
 ```
 
@@ -152,19 +167,44 @@ Content-Type: application/json
 
 {
   "form_errors": {
-      "title": ["duplicate title"]
+      "category": ["Invalid category: 111111111"],
+      "cover": ["Invalid cover reference"],
+      "description": ["This field is required, but can be an empty string."],
+      "title": ["Duplicate title"]
     },
   "error": "invalid_request"
+}
+```
+
+Channel Updates
+===============
+
+To change the data for a channel `PUT` new json data to the resource url, as per Channel Create above.
+
+```http
+PUT /ws/USERID/channels/CHANNELID/ HTTP/1.1
+Content-Type: application/json
+Authorization: Bearer TOKEN
+
+{
+    "title": "channel title",
+    "description": "channel description",
+    "locale": "en-us",
+    "category": 1,
+    "cover": "COVERARTID",
+    "public": true
 }
 ```
 
 Channel Privacy
 ===============
 
+To toggle a channel's privacy settings `POST` json data to a channel's `public` resource.
+
 ```http
 PUT /ws/USERID/channel/CHANNELID/public/ HTTP/1.1
+Content-Type: application/json
 Authorization: Bearer TOKEN
-Content-Type: application/x-www-form-urlencoded
 
 {
     "public": false
@@ -207,7 +247,7 @@ Parameter      | Required? | Value             | Description
 :------------- | :-------- | :---------------- | :----------
 locale         | yes       | IETF language tag | The action will be recorded for the given locale
 action         | yes       | `star` or `view`  | Specifies the action type
-video_instance | no        | instance id       | The id of the video instance that was viewed or starred
+video_instance | yes       | instance id       | The id of the video instance that was viewed or starred
 
 ```http
 HTTP/1.1 204 NO CONTENT
@@ -234,36 +274,34 @@ Cache-Control: private, max-age=60
 }
 ```
 
-Subscription Updates
-====================
-
-```http
-GET /ws/USERID/subscriptions/recent_videos/ HTTP/1.1
-```
-
-List of all video instances recently added to user's subscribed channels.
-
 User Cover Art
 ==============
+
+### Get
 
 Get list of users uploaded cover images.
 
 ```http
-GET /ws/USERID/cover_art/ HTTP/1.1
+GET /ws/USERID/cover_art/?start=START&size=SIZE HTTP/1.1
 Authorization: Bearer TOKEN
 ```
+
+Parameter      | Required? | Value             | Description
+:------------- | :-------- | :---------------- | :----------
+start          | no        | 0-based integer   | Used for paging through the user's cover art items
+size           | no        | video page size   | Number of items to return - 100 by default
 
 ```http
 HTTP/1.1 200 OK
 Content-Type: application/json
-Cache-Control: public, max-age=60
+Cache-Control: private, max-age=60
 
 {
   "cover_art": {
     "total": 1,
     "items": [
       {
-        "cover_ref": "img.png",
+        "cover_ref": "coverartref",
         "background_url": "http://path/to/background/img.jpg",
         "carousel_url": "http://path/to/carousel/img.jpg"
       }
@@ -272,4 +310,196 @@ Cache-Control: public, max-age=60
 }
 ```
 
+### Upload
 
+`POST` image data to cover_art service:
+
+```http
+POST /ws/USERID/cover_art/ HTTP/1.1
+Content-Type: image/png
+Authorization: Bearer TOKEN
+
+.........IMAGE DATA....
+```
+
+If the image data cannot be processed you'll get an `400` response:
+```http
+HTTP/1.1 400 BAD REQUEST
+Content-Type: application/json
+
+{
+ "error": "invalid_request",
+ "message": "cannot identify image file"
+}
+```
+
+On success a `201` will include the `cover_ref` value for adding to a channel.
+
+```http
+HTTP/1.1 201 CREATED
+Content-Type: application/json
+Location: http://path/to/cover/art/resource/url.png
+
+{
+ "cover_ref": "coverartref",
+ "resource_url": "http://path/to/cover/art/resource/url.png",
+ "background_url": "http://path/to/uploaded/image/background/size.jpg",
+ "carousel_url": "http://path/to/uploaded/image/carousel/size.jpg"
+}
+```
+
+### Remove
+
+Remove a users cover art item with a `DELETE` request:
+
+```http
+DELETE /ws/USERID/cover_art/COVER_REF HTTP/1.1
+Authorization: Bearer TOKEN
+```
+
+```http
+HTTP/1.1 204 NO CONTENT
+Content-Type: application/json
+```
+
+Subscriptions
+=============
+
+### List
+
+Get a list of all channel subscriptions for the user.
+
+```http
+GET /ws/USERID/subscriptions/ HTTP/1.1
+Authorization: Bearer TOKEN
+```
+
+Each item in the response includes a `resource_url`, used for deleting/unsubscribing,
+and a `channel_url` for retrieving detail about the channel.
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{
+ "subscriptions": {
+  "items": [
+   {
+    "resource_url": "http://path/to/channel/subscription/item/",
+    "channel_url": "http://path/to/associated/channel/info/"
+   }
+  ],
+  "total": 1
+ }
+}
+```
+
+### Subscribe
+
+`POST` the channel url to create a new subscription.
+
+```http
+POST /ws/USERID/subscriptions/ HTTP/1.1
+Content-Type: application/json
+Authorization: Bearer TOKEN
+
+"http://path/to/channel"
+```
+
+If the channel url is invalid a `400` will be returned:
+
+```http
+HTTP/1.1 400 BAD REQUEST
+Content-Type: application/json
+
+{
+ "error": "invalid_request",
+ "message": "Invalid channel url"
+}
+```
+
+If the subscription is created a `201` with the new resource url will be returned.
+
+```http
+HTTP/1.1 201 CREATED
+Location: http://resource/url/for/new/subscription/
+Content-Type: application/json
+
+{
+ "resource_url": "http://resource/url/for/new/subscription/",
+ "id": "ID"
+}
+```
+
+### Unsubscribe
+
+Delete the subscription resource to unsubscribe.
+
+```http
+DELETE /ws/USERID/subscriptions/SUBSCRIPTION/ HTTP/1.1
+Authorization: Bearer TOKEN
+```
+
+```http
+HTTP/1.1 204 NO CONTENT
+Content-Type: application/json
+```
+
+### Subscription Updates
+
+```http
+GET /ws/USERID/subscriptions/recent_videos/?locale=LOCALE&start=START&size=SIZE HTTP/1.1
+```
+
+Parameter      | Required? | Value             | Description
+:------------- | :-------- | :---------------- | :----------
+locale         | yes       | IETF language tag | Some videos may be excluded if not marked as visible for the specified locale
+start          | no        | 0-based integer   | Used for paging through the result items
+size           | no        | video page size   | Number of items to return - 100 by default
+
+List of all video instances recently added to user's subscribed channels.
+
+```http
+HTTP/1.0 200 OK
+Content-Type: application/json
+Cache-Control: private, max-age=60
+
+{
+ "videos": {
+  "total": 71,
+  "items": [
+   {
+    "position": 0,
+    "id": "viYMCzy5ZwQ_6HWBhaIcWI5g",
+    "title": "I Wasn't Talking To You",
+    "date_added": "2013-02-20T22:57:08.197668+00:00",
+    "video": {
+     "id": "RP000001ZALXK3ETZHWTCI6MVJSOBRVZY5KNL7DK",
+     "source": "youtube",
+     "source_id": "vSV8un-UscU",
+     "duration": 62,
+     "thumbnail_url": "http://i.ytimg.com/vi/vSV8un-UscU/mqdefault.jpg",
+     "view_count": 2,
+     "star_count": 6
+    },
+    "channel": {
+     "id": "chEK9lwEXBTNCBp9Xp8g1FAV",
+     "resource_url": "http://rockpack.com/ws/BJsFQkw7SpyNfi6xOBlA1Q/channels/chEK9lwEXBTNCBp9Xp8g1FAV/",
+     "title": "favourites",
+     "description": "",
+     "cover_background_url": "",
+     "cover_thumbnail_large_url": "",
+     "cover_thumbnail_small_url": "",
+     "subscribe_count": 0,
+     "owner": {
+      "id": "BJsFQkw7SpyNfi6xOBlA1Q",
+      "resource_url": "http://rockpack.com/ws/BJsFQkw7SpyNfi6xOBlA1Q/",
+      "name": "some user",
+      "avatar_thumbnail_url": "http://media.rockpack.com/images/avatar/thumbnail_small/b1V2MgQqT5u-gT2iTFUjJw.jpg"
+     }
+    }
+   }
+  ]
+ }
+}
+```

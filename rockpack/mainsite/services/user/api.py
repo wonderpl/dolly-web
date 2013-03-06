@@ -8,7 +8,7 @@ from rockpack.mainsite.core.dbapi import commit_on_success
 from rockpack.mainsite.core.webservice import WebService, expose_ajax, ajax_create_response, process_image
 from rockpack.mainsite.core.oauth.decorators import check_authorization
 from rockpack.mainsite.core.youtube import get_video_data
-from rockpack.mainsite.helpers.urls import url_for
+from rockpack.mainsite.helpers.urls import url_for, url_to_endpoint
 from rockpack.mainsite.helpers.db import gen_videoid
 from rockpack.mainsite.services.video.models import (
     Channel, ChannelLocaleMeta, Video, VideoInstance, VideoLocaleMeta, Category)
@@ -16,7 +16,7 @@ from rockpack.mainsite.services.cover_art.models import UserCoverArt, RockpackCo
 from rockpack.mainsite.services.cover_art import api as cover_api
 from rockpack.mainsite.services.video import api as video_api
 from rockpack.mainsite.services.search import api as search_api
-from .models import User, UserActivity
+from .models import User, UserActivity, Subscription
 
 
 ACTION_COLUMN_VALUE_MAP = dict(
@@ -96,6 +96,10 @@ def action_object_list(user, action, limit):
     return id_list[0] if id_list else []
 
 
+def user_subscriptions(userid):
+    return Subscription.query.filter_by(user=userid)
+
+
 def check_present(form, field):
     if field.name not in (request.json or request.form):
         raise ValidationError('This field is required, but can be an empty string.')
@@ -105,7 +109,7 @@ def verify_id_on_model(model, col='id'):
     def f(form, field):
         if field.data:
             if not model.query.filter_by(**{col: field.data}).count():
-                raise ValidationError('Invalid {} "{}"'.format(field, field.data))
+                raise ValidationError('Invalid {}: {}'.format(field.name, field.data))
     return f
 
 
@@ -126,7 +130,7 @@ class ChannelForm(form.BaseForm):
     def validate_cover(self, field):
         exists = lambda m: m.query.filter_by(cover=field.data).count()
         if field.data and not (exists(RockpackCoverArt) or exists(UserCoverArt)):
-            raise ValidationError('invalid cover reference')
+            raise ValidationError('Invalid cover reference')
 
     def validate_title(self, field):
         user_channels = Channel.query.filter_by(owner=self.userid)
@@ -134,10 +138,11 @@ class ChannelForm(form.BaseForm):
             untitled_channel = app.config['UNTITLED_CHANNEL'] + ' '
             count = user_channels.filter(Channel.title.like(untitled_channel + '%')).count()
             field.data = untitled_channel + str(count + 1)
+
         # If we have a channel with the same title, other than the one we're editing, ...
         if user_channels.filter_by(title=field.data).count() and not (
                 self._channel_id and user_channels.filter_by(id=self._channel_id).count()):
-            raise ValidationError('duplicate title')
+            raise ValidationError('Duplicate title')
 
     def validate_category(self, field):
         if not (field.data and Category.query.get(field.data)):
@@ -180,29 +185,19 @@ class UserWS(WebService):
         channels = [video_api.channel_dict(c, with_owner=False, owner_url=True) for c in
                     Channel.query.filter_by(owner=user.id)]
         response = _user_info_response(user, channels)
-        for key in 'activity', 'cover_art':
+        for key in 'activity', 'cover_art', 'subscriptions':
             response[key] = dict(resource_url=url_for('userws.get_%s' % key, userid=userid))
         return response
-
-    # TODO: remove me
-    @expose_ajax('/USERID/subscriptions/recent_videos/', cache_age=60)
-    def all_recent_videos(self):
-        data, total = video_api.get_local_videos(self.get_locale(), self.get_page(), date_order=True, **request.args)
-        return {'videos': {'items': data, 'total': total}}
-
-    @expose_ajax('/<userid>/subscriptions/recent_videos/', cache_age=60, cache_private=True)
-    @check_authorization(self_auth=True)
-    def recent_videos(self, userid):
-        data, total = video_api.get_local_videos(self.get_locale(), self.get_page(), date_order=True, **request.args)
-        return {'videos': {'items': data, 'total': total}}
 
     @expose_ajax('/<userid>/activity/', cache_age=60, cache_private=True)
     @check_authorization(self_auth=True)
     def get_activity(self, userid):
+        subscriptions = user_subscriptions(userid).\
+            order_by(desc('date_created')).limit(self.max_page_size)
         return dict(
             recently_viewed=action_object_list(userid, 'view', self.max_page_size),
             recently_starred=action_object_list(userid, 'star', self.max_page_size),
-            subscribed=[],
+            subscribed=[id for (id,) in subscriptions.values('channel')],
         )
 
     @expose_ajax('/<userid>/activity/', methods=['POST'])
@@ -217,7 +212,7 @@ class UserWS(WebService):
     @check_authorization(self_auth=True)
     def channel_item_create(self, userid):
         form = ChannelForm(csrf_enabled=False)
-        form.userid = g.authorized.userid
+        form.userid = userid
         if not form.validate():
             abort(400, form_errors=form.errors)
         channel = Channel.create(
@@ -260,10 +255,10 @@ class UserWS(WebService):
     @check_authorization(self_auth=True)
     def channel_item_edit(self, userid, channelid):
         channel = Channel.query.get_or_404(channelid)
-        if not channel.owner == g.authorized.userid:
+        if not channel.owner == userid:
             abort(403)
         form = ChannelForm(csrf_enabled=False)
-        form.userid = g.authorized.userid
+        form.userid = userid
         if not form.validate():
             abort(400, form_errors=form.errors)
 
@@ -287,11 +282,76 @@ class UserWS(WebService):
     @check_authorization(self_auth=True)
     def get_cover_art(self, userid):
         covers = UserCoverArt.query.filter_by(owner=userid)
-        return cover_api.cover_art_response(covers, self.get_page())
+        return cover_api.cover_art_response(covers, self.get_page(), own=True)
 
     @expose_ajax('/<userid>/cover_art/', methods=['POST'])
     @check_authorization(self_auth=True)
     def post_cover_art(self, userid):
         path = process_image(UserCoverArt.cover)
         cover = UserCoverArt(cover=path, owner=userid).save()
-        return cover_api.cover_art_dict(cover), 201
+        return ajax_create_response(cover, cover_api.cover_art_dict(cover, own=True))
+
+    @expose_ajax('/<userid>/cover_art/<ref>', cache_age=3600)
+    def redirect_cover_art_item(self, userid, ref):
+        cover = UserCoverArt.query.filter_by(cover=ref).first_or_404()
+        return None, 302, [('Location', cover.cover.background)]
+
+    @expose_ajax('/<userid>/cover_art/<ref>', methods=['DELETE'])
+    @check_authorization(self_auth=True)
+    @commit_on_success
+    def delete_cover_art_item(self, userid, ref):
+        if not UserCoverArt.query.filter_by(cover=ref).delete():
+            abort(404)
+
+    @expose_ajax('/<userid>/subscriptions/')
+    @check_authorization(self_auth=True)
+    def get_subscriptions(self, userid):
+        channels = user_subscriptions(userid).join(Channel).values('id', 'owner')
+        items = [dict(resource_url=url_for('userws.delete_subscription_item',
+                                           userid=userid, channelid=channelid),
+                      channel_url=url_for('userws.channel_info',
+                                          userid=owner, channelid=channelid))
+                 for channelid, owner in channels]
+        return dict(subscriptions=dict(items=items, total=len(items)))
+
+    @expose_ajax('/<userid>/subscriptions/', methods=['POST'])
+    @check_authorization(self_auth=True)
+    def create_subscription(self, userid):
+        endpoint, args = url_to_endpoint(request.json or '')
+        if endpoint not in ('userws.owner_channel_info', 'userws.channel_info'):
+            abort(400, message='Invalid channel url')
+        channelid = args['channelid']
+        if not Channel.query.filter_by(id=channelid).count():
+            abort(400, message='Channel not found')
+        subs = Subscription(user=userid, channel=channelid).save()
+        return ajax_create_response(subs)
+
+    @expose_ajax('/<userid>/subscriptions/<channelid>/')
+    @check_authorization(self_auth=True)
+    def redirect_subscription_item(self, userid, channelid):
+        channel = Channel.query.get_or_404(channelid)
+        return channel.resource_url, 302, [('Location', channel.resource_url)]
+
+    @expose_ajax('/<userid>/subscriptions/<channelid>/', methods=['DELETE'])
+    @check_authorization(self_auth=True)
+    @commit_on_success
+    def delete_subscription_item(self, userid, channelid):
+        if not user_subscriptions(userid).filter_by(channel=channelid).delete():
+            abort(404)
+
+    # TODO: remove me - needed for backwards compatibility with iOS app prototype
+    @expose_ajax('/USERID/subscriptions/recent_videos/', cache_age=60)
+    def all_recent_videos(self):
+        data, total = video_api.get_local_videos(self.get_locale(), self.get_page(), date_order=True, **request.args)
+        return {'videos': {'items': data, 'total': total}}
+
+    @expose_ajax('/<userid>/subscriptions/recent_videos/', cache_age=60, cache_private=True)
+    @check_authorization(self_auth=True)
+    def recent_videos(self, userid):
+        channels = user_subscriptions(userid)
+        if channels.count():
+            data, total = video_api.get_local_videos(self.get_locale(), self.get_page(),
+                                                     date_order=True, channels=channels.values('channel'))
+        else:
+            data, total = [], 0
+        return {'videos': {'items': data, 'total': total}}
