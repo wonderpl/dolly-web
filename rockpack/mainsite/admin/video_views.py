@@ -125,7 +125,7 @@ class UserCoverArt(AdminView):
     model = coverart_models.UserCoverArt
     model_name = coverart_models.UserCoverArt.__tablename__
 
-    column_list = ('owner_rel', 'cover.thumbnail_large',)
+    column_list = ('owner_rel', 'cover.thumbnail_large', 'cover',)
     column_filters = ('owner_rel',)
 
     edit_template = 'admin/cover_art.html'
