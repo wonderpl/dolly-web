@@ -17,7 +17,6 @@ class ChannelCreateTestCase(base.RockPackTestCase):
             r = client.post('/ws/{}/channels/'.format(user.id),
                     data=json.dumps(dict(title='',
                         description='test channel for user {}'.format(user.id),
-                        locale='en-us',
                         category=1,
                         cover='',
                         public=False)),
@@ -40,7 +39,6 @@ class ChannelCreateTestCase(base.RockPackTestCase):
                     data=json.dumps(dict(title='a new channel title',
                         description=new_description,
                     category=3,
-                    locale='en-us',
                     cover=RockpackCoverArtData.comic_cover.cover,
                     public=False)),
                     content_type='application/json',
@@ -65,7 +63,6 @@ class ChannelCreateTestCase(base.RockPackTestCase):
                     data=json.dumps(dict(title='',
                         description=new_description,
                     category=3,
-                    locale='',
                     cover=RockpackCoverArtData.comic_cover.cover,
                     public=False)),
                     content_type='application/json',
@@ -93,8 +90,7 @@ class ChannelCreateTestCase(base.RockPackTestCase):
 
             channel_title = uuid.uuid4().hex
             r = client.post('/ws/{}/channels/'.format(user.id),
-                    data=dict(title=channel_title,
-                        locale='en-us'),
+                    data=dict(title=channel_title),
                     headers=[get_auth_header(user.id)])
 
             self.assertEquals(400, r.status_code)

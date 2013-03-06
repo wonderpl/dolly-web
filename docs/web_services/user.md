@@ -130,7 +130,6 @@ Authorization: Bearer TOKEN
 {
     "title": "channel title",
     "description": "channel description",
-    "locale": "en-us",
     "category": 1,
     "cover": "COVERARTID",
     "public": true
@@ -144,7 +143,6 @@ description    | Yes       | unicode string    | May be empty string.
 category       | Yes       | category id       | Id of assigned category. May be empty string to leave unassigned.
 cover          | Yes       | cover image ref   | Reference for cover art image. May be empty string to leave unassigned.
 public         | Yes       | `true` or `false` | Toggles whether a channel is public. May be empty string, but will default to `true`. If other fields are unassigned, field will default to `false`.
-locale         | Yes       | IETF language tag | May be empty string.
 
 Responds with a channel resource url.
 
@@ -189,7 +187,6 @@ Authorization: Bearer TOKEN
 {
     "title": "channel title",
     "description": "channel description",
-    "locale": "en-us",
     "category": 1,
     "cover": "COVERARTID",
     "public": true

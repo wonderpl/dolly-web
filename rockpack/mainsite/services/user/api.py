@@ -221,7 +221,6 @@ class UserWS(WebService):
             description=form.description.data,
             cover=form.cover.data,
             category=form.category.data,
-            locale=request.args.get('locale'),
             public=form.public.data)
         return ajax_create_response(channel)
 
