@@ -69,3 +69,4 @@ TEST_EXTERNAL_SYSTEM = False
 # Credentials for "rockpack-dev" app on facebook
 FACEBOOK_APP_ID = '131721883664256'
 FACEBOOK_APP_SECRET = '9dc1d5cf8d5f9b96284303b3ab4d1d15'
+FACEBOOK_APP_NAMESPACE = 'rockpack-dev'

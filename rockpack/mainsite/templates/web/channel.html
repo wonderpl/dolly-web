@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html> 
+  <head prefix="og: http://ogp.me/ns# {{ config.FACEBOOK_APP_NAMESPACE }}: http://ogp.me/ns/apps/{{ config.FACEBOOK_APP_NAMESPACE }}#">
+    <title>{{ title }}</title>
+    <meta property="fb:app_id" content="{{ config.FACEBOOK_APP_ID }}" /> 
+    <meta property="og:title" content="{{ title }}" /> 
+    <meta property="og:image" content="{{ cover_thumbnail_large_url }}" /> 
+    <meta property="og:description" content="{{ description }}" /> 
+  </head>
+  <body>
+    <h1>{{ title }}</h1>
+    <script>
+      var owner = {{ owner|tojson|safe }};
+    </script>
+  </body>
+</html>
