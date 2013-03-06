@@ -8,9 +8,23 @@
     <meta property="og:description" content="{{ description }}" /> 
   </head>
   <body>
-    <h1>{{ title }}</h1>
-    <script>
-      var owner = {{ owner|tojson|safe }};
-    </script>
+    <div class="background" style="background: url({{ cover_background_url }})">
+      <h1>{{ title }}</h1>
+      <script>
+        var owner = {{ owner|tojson|safe }};
+      </script>
+      {% if selected_instance %}
+      <div class="player">
+        <!-- play {{ selected_instance.video.source_id }} -->
+      </div>
+      {% endif %}
+      <div class="videos">
+        {% for instance in videos['items'] %}
+        <div id="{{ instance.id }}" class="video" data-sourceid="{{ instance.video.source_id }}">
+          <img src="{{ instance.video.thumbnail_url }}"/>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
   </body>
 </html>
