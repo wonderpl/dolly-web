@@ -59,7 +59,7 @@ Cache-Control: max-age=60
 
 {
  "id": "Unique channel id",
- "public": 1,
+ "public": true,
  "description": "Channel description",
  "resource_url": "http://base/ws/USERID/channels/CHANNELID/",
  "title": "Channel title",
@@ -95,7 +95,7 @@ Cache-Control: max-age=60
 
 Possible errors.
 
-If accessed via the secure sub-domain, and `public` is `1`,
+If accessed via the secure sub-domain, and `public` is `true`,
 resource will return
 
 ```http
@@ -104,6 +104,8 @@ HTTP/1.1 404 NOT FOUND
 
 Channel Create
 ==============
+
+Create a new channel.
 
 ```http
 POST /ws/USERID/channel/ HTTP/1.1
@@ -122,7 +124,7 @@ Content-Type: application/x-www-form-urlencoded
 
 Parameter      | Required? | Value             | Description
 :------------- | :-------- | :---------------- | :----------
-title          | No        | String            | If not specified, a default title will be assigned
+title          | No        | String            | If not specified, a default title will be assigned.
 description    | No        | String
 category       | No        | Integer
 cover          | No        | COVERARTID
@@ -140,6 +142,53 @@ Location: /ws/USERID/channels/CHANNELID/
     "resource_url": "/ws/USERID/channels/CHANNELID/"
 }
 ```
+
+Possible errors.
+
+Errors occurred with the form data.
+```http
+HTTP/1.1 400 BAD REQUEST
+Content-Type: application/json
+
+{
+  "form_errors": {
+      "title": ["duplicate title"]
+    },
+  "error": "invalid_request"
+}
+```
+
+Channel Privacy
+===============
+
+```http
+PUT /ws/USERID/channel/CHANNELID/public/ HTTP/1.1
+Authorization: Bearer TOKEN
+Content-Type: application/x-www-form-urlencoded
+
+{
+    "public": false
+}
+```
+
+Parameter      | Required? | Value             | Description
+:------------- | :-------- | :---------------- | :----------
+public         | Yes       | `true` or `false` | Toggles public viewing of the channel
+
+Possible errors.
+
+Missing or incorrect value for `public`.
+```http
+HTTP/1.1 400 BAD REQUEST
+Content-Type: application/json
+
+{
+    "form_errors": {
+        "public": ["Value should be 'true' or 'false'"]
+    }
+}
+```
+
 
 User Activity
 =============

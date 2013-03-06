@@ -4,6 +4,7 @@ from urlparse import urlsplit
 from test import base
 from test.fixtures import RockpackCoverArtData
 from test.test_helpers import get_auth_header
+from rockpack.mainsite import app
 from rockpack.mainsite.services.video import models
 
 
@@ -13,9 +14,8 @@ class ChannelCreateTestCase(base.RockPackTestCase):
         with self.app.test_client() as client:
             user = self.create_test_user()
 
-            channel_title = uuid.uuid4().hex
             r = client.post('/ws/{}/channels/'.format(user.id),
-                    data=dict(title=channel_title,
+                    data=dict(title='',
                         description='test channel for user {}'.format(user.id),
                         locale='en-us',
                         category=1,
@@ -27,7 +27,8 @@ class ChannelCreateTestCase(base.RockPackTestCase):
             resource = urlsplit(r.headers['Location']).path
             r = client.get(resource, headers=[get_auth_header(user.id)])
             new_ch = json.loads(r.data)
-            self.assertEquals(channel_title, new_ch['title'],
+            self.assertEquals(False, new_ch['public'], 'channel should be private')
+            self.assertEquals(app.config['UNTITLED_CHANNEL'] + ' 1', new_ch['title'],
                     'channel titles should match')
             self.assertEquals('', new_ch['cover_background_url'],
                     'channel cover should be blank')
@@ -35,10 +36,10 @@ class ChannelCreateTestCase(base.RockPackTestCase):
             # test channel update
             new_description = 'this is a new description!'
             r = client.put(resource,
-                    data=dict(title='',
+                    data=dict(title='a new channel title',
                         description=new_description,
                     category=3,
-                    locale='',
+                    locale='en-us',
                     cover=RockpackCoverArtData.comic_cover.cover,
                     public=False),
                     headers=[get_auth_header(user.id)])
@@ -54,6 +55,32 @@ class ChannelCreateTestCase(base.RockPackTestCase):
             assert metas.count() > 0
             for m in metas:
                 self.assertEquals(m.category, 3)
+
+            # check that the dup-title error isnt triggered when updating
+            # but not changing the title
+            new_description = 'this is a new description!'
+            r = client.put(resource,
+                    data=dict(title='',
+                        description=new_description,
+                    category=3,
+                    locale='',
+                    cover=RockpackCoverArtData.comic_cover.cover,
+                    public=False),
+                    headers=[get_auth_header(user.id)])
+            self.assertEquals(204, r.status_code)
+
+            # test public toggle
+            r = client.put(resource + 'public/',
+                    data=dict(public=False),
+                    headers=[get_auth_header(user.id)])
+            data = json.loads(r.data)
+            self.assertEquals(data['public'], False)
+
+            r = client.put(resource + 'public/',
+                    data=dict(public=True),
+                    headers=[get_auth_header(user.id)])
+            data = json.loads(r.data)
+            self.assertEquals(data['public'], True)
 
     def test_failed_channel_create(self):
         with self.app.test_client() as client:

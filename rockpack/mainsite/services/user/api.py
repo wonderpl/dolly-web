@@ -110,11 +110,18 @@ def verify_id_on_model(model, col='id'):
 
 
 class ChannelForm(form.BaseForm):
+    def __init__(self, *args, **kwargs):
+        super(ChannelForm, self).__init__(*args, **kwargs)
+        self._channel_id = None
+
     title = wtf.TextField(validators=[check_present])
     description = wtf.TextField(validators=[check_present])
     category = wtf.TextField(validators=[check_present, verify_id_on_model(Category)])
     cover = wtf.TextField(validators=[check_present])
     public = wtf.BooleanField(validators=[check_present])
+
+    def for_channel_id(self, id):
+        self._channel_id = id
 
     def validate_cover(self, field):
         exists = lambda m: m.query.filter_by(cover=field.data).count()
@@ -127,7 +134,9 @@ class ChannelForm(form.BaseForm):
             untitled_channel = app.config['UNTITLED_CHANNEL'] + ' '
             count = user_channels.filter(Channel.title.like(untitled_channel + '%')).count()
             field.data = untitled_channel + str(count + 1)
-        if user_channels.filter_by(title=field.data).count():
+        # If we have a channel with the same title, other than the one we're editing, ...
+        if user_channels.filter_by(title=field.data).count() and not (
+                self._channel_id and user_channels.filter_by(id=self._channel_id).count()):
             raise ValidationError('duplicate title')
 
     def validate_category(self, field):
@@ -233,6 +242,19 @@ class UserWS(WebService):
         if g.authorized.userid != userid and not channel.public:
             abort(404)
         return _channel_info_response(channel, self.get_locale(), self.get_page(), True)
+
+    @expose_ajax('/<userid>/channels/<channelid>/public/', methods=('PUT',))
+    @check_authorization(self_auth=True)
+    def channel_public_toggle(self, userid, channelid):
+        channel = Channel.query.get_or_404(channelid)
+        tf = {'true': True, 'false': False}
+        try:
+            public = tf[request.form.get('public').lower()]
+        except KeyError:
+            abort(400, form_errors={"public": ["Value should be 'true' or 'false'"]})
+        channel.public = public
+        channel.save()
+        return {"public": channel.public}
 
     @expose_ajax('/<userid>/channels/<channelid>/', methods=('PUT',))
     @check_authorization(self_auth=True)
