@@ -15,13 +15,6 @@ from rockpack.mainsite.services.video.models import Locale
 from . import models
 
 
-def user_authenticated(username, password):
-    user = User.get_from_username(username)
-    if user and user.check_password(password):
-        return user
-    return False
-
-
 if app.config.get('TEST_EXTERNAL_SYSTEM'):
     @app.route('/test/fb/login/', subdomain=app.config.get('SECURE_SUBDOMAIN'))
     def test_fb():
@@ -40,7 +33,7 @@ class LoginWS(WebService):
     def login(self):
         if not request.form['grant_type'] == 'password':
             abort(400, error='unsupported_grant_type')
-        user = user_authenticated(request.form['username'], request.form['password'])
+        user = User.get_from_credentials(request.form['username'], request.form['password'])
         if not user:
             abort(400, error='invalid_grant')
         return user.get_credentials()
