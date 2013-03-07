@@ -226,7 +226,7 @@ class UserWS(WebService):
 
     @expose_ajax('/<userid>/channels/<channelid>/', cache_age=60, secure=False)
     def channel_info(self, userid, channelid):
-        channel = Channel.query.filter_by(channel=channelid, public=True).first_or_404()
+        channel = Channel.query.filter_by(id=channelid, public=True).first_or_404()
         return _channel_info_response(channel, self.get_locale(), self.get_page(), False)
 
     @expose_ajax('/<userid>/channels/<channelid>/', cache_age=0)
