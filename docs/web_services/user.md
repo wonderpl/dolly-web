@@ -576,10 +576,15 @@ Content-Type: application/json
 Missing list in `videos`
 
 ```http
-HTTP/1.1 404 BAD REQUEST
+HTTP/1.1 400 BAD REQUEST
 Content-Type: application/json
 
 {
-    "videos": ["List can be empty, but must be present."]
+    "error": "invalid_request",
+    "form_errors": {
+        "videos": [
+            "List can be empty, but must be present."
+        ]
+    }
 }
 ```

@@ -299,7 +299,7 @@ class UserWS(WebService):
             abort(403)
 
         if not request.json or not isinstance(request.json.get('videos'), list):
-            return abort(404, form_errors={'videos': ['List can be empty, but must be present.']})
+            abort(400, form_errors=dict(videos=['List can be empty, but must be present.']))
 
         instances = {v.video: v for v in list(VideoInstance.query.filter_by(channel=channelid).order_by('position asc'))}
         for pos, video in enumerate(request.json['videos']):
