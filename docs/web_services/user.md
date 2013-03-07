@@ -36,10 +36,8 @@ Cache-Control: public, max-age=60
 }
 ```
 
-Channel
-=======
-
-### Get
+Channel Get
+===========
 
 Get data for an individual channel.
 
@@ -56,14 +54,6 @@ locale         | yes       | IETF language tag | Some videos may be excluded if 
 start          | no        | 0-based integer   | Used for paging through the channel's video items
 size           | no        | video page size   | Number of videos to return - 100 by default
 
-If the channel is private and the owner's token is not provided then a `403` will be returned.
-
-```http
-HTTP/1.1 403 FORBIDDEN
-Content-Type: application/json
-
-{"error":"insufficient_scope"}
-```
 
 Otherwise returns metadata and video list for the requested channel.
 
@@ -110,8 +100,16 @@ Cache-Control: public, max-age=60
 
 Possible errors.
 
-If accessed via the secure sub-domain, and `public` is `true`,
-resource will return
+If the channel is private and the owner's token is not provided then a `403` will be returned.
+
+```http
+HTTP/1.1 403 FORBIDDEN
+Content-Type: application/json
+
+{"error":"insufficient_scope"}
+```
+
+If accessed via the secure sub-domain, `public` is `false`, and user is not channel owner, resource will return a `404`.
 
 ```http
 HTTP/1.1 404 NOT FOUND
