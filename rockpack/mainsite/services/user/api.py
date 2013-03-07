@@ -273,7 +273,10 @@ class UserWS(WebService):
                     or form.category.data
 
                 m.save()
-        return ajax_create_response(channel, status=200)
+        resource_url = channel.get_resource_url(True)
+        return (dict(id=channel.id, resource_url=resource_url),
+                200, [('Location', resource_url)])
+
 
     @expose_ajax('/<userid>/cover_art/', cache_age=60, cache_private=True)
     @check_authorization(self_auth=True)
