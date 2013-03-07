@@ -1,7 +1,8 @@
 import re
 import uuid
 from sqlalchemy import (
-    String, Column, Integer, Boolean, DateTime, ForeignKey, CHAR, event, func)
+    String, Column, Integer, Boolean, DateTime, ForeignKey,
+    PrimaryKeyConstraint, CHAR, event, func)
 from sqlalchemy.orm import relationship
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask import g
@@ -153,10 +154,31 @@ class UserActivity(db.Model):
     __tablename__ = 'user_activity'
 
     id = Column(Integer, primary_key=True)
-    user = Column(CHAR(22), ForeignKey('user.id'), nullable=False)
+    user = Column(ForeignKey('user.id'), nullable=False)
     action = Column(String(16), nullable=False)
     date_actioned = Column(DateTime(), nullable=False, default=func.now())
     object_type = Column(String(16), nullable=False)
     object_id = Column(String(64), nullable=False)
+
+
+class Subscription(db.Model):
+    __tablename__ = 'subscription'
+    __table_args__ = (
+        PrimaryKeyConstraint('user', 'channel'),
+    )
+
+    user = Column(ForeignKey('user.id'), nullable=False)
+    channel = Column(ForeignKey('channel.id'), nullable=False)
+    date_created = Column(DateTime(), nullable=False, default=func.now())
+
+    @property
+    def id(self):
+        return self.user + self.channel
+
+    def get_resource_url(self, own=False):
+        view = 'userws.delete_subscription_item'
+        return url_for(view, userid=self.user, channelid=self.channel)
+    resource_url = property(get_resource_url)
+
 
 event.listen(User, 'before_insert', lambda x, y, z: add_base64_pk(x, y, z))

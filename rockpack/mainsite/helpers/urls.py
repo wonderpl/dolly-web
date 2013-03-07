@@ -1,4 +1,5 @@
 import urlparse
+from werkzeug.exceptions import NotFound
 from flask import current_app, url_for as _url_for
 
 
@@ -10,6 +11,14 @@ def url_for(*args, **kwargs):
     if secure_subdomain and url.startswith('http://' + secure_subdomain + '.'):
         url = 'https://' + url[7:]
     return url
+
+
+def url_to_endpoint(url):
+    url = urlparse.urlsplit(url)
+    try:
+        return current_app.url_map.bind(url.netloc).match(url.path)
+    except NotFound:
+        return None, {}
 
 
 def image_url_from_path(path):

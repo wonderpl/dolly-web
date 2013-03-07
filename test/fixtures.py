@@ -45,13 +45,13 @@ class CategoryData(DataSet):
     class Music:
         id = 2
         name = 'Music'
-        locale = LocaleData.UK.id
+        locale = LocaleData.US.id
         parent = None
 
     class Rock:
         id = 3
         name = 'Rock'
-        locale = LocaleData.UK.id
+        locale = LocaleData.US.id
         parent = 2
 
 
