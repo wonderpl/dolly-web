@@ -106,7 +106,7 @@ class HeadersTestCase(base.RockPackTestCase):
 
 class LoginTestCase(base.RockPackTestCase):
 
-    @patch('rockpack.mainsite.services.oauth.api.user_authenticated', return_value=User())
+    @patch('rockpack.mainsite.services.user.models.User.get_from_credentials', return_value=User())
     @patch('rockpack.mainsite.services.user.models.User.get_resource_url')
     def test_succesful_login(self, get_resource_url, user_authenticated):
         with self.app.test_client() as client:
@@ -272,7 +272,7 @@ class RegisterTestCase(base.RockPackTestCase):
             self.assertEquals(200, r.status_code)
             self.assertNotEquals(None, creds['refresh_token'])
             self.assertEquals(1,
-                    Channel.query.filter_by(owner_rel=User.get_from_username('foobarbarbar')).count(),
+                    Channel.query.filter_by(owner=creds['user_id']).count(),
                     'default user channel should be created')
 
             creds = json.loads(r.data)

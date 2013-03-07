@@ -12,6 +12,7 @@ from rockpack.mainsite.services.pubsubhubbub.api import subscribe
 from rockpack.mainsite.services.video.models import (
     Locale, Source, Category, Video, Channel)
 from rockpack.mainsite.services.user.models import User
+from .models import AdminLogRecord
 
 
 class ImportForm(form.BaseForm):
@@ -84,9 +85,11 @@ class ImportView(BaseView):
                     cover='',
                     locale=form.locale.data,
                     category=form.category.data)
+                self.record_action('created', channel)
             else:
                 channel = Channel.query.get(channel)
             channel.add_videos(form.import_data.videos)
+            self.record_action('imported', channel, '%d videos' % count)
             push_config = form.import_data.push_config
             if push_config and channel.id:
                 subscribe(push_config.hub, push_config.topic, channel.id)
@@ -109,9 +112,19 @@ class ImportView(BaseView):
             avatar=avatar,
             refresh_token='',
             is_active=True)
+        self.record_action('created', user)
         db.session.add(user)
         db.session.commit()
         return user
+
+    def record_action(self, action, model, value=None):
+        db.session.add(AdminLogRecord(
+            username=login.current_user.username,
+            action=action,
+            model=model.__class__.__name__,
+            instance_id=unicode(model.id),
+            value=value or unicode(model),
+        ))
 
     @expose('/', ('GET', 'POST'))
     def index(self):

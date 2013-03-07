@@ -4,7 +4,6 @@ from sqlalchemy import (
     String, Column, Integer, Boolean, DateTime, ForeignKey,
     PrimaryKeyConstraint, CHAR, event, func)
 from sqlalchemy.orm import relationship
-from sqlalchemy.orm.exc import NoResultFound
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask import g
 from rockpack.mainsite import app
@@ -42,11 +41,17 @@ class User(db.Model):
         return q.values(cls.id, cls.username)
 
     @classmethod
-    def get_from_username(cls, username):
-        try:
-            return cls.query.filter_by(username=username).one()
-        except NoResultFound:
-            return None
+    def get_from_credentials(cls, username, password):
+        if '@' in username:
+            filter = dict(email=username)
+        else:
+            filter = dict(username=username)
+        # XXX: email field doesn't have unique constraint - for now we
+        # check each record for matching password but we could consider
+        # taking first only or applying unique constraint
+        for user in cls.query.filter_by(**filter):
+            if user.check_password(password):
+                return user
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)

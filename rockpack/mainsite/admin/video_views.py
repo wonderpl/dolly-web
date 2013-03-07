@@ -10,6 +10,11 @@ def _format_video_thumbnail(context, video, name):
     return Markup(t % (video.player_link, video.default_thumbnail))
 
 
+def _format_video_instance_link(context, video, name):
+    t = '<a href="/admin/video_locale_meta/?flt1_2={}">{}</a>'
+    return Markup(t.format(video.video_rel.title, video.video_rel.title))
+
+
 class VideoLocaleMetaFormAdmin(InlineFormAdmin):
     form_columns = ('id', 'category_ref', 'visible')
 
@@ -46,7 +51,7 @@ class VideoInstance(AdminView):
     model = models.VideoInstance
 
     column_list = ('video_rel', 'video_channel', 'date_added', 'thumbnail')
-    column_formatters = dict(thumbnail=_format_video_thumbnail)
+    column_formatters = dict(thumbnail=_format_video_thumbnail, video_rel=_format_video_instance_link)
     column_filters = ('video_channel', 'video_rel')
     form_columns = ('video_channel', 'video_rel')
 
@@ -125,7 +130,7 @@ class UserCoverArt(AdminView):
     model = coverart_models.UserCoverArt
     model_name = coverart_models.UserCoverArt.__tablename__
 
-    column_list = ('owner_rel', 'cover.thumbnail_large',)
+    column_list = ('owner_rel', 'cover.thumbnail_large', 'cover',)
     column_filters = ('owner_rel',)
 
     edit_template = 'admin/cover_art.html'
