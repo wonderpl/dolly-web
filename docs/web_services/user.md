@@ -191,6 +191,18 @@ Authorization: Bearer TOKEN
 }
 ```
 
+Responds '200' with the original channel resource url.
+
+```http
+HTTP/1.1 200 OK
+Location: http://some_doman/ws/USERID/channels/CHANNELID/
+
+{
+    "id": "CHANNELID",
+    "resource_url": "http://some_domain/ws/USERID/channels/CHANNELID/"
+}
+```
+
 Channel Privacy
 ===============
 
