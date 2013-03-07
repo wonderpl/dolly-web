@@ -540,6 +540,9 @@ Content-Type: application/json
 To add or delete videos from a channel, send a list of the videos that the channel needs to contain.
 Any videos not included, but are currently in the channel, will be removed.
 
+Additionally, the order in which the video ids occur in the list will dictate the order in which they
+will be returned in the `GET` above.
+
 ```http
 GET /ws/USERID/channels/CHANNELID/videos/ HTTP/1.1
 Content-Type: application/json
