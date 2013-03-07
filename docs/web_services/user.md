@@ -100,19 +100,14 @@ Cache-Control: public, max-age=60
 
 Possible errors.
 
-If the channel is private and the owner's token is not provided then a `403` will be returned.
+If the channel is private and the owner's token is not provided; or; if accessed via a secure sub-domain,
+`public` is `false`, and user is not channel owner, then a `403` will be returned.
 
 ```http
 HTTP/1.1 403 FORBIDDEN
 Content-Type: application/json
 
 {"error":"insufficient_scope"}
-```
-
-If accessed via the secure sub-domain, `public` is `false`, and user is not channel owner, resource will return a `404`.
-
-```http
-HTTP/1.1 404 NOT FOUND
 ```
 
 Channel Create
@@ -508,5 +503,83 @@ Cache-Control: private, max-age=60
    }
   ]
  }
+}
+```
+
+# Channel Videos
+
+### Get
+
+Get a list of videos for a channel.
+
+```http
+GET /ws/USERID/channels/CHANNELID/videos/ HTTP/1.1
+Authorization: Bearer TOKEN
+```
+
+Returns an ordered list of videos for a channel.
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{
+    "videos": [
+        {
+            "id": "VIDEOID"
+        },
+        {
+            "id": "VIDEOID"
+        }
+    ]
+}
+```
+
+### Add/Delete Videos
+
+To add or delete videos from a channel, send a list of the videos that the channel needs to contain.
+Any videos not included, but are currently in the channel, will be removed.
+
+```http
+GET /ws/USERID/channels/CHANNELID/videos/ HTTP/1.1
+Content-Type: application/json
+Authorization: Bearer TOKEN
+
+{
+    "videos": [
+        {
+            "id": "VIDEOID"
+        },
+        {
+            "id": "VIDEOID"
+        }
+    ]
+}
+```
+
+```http
+HTTP/1.1 204 NO CONTENT
+Content-Type: application/json
+```
+
+Possible errors.
+
+If the channel is private and the owner's token is not provided then a 403 will be returned.
+
+```http
+HTTP/1.1 403 FORBIDDEN
+Content-Type: application/json
+
+{"error":"insufficient_scope"}
+```
+
+Missing list in `videos`
+
+```http
+HTTP/1.1 404 BAD REQUEST
+Content-Type: application/json
+
+{
+    "videos": ["List can be empty, but must be present."]
 }
 ```

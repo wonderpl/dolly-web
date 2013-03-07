@@ -224,29 +224,6 @@ class UserWS(WebService):
             public=form.public.data)
         return ajax_create_response(channel)
 
-    @expose_ajax('/<userid>/channels/<channelid>/', cache_age=60, secure=False)
-    def channel_info(self, userid, channelid):
-        channel = Channel.query.filter_by(channel=channelid, public=True).first_or_404()
-        return _channel_info_response(channel, self.get_locale(), self.get_page(), False)
-
-    @expose_ajax('/<userid>/channels/<channelid>/', cache_age=0)
-    @check_authorization()
-    def owner_channel_info(self, userid, channelid):
-        channel = Channel.query.get_or_404(channelid)
-        if g.authorized.userid != userid and not channel.public:
-            abort(404)
-        return _channel_info_response(channel, self.get_locale(), self.get_page(), True)
-
-    @expose_ajax('/<userid>/channels/<channelid>/public/', methods=('PUT',))
-    @check_authorization(self_auth=True)
-    def channel_public_toggle(self, userid, channelid):
-        channel = Channel.query.get_or_404(channelid)
-        if not request.json or not isinstance(request.json.get('public', None), bool):
-            abort(400, form_errors={"public": ["Value should be 'true' or 'false'"]})
-        channel.public = request.json.get('public')
-        channel.save()
-        return {"public": channel.public}
-
     @expose_ajax('/<userid>/channels/<channelid>/', methods=('PUT',))
     @check_authorization(self_auth=True)
     def channel_item_edit(self, userid, channelid):
@@ -277,6 +254,77 @@ class UserWS(WebService):
         return (dict(id=channel.id, resource_url=resource_url),
                 200, [('Location', resource_url)])
 
+    @expose_ajax('/<userid>/channels/<channelid>/', cache_age=60, secure=False)
+    def channel_info(self, userid, channelid):
+        channel = Channel.query.filter_by(channel=channelid, public=True).first_or_404()
+        return _channel_info_response(channel, self.get_locale(), self.get_page(), False)
+
+    @expose_ajax('/<userid>/channels/<channelid>/', cache_age=0)
+    @check_authorization()
+    def owner_channel_info(self, userid, channelid):
+        channel = Channel.query.get_or_404(channelid)
+        if not channel.owner == userid:
+            abort(403)
+        if g.authorized.userid != userid and not channel.public:
+            abort(404)
+        return _channel_info_response(channel, self.get_locale(), self.get_page(), True)
+
+    @expose_ajax('/<userid>/channels/<channelid>/public/', methods=('PUT',))
+    @check_authorization(self_auth=True)
+    def channel_public_toggle(self, userid, channelid):
+        channel = Channel.query.get_or_404(channelid)
+        if not channel.owner == userid:
+            abort(403)
+        if not request.json or not isinstance(request.json.get('public', None), bool):
+            abort(400, form_errors={"public": ["Value should be 'true' or 'false'"]})
+        channel.public = request.json.get('public')
+        channel.save()
+        return {"public": channel.public}
+
+    @expose_ajax('/<userid>/channels/<channelid>/videos/')
+    @check_authorization()
+    def channel_videos(self, userid, channelid):
+        channel = Channel.query.get_or_404(channelid)
+        if not channel.owner == userid:
+            abort(403)
+        return {'videos':
+                [dict(id=v.video) for v in VideoInstance.query.filter_by(channel=channelid).order_by('position asc')]
+                }
+
+    @expose_ajax('/<userid>/channels/<channelid>/videos/', methods=('PUT',))
+    @check_authorization(self_auth=True)
+    def update_channel_videos(self, userid, channelid):
+        channel = Channel.query.get_or_404(channelid)
+        if not channel.owner == userid:
+            abort(403)
+
+        if not request.json or not isinstance(request.json.get('videos'), list):
+            return abort(404, form_errors={'videos': ['List can be empty, but must be present.']})
+
+        instances = {v.video: v for v in list(VideoInstance.query.filter_by(channel=channelid).order_by('position asc'))}
+        for pos, video in enumerate(request.json['videos']):
+            i = instances.get(video['id'])
+            if not i:
+                g.session.add(VideoInstance(video=video['id'], channel=channelid))
+                continue
+            if i.position != pos:
+                i.position = pos
+                g.session.add(i)
+
+        deletes = set(instances.keys()).difference(v['id'] for v in request.json['videos'])
+        if deletes:
+            VideoInstance.query.filter(
+                VideoInstance.video.in_(deletes),
+                VideoInstance.channel == channelid
+            ).delete(synchronize_session='fetch')
+
+        try:
+            g.session.commit()
+        except Exception as e:
+            g.session.rollback()
+            app.logger.error('Failed to update channel videos with: {}'.format(str(e)))
+            abort(500)
+        return 204
 
     @expose_ajax('/<userid>/cover_art/', cache_age=60, cache_private=True)
     @check_authorization(self_auth=True)
