@@ -61,10 +61,10 @@ def expose_ajax(url, methods=['GET'], secure=None, cache_age=None, cache_private
     return decorator
 
 
-def ajax_create_response(instance, extra={}):
+def ajax_create_response(instance, extra={}, status=201):
     resource_url = extra.pop('resource_url', instance.get_resource_url(True))
     return (dict(id=instance.id, resource_url=resource_url, **extra),
-            201, [('Location', resource_url)])
+            status, [('Location', resource_url)])
 
 
 def process_image(field, data=None):

@@ -241,7 +241,7 @@ class UserWS(WebService):
     @check_authorization(self_auth=True)
     def channel_public_toggle(self, userid, channelid):
         channel = Channel.query.get_or_404(channelid)
-        if not request.json and isinstance(request.json.get('public'), bool):
+        if not request.json or not isinstance(request.json.get('public', None), bool):
             abort(400, form_errors={"public": ["Value should be 'true' or 'false'"]})
         channel.public = request.json.get('public')
         channel.save()
@@ -273,6 +273,7 @@ class UserWS(WebService):
                     or form.category.data
 
                 m.save()
+        return ajax_create_response(channel, status=200)
 
     @expose_ajax('/<userid>/cover_art/', cache_age=60, cache_private=True)
     @check_authorization(self_auth=True)

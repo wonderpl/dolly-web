@@ -43,7 +43,7 @@ class ChannelCreateTestCase(base.RockPackTestCase):
                     public=False)),
                     content_type='application/json',
                     headers=[get_auth_header(user.id)])
-            self.assertEquals(204, r.status_code)
+            self.assertEquals(200, r.status_code)
 
             r = client.get(resource, headers=[get_auth_header(user.id)])
             updated_ch = json.loads(r.data)
@@ -67,7 +67,7 @@ class ChannelCreateTestCase(base.RockPackTestCase):
                     public=False)),
                     content_type='application/json',
                     headers=[get_auth_header(user.id)])
-            self.assertEquals(204, r.status_code)
+            self.assertEquals(200, r.status_code)
 
             # test public toggle
             r = client.put(resource + 'public/',
