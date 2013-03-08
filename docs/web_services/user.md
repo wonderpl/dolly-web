@@ -184,6 +184,21 @@ HTTP/1.1 204 NO CONTENT
 Content-Type: application/json
 ```
 
+### Delete
+
+Delete a channel
+
+```http
+DELETE /ws/USERID/channels/CHANNELID/ HTTP/1.1
+```
+
+Responds with  `204` on success
+
+```http
+HTTP/1.1 204 NO CONTENT
+Content-Type: application/json
+```
+
 User Activity
 =============
 

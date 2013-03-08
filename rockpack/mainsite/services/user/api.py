@@ -239,6 +239,14 @@ class UserWS(WebService):
         #channel.category = form.category.data
         channel.save()
 
+    @expose_ajax('/<userid>/channels/<channelid>/', methods=('DELETE',))
+    @check_authorization(self_auth=True)
+    def channel_delete(self, userid, channelid):
+        channel = Channel.query.get_or_404(channelid)
+        channel.deleted = True
+        channel.save()
+        return 204
+
     @expose_ajax('/<userid>/cover_art/', cache_age=60, cache_private=True)
     @check_authorization(self_auth=True)
     def get_cover_art(self, userid):
