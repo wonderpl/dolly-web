@@ -224,6 +224,31 @@ class UserWS(WebService):
             public=form.public.data)
         return ajax_create_response(channel)
 
+    @expose_ajax('/<userid>/channels/<channelid>/', cache_age=60, secure=False)
+    def channel_info(self, userid, channelid):
+        channel = Channel.query.filter_by(id=channelid, public=True).first_or_404()
+        return _channel_info_response(channel, self.get_locale(), self.get_page(), False)
+
+    @expose_ajax('/<userid>/channels/<channelid>/', cache_age=0)
+    @check_authorization()
+    def owner_channel_info(self, userid, channelid):
+        channel = Channel.query.get_or_404(channelid)
+        if g.authorized.userid != userid and not channel.public:
+            abort(404)
+        return _channel_info_response(channel, self.get_locale(), self.get_page(), True)
+
+    @expose_ajax('/<userid>/channels/<channelid>/public/', methods=('PUT',))
+    @check_authorization(self_auth=True)
+    def channel_public_toggle(self, userid, channelid):
+        channel = Channel.query.get_or_404(channelid)
+        if not channel.owner == userid:
+            abort(403)
+        if not isinstance(request.json, bool):
+            abort(400, form_errors="Value should be 'true' or 'false'")
+        channel.public = request.json
+        channel = channel.save()
+        return '{}'.format(str(channel.public).lower())
+
     @expose_ajax('/<userid>/channels/<channelid>/', methods=('PUT',))
     @check_authorization(self_auth=True)
     def channel_item_edit(self, userid, channelid):
@@ -253,33 +278,6 @@ class UserWS(WebService):
         resource_url = channel.get_resource_url(True)
         return (dict(id=channel.id, resource_url=resource_url),
                 200, [('Location', resource_url)])
-
-    @expose_ajax('/<userid>/channels/<channelid>/', cache_age=60, secure=False)
-    def channel_info(self, userid, channelid):
-        channel = Channel.query.filter_by(channel=channelid, public=True).first_or_404()
-        return _channel_info_response(channel, self.get_locale(), self.get_page(), False)
-
-    @expose_ajax('/<userid>/channels/<channelid>/', cache_age=0)
-    @check_authorization()
-    def owner_channel_info(self, userid, channelid):
-        channel = Channel.query.get_or_404(channelid)
-        if not channel.owner == userid:
-            abort(403)
-        if g.authorized.userid != userid and not channel.public:
-            abort(404)
-        return _channel_info_response(channel, self.get_locale(), self.get_page(), True)
-
-    @expose_ajax('/<userid>/channels/<channelid>/public/', methods=('PUT',))
-    @check_authorization(self_auth=True)
-    def channel_public_toggle(self, userid, channelid):
-        channel = Channel.query.get_or_404(channelid)
-        if not channel.owner == userid:
-            abort(403)
-        if not isinstance(request.json, bool):
-            abort(400, form_errors="Value should be 'true' or 'false'")
-        channel.public = request.json
-        channel = channel.save()
-        return '{}'.format(str(channel.public).lower())
 
     @expose_ajax('/<userid>/channels/<channelid>/videos/')
     @check_authorization()

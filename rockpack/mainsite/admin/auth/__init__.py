@@ -55,6 +55,10 @@ class LoginManager(login.LoginManager):
             return response
 
 
+class AnonymousUser(login.AnonymousUser):
+    username = 'guest'
+
+
 def setup_auth(app):
     global google_oauth
     google_oauth = GoogleOAuth(app.config['GOOGLE_CONSUMER_KEY'],
@@ -62,5 +66,5 @@ def setup_auth(app):
     login_manager = LoginManager()
     login_manager.setup_app(app)
     login_manager.user_loader(lambda id: User.get_from_login(id))
-    login_manager.anonymous_user = login.AnonymousUser
+    login_manager.anonymous_user = AnonymousUser
     login_manager.login_view = '.login'

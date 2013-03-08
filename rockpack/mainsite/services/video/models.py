@@ -404,9 +404,10 @@ def _update_video_visibility(mapper, connection, target):
     if not target.visible:
         VideoLocaleMeta.query.\
             filter_by(locale=target.locale).\
-            join(Video, VideoInstance).\
-            filter_by(channel=target.channel).\
-            update(dict(visible=target.visible))
+            filter(VideoLocaleMeta.video.in_(
+                VideoInstance.query.filter_by(channel=target.channel).\
+                    with_entities(VideoInstance.video)
+            )).update(dict(visible=target.visible), False)
 
 event.listen(Video, 'before_insert', add_video_pk)
 event.listen(VideoLocaleMeta, 'before_insert', add_video_meta_pk)
