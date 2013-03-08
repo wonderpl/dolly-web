@@ -292,9 +292,6 @@ class Channel(db.Model):
     """ A channel, which can contain many videos """
 
     __tablename__ = 'channel'
-    __table_args__ = (
-        UniqueConstraint('owner', 'title'),
-    )
 
     id = Column(CHAR(24), primary_key=True)
     title = Column(String(1024), nullable=False)

@@ -140,7 +140,7 @@ class ChannelForm(form.BaseForm):
             field.data = untitled_channel + str(count + 1)
 
         # If we have a channel with the same title, other than the one we're editing, ...
-        if user_channels.filter_by(title=field.data).count() and not (
+        if user_channels.filter_by(title=field.data, deleted=False).count() and not (
                 self._channel_id and user_channels.filter_by(id=self._channel_id).count()):
             raise ValidationError('Duplicate title')
 
@@ -173,7 +173,7 @@ class UserWS(WebService):
     def user_info(self, userid):
         user = User.query.get_or_404(userid)
         channels = [video_api.channel_dict(c, with_owner=False, owner_url=False) for c in
-                    Channel.query.filter_by(owner=user.id)]   # TODO: .filter_by(public=True)
+                    Channel.query.filter_by(owner=user.id, deleted=False, public=True)]
         return _user_info_response(user, channels)
 
     @expose_ajax('/<userid>/', cache_private=True)
@@ -183,7 +183,7 @@ class UserWS(WebService):
             return self.user_info(userid)
         user = g.authorized.user
         channels = [video_api.channel_dict(c, with_owner=False, owner_url=True) for c in
-                    Channel.query.filter_by(owner=user.id)]
+                    Channel.query.filter_by(owner=user.id, deleted=False)]
         response = _user_info_response(user, channels)
         for key in 'activity', 'cover_art', 'subscriptions':
             response[key] = dict(resource_url=url_for('userws.get_%s' % key, userid=userid))
@@ -226,13 +226,13 @@ class UserWS(WebService):
 
     @expose_ajax('/<userid>/channels/<channelid>/', cache_age=60, secure=False)
     def channel_info(self, userid, channelid):
-        channel = Channel.query.filter_by(id=channelid, public=True).first_or_404()
+        channel = Channel.query.filter_by(id=channelid, public=True, deleted=False).first_or_404()
         return _channel_info_response(channel, self.get_locale(), self.get_page(), False)
 
     @expose_ajax('/<userid>/channels/<channelid>/', cache_age=0)
     @check_authorization()
     def owner_channel_info(self, userid, channelid):
-        channel = Channel.query.get_or_404(channelid)
+        channel = Channel.query.filter_by(id=channelid, deleted=False).first_or_404()
         if g.authorized.userid != userid and not channel.public:
             abort(404)
         return _channel_info_response(channel, self.get_locale(), self.get_page(), True)
@@ -240,7 +240,7 @@ class UserWS(WebService):
     @expose_ajax('/<userid>/channels/<channelid>/public/', methods=('PUT',))
     @check_authorization(self_auth=True)
     def channel_public_toggle(self, userid, channelid):
-        channel = Channel.query.get_or_404(channelid)
+        channel = Channel.query.filter_by(id=channelid, deleted=False).first_or_404()
         if not channel.owner == userid:
             abort(403)
         if not isinstance(request.json, bool):
@@ -252,7 +252,7 @@ class UserWS(WebService):
     @expose_ajax('/<userid>/channels/<channelid>/', methods=('PUT',))
     @check_authorization(self_auth=True)
     def channel_item_edit(self, userid, channelid):
-        channel = Channel.query.get_or_404(channelid)
+        channel = Channel.query.filter_by(id=channelid, deleted=False).first_or_404()
         if not channel.owner == userid:
             abort(403)
         form = ChannelForm(csrf_enabled=False)
@@ -282,7 +282,7 @@ class UserWS(WebService):
     @expose_ajax('/<userid>/channels/<channelid>/videos/')
     @check_authorization()
     def channel_videos(self, userid, channelid):
-        channel = Channel.query.get_or_404(channelid)
+        channel = Channel.query.filter_by(id=channelid, deleted=False).first_or_404()
         if not channel.owner == userid:
             abort(403)
         return [v.video for v in VideoInstance.query.filter_by(channel=channelid).order_by('position asc')]
@@ -290,7 +290,7 @@ class UserWS(WebService):
     @expose_ajax('/<userid>/channels/<channelid>/videos/', methods=('PUT',))
     @check_authorization(self_auth=True)
     def update_channel_videos(self, userid, channelid):
-        channel = Channel.query.get_or_404(channelid)
+        channel = Channel.query.filter_by(id=channelid, deleted=False).first_or_404()
         if not channel.owner == userid:
             abort(403)
 
@@ -333,7 +333,7 @@ class UserWS(WebService):
     @expose_ajax('/<userid>/channels/<channelid>/', methods=('DELETE',))
     @check_authorization(self_auth=True)
     def channel_delete(self, userid, channelid):
-        channel = Channel.query.get_or_404(channelid)
+        channel = Channel.query.filter_by(id=channelid, deleted=False).first_or_404()
         channel.deleted = True
         channel.save()
         return 204
@@ -366,7 +366,7 @@ class UserWS(WebService):
     @expose_ajax('/<userid>/subscriptions/')
     @check_authorization(self_auth=True)
     def get_subscriptions(self, userid):
-        channels = user_subscriptions(userid).join(Channel).values('id', 'owner')
+        channels = user_subscriptions(userid).join(Channel).filter(Channel.deleted==False).values('id', 'owner')
         items = [dict(resource_url=url_for('userws.delete_subscription_item',
                                            userid=userid, channelid=channelid),
                       channel_url=url_for('userws.channel_info',
@@ -381,7 +381,7 @@ class UserWS(WebService):
         if endpoint not in ('userws.owner_channel_info', 'userws.channel_info'):
             abort(400, message='Invalid channel url')
         channelid = args['channelid']
-        if not Channel.query.filter_by(id=channelid).count():
+        if not Channel.query.filter_by(id=channelid, deleted=False).count():
             abort(400, message='Channel not found')
         subs = Subscription(user=userid, channel=channelid).save()
         return ajax_create_response(subs)
@@ -389,7 +389,7 @@ class UserWS(WebService):
     @expose_ajax('/<userid>/subscriptions/<channelid>/')
     @check_authorization(self_auth=True)
     def redirect_subscription_item(self, userid, channelid):
-        channel = Channel.query.get_or_404(channelid)
+        channel = Channel.query.filter_by(id=channelid, deleted=False).first_or_404()
         return channel.resource_url, 302, [('Location', channel.resource_url)]
 
     @expose_ajax('/<userid>/subscriptions/<channelid>/', methods=['DELETE'])
