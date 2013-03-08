@@ -208,14 +208,12 @@ PUT /ws/USERID/channel/CHANNELID/public/ HTTP/1.1
 Content-Type: application/json
 Authorization: Bearer TOKEN
 
-{
-    "public": false
-}
+false
 ```
 
 Parameter      | Required? | Value             | Description
 :------------- | :-------- | :---------------- | :----------
-public         | Yes       | `true` or `false` | Toggles public viewing of the channel
+               | Yes       | `true` or `false` | Toggles public viewing of the channel
 
 Possible errors.
 
@@ -225,9 +223,8 @@ HTTP/1.1 400 BAD REQUEST
 Content-Type: application/json
 
 {
-    "form_errors": {
-        "public": ["Value should be 'true' or 'false'"]
-    }
+    "error": "invalid_request",
+    "form_errors": "Value should be 'true' or 'false'"
 }
 ```
 

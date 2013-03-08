@@ -275,11 +275,11 @@ class UserWS(WebService):
         channel = Channel.query.get_or_404(channelid)
         if not channel.owner == userid:
             abort(403)
-        if not request.json or not isinstance(request.json.get('public', None), bool):
-            abort(400, form_errors={"public": ["Value should be 'true' or 'false'"]})
-        channel.public = request.json.get('public')
-        channel.save()
-        return {"public": channel.public}
+        if not isinstance(request.json, bool):
+            abort(400, form_errors="Value should be 'true' or 'false'")
+        channel.public = request.json
+        channel = channel.save()
+        return '{}'.format(str(channel.public).lower())
 
     @expose_ajax('/<userid>/channels/<channelid>/videos/')
     @check_authorization()
