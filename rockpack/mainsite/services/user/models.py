@@ -1,7 +1,7 @@
 import re
 import uuid
 from sqlalchemy import (
-    String, Column, Integer, Boolean, DateTime, ForeignKey,
+    String, Column, Integer, Boolean, DateTime, Text, Enum, ForeignKey,
     PrimaryKeyConstraint, CHAR, event, func)
 from sqlalchemy.orm import relationship
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -11,6 +11,9 @@ from rockpack.mainsite.core.token import create_access_token
 from rockpack.mainsite.core.dbapi import db
 from rockpack.mainsite.helpers.db import ImageType, add_base64_pk, resize_and_upload
 from rockpack.mainsite.helpers.urls import url_for
+
+
+EXTERNAL_SYSTEM_NAMES = 'facebook', 'twitter', 'google'
 
 
 class User(db.Model):
@@ -159,6 +162,15 @@ class UserActivity(db.Model):
     date_actioned = Column(DateTime(), nullable=False, default=func.now())
     object_type = Column(String(16), nullable=False)
     object_id = Column(String(64), nullable=False)
+
+
+class ReservedUsername(db.Model):
+    __tablename__ = 'reserved_username'
+
+    username = Column(String(52), nullable=False, primary_key=True)
+    external_system = Column(Enum(*EXTERNAL_SYSTEM_NAMES), nullable=False)
+    external_uid = Column(String(1024), nullable=False)
+    external_data = Column(Text())
 
 
 class Subscription(db.Model):
