@@ -36,6 +36,67 @@ Cache-Control: public, max-age=60
 }
 ```
 
+### Change username
+
+Change the current username for a user
+
+```http
+PUT /ws/USERID/username/ HTTP/1.1
+Content-Type: application/json
+
+"foo"
+```
+
+Parameter  | Required | Value      | Description
+:--------- | :------- | :--------- | :----------
+username   | Yes      | String     | Characters allowed should match regex [a-zA-Z0-9]
+
+Responds with a `204`
+
+```http
+HTTP/1.1 204 OK
+Content-Type: application/json
+```
+
+Possible errors
+
+Username has already been taken
+
+```http
+HTTP/1.1 400 BAD REQUEST
+Content-Type: application/json
+
+{
+    "error": "invalid_request",
+    "form_errors": "Username is already taken",
+    "suggested_username": "foo"
+}
+```
+
+Username has already been changed a maximum number of times
+
+```http
+HTTP/1.1 400 BAD REQUEST
+Content-Type: application/json
+
+{
+    "error": "invalid_request",
+    "form_errors": "Limit for changing username has been reached"
+}
+```
+
+Invalid username
+
+```http
+HTTP/1.1 400 BAD REQUEST
+Content-Type: application/json
+
+{
+    "error": "invalid_request",
+    "form_errors": "Not a valid username"
+}
+```
+
 Channel
 =======
 
