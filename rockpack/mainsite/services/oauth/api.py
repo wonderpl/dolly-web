@@ -1,18 +1,28 @@
-from datetime import datetime
-from datetime import timedelta
+from datetime import datetime, timedelta
 from cStringIO import StringIO
-from flask import request
-from flask import abort
-from flask.ext import wtf
 import requests
-from . import facebook
+from flask import request, abort, g
+from flask.ext import wtf
 from rockpack.mainsite import app
+from rockpack.mainsite.helpers.db import get_column_property, get_column_validators
 from rockpack.mainsite.core.oauth.decorators import check_client_authorization
-from rockpack.mainsite.core.webservice import WebService
-from rockpack.mainsite.core.webservice import expose_ajax
-from rockpack.mainsite.services.user.models import User
+from rockpack.mainsite.core.webservice import WebService, expose_ajax
+from rockpack.mainsite.services.user.models import User, UserAccountEvent
 from rockpack.mainsite.services.video.models import Locale
+from . import facebook
 from . import models
+
+
+def _record_user_event(username, type, value=''):
+    trunc = lambda f, v: v[:get_column_property(UserAccountEvent, f, 'length')]
+    UserAccountEvent(
+        username=trunc('username', username),
+        event_type=type,
+        event_value=value,
+        ip_address=request.remote_addr,
+        user_agent=trunc('user_agent', request.user_agent.string),
+        clientid=getattr(g, 'app_client_id') or getattr(g.authorized, 'clientid') or '',
+    ).save()
 
 
 if app.config.get('TEST_EXTERNAL_SYSTEM'):
@@ -35,7 +45,9 @@ class LoginWS(WebService):
             abort(400, error='unsupported_grant_type')
         user = User.get_from_credentials(request.form['username'], request.form['password'])
         if not user:
+            _record_user_event(request.form['username'], 'login failed')
             abort(400, error='invalid_grant')
+        _record_user_event(request.form['username'], 'login succeeded', user.id)
         return user.get_credentials()
 
     @expose_ajax('/external/', methods=['POST'])
@@ -64,23 +76,24 @@ class LoginWS(WebService):
 
 
 class RockRegistrationForm(wtf.Form):
-    username = wtf.TextField(validators=[wtf.Required()])
-    password = wtf.PasswordField(validators=[wtf.Required()])
-    first_name = wtf.TextField()
-    last_name = wtf.TextField()
-    locale = wtf.TextField(validators=[wtf.Required()])
-    email = wtf.TextField(validators=[wtf.Required(), wtf.Email()])
+    username = wtf.TextField(validators=[wtf.Length(min=3)] + get_column_validators(User, 'username'))
+    password = wtf.PasswordField(validators=[wtf.Required(), wtf.Length(min=6)])
+    first_name = wtf.TextField(validators=[wtf.Optional()] + get_column_validators(User, 'first_name'))
+    last_name = wtf.TextField(validators=[wtf.Optional()] + get_column_validators(User, 'last_name'))
+    date_of_birth = wtf.DateField(validators=get_column_validators(User, 'date_of_birth'))
+    locale = wtf.TextField(validators=get_column_validators(User, 'locale'))
+    email = wtf.TextField(validators=[wtf.Email()] + get_column_validators(User, 'email'))
 
     def validate_username(form, field):
         if User.query.filter_by(username=field.data).count():
-            raise wtf.ValidationError('"%s" already taken' % field.data)
+            raise wtf.ValidationError('"%s" already taken.' % field.data)
 
         if field.data != User.sanitise_username(field.data):
-            raise wtf.ValidationError('Username can only contain alphanumerics')
+            raise wtf.ValidationError('Username can only contain alphanumerics.')
 
     def validate_email(form, field):
         if User.query.filter_by(email=field.data).count():
-            raise wtf.ValidationError('Email address already registered')
+            raise wtf.ValidationError('Email address already registered.')
 
 
 class ExternalRegistrationForm(wtf.Form):
@@ -167,14 +180,18 @@ class RegistrationWS(WebService):
     def register(self):
         form = RockRegistrationForm(csrf_enabled=False)
         if not form.validate():
+            _record_user_event(form.username.data, 'registration failed',
+                               ','.join(form.errors.keys()))
             abort(400, form_errors=form.errors)
         user = User.create_with_channel(
             username=form.username.data,
             first_name=form.first_name.data,
             last_name=form.last_name.data,
+            date_of_birth=form.date_of_birth.data,
             email=form.email.data,
             password=form.password.data,
             locale=form.locale.data)
+        _record_user_event(user.username, 'registration succeeded', user.id)
         return user.get_credentials()
 
 
@@ -189,5 +206,7 @@ class TokenWS(WebService):
             abort(400, error='unsupported_grant_type')
         user = User.query.filter_by(refresh_token=refresh_token).first()
         if not user:
+            _record_user_event('', 'refresh token failed')
             abort(400, error='invalid_grant')
+        _record_user_event(user.username, 'refresh token succeeded', user.id)
         return user.get_credentials()

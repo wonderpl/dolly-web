@@ -6,6 +6,7 @@ from iso8601.iso8601 import UTC
 from sqlalchemy import types
 from sqlalchemy.dialects.mysql.base import MySQLDialect
 from flask import g
+from flask.ext import wtf
 from rockpack.mainsite import app
 from rockpack.mainsite.core import imaging
 from .urls import image_url_from_path
@@ -46,6 +47,20 @@ def add_video_pk(mapper, connection, instance):
 def add_video_meta_pk(mapper, connection, instance):
     if not instance.id:
         instance.id = gen_videoid(instance.locale, instance.video_rel.source, instance.video_rel.source_videoid)
+
+
+def get_column_property(model, column, prop):
+    return getattr(model._sa_class_manager.mapper.get_property(column).columns[0].type, prop)
+
+
+def get_column_validators(model, columnname):
+    column = model._sa_class_manager.mapper.get_property(columnname).columns[0]
+    validators = []
+    if not column.nullable:
+        validators.append(wtf.Required())
+    if hasattr(column.type, 'length'):
+        validators.append(wtf.Length(max=column.type.length))
+    return validators
 
 
 def insert_new_only(model, instances):

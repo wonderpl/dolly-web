@@ -82,23 +82,25 @@ Authorization: Basic CLIENT_APP_CREDENTIALS
 Content-Type: application/x-www-form-urlencoded
 
 {
-    "username": "theamazingspiderman",
-    "password": "venom",
-    "first_name": "Peter",
-    "last_name": "Parker",
-    "locale": "en-us",
-    "spidey@theavengers.com"
+  "username": "theamazingspiderman",
+  "password": "venom",
+  "first_name": "Peter",
+  "last_name": "Parker",
+  "date_of_birth": "2003-01-24",
+  "locale": "en-us",
+  "spidey@theavengers.com"
 }
 ```
 
-Parameter  | Required | Value  | Description
-:--------- | :------- | :----- | :----------
-username   | Yes      | String | Characters allowed should match regex [a-zA-Z0-9]
-password   | Yes      | String |
-first_name | No       | String
-last_name  | No       | String
-locale     | Yes      | IETF language tag
-email      | Yes      | String
+Parameter     | Required | Value  | Description
+:------------ | :------- | :----- | :----------
+username      | Yes      | String | Characters allowed should match regex [a-zA-Z0-9]
+password      | Yes      | String | Minimum 6 characters
+first_name    | No       | String |
+last_name     | No       | String |
+date_of_birth | Yes      | String | YYYY-MM-DD formatted date string
+locale        | Yes      | String | IETF language tag
+email         | Yes      | String | Email address
 
 Responds with an access token information.
 

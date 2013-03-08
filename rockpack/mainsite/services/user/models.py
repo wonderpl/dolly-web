@@ -1,9 +1,10 @@
 import re
 import uuid
 from sqlalchemy import (
-    String, Column, Integer, Boolean, DateTime, ForeignKey,
+    String, Column, Integer, Boolean, Date, DateTime, ForeignKey,
     PrimaryKeyConstraint, CHAR, event, func)
 from sqlalchemy.orm import relationship
+from sqlalchemy.dialects import postgresql
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask import g
 from rockpack.mainsite import app
@@ -17,14 +18,17 @@ class User(db.Model):
     __tablename__ = 'user'
 
     id = Column(CHAR(22), primary_key=True)
-    username = Column(String(254), unique=True, nullable=False)
+    username = Column(String(52), unique=True, nullable=False)
     password_hash = Column(String(60), nullable=False)
     email = Column(String(254), nullable=False)
-    first_name = Column(String(254), nullable=False)
-    last_name = Column(String(254), nullable=False)
+    first_name = Column(String(32), nullable=False)
+    last_name = Column(String(32), nullable=False)
+    date_of_birth = Column(Date(), nullable=False)
     avatar = Column(ImageType('AVATAR'), nullable=False)
     is_active = Column(Boolean, nullable=False, server_default='true', default=True)
     refresh_token = Column(String(1024), nullable=False)
+    date_joined = Column(DateTime(), nullable=False, default=func.now())
+    date_updated = Column(DateTime(), nullable=False, default=func.now(), onupdate=func.now())
 
     locale = Column(ForeignKey('locale.id'), nullable=False, server_default='')
 
@@ -49,7 +53,7 @@ class User(db.Model):
         # XXX: email field doesn't have unique constraint - for now we
         # check each record for matching password but we could consider
         # taking first only or applying unique constraint
-        for user in cls.query.filter_by(**filter):
+        for user in cls.query.filter_by(is_active=True, **filter):
             if user.check_password(password):
                 return user
 
@@ -159,6 +163,19 @@ class UserActivity(db.Model):
     date_actioned = Column(DateTime(), nullable=False, default=func.now())
     object_type = Column(String(16), nullable=False)
     object_id = Column(String(64), nullable=False)
+
+
+class UserAccountEvent(db.Model):
+    __tablename__ = 'user_account_event'
+
+    id = Column(Integer, primary_key=True)
+    username = Column(String(52), nullable=False)
+    event_date = Column(DateTime(), nullable=False, default=func.now())
+    event_type = Column(String(32), nullable=False)
+    event_value = Column(String(1024), nullable=False)
+    ip_address = Column(postgresql.INET, nullable=False)
+    user_agent = Column(String(1024), nullable=False)
+    clientid = Column(CHAR(22), nullable=False)
 
 
 class Subscription(db.Model):
