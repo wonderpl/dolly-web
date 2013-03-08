@@ -285,9 +285,7 @@ class UserWS(WebService):
         channel = Channel.query.get_or_404(channelid)
         if not channel.owner == userid:
             abort(403)
-        return {'videos':
-                [dict(id=v.video) for v in VideoInstance.query.filter_by(channel=channelid).order_by('position asc')]
-                }
+        return [v.video for v in VideoInstance.query.filter_by(channel=channelid).order_by('position asc')]
 
     @expose_ajax('/<userid>/channels/<channelid>/videos/', methods=('PUT',))
     @check_authorization(self_auth=True)
@@ -296,20 +294,28 @@ class UserWS(WebService):
         if not channel.owner == userid:
             abort(403)
 
-        if not request.json or not isinstance(request.json.get('videos'), list):
-            abort(400, form_errors=dict(videos=['List can be empty, but must be present.']))
+        if not request.json or not isinstance(request.json, list):
+            abort(400, form_errors='List can be empty, but must be present.')
 
+        additions = []
         instances = {v.video: v for v in list(VideoInstance.query.filter_by(channel=channelid).order_by('position asc'))}
-        for pos, video in enumerate(request.json['videos']):
-            i = instances.get(video['id'])
+        for pos, vid in enumerate(request.json):
+            if not isinstance(vid, str):
+                abort(400, form_errors='List item must be a video id')
+            i = instances.get(vid)
             if not i:
-                g.session.add(VideoInstance(video=video['id'], channel=channelid))
+                additions.append(vid)
                 continue
             if i.position != pos:
                 i.position = pos
                 g.session.add(i)
 
-        deletes = set(instances.keys()).difference(v['id'] for v in request.json['videos'])
+        # Get a valid list of video ids
+        video_ids = Video.query.filter(Video.id.in_(additions)).values('id')
+        for v in video_ids:
+            g.session.add(VideoInstance(video=v, channel=channelid))
+
+        deletes = set(instances.keys()).difference([v for v in request.json])
         if deletes:
             VideoInstance.query.filter(
                 VideoInstance.video.in_(deletes),

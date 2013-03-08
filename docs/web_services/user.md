@@ -529,16 +529,7 @@ Returns an ordered list of videos for a channel.
 HTTP/1.1 200 OK
 Content-Type: application/json
 
-{
-    "videos": [
-        {
-            "id": "VIDEOID"
-        },
-        {
-            "id": "VIDEOID"
-        }
-    ]
-}
+["id": "VIDEOID", "id": "VIDEOID"]
 ```
 
 ### Add/Delete Videos
@@ -554,16 +545,7 @@ GET /ws/USERID/channels/CHANNELID/videos/ HTTP/1.1
 Content-Type: application/json
 Authorization: Bearer TOKEN
 
-{
-    "videos": [
-        {
-            "id": "VIDEOID"
-        },
-        {
-            "id": "VIDEOID"
-        }
-    ]
-}
+["id": "VIDEOID", "id": "VIDEOID"]
 ```
 
 ```http
@@ -582,7 +564,7 @@ Content-Type: application/json
 {"error":"insufficient_scope"}
 ```
 
-Missing list in `videos`
+Missing list if video ids
 
 ```http
 HTTP/1.1 400 BAD REQUEST
@@ -595,5 +577,17 @@ Content-Type: application/json
             "List can be empty, but must be present."
         ]
     }
+}
+```
+
+Item in list is not a string
+
+```http
+HTTP/1.1 400 BAD REQUEST
+Content-Type: application/json
+
+{
+    "error": "invalid_request",
+    "form_errors": "List item must be a video id"
 }
 ```
