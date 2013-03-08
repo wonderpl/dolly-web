@@ -99,6 +99,7 @@ def get_video_data(id, fetch_all_videos=True):
 def get_playlist_data(id, fetch_all_videos=False, feed='playlists'):
     """Return playlist data from youtube api."""
     total = 0
+    seen = []
     videos = []
     params = {'start-index': 1, 'max-results': (50 if fetch_all_videos else 1)}
     while True:
@@ -106,7 +107,11 @@ def get_playlist_data(id, fetch_all_videos=False, feed='playlists'):
         total = youtube_data['openSearch$totalResults']['$t']
         limit = min(total, app.config.get('YOUTUBE_IMPORT_LIMIT', 100))
         entries = youtube_data.get('entry', [])
-        videos.extend(_get_video_data(e, id) for e in entries)
+        for entry in entries:
+            video = _get_video_data(entry, id)
+            if video.source_videoid not in seen:
+                videos.append(video)
+                seen.append(video.source_videoid)
         if entries and fetch_all_videos and len(videos) < limit:
             params['start-index'] += params['max-results']
             continue
