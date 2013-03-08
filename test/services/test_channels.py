@@ -26,12 +26,10 @@ class ChannelCreateTestCase(base.RockPackTestCase):
             self.assertEquals(201, r.status_code)
             resource = urlsplit(r.headers['Location']).path
             r = client.get(resource, headers=[get_auth_header(user.id)])
-            new_ch = json.loads(r.data)
-            self.assertEquals(False, new_ch['public'], 'channel should be private')
-            self.assertEquals(app.config['UNTITLED_CHANNEL'] + ' 1', new_ch['title'],
-                    'channel titles should match')
-            self.assertEquals('', new_ch['cover_background_url'],
-                    'channel cover should be blank')
+            resp = json.loads(r.data)
+            new_ch = models.Channel.query.filter(
+                models.Channel.title.like(app.config['UNTITLED_CHANNEL'] + '%')).one()
+            self.assertEquals({"error":"Not Found"}, resp, 'channel should be private')
 
             # test channel update
             new_description = 'this is a new description!'
@@ -51,7 +49,7 @@ class ChannelCreateTestCase(base.RockPackTestCase):
                     'channel descriptions should match')
             self.assertNotEquals('', updated_ch['cover_background_url'],
                     'channel cover should not be blank')
-            metas = models.ChannelLocaleMeta.query.filter_by(channel=new_ch['id'])
+            metas = models.ChannelLocaleMeta.query.filter_by(channel=new_ch.id)
             assert metas.count() > 0
             for m in metas:
                 self.assertEquals(m.category, 3)
@@ -71,18 +69,18 @@ class ChannelCreateTestCase(base.RockPackTestCase):
 
             # test public toggle
             r = client.put(resource + 'public/',
-                    data=json.dumps(dict(public=False)),
+                    data=json.dumps(False),
                     content_type='application/json',
                     headers=[get_auth_header(user.id)])
             data = json.loads(r.data)
-            self.assertEquals(data['public'], False)
+            self.assertEquals(data, 'false')
 
             r = client.put(resource + 'public/',
-                    data=json.dumps(dict(public=True)),
+                    data=json.dumps(True),
                     content_type='application/json',
                     headers=[get_auth_header(user.id)])
             data = json.loads(r.data)
-            self.assertEquals(data['public'], True)
+            self.assertEquals(data, 'true')
 
     def test_failed_channel_create(self):
         with self.app.test_client() as client:

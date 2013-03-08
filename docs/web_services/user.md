@@ -208,12 +208,21 @@ PUT /ws/USERID/channel/CHANNELID/public/ HTTP/1.1
 Content-Type: application/json
 Authorization: Bearer TOKEN
 
-false
+"false"
 ```
 
 Parameter      | Required? | Value             | Description
 :------------- | :-------- | :---------------- | :----------
                | Yes       | `true` or `false` | Toggles public viewing of the channel
+
+Returns current state for `public`
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+"false"
+```
 
 Possible errors.
 
