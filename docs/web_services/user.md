@@ -49,7 +49,7 @@ Content-Type: application/json
 
 Parameter  | Required | Value      | Description
 :--------- | :------- | :--------- | :----------
-username   | Yes      | String     | Characters allowed should match regex [a-zA-Z0-9]
+           | Yes      | String     | Characters allowed should match regex [a-zA-Z0-9]
 
 Responds with a `204`
 
