@@ -114,10 +114,18 @@ def verify_id_on_model(model, col='id'):
 
 
 class ChannelForm(form.BaseForm):
+    def __init__(self, *args, **kwargs):
+        super(ChannelForm, self).__init__(*args, **kwargs)
+        self._channel_id = None
+
     title = wtf.TextField(validators=[check_present])
     description = wtf.TextField(validators=[check_present])
     category = wtf.TextField(validators=[check_present, verify_id_on_model(Category)])
     cover = wtf.TextField(validators=[check_present])
+    public = wtf.BooleanField(validators=[check_present])
+
+    def for_channel_id(self, id):
+        self._channel_id = id
 
     def validate_cover(self, field):
         exists = lambda m: m.query.filter_by(cover=field.data).count()
@@ -130,13 +138,20 @@ class ChannelForm(form.BaseForm):
             untitled_channel = app.config['UNTITLED_CHANNEL'] + ' '
             count = user_channels.filter(Channel.title.like(untitled_channel + '%')).count()
             field.data = untitled_channel + str(count + 1)
-        if user_channels.filter_by(title=field.data).count():
+
+        # If we have a channel with the same title, other than the one we're editing, ...
+        if user_channels.filter_by(title=field.data).count() and not (
+                self._channel_id and user_channels.filter_by(id=self._channel_id).count()):
             raise ValidationError('Duplicate title')
 
+    def validate_category(self, field):
+        if not (field.data and Category.query.get(field.data)):
+            raise ValidationError('invalid category')
 
-def _channel_info_response(channelid, meta, locale, paging, owner_url):
-    data = video_api.channel_dict(meta.channel_rel, owner_url=owner_url)
-    items, total = video_api.get_local_videos(locale, paging, channel=channelid, with_channel=False)
+
+def _channel_info_response(channel, locale, paging, owner_url):
+    data = video_api.channel_dict(channel, owner_url=owner_url)
+    items, total = video_api.get_local_videos(locale, paging, channel=channel.id, with_channel=False)
     data['videos'] = dict(items=items, total=total)
     return data
 
@@ -206,19 +221,33 @@ class UserWS(WebService):
             description=form.description.data,
             cover=form.cover.data,
             category=form.category.data,
-            locale=request.args.get('locale'))
+            public=form.public.data)
         return ajax_create_response(channel)
 
     @expose_ajax('/<userid>/channels/<channelid>/', cache_age=60, secure=False)
     def channel_info(self, userid, channelid):
-        meta = ChannelLocaleMeta.query.filter_by(channel=channelid).first_or_404()
-        return _channel_info_response(channelid, meta, self.get_locale(), self.get_page(), False)
+        channel = Channel.query.filter_by(id=channelid, public=True).first_or_404()
+        return _channel_info_response(channel, self.get_locale(), self.get_page(), False)
 
     @expose_ajax('/<userid>/channels/<channelid>/', cache_age=0)
     @check_authorization()
     def owner_channel_info(self, userid, channelid):
-        meta = ChannelLocaleMeta.query.filter_by(channel=channelid).first_or_404()
-        return _channel_info_response(channelid, meta, self.get_locale(), self.get_page(), True)
+        channel = Channel.query.get_or_404(channelid)
+        if g.authorized.userid != userid and not channel.public:
+            abort(404)
+        return _channel_info_response(channel, self.get_locale(), self.get_page(), True)
+
+    @expose_ajax('/<userid>/channels/<channelid>/public/', methods=('PUT',))
+    @check_authorization(self_auth=True)
+    def channel_public_toggle(self, userid, channelid):
+        channel = Channel.query.get_or_404(channelid)
+        if not channel.owner == userid:
+            abort(403)
+        if not isinstance(request.json, bool):
+            abort(400, form_errors="Value should be 'true' or 'false'")
+        channel.public = request.json
+        channel = channel.save()
+        return '{}'.format(str(channel.public).lower())
 
     @expose_ajax('/<userid>/channels/<channelid>/', methods=('PUT',))
     @check_authorization(self_auth=True)
@@ -234,10 +263,72 @@ class UserWS(WebService):
         channel.title = form.title.data
         channel.description = form.description.data
         channel.cover = form.cover.data
-        # XXX: This is broken!
-        #channel.locale = form.locale.data
-        #channel.category = form.category.data
+        channel.public = Channel.should_be_public(channel, form.public.data)
         channel.save()
+
+        # Update metas to a new category if necessary
+        for m in list(ChannelLocaleMeta.query.filter_by(channel=channelid)):
+            # NOTE: If we change the category, and there isn't a mapping to
+            # a locale for it, set it as per the form
+            if int(form.category.data) != m.category:
+                m.category = Category.map_to(int(form.category.data), m.locale)\
+                    or form.category.data
+
+                m.save()
+        resource_url = channel.get_resource_url(True)
+        return (dict(id=channel.id, resource_url=resource_url),
+                200, [('Location', resource_url)])
+
+    @expose_ajax('/<userid>/channels/<channelid>/videos/')
+    @check_authorization()
+    def channel_videos(self, userid, channelid):
+        channel = Channel.query.get_or_404(channelid)
+        if not channel.owner == userid:
+            abort(403)
+        return [v.video for v in VideoInstance.query.filter_by(channel=channelid).order_by('position asc')]
+
+    @expose_ajax('/<userid>/channels/<channelid>/videos/', methods=('PUT',))
+    @check_authorization(self_auth=True)
+    def update_channel_videos(self, userid, channelid):
+        channel = Channel.query.get_or_404(channelid)
+        if not channel.owner == userid:
+            abort(403)
+
+        if not request.json or not isinstance(request.json, list):
+            abort(400, form_errors='List can be empty, but must be present.')
+
+        additions = []
+        instances = {v.video: v for v in list(VideoInstance.query.filter_by(channel=channelid).order_by('position asc'))}
+        for pos, vid in enumerate(request.json):
+            if not isinstance(vid, str):
+                abort(400, form_errors='List item must be a video id')
+            i = instances.get(vid)
+            if not i:
+                additions.append(vid)
+                continue
+            if i.position != pos:
+                i.position = pos
+                g.session.add(i)
+
+        # Get a valid list of video ids
+        video_ids = Video.query.filter(Video.id.in_(additions)).values('id')
+        for v in video_ids:
+            g.session.add(VideoInstance(video=v, channel=channelid))
+
+        deletes = set(instances.keys()).difference([v for v in request.json])
+        if deletes:
+            VideoInstance.query.filter(
+                VideoInstance.video.in_(deletes),
+                VideoInstance.channel == channelid
+            ).delete(synchronize_session='fetch')
+
+        try:
+            g.session.commit()
+        except Exception as e:
+            g.session.rollback()
+            app.logger.error('Failed to update channel videos with: {}'.format(str(e)))
+            abort(500)
+        return 204
 
     @expose_ajax('/<userid>/channels/<channelid>/', methods=('DELETE',))
     @check_authorization(self_auth=True)
