@@ -1,16 +1,18 @@
+'use strict';
+
 module.exports = function(grunt) {
 
   // Configuration goes here
   grunt.initConfig({
 
-
-    watch: {
-      src: {
-        files: ['app/**'],
-        tasks: ['rebuild-dev']
+    regarde: {
+      js: {
+        files: 'app/**',
+        tasks: ['rebuild-dev'],
+        spawn: true
       }
     },
-    // copy index.html all other files (including images) will get processed
+
     copy: {
       dist: {
         files: [
@@ -43,7 +45,7 @@ module.exports = function(grunt) {
     coffee: {
       compile: {
         files: {
-          'public/app/js/main.min.js': ['app/**/*.coffee']
+          'public/js/main.min.js': ['app/**/*.coffee']
         }
       }
     },
@@ -57,13 +59,13 @@ module.exports = function(grunt) {
     },
 
     jshint: {
-      all: ['Gruntfile.js', 'public/js/main.min.js']
+      all: ['public/js/main.min.js']
     },
 
     uglify: {
       dist: {
         files: { 
-          'public/app/js/main.min.js': ['public/app/js/main.min.js'],
+          'public/js/main.min.js': ['public/js/main.min.js'],
           'public/js/vendor-scripts.min.js': 'public/js/vendor-scripts.min.js'
         }
       }
@@ -101,14 +103,17 @@ module.exports = function(grunt) {
           optimizationLevel: 1
         },
         files: {
-          'public/images/**/*.*': ['app/images/**/*.*', 'vendor/images/**/*.*']
+          'public/images/': ['app/images/**/*.*', 'vendor/images/**/*.*']
         }
       }
     },
 
-    shell: {
-      runserver: {
-          command: 'python2.7 runserver.py'
+    connect: {
+      server: {
+        options: {
+          port: 9001,
+          base: 'public/'
+        }
       }
     }
 
@@ -124,10 +129,11 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-concat'); 
   grunt.loadNpmTasks('grunt-contrib-cssmin');
   grunt.loadNpmTasks('grunt-contrib-imagemin');
-  grunt.loadNpmTasks('grunt-contrib-watch');
-  grunt.loadNpmTasks('grunt-shell');
+  grunt.loadNpmTasks('grunt-regarde');
+  grunt.loadNpmTasks('grunt-contrib-connect');
 
   // Define your tasks here
   grunt.registerTask('default', ['copy:dist', 'concat', 'coffee', 'jshint', 'uglify', 'less', 'cssmin', 'ngtemplates', 'imagemin']);
-  grunt.registerTask('rebuild-dev', ['shell', 'copy:dev', 'concat', 'coffee', 'jshint', 'less', 'ngtemplates']);
+  grunt.registerTask('rebuild-dev', ['copy:dev', 'concat', 'coffee', 'jshint', 'less', 'ngtemplates']);
+  grunt.registerTask('server', ['rebuild-dev', 'connect', 'regarde']);
 };
