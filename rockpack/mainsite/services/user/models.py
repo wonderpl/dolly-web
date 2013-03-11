@@ -2,7 +2,7 @@ import re
 import uuid
 from sqlalchemy import (
     String, Column, Integer, Boolean, Date, DateTime, ForeignKey,
-    PrimaryKeyConstraint, CHAR, event, func)
+    Text, Enum, CHAR, PrimaryKeyConstraint, event, func)
 from sqlalchemy.orm import relationship
 from sqlalchemy.dialects import postgresql
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -12,6 +12,9 @@ from rockpack.mainsite.core.token import create_access_token
 from rockpack.mainsite.core.dbapi import db
 from rockpack.mainsite.helpers.db import ImageType, add_base64_pk, resize_and_upload
 from rockpack.mainsite.helpers.urls import url_for
+
+
+EXTERNAL_SYSTEM_NAMES = 'facebook', 'twitter', 'google'
 
 
 class User(db.Model):
@@ -90,7 +93,7 @@ class User(db.Model):
 
     @classmethod
     def suggested_username(cls, source_name):
-        if not cls.query.filter_by(username=source_name).count():
+        if not username_exists(source_name):
             return source_name
 
         user = cls.query.filter(
@@ -178,6 +181,15 @@ class UserAccountEvent(db.Model):
     clientid = Column(CHAR(22), nullable=False)
 
 
+class ReservedUsername(db.Model):
+    __tablename__ = 'reserved_username'
+
+    username = Column(String(52), nullable=False, primary_key=True)
+    external_system = Column(Enum(*EXTERNAL_SYSTEM_NAMES), nullable=False)
+    external_uid = Column(String(1024), nullable=False)
+    external_data = Column(Text())
+
+
 class Subscription(db.Model):
     __tablename__ = 'subscription'
     __table_args__ = (
@@ -196,6 +208,14 @@ class Subscription(db.Model):
         view = 'userws.delete_subscription_item'
         return url_for(view, userid=self.user, channelid=self.channel)
     resource_url = property(get_resource_url)
+
+
+def username_exists(username):
+    username_filter = lambda m: func.lower(m.username) == username.lower()
+    if User.query.filter(username_filter(User)).count():
+        return 'exists'
+    if ReservedUsername.query.filter(username_filter(ReservedUsername)).count():
+        return 'reserved'
 
 
 event.listen(User, 'before_insert', lambda x, y, z: add_base64_pk(x, y, z))

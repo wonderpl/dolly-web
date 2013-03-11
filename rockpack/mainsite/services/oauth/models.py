@@ -11,11 +11,8 @@ from sqlalchemy.orm import relationship, exc
 
 from rockpack.mainsite import app
 from rockpack.mainsite.core.dbapi import db
-from rockpack.mainsite.services.user.models import User
+from rockpack.mainsite.services.user.models import User, EXTERNAL_SYSTEM_NAMES
 from . import exceptions
-
-
-EXTERNAL_SYSTEM_NAMES = ('facebook',)
 
 
 class ExternalToken(db.Model):
