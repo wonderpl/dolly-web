@@ -6,12 +6,12 @@ from rockpack.mainsite.services.cover_art import models as coverart_models
 
 
 def _format_video_thumbnail(context, video, name):
-    t = '<a target="_blank" href="%s"><img src="%s" width="160" height="90"/></a>'
+    t = u'<a target="_blank" href="%s"><img src="%s" width="160" height="90"/></a>'
     return Markup(t % (video.player_link, video.default_thumbnail))
 
 
 def _format_video_instance_link(context, video, name):
-    t = '<a href="/admin/video_locale_meta/?flt1_2={}">{}</a>'
+    t = u'<a href="/admin/video_locale_meta/?flt1_2={}">{}</a>'
     return Markup(t.format(video.video_rel.title, video.video_rel.title))
 
 
