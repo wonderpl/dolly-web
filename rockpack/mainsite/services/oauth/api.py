@@ -1,18 +1,14 @@
-from datetime import datetime
-from datetime import timedelta
+from datetime import datetime, timedelta
 from cStringIO import StringIO
-from flask import request
-from flask import abort
+from flask import request, abort
 from flask.ext import wtf
 import requests
-from . import facebook
 from rockpack.mainsite import app
 from rockpack.mainsite.core.oauth.decorators import check_client_authorization
-from rockpack.mainsite.core.webservice import WebService
-from rockpack.mainsite.core.webservice import expose_ajax
-from rockpack.mainsite.services.user.models import User
+from rockpack.mainsite.core.webservice import WebService, expose_ajax
+from rockpack.mainsite.services.user.models import User, username_exists
 from rockpack.mainsite.services.video.models import Locale
-from . import models
+from . import facebook, models
 
 
 if app.config.get('TEST_EXTERNAL_SYSTEM'):
@@ -72,11 +68,13 @@ class RockRegistrationForm(wtf.Form):
     email = wtf.TextField(validators=[wtf.Required(), wtf.Email()])
 
     def validate_username(form, field):
-        if User.query.filter_by(username=field.data).count():
-            raise wtf.ValidationError('"%s" already taken' % field.data)
-
         if field.data != User.sanitise_username(field.data):
             raise wtf.ValidationError('Username can only contain alphanumerics')
+        exists = username_exists(field.data)
+        if exists == 'reserved':
+            raise wtf.ValidationError('"%s" is reserved' % field.data)
+        elif exists:
+            raise wtf.ValidationError('"%s" already taken' % field.data)
 
     def validate_email(form, field):
         if User.query.filter_by(email=field.data).count():

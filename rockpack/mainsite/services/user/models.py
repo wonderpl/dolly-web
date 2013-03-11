@@ -89,7 +89,7 @@ class User(db.Model):
 
     @classmethod
     def suggested_username(cls, source_name):
-        if not cls.query.filter_by(username=source_name).count():
+        if not username_exists(source_name):
             return source_name
 
         user = cls.query.filter(
@@ -191,6 +191,14 @@ class Subscription(db.Model):
         view = 'userws.delete_subscription_item'
         return url_for(view, userid=self.user, channelid=self.channel)
     resource_url = property(get_resource_url)
+
+
+def username_exists(username):
+    username_filter = lambda m: func.lower(m.username) == username.lower()
+    if User.query.filter(username_filter(User)).count():
+        return 'exists'
+    if ReservedUsername.query.filter(username_filter(ReservedUsername)).count():
+        return 'reserved'
 
 
 event.listen(User, 'before_insert', lambda x, y, z: add_base64_pk(x, y, z))

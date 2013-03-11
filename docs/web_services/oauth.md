@@ -8,10 +8,7 @@ POST /ws/login/ HTTP/1.1
 Authorization: Basic CLIENT_APP_CREDENTIALS
 Content-Type: application/x-www-form-urlencoded
 
-{
-    "username": "ironman",
-    "password": "pepperpots"
-}
+grant_type=password&username=USER&password=PASS
 ```
 
 Parameter  | Required | Value      | Description
@@ -32,7 +29,7 @@ Content-Type: application/json
   "expires_in": "3600",
   "refresh_token": "some_refresh_token",
   "user_id": "USERID",
-  "resource_url:" "/ws/USERID/"
+  "resource_url:" "http://path/to/user/info/"
 }
 ```
 
@@ -79,7 +76,7 @@ Register a user.
 ```http
 POST /ws/register/ HTTP/1.1
 Authorization: Basic CLIENT_APP_CREDENTIALS
-Content-Type: application/x-www-form-urlencoded
+Content-Type: application/json
 
 {
     "username": "theamazingspiderman",
@@ -112,7 +109,7 @@ Content-Type: application/json
   "expires_in": "3600",
   "refresh_token": "some_refresh_token",
   "user_id": "USERID",
-  "resource_url:" "/ws/USERID/"
+  "resource_url:" "http://path/to/user/info/"
 }
 ```
 
@@ -124,10 +121,13 @@ HTTP/1.1 400 BAD REQUEST
 Content-Type: application/json
 
 {
-  "form_errors": {
-      "email": ["Email address already registered"]
-    },
-  "error": "invalid_request"
+ "error": "invalid_request",
+ "form_errors": {
+  "username": [ "\"USERNAME\" is reserved" ],
+  "locale": [ "This field is required." ],
+  "password": [ "Field must be at least 6 characters long." ],
+  "email": [ "Invalid email address." ]
+ }
 }
 ```
 
@@ -141,7 +141,7 @@ Registrering a Facebook user.
 ```http
 POST /ws/login/external/ HTTP/1.1
 Authorization: Basic CLIENT_APP_CREDENTIALS
-Content-Type: application/x-www-form-urlencoded
+Content-Type: application/json
 
 {
     "external_system": "facebook",
@@ -166,7 +166,7 @@ Content-Type: application/json
   "expires_in": "3600",
   "refresh_token": "some_refresh_token",
   "user_id": "USERID",
-  "resource_url:" "/ws/USERID/"
+  "resource_url:" "http://path/to/user/info/"
 }
 ```
 
@@ -205,13 +205,10 @@ Refreshing Tokens
 
 ```http
 POST /ws/token/ HTTP/1.1
-Authorization: Bearer TOKEN
+Authorization: Basic CLIENT_APP_CREDENTIALS
 Content-Type: application/x-www-form-urlencoded
 
-{
-    "grant_type": "refresh_token",
-    "refresh_token": "some_long_string"
-}
+grant_type=refresh_token&refresh_token=TOKEN
 ```
 
 Parameter       | Required | Value           | Description
