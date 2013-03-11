@@ -264,7 +264,7 @@ Location: http://some_doman/ws/USERID/channels/CHANNELID/
 Channel Privacy
 ===============
 
-To toggle a channel's privacy settings `POST` json data to a channel's `public` resource.
+To toggle a channel's privacy settings `PUT` json data to a channel's `public` resource.
 
 ```http
 PUT /ws/USERID/channel/CHANNELID/public/ HTTP/1.1

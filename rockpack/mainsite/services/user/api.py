@@ -353,6 +353,8 @@ class UserWS(WebService):
     @check_authorization(self_auth=True)
     def channel_delete(self, userid, channelid):
         channel = Channel.query.filter_by(id=channelid, deleted=False).first_or_404()
+        if not channel.owner == userid:
+            abort(403)
         channel.deleted = True
         channel.save()
         return 204
