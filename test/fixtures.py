@@ -1,3 +1,4 @@
+from datetime import date
 from fixture import DataSet
 from fixture import SQLAlchemyFixture
 
@@ -68,6 +69,7 @@ class UserData(DataSet):
         email = 'test@user.com'
         first_name = 'test'
         last_name = 'user'
+        date_of_birth = date(2000, 1, 1)
         avatar = ''
         is_active = True
         refresh_token = ''
