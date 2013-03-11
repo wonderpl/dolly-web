@@ -4,7 +4,6 @@ from sqlalchemy import (
     String, Column, Integer, Boolean, Date, DateTime, ForeignKey,
     Text, Enum, CHAR, PrimaryKeyConstraint, event, func)
 from sqlalchemy.orm import relationship
-from sqlalchemy.dialects import postgresql
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask import g
 from rockpack.mainsite import app
@@ -176,7 +175,7 @@ class UserAccountEvent(db.Model):
     event_date = Column(DateTime(), nullable=False, default=func.now())
     event_type = Column(String(32), nullable=False)
     event_value = Column(String(1024), nullable=False)
-    ip_address = Column(postgresql.INET, nullable=False)
+    ip_address = Column(String(32), nullable=False)
     user_agent = Column(String(1024), nullable=False)
     clientid = Column(CHAR(22), nullable=False)
 

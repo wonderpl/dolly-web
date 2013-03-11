@@ -1,6 +1,6 @@
 import re
 import logging
-
+from datetime import date
 from flask import request, url_for, redirect, flash, jsonify
 from flask.ext import wtf, login
 from flask.ext.admin import BaseView, expose, form
@@ -109,6 +109,7 @@ class ImportView(BaseView):
             first_name=form.first_name.data,
             last_name=form.last_name.data,
             email=form.email.data,
+            date_of_birth=date(1900, 1, 1),
             avatar=avatar,
             refresh_token='',
             is_active=True)

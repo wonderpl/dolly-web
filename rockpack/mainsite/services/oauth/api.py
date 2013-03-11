@@ -18,7 +18,7 @@ def _record_user_event(username, type, value=''):
         username=trunc('username', username),
         event_type=type,
         event_value=value,
-        ip_address=request.remote_addr,
+        ip_address=request.remote_addr or '',
         user_agent=trunc('user_agent', request.user_agent.string),
         clientid=getattr(g, 'app_client_id') or getattr(g.authorized, 'clientid') or '',
     ).save()
