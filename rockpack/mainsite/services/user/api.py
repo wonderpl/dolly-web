@@ -241,11 +241,13 @@ class UserWS(WebService):
     @check_authorization(self_auth=True)
     def channel_public_toggle(self, userid, channelid):
         channel = Channel.query.get_or_404(channelid)
-        if not request.json or not isinstance(request.json.get('public', None), bool):
-            abort(400, form_errors={"public": ["Value should be 'true' or 'false'"]})
-        channel.public = request.json.get('public')
-        channel.save()
-        return {"public": channel.public}
+        if not channel.owner == userid:
+            abort(403)
+        if not isinstance(request.json, bool):
+            abort(400, form_errors="Value should be 'true' or 'false'")
+        channel.public = request.json
+        channel = channel.save()
+        return '{}'.format(str(channel.public).lower())
 
     @expose_ajax('/<userid>/channels/<channelid>/', methods=('PUT',))
     @check_authorization(self_auth=True)
@@ -277,6 +279,56 @@ class UserWS(WebService):
         return (dict(id=channel.id, resource_url=resource_url),
                 200, [('Location', resource_url)])
 
+    @expose_ajax('/<userid>/channels/<channelid>/videos/')
+    @check_authorization()
+    def channel_videos(self, userid, channelid):
+        channel = Channel.query.get_or_404(channelid)
+        if not channel.owner == userid:
+            abort(403)
+        return [v.video for v in VideoInstance.query.filter_by(channel=channelid).order_by('position asc')]
+
+    @expose_ajax('/<userid>/channels/<channelid>/videos/', methods=('PUT',))
+    @check_authorization(self_auth=True)
+    def update_channel_videos(self, userid, channelid):
+        channel = Channel.query.get_or_404(channelid)
+        if not channel.owner == userid:
+            abort(403)
+
+        if not request.json or not isinstance(request.json, list):
+            abort(400, form_errors='List can be empty, but must be present.')
+
+        additions = []
+        instances = {v.video: v for v in list(VideoInstance.query.filter_by(channel=channelid).order_by('position asc'))}
+        for pos, vid in enumerate(request.json):
+            if not isinstance(vid, str):
+                abort(400, form_errors='List item must be a video id')
+            i = instances.get(vid)
+            if not i:
+                additions.append(vid)
+                continue
+            if i.position != pos:
+                i.position = pos
+                g.session.add(i)
+
+        # Get a valid list of video ids
+        video_ids = Video.query.filter(Video.id.in_(additions)).values('id')
+        for v in video_ids:
+            g.session.add(VideoInstance(video=v, channel=channelid))
+
+        deletes = set(instances.keys()).difference([v for v in request.json])
+        if deletes:
+            VideoInstance.query.filter(
+                VideoInstance.video.in_(deletes),
+                VideoInstance.channel == channelid
+            ).delete(synchronize_session='fetch')
+
+        try:
+            g.session.commit()
+        except Exception as e:
+            g.session.rollback()
+            app.logger.error('Failed to update channel videos with: {}'.format(str(e)))
+            abort(500)
+        return 204
 
     @expose_ajax('/<userid>/cover_art/', cache_age=60, cache_private=True)
     @check_authorization(self_auth=True)
