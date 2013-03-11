@@ -9,6 +9,7 @@ from rockpack.mainsite.helpers.db import (
     gen_videoid, insert_new_only, ImageType)
 from rockpack.mainsite.helpers.urls import url_for
 from rockpack.mainsite.services.user.models import User
+from rockpack.mainsite import app
 
 
 class Locale(db.Model):
@@ -298,6 +299,7 @@ class Channel(db.Model):
     title = Column(String(1024), nullable=False)
     description = Column(Text, nullable=False)
     cover = Column(ImageType('CHANNEL', reference_only=True), nullable=False)
+    public = Column(Boolean(), nullable=False, server_default='true', default=True)
 
     owner = Column(CHAR(22), ForeignKey('user.id'), nullable=False)
     owner_rel = relationship(User, primaryjoin=(owner == User.id), lazy='joined', innerjoin=True)
@@ -313,15 +315,20 @@ class Channel(db.Model):
         return cls.query.filter_by(owner=owner).values(cls.id, cls.title)
 
     @classmethod
-    def create(cls, category, locale=None, **kwargs):
+    def channelmeta_for_category(cls, category, locale):
+        if locale is None:
+            locale = Category.query.filter_by(id=category).value('locale')
+        return [ChannelLocaleMeta(
+            locale=locale,
+            category=category)]
+
+    @classmethod
+    def create(cls, category, locale=None, public=True, **kwargs):
         """Create & save a new channel record along with appropriate category metadata"""
         channel = Channel(**kwargs)
+        channel.public = channel.should_be_public(channel, public)
         if category:
-            if locale is None:
-                locale = Category.query.filter_by(id=category).value('locale')
-            channel.metas = [ChannelLocaleMeta(
-                             locale=locale,
-                             category=category)]
+            channel.metas = cls.channelmeta_for_category(category, locale)
         return channel.save()
 
     def get_resource_url(self, own=False):
@@ -345,6 +352,16 @@ class Channel(db.Model):
         VideoInstance.query.filter_by(channel=self.id).filter(
             VideoInstance.video.in_(set(getattr(v, 'id', v) for v in videos))).\
             delete(synchronize_session=False)
+
+    @classmethod
+    def should_be_public(self, channel, public):
+        """ Return False if conditions for
+            visibility are not met """
+        if not (channel.description and channel.cover and
+                (channel.title and not channel.title.startswith(app.config['UNTITLED_CHANNEL']))):
+            return False
+
+        return public
 
 
 class ChannelLocaleMeta(db.Model):
