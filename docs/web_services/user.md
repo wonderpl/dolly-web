@@ -68,7 +68,7 @@ Content-Type: application/json
 
 {
     "error": "invalid_request",
-    "form_errors": "Username is already taken",
+    "message": "Username is already taken",
     "suggested_username": "foo"
 }
 ```
@@ -81,7 +81,7 @@ Content-Type: application/json
 
 {
     "error": "invalid_request",
-    "form_errors": "Limit for changing username has been reached"
+    "message": "Limit for changing username has been reached"
 }
 ```
 
@@ -93,7 +93,7 @@ Content-Type: application/json
 
 {
     "error": "invalid_request",
-    "form_errors": "Not a valid username"
+    "message": "Not a valid username"
 }
 ```
 
@@ -592,7 +592,7 @@ Returns an ordered list of videos for a channel.
 HTTP/1.1 200 OK
 Content-Type: application/json
 
-["id": "VIDEOID", "id": "VIDEOID"]
+["VIDEOID", "VIDEOID"]
 ```
 
 ### Add/Delete Videos
@@ -608,7 +608,7 @@ GET /ws/USERID/channels/CHANNELID/videos/ HTTP/1.1
 Content-Type: application/json
 Authorization: Bearer TOKEN
 
-["id": "VIDEOID", "id": "VIDEOID"]
+["VIDEOID", "VIDEOID"]
 ```
 
 ```http
@@ -635,11 +635,7 @@ Content-Type: application/json
 
 {
     "error": "invalid_request",
-    "form_errors": {
-        "videos": [
-            "List can be empty, but must be present."
-        ]
-    }
+    "message": "List can be empty, but must be present"
 }
 ```
 
@@ -651,6 +647,6 @@ Content-Type: application/json
 
 {
     "error": "invalid_request",
-    "form_errors": "List item must be a video id"
+    "message": "List item must be a video id"
 }
 ```

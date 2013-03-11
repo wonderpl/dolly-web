@@ -194,14 +194,14 @@ class UserWS(WebService):
     def change_user_info(self, userid, attribute_name):
         user = g.authorized.user
         if user.username_updated:
-            abort(400, form_errors='Limit for changing username has been reached')
+            abort(400, message='Limit for changing username has been reached')
         username = request.json
         if not isinstance(username, str) or username != User.sanitise_username(username):
-            abort(400, form_errors='Not a valid username')
+            abort(400, message='Not a valid username')
         suggested = User.suggested_username(username)
         if suggested != username:
             abort(400,
-                form_errors='Username is already taken',
+                message='Username is already taken',
                 suggested_username=suggested)
         user.username = username
         user.username_updated = True
@@ -304,7 +304,7 @@ class UserWS(WebService):
         channel = Channel.query.get_or_404(channelid)
         if not channel.owner == userid:
             abort(403)
-        return [v.video for v in VideoInstance.query.filter_by(channel=channelid).order_by('position asc')]
+        return [v[0] for v in VideoInstance.query.filter_by(channel=channelid).order_by('position asc').values('video')]
 
     @expose_ajax('/<userid>/channels/<channelid>/videos/', methods=('PUT',))
     @check_authorization(self_auth=True)
@@ -314,13 +314,13 @@ class UserWS(WebService):
             abort(403)
 
         if not request.json or not isinstance(request.json, list):
-            abort(400, form_errors='List can be empty, but must be present.')
+            abort(400, message='List can be empty, but must be present')
 
         additions = []
         instances = {v.video: v for v in list(VideoInstance.query.filter_by(channel=channelid).order_by('position asc'))}
         for pos, vid in enumerate(request.json):
             if not isinstance(vid, str):
-                abort(400, form_errors='List item must be a video id')
+                abort(400, message='List item must be a video id')
             i = instances.get(vid)
             if not i:
                 additions.append(vid)
