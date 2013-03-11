@@ -292,9 +292,6 @@ class Channel(db.Model):
     """ A channel, which can contain many videos """
 
     __tablename__ = 'channel'
-    __table_args__ = (
-        UniqueConstraint('owner', 'title'),
-    )
 
     id = Column(CHAR(24), primary_key=True)
     title = Column(String(1024), nullable=False)
@@ -304,6 +301,8 @@ class Channel(db.Model):
 
     owner = Column(CHAR(22), ForeignKey('user.id'), nullable=False)
     owner_rel = relationship(User, primaryjoin=(owner == User.id), lazy='joined', innerjoin=True)
+
+    deleted = Column(Boolean(), nullable=False, server_default='false', default=False)
 
     video_instances = relationship('VideoInstance', backref='video_channel')
     metas = relationship('ChannelLocaleMeta', backref=db.backref('channel_rel', lazy='joined', innerjoin=True))

@@ -42,7 +42,7 @@ def get_local_channel(locale, paging, **filters):
     metas = models.ChannelLocaleMeta.query.filter_by(visible=True, locale=locale)
     metas = metas.join(models.Channel).\
         options(contains_eager(models.ChannelLocaleMeta.channel_rel))
-    metas = metas.filter(models.Channel.public==True)
+    metas = metas.filter(models.Channel.public==True, models.Channel.deleted==False)
     if filters.get('category'):
         metas = _filter_by_category(metas, models.ChannelLocaleMeta, filters['category'])
     if filters.get('query'):
