@@ -25,6 +25,7 @@ class User(db.Model):
     avatar = Column(ImageType('AVATAR'), nullable=False)
     is_active = Column(Boolean, nullable=False, server_default='true', default=True)
     refresh_token = Column(String(1024), nullable=False)
+    username_updated = Column(Boolean, nullable=False, server_default='false', default=False)
 
     locale = Column(ForeignKey('locale.id'), nullable=False, server_default='')
 

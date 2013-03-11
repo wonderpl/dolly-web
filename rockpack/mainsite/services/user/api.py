@@ -189,6 +189,25 @@ class UserWS(WebService):
             response[key] = dict(resource_url=url_for('userws.get_%s' % key, userid=userid))
         return response
 
+    @expose_ajax('/<userid>/<any("username"):attribute_name>/', methods=('PUT',))
+    @check_authorization(self_auth=True)
+    def change_user_info(self, userid, attribute_name):
+        user = g.authorized.user
+        if user.username_updated:
+            abort(400, form_errors='Limit for changing username has been reached')
+        username = request.json
+        if not isinstance(username, str) or username != User.sanitise_username(username):
+            abort(400, form_errors='Not a valid username')
+        suggested = User.suggested_username(username)
+        if suggested != username:
+            abort(400,
+                form_errors='Username is already taken',
+                suggested_username=suggested)
+        user.username = username
+        user.username_updated = True
+        user.save()
+        return 204
+
     @expose_ajax('/<userid>/activity/', cache_age=60, cache_private=True)
     @check_authorization(self_auth=True)
     def get_activity(self, userid):
