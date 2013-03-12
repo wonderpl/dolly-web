@@ -185,9 +185,18 @@ class ImportView(BaseView):
     @expose('/channels.js')
     def channels(self):
         user = request.args.get('user', '')
-        if not re.match('^[\w-]+$', user):
-            user = None
-        return jsonify(Channel.get_form_choices(owner=user))
+        if user:
+            if not re.match('^[\w-]+$', user):
+                user = None
+            return jsonify(Channel.get_form_choices(owner=user))
+        prefix = request.args.get('prefix', '')
+        if prefix:
+            if not re.match('^[\w ]+$', prefix):
+                prefix = None
+            return jsonify(Channel.query.filter(
+                    Channel.title.ilike(prefix + '%')).values(Channel.id, Channel.title))
+        return []
+
 
     @expose('/bookmarklet.js')
     def bookmarklet(self):

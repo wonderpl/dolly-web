@@ -95,6 +95,11 @@ class AdminView(ModelView):
 
     def update_model(self, form, model):
         if self._process_image_data(form):
+            # hack for owner_rel passing models around
+            for f in filter(lambda x: x.endswith('_rel'), form.data.keys()):
+                if isinstance(getattr(form, f).data, unicode) or isinstance(getattr(form, f).data, str):
+                    field = getattr(form, f)
+                    field.data = getattr(model, f).query.get(getattr(form, f).data)
             return super(AdminView, self).update_model(form, model)
 
     def record_action(self, action, model):
