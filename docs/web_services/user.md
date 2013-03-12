@@ -43,6 +43,67 @@ Cache-Control: public, max-age=60
 }
 ```
 
+### Change username
+
+Change the current username for a user
+
+```http
+PUT /ws/USERID/username/ HTTP/1.1
+Content-Type: application/json
+
+"foo"
+```
+
+Parameter  | Required | Value      | Description
+:--------- | :------- | :--------- | :----------
+           | Yes      | String     | Characters allowed should match regex [a-zA-Z0-9]
+
+Responds with a `204`
+
+```http
+HTTP/1.1 204 OK
+Content-Type: application/json
+```
+
+Possible errors
+
+Username has already been taken
+
+```http
+HTTP/1.1 400 BAD REQUEST
+Content-Type: application/json
+
+{
+    "error": "invalid_request",
+    "message": "Username is already taken",
+    "suggested_username": "foo"
+}
+```
+
+Username has already been changed a maximum number of times
+
+```http
+HTTP/1.1 400 BAD REQUEST
+Content-Type: application/json
+
+{
+    "error": "invalid_request",
+    "message": "Limit for changing username has been reached"
+}
+```
+
+Invalid username
+
+```http
+HTTP/1.1 400 BAD REQUEST
+Content-Type: application/json
+
+{
+    "error": "invalid_request",
+    "message": "Not a valid username"
+}
+```
+
 Channel
 =======
 
@@ -63,14 +124,6 @@ locale         | yes       | IETF language tag | Some videos may be excluded if 
 start          | no        | 0-based integer   | Used for paging through the channel's video items
 size           | no        | video page size   | Number of videos to return - 100 by default
 
-If the channel is private and the owner's token is not provided then a `403` will be returned.
-
-```http
-HTTP/1.1 403 FORBIDDEN
-Content-Type: application/json
-
-{"error":"insufficient_scope"}
-```
 
 Otherwise returns metadata and video list for the requested channel.
 
@@ -81,6 +134,8 @@ Cache-Control: public, max-age=60
 
 {
  "id": "Unique channel id",
+ "public": true,
+ "description": "Channel description",
  "resource_url": "http://base/ws/USERID/channels/CHANNELID/",
  "title": "Channel title",
  "cover_background_url": "http://path/to/channel/bg.jpg",
@@ -113,7 +168,20 @@ Cache-Control: public, max-age=60
 }
 ```
 
-### Create
+Possible errors.
+
+If the channel is private and the owner's token is not provided; or; if accessed via a secure sub-domain,
+`public` is `false`, and user is not channel owner, then a `403` will be returned.
+
+```http
+HTTP/1.1 403 FORBIDDEN
+Content-Type: application/json
+
+{"error":"insufficient_scope"}
+```
+
+Channel Create
+==============
 
 To create a new channel `POST` json data to channels service.
 
@@ -123,53 +191,56 @@ Content-Type: application/json
 Authorization: Bearer TOKEN
 
 {
- "title": "new title",
- "description": "",
- "cover": "coverimageref.png",
- "category": 1
+    "title": "channel title",
+    "description": "channel description",
+    "category": 1,
+    "cover": "COVERARTID",
+    "public": true
 }
 ```
 
 Parameter      | Required? | Value             | Description
 :------------- | :-------- | :---------------- | :----------
-title          | yes       | unicode string    | May be empty string, in which case a default title will be used
-description    | yes       | unicode string    | May be empty string
-cover          | yes       | cover reference   | A string identifying a user or global cover image - `cover_ref` key from cover_art service
-category       | yes       | category id       | The id of the assigned category. May be empty to leave unassigned
+title          | Yes       | unicode string    | May be empty string. If not specified, a default title will be assigned.
+description    | Yes       | unicode string    | May be empty string.
+category       | Yes       | category id       | Id of assigned category. May be empty string to leave unassigned.
+cover          | Yes       | cover image ref   | Reference for cover art image. May be empty string to leave unassigned.
+public         | Yes       | `true` or `false` | Toggles whether a channel is public. May be empty string, but will default to `true`. If other fields are unassigned, field will default to `false`.
 
-If any of the body parameters are invalid then a 400 response will list the error messages per field:
+Responds with a channel resource url.
 
+```http
+HTTP/1.1 201 CREATED
+Location: http://some_doman/ws/USERID/channels/CHANNELID/
+
+{
+    "id": "CHANNELID",
+    "resource_url": "http://some_domain/ws/USERID/channels/CHANNELID/"
+}
+```
+
+Possible errors.
+
+Errors occurred with the form data.
 ```http
 HTTP/1.1 400 BAD REQUEST
 Content-Type: application/json
 
 {
- "error": "invalid_request",
- "form_errors": {
-  "category": ["Invalid category: 111111111"],
-  "cover": ["Invalid cover reference"],
-  "description": ["This field is required, but can be an empty string."],
-  "title": ["Duplicate title"]
- }
+  "form_errors": {
+      "category": ["Invalid category: 111111111"],
+      "cover": ["Invalid cover reference"],
+      "description": ["This field is required, but can be an empty string."],
+      "title": ["Duplicate title"]
+    },
+  "error": "invalid_request"
 }
 ```
 
-On success:
+Channel Updates
+===============
 
-```http
-HTTP/1.1 201 CREATED
-Content-Type: application/json
-Location: http://path/to/resource/url/for/new/channel/
-
-{
- "resource_url": "http://path/to/resource/url/for/new/channel/",
- "id": "chxrE1zIf1TaK-pe_C_YyXmw"
-}
-```
-
-### Edit
-
-To change the data for a channel `PUT` new json data to the resource url.
+To change the data for a channel `PUT` new json data to the resource url, as per Channel Create above.
 
 ```http
 PUT /ws/USERID/channels/CHANNELID/ HTTP/1.1
@@ -177,14 +248,74 @@ Content-Type: application/json
 Authorization: Bearer TOKEN
 
 {
- "title": "new title",
- "description": "",
- "cover": "coverimageref.png",
- "category": 1
+    "title": "channel title",
+    "description": "channel description",
+    "category": 1,
+    "cover": "COVERARTID",
+    "public": true
 }
 ```
 
-The json format is the same as for creating a new channel.
+Responds '200' with the original channel resource url.
+
+```http
+HTTP/1.1 200 OK
+Location: http://some_doman/ws/USERID/channels/CHANNELID/
+
+{
+    "id": "CHANNELID",
+    "resource_url": "http://some_domain/ws/USERID/channels/CHANNELID/"
+}
+```
+
+Channel Privacy
+===============
+
+To toggle a channel's privacy settings `PUT` json data to a channel's `public` resource.
+
+```http
+PUT /ws/USERID/channel/CHANNELID/public/ HTTP/1.1
+Content-Type: application/json
+Authorization: Bearer TOKEN
+
+"false"
+```
+
+Parameter      | Required? | Value             | Description
+:------------- | :-------- | :---------------- | :----------
+               | Yes       | `true` or `false` | Toggles public viewing of the channel
+
+Returns current state for `public`
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+"false"
+```
+
+Possible errors.
+
+Missing or incorrect value for `public`.
+```http
+HTTP/1.1 400 BAD REQUEST
+Content-Type: application/json
+
+{
+    "error": "invalid_request",
+    "form_errors": "Value should be 'true' or 'false'"
+}
+```
+
+### Delete
+
+Delete a channel
+
+```http
+DELETE /ws/USERID/channels/CHANNELID/ HTTP/1.1
+```
+
+Responds with  `204` on success
 
 ```http
 HTTP/1.1 204 NO CONTENT
@@ -462,5 +593,81 @@ Cache-Control: private, max-age=60
    }
   ]
  }
+}
+```
+
+# Channel Videos
+
+### Get
+
+Get a list of videos for a channel.
+
+```http
+GET /ws/USERID/channels/CHANNELID/videos/ HTTP/1.1
+Authorization: Bearer TOKEN
+```
+
+Returns an ordered list of videos for a channel.
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+["VIDEOID", "VIDEOID"]
+```
+
+### Add/Delete Videos
+
+To add or delete videos from a channel, send a list of the videos that the channel needs to contain.
+Any videos not included, but are currently in the channel, will be removed.
+
+Additionally, the order in which the video ids occur in the list will dictate the order in which they
+will be returned in the `GET` above.
+
+```http
+GET /ws/USERID/channels/CHANNELID/videos/ HTTP/1.1
+Content-Type: application/json
+Authorization: Bearer TOKEN
+
+["VIDEOID", "VIDEOID"]
+```
+
+```http
+HTTP/1.1 204 NO CONTENT
+Content-Type: application/json
+```
+
+Possible errors.
+
+If the channel is private and the owner's token is not provided then a 403 will be returned.
+
+```http
+HTTP/1.1 403 FORBIDDEN
+Content-Type: application/json
+
+{"error":"insufficient_scope"}
+```
+
+Missing list if video ids
+
+```http
+HTTP/1.1 400 BAD REQUEST
+Content-Type: application/json
+
+{
+    "error": "invalid_request",
+    "message": "List can be empty, but must be present"
+}
+```
+
+Item in list is not a string
+
+```http
+HTTP/1.1 400 BAD REQUEST
+Content-Type: application/json
+
+{
+    "error": "invalid_request",
+    "message": "List item must be a video id"
 }
 ```
