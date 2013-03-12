@@ -178,6 +178,9 @@ class ImportView(BaseView):
     @expose('/users.js')
     def users(self):
         prefix = request.args.get('prefix', '')
+        exact_name = request.args.get('exact_name', '')
+        if exact_name:
+            return jsonify(User.query.filter(User.username==exact_name).values(User.id, User.username))
         if not re.match('^\w+$', prefix):
             prefix = None
         return jsonify(User.get_form_choices(prefix=prefix))

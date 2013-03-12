@@ -32,7 +32,7 @@ userField.select2({
     initSelection: function(element, callback) {
         $.ajax('{{ url_for("import.users") }}', {
             data: {
-                prefix: userField.select2("val"),
+                exact_name: userField.select2("val"),
             },
         }).done(function(data) {
             var r = dataToResults(data)['results'][0];
