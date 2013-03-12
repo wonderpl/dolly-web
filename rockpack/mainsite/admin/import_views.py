@@ -50,7 +50,7 @@ class UserForm(form.BaseForm):
     username = wtf.TextField(validators=[wtf.validators.required()])
     first_name = wtf.TextField(validators=[wtf.validators.required()])
     last_name = wtf.TextField(validators=[wtf.validators.required()])
-    email = wtf.TextField(validators=[wtf.validators.required()])
+    email = wtf.TextField(validators=[wtf.Optional()])
     avatar = wtf.FileField()
 
     def validate_avatar(form, field):
