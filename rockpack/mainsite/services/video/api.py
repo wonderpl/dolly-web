@@ -25,6 +25,7 @@ def channel_dict(channel, with_owner=True, owner_url=False):
         thumbnail_url=channel.cover.thumbnail_large,
         description=channel.description,
         subscribe_count=0,  # TODO: implement this for real
+        public=channel.public,
     )
     if with_owner:
         ch_data['owner'] = dict(
@@ -39,13 +40,12 @@ def channel_dict(channel, with_owner=True, owner_url=False):
 
 def get_local_channel(locale, paging, **filters):
     metas = models.ChannelLocaleMeta.query.filter_by(visible=True, locale=locale)
+    metas = metas.join(models.Channel).\
+        options(contains_eager(models.ChannelLocaleMeta.channel_rel))
+    metas = metas.filter(models.Channel.public==True, models.Channel.deleted==False)
     if filters.get('category'):
         metas = _filter_by_category(metas, models.ChannelLocaleMeta, filters['category'])
     if filters.get('query'):
-        # The contains_eager clause is necessary when filtering on
-        # a lazy loaded join.
-        metas = metas.join(models.Channel).\
-            options(contains_eager(models.ChannelLocaleMeta.channel_rel))
         metas = metas.filter(models.Channel.title.ilike('%%%s%%' % filters['query']))
 
     total = metas.count()
