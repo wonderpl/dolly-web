@@ -29,7 +29,7 @@ class ChannelCreateTestCase(base.RockPackTestCase):
             resp = json.loads(r.data)
             new_ch = models.Channel.query.filter(
                 models.Channel.title.like(app.config['UNTITLED_CHANNEL'] + '%')).one()
-            self.assertEquals({"error":"Not Found"}, resp, 'channel should be private')
+            self.assertEquals(False, resp['public'], 'channel should be private')
 
             # test channel update
             new_description = 'this is a new description!'
