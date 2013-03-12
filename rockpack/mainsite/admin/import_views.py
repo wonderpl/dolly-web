@@ -193,6 +193,9 @@ class ImportView(BaseView):
                 user = None
             return jsonify(Channel.get_form_choices(owner=user))
         prefix = request.args.get('prefix', '')
+        exact_name = request.args.get('exact_name', '')
+        if exact_name:
+            return jsonify(Channel.query.filter(Channel.title==exact_name).values(Channel.id, Channel.title))
         if prefix:
             if not re.match('^[\w ]+$', prefix):
                 prefix = None

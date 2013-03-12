@@ -62,7 +62,6 @@ videoField.select2({
                 instance_id: decodeURI(window.location.search.substring(1)).split('=').slice(-1)[0],
             },
         }).done(function(data) {
-            console.log(data)
             var r = dataToResults(data)['results'][0];
             callback(r);
             videoField[0].value = r['id'];
@@ -85,11 +84,12 @@ channelField.select2({
     initSelection: function(element, callback) {
         $.ajax('{{ url_for("import.channels") }}', {
             data: {
-                prefix: channelField.select2("val"),
+                exact_name: channelField.select2("val"),
             },
         }).done(function(data) {
-            console.log(data);
+            var r = dataToResults(data)['results'][0];
             callback(dataToResults(data)['results'][0]); 
+            channelField[0].value = r['id'];
         });
     },
     //createSearchChoice: function (term) {

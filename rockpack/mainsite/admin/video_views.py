@@ -154,7 +154,10 @@ class ChannelLocaleMeta(AdminView):
     model_name = 'channel_locale_meta'
     model = models.ChannelLocaleMeta
 
-    form_overrides = dict(channel_rel=wtf.TextField)
+    form_overrides = dict(channel_rel=wtf.TextField,
+            view_count=wtf.TextField,
+            star_count=wtf.TextField,
+            )
 
     column_filters = ('channel_rel',)
 
