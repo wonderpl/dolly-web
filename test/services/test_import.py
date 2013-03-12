@@ -103,7 +103,7 @@ class ImportFromYoutubeTestCase(base.RockPackTestCase):
             with self.app.test_client() as client:
                 data = self.data_video.copy()
                 data.update({
-                    'locale': 'en-gb', 'category': 3,
+                    'locale': 'en-us', 'category': 3,
                     'user': User.query.filter_by(username=UserData.test_user_a.username).first().id})
                 data.update(self.data_channel.copy())
 
@@ -122,7 +122,7 @@ class ImportFromYoutubeTestCase(base.RockPackTestCase):
 
                 data = self.data_video_1.copy()
                 data.update({
-                    'locale': 'en-gb', 'category': 3,
+                    'locale': 'en-us', 'category': 3,
                     'user': User.query.filter_by(username=UserData.test_user_a.username).first().id})
                 data['channel'] = channel.id
 
