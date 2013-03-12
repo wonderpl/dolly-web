@@ -188,7 +188,7 @@ class ImportView(BaseView):
     @expose('/channels.js')
     def channels(self):
         user = request.args.get('user', '')
-        if user:
+        if 'user' in request.args.keys():
             if not re.match('^[\w-]+$', user):
                 user = None
             return jsonify(Channel.get_form_choices(owner=user))
