@@ -2,7 +2,8 @@
 $(function () {
     var categoryField = $('#category'),
 userField = $('#user'),
-channelField = $('#channel');
+channelField = $('#channel'),
+videoField = $('#video_rel');
 if (userField.length === 0) {
     userField = $('#owner_rel');
 }
@@ -43,6 +44,32 @@ userField.select2({
     dropdownCssClass: 'bigdrop'
 }).on('change', function (e) {
     channelField.select2('data', {});
+});
+
+videoField.select2({
+    _placeholder: 'Search for video',
+    minimumInputLength: 10,
+    ajax: {
+        url: '{{ url_for("import.videos") }}',
+    data: function (term, page) {
+        return {vid: term};
+    },
+    results: dataToResults
+    },
+    initSelection: function(element, callback) {
+        $.ajax('{{ url_for("import.videos") }}', {
+            data: {
+                instance_id: decodeURI(window.location.search.substring(1)).split('=').slice(-1)[0],
+            },
+        }).done(function(data) {
+            console.log(data)
+            var r = dataToResults(data)['results'][0];
+            callback(r);
+            videoField[0].value = r['id'];
+        });
+    },
+    width: 'element',
+    dropdownCssClass: 'bigdrop'
 });
 
 channelField.select2({

@@ -43,7 +43,14 @@ class VideoThumbnail(AdminView):
 class VideoLocaleMeta(AdminView):
     model = models.VideoLocaleMeta
     model_name = model.__tablename__
-    form_overrides = dict(video_rel=wtf.TextField)
+    form_overrides = dict(video_rel=wtf.TextField,
+            view_count=wtf.TextField,
+            star_count=wtf.TextField,
+            )
+    from_args = dict(
+            view_count=dict(validators=[wtf.InputRequired()]),
+            star_count=dict(validators=[wtf.InputRequired()]),
+            )
 
     column_filters = ('video_rel', 'category_ref', 'locale_rel', 'visible',)
 

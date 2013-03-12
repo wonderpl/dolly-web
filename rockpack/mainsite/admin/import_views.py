@@ -10,7 +10,7 @@ from rockpack.mainsite.core import youtube
 from rockpack.mainsite.helpers.db import resize_and_upload
 from rockpack.mainsite.services.pubsubhubbub.api import subscribe
 from rockpack.mainsite.services.video.models import (
-    Locale, Source, Category, Video, Channel)
+    Locale, Source, Category, Video, VideoLocaleMeta, Channel)
 from rockpack.mainsite.services.user.models import User
 from .models import AdminLogRecord
 
@@ -197,6 +197,12 @@ class ImportView(BaseView):
                     Channel.title.ilike(prefix + '%')).values(Channel.id, Channel.title))
         return []
 
+    @expose('/video.js')
+    def videos(self):
+        vid = request.args.get('vid', '')
+        if request.args.get('instance_id'):
+            return jsonify(VideoLocaleMeta.query.join(Video).filter(VideoLocaleMeta.id==request.args.get('instance_id')).values(VideoLocaleMeta.video, Video.title))
+        return jsonify(Video.query.filter(Video.id.ilike(vid + '%')).values(Video.id, Video.title))
 
     @expose('/bookmarklet.js')
     def bookmarklet(self):
