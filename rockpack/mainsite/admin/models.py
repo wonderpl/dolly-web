@@ -91,10 +91,28 @@ class AdminView(ModelView):
 
     def create_model(self, form):
         if self._process_image_data(form):
+            # bad bad bad hack
+            from rockpack.mainsite.services.user.models import User
+            from rockpack.mainsite.services.video.models import Channel, Video
+            for f in filter(lambda x: x.endswith('_rel'), form.data.keys()):
+                if isinstance(getattr(form, f).data, unicode) or isinstance(getattr(form, f).data, str):
+                    field = getattr(form, f)
+                    if f == 'owner_rel':
+                        model = User
+                    if f == 'video_rel':
+                        model = Video
+                    if f == 'channel_rel':
+                        model = Channel
+                    field.data = model.query.get(getattr(form, f).data)
             return super(AdminView, self).create_model(form)
 
     def update_model(self, form, model):
         if self._process_image_data(form):
+            # hack for owner_rel passing models around
+            for f in filter(lambda x: x.endswith('_rel'), form.data.keys()):
+                if isinstance(getattr(form, f).data, unicode) or isinstance(getattr(form, f).data, str):
+                    field = getattr(form, f)
+                    field.data = getattr(model, f).query.get(getattr(form, f).data)
             return super(AdminView, self).update_model(form, model)
 
     def record_action(self, action, model):

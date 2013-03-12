@@ -373,8 +373,8 @@ class ChannelLocaleMeta(db.Model):
 
     id = Column(CHAR(24), primary_key=True)
     visible = Column(Boolean(), nullable=False, server_default='true', default=True)
-    view_count = Column(Integer, nullable=False, server_default='0')
-    star_count = Column(Integer, nullable=False, server_default='0')
+    view_count = Column(Integer, nullable=False, server_default='0', default=0)
+    star_count = Column(Integer, nullable=False, server_default='0', default=0)
 
     channel = Column(ForeignKey('channel.id'), nullable=False)
     locale = Column(ForeignKey('locale.id'), nullable=False)
@@ -383,7 +383,7 @@ class ChannelLocaleMeta(db.Model):
     channel_locale = relationship('Locale', remote_side=[Locale.id], backref='channel_locale_meta')
 
     def __unicode__(self):
-        return self.locale, 'for channel', self.channel
+        return self.locale + ' for channel ' + self.channel
 
 
 ParentCategory = aliased(Category)

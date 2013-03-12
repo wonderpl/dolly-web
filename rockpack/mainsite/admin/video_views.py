@@ -1,3 +1,4 @@
+from flask.ext import wtf
 from flask.ext.admin.model.typefmt import Markup
 from flask.ext.admin.model.form import InlineFormAdmin
 from rockpack.mainsite.admin.models import AdminView
@@ -42,6 +43,14 @@ class VideoThumbnail(AdminView):
 class VideoLocaleMeta(AdminView):
     model = models.VideoLocaleMeta
     model_name = model.__tablename__
+    form_overrides = dict(video_rel=wtf.TextField,
+            view_count=wtf.TextField,
+            star_count=wtf.TextField,
+            )
+    from_args = dict(
+            view_count=dict(validators=[wtf.InputRequired()]),
+            star_count=dict(validators=[wtf.InputRequired()]),
+            )
 
     column_filters = ('video_rel', 'category_ref', 'locale_rel', 'visible',)
 
@@ -49,6 +58,8 @@ class VideoLocaleMeta(AdminView):
 class VideoInstance(AdminView):
     model_name = 'video_instance'
     model = models.VideoInstance
+
+    form_overrides = dict(video_rel=wtf.TextField)
 
     column_list = ('video_rel', 'video_channel', 'date_added', 'thumbnail')
     column_formatters = dict(thumbnail=_format_video_thumbnail, video_rel=_format_video_instance_link)
@@ -106,8 +117,10 @@ class Channel(AdminView):
     model_name = 'channel'
     model = models.Channel
 
-    column_list = ('title', 'owner_rel', 'cover.thumbnail_large')
-    column_filters = ('owner_rel', 'title', 'metas')
+    form_overrides = dict(owner_rel=wtf.TextField)
+
+    column_list = ('title', 'owner', 'cover.thumbnail_large')
+    column_filters = ('owner', 'title', 'metas')
     column_searchable_list = ('title',)
 
     inline_models = (ChannelLocaleMetaFormAdmin(models.ChannelLocaleMeta),)
@@ -130,6 +143,7 @@ class UserCoverArt(AdminView):
     model = coverart_models.UserCoverArt
     model_name = coverart_models.UserCoverArt.__tablename__
 
+    form_overrides = dict(owner_rel=wtf.TextField)
     column_list = ('owner_rel', 'cover.thumbnail_large', 'cover',)
     column_filters = ('owner_rel',)
 
@@ -139,6 +153,11 @@ class UserCoverArt(AdminView):
 class ChannelLocaleMeta(AdminView):
     model_name = 'channel_locale_meta'
     model = models.ChannelLocaleMeta
+
+    form_overrides = dict(channel_rel=wtf.TextField,
+            view_count=wtf.TextField,
+            star_count=wtf.TextField,
+            )
 
     column_filters = ('channel_rel',)
 
