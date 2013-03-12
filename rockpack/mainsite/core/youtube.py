@@ -15,6 +15,8 @@ def _youtube_feed(feed, id, params={}):
     params = dict(v=2, alt='json', **params)
     response = requests.get(url, params=params)
     response.raise_for_status()
+    if isinstance(response.json, dict):
+        return response.json
     return response.json()
 
 
