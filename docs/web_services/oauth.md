@@ -1,3 +1,15 @@
+Based on [OAuth 2.0](http://self-issued.info/docs/rfc6749.html).
+
+All these services require clients to be authenticed using an `Authorization`
+header with the encoded client id and secret.
+For further detail see [OAuth 2.0 Client Authentication]
+(http://self-issued.info/docs/rfc6749.html#client-authentication).
+
+On successful login or registration a `Bearer` token will be returned.
+See OAuth 2.0 Bearer Token Usage [Access Token Response]
+(http://self-issued.info/docs/draft-ietf-oauth-v2-bearer.html#ExAccTokResp).
+
+
 Log-in User
 ===========
 
@@ -10,6 +22,9 @@ Content-Type: application/x-www-form-urlencoded
 
 grant_type=password&username=USER&password=PASS
 ```
+
+This service follows the OAuth 2 [Resource Owner Password Credentials Grant flow]
+(http://self-issued.info/docs/rfc6749.html#grant-password).
 
 Parameter  | Required | Value      | Description
 :--------- | :------- | :--------- | :----------
@@ -204,6 +219,9 @@ Content-Type: application/json
 
 Refreshing Tokens
 =================
+
+This service follows the OAuth 2 [Refreshing an Access Token flow]
+(http://self-issued.info/docs/rfc6749.html#token-refresh).
 
 ```http
 POST /ws/token/ HTTP/1.1

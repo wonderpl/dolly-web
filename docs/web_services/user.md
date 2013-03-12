@@ -1,3 +1,10 @@
+Access to private resources require a `Bearer` access token, as returned
+but the [oauth services](oauth.md).
+
+See the OAuth 2.0 [Bearer Token Usage]
+(http://self-issued.info/docs/draft-ietf-oauth-v2-bearer.html)
+spec for further detail.
+
 User
 ====
 
