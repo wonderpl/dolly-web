@@ -149,6 +149,11 @@ class ChannelForm(form.BaseForm):
             raise ValidationError('invalid category')
 
 
+class ActivityForm(wtf.Form):
+    action = wtf.SelectField(choices=ACTION_COLUMN_VALUE_MAP.items())
+    video_instance = wtf.StringField(validators=[wtf.Required()])
+
+
 def _channel_info_response(channel, locale, paging, owner_url):
     data = video_api.channel_dict(channel, owner_url=owner_url)
     items, total = video_api.get_local_videos(locale, paging, channel=channel.id, with_channel=False)
@@ -222,9 +227,12 @@ class UserWS(WebService):
     @expose_ajax('/<userid>/activity/', methods=['POST'])
     @check_authorization(self_auth=True)
     def post_activity(self, userid):
+        form = ActivityForm(csrf_enabled=False)
+        if not form.validate():
+            abort(400, form_errors=form.errors)
         save_video_activity(userid,
-                            request.form['action'],
-                            request.form['video_instance'],
+                            form.action.data,
+                            form.video_instance.data,
                             self.get_locale())
 
     @expose_ajax('/<userid>/channels/', methods=('POST',))
