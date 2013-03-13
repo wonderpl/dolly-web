@@ -27,9 +27,10 @@ class SearchWS(WebService):
     @expose_ajax('/videos/', cache_age=300)
     def search_videos(self):
         """Search youtube videos."""
+        order = 'published' if request.args.get('order') == 'latest' else None
         start, size = self.get_page()
         region = self.get_locale().split('-')[1]
-        result = youtube.search(_query_term(), start, size,
+        result = youtube.search(_query_term(), order, start, size,
                                 region, request.remote_addr)
         items = []
         for position, video in enumerate(result.videos, start):
@@ -54,9 +55,11 @@ class SearchWS(WebService):
     @expose_ajax('/channels/', cache_age=300)
     def search_channels(self):
         # XXX: Obviously this needs to be replaced by a search engine
+        date_order = True if request.args.get('order') == 'latest' else False
         items, total = get_local_channel(self.get_locale(),
                                          self.get_page(),
-                                         query=_query_term())
+                                         query=_query_term(),
+                                         date_order=date_order)
         return {'channels': {'items': items, 'total': total}}
 
 

@@ -48,6 +48,9 @@ def get_local_channel(locale, paging, **filters):
     if filters.get('query'):
         metas = metas.filter(models.Channel.title.ilike('%%%s%%' % filters['query']))
 
+    if filters.get('date_order'):
+        metas = metas.order_by(desc(models.ChannelLocaleMeta.date_added))
+
     total = metas.count()
     offset, limit = paging
     metas = metas.offset(offset).limit(limit)

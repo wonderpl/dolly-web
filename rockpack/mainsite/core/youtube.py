@@ -133,9 +133,10 @@ def get_user_data(id, fetch_all_videos=False):
     return get_playlist_data('%s/uploads' % id, fetch_all_videos, 'users')
 
 
-def search(query, start=0, size=10, region=None, client_address=None, safe_search='strict'):
+def search(query, order=None, start=0, size=10, region=None, client_address=None, safe_search='strict'):
     params = {
         'q': query,
+        'orderby': order,
         'start-index': start + 1,
         'max-results': size,
         'region': region,
