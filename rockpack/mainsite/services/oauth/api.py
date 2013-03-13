@@ -5,6 +5,8 @@ from flask import request, abort, g
 from flask.ext import wtf
 from rockpack.mainsite import app
 from rockpack.mainsite.helpers.db import get_column_property, get_column_validators
+from rockpack.mainsite.helpers.urls import url_for
+from rockpack.mainsite.core.token import create_access_token
 from rockpack.mainsite.core.oauth.decorators import check_client_authorization
 from rockpack.mainsite.core.webservice import WebService, expose_ajax
 from rockpack.mainsite.services.user.models import User, UserAccountEvent, username_exists
@@ -211,3 +213,24 @@ class TokenWS(WebService):
             abort(400, error='invalid_grant')
         _record_user_event(user.username, 'refresh token succeeded', user.id)
         return user.get_credentials()
+
+
+def send_password_reset(user):
+    token = create_access_token(user.id, '', 3600)
+    url = url_for('reset_password') + '?token=' + token
+    print url
+
+
+class ResetWS(WebService):
+
+    endpoint = '/reset-password'
+
+    @expose_ajax('/', methods=['POST'])
+    @check_client_authorization
+    def reset_password(self):
+        user = User.query.filter_by(email=request.form['email']).first()
+        if not user:
+            abort(400)
+        _record_user_event(user.username, 'password reset requested')
+        # TODO: move to offline process
+        send_password_reset(user)
