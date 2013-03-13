@@ -75,7 +75,7 @@ class ExternalToken(db.Model):
         def _expired_token(expires):
             if not expires:
                 return True
-            if datetime.utcnow() + timedelta(days=1) > expires:
+            if datetime.now() + timedelta(days=1) > expires:
                 return True
             return False
 

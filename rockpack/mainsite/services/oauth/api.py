@@ -116,7 +116,7 @@ class ExternalUser:
         self._system = system
 
         if expires_in:
-            self._expires = datetime.utcnow() + timedelta(seconds=expires_in)
+            self._expires = datetime.now() + timedelta(seconds=expires_in)
         else:
             self._expires = None
 
