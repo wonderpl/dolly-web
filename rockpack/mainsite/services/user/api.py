@@ -163,6 +163,7 @@ def _channel_info_response(channel, locale, paging, owner_url):
 
 def _user_info_response(user, channels):
     return dict(
+        id=user.id,
         name=user.username,
         display_name=user.display_name,
         avatar_thumbnail_url=user.avatar.thumbnail_small,
@@ -190,6 +191,8 @@ class UserWS(WebService):
         channels = [video_api.channel_dict(c, with_owner=False, owner_url=True) for c in
                     Channel.query.filter_by(owner=user.id, deleted=False)]
         response = _user_info_response(user, channels)
+        for key in 'first_name', 'last_name', 'date_of_birth':
+            response[key] = getattr(user, key)
         for key in 'activity', 'cover_art', 'subscriptions':
             response[key] = dict(resource_url=url_for('userws.get_%s' % key, userid=userid))
         return response
