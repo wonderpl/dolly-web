@@ -325,26 +325,33 @@ Content-Type: application/json
 User Activity
 =============
 
+### Store
+
 Record a view or a starring of a video instance.
 
 ```http
 POST /ws/USERID/activity/?locale=LOCALE HTTP/1.1
 Authorization: Bearer TOKEN
-Content-Type: application/x-www-form-urlencoded
+Content-Type: application/json
 
-action=ACTION&video_instance=VIDEOINSTANCEID
+{
+ "action": "ACTION",
+ "video_instance": "VIDEOINSTANCEID"
+}
 ```
 
 Parameter      | Required? | Value             | Description
 :------------- | :-------- | :---------------- | :----------
-locale         | yes       | IETF language tag | The action will be recorded for the given locale
 action         | yes       | `star` or `view`  | Specifies the action type
 video_instance | yes       | instance id       | The id of the video instance that was viewed or starred
+locale         | no        | IETF language tag | The action will be recorded for the given locale
 
 ```http
 HTTP/1.1 204 NO CONTENT
 Content-Type: application/json
 ```
+
+### Retrieve
 
 Get list of item identifies associated with recent activity: views, stars & subscriptions.
 Useful for changing the UI of items from other WS responses.
