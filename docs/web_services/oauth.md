@@ -100,7 +100,7 @@ Content-Type: application/json
   "last_name": "Parker",
   "date_of_birth": "2003-01-24",
   "locale": "en-us",
-  "spidey@theavengers.com"
+  "email": "spidey@theavengers.com"
 }
 ```
 
