@@ -87,6 +87,13 @@ class Category(AdminView):
 
     inline_models = (ChildCategoryFormAdmin(models.Category),)
 
+    def scaffold_filters(self, name):
+        filters = super(Category, self).scaffold_filters(name)
+        # Allow filtering by "parent is NULL":
+        if name == 'parent':
+            filters[0].clean = lambda v: None if v == '' else v
+        return filters
+
 
 class CategoryMap(AdminView):
     model_name = models.CategoryMap.__tablename__
