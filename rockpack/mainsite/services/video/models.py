@@ -230,6 +230,8 @@ class VideoLocaleMeta(db.Model):
     visible = Column(Boolean(), nullable=False, server_default='true', default=True)
     view_count = Column(Integer, nullable=False, server_default='0')
     star_count = Column(Integer, nullable=False, server_default='0')
+    date_added = Column(DateTime(timezone=True), nullable=False, default=func.now())
+    date_updated = Column(DateTime(timezone=True), nullable=False, default=func.now(), onupdate=func.now())
 
     locale_rel = relationship('Locale', backref='videolocalemetas')
 
@@ -298,6 +300,8 @@ class Channel(db.Model):
     description = Column(Text, nullable=False)
     cover = Column(ImageType('CHANNEL', reference_only=True), nullable=False)
     public = Column(Boolean(), nullable=False, server_default='true', default=True)
+    date_added = Column(DateTime(timezone=True), nullable=False, default=func.now())
+    date_updated = Column(DateTime(timezone=True), nullable=False, default=func.now(), onupdate=func.now())
 
     owner = Column(CHAR(22), ForeignKey('user.id'), nullable=False)
     owner_rel = relationship(User, primaryjoin=(owner == User.id), lazy='joined', innerjoin=True)
@@ -375,6 +379,8 @@ class ChannelLocaleMeta(db.Model):
     visible = Column(Boolean(), nullable=False, server_default='true', default=True)
     view_count = Column(Integer, nullable=False, server_default='0', default=0)
     star_count = Column(Integer, nullable=False, server_default='0', default=0)
+    date_added = Column(DateTime(timezone=True), nullable=False, default=func.now())
+    date_updated = Column(DateTime(timezone=True), nullable=False, default=func.now(), onupdate=func.now())
 
     channel = Column(ForeignKey('channel.id'), nullable=False)
     locale = Column(ForeignKey('locale.id'), nullable=False)
