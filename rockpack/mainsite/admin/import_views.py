@@ -1,6 +1,6 @@
 import re
 import logging
-
+from datetime import date
 from flask import request, url_for, redirect, flash, jsonify
 from flask.ext import wtf, login
 from flask.ext.admin import BaseView, expose, form
@@ -10,8 +10,9 @@ from rockpack.mainsite.core import youtube
 from rockpack.mainsite.helpers.db import resize_and_upload
 from rockpack.mainsite.services.pubsubhubbub.api import subscribe
 from rockpack.mainsite.services.video.models import (
-    Locale, Source, Category, Video, Channel)
+    Locale, Source, Category, Video, VideoLocaleMeta, Channel)
 from rockpack.mainsite.services.user.models import User
+from .models import AdminLogRecord
 
 
 class ImportForm(form.BaseForm):
@@ -49,7 +50,7 @@ class UserForm(form.BaseForm):
     username = wtf.TextField(validators=[wtf.validators.required()])
     first_name = wtf.TextField(validators=[wtf.validators.required()])
     last_name = wtf.TextField(validators=[wtf.validators.required()])
-    email = wtf.TextField(validators=[wtf.validators.required()])
+    email = wtf.TextField(validators=[wtf.Optional()])
     avatar = wtf.FileField()
 
     def validate_avatar(form, field):
@@ -84,9 +85,11 @@ class ImportView(BaseView):
                     cover='',
                     locale=form.locale.data,
                     category=form.category.data)
+                self.record_action('created', channel)
             else:
                 channel = Channel.query.get(channel)
             channel.add_videos(form.import_data.videos)
+            self.record_action('imported', channel, '%d videos' % count)
             push_config = form.import_data.push_config
             if push_config and channel.id:
                 subscribe(push_config.hub, push_config.topic, channel.id)
@@ -106,12 +109,23 @@ class ImportView(BaseView):
             first_name=form.first_name.data,
             last_name=form.last_name.data,
             email=form.email.data,
+            date_of_birth=date(1900, 1, 1),
             avatar=avatar,
             refresh_token='',
             is_active=True)
+        self.record_action('created', user)
         db.session.add(user)
         db.session.commit()
         return user
+
+    def record_action(self, action, model, value=None):
+        db.session.add(AdminLogRecord(
+            username=login.current_user.username,
+            action=action,
+            model=model.__class__.__name__,
+            instance_id=unicode(model.id),
+            value=value or unicode(model),
+        ))
 
     @expose('/', ('GET', 'POST'))
     def index(self):
@@ -164,6 +178,9 @@ class ImportView(BaseView):
     @expose('/users.js')
     def users(self):
         prefix = request.args.get('prefix', '')
+        exact_name = request.args.get('exact_name', '')
+        if exact_name:
+            return jsonify(User.query.filter(User.username==exact_name).values(User.id, User.username))
         if not re.match('^\w+$', prefix):
             prefix = None
         return jsonify(User.get_form_choices(prefix=prefix))
@@ -171,9 +188,27 @@ class ImportView(BaseView):
     @expose('/channels.js')
     def channels(self):
         user = request.args.get('user', '')
-        if not re.match('^[\w-]+$', user):
-            user = None
-        return jsonify(Channel.get_form_choices(owner=user))
+        if 'user' in request.args.keys():
+            if not re.match('^[\w-]+$', user):
+                user = None
+            return jsonify(Channel.get_form_choices(owner=user))
+        prefix = request.args.get('prefix', '')
+        exact_name = request.args.get('exact_name', '')
+        if exact_name:
+            return jsonify(Channel.query.filter(Channel.title==exact_name).values(Channel.id, Channel.title))
+        if prefix:
+            if not re.match('^[\w ]+$', prefix):
+                prefix = None
+            return jsonify(Channel.query.filter(
+                    Channel.title.ilike(prefix + '%')).values(Channel.id, Channel.title))
+        return []
+
+    @expose('/video.js')
+    def videos(self):
+        vid = request.args.get('vid', '')
+        if request.args.get('instance_id'):
+            return jsonify(VideoLocaleMeta.query.join(Video).filter(VideoLocaleMeta.id==request.args.get('instance_id')).values(VideoLocaleMeta.video, Video.title))
+        return jsonify(Video.query.filter(Video.id.ilike(vid + '%')).values(Video.id, Video.title))
 
     @expose('/bookmarklet.js')
     def bookmarklet(self):

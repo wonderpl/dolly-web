@@ -39,3 +39,17 @@ def setup_admin(app):
 
     admin.add_view(user_views.UserView(name='Users', endpoint='user'))
     admin.add_view(import_views.ImportView(name='Import', endpoint='import'))
+
+    original_edit_master = (admin.index_view.blueprint.jinja_loader
+            .load(app.jinja_env, 'admin/model/edit.html'))
+
+    original_create_master = (admin.index_view.blueprint.jinja_loader
+            .load(app.jinja_env, 'admin/model/create.html'))
+
+    @app.context_processor
+    def original_edit_master_template():
+        return {'original_edit_master': original_edit_master}
+
+    @app.context_processor
+    def original_create_master_template():
+        return {'original_create_master': original_create_master}

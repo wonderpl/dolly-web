@@ -1,3 +1,15 @@
+Based on [OAuth 2.0](http://self-issued.info/docs/rfc6749.html).
+
+All these services require clients to be authenticed using an `Authorization`
+header with the encoded client id and secret.
+For further detail see [OAuth 2.0 Client Authentication]
+(http://self-issued.info/docs/rfc6749.html#client-authentication).
+
+On successful login or registration a `Bearer` token will be returned.
+See OAuth 2.0 Bearer Token Usage [Access Token Response]
+(http://self-issued.info/docs/draft-ietf-oauth-v2-bearer.html#ExAccTokResp).
+
+
 Log-in User
 ===========
 
@@ -8,11 +20,11 @@ POST /ws/login/ HTTP/1.1
 Authorization: Basic CLIENT_APP_CREDENTIALS
 Content-Type: application/x-www-form-urlencoded
 
-{
-    "username": "ironman",
-    "password": "pepperpots"
-}
+grant_type=password&username=USER&password=PASS
 ```
+
+This service follows the OAuth 2 [Resource Owner Password Credentials Grant flow]
+(http://self-issued.info/docs/rfc6749.html#grant-password).
 
 Parameter  | Required | Value      | Description
 :--------- | :------- | :--------- | :----------
@@ -32,7 +44,7 @@ Content-Type: application/json
   "expires_in": "3600",
   "refresh_token": "some_refresh_token",
   "user_id": "USERID",
-  "resource_url:" "/ws/USERID/"
+  "resource_url:" "http://path/to/user/info/"
 }
 ```
 
@@ -79,26 +91,28 @@ Register a user.
 ```http
 POST /ws/register/ HTTP/1.1
 Authorization: Basic CLIENT_APP_CREDENTIALS
-Content-Type: application/x-www-form-urlencoded
+Content-Type: application/json
 
 {
-    "username": "theamazingspiderman",
-    "password": "venom",
-    "first_name": "Peter",
-    "last_name": "Parker",
-    "locale": "en-us",
-    "spidey@theavengers.com"
+  "username": "theamazingspiderman",
+  "password": "venom",
+  "first_name": "Peter",
+  "last_name": "Parker",
+  "date_of_birth": "2003-01-24",
+  "locale": "en-us",
+  "email": "spidey@theavengers.com"
 }
 ```
 
-Parameter  | Required | Value  | Description
-:--------- | :------- | :----- | :----------
-username   | Yes      | String | Characters allowed should match regex [a-zA-Z0-9]
-password   | Yes      | String |
-first_name | No       | String
-last_name  | No       | String
-locale     | Yes      | IETF language tag
-email      | Yes      | String
+Parameter     | Required | Value  | Description
+:------------ | :------- | :----- | :----------
+username      | Yes      | String | Characters allowed should match regex [a-zA-Z0-9]
+password      | Yes      | String | Minimum 6 characters
+first_name    | No       | String |
+last_name     | No       | String |
+date_of_birth | Yes      | String | YYYY-MM-DD formatted date string
+locale        | Yes      | String | IETF language tag
+email         | Yes      | String | Email address
 
 Responds with an access token information.
 
@@ -112,7 +126,7 @@ Content-Type: application/json
   "expires_in": "3600",
   "refresh_token": "some_refresh_token",
   "user_id": "USERID",
-  "resource_url:" "/ws/USERID/"
+  "resource_url:" "http://path/to/user/info/"
 }
 ```
 
@@ -124,10 +138,13 @@ HTTP/1.1 400 BAD REQUEST
 Content-Type: application/json
 
 {
-  "form_errors": {
-      "email": ["Email address already registered"]
-    },
-  "error": "invalid_request"
+ "error": "invalid_request",
+ "form_errors": {
+  "username": [ "\"USERNAME\" is reserved" ],
+  "locale": [ "This field is required." ],
+  "password": [ "Field must be at least 6 characters long." ],
+  "email": [ "Invalid email address." ]
+ }
 }
 ```
 
@@ -141,7 +158,7 @@ Registrering a Facebook user.
 ```http
 POST /ws/login/external/ HTTP/1.1
 Authorization: Basic CLIENT_APP_CREDENTIALS
-Content-Type: application/x-www-form-urlencoded
+Content-Type: application/json
 
 {
     "external_system": "facebook",
@@ -166,7 +183,7 @@ Content-Type: application/json
   "expires_in": "3600",
   "refresh_token": "some_refresh_token",
   "user_id": "USERID",
-  "resource_url:" "/ws/USERID/"
+  "resource_url:" "http://path/to/user/info/"
 }
 ```
 
@@ -203,15 +220,15 @@ Content-Type: application/json
 Refreshing Tokens
 =================
 
+This service follows the OAuth 2 [Refreshing an Access Token flow]
+(http://self-issued.info/docs/rfc6749.html#token-refresh).
+
 ```http
 POST /ws/token/ HTTP/1.1
-Authorization: Bearer TOKEN
+Authorization: Basic CLIENT_APP_CREDENTIALS
 Content-Type: application/x-www-form-urlencoded
 
-{
-    "grant_type": "refresh_token",
-    "refresh_token": "some_long_string"
-}
+grant_type=refresh_token&refresh_token=TOKEN
 ```
 
 Parameter       | Required | Value           | Description

@@ -43,7 +43,7 @@ class DummyAuthStore(TokenMapper):
             print 'dropped key', key
 
     def set_auth_token(self, key, expires, data):
-        self._set_token(key, (datetime.utcnow() + timedelta(seconds=expires), data,))
+        self._set_token(key, (datetime.now() + timedelta(seconds=expires), data,))
 
     def get_auth_token(self, key):
         return self._get_token(key)

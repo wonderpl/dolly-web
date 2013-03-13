@@ -54,7 +54,9 @@
       <h2>{{ import_preview.title }}</h2>
       <p>Video count: {{ import_preview.video_count }}</p>
       {% endif %}
-      <img src="{{ import_preview.videos[0].thumbnails[0].url }}"/>
+      {% for video in import_preview.videos if video.thumbnails %}
+      <img src="{{ video.thumbnails[0].url }}"/>
+      {% endfor %}
   </div>
   {% else %}
   <div class="error">No videos found. :-(</div>
@@ -65,7 +67,8 @@
 {% endblock %}
 
 {% block tail %}
-  {{ super() }}
+<script src="/admin/static/js/bootstrap-datepicker.js"></script>
+    <script src="/admin/static/js/form.js"></script>
   <script>
       $(function () {
           // hide the channel description unless we create a new one

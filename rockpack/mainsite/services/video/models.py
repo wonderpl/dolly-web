@@ -9,6 +9,7 @@ from rockpack.mainsite.helpers.db import (
     gen_videoid, insert_new_only, ImageType)
 from rockpack.mainsite.helpers.urls import url_for
 from rockpack.mainsite.services.user.models import User
+from rockpack.mainsite import app
 
 
 class Locale(db.Model):
@@ -142,8 +143,8 @@ class Video(db.Model):
     title = Column(String(1024), nullable=False)
     source_videoid = Column(String(128), nullable=False)
     source_listid = Column(String(128), nullable=True)
-    date_added = Column(DateTime(timezone=True), nullable=False, default=func.now())
-    date_updated = Column(DateTime(timezone=True), nullable=False, default=func.now(), onupdate=func.now())
+    date_added = Column(DateTime(), nullable=False, default=func.now())
+    date_updated = Column(DateTime(), nullable=False, default=func.now(), onupdate=func.now())
     duration = Column(Integer, nullable=False, server_default='0')
     view_count = Column(Integer, nullable=False, server_default='0')
     star_count = Column(Integer, nullable=False, server_default='0')
@@ -229,6 +230,8 @@ class VideoLocaleMeta(db.Model):
     visible = Column(Boolean(), nullable=False, server_default='true', default=True)
     view_count = Column(Integer, nullable=False, server_default='0')
     star_count = Column(Integer, nullable=False, server_default='0')
+    date_added = Column(DateTime(), nullable=False, default=func.now())
+    date_updated = Column(DateTime(), nullable=False, default=func.now(), onupdate=func.now())
 
     locale_rel = relationship('Locale', backref='videolocalemetas')
 
@@ -252,9 +255,10 @@ class VideoInstance(db.Model):
     )
 
     id = Column(CHAR(24), primary_key=True)
-    date_added = Column(DateTime(timezone=True), nullable=False, default=func.now())
+    date_added = Column(DateTime(), nullable=False, default=func.now())
     view_count = Column(Integer, nullable=False, server_default='0')
     star_count = Column(Integer, nullable=False, server_default='0')
+    position = Column(Integer, nullable=False, server_default='0', default=0)
 
     video = Column(ForeignKey('video.id', ondelete='CASCADE'), nullable=False)
     channel = Column(ForeignKey('channel.id'), nullable=False)
@@ -290,17 +294,19 @@ class Channel(db.Model):
     """ A channel, which can contain many videos """
 
     __tablename__ = 'channel'
-    __table_args__ = (
-        UniqueConstraint('owner', 'title'),
-    )
 
     id = Column(CHAR(24), primary_key=True)
     title = Column(String(1024), nullable=False)
     description = Column(Text, nullable=False)
     cover = Column(ImageType('CHANNEL', reference_only=True), nullable=False)
+    public = Column(Boolean(), nullable=False, server_default='true', default=True)
+    date_added = Column(DateTime(), nullable=False, default=func.now())
+    date_updated = Column(DateTime(), nullable=False, default=func.now(), onupdate=func.now())
 
     owner = Column(CHAR(22), ForeignKey('user.id'), nullable=False)
     owner_rel = relationship(User, primaryjoin=(owner == User.id), lazy='joined', innerjoin=True)
+
+    deleted = Column(Boolean(), nullable=False, server_default='false', default=False)
 
     video_instances = relationship('VideoInstance', backref='video_channel')
     metas = relationship('ChannelLocaleMeta', backref=db.backref('channel_rel', lazy='joined', innerjoin=True))
@@ -313,15 +319,20 @@ class Channel(db.Model):
         return cls.query.filter_by(owner=owner).values(cls.id, cls.title)
 
     @classmethod
-    def create(cls, category, locale=None, **kwargs):
+    def channelmeta_for_category(cls, category, locale):
+        if locale is None:
+            locale = Category.query.filter_by(id=category).value('locale')
+        return [ChannelLocaleMeta(
+            locale=locale,
+            category=category)]
+
+    @classmethod
+    def create(cls, category, locale=None, public=True, **kwargs):
         """Create & save a new channel record along with appropriate category metadata"""
         channel = Channel(**kwargs)
+        channel.public = channel.should_be_public(channel, public)
         if category:
-            if locale is None:
-                locale = Category.query.filter_by(id=category).value('locale')
-            channel.metas = [ChannelLocaleMeta(
-                             locale=locale,
-                             category=category)]
+            channel.metas = cls.channelmeta_for_category(category, locale)
         return channel.save()
 
     def get_resource_url(self, own=False):
@@ -346,6 +357,16 @@ class Channel(db.Model):
             VideoInstance.video.in_(set(getattr(v, 'id', v) for v in videos))).\
             delete(synchronize_session=False)
 
+    @classmethod
+    def should_be_public(self, channel, public):
+        """ Return False if conditions for
+            visibility are not met """
+        if not (channel.description and channel.cover and
+                (channel.title and not channel.title.startswith(app.config['UNTITLED_CHANNEL']))):
+            return False
+
+        return public
+
 
 class ChannelLocaleMeta(db.Model):
 
@@ -356,8 +377,10 @@ class ChannelLocaleMeta(db.Model):
 
     id = Column(CHAR(24), primary_key=True)
     visible = Column(Boolean(), nullable=False, server_default='true', default=True)
-    view_count = Column(Integer, nullable=False, server_default='0')
-    star_count = Column(Integer, nullable=False, server_default='0')
+    view_count = Column(Integer, nullable=False, server_default='0', default=0)
+    star_count = Column(Integer, nullable=False, server_default='0', default=0)
+    date_added = Column(DateTime(), nullable=False, default=func.now())
+    date_updated = Column(DateTime(), nullable=False, default=func.now(), onupdate=func.now())
 
     channel = Column(ForeignKey('channel.id'), nullable=False)
     locale = Column(ForeignKey('locale.id'), nullable=False)
@@ -366,7 +389,7 @@ class ChannelLocaleMeta(db.Model):
     channel_locale = relationship('Locale', remote_side=[Locale.id], backref='channel_locale_meta')
 
     def __unicode__(self):
-        return self.locale, 'for channel', self.channel
+        return self.locale + ' for channel ' + self.channel
 
 
 ParentCategory = aliased(Category)
@@ -386,9 +409,10 @@ def _update_video_visibility(mapper, connection, target):
     if not target.visible:
         VideoLocaleMeta.query.\
             filter_by(locale=target.locale).\
-            join(Video, VideoInstance).\
-            filter_by(channel=target.channel).\
-            update(dict(visible=target.visible))
+            filter(VideoLocaleMeta.video.in_(
+                VideoInstance.query.filter_by(channel=target.channel).\
+                    with_entities(VideoInstance.video)
+            )).update(dict(visible=target.visible), False)
 
 event.listen(Video, 'before_insert', add_video_pk)
 event.listen(VideoLocaleMeta, 'before_insert', add_video_meta_pk)

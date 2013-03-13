@@ -15,6 +15,8 @@ def _youtube_feed(feed, id, params={}):
     params = dict(v=2, alt='json', **params)
     response = requests.get(url, params=params)
     response.raise_for_status()
+    if isinstance(response.json, dict):
+        return response.json
     return response.json()
 
 
@@ -99,6 +101,7 @@ def get_video_data(id, fetch_all_videos=True):
 def get_playlist_data(id, fetch_all_videos=False, feed='playlists'):
     """Return playlist data from youtube api."""
     total = 0
+    seen = []
     videos = []
     params = {'start-index': 1, 'max-results': (50 if fetch_all_videos else 1)}
     while True:
@@ -106,7 +109,11 @@ def get_playlist_data(id, fetch_all_videos=False, feed='playlists'):
         total = youtube_data['openSearch$totalResults']['$t']
         limit = min(total, app.config.get('YOUTUBE_IMPORT_LIMIT', 100))
         entries = youtube_data.get('entry', [])
-        videos.extend(_get_video_data(e, id) for e in entries)
+        for entry in entries:
+            video = _get_video_data(entry, id)
+            if video.source_videoid not in seen:
+                videos.append(video)
+                seen.append(video.source_videoid)
         if entries and fetch_all_videos and len(videos) < limit:
             params['start-index'] += params['max-results']
             continue
@@ -126,9 +133,10 @@ def get_user_data(id, fetch_all_videos=False):
     return get_playlist_data('%s/uploads' % id, fetch_all_videos, 'users')
 
 
-def search(query, start=0, size=10, region=None, client_address=None, safe_search='strict'):
+def search(query, order=None, start=0, size=10, region=None, client_address=None, safe_search='strict'):
     params = {
         'q': query,
+        'orderby': order,
         'start-index': start + 1,
         'max-results': size,
         'region': region,

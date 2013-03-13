@@ -137,7 +137,7 @@ class RockpackResourceProvider(ResourceProvider):
             expires, raw_json = self.store.get_auth_token('oauth2.access_token:{}'.format(access_token))
         except ValueError:
             return
-        now = datetime.utcnow()
+        now = datetime.now()
         if now > expires:
             return
         data = json.loads(raw_json)

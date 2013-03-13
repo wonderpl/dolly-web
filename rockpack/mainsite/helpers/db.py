@@ -6,6 +6,7 @@ from iso8601.iso8601 import UTC
 from sqlalchemy import types
 from sqlalchemy.dialects.mysql.base import MySQLDialect
 from flask import g
+from flask.ext import wtf
 from rockpack.mainsite import app
 from rockpack.mainsite.core import imaging
 from .urls import image_url_from_path
@@ -48,6 +49,20 @@ def add_video_meta_pk(mapper, connection, instance):
         instance.id = gen_videoid(instance.locale, instance.video_rel.source, instance.video_rel.source_videoid)
 
 
+def get_column_property(model, column, prop):
+    return getattr(model._sa_class_manager.mapper.get_property(column).columns[0].type, prop)
+
+
+def get_column_validators(model, columnname):
+    column = model._sa_class_manager.mapper.get_property(columnname).columns[0]
+    validators = []
+    if not column.nullable:
+        validators.append(wtf.Required())
+    if hasattr(column.type, 'length'):
+        validators.append(wtf.Length(max=column.type.length))
+    return validators
+
+
 def insert_new_only(model, instances):
     """Check db for existing instances and insert new records only"""
     all_ids = set(i.id for i in instances)
@@ -56,39 +71,6 @@ def insert_new_only(model, instances):
     new_ids = all_ids - existing_ids
     g.session.add_all(i for i in instances if i.id in new_ids)
     return new_ids, existing_ids
-
-
-def timezone_aware(dt):
-    """ Determine if datetime is tz aware.
-
-    >>> timezone_aware(datetime.datetime.now())
-    False
-    >>> timezone_aware(datetime.datetime.now(UTC))
-    True
-
-    """
-    return (hasattr(dt, 'tzinfo') and dt.tzinfo is not None) and dt.tzinfo.utcoffset(dt) is not None
-
-
-class UTCCoercingDateTime(types.TypeDecorator):
-    impl = types.DateTime
-
-    def process_bind_param(self, value, dialect):
-        if (value is not None and isinstance(dialect, MySQLDialect)
-                and timezone_aware(value)):
-            value = value.astimezone(UTC).replace(tzinfo=None)
-        return value
-
-    def process_result_value(self, value, dialect):
-        if value is not None and not timezone_aware(value):
-            try:
-                value = value.replace(tzinfo=UTC)
-            except TypeError:
-                pass
-        return value
-
-
-TZDateTime = UTCCoercingDateTime
 
 
 class ImageUrl(str):

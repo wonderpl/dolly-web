@@ -6,13 +6,14 @@ Search
 A wrapper around youtube search.
 
 ```http
-GET /ws/search/videos/?locale=LOCALE&q=QUERY&start=START&size=SIZE HTTP/1.1
+GET /ws/search/videos/?locale=LOCALE&q=QUERY&order=ORDER&&start=START&size=SIZE HTTP/1.1
 ```
 
 Parameter      | Required? | Value             | Description
 :------------- | :-------- | :---------------- | :----------
 q              | yes       | Unicode string    | The search term string
 locale         | no        | IETF language tag | The locale gives a regional bias to the results
+order          | no        | default, latest   | Specifies the order in which the results are returned
 start          | no        | 0-based integer   | Used for paging through the result items
 size           | no        | Result page size  | Number of items to return - max 50.
 
@@ -52,13 +53,14 @@ Cache-Control: public, max-age=300
 List channels matching a specific search term.
 
 ```http
-GET /ws/search/channels/?locale=LOCALE&q=QUERY&start=START&size=SIZE HTTP/1.1
+GET /ws/search/channels/?locale=LOCALE&q=QUERY&order=ORDER&start=START&size=SIZE HTTP/1.1
 ```
 
 Parameter      | Required? | Value             | Description
 :------------- | :-------- | :---------------- | :----------
 q              | yes       | Unicode string    | The search term string
 locale         | no        | IETF language tag | The locale gives a regional bias to the results
+order          | no        | default, latest   | Specifies the order in which the results are returned
 start          | no        | 0-based integer   | Used for paging through the result items
 size           | no        | Result page size  | Number of items to return - max 50.
 

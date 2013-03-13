@@ -1,10 +1,9 @@
 import re
 import uuid
 from sqlalchemy import (
-    String, Column, Integer, Boolean, DateTime, ForeignKey,
-    PrimaryKeyConstraint, CHAR, event, func)
+    String, Column, Integer, Boolean, Date, DateTime, ForeignKey,
+    Text, Enum, CHAR, PrimaryKeyConstraint, event, func)
 from sqlalchemy.orm import relationship
-from sqlalchemy.orm.exc import NoResultFound
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask import g
 from rockpack.mainsite import app
@@ -14,18 +13,25 @@ from rockpack.mainsite.helpers.db import ImageType, add_base64_pk, resize_and_up
 from rockpack.mainsite.helpers.urls import url_for
 
 
+EXTERNAL_SYSTEM_NAMES = 'facebook', 'twitter', 'google'
+
+
 class User(db.Model):
     __tablename__ = 'user'
 
     id = Column(CHAR(22), primary_key=True)
-    username = Column(String(254), unique=True, nullable=False)
+    username = Column(String(52), unique=True, nullable=False)
     password_hash = Column(String(60), nullable=False)
     email = Column(String(254), nullable=False)
-    first_name = Column(String(254), nullable=False)
-    last_name = Column(String(254), nullable=False)
+    first_name = Column(String(32), nullable=False)
+    last_name = Column(String(32), nullable=False)
+    date_of_birth = Column(Date())
     avatar = Column(ImageType('AVATAR'), nullable=False)
     is_active = Column(Boolean, nullable=False, server_default='true', default=True)
     refresh_token = Column(String(1024), nullable=False)
+    username_updated = Column(Boolean, nullable=False, server_default='false', default=False)
+    date_joined = Column(DateTime(), nullable=False, default=func.now())
+    date_updated = Column(DateTime(), nullable=False, default=func.now(), onupdate=func.now())
 
     locale = Column(ForeignKey('locale.id'), nullable=False, server_default='')
 
@@ -42,11 +48,17 @@ class User(db.Model):
         return q.values(cls.id, cls.username)
 
     @classmethod
-    def get_from_username(cls, username):
-        try:
-            return cls.query.filter_by(username=username).one()
-        except NoResultFound:
-            return None
+    def get_from_credentials(cls, username, password):
+        if '@' in username:
+            filter = dict(email=username)
+        else:
+            filter = dict(username=username)
+        # XXX: email field doesn't have unique constraint - for now we
+        # check each record for matching password but we could consider
+        # taking first only or applying unique constraint
+        for user in cls.query.filter_by(is_active=True, **filter):
+            if user.check_password(password):
+                return user
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -81,7 +93,7 @@ class User(db.Model):
 
     @classmethod
     def suggested_username(cls, source_name):
-        if not cls.query.filter_by(username=source_name).count():
+        if not username_exists(source_name):
             return source_name
 
         user = cls.query.filter(
@@ -156,6 +168,28 @@ class UserActivity(db.Model):
     object_id = Column(String(64), nullable=False)
 
 
+class UserAccountEvent(db.Model):
+    __tablename__ = 'user_account_event'
+
+    id = Column(Integer, primary_key=True)
+    username = Column(String(52), nullable=False)
+    event_date = Column(DateTime(), nullable=False, default=func.now())
+    event_type = Column(String(32), nullable=False)
+    event_value = Column(String(1024), nullable=False)
+    ip_address = Column(String(32), nullable=False)
+    user_agent = Column(String(1024), nullable=False)
+    clientid = Column(CHAR(22), nullable=False)
+
+
+class ReservedUsername(db.Model):
+    __tablename__ = 'reserved_username'
+
+    username = Column(String(52), nullable=False, primary_key=True)
+    external_system = Column(Enum(*EXTERNAL_SYSTEM_NAMES), nullable=False)
+    external_uid = Column(String(1024), nullable=False)
+    external_data = Column(Text())
+
+
 class Subscription(db.Model):
     __tablename__ = 'subscription'
     __table_args__ = (
@@ -174,6 +208,14 @@ class Subscription(db.Model):
         view = 'userws.delete_subscription_item'
         return url_for(view, userid=self.user, channelid=self.channel)
     resource_url = property(get_resource_url)
+
+
+def username_exists(username):
+    username_filter = lambda m: func.lower(m.username) == username.lower()
+    if User.query.filter(username_filter(User)).count():
+        return 'exists'
+    if ReservedUsername.query.filter(username_filter(ReservedUsername)).count():
+        return 'reserved'
 
 
 event.listen(User, 'before_insert', lambda x, y, z: add_base64_pk(x, y, z))

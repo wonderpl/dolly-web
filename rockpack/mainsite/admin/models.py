@@ -1,9 +1,23 @@
+from sqlalchemy import String, Column, Integer, DateTime, func
 from flask.ext import login, wtf
 from flask.ext.admin.model.typefmt import BASE_FORMATTERS, Markup
 from flask.ext.admin.model.form import converts
 from flask.ext.admin.contrib.sqlamodel import ModelView, form, filters
 from rockpack.mainsite.helpers.db import ImageUrl, ImageType, resize_and_upload
 from rockpack.mainsite.core.dbapi import db
+
+
+class AdminLogRecord(db.Model):
+
+    __tablename__ = 'admin_log'
+
+    id = Column(Integer(), primary_key=True)
+    username = Column(String(254), nullable=False)
+    timestamp = Column(DateTime(), nullable=False, default=func.now())
+    action = Column(String(254), nullable=False)
+    model = Column(String(254), nullable=False)
+    instance_id = Column(String(254), nullable=False)
+    value = Column(String(254), nullable=False)
 
 
 def _render_image(img):
@@ -77,11 +91,44 @@ class AdminView(ModelView):
 
     def create_model(self, form):
         if self._process_image_data(form):
+            # bad bad bad hack
+            from rockpack.mainsite.services.user.models import User
+            from rockpack.mainsite.services.video.models import Channel, Video
+            for f in filter(lambda x: x.endswith('_rel'), form.data.keys()):
+                if isinstance(getattr(form, f).data, unicode) or isinstance(getattr(form, f).data, str):
+                    field = getattr(form, f)
+                    if f == 'owner_rel':
+                        model = User
+                    if f == 'video_rel':
+                        model = Video
+                    if f == 'channel_rel':
+                        model = Channel
+                    field.data = model.query.get(getattr(form, f).data)
             return super(AdminView, self).create_model(form)
 
     def update_model(self, form, model):
         if self._process_image_data(form):
+            # hack for owner_rel passing models around
+            for f in filter(lambda x: x.endswith('_rel'), form.data.keys()):
+                if isinstance(getattr(form, f).data, unicode) or isinstance(getattr(form, f).data, str):
+                    field = getattr(form, f)
+                    field.data = getattr(model, f).query.get(getattr(form, f).data)
             return super(AdminView, self).update_model(form, model)
+
+    def record_action(self, action, model):
+        self.session.add(AdminLogRecord(
+            username=login.current_user.username,
+            action=action,
+            model=model.__class__.__name__,
+            instance_id=unicode(model.id),
+            value=unicode(model),
+        ))
+
+    def on_model_change(self, form, model):
+        self.record_action('changed' if model.id else 'created', model)
+
+    def on_model_delete(self, model):
+        self.record_action('deleted', model)
 
 
 # TODO: implement the below - ignoring for now, just let people sign in.
