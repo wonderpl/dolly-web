@@ -63,6 +63,8 @@ FAVOURITE_CHANNEL = 'Favourites', 'My favourite videos', ''
 # Path to default avatar image used when creating users
 DEFAULT_AVATAR = ''
 
+DEFAULT_EMAIL_SOURCE = 'rockpack <noreply@rockpack.com>'
+
 # Toggle to enable test url
 TEST_EXTERNAL_SYSTEM = False
 

@@ -7,6 +7,7 @@ from rockpack.mainsite import app
 from rockpack.mainsite.helpers.db import get_column_property, get_column_validators
 from rockpack.mainsite.helpers.urls import url_for
 from rockpack.mainsite.core.token import create_access_token
+from rockpack.mainsite.core.email import send_email
 from rockpack.mainsite.core.oauth.decorators import check_client_authorization
 from rockpack.mainsite.core.webservice import WebService, expose_ajax
 from rockpack.mainsite.services.user.models import User, UserAccountEvent, username_exists
@@ -14,15 +15,19 @@ from rockpack.mainsite.services.video.models import Locale
 from . import facebook, models
 
 
-def _record_user_event(username, type, value=''):
+def record_user_event(username, type, value=''):
     trunc = lambda f, v: v[:get_column_property(UserAccountEvent, f, 'length')]
+    try:
+        clientid = g.app_client_id or g.authorized.clientid
+    except AttributeError:
+        clientid = ''
     UserAccountEvent(
         username=trunc('username', username),
         event_type=type,
         event_value=value,
         ip_address=request.remote_addr or '',
         user_agent=trunc('user_agent', request.user_agent.string),
-        clientid=getattr(g, 'app_client_id') or getattr(g.authorized, 'clientid') or '',
+        clientid=clientid,
     ).save()
 
 
@@ -46,9 +51,9 @@ class LoginWS(WebService):
             abort(400, error='unsupported_grant_type')
         user = User.get_from_credentials(request.form['username'], request.form['password'])
         if not user:
-            _record_user_event(request.form['username'], 'login failed')
+            record_user_event(request.form['username'], 'login failed')
             abort(400, error='invalid_grant')
-        _record_user_event(request.form['username'], 'login succeeded', user.id)
+        record_user_event(request.form['username'], 'login succeeded', user.id)
         return user.get_credentials()
 
     @expose_ajax('/external/', methods=['POST'])
@@ -183,7 +188,7 @@ class RegistrationWS(WebService):
     def register(self):
         form = RockRegistrationForm(csrf_enabled=False)
         if not form.validate():
-            _record_user_event(form.username.data, 'registration failed',
+            record_user_event(form.username.data, 'registration failed',
                                ','.join(form.errors.keys()))
             abort(400, form_errors=form.errors)
         user = User.create_with_channel(
@@ -194,7 +199,7 @@ class RegistrationWS(WebService):
             email=form.email.data,
             password=form.password.data,
             locale=form.locale.data)
-        _record_user_event(user.username, 'registration succeeded', user.id)
+        record_user_event(user.username, 'registration succeeded', user.id)
         return user.get_credentials()
 
 
@@ -209,16 +214,23 @@ class TokenWS(WebService):
             abort(400, error='unsupported_grant_type')
         user = User.query.filter_by(refresh_token=refresh_token).first()
         if not user:
-            _record_user_event('', 'refresh token failed')
+            record_user_event('', 'refresh token failed')
             abort(400, error='invalid_grant')
-        _record_user_event(user.username, 'refresh token succeeded', user.id)
+        record_user_event(user.username, 'refresh token succeeded', user.id)
         return user.get_credentials()
 
 
 def send_password_reset(user):
     token = create_access_token(user.id, '', 3600)
     url = url_for('reset_password') + '?token=' + token
-    print url
+    message = '''
+        Click here to reset your password:
+        %s
+
+        This link will expire in 1 hour
+    ''' % (url,)
+    subject = 'rockpack password reset'
+    send_email(user.email, subject, message)
 
 
 class ResetWS(WebService):
@@ -228,9 +240,9 @@ class ResetWS(WebService):
     @expose_ajax('/', methods=['POST'])
     @check_client_authorization
     def reset_password(self):
-        user = User.query.filter_by(email=request.form['email']).first()
+        user = User.get_from_credentials(request.form['username'], None)
         if not user:
             abort(400)
-        _record_user_event(user.username, 'password reset requested')
+        record_user_event(user.username, 'password reset requested')
         # TODO: move to offline process
         send_password_reset(user)

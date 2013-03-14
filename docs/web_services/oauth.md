@@ -270,3 +270,38 @@ Content-Type: application/json
     "error": "unsupported_grant_type"
 }
 ```
+
+Reset Password
+==============
+
+Initiate a password reset flow
+
+```http
+POST /ws/reset-password/ HTTP/1.1
+Authorization: Basic CLIENT_APP_CREDENTIALS
+Content-Type: application/x-www-form-urlencoded
+
+username=USER
+```
+
+Parameter       | Required | Value     | Description
+:-------------- | :------- | :-------- | :----------
+username        | Yes      | String    | Username or email address of user
+
+If user isn't found then a `400` response will be returned.
+
+```http
+HTTP/1.1 400 OK
+Content-Type: application/json
+
+{
+ "error": "invalid_request"
+}
+```
+
+If request was accepted and the reset email sent then a `204` will be returned.
+
+```http
+HTTP/1.1 204 OK
+Content-Type: application/json
+```

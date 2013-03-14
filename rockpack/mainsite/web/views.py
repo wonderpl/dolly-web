@@ -5,6 +5,7 @@ from flask.ext import wtf
 from rockpack.mainsite import app
 from rockpack.mainsite.core.token import parse_access_token
 from rockpack.mainsite.services.user.models import User
+from rockpack.mainsite.services.oauth.api import record_user_event
 
 
 def ws_request(url):
@@ -57,4 +58,5 @@ def reset_password():
             user = User.query.get(userid)
             user.set_password(form.password.data)
             user.save()
+            record_user_event(user.username, 'password changed')
     return render_template('web/reset_password.html', **locals())
