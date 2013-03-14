@@ -189,7 +189,7 @@ class RegistrationWS(WebService):
         form = RockRegistrationForm(csrf_enabled=False)
         if not form.validate():
             record_user_event(form.username.data, 'registration failed',
-                               ','.join(form.errors.keys()))
+                              ','.join(form.errors.keys()))
             abort(400, form_errors=form.errors)
         user = User.create_with_channel(
             username=form.username.data,
