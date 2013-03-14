@@ -126,7 +126,7 @@ class Channel(AdminView):
 
     form_overrides = dict(owner_rel=wtf.TextField)
 
-    column_list = ('title', 'owner', 'cover.thumbnail_large')
+    column_list = ('title', 'owner', 'cover.thumbnail_large', 'date_added')
     column_filters = ('owner', 'title', 'metas')
     column_searchable_list = ('title',)
 
