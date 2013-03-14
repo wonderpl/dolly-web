@@ -4,6 +4,7 @@ from flask import request, json, render_template
 from flask.ext import wtf
 from rockpack.mainsite import app
 from rockpack.mainsite.core.token import parse_access_token
+from rockpack.mainsite.core.webservice import secure_view
 from rockpack.mainsite.services.user.models import User
 from rockpack.mainsite.services.oauth.api import record_user_event
 
@@ -45,7 +46,8 @@ class ResetPasswordForm(wtf.Form):
             raise wtf.ValidationError('Passwords must match.')
 
 
-@app.route('/reset_password/', methods=('GET', 'POST'))
+@app.route('/reset_password/', methods=('GET', 'POST'), subdomain=app.config.get('SECURE_SUBDOMAIN'))
+@secure_view()
 def reset_password():
     token = (request.form or request.args).get('token')
     try:
