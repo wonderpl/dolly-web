@@ -104,7 +104,7 @@ class ImportView(BaseView):
         else:
             avatar = ''
         user = User(
-            username=form.username.data,
+            username=form.username.data.strip(),
             password_hash='',
             first_name=form.first_name.data,
             last_name=form.last_name.data,
