@@ -75,13 +75,22 @@
           $('#channel_description')[0].style.display = 'none';
           $('label[for="channel_description"]')[0].style.display = 'none';
 
+          $('#cover')[0].style.display = 'none';
+          $('label[for="cover"]')[0].style.display = 'none';
+
           $('#channel').change(function() {
               if ($('#channel')[0].value.indexOf('_new') < 0) {
                   $('#channel_description')[0].style.display = 'none';
                   $('label[for="channel_description"]')[0].style.display = 'none';
+
+                  $('#cover')[0].style.display = 'none';
+                  $('label[for="cover"]')[0].style.display = 'none';
                   } else {
                   $('#channel_description')[0].style.display = 'inline';
                   $('label[for="channel_description"]')[0].style.display = 'inline';
+
+                  $('#cover')[0].style.display = 'inline';
+                  $('label[for="cover"]')[0].style.display = 'inline';
               }
           });
 

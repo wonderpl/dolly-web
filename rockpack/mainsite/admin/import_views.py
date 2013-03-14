@@ -11,6 +11,7 @@ from rockpack.mainsite.helpers.db import resize_and_upload
 from rockpack.mainsite.services.pubsubhubbub.api import subscribe
 from rockpack.mainsite.services.video.models import (
     Locale, Source, Category, Video, VideoLocaleMeta, Channel)
+from rockpack.mainsite.services.cover_art.models import UserCoverArt
 from rockpack.mainsite.services.user.models import User
 from .models import AdminLogRecord
 
@@ -22,6 +23,7 @@ class ImportForm(form.BaseForm):
     id = wtf.TextField(validators=[wtf.validators.required()])
     locale = form.Select2Field(default='en-gb')
     category = form.Select2Field(coerce=int, default=-1)
+    cover = wtf.FileField(validators=[wtf.Optional()])
     commit = wtf.HiddenField()
     user = wtf.TextField()
     channel = wtf.TextField()
@@ -78,14 +80,18 @@ class ImportView(BaseView):
         user = form.user.data
         if channel and user:
             if channel.startswith('_new:'):
+                cover = ''
+                if request.files.get('cover'):
+                    cover = resize_and_upload(request.files['cover'], 'CHANNEL')
                 channel = Channel.create(
                     title=channel.split(':', 1)[1],
                     owner=user,
                     description=form.channel_description.data,
-                    cover='',
+                    cover=cover,
                     locale=form.locale.data,
                     category=form.category.data)
                 self.record_action('created', channel)
+
             else:
                 channel = Channel.query.get(channel)
             channel.add_videos(form.import_data.videos)
@@ -104,7 +110,7 @@ class ImportView(BaseView):
         else:
             avatar = ''
         user = User(
-            username=form.username.data,
+            username=form.username.data.strip(),
             password_hash='',
             first_name=form.first_name.data,
             last_name=form.last_name.data,
@@ -213,3 +219,12 @@ class ImportView(BaseView):
     @expose('/bookmarklet.js')
     def bookmarklet(self):
         return self.render('admin/import_bookmarklet.js')
+
+    @expose('/coverart.js/', methods=('POST',))
+    def coverart(self):
+        if not User.query.get(request.form.get('owner')):
+            return jsonify({'error': 'invalid owner'}), 400
+
+        c = UserCoverArt(cover=resize_and_upload(request.files['cover'], 'CHANNEL'),
+                owner=request.form.get('owner')).save()
+        return jsonify({'id': str(c.cover)})
