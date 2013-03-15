@@ -91,7 +91,7 @@ class Resizer(object):
         orig_ext = getattr(self.image_path, 'filename', '').rsplit('.', 1)[-1]
         if not orig_ext:
             format = self.orig_img.format
-            orig_ext = next(e for e, f in Image.EXTENSION.items() if f == format)[1:]
+            orig_ext = next(e for e, f in sorted(Image.EXTENSION.items(), reverse=True) if f == format)[1:]
         return orig_ext
 
 
