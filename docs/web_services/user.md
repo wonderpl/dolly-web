@@ -632,7 +632,7 @@ Additionally, the order in which the video ids occur in the list will dictate th
 will be returned in the `GET` above.
 
 ```http
-GET /ws/USERID/channels/CHANNELID/videos/ HTTP/1.1
+PUT /ws/USERID/channels/CHANNELID/videos/ HTTP/1.1
 Content-Type: application/json
 Authorization: Bearer TOKEN
 
