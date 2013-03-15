@@ -88,7 +88,7 @@ Cache-Control: public, max-age=3600
           "owner": {
             "avatar_thumbnail_url": "http://path/to/avatar/small.jpg",
             "id": "Tr3dHIt5_K9qdGtR",
-            "name": "joblomovienetwork"
+            "display_name": "joblomovienetwork"
           },
           "resource_url": "http://base/ws/USERID/channels/CHANNELID/",
           "id": "UCRX7UEyE8kp35mPrgC2sosA",
@@ -137,7 +137,7 @@ Cache-Control: public, max-age=3600
     "cover_thumbnail_large_url": "http://path/to/channel/large.jpg",
     "owner": {
      "id": "Unique user id",
-     "name": "User display name",
+     "display_name": "User display name",
      "avatar_thumbnail_url": "https://path/to/avatar/small.jpg"
     },
     "subscribe_count": 119

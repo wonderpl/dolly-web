@@ -16,7 +16,7 @@ Authorization: Bearer TOKEN
 ```
 
 Responds with user information (names & avatar) and channels.
-If `Bearer` token matches requested `USERID` then private channels will be included.
+
 The token is not required when accessing other user's data.
 
 ```http
@@ -25,21 +25,59 @@ Content-Type: application/json
 Cache-Control: public, max-age=60
 
 {
-  "name": "username",
+  "id": "userid",
+  "username": "username",
   "display_name": "display name",
   "avatar_thumbnail_url": "http://path/to/avatar/small.jpg",
-  "channels": [
-    {
-      "id": "channelid",
-      "resource_url": "http://path/to/users/channels/channelid/",
-      "description": "channel description",
-      "title": "channel title",
-      "subscribe_count": 123,
-      "cover_background_url": "http://path/to/channel/bg.jpg",
-      "cover_thumbnail_small_url": "http://path/to/channel/small.jpg",
-      "cover_thumbnail_large_url": "http://path/to/channel/large.jpg"
-    }
-  ]
+  "channels": {
+    "total": 1,
+    "items": [
+      {
+        "id": "channelid",
+        "resource_url": "http://path/to/users/channels/channelid/",
+        "description": "channel description",
+        "title": "channel title",
+        "subscribe_count": 123,
+        "cover_background_url": "http://path/to/channel/bg.jpg",
+        "cover_thumbnail_small_url": "http://path/to/channel/small.jpg",
+        "cover_thumbnail_large_url": "http://path/to/channel/large.jpg"
+      }
+    ]
+  }
+}
+```
+
+If `Bearer` token matches requested `USERID` then private channels will be included
+and additional fields and resource url links will be returned.
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+Cache-Control: private
+
+{
+ "id": "userid",
+ "username": "username",
+ "display_name": "first last",
+ "first_name": "first",
+ "last_name": "last",
+ "email": "user@mail.com",
+ "avatar_thumbnail_url": "http://path/to/avatar.img",
+ "date_of_birth": "1900-01-21",
+ "subscriptions": {
+  "resource_url": "https://path/to/subscriptions/resource/base/url/"
+ },
+ "activity": {
+  "resource_url": "https://path/to/activity/resource/base/url/"
+ },
+ "cover_art": {
+  "resource_url": "https://path/to/cover_art/resource/base/url/"
+ },
+ "channels": {
+  "resource_url": "https://path/to/channels/resource/base/url/"
+   "total": 0,
+   "items": []
+ }
 }
 ```
 
@@ -144,7 +182,7 @@ Cache-Control: public, max-age=60
  "subscribe_count": 119,
  "owner": {
   "id": "Unique user id",
-  "name": "User display name",
+  "display_name": "User display name",
   "avatar_thumbnail_url": "https://path/to/avatar/small.jpg"
  },
  "videos": {
@@ -180,8 +218,7 @@ Content-Type: application/json
 {"error":"insufficient_scope"}
 ```
 
-Channel Create
-==============
+### Create
 
 To create a new channel `POST` json data to channels service.
 
@@ -237,8 +274,7 @@ Content-Type: application/json
 }
 ```
 
-Channel Updates
-===============
+### Update
 
 To change the data for a channel `PUT` new json data to the resource url, as per Channel Create above.
 
@@ -268,8 +304,7 @@ Location: http://some_doman/ws/USERID/channels/CHANNELID/
 }
 ```
 
-Channel Privacy
-===============
+### Update privacy
 
 To toggle a channel's privacy settings `PUT` json data to a channel's `public` resource.
 
@@ -320,6 +355,83 @@ Responds with  `204` on success
 ```http
 HTTP/1.1 204 NO CONTENT
 Content-Type: application/json
+```
+
+Channel Videos
+==============
+
+### Get
+
+Get a list of videos for a channel.
+
+```http
+GET /ws/USERID/channels/CHANNELID/videos/ HTTP/1.1
+Authorization: Bearer TOKEN
+```
+
+Returns an ordered list of videos for a channel.
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+["VIDEOID", "VIDEOID"]
+```
+
+### Update
+
+To add or delete videos from a channel, send a list of the videos that the channel needs to contain.
+Any videos not included, but are currently in the channel, will be removed.
+
+Additionally, the order in which the video ids occur in the list will dictate the order in which they
+will be returned in the `GET` above.
+
+```http
+PUT /ws/USERID/channels/CHANNELID/videos/ HTTP/1.1
+Content-Type: application/json
+Authorization: Bearer TOKEN
+
+["VIDEOID", "VIDEOID"]
+```
+
+```http
+HTTP/1.1 204 NO CONTENT
+Content-Type: application/json
+```
+
+Possible errors.
+
+If the channel is private and the owner's token is not provided then a 403 will be returned.
+
+```http
+HTTP/1.1 403 FORBIDDEN
+Content-Type: application/json
+
+{"error":"insufficient_scope"}
+```
+
+Missing list if video ids
+
+```http
+HTTP/1.1 400 BAD REQUEST
+Content-Type: application/json
+
+{
+    "error": "invalid_request",
+    "message": "List can be empty, but must be present"
+}
+```
+
+Item in list is not a string
+
+```http
+HTTP/1.1 400 BAD REQUEST
+Content-Type: application/json
+
+{
+    "error": "invalid_request",
+    "message": "List item must be a video id"
+}
 ```
 
 User Activity
@@ -593,88 +705,12 @@ Cache-Control: private, max-age=60
      "owner": {
       "id": "BJsFQkw7SpyNfi6xOBlA1Q",
       "resource_url": "http://rockpack.com/ws/BJsFQkw7SpyNfi6xOBlA1Q/",
-      "name": "some user",
+      "display_name": "some user",
       "avatar_thumbnail_url": "http://media.rockpack.com/images/avatar/thumbnail_small/b1V2MgQqT5u-gT2iTFUjJw.jpg"
      }
     }
    }
   ]
  }
-}
-```
-
-# Channel Videos
-
-### Get
-
-Get a list of videos for a channel.
-
-```http
-GET /ws/USERID/channels/CHANNELID/videos/ HTTP/1.1
-Authorization: Bearer TOKEN
-```
-
-Returns an ordered list of videos for a channel.
-
-```http
-HTTP/1.1 200 OK
-Content-Type: application/json
-
-["VIDEOID", "VIDEOID"]
-```
-
-### Add/Delete Videos
-
-To add or delete videos from a channel, send a list of the videos that the channel needs to contain.
-Any videos not included, but are currently in the channel, will be removed.
-
-Additionally, the order in which the video ids occur in the list will dictate the order in which they
-will be returned in the `GET` above.
-
-```http
-PUT /ws/USERID/channels/CHANNELID/videos/ HTTP/1.1
-Content-Type: application/json
-Authorization: Bearer TOKEN
-
-["VIDEOID", "VIDEOID"]
-```
-
-```http
-HTTP/1.1 204 NO CONTENT
-Content-Type: application/json
-```
-
-Possible errors.
-
-If the channel is private and the owner's token is not provided then a 403 will be returned.
-
-```http
-HTTP/1.1 403 FORBIDDEN
-Content-Type: application/json
-
-{"error":"insufficient_scope"}
-```
-
-Missing list if video ids
-
-```http
-HTTP/1.1 400 BAD REQUEST
-Content-Type: application/json
-
-{
-    "error": "invalid_request",
-    "message": "List can be empty, but must be present"
-}
-```
-
-Item in list is not a string
-
-```http
-HTTP/1.1 400 BAD REQUEST
-Content-Type: application/json
-
-{
-    "error": "invalid_request",
-    "message": "List item must be a video id"
 }
 ```
