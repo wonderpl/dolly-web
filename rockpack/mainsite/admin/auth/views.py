@@ -35,8 +35,11 @@ def oauth_callback(response, access_token):
         response = google_oauth.get('https://www.googleapis.com/oauth2/v1/userinfo?alt=json', access_token=access_token).response
         if response.status_code != 200:
             current_app.logger.error('Failed to retrieve userinfo with: {}'.format(response.content))
-            return 'Error fetching userinfo', 500
-        email = response.json.get('email')
+            return 'Error fetching userinfo', 500 
+        if callable(response.json):
+            email = response.json().get('email')
+        else:
+            email = response.json.get('email')
         user = User.register_token(access_token, email)
         if not user:
             return 'No registered email address found', 401
