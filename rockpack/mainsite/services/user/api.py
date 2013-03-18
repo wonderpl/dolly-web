@@ -219,6 +219,19 @@ class UserWS(WebService):
         user.save()
         return 204
 
+    @expose_ajax('/<userid>/avatar/', cache_age=60)
+    def get_avatar(self, userid):
+        user = User.query.get_or_404(userid)
+        return None, 302, [('Location', user.avatar.thumbnail_large)]
+
+    @expose_ajax('/<userid>/avatar/', methods=['PUT'])
+    @check_authorization(self_auth=True)
+    def set_avatar(self, userid):
+        user = User.query.get_or_404(userid)
+        user.avatar = process_image(User.avatar)
+        user.save()
+        return None, 204, [('Location', user.avatar.thumbnail_large)]
+
     @expose_ajax('/<userid>/activity/', cache_age=60, cache_private=True)
     @check_authorization(self_auth=True)
     def get_activity(self, userid):

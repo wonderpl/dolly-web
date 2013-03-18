@@ -142,6 +142,40 @@ Content-Type: application/json
 }
 ```
 
+Avatar
+======
+
+### Update
+
+`PUT` new image data to update the users avatar.
+
+```http
+PUT /ws/USERID/avatar/ HTTP/1.1
+Authorization: Bearer TOKEN
+Content-Type: image/png
+
+.........IMAGE DATA....
+```
+
+If invalid data:
+
+```http
+HTTP/1.1 400 BAD REQUEST
+Content-Type: application/json
+
+{
+ "error": "invalid_request",
+ "message": "cannot identify image file"
+}
+```
+
+If successful:
+
+```http
+HTTP/1.1 204 OK
+Location: http://path/uploaded/media.png
+```
+
 Channel
 =======
 
