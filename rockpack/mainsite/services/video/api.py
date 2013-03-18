@@ -31,7 +31,8 @@ def channel_dict(channel, with_owner=True, owner_url=False):
         ch_data['owner'] = dict(
             id=channel.owner_rel.id,
             resource_url=channel.owner_rel.get_resource_url(owner_url),
-            name=channel.owner_rel.display_name,
+            display_name=channel.owner_rel.display_name,
+            name=channel.owner_rel.display_name,    # XXX: backwards compatibility
             avatar_thumbnail_url=channel.owner_rel.avatar.thumbnail_small,
         )
     ch_data.update(images)

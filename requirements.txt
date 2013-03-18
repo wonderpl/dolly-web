@@ -14,3 +14,4 @@ git+git://github.com/StartTheShift/pyoauth2.git@94b1e8e5bfe0a1aa220f1645c810ab2f
 alembic==0.4.2
 raven==3.1.17
 blinker==1.2
+requests==1.1.0

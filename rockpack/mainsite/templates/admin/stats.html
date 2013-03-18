@@ -1,0 +1,48 @@
+{% extends 'admin/master.html' %}
+{% block body %}
+<div>
+    {% if not current_user.is_authenticated() %}
+    <a href="{{ url_for('login') }}">Sign in with your Google ID</a>
+    {% else %}
+    <p>
+    <h4>Channel overview</h4>
+    <ul>
+        <li>{{ total_channels }} total channels</li>
+        <li>{{ public_channels }} public/visible channels</li>
+        <li>{{ total_channels_today}} all channels added today</li>
+    </ul>
+    </p>
+    <p>
+    <h4>Channel filters</h4>
+    <ul>
+        <li><a href="{{ url_for('channel.index_view') }}?flt1_8=1&flt0_10=1">Visible/public channls</a></li>
+        <li><a href="{{ url_for('channel.index_view') }}?flt1_22={{ now }}+00%3A00%3A00">Channels created today</a></li>
+    </ul>
+    </p>
+    <p>
+    </p>
+    <h4>Video Count Per Sub-Category</h4>
+    <ul>
+        <li>{{ cat_count }} sub categories with visible videos</li>
+    </ul>
+    <table>
+    <tr><th align="left">Locale</th><th align="left">Category</th><th align="left">Sub-Category</th><th>Video Count</th><tr>
+        {% for v in cat_group %}
+    <tr><td style="padding-right:20px">{{ v[0] }}</td><td style="padding-right:20px">{{ v[1] }}</td><td style="padding-right:20px">{{ v[2] }}</td><td align="right">{{ v[3] }}</td></tr>
+    {% endfor %}
+    </table>
+
+    <h4>Channel Count Per Sub-Category</h4>
+    <ul>
+        <li>{{ channel_count }} sub categories with visible/public channels</li>
+    </ul>
+    <table>
+    <tr><th align="left">Locale</th><th align="left">Category</th><th align="left">Sub-Category</th><th>Channel Count</th><tr>
+        {% for v in channel_group %}
+    <tr><td style="padding-right:20px">{{ v[0] }}</td><td style="padding-right:20px">{{ v[1] }}</td><td style="padding-right:20px">{{ v[2] }}</td><td align="right">{{ v[3] }}</td></tr>
+    {% endfor %}
+    </table>
+
+    {% endif %}
+</div>
+{% endblock %}

@@ -28,6 +28,7 @@ WEBSERVICE_BASE = '/ws'
 
 
 def run_setups():
+    import rockpack.mainsite.web.views
     for import_name, name in REGISTER_SETUPS:
         setup_func = getattr(__import__(
             import_name,

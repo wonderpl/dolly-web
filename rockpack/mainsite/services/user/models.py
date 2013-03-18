@@ -57,7 +57,7 @@ class User(db.Model):
         # check each record for matching password but we could consider
         # taking first only or applying unique constraint
         for user in cls.query.filter_by(is_active=True, **filter):
-            if user.check_password(password):
+            if password is None or user.check_password(password):
                 return user
 
     def set_password(self, password):

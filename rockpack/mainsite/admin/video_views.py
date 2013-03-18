@@ -87,6 +87,13 @@ class Category(AdminView):
 
     inline_models = (ChildCategoryFormAdmin(models.Category),)
 
+    def scaffold_filters(self, name):
+        filters = super(Category, self).scaffold_filters(name)
+        # Allow filtering by "parent is NULL":
+        if name == 'parent':
+            filters[0].clean = lambda v: None if v == '' else v
+        return filters
+
 
 class CategoryMap(AdminView):
     model_name = models.CategoryMap.__tablename__
@@ -113,15 +120,33 @@ class ChannelLocaleMetaFormAdmin(InlineFormAdmin):
         return form
 
 
+def _format_channel_metas(context, channel, name):
+    text = ''
+    for clm in models.ChannelLocaleMeta.query.filter_by(channel=channel.id):
+        cat = models.Category.query.get(clm.category)
+        text+= '<p>' + clm.locale + '</br>{}/{}'.format(cat.parent_category.name, cat.name) + '</p>'
+    return Markup(text)
+
+
+def _format_channel_video_count(context, channel, name):
+    count = models.VideoInstance.query.filter(models.VideoInstance.channel==channel.id).count()
+    return Markup('{}'.format(count))
+
+
+
 class Channel(AdminView):
     model_name = 'channel'
     model = models.Channel
 
     form_overrides = dict(owner_rel=wtf.TextField)
+    column_auto_select_related = True
+    column_display_all_relations = True
 
-    column_list = ('title', 'owner', 'cover.thumbnail_large')
-    column_filters = ('owner', 'title', 'metas')
+    column_list = ('title', 'owner_rel', 'public', 'cover.thumbnail_large', 'metas', 'video_count', 'date_added')
+    column_filters = ('owner', 'title', 'public', models.Channel.metas)
     column_searchable_list = ('title',)
+    column_formatters = dict(metas=_format_channel_metas,
+            video_count=_format_channel_video_count)
 
     inline_models = (ChannelLocaleMetaFormAdmin(models.ChannelLocaleMeta),)
 

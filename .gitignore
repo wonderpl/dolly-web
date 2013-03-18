@@ -32,3 +32,13 @@ nosetests.xml
 # local settings
 rockpack/mainsite/settings/local.py
 RELEASE-VERSION
+
+#Mac index
+.DS_Store
+
+#JS files
+public/
+node_modules/
+
+#virtual env
+env/

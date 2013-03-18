@@ -1,6 +1,8 @@
 import re
 import logging
 from datetime import date
+from cStringIO import StringIO
+import requests
 from flask import request, url_for, redirect, flash, jsonify
 from flask.ext import wtf, login
 from flask.ext.admin import BaseView, expose, form
@@ -11,6 +13,7 @@ from rockpack.mainsite.helpers.db import resize_and_upload
 from rockpack.mainsite.services.pubsubhubbub.api import subscribe
 from rockpack.mainsite.services.video.models import (
     Locale, Source, Category, Video, VideoLocaleMeta, Channel)
+from rockpack.mainsite.services.cover_art.models import UserCoverArt
 from rockpack.mainsite.services.user.models import User
 from .models import AdminLogRecord
 
@@ -22,6 +25,8 @@ class ImportForm(form.BaseForm):
     id = wtf.TextField(validators=[wtf.validators.required()])
     locale = form.Select2Field(default='en-gb')
     category = form.Select2Field(coerce=int, default=-1)
+    cover = wtf.FileField(validators=[wtf.Optional()])
+    cover_url = wtf.TextField(validators=[wtf.Optional(), wtf.URL()])
     commit = wtf.HiddenField()
     user = wtf.TextField()
     channel = wtf.TextField()
@@ -30,6 +35,20 @@ class ImportForm(form.BaseForm):
     def validate(self):
         if not super(ImportForm, self).validate():
             return
+
+        if request.files.get('cover'):
+            cover = request.files['cover']
+        elif self.cover_url.data:
+            cover = StringIO(requests.get(self.cover_url.data).content)
+        else:
+            cover = None
+        try:
+            self.cover.data = resize_and_upload(cover, 'CHANNEL') if cover else ''
+        except IOError, e:
+            self.cover.errors = [str(e)]
+            return
+        UserCoverArt(cover=self.cover.data, owner=self.user.data).save()
+
         if self.commit.data and self.category.data == -1:
             # category is required before commit
             self.category.errors = ['Please select a category']
@@ -82,7 +101,7 @@ class ImportView(BaseView):
                     title=channel.split(':', 1)[1],
                     owner=user,
                     description=form.channel_description.data,
-                    cover='',
+                    cover=form.cover.data,
                     locale=form.locale.data,
                     category=form.category.data)
                 self.record_action('created', channel)
@@ -104,7 +123,7 @@ class ImportView(BaseView):
         else:
             avatar = ''
         user = User(
-            username=form.username.data,
+            username=form.username.data.strip(),
             password_hash='',
             first_name=form.first_name.data,
             last_name=form.last_name.data,
@@ -180,7 +199,7 @@ class ImportView(BaseView):
         prefix = request.args.get('prefix', '')
         exact_name = request.args.get('exact_name', '')
         if exact_name:
-            return jsonify(User.query.filter(User.username==exact_name).values(User.id, User.username))
+            return jsonify(User.query.filter(User.username == exact_name).values(User.id, User.username))
         if not re.match('^\w+$', prefix):
             prefix = None
         return jsonify(User.get_form_choices(prefix=prefix))
@@ -195,21 +214,30 @@ class ImportView(BaseView):
         prefix = request.args.get('prefix', '')
         exact_name = request.args.get('exact_name', '')
         if exact_name:
-            return jsonify(Channel.query.filter(Channel.title==exact_name).values(Channel.id, Channel.title))
+            return jsonify(Channel.query.filter(Channel.title == exact_name).values(Channel.id, Channel.title))
         if prefix:
             if not re.match('^[\w ]+$', prefix):
                 prefix = None
             return jsonify(Channel.query.filter(
-                    Channel.title.ilike(prefix + '%')).values(Channel.id, Channel.title))
+                           Channel.title.ilike(prefix + '%')).values(Channel.id, Channel.title))
         return []
 
     @expose('/video.js')
     def videos(self):
         vid = request.args.get('vid', '')
         if request.args.get('instance_id'):
-            return jsonify(VideoLocaleMeta.query.join(Video).filter(VideoLocaleMeta.id==request.args.get('instance_id')).values(VideoLocaleMeta.video, Video.title))
+            return jsonify(VideoLocaleMeta.query.join(Video).filter(VideoLocaleMeta.id == request.args.get('instance_id')).values(VideoLocaleMeta.video, Video.title))
         return jsonify(Video.query.filter(Video.id.ilike(vid + '%')).values(Video.id, Video.title))
 
     @expose('/bookmarklet.js')
     def bookmarklet(self):
         return self.render('admin/import_bookmarklet.js')
+
+    @expose('/coverart.js/', methods=('POST',))
+    def coverart(self):
+        if not User.query.get(request.form.get('owner')):
+            return jsonify({'error': 'invalid owner'}), 400
+
+        c = UserCoverArt(cover=resize_and_upload(request.files['cover'], 'CHANNEL'),
+                         owner=request.form.get('owner')).save()
+        return jsonify({'id': str(c.cover)})

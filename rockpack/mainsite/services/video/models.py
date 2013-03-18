@@ -52,7 +52,10 @@ class Category(db.Model):
     external_category_maps = relationship('ExternalCategoryMap', backref='category_ref')
 
     def __unicode__(self):
-        return self.name
+        parent_name = ''
+        if self.parent_category:
+            parent_name = self.parent_category.name + ' >'
+        return '({}) {} {}'.format(self.locales.name, parent_name, self.name)
 
     @classmethod
     def map_to(cls, category, locale):

@@ -63,12 +63,15 @@ FAVOURITE_CHANNEL = 'Favourites', 'My favourite videos', ''
 # Path to default avatar image used when creating users
 DEFAULT_AVATAR = ''
 
+DEFAULT_EMAIL_SOURCE = 'rockpack <noreply@rockpack.com>'
+
 # Toggle to enable test url
 TEST_EXTERNAL_SYSTEM = False
 
 # Credentials for "rockpack-dev" app on facebook
 FACEBOOK_APP_ID = '131721883664256'
 FACEBOOK_APP_SECRET = '9dc1d5cf8d5f9b96284303b3ab4d1d15'
+FACEBOOK_APP_NAMESPACE = 'rockpack-dev'
 
 # Credentials for "rockpack dev" app on twitter
 TWITTER_CONSUMER_KEY = '0Pxmm1W7VdsxQFF1nsB9Jg'

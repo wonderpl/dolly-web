@@ -37,6 +37,51 @@ def setup_admin(app):
         category='Permissions'))
     """
 
+    from datetime import datetime
+    from flask.ext.admin import BaseView, expose
+    from rockpack.mainsite.services.video import models
+
+    class Stats(BaseView):
+        @expose('/')
+        def index(self):
+            channels = models.Channel.query
+            public = channels.join(models.ChannelLocaleMeta).filter(models.ChannelLocaleMeta.visible==True, models.Channel.public==True)
+            from sqlalchemy import func
+            from flask import g
+            from sqlalchemy.orm import aliased
+            parent = aliased(models.Category)
+            cat_group = g.session.query(
+                    models.VideoLocaleMeta.locale, parent.name, models.Category.name, func.count(models.VideoLocaleMeta.id)
+                    ).filter(models.Category.parent==parent.id, models.VideoLocaleMeta.category==models.Category.id
+                    ).filter(models.Category.parent!=1, models.VideoLocaleMeta.visible==True
+                    ).filter_by(
+                    ).group_by(models.Category.parent_category, models.Category.name, parent.name, models.VideoLocaleMeta.locale
+                    ).order_by(models.VideoLocaleMeta.locale.desc(), parent.name.desc())
+            cat_count = cat_group.count()
+
+            channel_group = g.session.query(
+                    models.ChannelLocaleMeta.locale, parent.name, models.Category.name, func.count(models.ChannelLocaleMeta.id)
+                    ).filter(models.Category.parent==parent.id, models.ChannelLocaleMeta.category==models.Category.id
+                    ).filter(models.Category.parent!=1, models.ChannelLocaleMeta.visible==True
+                    ).join(models.Channel, models.Channel.id==models.ChannelLocaleMeta.channel
+                    ).filter(models.Channel.public==True
+                    ).group_by(models.Category.parent_category, models.Category.name, parent.name, models.ChannelLocaleMeta.locale
+                    ).order_by(models.ChannelLocaleMeta.locale.desc(), parent.name.desc())
+            channel_count = channel_group.count()
+
+            return self.render('admin/stats.html',
+                    **{
+                        'now': datetime.now().strftime('%Y-%m-%d'),
+                        'total_channels': channels.count(),
+                        'total_channels_today': channels.filter(models.Channel.date_added>=datetime.now().strftime('%Y-%m-%d')).count(),
+                        'public_channels': public.count(),
+                        'cat_group': cat_group.all(),
+                        'cat_count': cat_count,
+                        'channel_group': channel_group.all(),
+                        'channel_count': channel_count,
+                })
+
+    admin.add_view(Stats(name='Stats'))
     admin.add_view(user_views.UserView(name='Users', endpoint='user'))
     admin.add_view(import_views.ImportView(name='Import', endpoint='import'))
 

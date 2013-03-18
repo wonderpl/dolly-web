@@ -161,15 +161,6 @@ def _channel_info_response(channel, locale, paging, owner_url):
     return data
 
 
-def _user_info_response(user, channels):
-    return dict(
-        name=user.username,
-        display_name=user.display_name,
-        avatar_thumbnail_url=user.avatar.thumbnail_small,
-        channels=channels,
-    )
-
-
 class UserWS(WebService):
 
     endpoint = '/'
@@ -179,7 +170,14 @@ class UserWS(WebService):
         user = User.query.get_or_404(userid)
         channels = [video_api.channel_dict(c, with_owner=False, owner_url=False) for c in
                     Channel.query.filter_by(owner=user.id, deleted=False, public=True)]
-        return _user_info_response(user, channels)
+        return dict(
+            id=user.id,
+            name=user.username,     # XXX: backwards compatibility
+            username=user.username,
+            display_name=user.display_name,
+            avatar_thumbnail_url=user.avatar.thumbnail_small,
+            channels=dict(items=channels, total=len(channels)),
+        )
 
     @expose_ajax('/<userid>/', cache_private=True)
     @check_authorization()
@@ -189,10 +187,20 @@ class UserWS(WebService):
         user = g.authorized.user
         channels = [video_api.channel_dict(c, with_owner=False, owner_url=True) for c in
                     Channel.query.filter_by(owner=user.id, deleted=False)]
-        response = _user_info_response(user, channels)
-        for key in 'activity', 'cover_art', 'subscriptions':
-            response[key] = dict(resource_url=url_for('userws.get_%s' % key, userid=userid))
-        return response
+        info = dict(
+            id=user.id,
+            username=user.username,
+            display_name=user.display_name,
+            first_name=user.first_name,
+            last_name=user.last_name,
+            email=user.email,
+            avatar_thumbnail_url=user.avatar.thumbnail_small,
+            date_of_birth=user.date_of_birth.isoformat(),
+        )
+        for key in 'channels', 'activity', 'cover_art', 'subscriptions':
+            info[key] = dict(resource_url=url_for('userws.get_%s' % key, userid=userid))
+        info['channels'].update(items=channels, total=len(channels))
+        return info
 
     @expose_ajax('/<userid>/<any("username"):attribute_name>/', methods=('PUT',))
     @check_authorization(self_auth=True)
@@ -205,9 +213,7 @@ class UserWS(WebService):
             abort(400, message='Not a valid username')
         suggested = User.suggested_username(username)
         if suggested != username:
-            abort(400,
-                message='Username is already taken',
-                suggested_username=suggested)
+            abort(400, message='Username is already taken', suggested_username=suggested)
         user.username = username
         user.username_updated = True
         user.save()
@@ -234,6 +240,13 @@ class UserWS(WebService):
                             form.action.data,
                             form.video_instance.data,
                             self.get_locale())
+
+    @expose_ajax('/<userid>/channels/', cache_private=True)
+    @check_authorization(self_auth=True)
+    def get_channels(self, userid):
+        channels = [video_api.channel_dict(c, with_owner=False, owner_url=True) for c in
+                    Channel.query.filter_by(owner=userid, deleted=False)]
+        return dict(channels=dict(items=channels, total=len(channels)))
 
     @expose_ajax('/<userid>/channels/', methods=('POST',))
     @check_authorization(self_auth=True)
