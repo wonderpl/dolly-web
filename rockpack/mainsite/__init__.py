@@ -1,3 +1,4 @@
+import logging
 from flask import Flask
 
 #from rockpack.services.video import api
@@ -56,5 +57,7 @@ def import_services():
 
 
 def init_app():
+    if not app.debug:
+        app.logger.addHandler(logging.StreamHandler())
     run_setups()
     import_services()

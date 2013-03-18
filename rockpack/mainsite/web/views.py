@@ -4,7 +4,7 @@ from flask import request, json, render_template
 from flask.ext import wtf
 from rockpack.mainsite import app
 from rockpack.mainsite.core.token import parse_access_token
-from rockpack.mainsite.core.webservice import secure_view
+from rockpack.mainsite.core.webservice import secure_view, JsonReponse
 from rockpack.mainsite.services.user.models import User
 from rockpack.mainsite.services.oauth.api import record_user_event
 
@@ -62,3 +62,12 @@ def reset_password():
             user.save()
             record_user_event(user.username, 'password changed')
     return render_template('web/reset_password.html', **locals())
+
+
+@app.errorhandler(500)
+def server_error(error):
+    message = getattr(error, 'message', str(error))
+    if request.path.startswith('/ws/'):
+        return JsonReponse(dict(error='internal_error', message=message), 500)
+    else:
+        return render_template('server_error.html', message=message), 500
