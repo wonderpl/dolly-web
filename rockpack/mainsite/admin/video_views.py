@@ -124,14 +124,13 @@ def _format_channel_metas(context, channel, name):
     text = ''
     for clm in models.ChannelLocaleMeta.query.filter_by(channel=channel.id):
         cat = models.Category.query.get(clm.category)
-        text+= '<p>' + clm.locale + '</br>{}/{}'.format(cat.parent_category.name, cat.name) + '</p>'
+        text += '<p>' + clm.locale + '</br>{}/{}'.format(cat.parent_category.name, cat.name) + '</p>'
     return Markup(text)
 
 
 def _format_channel_video_count(context, channel, name):
-    count = models.VideoInstance.query.filter(models.VideoInstance.channel==channel.id).count()
+    count = models.VideoInstance.query.filter(models.VideoInstance.channel == channel.id).count()
     return Markup('{}'.format(count))
-
 
 
 class Channel(AdminView):
@@ -139,6 +138,9 @@ class Channel(AdminView):
     model = models.Channel
 
     form_overrides = dict(owner_rel=wtf.TextField)
+    form_args = dict(
+        ecommerce_url=dict(validators=[wtf.Optional()]),
+    )
     column_auto_select_related = True
     column_display_all_relations = True
 
