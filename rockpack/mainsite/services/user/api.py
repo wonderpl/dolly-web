@@ -195,7 +195,7 @@ class UserWS(WebService):
             last_name=user.last_name,
             email=user.email,
             avatar_thumbnail_url=user.avatar.thumbnail_small,
-            date_of_birth=user.date_of_birth.isoformat(),
+            date_of_birth=user.date_of_birth.isoformat() if user.date_of_birth else None,
         )
         for key in 'channels', 'activity', 'cover_art', 'subscriptions':
             info[key] = dict(resource_url=url_for('userws.get_%s' % key, userid=userid))
