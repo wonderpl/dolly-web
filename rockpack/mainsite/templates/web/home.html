@@ -2,7 +2,16 @@
 <html>
   <head>
     <title>rockpack</title>
-    <script src="/public/js/vendor-scripts.min.js"></script>
+    {% assets filters="rjsmin", output="gen/lib.%(version)s.js",
+              "js/vendor/jquery.js", "js/vendor/acme.js" %}
+      <script type="text/javascript" src="{{ ASSET_URL }}"></script>
+    {% endassets %}
+    {% assets filters="coffeescript,rjsmin", output="gen/home.%(version)s.js", "js/home/test.coffee" %}
+      <script type="text/javascript" src="{{ ASSET_URL }}"></script>
+    {% endassets %}
+    {% assets filters="less", output="gen/home.%(version)s.css", "css/home/test.less" %}
+      <link type="text/css" href="{{ ASSET_URL }}"/>
+    {% endassets %}
   </head>
   <body>
     <h1>rockpack</h1>

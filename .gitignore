@@ -42,3 +42,8 @@ node_modules/
 
 #virtual env
 env/
+
+# webassets
+rockpack/mainsite/static/.webassets-manifest
+rockpack/mainsite/static/.webassets-cache
+rockpack/mainsite/static/gen
