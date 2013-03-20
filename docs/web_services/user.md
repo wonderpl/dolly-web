@@ -343,11 +343,11 @@ Location: http://some_doman/ws/USERID/channels/CHANNELID/
 To toggle a channel's privacy settings `PUT` json data to a channel's `public` resource.
 
 ```http
-PUT /ws/USERID/channel/CHANNELID/public/ HTTP/1.1
+PUT /ws/USERID/channels/CHANNELID/public/ HTTP/1.1
 Content-Type: application/json
 Authorization: Bearer TOKEN
 
-"false"
+false
 ```
 
 Parameter      | Required? | Value             | Description
@@ -360,7 +360,7 @@ Returns current state for `public`
 HTTP/1.1 200 OK
 Content-Type: application/json
 
-"false"
+false
 ```
 
 Possible errors.
