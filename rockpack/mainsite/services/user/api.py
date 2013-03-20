@@ -295,7 +295,7 @@ class UserWS(WebService):
             abort(400, form_errors="Value should be 'true' or 'false'")
         channel.public = request.json
         channel = channel.save()
-        return '{}'.format(str(channel.public).lower())
+        return channel.public
 
     @expose_ajax('/<userid>/channels/<channelid>/', methods=('PUT',))
     @check_authorization(self_auth=True)
