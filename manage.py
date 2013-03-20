@@ -1,8 +1,10 @@
 #!/usr/bin/python2.7
 from flask.ext.script import Manager
+from flask.ext.assets import ManageAssets
 from rockpack.mainsite import app, init_app
 
 manager = Manager(app)
+manager.add_command("assets", ManageAssets())
 
 
 @manager.command
