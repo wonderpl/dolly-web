@@ -1,13 +1,20 @@
-#!/usr/bin/env python
-import argparse
+#!/usr/bin/python2.7
+from flask.ext.script import Manager
+from rockpack.mainsite import app, init_app
+
+manager = Manager(app)
 
 
-def test(options):
+@manager.command
+def test():
+    """Run tests"""
     import pytest
-    pytest.main(options[1])
+    pytest.main()
 
 
+@manager.command
 def recreate_db(options):
+    """Drops and re-creates database"""
     from rockpack import mainsite
     from rockpack.mainsite.core import dbapi
     db_url = mainsite.app.config['DATABASE_URL']
@@ -18,28 +25,13 @@ def recreate_db(options):
     dbapi.create_database(db_url, drop_if_exists=answer.lower() == 'y')
 
 
-def dbsync(options):
+@manager.command
+def syncdb(options):
+    """Create all db tables"""
     from rockpack.mainsite.core import dbapi
     dbapi.sync_database()
 
 
-def main():
-    parser = argparse.ArgumentParser()
-
-    subparsers = parser.add_subparsers()
-    test_parser = subparsers.add_parser('test', help='run pytests')
-    test_parser.set_defaults(func=test)
-
-    sync_parser = subparsers.add_parser('dbsync', help='syncs tables')
-    sync_parser.set_defaults(func=dbsync)
-
-    recreatedb_parser = subparsers.add_parser('recreatedb', help='drops and re-creates database')
-    recreatedb_parser.set_defaults(func=recreate_db)
-
-    args = parser.parse_known_args()
-    args[0].func(args)
-    parser.exit(1)
-
-
 if __name__ == '__main__':
-    main()
+    init_app()
+    manager.run()

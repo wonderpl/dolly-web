@@ -1,4 +1,5 @@
 from sqlalchemy import desc
+from sqlalchemy.orm.exc import NoResultFound
 from flask import abort, request, g
 from flask.ext import wtf
 from flask.ext.admin import form
@@ -105,14 +106,6 @@ def check_present(form, field):
         raise ValidationError('This field is required, but can be an empty string.')
 
 
-def verify_id_on_model(model, col='id'):
-    def f(form, field):
-        if field.data:
-            if not model.query.filter_by(**{col: field.data}).count():
-                raise ValidationError('Invalid {}: {}'.format(field.name, field.data))
-    return f
-
-
 class ChannelForm(form.BaseForm):
     def __init__(self, *args, **kwargs):
         super(ChannelForm, self).__init__(*args, **kwargs)
@@ -120,7 +113,7 @@ class ChannelForm(form.BaseForm):
 
     title = wtf.TextField(validators=[check_present])
     description = wtf.TextField(validators=[check_present])
-    category = wtf.TextField(validators=[check_present, verify_id_on_model(Category)])
+    category = wtf.TextField(validators=[check_present])
     cover = wtf.TextField(validators=[check_present])
     public = wtf.BooleanField(validators=[check_present])
 
@@ -145,8 +138,11 @@ class ChannelForm(form.BaseForm):
             raise ValidationError('Duplicate title')
 
     def validate_category(self, field):
-        if not (field.data and Category.query.get(field.data)):
-            raise ValidationError('invalid category')
+        if field.data:
+            try:
+                Category.query.filter_by(id=int(field.data)).one()
+            except (ValueError, NoResultFound):
+                raise ValidationError('invalid category')
 
 
 class ActivityForm(wtf.Form):
@@ -195,7 +191,7 @@ class UserWS(WebService):
             last_name=user.last_name,
             email=user.email,
             avatar_thumbnail_url=user.avatar.thumbnail_small,
-            date_of_birth=user.date_of_birth.isoformat(),
+            date_of_birth=user.date_of_birth.isoformat() if user.date_of_birth else None,
         )
         for key in 'channels', 'activity', 'cover_art', 'subscriptions':
             info[key] = dict(resource_url=url_for('userws.get_%s' % key, userid=userid))
@@ -218,6 +214,19 @@ class UserWS(WebService):
         user.username_updated = True
         user.save()
         return 204
+
+    @expose_ajax('/<userid>/avatar/', cache_age=60)
+    def get_avatar(self, userid):
+        user = User.query.get_or_404(userid)
+        return None, 302, [('Location', user.avatar.thumbnail_large)]
+
+    @expose_ajax('/<userid>/avatar/', methods=['PUT'])
+    @check_authorization(self_auth=True)
+    def set_avatar(self, userid):
+        user = User.query.get_or_404(userid)
+        user.avatar = process_image(User.avatar)
+        user.save()
+        return None, 204, [('Location', user.avatar.thumbnail_large)]
 
     @expose_ajax('/<userid>/activity/', cache_age=60, cache_private=True)
     @check_authorization(self_auth=True)
@@ -408,7 +417,7 @@ class UserWS(WebService):
     @expose_ajax('/<userid>/subscriptions/')
     @check_authorization(self_auth=True)
     def get_subscriptions(self, userid):
-        channels = user_subscriptions(userid).join(Channel).filter(Channel.deleted==False).values('id', 'owner')
+        channels = user_subscriptions(userid).join(Channel).filter(Channel.deleted == False).values('id', 'owner')
         items = [dict(resource_url=url_for('userws.delete_subscription_item',
                                            userid=userid, channelid=channelid),
                       channel_url=url_for('userws.channel_info',
