@@ -28,7 +28,10 @@ channel_mapping = {
         "properties": {
             "id": {"type": "string"},
             "locale": {"type": "string"},
-            "category": {"type": "integer"},
+            "category": {
+                "type": "integer",
+                "index": "analyzed"
+                },
             "subscribe_count": {"type": "integer"},
             "description": {
                 "type": "string",
@@ -48,6 +51,7 @@ channel_mapping = {
 
 
 from rockpack.mainsite.services.video.api import *
+from rockpack.mainsite.services.video.models import *
 from rockpack.mainsite import app, init_app
 
 init_app()
@@ -55,6 +59,9 @@ try:
     conn.indices.create_index('en-us')
 except:
     pass
+
+
+cat_map = {c[0]:c[1] for c in Category.query.filter(Category.parent!=None).values('id', 'parent')}
 
 def import_channels():
     print conn.indices.put_mapping("channels", channel_mapping, ["en-us"])
@@ -64,16 +71,22 @@ def import_channels():
         # the paging amount is
         for c in channels:
             # maybe bulk insert this?
-            print conn.index({
-                'locale': 'en-us', 'id': c['id'],
-                'category': c['category'],
-                'description': c['description'],
-                'description': c['description'],
-                'title': c['title']
-                },
-                'en-us',
-                'channels',
-                id=c['id'])
+            try:
+                print conn.index({
+                    'locale': 'en-us', 'id': c['id'],
+                    'category': [
+                        c['category'],
+                        cat_map[c['category']]
+                    ],
+                    'description': c['description'],
+                    'description': c['description'],
+                    'title': c['title']
+                    },
+                    'en-us',
+                    'channels',
+                    id=c['id'])
+            except:
+                print c
         conn.indices.refresh("en-us")
 
 def import_videos():
@@ -96,8 +109,19 @@ def import_videos():
                 'videos',
                 id=v['id'])
 
+
+from pprint import pprint as pp
 import pyes
-q = pyes.StringQuery('career')
-s = pyes.Search(q)
-r = conn.search(s)
-print [_ for _ in r]
+
+
+def test_q():
+    q = pyes.StringQuery('career')
+    s = pyes.Search(q)
+    r = conn.search(s)
+    print [_ for _ in r]
+
+
+def cat_filter():
+    q = pyes.TermQuery(field='category', value=123)
+    r = conn.search(query=pyes.Search(q), indices='en-us', doc_types=['channels'])
+    pp([_ for _ in r])

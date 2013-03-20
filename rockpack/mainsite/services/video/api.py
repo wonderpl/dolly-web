@@ -1,6 +1,7 @@
 from sqlalchemy.orm import contains_eager
 from sqlalchemy.sql.expression import desc
 from flask import g, request
+from rockpack.mainsite.core.dbapi import db
 from rockpack.mainsite.core.webservice import WebService, expose_ajax
 from rockpack.mainsite.services.video import models
 
@@ -102,7 +103,7 @@ def video_dict(video):
 
 
 def get_local_videos(loc, paging, with_channel=True, **filters):
-    videos = g.session.query(models.VideoInstance, models.Video,
+    videos = db.session.query(models.VideoInstance, models.Video,
                              models.VideoLocaleMeta).join(models.Video)
 
     if filters.get('channel'):
