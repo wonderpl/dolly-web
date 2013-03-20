@@ -1,6 +1,7 @@
-from flask import request, app
+from flask import request
+from rockpack.mainsite import app
 from rockpack.mainsite.core import youtube
-from rockpack.mainsite.core.webservice import WebService, expose
+from rockpack.mainsite.core.webservice import WebService, expose, secure_view
 from rockpack.mainsite.core.dbapi import commit_on_success
 from rockpack.mainsite.services.video.models import Video
 from .models import Subscription
@@ -24,6 +25,7 @@ class PubSubHubbubWS(WebService):
     endpoint = '/pubsubhubbub'
 
     @expose('/callback', methods=('GET', 'POST'))
+    @secure_view()
     def callback(self):
         try:
             id = int(request.args.get('id', ''))
