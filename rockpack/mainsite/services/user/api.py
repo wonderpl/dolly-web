@@ -213,7 +213,6 @@ class UserWS(WebService):
         user.username = username
         user.username_updated = True
         user.save()
-        return 204
 
     @expose_ajax('/<userid>/avatar/', cache_age=60)
     def get_avatar(self, userid):
@@ -377,7 +376,6 @@ class UserWS(WebService):
             g.session.rollback()
             app.logger.error('Failed to update channel videos with: {}'.format(str(e)))
             abort(500)
-        return 204
 
     @expose_ajax('/<userid>/channels/<channelid>/', methods=('DELETE',))
     @check_authorization(self_auth=True)
@@ -387,7 +385,6 @@ class UserWS(WebService):
             abort(403)
         channel.deleted = True
         channel.save()
-        return 204
 
     @expose_ajax('/<userid>/cover_art/', cache_age=60, cache_private=True)
     @check_authorization(self_auth=True)
