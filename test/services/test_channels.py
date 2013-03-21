@@ -73,14 +73,14 @@ class ChannelCreateTestCase(base.RockPackTestCase):
                     content_type='application/json',
                     headers=[get_auth_header(user.id)])
             data = json.loads(r.data)
-            self.assertEquals(data, 'false')
+            self.assertEquals(data, False)
 
             r = client.put(resource + 'public/',
                     data=json.dumps(True),
                     content_type='application/json',
                     headers=[get_auth_header(user.id)])
             data = json.loads(r.data)
-            self.assertEquals(data, 'true')
+            self.assertEquals(data, True)
 
     def test_failed_channel_create(self):
         with self.app.test_client() as client:
@@ -94,7 +94,7 @@ class ChannelCreateTestCase(base.RockPackTestCase):
             self.assertEquals(400, r.status_code)
             errors = json.loads(r.data)['form_errors']
             self.assertEquals({
-                "category": ["This field is required, but can be an empty string.", "invalid category"],
+                "category": ["This field is required, but can be an empty string."],
                 "public": ["This field is required, but can be an empty string."],
                 "description": ["This field is required, but can be an empty string."],
                 "cover":["This field is required, but can be an empty string."]},

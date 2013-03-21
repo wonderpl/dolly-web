@@ -5,4 +5,3 @@ from .views import homepage
 
 def setup_web(app):
     env = Environment(app)
-    #env.manifest = 'file'

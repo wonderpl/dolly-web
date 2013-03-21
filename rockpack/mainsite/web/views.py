@@ -22,12 +22,12 @@ def ws_request(url):
     return json.loads(response)
 
 
-@app.route('/')
+@app.route('/', subdomain=app.config.get('DEFAULT_SUBDOMAIN'))
 def homepage():
     return render_template('web/home.html')
 
 
-@app.route('/channel/<slug>/<channelid>/')
+@app.route('/channel/<slug>/<channelid>/', subdomain=app.config.get('DEFAULT_SUBDOMAIN'))
 def channel(slug, channelid):
     channel_data = ws_request('/ws/-/channels/%s/' % channelid)
     for instance in channel_data['videos']['items']:
