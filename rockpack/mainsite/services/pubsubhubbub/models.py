@@ -39,7 +39,7 @@ class Subscription(db.Model):
     def verify(self, topic, verify_token, lease_seconds, challenge):
         if self.topic == topic and self.verify_token == verify_token:
             self.verified = True
-            self.lease_seconds = lease_seconds
+            self.lease_expires = datetime.now() + timedelta(seconds=int(lease_seconds))
             self.save()
             return challenge
 
