@@ -1,0 +1,28 @@
+<div ng-controller="ChannelCtrl" id="ChannelCtrl">
+  <img ng-src="{{channel.cover_background_url}}" id="bgimage">
+  <div class="channelheader">
+    <div class="wrapper" ng-style="wrapperWidth()">
+      <ul>
+        <li><img class="user-profile" ng-src="{{channel.owner.avatar_thumbnail_url}}"></li>
+        <li class="title">
+          <h1>{{channel.title}}</h1>
+          <h4>BY {{channel.owner.name}}</h4>
+        </li>
+        <li class="right"><a href="#" class="btn btn-blue">Get the app</a> <h2>Curated with Rockpack on ipad</h2></li>
+      </ul>
+    </div>
+  </div>
+  <div id="channeloverlay" class="clearfix" when-scrolled="load_videos()">
+    <div ng-include src="'static/app/views/videoplayer.html'"></div>
+    <div class="wrapper" ng-style="wrapperWidth()">
+      <ul class="channeldetails">
+        <li><div class="bluenumber">{{channel.videos.total}}</div><div class="desc">Videos</div></li>
+        <li><div class="bluenumber">{{channel.subscribe_count}}</div><div class="desc">Followers</div></li>
+        <li class="channeldesc">{{channel.description}}</li>
+      </ul>
+      <ul id="videoslist">
+        <li ng-click="setCurrentVideo(video)" ng-repeat="video in channel.videos.items" video-cell></li>
+      </ul>
+    </div>
+  </div>
+</div>

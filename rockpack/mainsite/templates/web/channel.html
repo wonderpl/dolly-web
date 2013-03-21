@@ -12,6 +12,7 @@
       <h1>{{ title }}</h1>
       <script>
         var owner = {{ owner|tojson|safe }};
+        var videos = {{ videos|tojson|safe}};
       </script>
       {% if selected_instance %}
       <div class="player">

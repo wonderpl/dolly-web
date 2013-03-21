@@ -1,0 +1,15 @@
+<div ng-controller="VideoCtrl" ng-click="hide()" id="lightbox">
+  <div id="playercontainer">
+    <div id="player"></div>
+    <div id="playerinfo">
+      <div id="videotitle">{{videodata.title | truncate: 45}}</div>
+      <ul>
+        <li id="channelthumb"><img ng-src="{{channel.cover_thumbnail_small_url}}"></li>
+        <li>
+          <div id="channeltitle">{{channel.title}}</div>
+          <div id="username">{{channel.owner.name}}</div>
+        </li>
+      </il>
+    </div>
+  </div>
+</div>

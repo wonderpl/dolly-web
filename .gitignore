@@ -47,3 +47,6 @@ env/
 rockpack/mainsite/static/.webassets-manifest
 rockpack/mainsite/static/.webassets-cache
 rockpack/mainsite/static/gen
+
+# Local sql db
+rockpack/mainsite/rockpack.db
