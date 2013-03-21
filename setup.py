@@ -54,6 +54,15 @@ def get_git_version():
     return check_output(('git', 'describe', '--match', '[0-9].*')).strip()
 
 
+def parse_requirements(filename):
+    with open(filename) as f:
+        for line in f:
+            if not line.startswith('git+'):
+                yield line.strip()
+
+
+print list(parse_requirements('requirements.txt'))
+
 name = 'rockpack-mainsite'
 
 setup(
@@ -65,6 +74,7 @@ setup(
     long_description=open('README.md').read(),
     license="Copyright 2013 Rockpack Ltd",
     url="http://dev.rockpack.com/",
+    zip_safe=False,
     packages=find_packages(),
     include_package_data=True,
     data_files=[
@@ -73,6 +83,7 @@ setup(
     entry_points={
         'console_scripts': ['%s-manage = rockpack.mainsite.manager:run' % name]
     },
+    install_requires=list(parse_requirements('requirements.txt')),
     setup_requires=['setuptools_git'],
     tests_require=['pytest'],
     cmdclass={
