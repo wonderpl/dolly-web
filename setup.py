@@ -17,8 +17,10 @@ def get_git_version():
     from subprocess import check_output
     return check_output(('git', 'describe', '--match', '[0-9].*')).strip()
 
+name = 'rockpack-mainsite'
+
 setup(
-    name="rockpack-mainsite",
+    name=name,
     version=get_git_version(),
     author="rockpack ltd",
     author_email="developers@rockpack.com",
@@ -27,12 +29,13 @@ setup(
     license="Copyright 2013 Rockpack Ltd",
     url="http://dev.rockpack.com/",
     packages=find_packages(),
-    scripts=['manage.py'],
     include_package_data=True,
     data_files=[
         ('/etc/rockpack/mainsite', ['uwsgi.ini']),
-        ('/etc/init.d', ['rockpack-mainsite'])],
-    #package_data={'': ['templates/*/*.html', '*.html']},
+        ('/etc/init.d', [name])],
+    entry_points={
+        'console_scripts': ['%s-manage = rockpack.mainsite.manager:run' % name]
+    },
     setup_requires=['setuptools_git'],
     tests_require=['pytest'],
     cmdclass={
