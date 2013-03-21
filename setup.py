@@ -61,8 +61,6 @@ def parse_requirements(filename):
                 yield line.strip()
 
 
-print list(parse_requirements('requirements.txt'))
-
 name = 'rockpack-mainsite'
 
 setup(
