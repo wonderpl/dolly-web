@@ -1,3 +1,4 @@
+import sys
 from flask.ext.script import Manager
 from flask.ext.assets import ManageAssets
 from rockpack.mainsite import app, init_app
@@ -33,6 +34,9 @@ def syncdb(options):
     dbapi.sync_database()
 
 
-def run():
+def run(*args):
     init_app()
-    manager.run()
+    if args:
+        return manager.handle(sys.argv[0], args[0], args[1:])
+    else:
+        return manager.run()

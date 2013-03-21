@@ -53,6 +53,9 @@ AVATAR_IMG_PATHS = {'original': 'images/avatar/original/',
         'thumbnail_medium': 'images/avatar/thumbnail_medium/',
         'thumbnail_large': 'images/avatar/thumbnail_large/'}
 
+ASSETS_MANIFEST = 'file'
+ASSETS_CACHE = False
+ASSETS_AUTO_BUILD = False
 
 # Prefix for untitled channels
 UNTITLED_CHANNEL = 'Untitled'
