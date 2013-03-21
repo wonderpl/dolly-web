@@ -1,6 +1,8 @@
+import pyes
 from sqlalchemy.orm import contains_eager
 from sqlalchemy.sql.expression import desc
-from flask import g, request
+from flask import request
+from rockpack.mainsite.core import es
 from rockpack.mainsite.core.dbapi import db
 from rockpack.mainsite.core.webservice import WebService, expose_ajax
 from rockpack.mainsite.services.video import models
@@ -69,18 +71,6 @@ def get_local_channel(locale, paging, **filters):
     return channel_data, total
 
 
-class ChannelWS(WebService):
-
-    endpoint = '/channels'
-
-    @expose_ajax('/', cache_age=300)
-    def channel_list(self):
-        data, total = get_local_channel(self.get_locale(),
-                                        self.get_page(),
-                                        category=request.args.get('category'))
-        return dict(channels=dict(items=data, total=total))
-
-
 def video_dict(video):
     # TODO: unfudge this
     thumbnail_url = None
@@ -140,7 +130,14 @@ def get_local_videos(loc, paging, with_channel=True, **filters):
     videos = videos.offset(offset).limit(limit)
     data = []
     for position, v in enumerate(videos, offset):
+        cats = []
+        if v.VideoLocaleMeta.category:
+            cats.append(v.VideoLocaleMeta.category_ref.id)
+            if v.VideoLocaleMeta.category_ref.parent:
+                cats.append(v.VideoLocaleMeta.category_ref.parent)
+
         item = dict(
+            category=cats,
             position=position,
             date_added=v.VideoInstance.date_added.isoformat(),
             video=video_dict(v.Video),
@@ -153,14 +150,77 @@ def get_local_videos(loc, paging, with_channel=True, **filters):
     return data, total
 
 
+def es_video_to_channel_map(videos, channel_dict):
+    for pos, video in enumerate(videos, len(videos)):
+        video['channel'] = channel_dict[video['channel']]
+        video['position'] = pos
+
+
+def es_get_videos(conn, locale, category=None, paging=None):
+    q = pyes.MatchAllQuery()
+    if category:
+        q = pyes.TermQuery(field='category', value=category)
+    offset, limit = paging if paging else 0, 100
+    return es.get_connection().search(query=pyes.Search(q, start=offset, size=limit), indices=locale, doc_types=['videos'])
+
+
+def es_get_channels(conn, locale, channel_ids=None, category=None, paging=None):
+    q = pyes.MatchAllQuery()
+    if channel_ids:
+        q = pyes.IdsQuery(channel_ids)
+    if category:
+        q = pyes.TermQuery(field='category', value=category)
+    offset, limit = paging if paging else 0, 100
+    return es.get_connection().search(query=pyes.Search(q, start=offset, size=limit), indices=locale, doc_types=['channels'])
+
+
 class VideoWS(WebService):
 
     endpoint = '/videos'
 
     @expose_ajax('/', cache_age=300)
     def video_list(self):
-        data, total = get_local_videos(self.get_locale(), self.get_page(), star_order=True, **request.args)
-        return dict(videos=dict(items=data, total=total))
+        category = request.args.get('category')
+        locale = self.get_locale()
+
+        conn = es.get_connection()
+        videos = es_get_videos(conn, locale, category=category, paging=self.get_page())
+        video_list = []
+
+        channel_list = {}
+        for video in videos:
+            video_list.append(video)
+            channel_list[video.channel] = None
+
+        channels = es_get_channels(conn, locale, channel_ids=channel_list.keys())
+
+        for channel in channels:
+            channel_list[channel.id] = channel
+
+        es_video_to_channel_map(video_list, channel_list)
+
+        return dict(videos={'items': video_list},
+                total=videos.count())
+        #data, total = get_local_videos(self.get_locale(), self.get_page(), star_order=True, **request.args)
+        #return dict(videos=dict(items=data, total=total))
+
+
+class ChannelWS(WebService):
+
+    endpoint = '/channels'
+
+    @expose_ajax('/', cache_age=300)
+    def channel_list(self):
+        conn = es.get_connection()
+        channels = es_get_channels(conn,
+                self.get_locale(),
+                category=request.args.get('category'),
+                paging=self.get_page())
+
+        return dict(channels=dict(
+            items=[_ for _ in channels],
+            total=channels.count())
+            )
 
 
 class CategoryWS(WebService):

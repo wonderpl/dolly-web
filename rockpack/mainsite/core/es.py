@@ -1,5 +1,12 @@
 from pyes import *
-conn = ES('127.0.0.1:9200')
+from rockpack.mainsite import app
+
+
+def get_connection():
+    return ES(app.config.get('ELASTICSEARCH_URL'))
+
+
+conn = get_connection()
 
 from pyes.mappings import *
 docmapping = DocumentObjectField()
@@ -13,6 +20,9 @@ video_mapping = {
                 "index": "analyzed",
                 },
             "position": {"type": "integer"},
+            'category': {
+                "type": "integer",
+                "index": "analyzed"},
             "video": {
                 "properties": {
                     "id": {"type": "string"},
@@ -45,7 +55,19 @@ channel_mapping = {
             "cover_thumbnail_small_url": {"type": "string"},
             "cover_thumbnail_large_url": {"type": "string"},
             "cover_background_url": {"type": "string"},
-            "resource_url": {"type": "string"}
+            "resource_url": {"type": "string"},
+            "owner": {
+                "properties": {
+                    "avatar_thumbnail_url": {"type": "string"},
+                    "resource_url": {"type": "string"},
+                    "display_name": {"type": "string"},
+                    "name": {"type": "string"},
+                    "id": {
+                        "type": "string",
+                        "index": "analyzed"
+                        }
+                    }
+                }
             }
         }
 
@@ -54,26 +76,32 @@ from rockpack.mainsite.services.video.api import *
 from rockpack.mainsite.services.video.models import *
 from rockpack.mainsite import app, init_app
 
-init_app()
+try:
+    init_app()
+except:
+    pass
+
 try:
     conn.indices.create_index('en-us')
 except:
     pass
 
+conn.indices.put_mapping("videos", video_mapping, ["en-us"])
+conn.indices.put_mapping("channels", channel_mapping, ["en-us"])
+
 
 cat_map = {c[0]:c[1] for c in Category.query.filter(Category.parent!=None).values('id', 'parent')}
 
 def import_channels():
-    print conn.indices.put_mapping("channels", channel_mapping, ["en-us"])
     with app.test_request_context():
-        channels, total = get_local_channel('en-us', (0, 100,))
+        channels, total = get_local_channel('en-us', (0, 1000,))
         # should keep looping until `total` < whatever
         # the paging amount is
         for c in channels:
             # maybe bulk insert this?
             try:
                 print conn.index({
-                    'locale': 'en-us', 'id': c['id'],
+                    'id': c['id'],
                     'category': [
                         c['category'],
                         cat_map[c['category']]
@@ -87,17 +115,18 @@ def import_channels():
                     id=c['id'])
             except:
                 print c
+        print '{} channels'.format(total)
         conn.indices.refresh("en-us")
 
 def import_videos():
-    print conn.indices.put_mapping("videos", video_mapping, ["en-us"])
     with app.test_request_context():
-        videos, total = get_local_videos('en-us', (0,100,))
+        videos, total = get_local_videos('en-us', (0,1000,))
         for v in videos:
             print v['title']
             print conn.index({
                 'id': v['id'],
                 'channel': v['channel']['id'],
+                'category': v['category'],
                 'title': v['title'],
                 'video': {
                     'id': v['video']['id'],

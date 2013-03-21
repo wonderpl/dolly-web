@@ -18,6 +18,7 @@ from rockpack.mainsite.services.cover_art import api as cover_api
 from rockpack.mainsite.services.video import api as video_api
 from rockpack.mainsite.services.search import api as search_api
 from .models import User, UserActivity, Subscription
+from rockpack.mainsite.core import es
 
 
 ACTION_COLUMN_VALUE_MAP = dict(
@@ -256,6 +257,8 @@ class UserWS(WebService):
                     Channel.query.filter_by(owner=userid, deleted=False)]
         return dict(channels=dict(items=channels, total=len(channels)))
 
+    # TODO: es lookup
+
     @expose_ajax('/<userid>/channels/', methods=('POST',))
     @check_authorization(self_auth=True)
     def channel_item_create(self, userid):
@@ -276,6 +279,8 @@ class UserWS(WebService):
     def channel_info(self, userid, channelid):
         channel = Channel.query.filter_by(id=channelid, public=True, deleted=False).first_or_404()
         return _channel_info_response(channel, self.get_locale(), self.get_page(), False)
+
+    # TODO: es lookup
 
     @expose_ajax('/<userid>/channels/<channelid>/', cache_age=0)
     @check_authorization()
@@ -334,6 +339,8 @@ class UserWS(WebService):
         if not channel.owner == userid:
             abort(403)
         return [v[0] for v in VideoInstance.query.filter_by(channel=channelid).order_by('position asc').values('video')]
+
+    # TODO: es lookup
 
     @expose_ajax('/<userid>/channels/<channelid>/videos/', methods=('PUT',))
     @check_authorization(self_auth=True)
@@ -463,3 +470,5 @@ class UserWS(WebService):
         else:
             data, total = [], 0
         return {'videos': {'items': data, 'total': total}}
+
+    # TODO: es lookup
