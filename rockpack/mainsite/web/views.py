@@ -33,6 +33,7 @@ def channel(slug, channelid):
     for instance in channel_data['videos']['items']:
         if instance['id'] == request.args.get('video'):
             channel_data['selected_instance'] = instance
+    ## channel_data=channel_data change view TODO
     return render_template('web/channel.html', **channel_data)
 
 
