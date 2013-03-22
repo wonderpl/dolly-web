@@ -12,8 +12,8 @@ window.Weblight = angular.module('Weblight', ['channelServices'])
 
   # Router
   .config(['$routeProvider', ($routeProvider) ->
-    $routeProvider.when('/', {templateUrl: 'channel.html'})
-    $routeProvider.when('/channel/:channelid', {templateUrl: 'channel.html', reloadOnSearch: false})
+    $routeProvider.when('/', {templateUrl: 'channel.html', reloadOnSearch: false})
+    # $routeProvider.when('/channel/:channelid', {templateUrl: 'channel.html', reloadOnSearch: false})
     $routeProvider.when('/jobs', {templateUrl: 'jobs.html'})
     $routeProvider.when('/about', {templateUrl: 'about.html'})
   ])
@@ -61,7 +61,8 @@ window.Weblight = angular.module('Weblight', ['channelServices'])
 window.onYouTubeIframeAPIReady = ->
   injector = angular.element(document.getElementById('app')).injector()
   injector.invoke(($rootScope, $compile, $document) ->
-    $rootScope.playerReady = true;
+    $rootScope.playerReady = true
+    $rootScope.$apply()
     return
   )
   return

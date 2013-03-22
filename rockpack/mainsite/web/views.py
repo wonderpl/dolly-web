@@ -35,7 +35,7 @@ def channel(slug, channelid):
     #         channel_data['selected_instance'] = instance
     ## channel_data=channel_data change view TODO
     ctx = {'api_urls': api_urls, 'channel_data': channel_data}
-    return render_template('web/home.html', ctx=ctx)
+    return render_template('web/channel.html', ctx=ctx)
 
 
 class ResetPasswordForm(wtf.Form):

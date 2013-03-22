@@ -3,15 +3,20 @@ window.Weblight.controller('ChannelCtrl', ['$scope', 'Videos', '$routeParams', '
   @page = 1 # We prefetch the first page in the index (server side)
   @channelid = $routeParams.channelid
   
-  @scope = isMobile
+  $scope.isMobile = isMobile
   $scope.channel = channelData
-  $scope.channel.videos = channelData.videos
+  $scope.videos = channelData.videos.items
+
+  @totalvideos = channelData.videos.total
 
   $scope.load_videos = => 
-    @page += 1
-    Videos.get({start : @page*40, channelID: @channelid}, (data) ->
-      $scope.videos.push.apply($scope.videos, data.videos.items)      
-    )
+
+    #only try to fech videos if there are hidden videos in the channel
+    if @page*40 <= @totalvideos
+      Videos.get({start : @page*40, channelID: @channelid}, (data) =>
+        $scope.videos.push.apply($scope.videos, data.videos.items)      
+        @page += 1
+      )
     return
 
   $scope.setCurrentVideo = (video) ->
