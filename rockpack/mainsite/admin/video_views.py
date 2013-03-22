@@ -184,7 +184,7 @@ class ChannelLocaleMeta(AdminView):
             star_count=wtf.TextField,
             )
 
-    column_filters = ('channel_rel',)
+    column_filters = ('channel_rel', 'channel_locale', models.Category.name)
 
 
 class ExternalCategoryMap(AdminView):
