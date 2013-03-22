@@ -1,4 +1,5 @@
 import requests
+from urllib import urlencode
 from urlparse import urljoin
 from flask import request, json, render_template
 from flask.ext import wtf
@@ -8,14 +9,16 @@ from rockpack.mainsite.core.webservice import secure_view, JsonReponse
 from rockpack.mainsite.services.user.models import User
 from rockpack.mainsite.services.oauth.api import record_user_event
 
-def ws_request(url):
+
+def ws_request(url, **kwargs):
     ws_base_url = app.config.get('WEB_WS_SERVICE_URL')
     if ws_base_url:
-        response = requests.get(urljoin(ws_base_url, url)).content
+        response = requests.get(urljoin(ws_base_url, url), params=kwargs).content
     else:
         # Make local in-process request at top of WSGI stack
         env = request.environ.copy()
         env['PATH_INFO'] = url
+        env['QUERY_STRING'] = urlencode(kwargs)
         response = ''.join(app.wsgi_app(env, lambda status, headers: None))
         # TODO: Catch non-200 responses
     return json.loads(response)
@@ -28,7 +31,7 @@ def homepage():
 
 @app.route('/channel/<slug>/<channelid>/', subdomain=app.config.get('DEFAULT_SUBDOMAIN'))
 def channel(slug, channelid):
-    channel_data = ws_request('/ws/-/channels/%s/?size=40' % channelid)
+    channel_data = ws_request('/ws/-/channels/%s/' % channelid, size=40)
     api_urls = ws_request('/ws/')
     # for instance in channel_data['videos']['items']:
     #     if instance['id'] == request.args.get('video'):
