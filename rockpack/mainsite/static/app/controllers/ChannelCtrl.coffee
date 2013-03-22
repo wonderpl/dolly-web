@@ -1,12 +1,12 @@
-window.Weblight.controller('ChannelCtrl', ['$scope', 'Videos', '$routeParams', '$rootScope', '$location', 'isMobile', ($scope, Videos, $routeParams, $rootScope, $location, isMobile) -> 
-  @page = 0
+window.Weblight.controller('ChannelCtrl', ['$scope', 'Videos', '$routeParams', '$rootScope', '$location', 'isMobile', 'channelData', ($scope, Videos, $routeParams, $rootScope, $location, isMobile, channelData) -> 
+
+  @page = 1 # We prefetch the first page in the index (server side)
   @channelid = $routeParams.channelid
   
   @scope = isMobile
-  $scope.channel = Videos.get({start: @page, channelID: @channelid}, (data) ->
-    $scope.videos = $scope.channel.videos.items
-    return
-  )
+  $scope.channel = channelData
+  $scope.channel.videos = channelData.videos
+
   $scope.load_videos = => 
     @page += 1
     Videos.get({start : @page*40, channelID: @channelid}, (data) ->

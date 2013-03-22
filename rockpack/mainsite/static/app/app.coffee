@@ -8,12 +8,14 @@ window.Weblight = angular.module('Weblight', ['channelServices'])
       false
     )(navigator.userAgent||navigator.vendor||window.opera))
 
+  .constant('channelData', window.channel_data)
+
   # Router
   .config(['$routeProvider', ($routeProvider) ->
-    $routeProvider.when('/', {templateUrl: 'static/app/views/channel.html'})
-    $routeProvider.when('/channel/:channelid', {templateUrl: 'static/app/views/channel.html', reloadOnSearch: false})
-    $routeProvider.when('/jobs', {templateUrl: 'static/app/views/jobs.html'})
-    $routeProvider.when('/about', {templateUrl: 'static/app/views/about.html'})
+    $routeProvider.when('/', {templateUrl: 'channel.html'})
+    $routeProvider.when('/channel/:channelid', {templateUrl: 'channel.html', reloadOnSearch: false})
+    $routeProvider.when('/jobs', {templateUrl: 'jobs.html'})
+    $routeProvider.when('/about', {templateUrl: 'about.html'})
   ])
   .directive('bgImage', ->
     return (scope, element, attrs) ->
@@ -27,7 +29,7 @@ window.Weblight = angular.module('Weblight', ['channelServices'])
   .directive('videoCell', ->
     return {
       restrict: 'A',
-      templateUrl : 'static/app/views/Videocell.html',
+      templateUrl : 'Videocell.html',
       transclude : true
     };
   )

@@ -31,15 +31,26 @@
       firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
     </script>
 
+    <script>
+      var channel_data = {{ ctx.channel_data|tojson|safe }},
+          api_urls = {{ ctx.api_urls|tojson|safe }};
+    </script>
+
     {% assets filters="rjsmin", output="gen/lib.%(version)s.js",
               "vendor/js/jquery-1.9.1.js", "vendor/js/lodash.js", "vendor/js/angular.js", "vendor/js/angular-resource.js",
               "vendor/js/ui-bootstrap-tpls-0.2.0.js" %}
       <script type="text/javascript" src="{{ ASSET_URL }}"></script>
     {% endassets %}
 
-    {% assets filters="coffeescript,rjsmin", output="gen/home.%(version)s.js", "app/app.coffee", "app/controllers/AppCtrl.coffee", "app/controllers/ChannelCtrl.coffee", "app/controllers/PageCtrl.coffee", "app/controllers/PageCtrl.coffee", "app/services.coffee" %}
+    {% assets filters="coffeescript", output="gen/home.%(version)s.js", "app/app.coffee", "app/controllers/AppCtrl.coffee", "app/controllers/ChannelCtrl.coffee", "app/controllers/PageCtrl.coffee", "app/controllers/PageCtrl.coffee", "app/services.coffee", "app/controllers/VideoCtrl.coffee" %}
       <script type="text/javascript" src="{{ ASSET_URL }}"></script>
     {% endassets %}
+
+    {% assets filters="ajstemplates", output="gen/templates.%(version)s.js", 
+      "app/views/about.html", "app/views/channel.html", "app/views/footer.html", "app/views/header.html", "app/views/jobs.html", "app/views/Videocell.html", "app/views/videoplayer.html" %}
+      <script type="text/javascript" src="{{ ASSET_URL }}"></script>
+    {% endassets %}
+
 
     {% assets filters="cssmin", output="gen/vendor.%(version)s.css", "vendor/css/bootstrap.css", "vendor/css/bootstrap-responsive.css" %}
       <link rel="stylesheet" href="{{ ASSET_URL }}"/>
@@ -48,10 +59,11 @@
     {% assets filters="less", output="gen/home.%(version)s.css", "css/app.less" %}
       <link rel="stylesheet" href="{{ ASSET_URL }}"/>
     {% endassets %}
+
   </head>
   <body ng-controller="AppCtrl" id="app">
-    <div ng-include src="'static/app/views/header.html'"></div>
+    <div ng-include src="'header.html'"></div>
     <div class="ng-view"></div>
-    <div ng-include src="'static/app/views/footer.html'"></div>
+    <div ng-include src="'footer.html'"></div>
   </body>
 </html>

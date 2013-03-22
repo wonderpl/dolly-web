@@ -8,7 +8,6 @@ from rockpack.mainsite.core.webservice import secure_view, JsonReponse
 from rockpack.mainsite.services.user.models import User
 from rockpack.mainsite.services.oauth.api import record_user_event
 
-
 def ws_request(url):
     ws_base_url = app.config.get('WEB_WS_SERVICE_URL')
     if ws_base_url:
@@ -29,12 +28,14 @@ def homepage():
 
 @app.route('/channel/<slug>/<channelid>/', subdomain=app.config.get('DEFAULT_SUBDOMAIN'))
 def channel(slug, channelid):
-    channel_data = ws_request('/ws/-/channels/%s/' % channelid)
-    for instance in channel_data['videos']['items']:
-        if instance['id'] == request.args.get('video'):
-            channel_data['selected_instance'] = instance
+    channel_data = ws_request('/ws/-/channels/%s/?size=40' % channelid)
+    api_urls = ws_request('/ws/')
+    # for instance in channel_data['videos']['items']:
+    #     if instance['id'] == request.args.get('video'):
+    #         channel_data['selected_instance'] = instance
     ## channel_data=channel_data change view TODO
-    return render_template('web/channel.html', **channel_data)
+    ctx = {'api_urls': api_urls, 'channel_data': channel_data}
+    return render_template('web/home.html', ctx=ctx)
 
 
 class ResetPasswordForm(wtf.Form):
