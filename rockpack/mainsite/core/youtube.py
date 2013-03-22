@@ -151,7 +151,7 @@ def search(query, order=None, start=0, size=10, region=None, client_address=None
     data = _youtube_feed('videos', '', params)['feed']
     total = data['openSearch$totalResults']['$t']
     videos = [_get_video_data(e, id) for e in data.get('entry', [])]
-    return Videolist(total, videos)
+    return Videolist(total, [v for v in videos if not v.restricted])
 
 
 def complete(query, **params):
