@@ -128,6 +128,9 @@ def get_local_videos(loc, paging, with_channel=True, **filters):
     if filters.get('category'):
         videos = _filter_by_category(videos, models.VideoLocaleMeta, filters['category'][0])
 
+    if filters.get('position_order'):
+        videos = videos.order_by(models.VideoInstance.position)
+
     if filters.get('star_order'):
         videos = videos.order_by(desc(models.VideoLocaleMeta.star_count))
 
