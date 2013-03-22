@@ -5,7 +5,7 @@ from flask.ext import wtf
 from flask.ext.admin import form
 from wtforms.validators import ValidationError
 from rockpack.mainsite import app
-from rockpack.mainsite.core.dbapi import commit_on_success
+from rockpack.mainsite.core.dbapi import commit_on_success, get_es_connection
 from rockpack.mainsite.core.webservice import WebService, expose_ajax, ajax_create_response, process_image
 from rockpack.mainsite.core.oauth.decorators import check_authorization
 from rockpack.mainsite.core.youtube import get_video_data
@@ -18,7 +18,6 @@ from rockpack.mainsite.services.cover_art import api as cover_api
 from rockpack.mainsite.services.video import api as video_api
 from rockpack.mainsite.services.search import api as search_api
 from .models import User, UserActivity, Subscription
-from rockpack.mainsite.core import es
 
 
 ACTION_COLUMN_VALUE_MAP = dict(
@@ -275,17 +274,16 @@ class UserWS(WebService):
 
     @expose_ajax('/<userid>/channels/<channelid>/', cache_age=60, secure=False)
     def channel_info(self, userid, channelid):
-        conn = es.get_connection()
-        # locale required to fetch channel from correct index.
-        # does that mean it'll have to be send in the request?
-        # or try all indexes?
-        videos = video_api.es_get_videos(conn, self.get_locale(), channel_ids=[channelid])
+        conn = get_es_connection()
+        channel = video_api.es_get_channels_with_videos(conn, channel_ids=[channelid])
+        return channel
         return dict(
                 videos = dict(
                     items=[_ for _ in videos], total=videos.count()
                     )
                 )
 
+    """
     @expose_ajax('/<userid>/channels/<channelid>/', cache_age=0)
     @check_authorization()
     def owner_channel_info(self, userid, channelid):
@@ -293,6 +291,7 @@ class UserWS(WebService):
         if g.authorized.userid != userid and not channel.public:
             abort(404)
         return _channel_info_response(channel, self.get_locale(), self.get_page(), True)
+    """
 
     @expose_ajax('/<userid>/channels/<channelid>/public/', methods=('PUT',))
     @check_authorization(self_auth=True)
@@ -340,7 +339,7 @@ class UserWS(WebService):
     @check_authorization()
     def channel_videos(self, userid, channelid):
         channels = video_api.es_get_channels(
-                es.get_connection(),
+                get_es_connection(),
                 self.get_locale(),
                 channel_ids=[channelid]
                 )

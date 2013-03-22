@@ -1,15 +1,4 @@
 from pyes import *
-from rockpack.mainsite import app
-
-
-def get_connection():
-    return ES(app.config.get('ELASTICSEARCH_URL'))
-
-
-conn = get_connection()
-
-from pyes.mappings import *
-docmapping = DocumentObjectField()
 
 video_mapping = {
         "properties": {
@@ -20,8 +9,11 @@ video_mapping = {
                 "index": "analyzed",
                 },
             "position": {"type": "integer"},
-            'category': {
+            "category": {
                 "type": "integer",
+                "index": "analyzed"},
+            "channel": {
+                "type": "string",
                 "index": "analyzed"},
             "video": {
                 "properties": {
@@ -76,13 +68,12 @@ channel_mapping = {
         }
 
 
-from rockpack.mainsite.services.video.models import *
 from rockpack.mainsite import app, init_app
+from rockpack.mainsite.core.dbapi import get_es_connection
 
-try:
-    init_app()
-except:
-    pass
+init_app()
+
+conn = get_es_connection()
 
 try:
     conn.indices.create_index('users')
@@ -94,12 +85,12 @@ conn.indices.put_mapping("videos", video_mapping, ["en-us"])
 conn.indices.put_mapping("channels", channel_mapping, ["en-us"])
 
 def import_owners():
-    from rockpack.mainsite.services.user.models import User
+    from rockpack.mainsite.services.user import models
     with app.test_request_context():
-        for user in User.query.all():
+        for user in models.User.query.all():
             print conn.index({
                 'id': user.id,
-                'avatar_thumbnail': user.avatar,
+                'avatar_thumbnail': str(user.avatar),
                 'resource_url': user.get_resource_url(False),
                 'display_name': user.display_name,
                 'name': user.username
@@ -107,9 +98,11 @@ def import_owners():
                 'users',
                 'user',
                 id=user.id)
+    print 'done'
 
 def import_channels():
     from rockpack.mainsite.services.video.api import *
+    from rockpack.mainsite.services.video.models import Category
     cat_map = {c[0]:c[1] for c in Category.query.filter(Category.parent!=None).values('id', 'parent')}
     with app.test_request_context():
         channels, total = get_local_channel('en-us', (0, 1000,))
@@ -117,27 +110,30 @@ def import_channels():
         # the paging amount is
         for c in channels:
             # maybe bulk insert this?
-            try:
-                print conn.index({
-                    'id': c['id'],
-                    'category': [
-                        c['category'],
-                        cat_map[c['category']]
-                    ],
-                    'description': c['description'],
-                    'description': c['description'],
-                    'title': c['title'],
-                    'owner': c['owner'],
-                    },
-                    'en-us',
-                    'channels',
-                    id=c['id'])
-            except:
-                print c
+            print conn.index({
+                'id': c['id'],
+                'subscribe_count': c['subscribe_count'],
+                'category': [
+                    c['category'],
+                    cat_map[c['category']]
+                ],
+                'description': c['description'],
+                'thumbnail_url': c['thumbnail_url'],
+                'cover_thumbnail_small_url': c['cover_thumbnail_small_url'],
+                'cover_thumbnail_large_url': c['cover_thumbnail_large_url'],
+                'cover_background_url': c['cover_background_url'],
+                'resource_url': c['resource_url'],
+                'title': c['title'],
+                'owner': c['owner']['id'],
+                },
+                'en-us',
+                'channels',
+                id=c['id'])
         print '{} channels'.format(total)
         conn.indices.refresh("en-us")
 
 def import_videos():
+    from rockpack.mainsite.services.video.api import *
     with app.test_request_context():
         videos, total = get_local_videos('en-us', (0,1000,))
         for v in videos:

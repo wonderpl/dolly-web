@@ -2,10 +2,10 @@ import pyes
 from sqlalchemy.orm import contains_eager
 from sqlalchemy.sql.expression import desc
 from flask import request
-from rockpack.mainsite.core import es
-from rockpack.mainsite.core.dbapi import db
+from rockpack.mainsite.core.dbapi import db, get_es_connection
 from rockpack.mainsite.core.webservice import WebService, expose_ajax
 from rockpack.mainsite.services.video import models
+from rockpack.mainsite import app
 
 
 def _filter_by_category(query, type, category_id):
@@ -156,35 +156,56 @@ def es_video_to_channel_map(videos, channel_dict):
         video['position'] = pos
 
 
-def es_get_videos(conn, locale, category=None, paging=None, channels=[]):
+def es_owner_to_channel_map(channels, owner_list):
+    for channel in channels:
+        channel['owner'] = owner_list[channel['owner']]
+
+
+def es_get_videos(conn, locale=app.config.get('ENABLED_LOCALES'), category=None, paging=None, channel_ids=None):
     q = pyes.MatchAllQuery()
     if category:
         q = pyes.TermQuery(field='category', value=category)
-    if channels:
-        q = pyes.TermQuery(field='channel', value=' '.join(channels))
+    if channel_ids:
+        q = pyes.FieldQuery('channel', ' '.join(channel_ids))
     offset, limit = paging if paging else 0, 100
     # TODO: we need to specify all indexes so that we can find
     # things in different locales, other this will fail
     # A cached list of locales somewhere ....
-    return es.get_connection().search(query=pyes.Search(q, start=offset, size=limit), indices=locale, doc_types=['videos'])
+    return conn.search(query=pyes.Search(q, start=offset, size=limit), indices=locale, doc_types=['videos'])
 
 
-def es_get_owners(conn, id=None, channels=None):
-    if channels:
-        q = pyes.TermQuery(field='channel', value=channels)
-    if id:
-        q = pyes.IdsQuery([id])
-    return es.get_connection().search(query=pyes.Search(q), indices='users', doc_types=['users'])
+def es_get_owners(conn, ids):
+    q = pyes.TermsQuery(field='_id', value=ids)
+    return conn.search(query=pyes.Search(q), indices='users', doc_types=['user'])
 
 
-def es_get_channels(conn, locale, channel_ids=None, category=None, paging=None):
+def es_get_channels(conn, locale=app.config.get('ENABLED_LOCALES'), channel_ids=None, category=None, paging=None):
     q = pyes.MatchAllQuery()
+    # TODO: maybe write this so they can be chained up
     if channel_ids:
         q = pyes.IdsQuery(channel_ids)
     if category:
         q = pyes.TermQuery(field='category', value=category)
     offset, limit = paging if paging else 0, 100
-    return es.get_connection().search(query=pyes.Search(q, start=offset, size=limit), indices=locale, doc_types=['channels'])
+    channels = conn.search(query=pyes.Search(q, start=offset, size=limit), indices=locale, doc_types=['channels'])
+
+    channel_list = {}
+    owner_list = {}
+    for channel in channels:
+        channel_list[channel['id']] = channel
+        owner_list[channel['owner']] = None
+
+    for owner in es_get_owners(conn, owner_list.keys()):
+        owner_list[owner['id']] = owner
+    es_owner_to_channel_map(channel_list.values(), owner_list)
+    return channel_list.values()
+
+def es_get_channels_with_videos(conn, locale=app.config.get('ENABLED_LOCALES'), channel_ids=None, paging=None):
+    channels = es_get_channels(conn, channel_ids=channel_ids)
+    videos = [_ for _ in es_get_videos(conn, channel_ids=channel_ids, paging=paging)]
+    channel_dict = {c['id']: c for c in channels}
+    es_video_to_channel_map(videos, channel_dict)
+    return channels.values()
 
 
 class VideoWS(WebService):
@@ -196,7 +217,7 @@ class VideoWS(WebService):
         category = request.args.get('category')
         locale = self.get_locale()
 
-        conn = es.get_connection()
+        conn = get_es_connection()
         videos = es_get_videos(conn, locale, category=category, paging=self.get_page())
         video_list = []
 
@@ -208,7 +229,7 @@ class VideoWS(WebService):
         channels = es_get_channels(conn, locale, channel_ids=channel_list.keys())
 
         for channel in channels:
-            channel_list[channel.id] = channel
+            channel_list[channel.id] = channel.copy()
 
         es_video_to_channel_map(video_list, channel_list)
 
@@ -224,16 +245,16 @@ class ChannelWS(WebService):
 
     @expose_ajax('/', cache_age=300)
     def channel_list(self):
-        conn = es.get_connection()
+        conn = get_es_connection()
         channels = es_get_channels(conn,
-                self.get_locale(),
-                category=request.args.get('category'),
-                paging=self.get_page())
+                    self.get_locale(),
+                    category=request.args.get('category'),
+                    paging=self.get_page())
 
-        return dict(channels=dict(
-            items=[_ for _ in channels],
-            total=channels.count())
-            )
+        return dict(
+            channels=dict(
+                items=channels,
+                total=len(channels)))
 
 
 class CategoryWS(WebService):
