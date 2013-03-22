@@ -7,7 +7,7 @@ angular.module('channelServices', ['ngResource'])
   ## Api url list is currently partial and not being used
 
   .factory('Videos', ['$resource', 'api_urls', 'channel_id', ($resource, api_urls, channel_id) ->
-    $resource('http://lb.demo.rockpack.com/abcd/channels/'+channel_id, {
+    $resource('http://lb.demo.rockpack.com/ws/abcd/channels/'+channel_id, {
       get: {method:'GET', params:{locale: '', size: 40}}
     })
   ])
