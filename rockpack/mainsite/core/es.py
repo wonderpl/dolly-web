@@ -34,6 +34,21 @@ video_mapping = {
             }
         }
 
+
+owner_mapping = {
+        "properties": {
+            "avatar_thumbnail_url": {"type": "string"},
+            "resource_url": {"type": "string"},
+            "display_name": {"type": "string"},
+            "name": {"type": "string"},
+            "id": {
+                "type": "string",
+                "index": "analyzed"
+                }
+            }
+        }
+
+
 channel_mapping = {
         "properties": {
             "id": {"type": "string"},
@@ -56,23 +71,11 @@ channel_mapping = {
             "cover_thumbnail_large_url": {"type": "string"},
             "cover_background_url": {"type": "string"},
             "resource_url": {"type": "string"},
-            "owner": {
-                "properties": {
-                    "avatar_thumbnail_url": {"type": "string"},
-                    "resource_url": {"type": "string"},
-                    "display_name": {"type": "string"},
-                    "name": {"type": "string"},
-                    "id": {
-                        "type": "string",
-                        "index": "analyzed"
-                        }
-                    }
-                }
+            "owner": {"type": "string"}
             }
         }
 
 
-from rockpack.mainsite.services.video.api import *
 from rockpack.mainsite.services.video.models import *
 from rockpack.mainsite import app, init_app
 
@@ -82,6 +85,7 @@ except:
     pass
 
 try:
+    conn.indices.create_index('users')
     conn.indices.create_index('en-us')
 except:
     pass
@@ -89,10 +93,24 @@ except:
 conn.indices.put_mapping("videos", video_mapping, ["en-us"])
 conn.indices.put_mapping("channels", channel_mapping, ["en-us"])
 
-
-cat_map = {c[0]:c[1] for c in Category.query.filter(Category.parent!=None).values('id', 'parent')}
+def import_owners():
+    from rockpack.mainsite.services.user.models import User
+    with app.test_request_context():
+        for user in User.query.all():
+            print conn.index({
+                'id': user.id,
+                'avatar_thumbnail': user.avatar,
+                'resource_url': user.get_resource_url(False),
+                'display_name': user.display_name,
+                'name': user.username
+                },
+                'users',
+                'user',
+                id=user.id)
 
 def import_channels():
+    from rockpack.mainsite.services.video.api import *
+    cat_map = {c[0]:c[1] for c in Category.query.filter(Category.parent!=None).values('id', 'parent')}
     with app.test_request_context():
         channels, total = get_local_channel('en-us', (0, 1000,))
         # should keep looping until `total` < whatever
@@ -108,7 +126,8 @@ def import_channels():
                     ],
                     'description': c['description'],
                     'description': c['description'],
-                    'title': c['title']
+                    'title': c['title'],
+                    'owner': c['owner'],
                     },
                     'en-us',
                     'channels',

@@ -156,12 +156,25 @@ def es_video_to_channel_map(videos, channel_dict):
         video['position'] = pos
 
 
-def es_get_videos(conn, locale, category=None, paging=None):
+def es_get_videos(conn, locale, category=None, paging=None, channels=[]):
     q = pyes.MatchAllQuery()
     if category:
         q = pyes.TermQuery(field='category', value=category)
+    if channels:
+        q = pyes.TermQuery(field='channel', value=' '.join(channels))
     offset, limit = paging if paging else 0, 100
+    # TODO: we need to specify all indexes so that we can find
+    # things in different locales, other this will fail
+    # A cached list of locales somewhere ....
     return es.get_connection().search(query=pyes.Search(q, start=offset, size=limit), indices=locale, doc_types=['videos'])
+
+
+def es_get_owners(conn, id=None, channels=None):
+    if channels:
+        q = pyes.TermQuery(field='channel', value=channels)
+    if id:
+        q = pyes.IdsQuery([id])
+    return es.get_connection().search(query=pyes.Search(q), indices='users', doc_types=['users'])
 
 
 def es_get_channels(conn, locale, channel_ids=None, category=None, paging=None):

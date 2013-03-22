@@ -257,8 +257,6 @@ class UserWS(WebService):
                     Channel.query.filter_by(owner=userid, deleted=False)]
         return dict(channels=dict(items=channels, total=len(channels)))
 
-    # TODO: es lookup
-
     @expose_ajax('/<userid>/channels/', methods=('POST',))
     @check_authorization(self_auth=True)
     def channel_item_create(self, userid):
@@ -277,10 +275,16 @@ class UserWS(WebService):
 
     @expose_ajax('/<userid>/channels/<channelid>/', cache_age=60, secure=False)
     def channel_info(self, userid, channelid):
-        channel = Channel.query.filter_by(id=channelid, public=True, deleted=False).first_or_404()
-        return _channel_info_response(channel, self.get_locale(), self.get_page(), False)
-
-    # TODO: es lookup
+        conn = es.get_connection()
+        # locale required to fetch channel from correct index.
+        # does that mean it'll have to be send in the request?
+        # or try all indexes?
+        videos = video_api.es_get_videos(conn, self.get_locale(), channel_ids=[channelid])
+        return dict(
+                videos = dict(
+                    items=[_ for _ in videos], total=videos.count()
+                    )
+                )
 
     @expose_ajax('/<userid>/channels/<channelid>/', cache_age=0)
     @check_authorization()
@@ -335,10 +339,21 @@ class UserWS(WebService):
     @expose_ajax('/<userid>/channels/<channelid>/videos/')
     @check_authorization()
     def channel_videos(self, userid, channelid):
-        channel = Channel.query.filter_by(id=channelid, deleted=False).first_or_404()
-        if not channel.owner == userid:
-            abort(403)
-        return [v[0] for v in VideoInstance.query.filter_by(channel=channelid).order_by('position asc').values('video')]
+        channels = video_api.es_get_channels(
+                es.get_connection(),
+                self.get_locale(),
+                channel_ids=[channelid]
+                )
+        if not channels.count():
+            abort(404)
+
+        vlist = []
+        from operator import attrgetter
+        for c in channels: # do this nicer
+            if not c.owner == userid:
+                abort(403)
+            vlist = [v.id for v in sorted(c.videos, key=attrgetter('position'))]
+        return vlist
 
     # TODO: es lookup
 
