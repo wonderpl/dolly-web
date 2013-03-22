@@ -10,6 +10,10 @@ ACCESS_TOKEN_VERSION = 1
 ACCESS_TOKEN_FMT = '>Hd16s16s'  # Version (unsigned short), Expiry (double), 16 byte id, 16 byte id
 
 
+class ExpiredTokenError(TypeError):
+    pass
+
+
 def _sign(value):
     return hmac.new(app.secret_key, value, hashlib.sha1).hexdigest()
 
@@ -44,6 +48,8 @@ def parse_access_token(token):
         return
     if _sign(payload) == signature:
         version, expiry, userid, clientid = struct.unpack(ACCESS_TOKEN_FMT, payload)
-        if version == 1 and expiry > time.time():
+        if version == 1:
+            if expiry < time.time():
+                raise ExpiredTokenError()
             userid, clientid = (b64encode(i)[:-2] for i in (userid, clientid))
             return userid, clientid

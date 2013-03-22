@@ -1,7 +1,7 @@
 from functools import wraps
 from flask import request, abort, g
 from rockpack.mainsite import app
-from rockpack.mainsite.core.token import parse_access_token
+from rockpack.mainsite.core.token import parse_access_token, ExpiredTokenError
 from rockpack.mainsite.services.user.models import User
 
 
@@ -41,6 +41,7 @@ def check_authorization(abort_on_fail=True, self_auth=False):
         def wrapper(*args, **kwargs):
             g.authorized = RequestUser(None)
             auth_header = request.headers.get('Authorization', '')
+            error = 'invalid_token'
             try:
                 auth_type, auth_val = auth_header.split(None, 1)
             except ValueError:
@@ -49,6 +50,8 @@ def check_authorization(abort_on_fail=True, self_auth=False):
                 if auth_type.lower() == 'bearer':
                     try:
                         userid, clientid = parse_access_token(auth_val)
+                    except ExpiredTokenError:
+                        error = 'expired_token'
                     except TypeError:
                         pass
                     else:
@@ -56,7 +59,7 @@ def check_authorization(abort_on_fail=True, self_auth=False):
                         if self_auth and not kwargs['userid'] == userid:
                             abort(403)
             if not g.authorized and abort_on_fail:
-                abort(401, scheme='bearer', error='invalid_token')
+                abort(401, scheme='bearer', error=error)
             return f(*args, **kwargs)
         # require secure unless abort_on_fail is False
         wrapper._secure = None if abort_on_fail is False else True
