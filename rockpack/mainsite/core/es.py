@@ -77,7 +77,18 @@ conn = get_es_connection()
 
 try:
     conn.indices.create_index('users')
+except:
+    pass
+
+
+# Should loop through app.config.ENABLED_LOCALES
+try:
     conn.indices.create_index('en-us')
+except:
+    pass
+
+try:
+    conn.indices.create_index('en-gb')
 except:
     pass
 

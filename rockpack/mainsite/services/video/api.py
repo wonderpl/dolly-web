@@ -150,10 +150,19 @@ def get_local_videos(loc, paging, with_channel=True, **filters):
     return data, total
 
 
-def es_video_to_channel_map(videos, channel_dict):
+def es_channel_to_video_map(videos, channel_dict):
     for pos, video in enumerate(videos, len(videos)):
         video['channel'] = channel_dict[video['channel']]
         video['position'] = pos
+
+
+def es_video_to_channel_map(videos, channel_dict):
+    # need to sort these by position
+    for video in videos:
+        channel_dict[
+            video['channel']
+        ].setdefault('video', {}
+            ).setdefault('items', []).append(video)
 
 
 def es_owner_to_channel_map(channels, owner_list):
@@ -166,7 +175,8 @@ def es_get_videos(conn, locale=app.config.get('ENABLED_LOCALES'), category=None,
     if category:
         q = pyes.TermQuery(field='category', value=category)
     if channel_ids:
-        q = pyes.FieldQuery('channel', ' '.join(channel_ids))
+        q = pyes.FieldQuery()
+        q.add('channel', ' '.join(channel_ids))
     offset, limit = paging if paging else 0, 100
     # TODO: we need to specify all indexes so that we can find
     # things in different locales, other this will fail
@@ -205,7 +215,7 @@ def es_get_channels_with_videos(conn, locale=app.config.get('ENABLED_LOCALES'), 
     videos = [_ for _ in es_get_videos(conn, channel_ids=channel_ids, paging=paging)]
     channel_dict = {c['id']: c for c in channels}
     es_video_to_channel_map(videos, channel_dict)
-    return channels.values()
+    return channel_dict.values()
 
 
 class VideoWS(WebService):
@@ -231,7 +241,7 @@ class VideoWS(WebService):
         for channel in channels:
             channel_list[channel.id] = channel.copy()
 
-        es_video_to_channel_map(video_list, channel_list)
+        es_channel_to_video_map(video_list, channel_list)
 
         return dict(videos={'items': video_list},
                 total=videos.count())
