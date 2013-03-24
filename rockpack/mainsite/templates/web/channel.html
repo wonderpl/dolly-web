@@ -36,7 +36,7 @@
           channelUrl = "{{ url_for('userws.channel_info', userid='-', channelid='-') }}"
     </script>
 
-    {% assets filters="rjsmin", output="gen/lib.%(version)s.js",
+    {% assets output="gen/lib.%(version)s.js",
               "vendor/js/jquery-1.9.1.js", "vendor/js/lodash.js", "vendor/js/angular.js", "vendor/js/angular-resource.js",
               "vendor/js/ui-bootstrap-tpls-0.2.0.js" %}
       <script type="text/javascript" src="{{ ASSET_URL }}"></script>
