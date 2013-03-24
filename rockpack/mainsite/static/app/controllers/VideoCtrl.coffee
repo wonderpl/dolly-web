@@ -7,6 +7,8 @@ window.Weblight.controller('VideoCtrl', ['$scope', '$rootScope', '$routeParams',
 
   $scope.PlayVideo = ->
     if $rootScope.playerReady && typeof $routeParams.videoid != "undefined"
+
+      # need to trigger a hide, otherwise show did not fire on load
       $("#lightbox").hide()
       $("#lightbox").show()
       $scope.videodata = _.find($scope.videos, (video) -> 

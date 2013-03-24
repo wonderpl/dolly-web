@@ -8,6 +8,7 @@ window.Weblight = angular.module('Weblight', ['channelServices'])
       false
     )(navigator.userAgent||navigator.vendor||window.opera))
 
+  # .constant('isMobile', true)
   .constant('channelData', window.channel_data)
 
   # Router

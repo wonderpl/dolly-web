@@ -1,4 +1,10 @@
 window.Weblight.controller('AppCtrl', ['$routeParams', 'isMobile', '$scope', ($routeParams, isMobile, $scope) -> 
+
+  $scope.isMobile = isMobile
+
+  if isMobile
+    $scope.isFindOutMoreOpen = true
+
   $scope.getWidth = ->
     return $(window).width()
 
@@ -12,8 +18,8 @@ window.Weblight.controller('AppCtrl', ['$routeParams', 'isMobile', '$scope', ($r
 
   $scope.wrapperWidth = ->
     # Video size 215 + 20px margin + 60px container margin
-
-    return {
-      width: Math.floor(($scope.window_width - 40 ) / 235) * 235 + 'px'
-    }
+    if isMobile
+      {width: 'auto'}
+    else
+      { width: Math.floor(($scope.window_width - 40 ) / 235) * 235 + 'px'}
 ])
