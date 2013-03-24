@@ -1,4 +1,4 @@
-window.Weblight = angular.module('Weblight', ['channelServices', 'ui.bootstrap'])
+window.Weblight = angular.module('Weblight', ['channelServices'])
   
   # Detect if user is browsing using a mobile browser
   .constant('isMobile', ( (a) -> 
