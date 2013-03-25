@@ -37,3 +37,11 @@ def add_video_to_index(conn, video_instance, video, locale):
         locale,
         'videos',
         id=video_instance['id'])
+
+
+def remove_channel_from_index(conn, channel_id, locale):
+    conn.delete(locale, 'channels', channel_id)
+
+
+def remove_video_from_index(conn, video_id, locale):
+    conn.delete(locale, 'videos', video_id)
