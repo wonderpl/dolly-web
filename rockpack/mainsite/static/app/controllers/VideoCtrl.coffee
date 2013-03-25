@@ -1,12 +1,21 @@
-window.Weblight.controller('VideoCtrl', ['$scope', '$rootScope', '$routeParams', '$location', ($scope, $rootScope, $routeParams, $location) ->
-  
+window.Weblight.controller('VideoCtrl', ['$scope', '$rootScope', '$routeParams', '$location', 'isMobile', ($scope, $rootScope, $routeParams, $location, isMobile) ->
+
+
   $rootScope.currentVideo = {}
 
   $scope.getVideoId = ->
     return $routeParams.videoid
 
-  $scope.PlayVideo = ->
+  $scope.PlayVideo = =>
+
+
     if $rootScope.playerReady && typeof $routeParams.videoid != "undefined"
+      if isMobile
+        @playerWidth = window.innerWidth
+        @playerHeight = window.innerWidth*9/16
+      else
+        @playerWidth = 738
+        @playerHeight = 415
 
       # need to trigger a hide, otherwise show did not fire on load
       $("#lightbox").hide()
@@ -14,19 +23,19 @@ window.Weblight.controller('VideoCtrl', ['$scope', '$rootScope', '$routeParams',
       $scope.videodata = _.find($scope.videos, (video) -> 
         video.id == $routeParams.videoid
       )
-      if typeof $scope.player != "undefined" 
-        $scope.player.loadVideoById($scope.videodata.video.source_id, 0, 'highres')
-      else 
-        $scope.player = new YT.Player('player', {
-          height: '415',
-          width: '738',
-          videoId: $scope.videodata.video.source_id,
-          playerVars: {
-            autoplay: 1,
-            showinfo: 0,
-            modestbranding: 0
-          }
-        })
+      # if typeof $scope.player != "undefined" 
+      #   $scope.player.loadVideoById($scope.videodata.video.source_id, 0, 'highres')
+      # else 
+      $scope.player = new YT.Player('player', {
+        height: @playerHeight,
+        width: @playerWidth,
+        videoId: $scope.videodata.video.source_id,
+        playerVars: {
+          autoplay: 1,
+          showinfo: 0,
+          modestbranding: 0
+        }
+      })
 
   $scope.$watch($scope.getVideoId, (newValue) ->
     if newValue
@@ -41,7 +50,7 @@ window.Weblight.controller('VideoCtrl', ['$scope', '$rootScope', '$routeParams',
   )
 
   $scope.hide = ->
-    $scope.player.stopVideo()
+    $scope.player.destroy()
     $('#lightbox').hide()
     $location.search( 'videoid', null );
     return
