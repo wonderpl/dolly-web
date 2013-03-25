@@ -48,6 +48,10 @@ def import_services():
             if (isinstance(a, type) and issubclass(a, WebService)
                     and a.__name__ != WebService.__name__):
                 services.append(a)
+        try:
+            __import__(s + '.commands')
+        except ImportError:
+            pass
 
     for s in services:
         endpoint = WEBSERVICE_BASE
