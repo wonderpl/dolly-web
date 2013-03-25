@@ -22,6 +22,7 @@ from .models import User, UserActivity, Subscription
 
 ACTION_COLUMN_VALUE_MAP = dict(
     view=('view_count', 1),
+    select=('view_count', 1),
     star=('star_count', 1),
     unstar=('star_count', -1),
 )
@@ -56,15 +57,8 @@ def save_video_activity(user, action, instance_id, locale):
         if not video_id:
             abort(400, message='video_instance not found')
 
-    if action == 'view':
-        object_type = 'video_instance'
-        object_id = instance_id
-    else:
-        object_type = 'video'
-        object_id = video_id
-
     activity = dict(user=user, action=action,
-                    object_type=object_type, object_id=object_id)
+                    object_type='video', object_id=video_id)
     if not UserActivity.query.filter_by(**activity).count():
         # Increment value on each of instance, video, & locale meta
         video = Video.query.filter_by(id=video_id)
@@ -85,9 +79,9 @@ def save_video_activity(user, action, instance_id, locale):
             owner=user, title=app.config['FAVOURITE_CHANNEL'][0]).first()
         if channel:
             if action == 'unstar':
-                channel.remove_videos([object_id])
+                channel.remove_videos([video_id])
             else:
-                channel.add_videos([object_id])
+                channel.add_videos([video_id])
 
 
 def action_object_list(user, action, limit):
@@ -232,9 +226,11 @@ class UserWS(WebService):
     def get_activity(self, userid):
         subscriptions = user_subscriptions(userid).\
             order_by(desc('date_created')).limit(self.max_page_size)
+        ids = dict((key, action_object_list(userid, key, self.max_page_size))
+                   for key in ACTION_COLUMN_VALUE_MAP)
         return dict(
-            recently_viewed=action_object_list(userid, 'view', self.max_page_size),
-            recently_starred=action_object_list(userid, 'star', self.max_page_size),
+            recently_viewed=ids['view'],
+            recently_starred=list(set(ids['star']) - set(ids['unstar'])),
             subscribed=[id for (id,) in subscriptions.values('channel')],
         )
 
