@@ -2,7 +2,8 @@ import pyes
 from sqlalchemy.orm import contains_eager
 from sqlalchemy.sql.expression import desc
 from flask import request
-from rockpack.mainsite.core.dbapi import db, get_es_connection
+from rockpack.mainsite.core.dbapi import db
+from rockpack.mainsite.core.es import get_es_connection
 from rockpack.mainsite.core.webservice import WebService, expose_ajax
 from rockpack.mainsite.services.video import models
 from rockpack.mainsite import app
@@ -187,6 +188,24 @@ def es_get_videos(conn, locale=app.config.get('ENABLED_LOCALES'), category=None,
 def es_get_owners(conn, ids):
     q = pyes.TermsQuery(field='_id', value=ids)
     return conn.search(query=pyes.Search(q), indices='users', doc_types=['user'])
+
+
+def es_add_videos(conn, videos):
+    for v in videos:
+        conn.index({
+            'id': v['id'],
+            'channel': v['channel']['id'],
+            'category': v['category'],
+            'title': v['title'],
+            'video': {
+                'id': v['video']['id'],
+                'thumbnail_url': v['video']['thumbnail_url'],
+                'view_count': v['video']['view_count']
+                }
+            },
+            'en-us',
+            'videos',
+            id=v['id'])
 
 
 def es_get_channels(conn, locale=app.config.get('ENABLED_LOCALES'), channel_ids=None, category=None, paging=None):

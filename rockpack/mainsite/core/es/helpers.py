@@ -69,7 +69,7 @@ channel_mapping = {
 
 
 from rockpack.mainsite import app, init_app
-from rockpack.mainsite.core.dbapi import get_es_connection
+from rockpack.mainsite.core.es import get_es_connection
 
 init_app()
 

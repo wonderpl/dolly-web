@@ -336,7 +336,29 @@ class Channel(db.Model):
         channel.public = channel.should_be_public(channel, public)
         if category:
             channel.metas = cls.channelmeta_for_category(category, locale)
-        return channel.save()
+
+        # NOTE: move this out to somewhere sensible
+        from rockpack.mainsite.core.es import get_es_connection, api
+        conn = get_es_connection()
+        channel = channel.save()
+        if channel.public:
+            api.add_channel_to_index(
+                    conn,
+                    dict(
+                        id=channel.id,
+                        category=category,
+                        subscribe_count=0,
+                        description=channel.description,
+                        thumbnail_url=channel.cover.thumbnail_large,
+                        cover_thumbnail_small_url=channel.cover.thumbnail_small,
+                        cover_thumbnail_large_url=channel.cover.thumbnail_large,
+                        cover_background_url=channel.cover.background,
+                        resource_url=channel.get_resource_url(),
+                        title=channel.title),
+                    channel.owner,
+                    locale)
+        return channel
+
 
     def get_resource_url(self, own=False):
         view = 'userws.owner_channel_info' if own else 'userws.channel_info'
@@ -344,16 +366,36 @@ class Channel(db.Model):
     resource_url = property(get_resource_url)
 
     def add_videos(self, videos):
+        from rockpack.mainsite.core.es import get_es_connection, api
+        conn = get_es_connection()
+        def _add_to_es(conn, channel, instance, locale):
+            api.add_video_to_index(
+                    conn,
+                    dict(
+                        id=instance.id,
+                        title=instance.video_rel.title,
+                        channel=instance.channel,
+                        category=channel.category),
+                    dict(
+                        id=instance.video,
+                        thumbnail_url=instance.default_thumbnail,
+                        view_count=instance.view_count),
+                    locale)
+
         instances = [VideoInstance(channel=self.id, video=getattr(v, 'id', v)) for v in videos]
         session = self.query.session
         try:
             with session.begin_nested():
                 session.add_all(instances)
+                [_add_to_es(conn, i, self.locale) for i in instances]
         except IntegrityError:
             existing = [i.video for i in session.query(VideoInstance.video).
                         filter_by(channel=self.id).
                         filter(VideoInstance.video.in_(set(i.video for i in instances)))]
-            session.add_all(i for i in instances if i.video not in existing)
+            for i in instances:
+                if i.video not in existing:
+                    session.add_all(i)
+                    _add_to_es(conn, i, self.locale)
 
     def remove_videos(self, videos):
         VideoInstance.query.filter_by(channel=self.id).filter(

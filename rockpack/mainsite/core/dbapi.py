@@ -7,7 +7,6 @@ from sqlalchemy.exc import StatementError
 from werkzeug.exceptions import HTTPException
 from flask.ext import sqlalchemy
 from flask import g
-from pyes import ES
 
 from rockpack.mainsite import app, SERVICES, REGISTER_SETUPS
 
@@ -112,8 +111,3 @@ def commit_on_success(f):
             g.session.commit()
             return result
     return wrapper
-
-
-def get_es_connection():
-    """ Connection handler for elastic search """
-    return ES(app.config.get('ELASTICSEARCH_URL'))

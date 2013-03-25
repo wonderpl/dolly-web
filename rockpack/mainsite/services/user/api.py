@@ -5,7 +5,8 @@ from flask.ext import wtf
 from flask.ext.admin import form
 from wtforms.validators import ValidationError
 from rockpack.mainsite import app
-from rockpack.mainsite.core.dbapi import commit_on_success, get_es_connection
+from rockpack.mainsite.core.dbapi import commit_on_success
+from rockpack.mainsite.core.es import get_es_connection
 from rockpack.mainsite.core.webservice import WebService, expose_ajax, ajax_create_response, process_image
 from rockpack.mainsite.core.oauth.decorators import check_authorization
 from rockpack.mainsite.core.youtube import get_video_data
