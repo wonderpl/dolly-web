@@ -211,8 +211,8 @@ def es_get_channels(conn, locale=app.config.get('ENABLED_LOCALES'), channel_ids=
     return channel_list.values()
 
 def es_get_channels_with_videos(conn, locale=app.config.get('ENABLED_LOCALES'), channel_ids=None, paging=None):
-    channels = es_get_channels(conn, channel_ids=channel_ids)
-    videos = [_ for _ in es_get_videos(conn, channel_ids=channel_ids, paging=paging)]
+    channels = es_get_channels(conn, channel_ids=channel_ids, paging=paging)
+    videos = [_ for _ in es_get_videos(conn, channel_ids=channel_ids)]
     channel_dict = {c['id']: c for c in channels}
     es_video_to_channel_map(videos, channel_dict)
     return channel_dict.values()
@@ -244,7 +244,7 @@ class VideoWS(WebService):
         es_channel_to_video_map(video_list, channel_list)
 
         return dict(videos={'items': video_list},
-                total=videos.count())
+                total=len(video_list))
         #data, total = get_local_videos(self.get_locale(), self.get_page(), star_order=True, **request.args)
         #return dict(videos=dict(items=data, total=total))
 

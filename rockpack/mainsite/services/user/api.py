@@ -335,23 +335,10 @@ class UserWS(WebService):
     @expose_ajax('/<userid>/channels/<channelid>/videos/')
     @check_authorization()
     def channel_videos(self, userid, channelid):
-        channels = video_api.es_get_channels(
-                get_es_connection(),
-                self.get_locale(),
-                channel_ids=[channelid]
-                )
-        if not channels.count():
-            abort(404)
-
-        vlist = []
-        from operator import attrgetter
-        for c in channels: # do this nicer
-            if not c.owner == userid:
-                abort(403)
-            vlist = [v.id for v in sorted(c.videos, key=attrgetter('position'))]
-        return vlist
-
-    # TODO: es lookup
+        channel = Channel.query.filter_by(id=channelid, deleted=False).first_or_404()
+        if not channel.owner == userid:
+            abort(403)
+        return [v[0] for v in VideoInstance.query.filter_by(channel=channelid).order_by('position asc').values('video')]
 
     @expose_ajax('/<userid>/channels/<channelid>/videos/', methods=('PUT',))
     @check_authorization(self_auth=True)
