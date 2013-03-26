@@ -19,6 +19,7 @@ header {
   font-family: "dn-bold";
   height: 80px;
   padding-top: 120px;
+  text-align: center;
 
   h1 {
     font-size: 21px;
@@ -36,10 +37,11 @@ footer {
 
   ul {
     list-style: none;
+    padding: 10px 0;
+    .clearfix();
 
     li {
       float: left;
-      line-height: 68px;
       margin-right: 15px;
     }
   }
@@ -65,7 +67,7 @@ footer {
 
   ul {
     list-style: none;
-    margin: 0;    
+    margin: 0 0 0 10px;
   }
 
   li {
@@ -156,6 +158,7 @@ input[type="password"] {
 
 .main-content {
   margin-top: 40px;
+  text-align: center;
 }
 
 footer {
@@ -166,7 +169,7 @@ footer {
 }
 
 .errors {
-
+  display: inline-block;
   color: #fff;
   font-family: "dn-regular";
   text-transform: uppercase;
@@ -183,4 +186,24 @@ footer {
   background: -ms-linear-gradient(top, #b6193a 0%,#e33737 100%); /* IE10+ */
   background: linear-gradient(to bottom, #b6193a 0%,#e33737 100%); /* W3C */
   filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#b6193a', endColorstr='#e33737',GradientType=0 ); /* IE6-9 */  
+}
+
+/* Landscape phone to portrait tablet */
+@media (max-width: 767px) {
+  .main-content {
+    width: 320px !important;
+    margin: 20px auto !important;
+  }
+
+  input[type='password'] {
+    width: 200px !important;
+  }
+
+  .btn {
+    padding: 5px 58px;
+  }
+
+  .errors {
+    width: 230px;
+  }
 }
