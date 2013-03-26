@@ -276,13 +276,14 @@ class UserWS(WebService):
     @expose_ajax('/<userid>/channels/<channelid>/', cache_age=60, secure=False)
     def channel_info(self, userid, channelid):
         conn = get_es_connection()
-        channel = video_api.es_get_channels_with_videos(
+        channel, total = video_api.es_get_channels_with_videos(
                 conn,
                 channel_ids=[channelid])
         if not channel:
             abort(404)
         return channel[0]
 
+    """
     @expose_ajax('/<userid>/channels/<channelid>/', cache_age=0)
     @check_authorization()
     def owner_channel_info(self, userid, channelid):
@@ -290,6 +291,7 @@ class UserWS(WebService):
         if g.authorized.userid != userid and not channel.public:
             abort(404)
         return _channel_info_response(channel, self.get_locale(), self.get_page(), True)
+    """
 
     @expose_ajax('/<userid>/channels/<channelid>/public/', methods=('PUT',))
     @check_authorization(self_auth=True)
