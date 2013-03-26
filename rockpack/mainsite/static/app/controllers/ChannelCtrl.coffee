@@ -7,6 +7,10 @@ window.Weblight.controller('ChannelCtrl', ['$scope', 'Videos', '$routeParams', '
   $scope.channel = channelData
   $scope.videos = channelData.videos.items
 
+  # Additional defaults
+  $scope.videoCellTitleLength = if $scope.isMobile then 10 else 25
+  $scope.channelTitleLength = if $scope.isMobile then 10 else 25
+
   @totalvideos = channelData.videos.total
 
   $scope.load_videos = => 
