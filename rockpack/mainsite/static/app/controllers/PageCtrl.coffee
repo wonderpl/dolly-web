@@ -3,4 +3,12 @@ window.Weblight.controller('PageCtrl', ['$routeParams', 'isMobile', '$scope', ($
 
   $scope.toggle = (e, hiddenelement) -> 
     $(e.currentTarget).toggleClass('activestate').siblings('.'+hiddenelement).toggleClass('activestate')
+
+  $scope.toggleReadMore = (e, hiddenelement) ->
+    $(e.currentTarget).toggleClass('activestate').siblings('.'+hiddenelement).toggleClass('activestate')
+    if $(e.currentTarget).hasClass('activestate')
+      $(e.currentTarget).html('Read Less')
+    else
+      $(e.currentTarget).html('Read More')
+
 ])
