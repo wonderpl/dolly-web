@@ -83,7 +83,8 @@ html, body {
     text-align: center;
 
     a {
-      margin: 0 20px;
+      display:inline-block;
+      padding: 0 20px;
       color: #fff;
       font-family:'dn-bold';
       font-size: 14px;
@@ -91,6 +92,20 @@ html, body {
       text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.75);
 
 
+
+    }
+
+    a:hover {
+      text-decoration:none;
+      color:#20c3e2;
+      background: url(/static/images/headerbghover.png) repeat right 0px;
+      background-color: rgba(28,31,33,0.7);
+
+      -webkit-transition: all 0.2s;
+      -moz-transition: all 0.2s;
+      -ms-transition: all 0.2s;
+      -o-transition: all 0.2s;
+      transition: all 0.2s;
     }
 
     .logo {
