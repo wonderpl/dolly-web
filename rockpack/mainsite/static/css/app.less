@@ -176,7 +176,6 @@ body {
 
   .title {
     margin-left: 20px;
-    width: 500px;
     text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.75);
   }
 
@@ -188,7 +187,7 @@ body {
   }
 
   li {
-    float: left;
+    display: inline-block
 
   }
 
@@ -263,6 +262,9 @@ body {
     }
 
     .channeldesc {
+      margin-right: 0;
+      text-align: left;
+      width: 70%;
       color: #515151;
       text-shadow: 1px 1px 1px rgba(255, 255, 255, 1);
     }
@@ -275,6 +277,7 @@ body {
   height: auto;
   width: auto;
   border: 1px solid #2d3136;
+  vertical-align: bottom;
   -webkit-box-shadow:  0px 0px 6px 1px rgba(0, 0, 0, 0.4);    
   box-shadow:  0px 0px 6px 1px rgba(0, 0, 0, 0.4);      
 }
@@ -771,4 +774,11 @@ footer {
 
 @media (min-width: 768px) and (max-width: 979px) {
 
+  #channeloverlay {
+    .channeldetails {
+      .channeldesc {
+        width: 60%;
+      }
+    }
+  }
 }
