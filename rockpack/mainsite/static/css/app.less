@@ -277,7 +277,6 @@ footer {
 
 .wrapper {
   position: relative;
-  min-width: 980px;
   margin: 0 auto;
   padding-top: 0;
 }
@@ -608,8 +607,7 @@ footer {
 }
 
 
-
-.mobile {
+@media (max-width: 767px) {
   #topnav {
     height: 40px;
     text-align: center;
@@ -703,4 +701,8 @@ footer {
       }
     }
   }
+}
+
+@media (min-width: 768px) and (max-width: 979px) {
+
 }

@@ -38,14 +38,8 @@ window.Weblight.controller('VideoCtrl', ['$scope', '$rootScope', '$routeParams',
       })
 
   $scope.$watch((-> window.orientation), (newValue, oldValue) ->
-    if oldValue 
+    if oldValue != newValue
       $scope.PlayVideo()
-  )
-
-  $scope.$watch($scope.getVideoId, (newValue) ->
-    if newValue
-      $scope.PlayVideo()
-    return
   )
 
   $scope.$watch((-> $rootScope.playerReady), (newValue) ->
