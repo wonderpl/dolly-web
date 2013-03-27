@@ -51,12 +51,12 @@ def setup_admin(app):
             from sqlalchemy.orm import aliased
             parent = aliased(models.Category)
             cat_group = g.session.query(
-                    models.VideoLocaleMeta.locale, parent.name, models.Category.name, func.count(models.VideoLocaleMeta.id)
-                    ).filter(models.Category.parent==parent.id, models.VideoLocaleMeta.category==models.Category.id
-                    ).filter(models.Category.parent!=1, models.VideoLocaleMeta.visible==True
+                    models.VideoInstanceLocaleMeta.locale, parent.name, models.Category.name, func.count(models.VideoInstanceLocaleMeta.id)
+                    ).join(models.VideoInstance, models.Video, ).filter(models.Category.parent==parent.id, models.VideoInstance.category==models.Category.id
+                    ).filter(models.Category.parent!=1, models.Video.visible==True
                     ).filter_by(
-                    ).group_by(models.Category.parent_category, models.Category.name, parent.name, models.VideoLocaleMeta.locale
-                    ).order_by(models.VideoLocaleMeta.locale.desc(), parent.name.desc())
+                    ).group_by(models.Category.parent_category, models.Category.name, parent.name, models.VideoInstanceLocaleMeta.locale
+                    ).order_by(models.VideoInstanceLocaleMeta.locale.desc(), parent.name.desc())
             cat_count = cat_group.count()
 
             channel_group = g.session.query(

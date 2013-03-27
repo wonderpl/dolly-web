@@ -45,7 +45,7 @@ class Category(db.Model):
     parent_category = relationship('Category', remote_side=[id], backref='children')
     locales = relationship('Locale', backref='categories')
 
-    video_locale_metas = relationship('VideoLocaleMeta', backref='category_ref',
+    video_instancess = relationship('VideoInstance', backref='category_ref',
                                       passive_deletes=True)
     channel_locale_metas = relationship('ChannelLocaleMeta', backref='category_ref',
                                         passive_deletes=True)
@@ -159,7 +159,6 @@ class Video(db.Model):
     thumbnails = relationship('VideoThumbnail', backref='video_rel',
                               lazy='joined', passive_deletes=True,
                               cascade="all, delete-orphan")
-    metas = relationship('VideoLocaleMeta', backref='video_rel')
     instances = relationship('VideoInstance', backref=db.backref('video_rel', lazy='joined'),
                              passive_deletes=True, cascade="all, delete-orphan")
     restrictions = relationship('VideoRestriction', backref='videos')
@@ -179,7 +178,9 @@ class Video(db.Model):
         return 'http://www.youtube.com/watch?v=' + self.source_videoid
 
     @classmethod
-    def add_videos(cls, videos, source, locale, category=None):
+    def add_videos(cls, videos, source, locale, channel, category=None):
+        for video in videos:
+            video.source = source
         session = cls.query.session
         try:
             # First try to add all...
@@ -241,8 +242,7 @@ class VideoInstance(db.Model):
     channel = Column(ForeignKey('channel.id'), nullable=False)
     category = Column(ForeignKey('category.id'), nullable=False)
 
-    category_rel = relationship('Category', backref='videoinstances')
-    metas = relationship('VideoInstanceLocaleMeta', backref='videoinstances', cascade='all,delete')
+    metas = relationship('VideoInstanceLocaleMeta', backref='video_instance_rel', cascade='all,delete')
 
     @property
     def default_thumbnail(self):
@@ -259,7 +259,7 @@ class VideoInstance(db.Model):
 
         session = cls.query.session
         instances = [cls(video=v, channel=channel, category=category) for v in video_ids]
-        session.add(instances)
+        session.add_all(instances)
         session.commit()
 
         for i in instances:
@@ -347,8 +347,9 @@ class Channel(db.Model):
         return url_for(view, userid=self.owner_rel.id, channelid=self.id)
     resource_url = property(get_resource_url)
 
-    def add_videos(self, videos):
-        VideoInstance.add_from_video_ids(getattr(v, 'id', v) for v in videos)
+    def add_videos(self, videos, locale):
+        meta = ChannelLocaleMeta.query.filter_by(channel=self.id, locale=locale).first()
+        VideoInstance.add_from_video_ids([getattr(v, 'id', v) for v in videos], self.id, meta.category, locale)
 
         instances = [VideoInstance(channel=self.id, video=getattr(v, 'id', v)) for v in videos]
         session = self.query.session
@@ -360,7 +361,6 @@ class Channel(db.Model):
                         filter_by(channel=self.id).
                         filter(VideoInstance.video.in_(set(i.video for i in instances)))]
             session.add_all(i for i in instances if i.video not in existing)
-            insert_new_only(VideoInstanceLocaleMeta, )
 
     def remove_videos(self, videos):
         VideoInstance.remove_from_video_ids(
