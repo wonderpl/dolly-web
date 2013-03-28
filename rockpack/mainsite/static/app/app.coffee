@@ -60,10 +60,8 @@ window.Weblight = angular.module('Weblight', ['channelServices'])
   )
 
 window.onYouTubeIframeAPIReady = ->
-  console.log 'callback'
   injector = angular.element(document.getElementById('app')).injector()
   injector.invoke(($rootScope, $compile, $document) ->
-    console.log 'player ready trigger'
     $rootScope.playerReady = true
     $rootScope.$apply()
     return

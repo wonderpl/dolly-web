@@ -35,22 +35,18 @@ window.Weblight.controller('VideoCtrl', ['$scope', '$rootScope', '$routeParams',
       })
 
   $scope.$watch((-> window.orientation), (newValue, oldValue) ->
-    console.log 'orientation changed'
     if oldValue != newValue
-      console.log 'triggered player reload'
       $scope.hide()
       $scope.PlayVideo()
   )
 
   $scope.$watch((-> $routeParams.videoid), (newValue) ->
-    console.log newValue
     if newValue
       $scope.PlayVideo()
     return
   )
 
   $scope.$watch((-> $rootScope.playerReady), (newValue) ->
-    console.log 'caught player ready: ' + newValue
     if newValue
       $scope.PlayVideo()
     return
