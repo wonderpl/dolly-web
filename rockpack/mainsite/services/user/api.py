@@ -273,6 +273,10 @@ class UserWS(WebService):
             abort(400, **response)
         user = g.authorized.user
         setattr(user, attribute_name, field.data)
+        if attribute_name == 'username':
+            if user.username_updated:
+                abort(400, message='Limit for changing username has been reached')
+            user.username_updated = True
         user.save()
 
     @expose_ajax('/<userid>/avatar/', cache_age=60)
