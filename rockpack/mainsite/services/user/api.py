@@ -1,3 +1,4 @@
+from werkzeug.datastructures import MultiDict
 from sqlalchemy import desc
 from sqlalchemy.orm.exc import NoResultFound
 from flask import abort, request, g
@@ -187,6 +188,7 @@ class UserWS(WebService):
             first_name=user.first_name,
             last_name=user.last_name,
             email=user.email,
+            gender=user.gender,
             avatar_thumbnail_url=user.avatar.thumbnail_small,
             date_of_birth=user.date_of_birth.isoformat() if user.date_of_birth else None,
         )
@@ -195,12 +197,11 @@ class UserWS(WebService):
         info['channels'].update(items=channels, total=len(channels))
         return info
 
-    @expose_ajax('/<userid>/<any("username", "first_name", "last_name", "email", "password", "locale", "date_of_birth"):attribute_name>/', methods=('PUT',))
+    @expose_ajax('/<userid>/<any("username", "first_name", "last_name", "email", "password", "locale", "date_of_birth", "gender"):attribute_name>/', methods=('PUT',))
     @check_authorization(self_auth=True)
     def change_user_info(self, userid, attribute_name):
-        from werkzeug.datastructures import MultiDict
         value = request.json
-        form = RockRegistrationForm(MultiDict([(attribute_name, value)]), csrf_enabled=False)
+        form = RockRegistrationForm(formdata=MultiDict([(attribute_name, value)]), csrf_enabled=False)
         field = getattr(form, attribute_name)
         if not field.validate(field.data):
             response = {'message': field.errors}
@@ -210,20 +211,6 @@ class UserWS(WebService):
             abort(400, **response)
         user = g.authorized.user
         setattr(user, attribute_name, field.data)
-        user.save()
-        return
-
-        user = g.authorized.user
-        if user.username_updated:
-            abort(400, message='Limit for changing username has been reached')
-        username = request.json
-        if not isinstance(username, str) or username != User.sanitise_username(username):
-            abort(400, message='Not a valid username')
-        suggested = User.suggested_username(username)
-        if suggested != username:
-            abort(400, message='Username is already taken', suggested_username=suggested)
-        user.username = username
-        user.username_updated = True
         user.save()
 
     @expose_ajax('/<userid>/avatar/', cache_age=60)

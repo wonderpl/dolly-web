@@ -10,7 +10,7 @@ from rockpack.mainsite.core.token import create_access_token
 from rockpack.mainsite.core.email import send_email
 from rockpack.mainsite.core.oauth.decorators import check_client_authorization
 from rockpack.mainsite.core.webservice import WebService, expose_ajax
-from rockpack.mainsite.services.user.models import User, UserAccountEvent, username_exists
+from rockpack.mainsite.services.user.models import User, UserAccountEvent, username_exists, GENDERS
 from rockpack.mainsite.services.video.models import Locale
 from . import facebook, models
 
@@ -100,11 +100,19 @@ def email_registered_validator():
     return _registered
 
 
+def gender_validator():
+    def _valid(form, field):
+        if field.data not in GENDERS:
+            raise wtf.ValidationError('Invalid gender.')
+    return _valid
+
+
 class RockRegistrationForm(wtf.Form):
     username = wtf.TextField(validators=[wtf.Length(min=3), username_validator()] + get_column_validators(User, 'username'))
     password = wtf.PasswordField(validators=[wtf.Required(), wtf.Length(min=6)])
     first_name = wtf.TextField(validators=[wtf.Optional()] + get_column_validators(User, 'first_name'))
     last_name = wtf.TextField(validators=[wtf.Optional()] + get_column_validators(User, 'last_name'))
+    gender = wtf.TextField(validators=[wtf.Optional(), gender_validator()] + get_column_validators(User, 'gender'))
     date_of_birth = wtf.DateField(validators=get_column_validators(User, 'date_of_birth'))
     locale = wtf.TextField(validators=get_column_validators(User, 'locale'))
     email = wtf.TextField(validators=[wtf.Email(), email_registered_validator()] + get_column_validators(User, 'email'))
@@ -192,7 +200,7 @@ class RegistrationWS(WebService):
     @expose_ajax('/', methods=['POST'])
     @check_client_authorization
     def register(self):
-        form = RockRegistrationForm(request.form, csrf_enabled=False)
+        form = RockRegistrationForm(csrf_enabled=False)
         if not form.validate():
             record_user_event(form.username.data, 'registration failed',
                               ','.join(form.errors.keys()))

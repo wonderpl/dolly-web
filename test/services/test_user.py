@@ -36,6 +36,7 @@ class TestProfileEdit(base.RockPackTestCase):
                     "email": 'bigtrouble@littlechina.com',
                     "password": 'lopanisgod',
                     "locale": 'en-us',
+                    "gender": "m",
                     "date_of_birth": '1901-01-01'}
 
             for field, value in field_map.iteritems():

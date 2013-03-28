@@ -14,6 +14,8 @@ from rockpack.mainsite.helpers.urls import url_for
 
 
 EXTERNAL_SYSTEM_NAMES = 'facebook', 'twitter', 'google'
+GENDERS_MAP = {'m': 'male', 'f': 'female'}
+GENDERS = GENDERS_MAP.keys()
 
 
 class User(db.Model):
@@ -27,6 +29,7 @@ class User(db.Model):
     last_name = Column(String(32), nullable=False)
     date_of_birth = Column(Date())
     avatar = Column(ImageType('AVATAR'), nullable=False)
+    gender = Column(Enum(*GENDERS), nullable=True)
     is_active = Column(Boolean, nullable=False, server_default='true', default=True)
     refresh_token = Column(String(1024), nullable=False)
     username_updated = Column(Boolean, nullable=False, server_default='false', default=False)

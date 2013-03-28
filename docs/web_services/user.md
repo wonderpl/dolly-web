@@ -28,6 +28,7 @@ Cache-Control: public, max-age=60
   "id": "userid",
   "username": "username",
   "display_name": "display name",
+  "gender": null,
   "avatar_thumbnail_url": "http://path/to/avatar/small.jpg",
   "channels": {
     "total": 1,
