@@ -3,16 +3,20 @@ window.Weblight.controller('VideoCtrl', ['$scope', '$rootScope', '$routeParams',
 
   $rootScope.currentVideo = {}
 
+  @getPlayerWidth = ->
+    console.log window.screen.width
+    if window.window.screen.width < 750
+      @playerWidth = window.window.screen.width
+      @playerHeight = window.window.screen.width*9/16
+    else
+      @playerWidth = 738
+      @playerHeight = 415
+
+
   $scope.PlayVideo = =>
-
-
     if $rootScope.playerReady && typeof $routeParams.videoid != "undefined"
-      if window.innerWidth < 750
-        @playerWidth = window.innerWidth
-        @playerHeight = window.innerWidth*9/16
-      else
-        @playerWidth = 738
-        @playerHeight = 415
+
+      @getPlayerWidth()
 
       # need to trigger a hide, otherwise show did not fire on load
       $("#lightbox").hide()
@@ -23,6 +27,7 @@ window.Weblight.controller('VideoCtrl', ['$scope', '$rootScope', '$routeParams',
       # if typeof $scope.player != "undefined" 
       #   $scope.player.loadVideoById($scope.videodata.video.source_id, 0, 'highres')
       # else 
+      console.log @playerWidth
       $scope.player = new YT.Player('player', {
         height: @playerHeight,
         width: @playerWidth,
@@ -30,14 +35,16 @@ window.Weblight.controller('VideoCtrl', ['$scope', '$rootScope', '$routeParams',
         playerVars: {
           autoplay: 1,
           showinfo: 0,
-          modestbranding: 0
+          modestbranding: 0,
+          wmode: "opaque"
         }
       })
 
-  $scope.$watch((-> window.orientation), (newValue, oldValue) ->
+  $scope.$watch((-> window.orientation), (newValue, oldValue) =>
     if oldValue != newValue
-      $scope.hide()
-      $scope.PlayVideo()
+      @getPlayerWidth()
+      $('#player').width(@playerWidth).height(@playerHeight)
+
   )
 
   $scope.$watch((-> $routeParams.videoid), (newValue) ->
@@ -53,8 +60,8 @@ window.Weblight.controller('VideoCtrl', ['$scope', '$rootScope', '$routeParams',
   )
 
   $scope.hide = ->
-    $scope.player.destroy()
     $('#lightbox').hide()
+    $scope.player.destroy()
     $location.search( 'videoid', null );
     return
 

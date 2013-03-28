@@ -32,7 +32,7 @@ html, body {
   position: fixed;
   top: 0;
   width: 100%;
-  z-index: 1000;
+  z-index: 100;
 
   #rightmenu {
     float: right;
@@ -81,6 +81,11 @@ html, body {
     border-left: 1px solid rgba(255, 255, 255, .1);
     line-height: 70px;
     text-align: center;
+    -webkit-transition: all 0.5s;
+    -moz-transition: all 0.5s;
+    -ms-transition: all 0.5s;
+    -o-transition: all 0.5s;
+    transition: all 0.5s;
 
 
 
@@ -92,7 +97,6 @@ html, body {
       font-size: 14px;
       text-transform: uppercase;
       text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.75);
-      background: rgba(28,31,33,0.0) url(/static/images/headerbghover.png) repeat-x 0 60px;
       text-decoration:none;
       -webkit-transition: all 0.3s;
       -moz-transition: all 0.3s;
@@ -102,16 +106,15 @@ html, body {
 
       &.gettheapp {
         background: url(/static/images/getTheApp.png) no-repeat -19px 0;
-        padding-left: 60px;
+        padding-left: 50px;
       }
       &.gettheapp:hover {
         background: url(/static/images/getTheAppHover.png) repeat-y -19px 60px;
-        padding-left: 60px;
         -webkit-transition: all 0.15s;
-      -moz-transition: all 0.15s;
-      -ms-transition: all 0.15s;
-      -o-transition: all 0.15s;
-      transition: all 0.15s;
+        -moz-transition: all 0.15s;
+        -ms-transition: all 0.15s;
+        -o-transition: all 0.15s;
+        transition: all 0.15s;
       }
 
       &:hover {
@@ -121,11 +124,6 @@ html, body {
 
     &:hover {
       background: rgba(28,31,33,0.6) url(/static/images/headerbghover.png) repeat-x 0 0;
-      -webkit-transition: all 0.5s;
-      -moz-transition: all 0.5s;
-      -ms-transition: all 0.5s;
-      -o-transition: all 0.5s;
-      transition: all 0.5s;
 
     }
 
@@ -182,6 +180,38 @@ body {
     width: 215px;
     -webkit-box-shadow:  0px 2px 2px 0px rgba(0, 0, 0, 0.15);    
     box-shadow:  0px 2px 2px 0px rgba(0, 0, 0, 0.15);
+    opacity: 1;
+    -webkit-transition: 0.5s;
+    -moz-transition: 0.5s all;
+    -ms-transition: 0.5s all;
+    -o-transition: 0.5s all;
+    transition: 0.5s all;
+
+    .overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      background: url(/static/images/videoOverlay.png);
+      background-size: 215px 121px;
+      width: 215px;
+      height: 121px;
+      -webkit-transition: 0.1s;
+      -moz-transition: 0.1s all;
+      -ms-transition: 0.1s all;
+      -o-transition: 0.1s all;
+      transition: 0.1s all;
+
+      &:hover {
+        background: url(/static/images/overlayhover.png);
+        background-size: 215px 121px;
+      }
+    }
+
+    &:hover {
+      -webkit-box-shadow:  1px 3px 3px 0px rgba(0, 0, 0, 0.25);    
+      box-shadow:  1px 3px 3px 0px rgba(0, 0, 0, 0.25);
+      
+    }
 
     .videocell {
       background-size: 215px 121px;
@@ -278,11 +308,6 @@ body {
     .clearfix();
   }
 
-  li {
-    float: left;
-
-  }
-
   .bluenumber {
     font-size: 18px;
     font-family: "dn-bold";
@@ -302,6 +327,7 @@ body {
     margin: 0;
 
     li {
+      display: inline-block;      
       margin-right: 65px;
       text-align: center;
     }
@@ -420,7 +446,7 @@ footer {
     padding: 0;
 
     li {
-      float: left;
+      display: inline-block;
 
       &#channelthumb {
         border: 1px #2c3035 solid;
@@ -783,6 +809,26 @@ footer {
       width: 140px;
       opacity: 1;
 
+      .overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        background: url(/static/images/videoOverlay.png);
+        background-size: 140px 79px;
+        width: 140px;
+        height: 79px;
+        -webkit-transition: 0.5s;
+        -moz-transition: 0.5s all;
+        -ms-transition: 0.5s all;
+        -o-transition: 0.5s all;
+        transition: 0.5s all;
+
+        &:hover {
+          background: url(/static/images/overlayhover.png);
+          background-size: 140px 79px;
+        }
+      }
+
       .videocell {
         width: 140px;
         height: 79px;
@@ -818,6 +864,11 @@ footer {
 }
 
 @media (min-width: 768px) and (max-width: 979px) {
+
+  #topnav {
+    height: 60px;    
+  }
+  
 
   #channeloverlay {
     .channeldetails {
