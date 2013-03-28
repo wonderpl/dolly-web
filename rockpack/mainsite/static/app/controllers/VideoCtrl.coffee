@@ -4,6 +4,7 @@ window.Weblight.controller('VideoCtrl', ['$scope', '$rootScope', '$routeParams',
   $rootScope.currentVideo = {}
 
   @getPlayerWidth = ->
+    console.log window.innerWidth
     if window.innerWidth < 750
       @playerWidth = window.innerWidth
       @playerHeight = window.innerWidth*9/16
@@ -26,6 +27,7 @@ window.Weblight.controller('VideoCtrl', ['$scope', '$rootScope', '$routeParams',
       # if typeof $scope.player != "undefined" 
       #   $scope.player.loadVideoById($scope.videodata.video.source_id, 0, 'highres')
       # else 
+      console.log @playerWidth
       $scope.player = new YT.Player('player', {
         height: @playerHeight,
         width: @playerWidth,
