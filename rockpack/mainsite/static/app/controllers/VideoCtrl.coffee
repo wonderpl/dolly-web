@@ -53,9 +53,8 @@ window.Weblight.controller('VideoCtrl', ['$scope', '$rootScope', '$routeParams',
   )
 
   $scope.hide = ->
-    $scope.player.stopVideo()
-    $scope.player.destroy()
     $('#lightbox').hide()
+    $scope.player.destroy()
     $location.search( 'videoid', null );
     return
 
