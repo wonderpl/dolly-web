@@ -82,20 +82,28 @@ Cache-Control: private
 }
 ```
 
-### Change username
+### Update profile
 
-Change the current username for a user
+Change an individual attribute for a user, for example, username.
+
+The resource is contructed with USERID and ATTRIBUTE in this way `/ws/USERID/ATTRIBUTE/`
 
 ```http
-PUT /ws/USERID/username/ HTTP/1.1
+PUT /ws/dfj84vho43nl3yti8y43j/username/ HTTP/1.1
 Content-Type: application/json
 
-"foo"
+"porkchopexpress"
 ```
-
-Parameter  | Required | Value      | Description
-:--------- | :------- | :--------- | :----------
-           | Yes      | String     | Characters allowed should match regex [a-zA-Z0-9]
+           
+Parameter     | Required | Value  | Description
+:------------ | :------- | :----- | :----------
+username      | Yes      | String | Characters allowed should match regex [a-zA-Z0-9]
+password      | Yes      | String | Minimum 6 characters
+first_name    | No       | String |
+last_name     | No       | String |
+date_of_birth | Yes      | String | YYYY-MM-DD formatted date string
+locale        | Yes      | String | IETF language tag
+email         | Yes      | String | Email address
 
 Responds with a `204`
 
@@ -118,30 +126,7 @@ Content-Type: application/json
     "suggested_username": "foo"
 }
 ```
-
-Username has already been changed a maximum number of times
-
-```http
-HTTP/1.1 400 BAD REQUEST
-Content-Type: application/json
-
-{
-    "error": "invalid_request",
-    "message": "Limit for changing username has been reached"
-}
-```
-
-Invalid username
-
-```http
-HTTP/1.1 400 BAD REQUEST
-Content-Type: application/json
-
-{
-    "error": "invalid_request",
-    "message": "Not a valid username"
-}
-```
+See the Registration section of ``docs/web_services/oauth.md`` for a comprehensive list of errors
 
 Avatar
 ======
