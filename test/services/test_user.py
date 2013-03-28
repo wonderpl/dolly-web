@@ -2,6 +2,7 @@ import json
 
 from test import base
 from test.test_helpers import get_auth_header
+from rockpack.mainsite.services.user.models import User
 
 
 class TestProfileEdit(base.RockPackTestCase):
@@ -46,3 +47,12 @@ class TestProfileEdit(base.RockPackTestCase):
                         headers=[get_auth_header(new_user.id)])
 
                 self.assertEquals(r.status_code, 204, "{} - {}".format(field, r.data))
+
+            user = User.query.get(new_user.id)
+            self.assertEquals(user.check_password(field_map['password']), True)
+            self.assertEquals(field_map['locale'], user.locale)
+            self.assertEquals(field_map['email'], user.email)
+            self.assertEquals(field_map['gender'], user.gender)
+            self.assertEquals(field_map['last_name'], user.last_name)
+            self.assertEquals(field_map['first_name'], user.first_name)
+            self.assertEquals(field_map['date_of_birth'], user.date_of_birth.strftime("%Y-%m-%d"))

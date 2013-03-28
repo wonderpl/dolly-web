@@ -273,7 +273,11 @@ class UserWS(WebService):
                 response.update({'suggested_username': User.suggested_username(value)})
             abort(400, **response)
         user = g.authorized.user
-        setattr(user, attribute_name, field.data)
+        # special case for password
+        if attribute_name == 'password':
+            user.set_password(form.password.data)
+        else:
+            setattr(user, attribute_name, field.data)
         if attribute_name == 'username':
             if user.username_updated:
                 abort(400, message='Limit for changing username has been reached')
