@@ -4,10 +4,10 @@ window.Weblight.controller('VideoCtrl', ['$scope', '$rootScope', '$routeParams',
   $rootScope.currentVideo = {}
 
   @getPlayerWidth = ->
-    console.log window.innerWidth
-    if window.innerWidth < 750
-      @playerWidth = window.innerWidth
-      @playerHeight = window.innerWidth*9/16
+    console.log window.screen.width
+    if window.window.screen.width < 750
+      @playerWidth = window.window.screen.width
+      @playerHeight = window.window.screen.width*9/16
     else
       @playerWidth = 738
       @playerHeight = 415
