@@ -60,7 +60,7 @@ def get_local_channel(locale, paging, **filters):
         item = dict(
             position=position,
             id=meta.id,
-            category=meta.category,
+            category=str(meta.category),
         )
         item.update(channel_dict(meta.channel_rel))
         channel_data.append(item)

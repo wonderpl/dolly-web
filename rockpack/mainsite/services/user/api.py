@@ -211,6 +211,8 @@ def _channel_info_response(channel, locale, paging, owner_url):
         locale, paging, channel=channel.id, with_channel=False,
         position_order=True, date_order=True)
     data['ecommerce_url'] = channel.ecommerce_url
+    data['category'] = str(ChannelLocaleMeta.query.filter_by(
+        channel=channel.id, locale=locale).value('category'))
     data['videos'] = dict(items=items, total=total)
     return data
 
