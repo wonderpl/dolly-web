@@ -210,6 +210,7 @@ Cache-Control: public, max-age=60
  "description": "Channel description",
  "resource_url": "http://base/ws/USERID/channels/CHANNELID/",
  "title": "Channel title",
+ "ecommerce_url": "",
  "cover_background_url": "http://path/to/channel/bg.jpg",
  "cover_thumbnail_small_url": "http://path/to/channel/small.jpg",
  "cover_thumbnail_large_url": "http://path/to/channel/large.jpg",
@@ -728,6 +729,7 @@ Cache-Control: private, max-age=60
      "cover_thumbnail_large_url": "",
      "cover_thumbnail_small_url": "",
      "subscribe_count": 0,
+     "ecommerce_url": "",
      "owner": {
       "id": "BJsFQkw7SpyNfi6xOBlA1Q",
       "resource_url": "http://rockpack.com/ws/BJsFQkw7SpyNfi6xOBlA1Q/",

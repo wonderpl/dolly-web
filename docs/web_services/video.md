@@ -42,6 +42,7 @@ Cache-Control: private, max-age=60
                 "position": 1,
                 "resource_url": "http://demo.rockpack.com/ws/ziCAgGxbRpW-HNYTloYkQg/channels/chHRF0V4rMT4CqULiSajAP2Q/",
                 "id": "chHRF0V4rMT4CqULiSajAP2Q",
+                "ecommerce_url": "",
                 "cover_background_url": "http://media.dev.rockpack.com/images/channel/background/hJSke4WyRci0mqhHzlZSZg.jpg"
             }
         ]
