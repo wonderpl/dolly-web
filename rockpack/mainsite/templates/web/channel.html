@@ -1,30 +1,77 @@
 <!DOCTYPE html>
-<html> 
-  <head prefix="og: http://ogp.me/ns# {{ config.FACEBOOK_APP_NAMESPACE }}: http://ogp.me/ns/apps/{{ config.FACEBOOK_APP_NAMESPACE }}#">
-    <title>{{ title }}</title>
-    <meta property="fb:app_id" content="{{ config.FACEBOOK_APP_ID }}" /> 
-    <meta property="og:title" content="{{ title }}" /> 
-    <meta property="og:image" content="{{ cover_thumbnail_large_url }}" /> 
-    <meta property="og:description" content="{{ description }}" /> 
-  </head>
-  <body>
-    <div class="background" style="background: url({{ cover_background_url }})">
-      <h1>{{ title }}</h1>
+<html lang="en" id="ng-app" ng-app="Weblight" xmlns:ng="http://angularjs.org">
+<head>
+    <meta charset="utf-8">
+    <title>rockpack</title>
+    <meta name="HandheldFriendly" content="True">
+    <meta name="MobileOptimized" content="320">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1.0, user-scalable=no">
+    <meta http-equiv="cleartype" content="on">
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+
+    <!--[if lt IE 9]>
+      <link rel="stylesheet" type="text/css" href="ie.css" />
+    <![endif]-->
+
+    <!--[if lt IE 9]>
+      <script src="vendor/js-no-compile/html5.js"></script>
+    <![endif]-->
+
+    <!--[if lte IE 8]>
       <script>
-        var owner = {{ owner|tojson|safe }};
+        document.createElement('ng-include');
+        document.createElement('ng-pluralize');
+        document.createElement('ng-view');
+        document.createElement('ng:include');
+        document.createElement('ng:pluralize');
+        document.createElement('ng:view');
       </script>
-      {% if selected_instance %}
-      <div class="player">
-        <!-- play {{ selected_instance.video.source_id }} -->
-      </div>
-      {% endif %}
-      <div class="videos">
-        {% for instance in videos['items'] %}
-        <div id="{{ instance.id }}" class="video" data-sourceid="{{ instance.video.source_id }}">
-          <img src="{{ instance.video.thumbnail_url }}"/>
-        </div>
-        {% endfor %}
-      </div>
+      <script src="vendor/js-no-compile/json2.js"></script>
+    <![endif]-->
+
+    <script>
+      var channel_data = {{ ctx.channel_data|tojson|safe }},
+          channelUrl = "{{ url_for('userws.channel_info', userid='-', channelid='-') }}"
+    </script>
+
+    {% assets output="gen/lib.%(version)s.js",
+              "vendor/js/jquery-1.9.1.js", "vendor/js/lodash.js", "vendor/js/angular.js", "vendor/js/angular-resource.js",
+              "vendor/js/ui-bootstrap-tpls-0.2.0.js" %}
+      <script type="text/javascript" src="{{ ASSET_URL }}"></script>
+    {% endassets %}
+
+    {% assets filters="coffeescript", output="gen/home.%(version)s.js", "app/app.coffee", "app/controllers/AppCtrl.coffee", "app/controllers/ChannelCtrl.coffee", "app/controllers/PageCtrl.coffee", "app/controllers/PageCtrl.coffee", "app/services.coffee", "app/controllers/VideoCtrl.coffee" %}
+      <script type="text/javascript" src="{{ ASSET_URL }}"></script>
+    {% endassets %}
+
+    {% assets filters="ajstemplates", output="gen/templates.%(version)s.js", 
+      "app/views/about.html", "app/views/channel.html", "app/views/footer.html", "app/views/header.html", "app/views/jobs.html", "app/views/Videocell.html", "app/views/videoplayer.html", "app/views/headermobile.html" %}
+      <script type="text/javascript" src="{{ ASSET_URL }}"></script>
+    {% endassets %}
+
+    <script>
+      var tag = document.createElement('script');
+      tag.src = "//www.youtube.com/iframe_api";
+      var firstScriptTag = document.getElementsByTagName('script')[0];
+      firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+    </script>
+
+
+    {% assets filters="cssmin", output="gen/vendor.%(version)s.css", "vendor/css/bootstrap.css", "vendor/css/bootstrap-responsive.css" %}
+      <link rel="stylesheet" href="{{ ASSET_URL }}"/>
+    {% endassets %}
+
+    {% assets filters="less", output="gen/home.%(version)s.css", "css/app.less" %}
+      <link rel="stylesheet" href="{{ ASSET_URL }}"/>
+    {% endassets %}
+
+  </head>
+  <body ng-controller="AppCtrl" id="app" ng-class="{true:'mobile', false:''}[isMobile]">
+    <div ng-switch on="isMobile">
+      <div ng-switch-when="true"><div ng-include src="'headermobile.html'"></div></div>
+      <div ng-switch-when="false"><div ng-include src="'header.html'"></div></div>
     </div>
+    <div class="ng-view"></div>
+    <div ng-include src="'footer.html'"></div>
   </body>
 </html>

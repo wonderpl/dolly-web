@@ -14,7 +14,7 @@ service_urls = namedtuple('ServiceUrl', 'url func_name func methods')
 class JsonReponse(Response):
     def __init__(self, data, status=None, headers=None):
         super(JsonReponse, self).__init__(
-            json.dumps(data, separators=(',', ':')) if data else '',
+            '' if data is None else json.dumps(data, separators=(',', ':')),
             status, headers, 'application/json')
 
 
@@ -111,13 +111,14 @@ class WebService(object):
     max_page_size = 1000
 
     def __init__(self, app, url_prefix, **kwargs):
-        secure_subdomain = app.config.get('SECURE_SUBDOMAIN')
         default_subdomain = app.config.get('DEFAULT_SUBDOMAIN')
+        secure_subdomain = app.config.get('SECURE_SUBDOMAIN')
+        api_subdomain = app.config.get('API_SUBDOMAIN')
         bp = Blueprint(self.__class__.__name__.lower(), self.__class__.__name__, url_prefix=url_prefix)
         for route in self._routes:
             # If secure is None then view should be available on all domains,
             # if True then only available on secure, if False then non-secure only
-            subdomains = [None] + ([default_subdomain] if default_subdomain else [])
+            subdomains = [api_subdomain] + ([default_subdomain] if default_subdomain else [])
             if secure_subdomain:
                 secure = getattr(route.func, '_secure', None)
                 if secure is True:

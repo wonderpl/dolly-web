@@ -142,6 +142,40 @@ Content-Type: application/json
 }
 ```
 
+Avatar
+======
+
+### Update
+
+`PUT` new image data to update the users avatar.
+
+```http
+PUT /ws/USERID/avatar/ HTTP/1.1
+Authorization: Bearer TOKEN
+Content-Type: image/png
+
+.........IMAGE DATA....
+```
+
+If invalid data:
+
+```http
+HTTP/1.1 400 BAD REQUEST
+Content-Type: application/json
+
+{
+ "error": "invalid_request",
+ "message": "cannot identify image file"
+}
+```
+
+If successful:
+
+```http
+HTTP/1.1 204 OK
+Location: http://path/uploaded/media.png
+```
+
 Channel
 =======
 
@@ -309,11 +343,11 @@ Location: http://some_doman/ws/USERID/channels/CHANNELID/
 To toggle a channel's privacy settings `PUT` json data to a channel's `public` resource.
 
 ```http
-PUT /ws/USERID/channel/CHANNELID/public/ HTTP/1.1
+PUT /ws/USERID/channels/CHANNELID/public/ HTTP/1.1
 Content-Type: application/json
 Authorization: Bearer TOKEN
 
-"false"
+false
 ```
 
 Parameter      | Required? | Value             | Description
@@ -326,7 +360,7 @@ Returns current state for `public`
 HTTP/1.1 200 OK
 Content-Type: application/json
 
-"false"
+false
 ```
 
 Possible errors.
@@ -380,8 +414,9 @@ Content-Type: application/json
 
 ### Update
 
-To add or delete videos from a channel, send a list of the videos that the channel needs to contain.
-Any videos not included, but are currently in the channel, will be removed.
+To add or delete videos from a channel, send a list of video instance ids that the
+channel needs to contain. Any videos not included, but are currently in the channel,
+will be removed.
 
 Additionally, the order in which the video ids occur in the list will dictate the order in which they
 will be returned in the `GET` above.
@@ -391,7 +426,7 @@ PUT /ws/USERID/channels/CHANNELID/videos/ HTTP/1.1
 Content-Type: application/json
 Authorization: Bearer TOKEN
 
-["VIDEOID", "VIDEOID"]
+["VIDEOINSTANCEID", "VIDEOINSTANCEID"]
 ```
 
 ```http
@@ -407,30 +442,21 @@ If the channel is private and the owner's token is not provided then a 403 will 
 HTTP/1.1 403 FORBIDDEN
 Content-Type: application/json
 
-{"error":"insufficient_scope"}
-```
-
-Missing list if video ids
-
-```http
-HTTP/1.1 400 BAD REQUEST
-Content-Type: application/json
-
 {
-    "error": "invalid_request",
-    "message": "List can be empty, but must be present"
+ "error":"insufficient_scope"
 }
 ```
 
-Item in list is not a string
+Invalid ids:
 
 ```http
 HTTP/1.1 400 BAD REQUEST
 Content-Type: application/json
 
 {
-    "error": "invalid_request",
-    "message": "List item must be a video id"
+ "error": "invalid_request",
+ "message": "Invalid video instance ids",
+ "data": [ "aaa", "bbb" ]
 }
 ```
 

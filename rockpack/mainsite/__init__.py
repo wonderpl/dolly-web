@@ -1,3 +1,4 @@
+import logging
 from flask import Flask
 
 #from rockpack.services.video import api
@@ -22,13 +23,13 @@ REGISTER_SETUPS = (
     ('rockpack.mainsite.core.webservice', 'setup_abort_mapping'),
     ('rockpack.mainsite.admin.auth', 'setup_auth'),
     ('rockpack.mainsite.admin', 'setup_admin'),
+    ('rockpack.mainsite.web', 'setup_web'),
 )
 
 WEBSERVICE_BASE = '/ws'
 
 
 def run_setups():
-    import rockpack.mainsite.web.views
     for import_name, name in REGISTER_SETUPS:
         setup_func = getattr(__import__(
             import_name,
@@ -47,6 +48,10 @@ def import_services():
             if (isinstance(a, type) and issubclass(a, WebService)
                     and a.__name__ != WebService.__name__):
                 services.append(a)
+        try:
+            __import__(s + '.commands')
+        except ImportError:
+            pass
 
     for s in services:
         endpoint = WEBSERVICE_BASE
@@ -56,5 +61,7 @@ def import_services():
 
 
 def init_app():
+    if not app.debug:
+        app.logger.addHandler(logging.StreamHandler())
     run_setups()
     import_services()

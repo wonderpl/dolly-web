@@ -1,10 +1,32 @@
 <!DOCTYPE html>
-<html>
-  <head>
+<html lang="en" id="ng-app" ng-app="Weblight" xmlns:ng="http://angularjs.org">
+<head>
+    <meta charset="utf-8">
     <title>rockpack</title>
-    <script src="/public/js/vendor-scripts.min.js"></script>
+
+    <!--[if lt IE 9]>
+      <link rel="stylesheet" type="text/css" href="ie.css" />
+    <![endif]-->
+
+    <!--[if lt IE 9]>
+      <script src="vendor/js-no-compile/html5.js"></script>
+    <![endif]-->
+
+    <!--[if lte IE 8]>
+      <script>
+        document.createElement('ng-include');
+        document.createElement('ng-pluralize');
+        document.createElement('ng-view');
+        document.createElement('ng:include');
+        document.createElement('ng:pluralize');
+        document.createElement('ng:view');
+      </script>
+      <script src="vendor/js-no-compile/json2.js"></script>
+    <![endif]-->
+
+
   </head>
-  <body>
-    <h1>rockpack</h1>
+  <body ng-controller="AppCtrl" id="app">
+    Home
   </body>
 </html>

@@ -145,7 +145,7 @@ class Channel(AdminView):
     column_display_all_relations = True
 
     column_list = ('title', 'owner_rel', 'public', 'cover.thumbnail_large', 'metas', 'video_count', 'date_added')
-    column_filters = ('owner', 'title', 'public', models.Channel.metas)
+    column_filters = ('owner', 'title', 'public', models.Channel.metas, 'description', 'owner_rel', 'deleted')
     column_searchable_list = ('title',)
     column_formatters = dict(metas=_format_channel_metas,
             video_count=_format_channel_video_count)
@@ -186,7 +186,7 @@ class ChannelLocaleMeta(AdminView):
             star_count=wtf.TextField,
             )
 
-    column_filters = ('channel_rel',)
+    column_filters = ('channel_rel', 'channel_locale', models.Category.name)
 
 
 class ExternalCategoryMap(AdminView):

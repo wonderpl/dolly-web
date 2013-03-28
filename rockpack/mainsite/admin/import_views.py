@@ -15,6 +15,7 @@ from rockpack.mainsite.services.video.models import (
     Locale, Source, Category, Video, VideoLocaleMeta, Channel)
 from rockpack.mainsite.services.cover_art.models import UserCoverArt
 from rockpack.mainsite.services.user.models import User
+from rockpack.mainsite.services.oauth.api import RockRegistrationForm
 from .models import AdminLogRecord
 
 
@@ -65,11 +66,11 @@ class ImportForm(form.BaseForm):
                 return True
 
 
-class UserForm(form.BaseForm):
-    username = wtf.TextField(validators=[wtf.validators.required()])
-    first_name = wtf.TextField(validators=[wtf.validators.required()])
-    last_name = wtf.TextField(validators=[wtf.validators.required()])
-    email = wtf.TextField(validators=[wtf.Optional()])
+class UserForm(RockRegistrationForm):
+    password = None
+    date_of_birth = None
+    email = None
+    locale = None
     avatar = wtf.FileField()
 
     def validate_avatar(form, field):
@@ -127,7 +128,7 @@ class ImportView(BaseView):
             password_hash='',
             first_name=form.first_name.data,
             last_name=form.last_name.data,
-            email=form.email.data,
+            email='',
             date_of_birth=date(1900, 1, 1),
             avatar=avatar,
             refresh_token='',

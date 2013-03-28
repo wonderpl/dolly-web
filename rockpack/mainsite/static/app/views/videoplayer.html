@@ -1,0 +1,19 @@
+<div ng-controller="VideoCtrl" ng-click="hide()" id="lightbox">
+  <div id="playercontainer">
+    <img src="/static/images/closeicon.png" id="closeplayer">
+    <div id="player"></div>
+    <div id="playerinfo">
+      <div id="videotitle">{{videodata.title | truncate: 45}}</div>
+      <ul>
+        <li id="channelthumb"><img ng-src="{{channel.cover_thumbnail_small_url}}"></li>
+        <li>
+          <div id="channeltitle">{{channel.title}}</div>
+          <div id="username">{{channel.owner.name}}</div>
+        </li>
+        <li class="right" style="margin-right:25px">
+          <a href="#" class="btn btn-blue getappbtn">Get the app</a>
+        </li>
+      </ul>
+    </div>
+  </div>
+</div>
