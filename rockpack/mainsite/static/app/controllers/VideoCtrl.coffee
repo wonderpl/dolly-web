@@ -30,7 +30,8 @@ window.Weblight.controller('VideoCtrl', ['$scope', '$rootScope', '$routeParams',
         playerVars: {
           autoplay: 1,
           showinfo: 0,
-          modestbranding: 0
+          modestbranding: 0,
+          wmode: "opaque"
         }
       })
 
