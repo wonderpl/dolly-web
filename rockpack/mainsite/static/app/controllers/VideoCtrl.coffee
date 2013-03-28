@@ -3,16 +3,19 @@ window.Weblight.controller('VideoCtrl', ['$scope', '$rootScope', '$routeParams',
 
   $rootScope.currentVideo = {}
 
+  @getPlayerWidth = ->
+    if window.innerWidth < 750
+      @playerWidth = window.innerWidth
+      @playerHeight = window.innerWidth*9/16
+    else
+      @playerWidth = 738
+      @playerHeight = 415
+
+
   $scope.PlayVideo = =>
-
-
     if $rootScope.playerReady && typeof $routeParams.videoid != "undefined"
-      if window.innerWidth < 750
-        @playerWidth = window.innerWidth
-        @playerHeight = window.innerWidth*9/16
-      else
-        @playerWidth = 738
-        @playerHeight = 415
+
+      @getPlayerWidth()
 
       # need to trigger a hide, otherwise show did not fire on load
       $("#lightbox").hide()
@@ -35,10 +38,11 @@ window.Weblight.controller('VideoCtrl', ['$scope', '$rootScope', '$routeParams',
         }
       })
 
-  $scope.$watch((-> window.orientation), (newValue, oldValue) ->
+  $scope.$watch((-> window.orientation), (newValue, oldValue) =>
     if oldValue != newValue
-      $scope.hide()
-      $scope.PlayVideo()
+      @getPlayerWidth()
+      $('#player').width(@playerWidth).height(@playerHeight)
+
   )
 
   $scope.$watch((-> $routeParams.videoid), (newValue) ->
