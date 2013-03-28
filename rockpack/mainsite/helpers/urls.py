@@ -15,8 +15,11 @@ def url_for(*args, **kwargs):
 
 def url_to_endpoint(url):
     url = urlparse.urlsplit(url)
+    # XXX: Revisit this and double-check this is "the right thing"!
+    matcher = current_app.url_map.bind(url.netloc)
+    matcher.subdomain = current_app.config.get('API_SUBDOMAIN') or ''
     try:
-        return current_app.url_map.bind(url.netloc).match(url.path)
+        return matcher.match(url.path)
     except NotFound:
         return None, {}
 
