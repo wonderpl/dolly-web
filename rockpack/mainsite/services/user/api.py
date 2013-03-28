@@ -210,6 +210,7 @@ def _channel_info_response(channel, locale, paging, owner_url):
     items, total = video_api.get_local_videos(
         locale, paging, channel=channel.id, with_channel=False,
         position_order=True, date_order=True)
+    data['ecommerce_url'] = channel.ecommerce_url
     data['videos'] = dict(items=items, total=total)
     return data
 

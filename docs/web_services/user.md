@@ -716,7 +716,6 @@ Cache-Control: private, max-age=60
      "cover_thumbnail_large_url": "",
      "cover_thumbnail_small_url": "",
      "subscribe_count": 0,
-     "ecommerce_url": "",
      "owner": {
       "id": "BJsFQkw7SpyNfi6xOBlA1Q",
       "resource_url": "http://rockpack.com/ws/BJsFQkw7SpyNfi6xOBlA1Q/",

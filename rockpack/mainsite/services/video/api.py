@@ -26,7 +26,6 @@ def channel_dict(channel, with_owner=True, owner_url=False):
         description=channel.description,
         subscribe_count=0,  # TODO: implement this for real
         public=channel.public,
-        ecommerce_url=channel.ecommerce_url,
     )
     if with_owner:
         ch_data['owner'] = dict(
