@@ -151,6 +151,9 @@ def _channel_info_response(channel, locale, paging, owner_url):
     return data
 
 
+from rockpack.mainsite.services.oauth.api import RockRegistrationForm
+
+
 class UserWS(WebService):
 
     endpoint = '/'
@@ -192,9 +195,24 @@ class UserWS(WebService):
         info['channels'].update(items=channels, total=len(channels))
         return info
 
-    @expose_ajax('/<userid>/<any("username"):attribute_name>/', methods=('PUT',))
+    @expose_ajax('/<userid>/<any("username", "first_name", "last_name", "email", "password", "locale", "date_of_birth"):attribute_name>/', methods=('PUT',))
     @check_authorization(self_auth=True)
     def change_user_info(self, userid, attribute_name):
+        from werkzeug.datastructures import MultiDict
+        value = request.json
+        form = RockRegistrationForm(MultiDict([(attribute_name, value)]), csrf_enabled=False)
+        field = getattr(form, attribute_name)
+        if not field.validate(field.data):
+            response = {'message': field.errors}
+            # special case for username
+            if attribute_name == 'username':
+                response.update({'suggested_username': User.suggested_username(value)})
+            abort(400, **response)
+        user = g.authorized.user
+        setattr(user, attribute_name, field.data)
+        user.save()
+        return
+
         user = g.authorized.user
         if user.username_updated:
             abort(400, message='Limit for changing username has been reached')

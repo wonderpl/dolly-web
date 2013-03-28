@@ -81,16 +81,8 @@ class LoginWS(WebService):
         return user.get_credentials()
 
 
-class RockRegistrationForm(wtf.Form):
-    username = wtf.TextField(validators=[wtf.Length(min=3)] + get_column_validators(User, 'username'))
-    password = wtf.PasswordField(validators=[wtf.Required(), wtf.Length(min=6)])
-    first_name = wtf.TextField(validators=[wtf.Optional()] + get_column_validators(User, 'first_name'))
-    last_name = wtf.TextField(validators=[wtf.Optional()] + get_column_validators(User, 'last_name'))
-    date_of_birth = wtf.DateField(validators=get_column_validators(User, 'date_of_birth'))
-    locale = wtf.TextField(validators=get_column_validators(User, 'locale'))
-    email = wtf.TextField(validators=[wtf.Email()] + get_column_validators(User, 'email'))
-
-    def validate_username(form, field):
+def username_validator():
+    def _valid(form, field):
         if field.data != User.sanitise_username(field.data):
             raise wtf.ValidationError('Username can only contain alphanumerics.')
         exists = username_exists(field.data)
@@ -98,10 +90,24 @@ class RockRegistrationForm(wtf.Form):
             raise wtf.ValidationError('"%s" is reserved.' % field.data)
         elif exists:
             raise wtf.ValidationError('"%s" already taken.' % field.data)
+    return _valid
 
-    def validate_email(form, field):
+
+def email_registered_validator():
+    def _registered(form, field):
         if User.query.filter_by(email=field.data).count():
             raise wtf.ValidationError('Email address already registered.')
+    return _registered
+
+
+class RockRegistrationForm(wtf.Form):
+    username = wtf.TextField(validators=[wtf.Length(min=3), username_validator()] + get_column_validators(User, 'username'))
+    password = wtf.PasswordField(validators=[wtf.Required(), wtf.Length(min=6)])
+    first_name = wtf.TextField(validators=[wtf.Optional()] + get_column_validators(User, 'first_name'))
+    last_name = wtf.TextField(validators=[wtf.Optional()] + get_column_validators(User, 'last_name'))
+    date_of_birth = wtf.DateField(validators=get_column_validators(User, 'date_of_birth'))
+    locale = wtf.TextField(validators=get_column_validators(User, 'locale'))
+    email = wtf.TextField(validators=[wtf.Email(), email_registered_validator()] + get_column_validators(User, 'email'))
 
 
 class ExternalRegistrationForm(wtf.Form):
@@ -186,7 +192,7 @@ class RegistrationWS(WebService):
     @expose_ajax('/', methods=['POST'])
     @check_client_authorization
     def register(self):
-        form = RockRegistrationForm(csrf_enabled=False)
+        form = RockRegistrationForm(request.form, csrf_enabled=False)
         if not form.validate():
             record_user_event(form.username.data, 'registration failed',
                               ','.join(form.errors.keys()))

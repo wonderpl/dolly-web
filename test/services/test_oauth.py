@@ -257,6 +257,22 @@ class RegisterTestCase(base.RockPackTestCase):
 
             self.assertEquals(400, r.status_code)
 
+    def test_failed_registration(self):
+        with self.app.test_client() as client:
+            r = client.post('/ws/register/',
+                    headers=[get_client_auth_header()],
+                    data=dict(
+                        username='',
+                        password='barbar',
+                        first_name='foo',
+                        last_name='bar',
+                        date_of_birth='2000-01-01',
+                        locale='en-us',
+                        email='foo{}@bar.com'.format(uuid.uuid4().hex)))
+            response = json.loads(r.data)
+
+            self.assertEquals(response['form_errors']['username'][0], 'This field is required.')
+
     def test_successful_registration(self):
 
         with self.app.test_client() as client:
