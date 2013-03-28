@@ -157,6 +157,7 @@ class User(db.Model):
             first_name=eu.first_name,
             last_name=eu.last_name,
             email=eu.email,
+            gender=eu.gender,
             avatar=avatar)
 
 

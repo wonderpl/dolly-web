@@ -180,6 +180,12 @@ class ExternalUser:
             return ''
 
     @property
+    def gender(self):
+        if 'gender' in self._user_data:
+            return self._user_data['gender'][0]
+        return ''
+
+    @property
     def locale(self):
         l = self._user_data.get('locale', '').lower().replace('_', '-')
         if not Locale.query.get(l):

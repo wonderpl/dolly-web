@@ -86,24 +86,25 @@ Cache-Control: private
 
 Change an individual attribute for a user, for example, username.
 
-The resource is contructed with USERID and ATTRIBUTE in this way `/ws/USERID/ATTRIBUTE/`
-
 ```http
-PUT /ws/dfj84vho43nl3yti8y43j/username/ HTTP/1.1
+PUT /ws/USERID/ATTRIBUTE/ HTTP/1.1
 Content-Type: application/json
 
 "porkchopexpress"
 ```
-           
-Parameter     | Required | Value  | Description
-:------------ | :------- | :----- | :----------
-username      | Yes      | String | Characters allowed should match regex [a-zA-Z0-9]
-password      | Yes      | String | Minimum 6 characters
-first_name    | No       | String |
-last_name     | No       | String |
-date_of_birth | Yes      | String | YYYY-MM-DD formatted date string
-locale        | Yes      | String | IETF language tag
-email         | Yes      | String | Email address
+
+Where `ATTRIBUTE` can be one of:
+
+Attribute     | Value  | Description
+:------------ | :----- | :----------
+username      | String | Characters allowed should match regex [a-zA-Z0-9]
+password      | String | Minimum 6 characters
+first_name    | String |
+last_name     | String |
+date_of_birth | String | YYYY-MM-DD formatted date string
+locale        | String | IETF language tag
+email         | String | Email address
+gender        | String | `m` or `f`
 
 Responds with a `204`
 
@@ -126,7 +127,7 @@ Content-Type: application/json
     "suggested_username": "foo"
 }
 ```
-See the Registration section of ``docs/web_services/oauth.md`` for a comprehensive list of errors
+See the Registration section of [oauth documentation](oauth.md) for a comprehensive list of errors
 
 Avatar
 ======
