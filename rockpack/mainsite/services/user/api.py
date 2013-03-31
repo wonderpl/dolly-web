@@ -29,6 +29,7 @@ ACTION_COLUMN_VALUE_MAP = dict(
 )
 
 
+@commit_on_success
 def get_or_create_video_records(instance_ids, locale):
     """Take a list of instance ids and return mapping to associated video ids."""
 
