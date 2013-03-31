@@ -12,7 +12,7 @@ def check_client_authorization(f):
         auth = request.authorization
         if not auth or auth.type != 'basic':
             abort(401, error='invalid_request')
-        if auth.username != app.config['ROCKPACK_APP_CLIENT_ID']:
+        if auth.username not in app.config['CLIENT_IDS']:
             abort(401, error='unauthorized_client')
         g.app_client_id = auth.username
         return f(*args, **kwargs)

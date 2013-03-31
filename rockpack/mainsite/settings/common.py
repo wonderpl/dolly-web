@@ -18,6 +18,11 @@ GOOGLE_CONSUMER_SECRET = 'ja-jW0BDASKVIwIRFurpCaZi'
 # Client ID for the iOS app
 ROCKPACK_APP_CLIENT_ID = 'c8fe5f6rock873dpack19Q'
 
+# Client ID for the javascript front-end
+ROCKPACK_JS_CLIENT_ID = 'orockgqRScSlWKjsfVuxrQ'
+
+CLIENT_IDS = ROCKPACK_APP_CLIENT_ID, ROCKPACK_JS_CLIENT_ID
+
 IGNORE_ACCESS_TOKEN = False
 
 # Default is first locale
