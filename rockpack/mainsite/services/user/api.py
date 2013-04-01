@@ -13,7 +13,7 @@ from rockpack.mainsite.core.youtube import get_video_data
 from rockpack.mainsite.helpers.urls import url_for, url_to_endpoint
 from rockpack.mainsite.helpers.db import gen_videoid
 from rockpack.mainsite.services.video.models import (
-    Channel, ChannelLocaleMeta, Video, VideoInstance, VideoLocaleMeta, Category)
+    Channel, ChannelLocaleMeta, Video, VideoInstance, VideoInstanceLocaleMeta, Category)
 from rockpack.mainsite.services.cover_art.models import UserCoverArt, RockpackCoverArt
 from rockpack.mainsite.services.cover_art import api as cover_api
 from rockpack.mainsite.services.video import api as video_api
@@ -23,6 +23,7 @@ from .models import User, UserActivity, Subscription
 
 ACTION_COLUMN_VALUE_MAP = dict(
     view=('view_count', 1),
+    select=('view_count', 1),
     star=('star_count', 1),
     unstar=('star_count', -1),
 )
@@ -57,26 +58,19 @@ def save_video_activity(user, action, instance_id, locale):
         if not video_id:
             abort(400, message='video_instance not found')
 
-    if action == 'view':
-        object_type = 'video_instance'
-        object_id = instance_id
-    else:
-        object_type = 'video'
-        object_id = video_id
-
     activity = dict(user=user, action=action,
-                    object_type=object_type, object_id=object_id)
+                    object_type='video', object_id=video_id)
     if not UserActivity.query.filter_by(**activity).count():
         # Increment value on each of instance, video, & locale meta
         video = Video.query.filter_by(id=video_id)
-        meta = VideoLocaleMeta.query.filter_by(video=video_id, locale=locale)
+        meta = VideoInstanceLocaleMeta.query.filter_by(video_instance=instance_id, locale=locale)
         incr = lambda m: {getattr(m, column): getattr(m, column) + value}
         instance.update(incr(VideoInstance))
         updated = video.update(incr(Video))
         assert updated
-        updated = meta.update(incr(VideoLocaleMeta))
+        updated = meta.update(incr(VideoInstanceLocaleMeta))
         if not updated:
-            meta = Video.query.get(video_id).add_meta(locale)
+            meta = instance.add_meta(locale)
             setattr(meta, column, 1)
 
     UserActivity(**activity).save()
@@ -86,9 +80,9 @@ def save_video_activity(user, action, instance_id, locale):
             owner=user, title=app.config['FAVOURITE_CHANNEL'][0]).first()
         if channel:
             if action == 'unstar':
-                channel.remove_videos([object_id])
+                channel.remove_videos([video_id])
             else:
-                channel.add_videos([object_id])
+                channel.add_videos([video_id])
 
 
 def action_object_list(user, action, limit):
@@ -233,9 +227,11 @@ class UserWS(WebService):
     def get_activity(self, userid):
         subscriptions = user_subscriptions(userid).\
             order_by(desc('date_created')).limit(self.max_page_size)
+        ids = dict((key, action_object_list(userid, key, self.max_page_size))
+                   for key in ACTION_COLUMN_VALUE_MAP)
         return dict(
-            recently_viewed=action_object_list(userid, 'view', self.max_page_size),
-            recently_starred=action_object_list(userid, 'star', self.max_page_size),
+            recently_viewed=ids['view'],
+            recently_starred=list(set(ids['star']) - set(ids['unstar'])),
             subscribed=[id for (id,) in subscriptions.values('channel')],
         )
 
@@ -303,7 +299,7 @@ class UserWS(WebService):
             abort(400, form_errors="Value should be 'true' or 'false'")
         channel.public = request.json
         channel = channel.save()
-        return '{}'.format(str(channel.public).lower())
+        return channel.public
 
     @expose_ajax('/<userid>/channels/<channelid>/', methods=('PUT',))
     @check_authorization(self_auth=True)
@@ -366,24 +362,12 @@ class UserWS(WebService):
                 i.position = pos
                 g.session.add(i)
 
-        # Get a valid list of video ids
-        video_ids = Video.query.filter(Video.id.in_(additions)).values('id')
-        for v in video_ids:
-            g.session.add(VideoInstance(video=v, channel=channelid))
+        # Get a valid list of video ids and add them
+        videos = Video.query.filter(Video.id.in_(additions))
+        channel.add_videos(videos)
 
         deletes = set(instances.keys()).difference([v for v in request.json])
-        if deletes:
-            VideoInstance.query.filter(
-                VideoInstance.video.in_(deletes),
-                VideoInstance.channel == channelid
-            ).delete(synchronize_session='fetch')
-
-        try:
-            g.session.commit()
-        except Exception as e:
-            g.session.rollback()
-            app.logger.error('Failed to update channel videos with: {}'.format(str(e)))
-            abort(500)
+        channel.remove_videos([instances[d].video_rel for d in deletes])
 
     @expose_ajax('/<userid>/channels/<channelid>/', methods=('DELETE',))
     @check_authorization(self_auth=True)

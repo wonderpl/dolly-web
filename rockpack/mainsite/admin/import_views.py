@@ -12,7 +12,7 @@ from rockpack.mainsite.core import youtube
 from rockpack.mainsite.helpers.db import resize_and_upload
 from rockpack.mainsite.services.pubsubhubbub.api import subscribe
 from rockpack.mainsite.services.video.models import (
-    Locale, Source, Category, Video, VideoLocaleMeta, Channel)
+    Locale, Source, Category, Video, VideoInstance, Channel)
 from rockpack.mainsite.services.cover_art.models import UserCoverArt
 from rockpack.mainsite.services.user.models import User
 from rockpack.mainsite.services.oauth.api import RockRegistrationForm
@@ -92,6 +92,7 @@ class ImportView(BaseView):
             form.import_data.videos,
             form.source.data,
             form.locale.data,
+            form.channel.data,
             form.category.data)
 
         channel = form.channel.data   # XXX: Need to validate?
@@ -108,7 +109,7 @@ class ImportView(BaseView):
                 self.record_action('created', channel)
             else:
                 channel = Channel.query.get(channel)
-            channel.add_videos(form.import_data.videos)
+            channel.add_videos(form.import_data.videos, form.locale.data)
             self.record_action('imported', channel, '%d videos' % count)
             push_config = form.import_data.push_config
             if push_config and channel.id:
@@ -227,7 +228,7 @@ class ImportView(BaseView):
     def videos(self):
         vid = request.args.get('vid', '')
         if request.args.get('instance_id'):
-            return jsonify(VideoLocaleMeta.query.join(Video).filter(VideoLocaleMeta.id == request.args.get('instance_id')).values(VideoLocaleMeta.video, Video.title))
+            return jsonify(VideoInstance.query.join(Video).filter(VideoInstance.id == request.args.get('instance_id')).values(VideoInstance.video, Video.title))
         return jsonify(Video.query.filter(Video.id.ilike(vid + '%')).values(Video.id, Video.title))
 
     @expose('/bookmarklet.js')

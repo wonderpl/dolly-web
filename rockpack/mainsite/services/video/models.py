@@ -45,7 +45,7 @@ class Category(db.Model):
     parent_category = relationship('Category', remote_side=[id], backref='children')
     locales = relationship('Locale', backref='categories')
 
-    video_locale_metas = relationship('VideoLocaleMeta', backref='category_ref',
+    video_instancess = relationship('VideoInstance', backref='category_ref',
                                       passive_deletes=True)
     channel_locale_metas = relationship('ChannelLocaleMeta', backref='category_ref',
                                         passive_deletes=True)
@@ -152,13 +152,13 @@ class Video(db.Model):
     view_count = Column(Integer, nullable=False, server_default='0')
     star_count = Column(Integer, nullable=False, server_default='0')
     rockpack_curated = Column(Boolean, nullable=False, server_default='false', default=False)
+    visible = Column(Boolean(), nullable=False, server_default='true', default=True)
 
     source = Column(ForeignKey('source.id'), nullable=False)
 
     thumbnails = relationship('VideoThumbnail', backref='video_rel',
                               lazy='joined', passive_deletes=True,
                               cascade="all, delete-orphan")
-    metas = relationship('VideoLocaleMeta', backref='video_rel')
     instances = relationship('VideoInstance', backref=db.backref('video_rel', lazy='joined'),
                              passive_deletes=True, cascade="all, delete-orphan")
     restrictions = relationship('VideoRestriction', backref='videos')
@@ -177,27 +177,10 @@ class Video(db.Model):
         # TODO: Use data from source
         return 'http://www.youtube.com/watch?v=' + self.source_videoid
 
-    def add_meta(self, locale):
-        # Try mapping category from existing meta record to new locale
-        category = VideoLocaleMeta.query.filter_by(video=self.id).value('category')
-        if category:
-            category = Category.map_to(category, locale)
-        # Else fall back on default "Other"
-        else:
-            category = Category.get_default_category_id(locale)
-        meta = VideoLocaleMeta(locale=locale, category=category)
-        self.metas.append(meta)
-        self.save()
-        return meta
-
     @classmethod
-    def add_videos(cls, videos, source, locale, category=None):
-        if not category:
-            category = Category.get_default_category_id(locale)
+    def add_videos(cls, videos, source, locale, channel, category=None):
         for video in videos:
             video.source = source
-            video.metas = [VideoLocaleMeta(locale=locale, category=category)]
-
         session = cls.query.session
         try:
             # First try to add all...
@@ -207,36 +190,28 @@ class Video(db.Model):
         except IntegrityError:
             # Else explicitly check which videos already exist
             new_ids, existing_ids = insert_new_only(Video, videos)
-            # New metadata records may be needed for this locale
-            metas = [VideoLocaleMeta(
-                     id=gen_videoid(locale, source, video.source_videoid),
-                     video=video.id, locale=locale, category=category)
-                     for video in videos if video.id in existing_ids]
-            insert_new_only(VideoLocaleMeta, metas)
             count = len(new_ids)
 
         return count
 
 
-class VideoLocaleMeta(db.Model):
+class VideoInstanceLocaleMeta(db.Model):
 
-    __tablename__ = 'video_locale_meta'
+    __tablename__ = 'video_instance_locale_meta'
     __table_args__ = (
-        UniqueConstraint('locale', 'video'),
+        UniqueConstraint('locale', 'video_instance'),
     )
 
     id = Column(CHAR(40), primary_key=True)
 
-    video = Column(ForeignKey('video.id', ondelete='CASCADE'), nullable=False)
-    locale = Column(ForeignKey('locale.id'), nullable=False)
-    category = Column(ForeignKey('category.id'), nullable=False)
-    visible = Column(Boolean(), nullable=False, server_default='true', default=True)
+    video_instance = Column(ForeignKey('video_instance.id', ondelete='CASCADE'), nullable=False)
     view_count = Column(Integer, nullable=False, server_default='0')
     star_count = Column(Integer, nullable=False, server_default='0')
     date_added = Column(DateTime(), nullable=False, default=func.now())
     date_updated = Column(DateTime(), nullable=False, default=func.now(), onupdate=func.now())
+    locale = Column(ForeignKey('locale.id'), nullable=False)
 
-    locale_rel = relationship('Locale', backref='videolocalemetas')
+    locale_rel = relationship('Locale', backref='videoinstancelocalemetas')
 
 
 class VideoRestriction(db.Model):
@@ -265,6 +240,9 @@ class VideoInstance(db.Model):
 
     video = Column(ForeignKey('video.id', ondelete='CASCADE'), nullable=False)
     channel = Column(ForeignKey('channel.id'), nullable=False)
+    category = Column(ForeignKey('category.id'), nullable=False)
+
+    metas = relationship('VideoInstanceLocaleMeta', backref='video_instance_rel', cascade='all,delete')
 
     @property
     def default_thumbnail(self):
@@ -273,6 +251,32 @@ class VideoInstance(db.Model):
     @property
     def player_link(self):
         return self.video_rel.player_link
+
+    @classmethod
+    def add_from_video_ids(cls, video_ids, channel, category, locale):
+        """ Bulk add video instances from a list of videos
+            and attach meta records """
+
+        session = cls.query.session
+        instances = [cls(video=v, channel=channel, category=category) for v in video_ids]
+        session.add_all(instances)
+        session.commit()
+
+        for i in instances:
+            i.metas.append(VideoInstanceLocaleMeta(locale=locale))
+            session.add(i)
+        session.commit()
+
+    @classmethod
+    def remove_from_video_ids(cls, video_ids):
+        # Cascading delete
+        cls.query.filter(
+            cls.video.in_(video_ids)
+        ).delete(synchronize_session='fetch')
+
+    def add_meta(self, locale):
+        return VideoInstanceLocaleMeta(video_instance=self,
+                locale=locale).save()
 
     def __unicode__(self):
         return self.video
@@ -365,7 +369,7 @@ class Channel(db.Model):
         return url_for(view, userid=self.owner_rel.id, channelid=self.id)
     resource_url = property(get_resource_url)
 
-    def add_videos(self, videos):
+    def add_videos(self, videos, locale):
         from rockpack.mainsite.core.es import get_es_connection, api
         conn = get_es_connection()
         def _add_to_es(conn, channel, instance, locale):
@@ -382,12 +386,15 @@ class Channel(db.Model):
                         view_count=instance.view_count),
                     locale)
 
+        meta = ChannelLocaleMeta.query.filter_by(channel=self.id, locale=locale).first()
+        VideoInstance.add_from_video_ids([getattr(v, 'id', v) for v in videos], self.id, meta.category, locale)
+
         instances = [VideoInstance(channel=self.id, video=getattr(v, 'id', v)) for v in videos]
         session = self.query.session
         try:
             with session.begin_nested():
                 session.add_all(instances)
-                [_add_to_es(conn, i, self.locale) for i in instances]
+                [_add_to_es(conn, i, locale) for i in instances]
         except IntegrityError:
             existing = [i.video for i in session.query(VideoInstance.video).
                         filter_by(channel=self.id).
@@ -395,12 +402,13 @@ class Channel(db.Model):
             for i in instances:
                 if i.video not in existing:
                     session.add_all(i)
-                    _add_to_es(conn, i, self.locale)
+                    _add_to_es(conn, i, locale)
 
     def remove_videos(self, videos):
-        VideoInstance.query.filter_by(channel=self.id).filter(
-            VideoInstance.video.in_(set(getattr(v, 'id', v) for v in videos))).\
-            delete(synchronize_session=False)
+        VideoInstance.remove_from_video_ids(
+            set(
+                getattr(v, 'id', v)
+                for v in videos.query.filter_by(channel=self.id)))
 
     @classmethod
     def should_be_public(self, channel, public):
@@ -446,21 +454,8 @@ def _set_child_category_locale(mapper, connection, target):
         target.locale = target.parent_category.locale
 
 
-@event.listens_for(ChannelLocaleMeta, 'before_update')
-def _update_video_visibility(mapper, connection, target):
-    # If a channel is marked invisible then mark all the videos it references too
-    # XXX: We probably want to remove this again before launch because a video
-    # can be in many channels
-    if not target.visible:
-        VideoLocaleMeta.query.\
-            filter_by(locale=target.locale).\
-            filter(VideoLocaleMeta.video.in_(
-                VideoInstance.query.filter_by(channel=target.channel).\
-                    with_entities(VideoInstance.video)
-            )).update(dict(visible=target.visible), False)
-
 event.listen(Video, 'before_insert', add_video_pk)
-event.listen(VideoLocaleMeta, 'before_insert', add_video_meta_pk)
+event.listen(VideoInstanceLocaleMeta, 'before_insert', add_video_meta_pk)
 event.listen(VideoInstance, 'before_insert', lambda x, y, z: add_base64_pk(x, y, z, prefix='vi'))
 event.listen(VideoRestriction, 'before_insert', lambda x, y, z: add_base64_pk(x, y, z, prefix='vr'))
 event.listen(VideoThumbnail, 'before_insert', lambda x, y, z: add_base64_pk(x, y, z, prefix='vt'))

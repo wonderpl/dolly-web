@@ -76,7 +76,11 @@ def _get_video_data(youtube_data, playlist=None):
     video.source_category = get_category(media.get('media$category', []))
     video.source_view_count = int(youtube_data['yt$statistics']['viewCount']) if 'yt$statistics' in youtube_data else -1
     video.source_date_uploaded = media['yt$uploaded']['$t']
-    video.restricted = youtube_data['app$control']['yt$state']['name'] == 'restricted' if 'app$control' in youtube_data else False
+    video.restricted = False
+    if 'app$control' in youtube_data:
+        if ('yt$incomplete' in youtube_data['app$control'] or
+                youtube_data['app$control']['yt$state']['name'] == 'restricted'):
+            video.restricted = True
     for thumbnail in media.get('media$thumbnail', []):
         if 'time' not in thumbnail:
             video.thumbnails.append(
@@ -147,7 +151,7 @@ def search(query, order=None, start=0, size=10, region=None, client_address=None
     data = _youtube_feed('videos', '', params)['feed']
     total = data['openSearch$totalResults']['$t']
     videos = [_get_video_data(e, id) for e in data.get('entry', [])]
-    return Videolist(total, videos)
+    return Videolist(total, [v for v in videos if not v.restricted])
 
 
 def complete(query, **params):

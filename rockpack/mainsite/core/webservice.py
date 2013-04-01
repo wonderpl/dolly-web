@@ -14,7 +14,7 @@ service_urls = namedtuple('ServiceUrl', 'url func_name func methods')
 class JsonReponse(Response):
     def __init__(self, data, status=None, headers=None):
         super(JsonReponse, self).__init__(
-            json.dumps(data, separators=(',', ':')) if data else '',
+            '' if data is None else json.dumps(data, separators=(',', ':')),
             status, headers, 'application/json')
 
 
