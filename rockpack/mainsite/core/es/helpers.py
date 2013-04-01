@@ -9,6 +9,7 @@ video_mapping = {
                 "index": "analyzed",
                 },
             "position": {"type": "integer"},
+            "locale": {"type": "string"},
             "category": {
                 "type": "integer",
                 "index": "analyzed"},
@@ -83,7 +84,7 @@ except:
 
 # Should loop through app.config.ENABLED_LOCALES
 try:
-    conn.indices.create_index('en-us')
+    conn.indices.create_index('channels')
 except:
     pass
 
@@ -92,8 +93,15 @@ try:
 except:
     pass
 
-conn.indices.put_mapping("videos", video_mapping, ["en-us"])
-conn.indices.put_mapping("channels", channel_mapping, ["en-us"])
+
+try:
+    conn.indices.create_index('videos')
+except:
+    pass
+
+
+conn.indices.put_mapping("video", video_mapping, ["videos"])
+conn.indices.put_mapping("channel", channel_mapping, ["channels"])
 
 def import_owners():
     from rockpack.mainsite.services.user import models
@@ -128,6 +136,7 @@ def import_channels():
                     c['category'],
                     cat_map[c['category']]
                 ],
+                'locale': 'en-us',
                 'description': c['description'],
                 'thumbnail_url': c['thumbnail_url'],
                 'cover_thumbnail_small_url': c['cover_thumbnail_small_url'],
@@ -137,11 +146,11 @@ def import_channels():
                 'title': c['title'],
                 'owner': c['owner']['id'],
                 },
-                'en-us',
                 'channels',
+                'channel',
                 id=c['id'])
         print '{} channels'.format(total)
-        conn.indices.refresh("en-us")
+        conn.indices.refresh("channels")
 
 def import_videos():
     from rockpack.mainsite.services.video.api import *
@@ -152,6 +161,7 @@ def import_videos():
             print conn.index({
                 'id': v['id'],
                 'channel': v['channel']['id'],
+                'locale': 'en-us',
                 'category': v['category'],
                 'title': v['title'],
                 'video': {
@@ -160,8 +170,8 @@ def import_videos():
                     'view_count': v['video']['view_count']
                     }
                 },
-                'en-us',
                 'videos',
+                'video',
                 id=v['id'])
 
 

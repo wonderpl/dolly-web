@@ -3,6 +3,7 @@ def add_channel_to_index(conn, channel, owner_id, locale):
     cat_map = {c[0]:c[1] for c in Category.query.filter(Category.parent!=None).values('id', 'parent')}
     return conn.index({
         'id': channel['id'],
+        'locale': locale,
         'subscribe_count': channel['subscribe_count'],
         'category': [
             channel['category'],
@@ -17,7 +18,7 @@ def add_channel_to_index(conn, channel, owner_id, locale):
         'title': channel['title'],
         'owner': owner_id,
         },
-        locale,
+        'channel',
         'channels',
         id=channel['id'])
 
@@ -25,6 +26,7 @@ def add_channel_to_index(conn, channel, owner_id, locale):
 def add_video_to_index(conn, video_instance, video, locale):
     return conn.index({
         'id': video_instance['id'],
+        'locale': locale,
         'channel': video_instance['channel'],
         'category': video_instance['category'],
         'title': video_instance['title'],
@@ -34,14 +36,14 @@ def add_video_to_index(conn, video_instance, video, locale):
             'view_count': video_instance['view_count']
             }
         },
-        locale,
         'videos',
+        'video',
         id=video_instance['id'])
 
 
 def remove_channel_from_index(conn, channel_id, locale):
-    conn.delete(locale, 'channels', channel_id)
+    conn.delete('channels', 'channel', channel_id)
 
 
 def remove_video_from_index(conn, video_id, locale):
-    conn.delete(locale, 'videos', video_id)
+    conn.delete('videos', 'video', video_id)

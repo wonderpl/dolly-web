@@ -122,10 +122,10 @@ def get_local_videos(loc, paging, with_channel=True, **filters):
     data = []
     for position, v in enumerate(videos, offset):
         cats = []
-        if v.VideoLocaleMeta.category:
-            cats.append(v.VideoLocaleMeta.category_ref.id)
-            if v.VideoLocaleMeta.category_ref.parent:
-                cats.append(v.VideoLocaleMeta.category_ref.parent)
+        if v.VideoInstance.category:
+            cats.append(v.VideoInstance.category_ref.id)
+            if v.VideoInstance.category_ref.parent:
+                cats.append(v.VideoInstance.category_ref.parent)
 
         item = dict(
             category=cats,
@@ -161,7 +161,7 @@ def es_owner_to_channel_map(channels, owner_list):
         channel['owner'] = owner_list[channel['owner']]
 
 
-def es_get_videos(conn, locale=app.config.get('ENABLED_LOCALES'), category=None, paging=None, channel_ids=None):
+def es_get_videos(conn, category=None, paging=None, channel_ids=None):
     q = pyes.MatchAllQuery()
     if category:
         q = pyes.TermQuery(field='category', value=category)
@@ -172,7 +172,7 @@ def es_get_videos(conn, locale=app.config.get('ENABLED_LOCALES'), category=None,
     # TODO: we need to specify all indexes so that we can find
     # things in different locales, other this will fail
     # A cached list of locales somewhere ....
-    videos = conn.search(query=pyes.Search(q, start=offset, size=limit), indices=locale, doc_types=['videos'])
+    videos = conn.search(query=pyes.Search(q, start=offset, size=limit), indices='videos', doc_types=['video'])
     return [_ for _ in videos], videos.total
 
 
@@ -197,7 +197,7 @@ def es_add_videos(conn, videos):
             id=v['id'])
 
 
-def es_get_channels(conn, locale=app.config.get('ENABLED_LOCALES'), channel_ids=None, category=None, paging=None):
+def es_get_channels(conn, channel_ids=None, category=None, paging=None):
     q = pyes.MatchAllQuery()
     # TODO: maybe write this so they can be chained up
     if channel_ids:
@@ -205,7 +205,7 @@ def es_get_channels(conn, locale=app.config.get('ENABLED_LOCALES'), channel_ids=
     if category:
         q = pyes.TermQuery(field='category', value=category)
     offset, limit = paging if paging else 0, 100
-    channels = conn.search(query=pyes.Search(q, start=offset, size=limit), indices=locale, doc_types=['channels'])
+    channels = conn.search(query=pyes.Search(q, start=offset, size=limit), indices='channels', doc_types=['channel'])
 
     channel_list = {}
     owner_list = {}
@@ -219,7 +219,7 @@ def es_get_channels(conn, locale=app.config.get('ENABLED_LOCALES'), channel_ids=
     return channel_list.values(), channels.total
 
 
-def es_get_channels_with_videos(conn, locale=app.config.get('ENABLED_LOCALES'), channel_ids=None, paging=None):
+def es_get_channels_with_videos(conn, channel_ids=None, paging=None):
     channels, total = es_get_channels(conn, channel_ids=channel_ids, paging=paging)
     videos, _ = es_get_videos(conn, channel_ids=channel_ids)
     channel_dict = {c['id']: c for c in channels}
@@ -234,14 +234,11 @@ class VideoWS(WebService):
     @expose_ajax('/', cache_age=300)
     def video_list(self):
         category = request.args.get('category')
-        locale = self.get_locale()
 
         conn = get_es_connection()
-        videos, total = es_get_videos(conn, locale,
-                category=category, paging=self.get_page(), star_order=True)
+        videos, total = es_get_videos(conn, category=category, paging=self.get_page(), star_order=True)
 
-        channels, _ = es_get_channels(conn, locale,
-                channel_ids=[v['channel'] for v in videos])
+        channels, _ = es_get_channels(conn, channel_ids=[v['channel'] for v in videos])
 
         es_channel_to_video_map(videos, {c['id']: c for c in channels})
 
@@ -259,7 +256,6 @@ class ChannelWS(WebService):
     def channel_list(self):
         conn = get_es_connection()
         channels, total = es_get_channels(conn,
-            self.get_locale(),
             category=request.args.get('category'),
             paging=self.get_page())
 
