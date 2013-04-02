@@ -6,22 +6,35 @@ video_mapping = {
             "date_added": {"type": "date"},
             "title": {
                 "type": "string",
-                "index": "analyzed",
+                "index": "analyzed"
                 },
             "position": {"type": "integer"},
-            "locale": {"type": "string"},
+            "locale": {
+                "type": "string",
+                "index": "not_analyzed",
+                #"_source" : {"enabled" : False}
+                },
             "category": {
-                "type": "integer",
-                "index": "analyzed"},
+                "type": "integer"},
             "channel": {
                 "type": "string",
-                "index": "analyzed"},
+                "index": "not_analyzed"
+                },
             "video": {
                 "properties": {
-                    "id": {"type": "string"},
-                    "thumbnail_url": {"type": "string"},
+                    "id": {
+                        "type": "string",
+                        "index": "not_analyzed"},
+                    "thumbnail_url": {
+                        "type": "string",
+                        "index": "not_analyzed"},
+                    "view_count": {"type": "integer"},
+                    "star_count": {"type": "integer"},
+                    "source": {
+                        "type": "string",
+                        "index": "not_analyzed"},
                     "source_id": {"type": "string"},
-                    "view_count": {"type": "integer"}
+                    "duration": {"type": "integer"}
                     }
                 }
             }
@@ -30,13 +43,17 @@ video_mapping = {
 
 owner_mapping = {
         "properties": {
-            "avatar_thumbnail_url": {"type": "string"},
-            "resource_url": {"type": "string"},
+            "avatar_thumbnail_url": {
+                "type": "string",
+                "index": "not_analyzed"},
+            "resource_url": {
+                "type": "string",
+                "index": "not_analyzed"},
             "display_name": {"type": "string"},
             "name": {"type": "string"},
             "id": {
                 "type": "string",
-                "index": "analyzed"
+                "index": "not_analyzed"
                 }
             }
         }
@@ -44,11 +61,14 @@ owner_mapping = {
 
 channel_mapping = {
         "properties": {
-            "id": {"type": "string"},
-            "locale": {"type": "string"},
+            "id": {
+                "type": "string",
+                "index": "not_analyzed"},
+            "locale": {
+                "type": "string",
+                "index": "not_analyzed"},
             "category": {
                 "type": "integer",
-                "index": "analyzed"
                 },
             "subscribe_count": {"type": "integer"},
             "description": {
@@ -59,12 +79,24 @@ channel_mapping = {
                 "type": "string",
                 "index": "analyzed"
                 },
-            "thumbnail_url": {"type": "string"},
-            "cover_thumbnail_small_url": {"type": "string"},
-            "cover_thumbnail_large_url": {"type": "string"},
-            "cover_background_url": {"type": "string"},
-            "resource_url": {"type": "string"},
-            "owner": {"type": "string"}
+            "thumbnail_url": {
+                "type": "string",
+                "index": "not_analyzed"},
+            "cover_thumbnail_small_url": {
+                "type": "string",
+                "index": "not_analyzed"},
+            "cover_thumbnail_large_url": {
+                "type": "string",
+                "index": "not_analyzed"},
+            "cover_background_url": {
+                "type": "string",
+                "index": "not_analyzed"},
+            "resource_url": {
+                "type": "string",
+                "index": "not_analyzed"},
+            "owner": {
+                "type": "string",
+                        "index": "not_analyzed"}
             }
         }
 
@@ -82,14 +114,8 @@ except:
     pass
 
 
-# Should loop through app.config.ENABLED_LOCALES
 try:
     conn.indices.create_index('channels')
-except:
-    pass
-
-try:
-    conn.indices.create_index('en-gb')
 except:
     pass
 
@@ -164,10 +190,16 @@ def import_videos():
                 'locale': 'en-us',
                 'category': v['category'],
                 'title': v['title'],
+                'date_added': v['date_added'],
+                'position': v['position'],
                 'video': {
                     'id': v['video']['id'],
                     'thumbnail_url': v['video']['thumbnail_url'],
-                    'view_count': v['video']['view_count']
+                    'view_count': v['video']['view_count'],
+                    'star_count': v['video']['star_count'],
+                    'source': v['video']['source'],
+                    'source_id': v['video']['source_id'],
+                    'duration': v['video']['duration'],
                     }
                 },
                 'videos',

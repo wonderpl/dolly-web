@@ -30,10 +30,16 @@ def add_video_to_index(conn, video_instance, video, locale):
         'channel': video_instance['channel'],
         'category': video_instance['category'],
         'title': video_instance['title'],
+        'date_added': video_instance['date_added'],
+        'position': video_instance['position'],
         'video': {
             'id': video['id'],
             'thumbnail_url': video['thumbnail_url'],
-            'view_count': video_instance['view_count']
+            'view_count': video['view_count'],
+            'star_count': video['star_count'],
+            'source': video['source'],
+            'source_id': video['source_id'],
+            'duration': video['duration'],
             }
         },
         'videos',
@@ -41,9 +47,9 @@ def add_video_to_index(conn, video_instance, video, locale):
         id=video_instance['id'])
 
 
-def remove_channel_from_index(conn, channel_id, locale):
+def remove_channel_from_index(conn, channel_id):
     conn.delete('channels', 'channel', channel_id)
 
 
-def remove_video_from_index(conn, video_id, locale):
+def remove_video_from_index(conn, video_id):
     conn.delete('videos', 'video', video_id)

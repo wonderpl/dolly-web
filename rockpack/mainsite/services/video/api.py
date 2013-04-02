@@ -2,11 +2,11 @@ import pyes
 from sqlalchemy.orm import contains_eager
 from sqlalchemy.sql.expression import desc
 from flask import request
+from rockpack.mainsite import app
 from rockpack.mainsite.core.dbapi import db
 from rockpack.mainsite.core.es import get_es_connection
 from rockpack.mainsite.core.webservice import WebService, expose_ajax
 from rockpack.mainsite.services.video import models
-from rockpack.mainsite import app
 
 
 def _filter_by_category(query, type, category_id):
@@ -129,7 +129,7 @@ def get_local_videos(loc, paging, with_channel=True, **filters):
 
         item = dict(
             category=cats,
-            position=position,
+            position=v.VideoInstance.position,
             date_added=v.VideoInstance.date_added.isoformat(),
             video=video_dict(v.Video),
             id=v.VideoInstance.id,
@@ -143,8 +143,11 @@ def get_local_videos(loc, paging, with_channel=True, **filters):
 
 def es_channel_to_video_map(videos, channel_dict):
     for pos, video in enumerate(videos, len(videos)):
-        video['channel'] = channel_dict[video['channel']]
-        video['position'] = pos
+        try:
+            video['channel'] = channel_dict[video['channel']]
+            video['position'] = pos
+        except KeyError:
+            pass
 
 
 def es_video_to_channel_map(videos, channel_dict):
@@ -161,18 +164,36 @@ def es_owner_to_channel_map(channels, owner_list):
         channel['owner'] = owner_list[channel['owner']]
 
 
-def es_get_videos(conn, category=None, paging=None, channel_ids=None):
+def es_get_videos(conn, category=None, paging=None, channel_ids=None, star_order=False, locale=None, date_order=False):
     q = pyes.MatchAllQuery()
+    terms = []
     if category:
-        q = pyes.TermQuery(field='category', value=category)
+        terms.append(pyes.TermQuery(field='category', value=category))
+    if locale:
+        terms.append(pyes.TermQuery(field='locale', value=locale))
     if channel_ids:
         q = pyes.FieldQuery()
         q.add('channel', ' '.join(channel_ids))
+
+    sort = ''
+    def _append_sort_string(sort_str, field, order='desc'):
+        new = field + ':' + order
+        if not sort_str:
+            return new
+        return ','.join(sort_str.split(',').append(new))
+
+    if star_order:
+        sort = _append_sort_string(sort, 'star_count')
+    if date_order:
+        sort = _append_sort_string(sort, 'date_added')
+
     offset, limit = paging if paging else 0, 100
-    # TODO: we need to specify all indexes so that we can find
-    # things in different locales, other this will fail
-    # A cached list of locales somewhere ....
-    videos = conn.search(query=pyes.Search(q, start=offset, size=limit), indices='videos', doc_types=['video'])
+    # TODO: add ordering
+
+    if terms:
+        q = terms[0] if len(terms) == 0 else pyes.BoolQuery(must=terms)
+
+    videos = conn.search(query=pyes.Search(q, start=offset, size=limit), indices='videos', doc_types=['video'], sort=sort)
     return [_ for _ in videos], videos.total
 
 
@@ -197,7 +218,7 @@ def es_add_videos(conn, videos):
             id=v['id'])
 
 
-def es_get_channels(conn, channel_ids=None, category=None, paging=None):
+def es_get_channels(conn, channel_ids=None, category=None, paging=None, locale=None):
     q = pyes.MatchAllQuery()
     # TODO: maybe write this so they can be chained up
     if channel_ids:
@@ -233,10 +254,19 @@ class VideoWS(WebService):
 
     @expose_ajax('/', cache_age=300)
     def video_list(self):
+        if not app.config.get('ELASTICSEARCH_URL'):
+            data, total = get_local_videos(self.get_locale(), self.get_page(), star_order=True, **request.args)
+            return dict(videos=dict(items=data, total=total))
+
         category = request.args.get('category')
 
         conn = get_es_connection()
-        videos, total = es_get_videos(conn, category=category, paging=self.get_page(), star_order=True)
+        videos, total = es_get_videos(conn,
+                category=category,
+                paging=self.get_page(),
+                star_order=request.args.get('star_order'),
+                locale=self.get_locale(),
+                date_order=request.args.get('date_order'))
 
         channels, _ = es_get_channels(conn, channel_ids=[v['channel'] for v in videos])
 
@@ -244,8 +274,6 @@ class VideoWS(WebService):
 
         return dict(videos={'items': videos},
                 total=total)
-        #data, total = get_local_videos(self.get_locale(), self.get_page(), star_order=True, **request.args)
-        #return dict(videos=dict(items=data, total=total))
 
 
 class ChannelWS(WebService):
@@ -254,10 +282,17 @@ class ChannelWS(WebService):
 
     @expose_ajax('/', cache_age=300)
     def channel_list(self):
+        if not app.config.get('ELASTICSEARCH_URL'):
+            data, total = get_local_channel(self.get_locale(),
+                    self.get_page(),
+                    category=request.args.get('category'))
+            return dict(channels=dict(items=data, total=total))
+
         conn = get_es_connection()
         channels, total = es_get_channels(conn,
             category=request.args.get('category'),
-            paging=self.get_page())
+            paging=self.get_page(),
+            locale=self.get_locale())
 
         return dict(
             channels=dict(

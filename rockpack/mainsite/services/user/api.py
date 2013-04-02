@@ -271,6 +271,10 @@ class UserWS(WebService):
 
     @expose_ajax('/<userid>/channels/<channelid>/', cache_age=60, secure=False)
     def channel_info(self, userid, channelid):
+        if not app.config.get('ELASTICSEARCH_URL'):
+            channel = Channel.query.filter_by(id=channelid, public=True, deleted=False).first_or_404()
+            return _channel_info_response(channel, self.get_locale(), self.get_page(), False)
+
         conn = get_es_connection()
         channel, total = video_api.es_get_channels_with_videos(
                 conn,
