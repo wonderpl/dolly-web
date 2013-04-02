@@ -69,6 +69,12 @@ def reset_password():
     return render_template('web/reset_password.html', **locals())
 
 
+@app.route('/status/')
+def status():
+    # TODO: some internal checks
+    return 'OK', 200, [('Content-Type', 'text/plain')]
+
+
 @app.errorhandler(500)
 def server_error(error):
     message = getattr(error, 'message', str(error))
