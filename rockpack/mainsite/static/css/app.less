@@ -17,6 +17,10 @@ html, body {
   height: 100%;
 }
 
+.ng-view {
+  min-height: 100%;
+}
+
 #topnav {
   
   height: 60px;
@@ -28,7 +32,43 @@ html, body {
   position: fixed;
   top: 0;
   width: 100%;
-  z-index: 1000;
+  z-index: 100;
+
+  #rightmenu {
+    float: right;
+
+    li {
+      &:first-child {
+        -webkit-box-shadow:  -2px -1px 1px 0px rgba(0, 0, 0, 0.2);    
+        box-shadow:  -2px -1px 1px 0px rgba(0, 0, 0, 0.2);
+      }
+
+      &:last-child {
+        -webkit-box-shadow:  2px 1px 1px 0px rgba(255, 255, 255, 0.1);    
+        box-shadow:  2px 1px 1px 0px rgba(255, 255, 255, 0.1);
+      }
+    }
+  }
+
+  #leftmenu {
+
+    li {
+
+      &:first-child {
+        border-left: 0;
+      }
+
+      &:first-child a {
+        margin-left: 0;
+      }
+
+      &:last-child {
+        -webkit-box-shadow:  2px 1px 1px 0px rgba(255, 255, 255, 0.1);    
+        box-shadow:  2px 1px 1px 0px rgba(255, 255, 255, 0.1);
+      }
+
+    }
+  }
 
   ul {
     list-style: none;
@@ -41,37 +81,72 @@ html, body {
     border-left: 1px solid rgba(255, 255, 255, .1);
     line-height: 70px;
     text-align: center;
+    -webkit-transition: all 0.5s;
+    -moz-transition: all 0.5s;
+    -ms-transition: all 0.5s;
+    -o-transition: all 0.5s;
+    transition: all 0.5s;
 
-    &:first-child a {
-      margin-left: 0;
-    }
+
 
     a {
-      margin: 0 20px;
+      display:inline-block;
+      padding: 0 20px;
       color: #fff;
       font-family:'dn-bold';
       font-size: 14px;
       text-transform: uppercase;
       text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.75);
+      text-decoration:none;
+      -webkit-transition: all 0.3s;
+      -moz-transition: all 0.3s;
+      -ms-transition: all 0.3s;
+      -o-transition: all 0.3s;
+      transition: all 0.3s;
 
+      &.gettheapp {
+        background: url(/static/images/getTheApp.png) no-repeat -19px 0;
+        padding-left: 50px;
+      }
+      &.gettheapp:hover {
+        background: url(/static/images/getTheAppHover.png) repeat-y -19px 60px;
+        -webkit-transition: all 0.15s;
+        -moz-transition: all 0.15s;
+        -ms-transition: all 0.15s;
+        -o-transition: all 0.15s;
+        transition: all 0.15s;
+      }
+
+      &:hover {
+        color:#57def3;
+      }
+    }
+
+    &:hover {
+      background: rgba(28,31,33,0.6) url(/static/images/headerbghover.png) repeat-x 0 0;
 
     }
 
-    .logo {
-      width: 139px;
-      height: 31px;
-      margin-top: -8px;
-      margin-left: 7px;
+    &:active, &.active {
+      background: rgba(0,0,0,1.0) url(/static/images/headerbg.png) repeat-x 0 0;
+      
+
     }
 
-    &.gettheapp {
-      background: url(/static/images/getTheApp.png) no-repeat -27px 0;
-      padding-left: 20px;
+    &.logo {
+      
+      img {
+        width: 139px;
+        height: 31px;
+        margin-top: -8px;
+        margin-left: 7px;
+      }
+
+      &:hover {
+        background: none;
+      }
     }
 
-    &:first-child {
-      border-left: 0;
-    }
 
   }
 
@@ -105,6 +180,38 @@ body {
     width: 215px;
     -webkit-box-shadow:  0px 2px 2px 0px rgba(0, 0, 0, 0.15);    
     box-shadow:  0px 2px 2px 0px rgba(0, 0, 0, 0.15);
+    opacity: 1;
+    -webkit-transition: 0.5s;
+    -moz-transition: 0.5s all;
+    -ms-transition: 0.5s all;
+    -o-transition: 0.5s all;
+    transition: 0.5s all;
+
+    .overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      background: url(/static/images/videoOverlay.png);
+      background-size: 215px 121px;
+      width: 215px;
+      height: 121px;
+      -webkit-transition: 0.1s;
+      -moz-transition: 0.1s all;
+      -ms-transition: 0.1s all;
+      -o-transition: 0.1s all;
+      transition: 0.1s all;
+
+      &:hover {
+        background: url(/static/images/overlayhover.png);
+        background-size: 215px 121px;
+      }
+    }
+
+    &:hover {
+      -webkit-box-shadow:  1px 3px 3px 0px rgba(0, 0, 0, 0.25);    
+      box-shadow:  1px 3px 3px 0px rgba(0, 0, 0, 0.25);
+      
+    }
 
     .videocell {
       background-size: 215px 121px;
@@ -135,7 +242,7 @@ body {
   box-shadow:  4px 4px 4px 6px rgba(0, 0, 0, 0.3);    
 
   .getappbtn {
-    margin-right: 20px;
+    margin-right: 5px;
   }
 
   .getappcontainer {
@@ -144,7 +251,6 @@ body {
 
   .title {
     margin-left: 20px;
-    width: 500px;
     text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.75);
   }
 
@@ -156,7 +262,7 @@ body {
   }
 
   li {
-    float: left;
+    display: inline-block
 
   }
 
@@ -194,17 +300,12 @@ body {
 
 #channeloverlay {
   background: #f3f3f3 url(/static/images/channelbg.png) repeat-x;
-  padding-bottom: 10px;
+  padding-bottom: 30px;
 
   ul {
     list-style: none;
     padding: 0;
     .clearfix();
-  }
-
-  li {
-    float: left;
-
   }
 
   .bluenumber {
@@ -226,11 +327,15 @@ body {
     margin: 0;
 
     li {
+      display: inline-block;      
       margin-right: 65px;
       text-align: center;
     }
 
     .channeldesc {
+      margin-right: 0;
+      text-align: left;
+      width: 70%;
       color: #515151;
       text-shadow: 1px 1px 1px rgba(255, 255, 255, 1);
     }
@@ -243,6 +348,7 @@ body {
   height: auto;
   width: auto;
   border: 1px solid #2d3136;
+  vertical-align: bottom;
   -webkit-box-shadow:  0px 0px 6px 1px rgba(0, 0, 0, 0.4);    
   box-shadow:  0px 0px 6px 1px rgba(0, 0, 0, 0.4);      
 }
@@ -257,10 +363,11 @@ footer {
   color: #999999;
   background: #1c1f21;
   margin-top: -10px;
-  .clearfix();
 
   ul {
     list-style: none;
+    .clearfix();
+    margin: 0 0 10px 10px;
 
     li {
       float: left;
@@ -269,15 +376,20 @@ footer {
     }
   }
 
-  a, a:hover, a:visited, a:active {
+  a, a:visited, a:active {
+    color: #20c3e2;
+    text-decoration: none;
+  }
+
+  a:hover {
     color: #20c3e2;
     text-decoration: underline;
   }
+
 }
 
 .wrapper {
   position: relative;
-  min-width: 980px;
   margin: 0 auto;
   padding-top: 0;
 }
@@ -293,6 +405,9 @@ footer {
     display: none;
 }
 
+
+ // Video Player
+
 #playercontainer {
     width:750px;
     height:568px;
@@ -306,10 +421,12 @@ footer {
     z-index: 1010;
  }
 
- // Video Player
-
-#playercontrols {
-
+#closeplayer {
+  width: 45px;
+  height: 45px;
+  position: absolute;
+  top: 14px;
+  right: 25px;
 }
 
 #playerinfo {
@@ -329,7 +446,7 @@ footer {
     padding: 0;
 
     li {
-      float: left;
+      display: inline-block;
 
       &#channelthumb {
         border: 1px #2c3035 solid;
@@ -391,7 +508,7 @@ footer {
   }
 
   &:active, &.active {
-  background-color: #54b1c2 \9;
+  background-color: #54b1c29;
   }
 }
 
@@ -401,8 +518,16 @@ footer {
 
 .content-page {
   min-height: 100%;
-  color: #000;
+  color: #1c1f21;
 
+  #navbackground {
+    width: 100%;
+    height: 60px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    background: #000;
+  }
 
   .readmore {
 
@@ -410,38 +535,54 @@ footer {
       display: inline-block;
       background: #1bbfd7 url(/static/images/downarrow.png) no-repeat 5px 50%;
       color: #fff;
-      font-size: 17px;
+      font-size: 14px;
       font-weight: bold;
-      padding: 5px 10px 5px 30px;
+      padding: 6px 10px 5px 30px;
       cursor: pointer;
       text-decoration: none !important;
       letter-spacing: -1px;
+      -webkit-transition: all 0.5s;
+      -moz-transition: all 0.5s;
+      -ms-transition: all 0.5s;
+      -o-transition: all 0.5s;
+      transition: all 0.5s;
+
+      &:hover {
+        background: #000 url(/static/images/downarrow.png) no-repeat 5px 50%;        
+      }
 
       &.activestate {
         background: #000 url(/static/images/uparrow.png) no-repeat 5px 50%;
+
+        &:hover {
+          background: #1bbfd7 url(/static/images/uparrow.png) no-repeat 5px 50%;
+        }
       }
     }
 
     .readmoretext {
         max-height: 0;
         overflow: hidden;
-        -webkit-transition: all 1s;
-        -moz-transition: all 1s;
-        -ms-transition: all 1s;
-        -o-transition: all 1s;
-        transition: all 1s;
+        -webkit-transition: all 0.5s;
+        -moz-transition: all 0.5s;
+        -ms-transition: all 0.5s;
+        -o-transition: all 0.5s;
+        transition: all 0.5s;
 
         &.activestate {
-          max-height: 120px;
+          max-height: 400px;
         }
     }
   }
 
   .title {
-    width: 275px;
+    width: 260px;
+    margin-right: 15px;
     text-transform: uppercase;
     display: table-cell;
     vertical-align: top;  
+    font-family: "dn-bold";
+    padding-left: 10px;
   }
 
   header {
@@ -472,8 +613,6 @@ footer {
     h1 {
       font-size: 35px;
       color: #1c1f21;
-      width: 275px;
-
     }
 
     .main-text {
@@ -540,7 +679,7 @@ footer {
         }
 
         &.activestate, &:hover {
-          background: #000;
+          background: #1c1f21;
           color: #fff;
         }
 
@@ -608,8 +747,7 @@ footer {
 }
 
 
-
-.mobile {
+@media (max-width: 767px) {
   #topnav {
     height: 40px;
     text-align: center;
@@ -668,12 +806,32 @@ footer {
   #videoslist {
     li {
       margin: 0 5px 24px 5px;
-      width: 150px;
+      width: 140px;
       opacity: 1;
 
+      .overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        background: url(/static/images/videoOverlay.png);
+        background-size: 140px 79px;
+        width: 140px;
+        height: 79px;
+        -webkit-transition: 0.5s;
+        -moz-transition: 0.5s all;
+        -ms-transition: 0.5s all;
+        -o-transition: 0.5s all;
+        transition: 0.5s all;
+
+        &:hover {
+          background: url(/static/images/overlayhover.png);
+          background-size: 140px 79px;
+        }
+      }
+
       .videocell {
-        width: 150px;
-        height: 84px;
+        width: 140px;
+        height: 79px;
       }
     }
   }
@@ -681,6 +839,7 @@ footer {
   #playercontainer {
     width: 100%;
     height: 100%;
+    padding: 0;
     margin-top: 0;
     margin-left: 0;
     top: 0;
@@ -699,6 +858,22 @@ footer {
 
       li {
         line-height: 20px;
+      }
+    }
+  }
+}
+
+@media (min-width: 768px) and (max-width: 979px) {
+
+  #topnav {
+    height: 60px;    
+  }
+  
+
+  #channeloverlay {
+    .channeldetails {
+      .channeldesc {
+        width: 60%;
       }
     }
   }
