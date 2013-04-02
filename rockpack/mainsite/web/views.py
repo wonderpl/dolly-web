@@ -69,8 +69,8 @@ def reset_password():
     return render_template('web/reset_password.html', **locals())
 
 
-@app.route('/status/')
-def status():
+@app.route('/status/', subdomain='<sub>')
+def status(sub):
     # TODO: some internal checks
     return 'OK', 200, [('Content-Type', 'text/plain')]
 
