@@ -132,11 +132,14 @@ def add_videos_to_channel(channel, instance_list, locale):
     else:
         id_map = get_or_create_video_records(instance_list, locale)
     existing = dict((v.video, v) for v in VideoInstance.query.filter_by(channel=channel.id))
+    added = []
     for position, instance_id in enumerate(instance_list):
         video_id = id_map[instance_id]
-        instance = existing.get(video_id) or VideoInstance(video=video_id, channel=channel.id)
-        instance.position = position
-        g.session.add(instance)
+        if video_id not in added:
+            instance = existing.get(video_id) or VideoInstance(video=video_id, channel=channel.id)
+            instance.position = position
+            g.session.add(instance)
+            added.append(video_id)
 
     deleted_video_ids = set(existing.keys()).difference(id_map.values())
     if deleted_video_ids:
