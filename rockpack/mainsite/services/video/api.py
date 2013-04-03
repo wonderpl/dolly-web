@@ -64,7 +64,7 @@ def get_local_channel(locale, paging, **filters):
         item = dict(
             position=position,
             id=meta.id,
-            category=meta.category,
+            category=str(meta.category),
         )
         item.update(channel_dict(meta.channel_rel))
         channel_data.append(item)
@@ -109,6 +109,9 @@ def get_local_videos(loc, paging, with_channel=True, **filters):
 
     if filters.get('category'):
         videos = _filter_by_category(videos, models.VideoInstance, filters['category'][0])
+
+    if filters.get('position_order'):
+        videos = videos.order_by(models.VideoInstance.position)
 
     if filters.get('star_order'):
         videos = videos.order_by(desc(models.VideoInstanceLocaleMeta.star_count))

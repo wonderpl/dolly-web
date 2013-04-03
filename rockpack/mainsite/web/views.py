@@ -43,8 +43,8 @@ def channel(slug, channelid):
 
 class ResetPasswordForm(wtf.Form):
     token = wtf.HiddenField()
-    password = wtf.PasswordField(validators=[wtf.Required(), wtf.Length(min=6)])
-    password2 = wtf.PasswordField(validators=[wtf.Required(), wtf.Length(min=6)])
+    password = wtf.PasswordField('NEW PASSWORD', validators=[wtf.Required(), wtf.Length(min=6)])
+    password2 = wtf.PasswordField('RETYPE NEW PASSWORD', validators=[wtf.Required(), wtf.Length(min=6)])
 
     def validate_password2(self, field):
         if not self.password.data == self.password2.data:

@@ -309,8 +309,9 @@ class Channel(db.Model):
     public = Column(Boolean(), nullable=False, server_default='true', default=True)
     date_added = Column(DateTime(), nullable=False, default=func.now())
     date_updated = Column(DateTime(), nullable=False, default=func.now(), onupdate=func.now())
+    ecommerce_url = Column(String(1024), nullable=False, server_default='')
 
-    owner = Column(CHAR(22), ForeignKey('user.id'), nullable=False)
+    owner = Column(CHAR(22), ForeignKey('user.id'), nullable=False, default='', server_default='')
     owner_rel = relationship(User, primaryjoin=(owner == User.id), lazy='joined', innerjoin=True)
 
     deleted = Column(Boolean(), nullable=False, server_default='false', default=False)

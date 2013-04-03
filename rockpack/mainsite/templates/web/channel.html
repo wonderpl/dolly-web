@@ -30,13 +30,6 @@
     <![endif]-->
 
     <script>
-      var tag = document.createElement('script');
-      tag.src = "//www.youtube.com/iframe_api";
-      var firstScriptTag = document.getElementsByTagName('script')[0];
-      firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
-    </script>
-
-    <script>
       var channel_data = {{ ctx.channel_data|tojson|safe }},
           channelUrl = "{{ url_for('userws.channel_info', userid='-', channelid='-') }}"
     </script>
@@ -55,6 +48,13 @@
       "app/views/about.html", "app/views/channel.html", "app/views/footer.html", "app/views/header.html", "app/views/jobs.html", "app/views/Videocell.html", "app/views/videoplayer.html", "app/views/headermobile.html" %}
       <script type="text/javascript" src="{{ ASSET_URL }}"></script>
     {% endassets %}
+
+    <script>
+      var tag = document.createElement('script');
+      tag.src = "//www.youtube.com/iframe_api";
+      var firstScriptTag = document.getElementsByTagName('script')[0];
+      firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+    </script>
 
 
     {% assets filters="cssmin", output="gen/vendor.%(version)s.css", "vendor/css/bootstrap.css", "vendor/css/bootstrap-responsive.css" %}

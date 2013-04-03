@@ -60,10 +60,17 @@ window.Weblight = angular.module('Weblight', ['channelServices'])
   )
 
 window.onYouTubeIframeAPIReady = ->
+  updateScope()
+  return
+
+updateScope = ->
   injector = angular.element(document.getElementById('app')).injector()
-  injector.invoke(($rootScope, $compile, $document) ->
-    $rootScope.playerReady = true
-    $rootScope.$apply()
-    return
-  )
+  if typeof injector == "undefined" 
+    setTimeout(updateScope, 300)
+  else
+    injector.invoke(($rootScope, $compile, $document) ->
+      $rootScope.playerReady = true
+      $rootScope.$apply()
+      return
+    )
   return

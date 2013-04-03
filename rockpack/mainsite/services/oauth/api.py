@@ -10,7 +10,7 @@ from rockpack.mainsite.core.token import create_access_token
 from rockpack.mainsite.core.email import send_email
 from rockpack.mainsite.core.oauth.decorators import check_client_authorization
 from rockpack.mainsite.core.webservice import WebService, expose_ajax
-from rockpack.mainsite.services.user.models import User, UserAccountEvent, username_exists
+from rockpack.mainsite.services.user.models import User, UserAccountEvent, username_exists, GENDERS
 from rockpack.mainsite.services.video.models import Locale
 from . import facebook, models
 
@@ -81,16 +81,8 @@ class LoginWS(WebService):
         return user.get_credentials()
 
 
-class RockRegistrationForm(wtf.Form):
-    username = wtf.TextField(validators=[wtf.Length(min=3)] + get_column_validators(User, 'username'))
-    password = wtf.PasswordField(validators=[wtf.Required(), wtf.Length(min=6)])
-    first_name = wtf.TextField(validators=[wtf.Optional()] + get_column_validators(User, 'first_name'))
-    last_name = wtf.TextField(validators=[wtf.Optional()] + get_column_validators(User, 'last_name'))
-    date_of_birth = wtf.DateField(validators=get_column_validators(User, 'date_of_birth'))
-    locale = wtf.TextField(validators=get_column_validators(User, 'locale'))
-    email = wtf.TextField(validators=[wtf.Email()] + get_column_validators(User, 'email'))
-
-    def validate_username(form, field):
+def username_validator():
+    def _valid(form, field):
         if field.data != User.sanitise_username(field.data):
             raise wtf.ValidationError('Username can only contain alphanumerics.')
         exists = username_exists(field.data)
@@ -98,10 +90,32 @@ class RockRegistrationForm(wtf.Form):
             raise wtf.ValidationError('"%s" is reserved.' % field.data)
         elif exists:
             raise wtf.ValidationError('"%s" already taken.' % field.data)
+    return _valid
 
-    def validate_email(form, field):
+
+def email_registered_validator():
+    def _registered(form, field):
         if User.query.filter_by(email=field.data).count():
             raise wtf.ValidationError('Email address already registered.')
+    return _registered
+
+
+def gender_validator():
+    def _valid(form, field):
+        if field.data not in GENDERS:
+            raise wtf.ValidationError('Invalid gender.')
+    return _valid
+
+
+class RockRegistrationForm(wtf.Form):
+    username = wtf.TextField(validators=[wtf.Length(min=3), username_validator()] + get_column_validators(User, 'username'))
+    password = wtf.PasswordField(validators=[wtf.Required(), wtf.Length(min=6)])
+    first_name = wtf.TextField(validators=[wtf.Optional()] + get_column_validators(User, 'first_name'))
+    last_name = wtf.TextField(validators=[wtf.Optional()] + get_column_validators(User, 'last_name'))
+    gender = wtf.TextField(validators=[wtf.Optional(), gender_validator()] + get_column_validators(User, 'gender'))
+    date_of_birth = wtf.DateField(validators=get_column_validators(User, 'date_of_birth'))
+    locale = wtf.TextField(validators=get_column_validators(User, 'locale'))
+    email = wtf.TextField(validators=[wtf.Email(), email_registered_validator()] + get_column_validators(User, 'email'))
 
 
 class ExternalRegistrationForm(wtf.Form):
@@ -164,6 +178,12 @@ class ExternalUser:
             return '%s@facebook.com' % self._user_data['username']
         else:
             return ''
+
+    @property
+    def gender(self):
+        if 'gender' in self._user_data:
+            return self._user_data['gender'][0]
+        return ''
 
     @property
     def locale(self):

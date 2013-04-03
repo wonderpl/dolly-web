@@ -28,6 +28,7 @@ Cache-Control: public, max-age=60
   "id": "userid",
   "username": "username",
   "display_name": "display name",
+  "gender": null,
   "avatar_thumbnail_url": "http://path/to/avatar/small.jpg",
   "channels": {
     "total": 1,
@@ -81,20 +82,29 @@ Cache-Control: private
 }
 ```
 
-### Change username
+### Update profile
 
-Change the current username for a user
+Change an individual attribute for a user, for example, username.
 
 ```http
-PUT /ws/USERID/username/ HTTP/1.1
+PUT /ws/USERID/ATTRIBUTE/ HTTP/1.1
 Content-Type: application/json
 
-"foo"
+"porkchopexpress"
 ```
 
-Parameter  | Required | Value      | Description
-:--------- | :------- | :--------- | :----------
-           | Yes      | String     | Characters allowed should match regex [a-zA-Z0-9]
+Where `ATTRIBUTE` can be one of:
+
+Attribute     | Value  | Description
+:------------ | :----- | :----------
+username      | String | Characters allowed should match regex [a-zA-Z0-9]
+password      | String | Minimum 6 characters
+first_name    | String |
+last_name     | String |
+date_of_birth | String | YYYY-MM-DD formatted date string
+locale        | String | IETF language tag
+email         | String | Email address
+gender        | String | `m` or `f`
 
 Responds with a `204`
 
@@ -117,30 +127,7 @@ Content-Type: application/json
     "suggested_username": "foo"
 }
 ```
-
-Username has already been changed a maximum number of times
-
-```http
-HTTP/1.1 400 BAD REQUEST
-Content-Type: application/json
-
-{
-    "error": "invalid_request",
-    "message": "Limit for changing username has been reached"
-}
-```
-
-Invalid username
-
-```http
-HTTP/1.1 400 BAD REQUEST
-Content-Type: application/json
-
-{
-    "error": "invalid_request",
-    "message": "Not a valid username"
-}
-```
+See the Registration section of [oauth documentation](oauth.md) for a comprehensive list of errors
 
 Avatar
 ======
@@ -210,6 +197,7 @@ Cache-Control: public, max-age=60
  "description": "Channel description",
  "resource_url": "http://base/ws/USERID/channels/CHANNELID/",
  "title": "Channel title",
+ "ecommerce_url": "",
  "cover_background_url": "http://path/to/channel/bg.jpg",
  "cover_thumbnail_small_url": "http://path/to/channel/small.jpg",
  "cover_thumbnail_large_url": "http://path/to/channel/large.jpg",
@@ -414,8 +402,9 @@ Content-Type: application/json
 
 ### Update
 
-To add or delete videos from a channel, send a list of the videos that the channel needs to contain.
-Any videos not included, but are currently in the channel, will be removed.
+To add or delete videos from a channel, send a list of video instance ids that the
+channel needs to contain. Any videos not included, but are currently in the channel,
+will be removed.
 
 Additionally, the order in which the video ids occur in the list will dictate the order in which they
 will be returned in the `GET` above.
@@ -425,7 +414,7 @@ PUT /ws/USERID/channels/CHANNELID/videos/ HTTP/1.1
 Content-Type: application/json
 Authorization: Bearer TOKEN
 
-["VIDEOID", "VIDEOID"]
+["VIDEOINSTANCEID", "VIDEOINSTANCEID"]
 ```
 
 ```http
@@ -441,30 +430,21 @@ If the channel is private and the owner's token is not provided then a 403 will 
 HTTP/1.1 403 FORBIDDEN
 Content-Type: application/json
 
-{"error":"insufficient_scope"}
-```
-
-Missing list if video ids
-
-```http
-HTTP/1.1 400 BAD REQUEST
-Content-Type: application/json
-
 {
-    "error": "invalid_request",
-    "message": "List can be empty, but must be present"
+ "error":"insufficient_scope"
 }
 ```
 
-Item in list is not a string
+Invalid ids:
 
 ```http
 HTTP/1.1 400 BAD REQUEST
 Content-Type: application/json
 
 {
-    "error": "invalid_request",
-    "message": "List item must be a video id"
+ "error": "invalid_request",
+ "message": "Invalid video instance ids",
+ "data": [ "aaa", "bbb" ]
 }
 ```
 
