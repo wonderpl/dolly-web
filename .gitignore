@@ -50,3 +50,6 @@ rockpack/mainsite/static/gen
 
 # Local sql db
 rockpack/mainsite/rockpack.db
+
+# loadtest results
+loadtest/results/
