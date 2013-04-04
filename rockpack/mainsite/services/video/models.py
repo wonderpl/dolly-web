@@ -10,6 +10,7 @@ from rockpack.mainsite.helpers.db import (
 from rockpack.mainsite.helpers.urls import url_for
 from rockpack.mainsite.services.user.models import User
 from rockpack.mainsite import app
+from rockpack.mainsite.core import es
 
 
 class Locale(db.Model):
@@ -46,7 +47,7 @@ class Category(db.Model):
     locales = relationship('Locale', backref='categories')
 
     video_instancess = relationship('VideoInstance', backref='category_ref',
-                                      passive_deletes=True)
+                                  passive_deletes=True)
     channel_locale_metas = relationship('ChannelLocaleMeta', backref='category_ref',
                                         passive_deletes=True)
     external_category_maps = relationship('ExternalCategoryMap', backref='category_ref')
@@ -341,51 +342,15 @@ class Channel(db.Model):
         channel.public = channel.should_be_public(channel, public)
         if category:
             channel.metas = cls.channelmeta_for_category(category, locale)
-
-        # NOTE: move this out to somewhere sensible
-        from rockpack.mainsite.core.es import get_es_connection, api
-        conn = get_es_connection()
-        channel = channel.save()
-        if channel.public:
-            api.add_channel_to_index(
-                    conn,
-                    dict(
-                        id=channel.id,
-                        category=category,
-                        subscribe_count=0,
-                        description=channel.description,
-                        thumbnail_url=channel.cover.thumbnail_large,
-                        cover_thumbnail_small_url=channel.cover.thumbnail_small,
-                        cover_thumbnail_large_url=channel.cover.thumbnail_large,
-                        cover_background_url=channel.cover.background,
-                        resource_url=channel.get_resource_url(),
-                        title=channel.title),
-                    channel.owner,
-                    locale)
-        return channel
-
+        return channel.save()
 
     def get_resource_url(self, own=False):
         view = 'userws.owner_channel_info' if own else 'userws.channel_info'
         return url_for(view, userid=self.owner_rel.id, channelid=self.id)
+
     resource_url = property(get_resource_url)
 
     def add_videos(self, videos, locale):
-        from rockpack.mainsite.core.es import get_es_connection, api
-        conn = get_es_connection()
-        def _add_to_es(conn, channel, instance, locale):
-            api.add_video_to_index(
-                    conn,
-                    dict(
-                        id=instance.id,
-                        title=instance.video_rel.title,
-                        channel=instance.channel,
-                        category=channel.category),
-                    dict(
-                        id=instance.video,
-                        thumbnail_url=instance.default_thumbnail,
-                        view_count=instance.view_count),
-                    locale)
 
         meta = ChannelLocaleMeta.query.filter_by(channel=self.id, locale=locale).first()
         VideoInstance.add_from_video_ids([getattr(v, 'id', v) for v in videos], self.id, meta.category, locale)
@@ -395,7 +360,6 @@ class Channel(db.Model):
         try:
             with session.begin_nested():
                 session.add_all(instances)
-                [_add_to_es(conn, i, locale) for i in instances]
         except IntegrityError:
             existing = [i.video for i in session.query(VideoInstance.video).
                         filter_by(channel=self.id).
@@ -403,7 +367,6 @@ class Channel(db.Model):
             for i in instances:
                 if i.video not in existing:
                     session.add_all(i)
-                    _add_to_es(conn, i, locale)
 
     def remove_videos(self, videos):
         VideoInstance.remove_from_video_ids(
@@ -453,6 +416,96 @@ ParentCategory = aliased(Category)
 def _set_child_category_locale(mapper, connection, target):
     if not target.locale and target.parent_category:
         target.locale = target.parent_category.locale
+
+
+@event.listens_for(VideoInstanceLocaleMeta, 'after_insert')
+def _add_es_video(mapper, connection, target):
+        from rockpack.mainsite.core.es import get_es_connection, api
+        conn = get_es_connection()
+        # We only need to create an elasticesearch video record with this locale
+        # if there isn't one already present. New metas don't create new es records.
+        if not len(target.video_instance_rel.metas) > 1:
+            print api.add_video_to_index(
+                conn,
+                dict(
+                    id=target.video_instance_rel.id,
+                    title=target.video_instance_rel.video_rel.title,
+                    channel=target.video_instance_rel.channel,
+                    category=target.video_instance_rel.category,
+                    date_added=target.video_instance_rel.date_added,
+                    position=target.video_instance_rel.position),
+                dict(
+                    id=target.video_instance_rel.video,
+                    thumbnail_url=target.video_instance_rel.video_rel.default_thumbnail,
+                    view_count=target.video_instance_rel.video_rel.view_count,
+                    star_count=target.video_instance_rel.video_rel.star_count,
+                    source=target.video_instance_rel.video_rel.source,
+                    source_id=target.video_instance_rel.video_rel.source_videoid,
+                    duration=target.video_instance_rel.video_rel.duration),
+                target.locale)
+
+
+@event.listens_for(ChannelLocaleMeta, 'after_insert')
+def _es_channel_insert(mapper, connection, target):
+    # NOTE: owner_rel isn't available on Channel if we pass channel_rel for owner.resource_url.
+    # possibly lookup owner in resource_url method instead of having it rely on self.owner_rel
+    _add_es_channel(Channel.query.get(target.channel_rel.id), target.locale, target.category)
+
+
+@event.listens_for(ChannelLocaleMeta, 'after_update')
+def _es_channel_update_from_clm(mapper, connection, target):
+    _add_es_channel(target.channel_rel, target.locale, target.category)
+
+
+@event.listens_for(Channel, 'after_update')
+def _es_channel_update_from_channel(mapper, connection, target):
+    _add_es_channel(target, None, None)
+
+
+def _add_es_channel(channel, locale, category):
+    conn = es.get_es_connection()
+
+    data = dict(
+            id=channel.id,
+            public=channel.public,
+            category=category,
+            locale=locale,
+            subscribe_count=0,
+            description=channel.description,
+            resource_url=channel.get_resource_url(),
+            title=channel.title)
+
+    from rockpack.mainsite.services.video.api import es_get_channels
+    es_channel = es_get_channels(conn, channel_ids=[channel.id])[0]
+
+    # Thumbnailing won't work for update records
+    if not isinstance(channel.cover, str):
+        data['thumbnail_url'] = channel.cover.thumbnail_large
+        data['cover_thumbnail_small_url'] = channel.cover.thumbnail_small
+        data['cover_thumbnail_large_url'] = channel.cover.thumbnail_large
+        data['cover_background_url'] = channel.cover.background
+    else:
+        if es_channel:
+            data['thumbnail_url'] = es_channel[0]['thumbnail_url']
+            data['cover_thumbnail_small_url'] = es_channel[0]['cover_thumbnail_small_url']
+            data['cover_thumbnail_large_url'] = es_channel[0]['cover_thumbnail_large_url']
+            data['cover_background_url'] = es_channel[0]['cover_background_url']
+
+    if not (locale and category):
+        if es_channel:
+            data['locale'] = es_channel[0]['locale']
+            data['category'] = max(es_channel[0]['category'])
+            if isinstance(category, list):
+                category = max(category)
+            data['subscribe_count'] = es_channel[0]['subscribe_count']
+
+    print es.api.add_channel_to_index(conn, data, channel.owner, locale)
+    conn.indices.refresh('channels')
+
+
+@event.listens_for(VideoInstance, 'after_delete')
+def _es_video_delete(mapper, connection, target):
+    es.remove_video_from_index(es.get_es_connection(), target.id)
 
 
 event.listen(Video, 'before_insert', add_video_pk)

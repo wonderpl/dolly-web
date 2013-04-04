@@ -222,4 +222,12 @@ def username_exists(username):
         return 'reserved'
 
 
+def _es_owner_insert(mapper, connection, target):
+    from rockpack.mainsite.core.es.api import add_owner_to_index
+    from rockpack.mainsite.core.es import get_es_connection
+    add_owner_to_index(get_es_connection(), target)
+
+
+event.listen(User, 'after_insert', _es_owner_insert)
+event.listen(User, 'after_update', _es_owner_insert)
 event.listen(User, 'before_insert', lambda x, y, z: add_base64_pk(x, y, z))

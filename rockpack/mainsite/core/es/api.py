@@ -1,8 +1,22 @@
+def add_owner_to_index(conn, owner):
+    print conn.index({
+        'id': owner.id,
+        'avatar_thumbnail': str(owner.avatar),
+        'resource_url': owner.get_resource_url(False),
+        'display_name': owner.display_name,
+        'name': owner.username
+        },
+        'users',
+        'user',
+        id=owner.id)
+
+
 def add_channel_to_index(conn, channel, owner_id, locale):
     from rockpack.mainsite.services.video.models import Category
     cat_map = {c[0]:c[1] for c in Category.query.filter(Category.parent!=None).values('id', 'parent')}
     return conn.index({
         'id': channel['id'],
+        'public': channel['public'],
         'locale': locale,
         'subscribe_count': channel['subscribe_count'],
         'category': [
@@ -18,8 +32,8 @@ def add_channel_to_index(conn, channel, owner_id, locale):
         'title': channel['title'],
         'owner': owner_id,
         },
-        'channel',
         'channels',
+        'channel',
         id=channel['id'])
 
 
@@ -48,8 +62,8 @@ def add_video_to_index(conn, video_instance, video, locale):
 
 
 def remove_channel_from_index(conn, channel_id):
-    conn.delete('channels', 'channel', channel_id)
+    print conn.delete('channels', 'channel', channel_id)
 
 
 def remove_video_from_index(conn, video_id):
-    conn.delete('videos', 'video', video_id)
+    print conn.delete('videos', 'video', video_id)
