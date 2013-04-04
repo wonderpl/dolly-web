@@ -38,7 +38,7 @@ def syncdb(options):
 
 def run(*args):
     init_app()
-    logging.basicConfig(level=logging.DEBUG if app.debug else logging.INFO)
+    logging.basicConfig(level=logging.INFO if app.debug else logging.WARN)
     if args:
         return manager.handle(sys.argv[0], args[0], args[1:])
     else:
