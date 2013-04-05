@@ -102,37 +102,27 @@ def video_dict(video):
 
 
 def get_local_videos(loc, paging, with_channel=True, **filters):
-    videos = g.session.query(models.VideoInstance, models.Video,
-                             models.VideoLocaleMeta).join(models.Video)
+    videos = g.session.query(models.VideoInstance, models.Video
+            ).join(models.Video
+            ).filter(models.Video.visible == True
+                    ).outerjoin(models.VideoInstanceLocaleMeta,
+                            (models.VideoInstanceLocaleMeta.video_instance == models.VideoInstance.id) &
+                            (models.VideoInstanceLocaleMeta.locale == loc))
 
     if filters.get('channel'):
         filters.setdefault('channels', [filters['channel']])
 
     if filters.get('channels'):
-        # If selecting videos from a specific channel then we want all videos
-        # except those explicitly visible=False for the requested locale.
-        # Videos without a locale metadata record will be included.
-        videos = videos.outerjoin(models.VideoLocaleMeta,
-                    (models.Video.id == models.VideoLocaleMeta.video) &
-                    (models.VideoLocaleMeta.locale == loc)).\
-            filter((models.VideoLocaleMeta.visible == True) |
-                   (models.VideoLocaleMeta.visible == None)).\
-            filter(models.VideoInstance.channel.in_(filters['channels']))
-    else:
-        # For all other queries there must be an metadata record with visible=True
-        videos = videos.join(models.VideoLocaleMeta,
-                (models.Video.id == models.VideoLocaleMeta.video) &
-                (models.VideoLocaleMeta.locale == loc) &
-                (models.VideoLocaleMeta.visible == True))
+        videos = videos.filter(models.VideoInstance.channel.in_(filters['channels']))
 
     if filters.get('category'):
-        videos = _filter_by_category(videos, models.VideoLocaleMeta, filters['category'][0])
+        videos = _filter_by_category(videos, models.VideoInstance, filters['category'][0])
 
     if filters.get('position_order'):
         videos = videos.order_by(models.VideoInstance.position)
 
     if filters.get('star_order'):
-        videos = videos.order_by(desc(models.VideoLocaleMeta.star_count))
+        videos = videos.order_by(desc(models.VideoInstanceLocaleMeta.star_count))
 
     if filters.get('date_order'):
         videos = videos.order_by(desc(models.VideoInstance.date_added))

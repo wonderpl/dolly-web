@@ -13,7 +13,7 @@ from rockpack.mainsite.core.youtube import get_video_data
 from rockpack.mainsite.helpers.urls import url_for, url_to_endpoint
 from rockpack.mainsite.helpers.db import gen_videoid
 from rockpack.mainsite.services.video.models import (
-    Channel, ChannelLocaleMeta, Video, VideoInstance, VideoLocaleMeta, Category)
+    Channel, ChannelLocaleMeta, Video, VideoInstance, VideoInstanceLocaleMeta, Category)
 from rockpack.mainsite.services.cover_art.models import UserCoverArt, RockpackCoverArt
 from rockpack.mainsite.services.cover_art import api as cover_api
 from rockpack.mainsite.services.video import api as video_api
@@ -102,14 +102,14 @@ def save_video_activity(user, action, instance_id, locale):
     if not UserActivity.query.filter_by(**activity).count():
         # Increment value on each of instance, video, & locale meta
         video = Video.query.filter_by(id=video_id)
-        meta = VideoLocaleMeta.query.filter_by(video=video_id, locale=locale)
+        meta = VideoInstanceLocaleMeta.query.filter_by(video_instance=instance_id, locale=locale)
         incr = lambda m: {getattr(m, column): getattr(m, column) + value}
         VideoInstance.query.filter_by(id=instance_id).update(incr(VideoInstance))
         updated = video.update(incr(Video))
         assert updated
-        updated = meta.update(incr(VideoLocaleMeta))
+        updated = meta.update(incr(VideoInstanceLocaleMeta))
         if not updated:
-            meta = Video.query.get(video_id).add_meta(locale)
+            meta = VideoInstance.query.get(instance_id).add_meta(locale)
             setattr(meta, column, 1)
 
     UserActivity(**activity).save()

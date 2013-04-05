@@ -2,9 +2,7 @@ import base64
 import uuid
 import hashlib
 import cStringIO
-from iso8601.iso8601 import UTC
 from sqlalchemy import types
-from sqlalchemy.dialects.mysql.base import MySQLDialect
 from flask import g
 from flask.ext import wtf
 from rockpack.mainsite import app
@@ -46,7 +44,10 @@ def add_video_pk(mapper, connection, instance):
 
 def add_video_meta_pk(mapper, connection, instance):
     if not instance.id:
-        instance.id = gen_videoid(instance.locale, instance.video_rel.source, instance.video_rel.source_videoid)
+        instance.id = gen_videoid(
+                instance.locale,
+                instance.video_instance_rel.video_rel.source,
+                instance.video_instance_rel.video_rel.source_videoid)
 
 
 def get_column_property(model, column, prop):

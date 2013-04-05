@@ -16,21 +16,19 @@ def _format_video_instance_link(context, video, name):
     return Markup(t.format(video.video_rel.title, video.video_rel.title))
 
 
-class VideoLocaleMetaFormAdmin(InlineFormAdmin):
-    form_columns = ('id', 'category_ref', 'visible')
+class VideoInstanceLocaleMetaFormAdmin(InlineFormAdmin):
+    form_columns = ('id', 'locale_rel')
 
 
 class Video(AdminView):
     model_name = 'video'
     model = models.Video
 
-    column_list = ('title', 'date_updated', 'thumbnail')
+    column_list = ('title', 'date_updated', 'thumbnail', 'visible')
     column_formatters = dict(thumbnail=_format_video_thumbnail)
-    column_filters = ('source_listid', 'sources', 'date_added', 'metas')
+    column_filters = ('source_listid', 'sources', 'date_added', 'visible')
     column_searchable_list = ('title',)
-    form_columns = ('title', 'sources', 'source_videoid', 'rockpack_curated')
-
-    inline_models = (VideoLocaleMetaFormAdmin(models.VideoLocaleMeta),)
+    form_columns = ('title', 'sources', 'source_videoid', 'rockpack_curated', 'visible')
 
 
 class VideoThumbnail(AdminView):
@@ -40,10 +38,10 @@ class VideoThumbnail(AdminView):
     column_filters = ('video_rel',)
 
 
-class VideoLocaleMeta(AdminView):
-    model = models.VideoLocaleMeta
+class VideoInstanceLocaleMeta(AdminView):
+    model = models.VideoInstanceLocaleMeta
     model_name = model.__tablename__
-    form_overrides = dict(video_rel=wtf.TextField,
+    form_overrides = dict(video_instance_rel=wtf.TextField,
             view_count=wtf.TextField,
             star_count=wtf.TextField,
             )
@@ -52,7 +50,7 @@ class VideoLocaleMeta(AdminView):
             star_count=dict(validators=[wtf.InputRequired()]),
             )
 
-    column_filters = ('video_rel', 'category_ref', 'locale_rel', 'visible',)
+    column_filters = ('video_instance_rel', 'locale_rel',)
 
 
 class VideoInstance(AdminView):
@@ -63,8 +61,10 @@ class VideoInstance(AdminView):
 
     column_list = ('video_rel', 'video_channel', 'date_added', 'thumbnail')
     column_formatters = dict(thumbnail=_format_video_thumbnail, video_rel=_format_video_instance_link)
-    column_filters = ('video_channel', 'video_rel')
+    column_filters = ('video_channel', 'video_rel', 'metas')
     form_columns = ('video_channel', 'video_rel')
+
+    inline_models = (VideoInstanceLocaleMetaFormAdmin(models.VideoInstanceLocaleMeta),)
 
 
 class Source(AdminView):
@@ -195,7 +195,7 @@ class ExternalCategoryMap(AdminView):
 
 
 registered = [
-    Video, VideoLocaleMeta, VideoThumbnail, VideoInstance,
+    Video, VideoInstanceLocaleMeta, VideoThumbnail, VideoInstance,
     Source, Category, CategoryMap, Locale, RockpackCoverArt,
     UserCoverArt, Channel, ChannelLocaleMeta, ExternalCategoryMap]
 
