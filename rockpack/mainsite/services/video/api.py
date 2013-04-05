@@ -56,7 +56,7 @@ def get_local_channel(locale, paging, **filters):
     offset, limit = paging
     metas = metas.offset(offset).limit(limit)
     channel_data = []
-    for position, meta in enumerate(metas, 1):
+    for position, meta in enumerate(metas, offset):
         item = dict(
             position=position,
             id=meta.id,
