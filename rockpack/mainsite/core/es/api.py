@@ -1,28 +1,27 @@
+from . import mappings
+
+
 def add_owner_to_index(conn, owner):
-    print conn.index({
+    i = conn.index({
         'id': owner.id,
         'avatar_thumbnail': str(owner.avatar),
         'resource_url': owner.get_resource_url(False),
         'display_name': owner.display_name,
         'name': owner.username
         },
-        'users',
-        'user',
+        mappings.USER_INDEX,
+        mappings.USER_TYPE,
         id=owner.id)
+    conn.indices.refresh(mappings.USER_INDEX)
+    return i
 
 
-def add_channel_to_index(conn, channel, owner_id, locale):
-    from rockpack.mainsite.services.video.models import Category
-    cat_map = {c[0]:c[1] for c in Category.query.filter(Category.parent!=None).values('id', 'parent')}
-    return conn.index({
+def add_channel_to_index(conn, channel):
+    i = conn.index({
         'id': channel['id'],
-        'public': channel['public'],
-        'locale': locale,
+        'locale': channel['locale'],
         'subscribe_count': channel['subscribe_count'],
-        'category': [
-            channel['category'],
-            cat_map[channel['category']]
-            ],
+        'category': channel['category'],
         'description': channel['description'],
         'thumbnail_url': channel['thumbnail_url'],
         'cover_thumbnail_small_url': channel['cover_thumbnail_small_url'],
@@ -30,11 +29,13 @@ def add_channel_to_index(conn, channel, owner_id, locale):
         'cover_background_url': channel['cover_background_url'],
         'resource_url': channel['resource_url'],
         'title': channel['title'],
-        'owner': owner_id,
+        'owner': channel['owner_id'],
         },
-        'channels',
-        'channel',
+        mappings.CHANNEL_INDEX,
+        mappings.CHANNEL_TYPE,
         id=channel['id'])
+    conn.indices.refresh(mappings.CHANNEL_INDEX)
+    return i
 
 
 def add_video_to_index(conn, video_instance, video, locale):
@@ -56,14 +57,14 @@ def add_video_to_index(conn, video_instance, video, locale):
             'duration': video['duration'],
             }
         },
-        'videos',
-        'video',
+        mappings.VIDEO_INDEX,
+        mappings.VIDEO,
         id=video_instance['id'])
 
 
 def remove_channel_from_index(conn, channel_id):
-    print conn.delete('channels', 'channel', channel_id)
+    print conn.delete(mappings.CHANNEL_INDEX, mappings.CHANNEL_TYPE, channel_id)
 
 
 def remove_video_from_index(conn, video_id):
-    print conn.delete('videos', 'video', video_id)
+    print conn.delete(mappings.VIDEO_INDEX, mappings.VIDEO_TYPE, video_id)

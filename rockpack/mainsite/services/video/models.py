@@ -6,7 +6,7 @@ from sqlalchemy.orm import relationship, aliased
 from rockpack.mainsite.core.dbapi import db
 from rockpack.mainsite.helpers.db import (
     add_base64_pk, add_video_pk, add_video_meta_pk,
-    gen_videoid, insert_new_only, ImageType)
+    insert_new_only, ImageType)
 from rockpack.mainsite.helpers.urls import url_for
 from rockpack.mainsite.services.user.models import User
 from rockpack.mainsite import app
@@ -419,88 +419,89 @@ def _set_child_category_locale(mapper, connection, target):
 
 
 @event.listens_for(VideoInstanceLocaleMeta, 'after_insert')
-def _add_es_video(mapper, connection, target):
+def _add_video_insert(mapper, connection, target):
+    _add_es_video(target.video_instance_rel)
+
+
+def _locale_dict_from_object(meta):
+    return {'view_count': meta.view_count,
+            'star_count': meta.star_count}
+
+def _add_es_video(video_instance):
         from rockpack.mainsite.core.es import get_es_connection, api
         conn = get_es_connection()
-        # We only need to create an elasticesearch video record with this locale
-        # if there isn't one already present. New metas don't create new es records.
-        if not len(target.video_instance_rel.metas) > 1:
-            print api.add_video_to_index(
-                conn,
-                dict(
-                    id=target.video_instance_rel.id,
-                    title=target.video_instance_rel.video_rel.title,
-                    channel=target.video_instance_rel.channel,
-                    category=target.video_instance_rel.category,
-                    date_added=target.video_instance_rel.date_added,
-                    position=target.video_instance_rel.position),
-                dict(
-                    id=target.video_instance_rel.video,
-                    thumbnail_url=target.video_instance_rel.video_rel.default_thumbnail,
-                    view_count=target.video_instance_rel.video_rel.view_count,
-                    star_count=target.video_instance_rel.video_rel.star_count,
-                    source=target.video_instance_rel.video_rel.source,
-                    source_id=target.video_instance_rel.video_rel.source_videoid,
-                    duration=target.video_instance_rel.video_rel.duration),
-                target.locale)
+
+        locale = {}
+        for m in video_instance.metas:
+            locale.update({m.locale: _locale_dict_from_object})
+
+        data = dict(
+            id=video_instance.id,
+            title=video_instance.video_rel.title,
+            channel=video_instance.channel,
+            category=video_instance.category,
+            date_added=video_instance.date_added,
+            position=video_instance.position,
+            thumbnail_url=video_instance.video_rel.default_thumbnail,
+            source=video_instance.video_rel.source,
+            source_id=video_instance.video_rel.source_videoid,
+            duration=video_instance.video_rel.duration,
+            locale=locale)
+
+        print api.add_video_to_index(conn, data)
 
 
 @event.listens_for(ChannelLocaleMeta, 'after_insert')
 def _es_channel_insert(mapper, connection, target):
     # NOTE: owner_rel isn't available on Channel if we pass channel_rel for owner.resource_url.
     # possibly lookup owner in resource_url method instead of having it rely on self.owner_rel
-    _add_es_channel(Channel.query.get(target.channel_rel.id), target.locale, target.category)
+    _add_es_channel(Channel.query.get(target.channel_rel.id), category=target.category)
 
 
 @event.listens_for(ChannelLocaleMeta, 'after_update')
 def _es_channel_update_from_clm(mapper, connection, target):
-    _add_es_channel(target.channel_rel, target.locale, target.category)
+    _add_es_channel(Channel.query.get(target.channel_rel.id))
 
 
 @event.listens_for(Channel, 'after_update')
 def _es_channel_update_from_channel(mapper, connection, target):
-    _add_es_channel(target, None, None)
+    _add_es_channel(Channel.query.get(target.id))
 
 
-def _add_es_channel(channel, locale, category):
+class MissingChannelInElasticSearch(Exception):
+    pass
+
+
+def _add_es_channel(channel, category=None):
     conn = es.get_es_connection()
 
+    if category:
+        category = Category.query.filter(
+            Category.parent != None,
+            Category.id == category).values('id', 'parent').next()
+
+    locale = {}
+    for m in channel.metas:
+        locale.update({
+            m.locale: {'view_count': m.view_count,
+                'star_count': m.star_count}
+            })
+
     data = dict(
-            id=channel.id,
-            public=channel.public,
-            category=category,
-            locale=locale,
-            subscribe_count=0,
-            description=channel.description,
-            resource_url=channel.get_resource_url(),
-            title=channel.title)
+        id=channel.id,
+        category=category,
+        locale=locale,
+        owner_id=channel.owner,
+        subscribe_count=0,
+        description=channel.description,
+        resource_url=channel.get_resource_url(),
+        title=channel.title,
+        thumbnail_url=channel.cover.thumbnail_large,
+        cover_thumbnail_small_url=channel.cover.thumbnail_small,
+        cover_thumbnail_large_url=channel.cover.thumbnail_large,
+        cover_background_url=channel.cover.background)
 
-    from rockpack.mainsite.services.video.api import es_get_channels
-    es_channel = es_get_channels(conn, channel_ids=[channel.id])[0]
-
-    # Thumbnailing won't work for update records
-    if not isinstance(channel.cover, str):
-        data['thumbnail_url'] = channel.cover.thumbnail_large
-        data['cover_thumbnail_small_url'] = channel.cover.thumbnail_small
-        data['cover_thumbnail_large_url'] = channel.cover.thumbnail_large
-        data['cover_background_url'] = channel.cover.background
-    else:
-        if es_channel:
-            data['thumbnail_url'] = es_channel[0]['thumbnail_url']
-            data['cover_thumbnail_small_url'] = es_channel[0]['cover_thumbnail_small_url']
-            data['cover_thumbnail_large_url'] = es_channel[0]['cover_thumbnail_large_url']
-            data['cover_background_url'] = es_channel[0]['cover_background_url']
-
-    if not (locale and category):
-        if es_channel:
-            data['locale'] = es_channel[0]['locale']
-            data['category'] = max(es_channel[0]['category'])
-            if isinstance(category, list):
-                category = max(category)
-            data['subscribe_count'] = es_channel[0]['subscribe_count']
-
-    print es.api.add_channel_to_index(conn, data, channel.owner, locale)
-    conn.indices.refresh('channels')
+    print es.api.add_channel_to_index(conn, data)
 
 
 @event.listens_for(VideoInstance, 'after_delete')

@@ -42,7 +42,7 @@ class CategoryData(DataSet):
         id = 1
         name = 'Series'
         locale = LocaleData.US.id
-        parent = 1
+        parent = 0
 
     class Music:
         id = 2
