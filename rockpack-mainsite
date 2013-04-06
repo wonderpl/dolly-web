@@ -57,6 +57,7 @@ force-reload() {
 
 restart() {
 	stop
+	sleep 0.1
 	start
 }
 
