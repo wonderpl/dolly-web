@@ -1,4 +1,3 @@
-import time
 import random
 from base_user import BaseTransaction
 
@@ -7,9 +6,8 @@ class Transaction(BaseTransaction):
 
     def get_subs_videos(self):
         self.get(self.urls['subscriptions'] + 'recent_videos/', token=self.token)
-        time.sleep(random.random())
 
-    def _run(self):
+    def process(self):
         """
         - Register new user
         - Pick 10 random categories
@@ -24,11 +22,11 @@ class Transaction(BaseTransaction):
             channel = random.choice(channels)
             self.post(self.urls['subscriptions'], channel['resource_url'], token=self.token)
             self.get_subs_videos()
+            yield True
         for i in xrange(10):
             self.get_subs_videos()
+            yield True
 
 
 if __name__ == '__main__':
-    trans = Transaction()
-    trans.run()
-    trans.print_times()
+    Transaction().test()

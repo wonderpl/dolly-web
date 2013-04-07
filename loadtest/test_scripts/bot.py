@@ -5,7 +5,12 @@ from base_user import BaseTransaction
 
 class Transaction(BaseTransaction):
 
-    def _run(self):
+    def __init__(self):
+        super(Transaction, self).__init__()
+        # prevent service discovery request
+        self.urls = dict(status=True)
+
+    def process(self):
         """
         - Get status
         """
@@ -14,6 +19,4 @@ class Transaction(BaseTransaction):
 
 
 if __name__ == '__main__':
-    trans = Transaction()
-    trans.run()
-    trans.print_times()
+    Transaction().test()

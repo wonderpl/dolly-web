@@ -1,12 +1,13 @@
-import time
 import random
 import uuid
+import string
+import simplejson as json
 from base_user import BaseTransaction
 
 
 class Transaction(BaseTransaction):
 
-    def _run(self):
+    def process(self):
         """
         - Register new user
         - Search for videos
@@ -16,15 +17,19 @@ class Transaction(BaseTransaction):
         - Add the 10 videos to new channel
         """
         self.register_user()
-        params = dict(start=random.randint(0, 1000), size=100)
+        r = self.get(self.urls['video_search_terms'], dict(q=random.choice(string.ascii_lowercase)))
+        term = random.choice(json.loads(r[19:-1])[1])[0]
+        params = dict(q=term, start=random.randint(0, 800), size=100)
         videos = self.get(self.urls['video_search'], params=params)['videos']['items']
-        instance_ids = [v['id'] for v in random.sample(videos, 10)]
+        if not videos:
+            return
+        instance_ids = [v['id'] for v in random.sample(videos, min(10, len(videos)))]
 
         for instance_id in instance_ids:
             self.post(self.urls['activity'],
                       dict(action='select', video_instance=instance_id),
                       token=self.token)
-            time.sleep(random.random())
+            #yield True
 
         category = random.choice(self.get_cat_ids())
         cover = random.choice(self.get(self.urls['cover_art'])['cover_art']['items'])['cover_ref']
@@ -40,6 +45,4 @@ class Transaction(BaseTransaction):
 
 
 if __name__ == '__main__':
-    trans = Transaction()
-    trans.run()
-    trans.print_times()
+    Transaction().test()

@@ -1,4 +1,5 @@
 import time
+import random
 import re
 import urlparse
 import uuid
@@ -7,7 +8,7 @@ import simplejson as json
 import requests
 
 
-SERVER = 'http://localhost:5000'
+SERVER = 'http://10.250.237.240'
 DISCOVER_URL = 'http://lb.us.rockpack.com/ws/'
 CLIENT_AUTH_HEADER = 'Authorization', 'Basic YzhmZTVmNnJvY2s4NzNkcGFjazE5UTo='
 
@@ -15,40 +16,43 @@ CLIENT_AUTH_HEADER = 'Authorization', 'Basic YzhmZTVmNnJvY2s4NzNkcGFjazE5UTo='
 class BaseTransaction(object):
 
     def __init__(self):
-        self.custom_timers = {}
         self.urls = {}
+        self._process = None
 
     def run(self):
-        self.urls = self.get(DISCOVER_URL)
+        self.custom_timers = {}
+        if not self.urls:
+            self.urls = self.get(DISCOVER_URL)
+        if not self._process:
+            self._process = self.process()
         try:
-            self._run()
-        except Exception, e:
-            self.custom_timers['errors'] = 1
-            import logging, base64, struct
-            try:
-                userid = base64.urlsafe_b64encode(struct.unpack('>Hd16s16s', base64.urlsafe_b64decode(str(self.token)[40:]))[2])[:-2]
-            except:
-                userid = self.token
-            logging.exception('%s %s', e.response.url if hasattr(e, 'response') else e, userid)
-            raise
+            sleep = self._process.next()
+            if sleep is True:
+                sleep = random.random()
+            if sleep:
+                time.sleep(sleep)
+            return sleep
+        except (AttributeError, StopIteration):
+            self._process = None
 
     def request(self, url, method='get', params=None, data=None, headers=[], token=None):
         parsed_url = urlparse.urlparse(url)
         url = urlparse.urljoin(SERVER, parsed_url.path)
+        headers = headers[:]
         headers.append(('Host', parsed_url.netloc))
         if token:
             headers.append(('Authorization', 'Bearer %s' % token))
         start = time.time()
-        #print url, headers
         response = requests.request(method, url, params=params, data=data, headers=headers)
         service_name = method.upper() + '-' +\
             re.sub('/[\w-]{22,24}', '/X', parsed_url.path).strip('/').replace('/', '-')
+        #assert str(service_name) not in self.custom_timers, self.custom_timers
         self.custom_timers[str(service_name)] = time.time() - start
         response.raise_for_status()
         try:
             return response.json()
         except json.scanner.JSONDecodeError:
-            return None
+            return response.text
 
     def get(self, url, params=None, headers=[], token=None):
         return self.request(url, params=params, headers=headers, token=token)
@@ -65,13 +69,10 @@ class BaseTransaction(object):
         regdata = dict(username=s, password=s, email='%s@rockpack.com' % s, locale='en-us')
         credentials = self.post(self.urls['register'], regdata, headers=[CLIENT_AUTH_HEADER])
         self.token = credentials['access_token']
-        self.urls.setdefault('user', credentials['resource_url'])
+        self.urls['user'] = credentials['resource_url']
         userinfo = self.get(self.urls['user'], token=self.token)
-        for key, value in userinfo.items():
-            try:
-                self.urls.setdefault(key, value['resource_url'])
-            except (TypeError, KeyError):
-                pass
+        for key in 'subscriptions', 'channels', 'activity':
+            self.urls[key] = userinfo[key]['resource_url']
         return userinfo
 
     def get_cat_ids(self):
@@ -79,6 +80,18 @@ class BaseTransaction(object):
         return [c['id'] for c in chain(categories,
                 *(c.get('sub_categories', []) for c in categories))]
 
-    def print_times(self):
-        for name, value in self.custom_timers.items():
-            print '%s: %.5f secs' % (name, value)
+    def test(self):
+        i = 0
+        while True:
+            cont = self.run()
+            print '# %d' % i
+            i += 1
+            for name, value in self.custom_timers.items():
+                print '%s: %.5f secs' % (name, value)
+            if not cont:
+                break
+        self.run()
+
+
+class Transaction(BaseTransaction):
+    pass
