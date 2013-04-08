@@ -92,7 +92,6 @@ class ImportView(BaseView):
             form.import_data.videos,
             form.source.data,
             form.locale.data,
-            form.channel.data,
             form.category.data)
 
         channel = form.channel.data   # XXX: Need to validate?

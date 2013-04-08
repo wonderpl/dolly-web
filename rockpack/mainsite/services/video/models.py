@@ -6,7 +6,7 @@ from sqlalchemy.orm import relationship, aliased
 from rockpack.mainsite.core.dbapi import db
 from rockpack.mainsite.helpers.db import (
     add_base64_pk, add_video_pk, add_video_meta_pk,
-    gen_videoid, insert_new_only, ImageType)
+    insert_new_only, ImageType)
 from rockpack.mainsite.helpers.urls import url_for
 from rockpack.mainsite.services.user.models import User
 from rockpack.mainsite import app
@@ -178,7 +178,7 @@ class Video(db.Model):
         return 'http://www.youtube.com/watch?v=' + self.source_videoid
 
     @classmethod
-    def add_videos(cls, videos, source, locale, channel, category=None):
+    def add_videos(cls, videos, source, locale, category=None):
         for video in videos:
             video.source = source
         session = cls.query.session
