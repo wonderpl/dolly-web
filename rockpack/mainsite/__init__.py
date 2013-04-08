@@ -39,7 +39,7 @@ def run_setups():
 
 
 def import_services():
-    from rockpack.mainsite.core.webservice import WebService  # TODO: move this, obviously
+    from rockpack.mainsite.core.webservice import WebService
     services = []
     for s in SERVICES:
         import_name = s + '.api'
@@ -63,5 +63,12 @@ def import_services():
 def init_app():
     if not app.debug:
         app.logger.addHandler(logging.StreamHandler())
+    if app.debug:
+        try:
+            from flask_debugtoolbar import DebugToolbarExtension
+        except ImportError:
+            pass
+        else:
+            DebugToolbarExtension(app)
     run_setups()
     import_services()

@@ -13,9 +13,22 @@ service_urls = namedtuple('ServiceUrl', 'url func_name func methods')
 
 class JsonReponse(Response):
     def __init__(self, data, status=None, headers=None):
-        super(JsonReponse, self).__init__(
-            '' if data is None else json.dumps(data, separators=(',', ':')),
-            status, headers, 'application/json')
+        output = request.args.get('_output')
+        callback = request.args.get('_callback')
+        if output == 'html':
+            mimetype = 'text/html'
+            dumps_args = dict(indent=True)
+            head, tail = '<html><body><pre>', '</pre></body></html>'
+        elif callback:
+            mimetype = 'application/javascript'
+            dumps_args = dict()
+            head, tail = '%s(' % callback, ')'
+        else:
+            mimetype = 'application/json'
+            dumps_args = dict(separators=(',', ':'))
+            head, tail = '', ''
+        body = '' if data is None else json.dumps(data, **dumps_args)
+        super(JsonReponse, self).__init__(head + body + tail, status, headers, mimetype)
 
 
 def ajax(func):
