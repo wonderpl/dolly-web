@@ -453,7 +453,7 @@ def _add_es_video(video_instance):
 def _es_channel_insert(mapper, connection, target):
     # NOTE: owner_rel isn't available on Channel if we pass channel_rel for owner.resource_url.
     # possibly lookup owner in resource_url method instead of having it rely on self.owner_rel
-    _add_es_channel(Channel.query.get(target.channel_rel.id), category=target.category)
+    _add_es_channel(Channel.query.get(target.channel_rel.id))
 
 
 @event.listens_for(ChannelLocaleMeta, 'after_update')
@@ -470,13 +470,14 @@ class MissingChannelInElasticSearch(Exception):
     pass
 
 
-def _add_es_channel(channel, category=None):
+def _add_es_channel(channel):
     conn = es.get_es_connection()
 
-    if category:
+    category = []
+    if channel.category:
         category = Category.query.filter(
             Category.parent != None,
-            Category.id == category).values('id', 'parent').next()
+            Category.id == channel.category).values('id', 'parent').next()
 
     locale = {}
     for m in channel.metas:
@@ -484,6 +485,12 @@ def _add_es_channel(channel, category=None):
             m.locale: {'view_count': m.view_count,
                 'star_count': m.star_count}
             })
+
+    # HACK 
+    if isinstance(channel.cover, str):
+        convert = lambda value: ImageType('CHANNEL').process_result_value(value, None)
+    else:
+        convert = lambda x: x
 
     data = dict(
         id=channel.id,
@@ -494,10 +501,10 @@ def _add_es_channel(channel, category=None):
         description=channel.description,
         resource_url=channel.get_resource_url(),
         title=channel.title,
-        thumbnail_url=channel.cover.thumbnail_large,
-        cover_thumbnail_small_url=channel.cover.thumbnail_small,
-        cover_thumbnail_large_url=channel.cover.thumbnail_large,
-        cover_background_url=channel.cover.background)
+        thumbnail_url=convert(channel.cover).thumbnail_large,
+        cover_thumbnail_small_url=convert(channel.cover).thumbnail_small,
+        cover_thumbnail_large_url=convert(channel.cover).thumbnail_large,
+        cover_background_url=convert(channel.cover).background)
 
     print es.api.add_channel_to_index(conn, data)
 
