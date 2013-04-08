@@ -1,3 +1,4 @@
+from collections import defaultdict
 from sqlalchemy.orm import contains_eager
 from sqlalchemy.sql.expression import desc
 from flask import g, request
@@ -159,22 +160,15 @@ class CategoryWS(WebService):
 
     endpoint = '/categories'
 
-    @staticmethod
-    def cat_dict(instance):
-        data = dict(
-            id=str(instance.id),
-            name=instance.name,
-            priority=instance.priority,
-        )
-        for c in instance.children:
-            data.setdefault('sub_categories', []).append(CategoryWS.cat_dict(c))
-        return data
-
-    def _get_cats(self, **filters):
-        cats = models.Category.query.filter_by(locale=self.get_locale(), parent=None)
-        return [self.cat_dict(c) for c in cats]
-
     @expose_ajax('/', cache_age=3600)
     def category_list(self):
-        data = self._get_cats(**request.args)
-        return dict(categories=dict(items=data))
+        items = []
+        children = defaultdict(list)
+        for cat in models.Category.query.filter_by(locale=self.get_locale()):
+            info = dict(id=str(cat.id), name=cat.name, priority=cat.priority)
+            if cat.parent:
+                children[cat.parent].append(info)
+            else:
+                info['sub_categories'] = children[cat.id]
+                items.append(info)
+        return dict(categories=dict(items=items))
