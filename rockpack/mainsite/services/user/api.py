@@ -133,11 +133,14 @@ def add_videos_to_channel(channel, instance_list, locale):
     else:
         id_map = get_or_create_video_records(instance_list, locale)
     existing = dict((v.video, v) for v in VideoInstance.query.filter_by(channel=channel.id))
+    added = []
     for position, instance_id in enumerate(instance_list):
         video_id = id_map[instance_id]
-        instance = existing.get(video_id) or VideoInstance(video=video_id, channel=channel.id)
-        instance.position = position
-        g.session.add(instance)
+        if video_id not in added:
+            instance = existing.get(video_id) or VideoInstance(video=video_id, channel=channel.id)
+            instance.position = position
+            g.session.add(instance)
+            added.append(video_id)
 
     deleted_video_ids = set(existing.keys()).difference(id_map.values())
     if deleted_video_ids:
@@ -213,8 +216,7 @@ def _channel_info_response(channel, locale, paging, owner_url):
         locale, paging, channel=channel.id, with_channel=False,
         position_order=True, date_order=True)
     data['ecommerce_url'] = channel.ecommerce_url
-    data['category'] = str(ChannelLocaleMeta.query.filter_by(
-        channel=channel.id, locale=locale).value('category'))
+    data['category'] = channel.category
     data['videos'] = dict(items=items, total=total)
     return data
 
@@ -396,18 +398,10 @@ class UserWS(WebService):
         channel.title = form.title.data
         channel.description = form.description.data
         channel.cover = form.cover.data
+        channel.category = form.category.data
         channel.public = Channel.should_be_public(channel, form.public.data)
         channel.save()
 
-        # Update metas to a new category if necessary
-        for m in list(ChannelLocaleMeta.query.filter_by(channel=channelid)):
-            # NOTE: If we change the category, and there isn't a mapping to
-            # a locale for it, set it as per the form
-            if int(form.category.data) != m.category:
-                m.category = Category.map_to(int(form.category.data), m.locale)\
-                    or form.category.data
-
-                m.save()
         resource_url = channel.get_resource_url(True)
         return (dict(id=channel.id, resource_url=resource_url),
                 200, [('Location', resource_url)])

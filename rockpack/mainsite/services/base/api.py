@@ -12,7 +12,10 @@ def _discover_response():
         popular_channels=url_for('channelws.channel_list', locale=locale),
         popular_videos=url_for('videows.video_list', locale=locale),
         channel_search=url_for('searchws.search_channels', locale=locale),
+        channel_search_terms=url_for('completews.complete_channel_terms', locale=locale),
         video_search=url_for('searchws.search_videos', locale=locale),
+        video_search_terms=url_for('completews.complete_video_terms', locale=locale),
+        cover_art=url_for('coverartws.rockpack_cover_art', locale=locale),
         login=url_for('loginws.login'),
         register=url_for('registrationws.register'),
     )

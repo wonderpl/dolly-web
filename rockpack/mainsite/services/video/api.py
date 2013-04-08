@@ -30,6 +30,7 @@ def channel_dict(channel, with_owner=True, owner_url=False):
         description=channel.description,
         subscribe_count=0,  # TODO: implement this for real
         public=channel.public,
+        category=channel.category,
     )
     if with_owner:
         ch_data['owner'] = dict(
@@ -49,7 +50,7 @@ def get_local_channel(locale, paging, **filters):
         options(contains_eager(models.ChannelLocaleMeta.channel_rel))
     metas = metas.filter(models.Channel.public==True, models.Channel.deleted==False)
     if filters.get('category'):
-        metas = _filter_by_category(metas, models.ChannelLocaleMeta, filters['category'])
+        metas = _filter_by_category(metas, models.Channel, filters['category'])
     if filters.get('query'):
         metas = metas.filter(models.Channel.title.ilike('%%%s%%' % filters['query']))
 
@@ -60,11 +61,10 @@ def get_local_channel(locale, paging, **filters):
     offset, limit = paging
     metas = metas.offset(offset).limit(limit)
     channel_data = []
-    for position, meta in enumerate(metas, 1):
+    for position, meta in enumerate(metas, offset):
         item = dict(
             position=position,
             id=meta.id,
-            category=str(meta.category),
         )
         item.update(channel_dict(meta.channel_rel))
         channel_data.append(item)

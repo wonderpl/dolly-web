@@ -1,0 +1,2 @@
+ROCKPACK_SETTINGS=/etc/rockpack/mainsite/config.py
+*/15 * * * * root rockpack-mainsite-manage refresh_pubsubhubbub_subscriptions

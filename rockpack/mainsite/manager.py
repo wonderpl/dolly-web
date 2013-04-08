@@ -1,12 +1,29 @@
 import sys
 import logging
-from flask.ext.script import Manager
+from flask.ext.script import Manager as BaseManager
 from flask.ext.assets import ManageAssets
 from rockpack.mainsite import app, init_app
 
+
+class Manager(BaseManager):
+    def __init__(self, app):
+        super(Manager, self).__init__(app)
+        self.add_command("assets", ManageAssets())
+        self.logger = app.logger.manager.getLogger('command')
+        self._cron_commands = []
+
+    def cron_command(self, f):
+        self._cron_commands.append(f.__name__)
+        return self.command(f)
+
+    def handle(self, prog, name, args=None):
+        logging.basicConfig(level=logging.INFO if app.debug else logging.WARN)
+        if name in self._cron_commands and not self.app.config.get('ENABLE_CRON_JOBS'):
+            logging.info('cron jobs not enabled')
+            return
+        return super(Manager, self).handle(prog, name, args)
+
 manager = Manager(app)
-manager.add_command("assets", ManageAssets())
-manager.logger = app.logger.manager.getLogger('command')
 
 
 @manager.command
@@ -38,7 +55,6 @@ def syncdb(options):
 
 def run(*args):
     init_app()
-    logging.basicConfig(level=logging.DEBUG if app.debug else logging.INFO)
     if args:
         return manager.handle(sys.argv[0], args[0], args[1:])
     else:

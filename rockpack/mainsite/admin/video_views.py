@@ -120,14 +120,6 @@ class ChannelLocaleMetaFormAdmin(InlineFormAdmin):
         return form
 
 
-def _format_channel_metas(context, channel, name):
-    text = ''
-    for clm in models.ChannelLocaleMeta.query.filter_by(channel=channel.id):
-        cat = models.Category.query.get(clm.category)
-        text += '<p>' + clm.locale + '</br>{}/{}'.format(cat.parent_category.name, cat.name) + '</p>'
-    return Markup(text)
-
-
 def _format_channel_video_count(context, channel, name):
     count = models.VideoInstance.query.filter(models.VideoInstance.channel == channel.id).count()
     return Markup('{}'.format(count))
@@ -144,11 +136,10 @@ class Channel(AdminView):
     column_auto_select_related = True
     column_display_all_relations = True
 
-    column_list = ('title', 'owner_rel', 'public', 'cover.thumbnail_large', 'metas', 'video_count', 'date_added')
-    column_filters = ('owner', 'title', 'public', models.Channel.metas, 'description', 'owner_rel', 'deleted')
+    column_list = ('title', 'owner_rel', 'public', 'cover.thumbnail_large', 'category_rel', 'video_count', 'date_added')
+    column_filters = ('owner', 'title', 'public', 'category_rel', 'description', 'owner_rel', 'deleted')
     column_searchable_list = ('title',)
-    column_formatters = dict(metas=_format_channel_metas,
-            video_count=_format_channel_video_count)
+    column_formatters = dict(video_count=_format_channel_video_count)
 
     inline_models = (ChannelLocaleMetaFormAdmin(models.ChannelLocaleMeta),)
 
@@ -186,7 +177,7 @@ class ChannelLocaleMeta(AdminView):
             star_count=wtf.TextField,
             )
 
-    column_filters = ('channel_rel', 'channel_locale', models.Category.name)
+    column_filters = ('channel_rel', 'channel_locale')
 
 
 class ExternalCategoryMap(AdminView):

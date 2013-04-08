@@ -4,7 +4,7 @@ from datetime import datetime
 from rockpack.mainsite.manager import manager
 from .models import Subscription
 
-@manager.command
+@manager.cron_command
 def refresh_pubsubhubbub_subscriptions(id=None):
     """Re-subscribe expired PubSubHubbub subscriptions."""
     if id:

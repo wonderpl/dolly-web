@@ -47,9 +47,7 @@ class Category(db.Model):
     locales = relationship('Locale', backref='categories')
 
     video_instancess = relationship('VideoInstance', backref='category_ref',
-                                  passive_deletes=True)
-    channel_locale_metas = relationship('ChannelLocaleMeta', backref='category_ref',
-                                        passive_deletes=True)
+                                      passive_deletes=True)
     external_category_maps = relationship('ExternalCategoryMap', backref='category_ref')
 
     def __unicode__(self):
@@ -312,6 +310,9 @@ class Channel(db.Model):
     date_updated = Column(DateTime(), nullable=False, default=func.now(), onupdate=func.now())
     ecommerce_url = Column(String(1024), nullable=False, server_default='')
 
+    category = Column(ForeignKey('category.id'), nullable=True)
+    category_rel = relationship(Category, primaryjoin=(category == Category.id), lazy='joined', innerjoin=True)
+
     owner = Column(CHAR(22), ForeignKey('user.id'), nullable=False, default='', server_default='')
     owner_rel = relationship(User, primaryjoin=(owner == User.id), lazy='joined', innerjoin=True)
 
@@ -332,16 +333,15 @@ class Channel(db.Model):
         if locale is None:
             locale = Category.query.filter_by(id=category).value('locale')
         return [ChannelLocaleMeta(
-            locale=locale,
-            category=category)]
+            locale=locale)]
 
     @classmethod
-    def create(cls, category, locale=None, public=True, **kwargs):
+    def create(cls, locale=None, public=True, **kwargs):
         """Create & save a new channel record along with appropriate category metadata"""
         channel = Channel(**kwargs)
         channel.public = channel.should_be_public(channel, public)
-        if category:
-            channel.metas = cls.channelmeta_for_category(category, locale)
+        if kwargs.get('category'):
+            channel.metas = cls.channelmeta_for_category(kwargs['category'], locale)
         return channel.save()
 
     def get_resource_url(self, own=False):
@@ -351,9 +351,7 @@ class Channel(db.Model):
     resource_url = property(get_resource_url)
 
     def add_videos(self, videos, locale):
-
-        meta = ChannelLocaleMeta.query.filter_by(channel=self.id, locale=locale).first()
-        VideoInstance.add_from_video_ids([getattr(v, 'id', v) for v in videos], self.id, meta.category, locale)
+        VideoInstance.add_from_video_ids([getattr(v, 'id', v) for v in videos], self.id, self.category, locale)
 
         instances = [VideoInstance(channel=self.id, video=getattr(v, 'id', v)) for v in videos]
         session = self.query.session
@@ -401,7 +399,7 @@ class ChannelLocaleMeta(db.Model):
 
     channel = Column(ForeignKey('channel.id'), nullable=False)
     locale = Column(ForeignKey('locale.id'), nullable=False)
-    category = Column(ForeignKey('category.id'), nullable=False)
+    category = Column(ForeignKey('category.id'), nullable=True)
 
     channel_locale = relationship('Locale', remote_side=[Locale.id], backref='channel_locale_meta')
 
