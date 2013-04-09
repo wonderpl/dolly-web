@@ -38,27 +38,25 @@ def add_channel_to_index(conn, channel):
     return i
 
 
-def add_video_to_index(conn, video_instance, video, locale):
+def add_video_to_index(conn, video_instance):
     return conn.index({
         'id': video_instance['id'],
-        'locale': locale,
+        'locale': video_instance['locale'],
         'channel': video_instance['channel'],
         'category': video_instance['category'],
         'title': video_instance['title'],
-        'date_added': video_instance['date_added'],
+        'date_added': video_instance['date_added'].isoformat(),
         'position': video_instance['position'],
         'video': {
-            'id': video['id'],
-            'thumbnail_url': video['thumbnail_url'],
-            'view_count': video['view_count'],
-            'star_count': video['star_count'],
-            'source': video['source'],
-            'source_id': video['source_id'],
-            'duration': video['duration'],
+            'id': video_instance['video_id'],
+            'thumbnail_url': video_instance['thumbnail_url'],
+            'source': video_instance['source'],
+            'source_id': video_instance['source_id'],
+            'duration': video_instance['duration'],
             }
         },
         mappings.VIDEO_INDEX,
-        mappings.VIDEO,
+        mappings.VIDEO_TYPE,
         id=video_instance['id'])
 
 

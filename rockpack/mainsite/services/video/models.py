@@ -10,7 +10,6 @@ from rockpack.mainsite.helpers.db import (
 from rockpack.mainsite.helpers.urls import url_for
 from rockpack.mainsite.services.user.models import User
 from rockpack.mainsite import app
-from rockpack.mainsite.core import es
 
 
 class Locale(db.Model):
@@ -421,32 +420,36 @@ def _add_video_insert(mapper, connection, target):
     _add_es_video(target.video_instance_rel)
 
 
-def _locale_dict_from_object(meta):
-    return {'view_count': meta.view_count,
-            'star_count': meta.star_count}
+def _locale_dict_from_object(metas):
+    locales = {el: {} for el in app.config.get('ENABLED_LOCALES')}
+    meta_dict = {m.locale: m for m in metas}
+    for loc in locales.keys():
+        meta = meta_dict.get(loc)
+        locales[loc] = {
+            'view_count': getattr(meta, 'view_count', 0),
+            'star_count': getattr(meta, 'star_count', 0)
+        }
+    return locales
 
 def _add_es_video(video_instance):
-        from rockpack.mainsite.core.es import get_es_connection, api
-        conn = get_es_connection()
+    from rockpack.mainsite.core.es import get_es_connection, api
+    conn = get_es_connection()
 
-        locale = {}
-        for m in video_instance.metas:
-            locale.update({m.locale: _locale_dict_from_object})
+    data = dict(
+        id=video_instance.id,
+        video_id=video_instance.video,
+        title=video_instance.video_rel.title,
+        channel=video_instance.channel,
+        category=video_instance.category,
+        date_added=video_instance.date_added,
+        position=video_instance.position,
+        thumbnail_url=video_instance.video_rel.default_thumbnail,
+        source=video_instance.video_rel.source,
+        source_id=video_instance.video_rel.source_videoid,
+        duration=video_instance.video_rel.duration,
+        locale=_locale_dict_from_object(video_instance.metas))
 
-        data = dict(
-            id=video_instance.id,
-            title=video_instance.video_rel.title,
-            channel=video_instance.channel,
-            category=video_instance.category,
-            date_added=video_instance.date_added,
-            position=video_instance.position,
-            thumbnail_url=video_instance.video_rel.default_thumbnail,
-            source=video_instance.video_rel.source,
-            source_id=video_instance.video_rel.source_videoid,
-            duration=video_instance.video_rel.duration,
-            locale=locale)
-
-        print api.add_video_to_index(conn, data)
+    print api.add_video_to_index(conn, data)
 
 
 @event.listens_for(ChannelLocaleMeta, 'after_insert')
@@ -458,12 +461,12 @@ def _es_channel_insert(mapper, connection, target):
 
 @event.listens_for(ChannelLocaleMeta, 'after_update')
 def _es_channel_update_from_clm(mapper, connection, target):
-    _add_es_channel(Channel.query.get(target.channel_rel.id))
+    _add_es_channel(target.channel_rel)
 
 
 @event.listens_for(Channel, 'after_update')
 def _es_channel_update_from_channel(mapper, connection, target):
-    _add_es_channel(Channel.query.get(target.id))
+    _add_es_channel(target)
 
 
 class MissingChannelInElasticSearch(Exception):
@@ -471,6 +474,7 @@ class MissingChannelInElasticSearch(Exception):
 
 
 def _add_es_channel(channel):
+    from rockpack.mainsite.core import es
     conn = es.get_es_connection()
 
     category = []
@@ -479,14 +483,7 @@ def _add_es_channel(channel):
             Category.parent != None,
             Category.id == channel.category).values('id', 'parent').next()
 
-    locale = {}
-    for m in channel.metas:
-        locale.update({
-            m.locale: {'view_count': m.view_count,
-                'star_count': m.star_count}
-            })
-
-    # HACK 
+    # HACK
     if isinstance(channel.cover, str):
         convert = lambda value: ImageType('CHANNEL').process_result_value(value, None)
     else:
@@ -495,7 +492,7 @@ def _add_es_channel(channel):
     data = dict(
         id=channel.id,
         category=category,
-        locale=locale,
+        locale=_locale_dict_from_object(channel.metas),
         owner_id=channel.owner,
         subscribe_count=0,
         description=channel.description,
@@ -511,6 +508,7 @@ def _add_es_channel(channel):
 
 @event.listens_for(VideoInstance, 'after_delete')
 def _es_video_delete(mapper, connection, target):
+    from rockpack.mainsite.core import es
     es.remove_video_from_index(es.get_es_connection(), target.id)
 
 
