@@ -7,6 +7,7 @@ from rockpack.mainsite.core.dbapi import db
 from rockpack.mainsite.core.es import get_es_connection
 from rockpack.mainsite.core.webservice import WebService, expose_ajax
 from rockpack.mainsite.services.video import models
+from rockpack.mainsite.core.es.api import IndexSearch
 
 
 def _filter_by_category(query, type, category_id):
@@ -168,15 +169,13 @@ def es_owner_to_channel_map(channels, owner_list):
 
 
 def es_get_videos(conn, category=None, paging=None, channel_ids=None, star_order=False, locale=None, date_order=False):
-    q = pyes.MatchAllQuery()
-    terms = []
+    search = IndexSearch(conn, 'video', locale)
     if category:
-        terms.append(pyes.TermQuery(field='category', value=category))
-    if locale:
-        terms.append(pyes.TermQuery(field='locale', value=locale))
+        search.add_term('category', category)
     if channel_ids:
-        q = pyes.FieldQuery()
-        q.add('channel', ' '.join(channel_ids))
+        search.add_ids(channel_ids)
+
+    offset, limit = paging if paging else 0, 100
 
     sort = ''
     def _append_sort_string(sort_str, field, order='desc'):
@@ -189,15 +188,18 @@ def es_get_videos(conn, category=None, paging=None, channel_ids=None, star_order
         sort = _append_sort_string(sort, 'star_count')
     if date_order:
         sort = _append_sort_string(sort, 'date_added')
+    videos = search.search(offset, limit, sort=sort)
 
-    offset, limit = paging if paging else 0, 100
-    # TODO: add ordering
-
-    if terms:
-        q = terms[0] if len(terms) == 0 else pyes.BoolQuery(must=terms)
-
-    videos = conn.search(query=pyes.Search(q, start=offset, size=limit), indices='videos', doc_types=['video'], sort=sort)
-    return [_ for _ in videos], videos.total
+    vlist = []
+    for v in videos:
+        # XXX: should return either datetime or isoformat - something is broken
+        v['date_added'] = v['date_added'].isoformat() if not isinstance(v['date_added'], unicode) else v['date_added']
+        if locale:
+            v['video']['view_count'] = v['locale'][locale]['view_count']
+            v['video']['star_count'] = v['locale'][locale]['star_count']
+            del v['locale']
+        vlist.append(v)
+    return vlist, videos.total
 
 
 def es_get_owners(conn, ids):
@@ -222,25 +224,29 @@ def es_add_videos(conn, videos):
 
 
 def es_get_channels(conn, channel_ids=None, category=None, paging=None, locale=None):
-    q = pyes.MatchAllQuery()
-    # TODO: maybe write this so they can be chained up
+    search = IndexSearch(conn, 'channel', locale)
     if channel_ids:
-        q = pyes.IdsQuery(channel_ids)
+        search.add_ids(channel_ids)
     if category:
-        q = pyes.TermQuery(field='category', value=category)
-    offset, limit = paging if paging else 0, 100
-    channels = conn.search(query=pyes.Search(q, start=offset, size=limit), indices='channels', doc_types=['channel'])
+        search.add_term('category', category)
 
-    channel_list = {}
+    offset, limit = paging if paging else 0, 100
+    channels = search.search(offset, limit)
+
+    channel_list = []
     owner_list = {}
     for channel in channels:
-        channel_list[channel['id']] = channel
+        del channel['locale']
+        # XXX: tis a bit dangerous to assume max(cat)
+        # is the child category. review this
+        channel['category'] = max(channel['category']) if isinstance(channel['category'], list) else channel['category']
+        channel_list.append(channel)
         owner_list[channel['owner']] = None
 
     for owner in es_get_owners(conn, owner_list.keys()):
         owner_list[owner['id']] = owner
-    es_owner_to_channel_map(channel_list.values(), owner_list)
-    return channel_list.values(), channels.total
+    es_owner_to_channel_map(channel_list, owner_list)
+    return channel_list, channels.total
 
 
 def es_get_channels_with_videos(conn, channel_ids=None, paging=None):

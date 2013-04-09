@@ -54,73 +54,61 @@ def import_owners():
                 id=user.id)
     print 'done'
 
+
 def import_channels():
-    from rockpack.mainsite.services.video.api import *
-    from rockpack.mainsite.services.video.models import Category
+    from rockpack.mainsite.core import es
+    from rockpack.mainsite.services.video.models import Category, Channel, _locale_dict_from_object
+    conn = es.get_es_connection()
 
     cat_map = {c[0]:c[1] for c in Category.query.filter(Category.parent!=None).values('id', 'parent')}
 
     for locale in ('en-us', 'en-gb', ):
         with app.test_request_context():
-            for c in ChannelLocaleMeta.query.all():
-                api.add_channel_to_index(conn, channel)
-            return conn.indices.refresh(CHANNEL_INDEX)
-            
-            channels, total = get_local_channel(locale, (0, 1000,))
-            # should keep looping until `total` < whatever
-            # the paging amount is
-            for c in channels:
-                # maybe bulk insert this?
-                print conn.index({
-                    'id': c['id'],
-                    'subscribe_count': c['subscribe_count'],
-                    'category': [
-                        c['category'],
-                        cat_map[c['category']]
-                    ],
-                    'locale': 'en-us',
-                    'description': c['description'],
-                    'thumbnail_url': c['thumbnail_url'],
-                    'cover_thumbnail_small_url': c['cover_thumbnail_small_url'],
-                    'cover_thumbnail_large_url': c['cover_thumbnail_large_url'],
-                    'cover_background_url': c['cover_background_url'],
-                    'resource_url': c['resource_url'],
-                    'title': c['title'],
-                    'owner': c['owner']['id'],
-                    },
-                    mappings.CHANNEL_INDEX,
-                    mappings.CHANNEL_TYPE,
-                    id=c['id'])
-            print '{} channels'.format(total)
-            conn.indices.refresh("channels")
+            for channel in Channel.query.all():
+                print api.add_channel_to_index(
+                    conn,
+                    channel = {
+                        'id': channel.id,
+                        'locale': _locale_dict_from_object(channel.metas),
+                        'subscribe_count': channel.subscribe_count,
+                        'category': [channel.category, cat_map[channel.category]],
+                        'description': channel.description,
+                        'thumbnail_url': channel.cover.thumbnail_large,
+                        'cover_thumbnail_small_url': channel.cover.thumbnail_small,
+                        'cover_thumbnail_large_url': channel.cover.thumbnail_large,
+                        'cover_background_url': channel.cover.background,
+                        'resource_url': channel.get_resource_url(), 
+                        'title': channel.title,
+                        'owner_id': channel.owner,
+                        }
+                )
+
 
 def import_videos():
-    from rockpack.mainsite.services.video.api import *
+    from rockpack.mainsite.core import es
+    from rockpack.mainsite.services.video.models import Category, VideoInstance, _locale_dict_from_object
+    conn = es.get_es_connection()
+    cat_map = {c[0]:c[1] for c in Category.query.filter(Category.parent!=None).values('id', 'parent')}
     for locale in ('en-us', 'en-gb', ):
         with app.test_request_context():
-            videos, total = get_local_videos(locale, (0,1000,))
-            for v in videos:
-                print v['title']
-                print conn.index({
-                    'id': v['id'],
-                    'channel': v['channel']['id'],
-                    'category': v['category'],
-                    'title': v['title'],
-                    'date_added': v['date_added'],
-                    'position': v['position'],
-                    'video': {
-                        'id': v['video']['id'],
-                        'thumbnail_url': v['video']['thumbnail_url'],
-                        'view_count': v['video']['view_count'],
-                        'star_count': v['video']['star_count'],
-                        'source': v['video']['source'],
-                        'source_id': v['video']['source_id'],
-                        'duration': v['video']['duration'],
-                        }
-                    },
-                    mappings.VIDEO_INDEX,
-                    mappings.VIDEO_TYPE,
-                    id=v['id'])
+            for v in VideoInstance.query.all():
+                print api.add_video_to_index(
+                    conn,
+                    {'id': v.id,
+                    'channel': v.channel,
+                    'locale': _locale_dict_from_object(v.metas),
+                    'category': [v.category, cat_map[v.category]] if v.category else [],
+                    'title': v.video_rel.title,
+                    'date_added': v.date_added,
+                    'position': v.position,
+                    'video_id': v.video,
+                    'thumbnail_url': v.video_rel.thumbnails[0].url if v.video_rel.thumbnails else '',
+                    'view_count': v.video_rel.view_count,
+                    'star_count': v.video_rel.star_count,
+                    'source': v.video_rel.source,
+                    'source_id': v.video_rel.source_videoid,
+                    'duration': v.video_rel.duration,
+                    })
 
 
 from pprint import pprint as pp

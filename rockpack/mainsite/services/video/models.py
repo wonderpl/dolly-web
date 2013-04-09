@@ -308,6 +308,7 @@ class Channel(db.Model):
     date_added = Column(DateTime(), nullable=False, default=func.now())
     date_updated = Column(DateTime(), nullable=False, default=func.now(), onupdate=func.now())
     ecommerce_url = Column(String(1024), nullable=False, server_default='')
+    subscribe_count = Column(Integer, nullable=False, server_default='0', default=0)
 
     category = Column(ForeignKey('category.id'), nullable=True)
     category_rel = relationship(Category, primaryjoin=(category == Category.id), lazy='joined', innerjoin=True)
@@ -393,6 +394,7 @@ class ChannelLocaleMeta(db.Model):
     visible = Column(Boolean(), nullable=False, server_default='true', default=True)
     view_count = Column(Integer, nullable=False, server_default='0', default=0)
     star_count = Column(Integer, nullable=False, server_default='0', default=0)
+    subscribe_count = Column(Integer, nullable=False, server_default='0', default=0)
     date_added = Column(DateTime(), nullable=False, default=func.now())
     date_updated = Column(DateTime(), nullable=False, default=func.now(), onupdate=func.now())
 

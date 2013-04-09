@@ -1,4 +1,63 @@
+import pyes
 from . import mappings
+from rockpack.mainsite import app
+
+
+class InvalidSearchIndexPrefix(Exception):
+    pass
+
+
+class IndexSearch(object):
+    def __init__(self, conn, prefix, locale):
+        if prefix.lower() not in ('channel', 'video'):
+            raise InvalidSearchIndexPrefix(prefix)
+
+        self.conn = conn
+        self.locale = locale
+        self.index_name = prefix.upper() + '_INDEX'
+        self.type_name = prefix.upper() + '_TYPE'
+
+        self.terms = []
+
+    def _locale_filters(self, locale):
+        if not locale:
+            return []
+
+        filters = []
+        for el in app.config.get('ENABLED_LOCALES'):
+            if locale != el:
+                script = "doc['locale.{}.view_count'].value > doc['locale.{}.view_count'].value ? 1 : 0".format(locale, el)
+                filters.append(pyes.CustomFiltersScoreQuery.Filter(pyes.ScriptFilter(script=script), 5.0))
+        return filters
+
+    def add_term(self, field, value):
+        # TODO: field should use dot notation. Need to test.
+        self.terms.append(pyes.TermQuery(field=field, value=value))
+
+    def add_ids(self, ids):
+        self.terms.append(pyes.IdsQuery(ids))
+
+    def _get_terms_query(self):
+        if not self.terms:
+            return pyes.MatchAllQuery()
+        return self.terms[0] if len(self.terms) == 0 else pyes.BoolQuery(must=self.terms)
+
+    def _get_filters_query(self, q):
+        if not self.locale:
+            return pyes.MatchAllQuery()
+        filters = self._locale_filters(self.locale)
+        return pyes.CustomFiltersScoreQuery(q, filters)
+
+    def _get_full_query(self):
+        q = self._get_terms_query()
+        return self._get_filters_query(q)
+
+    def search(self, start=0, limit=100, sort=''):
+        return self.conn.search(
+            query=pyes.Search(self._get_full_query(), start=start, size=limit),
+            indices=getattr(mappings, self.index_name),
+            doc_types=[getattr(mappings, self.type_name)],
+            sort=sort)
 
 
 def add_owner_to_index(conn, owner):
@@ -7,8 +66,7 @@ def add_owner_to_index(conn, owner):
         'avatar_thumbnail': str(owner.avatar),
         'resource_url': owner.get_resource_url(False),
         'display_name': owner.display_name,
-        'name': owner.username
-        },
+        'name': owner.username},
         mappings.USER_INDEX,
         mappings.USER_TYPE,
         id=owner.id)
@@ -45,7 +103,7 @@ def add_video_to_index(conn, video_instance):
         'channel': video_instance['channel'],
         'category': video_instance['category'],
         'title': video_instance['title'],
-        'date_added': video_instance['date_added'].isoformat(),
+        'date_added': video_instance['date_added'],
         'position': video_instance['position'],
         'video': {
             'id': video_instance['video_id'],
