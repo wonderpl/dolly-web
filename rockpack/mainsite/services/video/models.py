@@ -202,7 +202,7 @@ class VideoInstanceLocaleMeta(db.Model):
         UniqueConstraint('locale', 'video_instance'),
     )
 
-    id = Column(CHAR(40), primary_key=True)
+    id = Column(CHAR(24), primary_key=True)
 
     video_instance = Column(ForeignKey('video_instance.id', ondelete='CASCADE'), nullable=False)
     view_count = Column(Integer, nullable=False, server_default='0')
@@ -414,7 +414,7 @@ def _set_child_category_locale(mapper, connection, target):
 
 
 event.listen(Video, 'before_insert', add_video_pk)
-event.listen(VideoInstanceLocaleMeta, 'before_insert', add_video_meta_pk)
+event.listen(VideoInstanceLocaleMeta, 'before_insert', lambda x, y, z: add_base64_pk(x, y, z, prefix='vl'))
 event.listen(VideoInstance, 'before_insert', lambda x, y, z: add_base64_pk(x, y, z, prefix='vi'))
 event.listen(VideoRestriction, 'before_insert', lambda x, y, z: add_base64_pk(x, y, z, prefix='vr'))
 event.listen(VideoThumbnail, 'before_insert', lambda x, y, z: add_base64_pk(x, y, z, prefix='vt'))
