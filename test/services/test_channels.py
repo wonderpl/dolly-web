@@ -49,10 +49,8 @@ class ChannelCreateTestCase(base.RockPackTestCase):
                     'channel descriptions should match')
             self.assertNotEquals('', updated_ch['cover_background_url'],
                     'channel cover should not be blank')
-            metas = models.ChannelLocaleMeta.query.filter_by(channel=new_ch.id)
-            assert metas.count() > 0
-            for m in metas:
-                self.assertEquals(m.category, 3)
+            channel = models.Channel.query.get(new_ch.id)
+            self.assertEquals(channel.category, 3)
 
             # check that the dup-title error isnt triggered when updating
             # but not changing the title

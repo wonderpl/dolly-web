@@ -61,7 +61,7 @@ def setup_admin(app):
 
             channel_group = g.session.query(
                     models.ChannelLocaleMeta.locale, parent.name, models.Category.name, func.count(models.ChannelLocaleMeta.id)
-                    ).filter(models.Category.parent==parent.id, models.ChannelLocaleMeta.category==models.Category.id
+                    ).filter(models.Category.parent==parent.id, models.Channel.category==models.Category.id
                     ).filter(models.Category.parent!=1, models.ChannelLocaleMeta.visible==True
                     ).join(models.Channel, models.Channel.id==models.ChannelLocaleMeta.channel
                     ).filter(models.Channel.public==True
