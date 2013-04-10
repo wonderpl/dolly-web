@@ -417,11 +417,6 @@ def _set_child_category_locale(mapper, connection, target):
         target.locale = target.parent_category.locale
 
 
-@event.listens_for(VideoInstanceLocaleMeta, 'after_insert')
-def _add_video_insert(mapper, connection, target):
-    _add_es_video(target.video_instance_rel)
-
-
 def _locale_dict_from_object(metas):
     locales = {el: {} for el in app.config.get('ENABLED_LOCALES')}
     meta_dict = {m.locale: m for m in metas}
@@ -439,6 +434,7 @@ def _add_es_video(video_instance):
 
     data = dict(
         id=video_instance.id,
+        public=True, # we only insert public records
         video_id=video_instance.video,
         title=video_instance.video_rel.title,
         channel=video_instance.channel,
@@ -452,27 +448,6 @@ def _add_es_video(video_instance):
         locale=_locale_dict_from_object(video_instance.metas))
 
     print api.add_video_to_index(conn, data)
-
-
-@event.listens_for(ChannelLocaleMeta, 'after_insert')
-def _es_channel_insert(mapper, connection, target):
-    # NOTE: owner_rel isn't available on Channel if we pass channel_rel for owner.resource_url.
-    # possibly lookup owner in resource_url method instead of having it rely on self.owner_rel
-    _add_es_channel(Channel.query.get(target.channel_rel.id))
-
-
-@event.listens_for(ChannelLocaleMeta, 'after_update')
-def _es_channel_update_from_clm(mapper, connection, target):
-    _add_es_channel(target.channel_rel)
-
-
-@event.listens_for(Channel, 'after_update')
-def _es_channel_update_from_channel(mapper, connection, target):
-    _add_es_channel(target)
-
-
-class MissingChannelInElasticSearch(Exception):
-    pass
 
 
 def _add_es_channel(channel):
@@ -493,10 +468,12 @@ def _add_es_channel(channel):
 
     data = dict(
         id=channel.id,
+        public=True,
         category=category,
         locale=_locale_dict_from_object(channel.metas),
         owner_id=channel.owner,
         subscribe_count=0,
+        date_added=channel.date_added,
         description=channel.description,
         resource_url=channel.get_resource_url(),
         title=channel.title,
@@ -508,10 +485,54 @@ def _add_es_channel(channel):
     print es.api.add_channel_to_index(conn, data)
 
 
-@event.listens_for(VideoInstance, 'after_delete')
-def _es_video_delete(mapper, connection, target):
+def _remove_es_channel(channel):
     from rockpack.mainsite.core import es
-    es.remove_video_from_index(es.get_es_connection(), target.id)
+    es.api.remove_channel_from_index(es.get_es_connection(), channel.id)
+
+
+def _remove_es_video_instance(video_instance):
+    from rockpack.mainsite.core import es
+    es.api.remove_video_from_index(es.get_es_connection(), video_instance.id)
+
+
+@event.listens_for(VideoInstanceLocaleMeta, 'after_insert')
+def _video_insert(mapper, connection, target):
+    _add_es_video(target.video_instance_rel)
+
+
+@event.listens_for(Video, 'after_update')
+def _video_update(mapper, connection, target):
+    if not target.visible:
+        for i in VideoInstance.query.filter_by(video=target.id):
+            _remove_es_video_instance(i)
+
+
+@event.listens_for(VideoInstance, 'after_update')
+def _video_instance_update(mapper, connection, target):
+    _remove_es_video_instance(target)
+
+
+@event.listens_for(VideoInstance, 'after_update')
+def _video_instance_delete(mapper, connection, target):
+    _remove_es_video_instance(target)
+
+
+@event.listens_for(ChannelLocaleMeta, 'after_insert')
+def _channel_insert(mapper, connection, target):
+    # NOTE: owner_rel isn't available on Channel if we pass channel_rel for owner.resource_url.
+    # possibly do a lookup owner in resource_url method instead of having it rely on self.owner_rel here
+    channel = Channel.query.get(target.channel_rel.id)
+    _add_es_channel(channel)
+
+
+@event.listens_for(ChannelLocaleMeta, 'after_update')
+def _es_channel_update_from_clm(mapper, connection, target):
+    _add_es_channel(target.channel_rel)
+
+
+@event.listens_for(Channel, 'after_update')
+def _es_channel_update_from_channel(mapper, connection, target):
+    _add_es_channel(target)
 
 
 event.listen(Video, 'before_insert', add_video_pk)

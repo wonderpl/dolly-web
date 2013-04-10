@@ -62,37 +62,44 @@ def import_channels():
 
     cat_map = {c[0]:c[1] for c in Category.query.filter(Category.parent!=None).values('id', 'parent')}
 
-    for locale in ('en-us', 'en-gb', ):
-        with app.test_request_context():
-            for channel in Channel.query.all():
-                print api.add_channel_to_index(
-                    conn,
-                    channel = {
-                        'id': channel.id,
-                        'locale': _locale_dict_from_object(channel.metas),
-                        'subscribe_count': channel.subscribe_count,
-                        'category': [channel.category, cat_map[channel.category]],
-                        'description': channel.description,
-                        'thumbnail_url': channel.cover.thumbnail_large,
-                        'cover_thumbnail_small_url': channel.cover.thumbnail_small,
-                        'cover_thumbnail_large_url': channel.cover.thumbnail_large,
-                        'cover_background_url': channel.cover.background,
-                        'resource_url': channel.get_resource_url(), 
-                        'title': channel.title,
-                        'owner_id': channel.owner,
-                        }
-                )
+    with app.test_request_context():
+        for i, channel in enumerate(Channel.query.filter(Channel.public == True)):
+            try:
+                category = [channel.category, cat_map[channel.category]] if channel.category else []
+            except KeyError:
+                category = [channel.category]
+            data ={
+                'id': channel.id,
+                'locale': _locale_dict_from_object(channel.metas),
+                'subscribe_count': channel.subscribe_count,
+                'category': category,
+                'description': channel.description,
+                'thumbnail_url': channel.cover.thumbnail_large,
+                'cover_thumbnail_small_url': channel.cover.thumbnail_small,
+                'cover_thumbnail_large_url': channel.cover.thumbnail_large,
+                'cover_background_url': channel.cover.background,
+                'resource_url': channel.get_resource_url(),
+                'date_added': channel.date_added,
+                'title': channel.title,
+                'owner_id': channel.owner,
+            }
+            print api.add_channel_to_index(conn, data)
 
 
 def import_videos():
     from rockpack.mainsite.core import es
-    from rockpack.mainsite.services.video.models import Category, VideoInstance, _locale_dict_from_object
+    from rockpack.mainsite.services.video.models import Category, Channel, Video, VideoInstance, _locale_dict_from_object
     conn = es.get_es_connection()
     cat_map = {c[0]:c[1] for c in Category.query.filter(Category.parent!=None).values('id', 'parent')}
-    for locale in ('en-us', 'en-gb', ):
-        with app.test_request_context():
-            for v in VideoInstance.query.all():
-                print api.add_video_to_index(
+    with app.test_request_context():
+        query = VideoInstance.query.join(Channel, Video).filter(Video.visible == True, Channel.public == True)
+        total = query.count()
+        print '{} to import'.format(total)
+        step = 400
+        for i in xrange(0, total, step):
+            print '--------------- {} to {} of {}'.format(i, i + step, total)
+            for v in query.offset(i).limit(step):
+                api.add_video_to_index(
                     conn,
                     {'id': v.id,
                     'channel': v.channel,

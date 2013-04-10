@@ -93,6 +93,7 @@ channel_mapping = {
             "type": "string",
             "index": "not_analyzed"},
         "locales": locale_count_dict,
+        "date_added": {"type": "date"},
         "category": {
             "type": "integer",
         },

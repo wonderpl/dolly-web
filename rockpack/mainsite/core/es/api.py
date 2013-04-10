@@ -32,7 +32,8 @@ class IndexSearch(object):
 
     def add_term(self, field, value):
         # TODO: field should use dot notation. Need to test.
-        self.terms.append(pyes.TermQuery(field=field, value=value))
+        f = pyes.TermsQuery if isinstance(value, list) else pyes.TermQuery
+        self.terms.append(f(field=field, value=value))
 
     def add_ids(self, ids):
         self.terms.append(pyes.IdsQuery(ids))
@@ -40,11 +41,11 @@ class IndexSearch(object):
     def _get_terms_query(self):
         if not self.terms:
             return pyes.MatchAllQuery()
-        return self.terms[0] if len(self.terms) == 0 else pyes.BoolQuery(must=self.terms)
+        return self.terms[0] if len(self.terms) == 1 else pyes.BoolQuery(must=self.terms)
 
     def _get_filters_query(self, q):
         if not self.locale:
-            return pyes.MatchAllQuery()
+            return q
         filters = self._locale_filters(self.locale)
         return pyes.CustomFiltersScoreQuery(q, filters)
 
@@ -52,9 +53,12 @@ class IndexSearch(object):
         q = self._get_terms_query()
         return self._get_filters_query(q)
 
-    def search(self, start=0, limit=100, sort=''):
+    def search(self, start=None, limit=None, sort=''):
+        search_kwargs = {}
+        if start is not None and limit is not None:
+            search_kwargs.update({'start': start, 'size': limit})
         return self.conn.search(
-            query=pyes.Search(self._get_full_query(), start=start, size=limit),
+            query=pyes.Search(self._get_full_query(), **search_kwargs),
             indices=getattr(mappings, self.index_name),
             doc_types=[getattr(mappings, self.type_name)],
             sort=sort)
@@ -77,6 +81,7 @@ def add_owner_to_index(conn, owner):
 def add_channel_to_index(conn, channel):
     i = conn.index({
         'id': channel['id'],
+        'public': True, # we assume we dont insert private/invisible
         'locale': channel['locale'],
         'subscribe_count': channel['subscribe_count'],
         'category': channel['category'],
@@ -87,6 +92,7 @@ def add_channel_to_index(conn, channel):
         'cover_background_url': channel['cover_background_url'],
         'resource_url': channel['resource_url'],
         'title': channel['title'],
+        'date_added': channel['date_added'],
         'owner': channel['owner_id'],
         },
         mappings.CHANNEL_INDEX,
@@ -99,6 +105,7 @@ def add_channel_to_index(conn, channel):
 def add_video_to_index(conn, video_instance):
     return conn.index({
         'id': video_instance['id'],
+        'public': True, # we assume we dont insert private/invisible
         'locale': video_instance['locale'],
         'channel': video_instance['channel'],
         'category': video_instance['category'],
@@ -119,8 +126,14 @@ def add_video_to_index(conn, video_instance):
 
 
 def remove_channel_from_index(conn, channel_id):
-    print conn.delete(mappings.CHANNEL_INDEX, mappings.CHANNEL_TYPE, channel_id)
+    try:
+        print conn.delete(mappings.CHANNEL_INDEX, mappings.CHANNEL_TYPE, channel_id)
+    except pyes.exceptions.NotFoundException:
+        pass
 
 
 def remove_video_from_index(conn, video_id):
-    print conn.delete(mappings.VIDEO_INDEX, mappings.VIDEO_TYPE, video_id)
+    try:
+        print conn.delete(mappings.VIDEO_INDEX, mappings.VIDEO_TYPE, video_id)
+    except pyes.exceptions.NotFoundException:
+        pass
