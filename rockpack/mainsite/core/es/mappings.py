@@ -94,6 +94,10 @@ channel_mapping = {
             "index": "not_analyzed"},
         "locales": locale_count_dict,
         "date_added": {"type": "date"},
+        "ecommerce_url": {
+            "type": "string",
+            "index": "not_analyzed"
+        },
         "category": {
             "type": "integer",
         },

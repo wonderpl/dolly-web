@@ -82,6 +82,7 @@ def import_channels():
                 'date_added': channel.date_added,
                 'title': channel.title,
                 'owner_id': channel.owner,
+                'ecommerce_url': channel.ecommerce_url
             }
             print api.add_channel_to_index(conn, data)
 
