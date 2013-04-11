@@ -310,7 +310,7 @@ class Channel(db.Model):
     ecommerce_url = Column(String(1024), nullable=False, server_default='')
 
     category = Column(ForeignKey('category.id'), nullable=True)
-    category_rel = relationship(Category, primaryjoin=(category == Category.id), lazy='joined', innerjoin=True)
+    category_rel = relationship(Category, primaryjoin=(category == Category.id), lazy='joined')
 
     owner = Column(CHAR(22), ForeignKey('user.id'), nullable=False, default='', server_default='')
     owner_rel = relationship(User, primaryjoin=(owner == User.id), lazy='joined', innerjoin=True)
