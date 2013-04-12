@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 # rockpack-mainsite - Use uwsgi to run rockpack wsgi web app.
 #
@@ -9,18 +9,18 @@
 
 . /etc/rc.d/init.d/functions
 
-NAME=uwsgi
+NAME=rockpack-mainsite
 USER=rockpack-mainsite
-BIN=/usr/sbin/$NAME
+BIN=/usr/sbin/uwsgi
+CFG=/etc/rockpack/mainsite/uwsgi.ini
 LOG=/var/log/$NAME.log
 PID=/var/run/$NAME.pid
 LOCK=/var/lock/subsys/$NAME
 RETVAL=0
 
-export ROCKPACK_SETTINGS=/etc/rockpack/mainsite/config.py
-CFG=/etc/rockpack/mainsite/$NAME.ini
+DAEMON_OPTS="--ini $CFG --daemonize $LOG --pidfile $PID --uid $USER"
 
-DAEMON_OPTS="--ini $CFG --daemonize /var/log/$NAME.log --pidfile /var/run/$NAME.pid --uid $USER"
+export ROCKPACK_SETTINGS=/etc/rockpack/mainsite/config.py
 
 
 start() {
@@ -34,7 +34,7 @@ start() {
 
 stop() {
 	echo -n "Stopping $NAME: "
-	killproc $BIN
+	killproc -p $PID $NAME
 	RETVAL=$?
 	echo
 	[ $RETVAL -eq 0 ] && rm -f $LOCK
@@ -43,14 +43,7 @@ stop() {
 
 reload() {
 	echo "Reloading $NAME" 
-	killproc $BIN -HUP
-	RETVAL=$?
-	echo
-}
-
-force-reload() {
-	echo "Reloading $NAME" 
-	killproc $BIN -TERM
+	killproc -p $PID $NAME -HUP
 	RETVAL=$?
 	echo
 }
@@ -61,8 +54,12 @@ restart() {
 	start
 }
 
+force_reload() {
+	restart
+}
+
 rh_status() {
-	status $BIN
+	status -p $PID $NAME
 }
 
 rh_status_q() {
@@ -78,21 +75,27 @@ case "$1" in
 		rh_status_q || exit 0
 		$1
 		;;
-	restart|force-reload)
+	restart)
 		$1
 		;;
 	reload)
 		rh_status_q || exit 7
 		$1
 		;;
+	force-reload)
+		force_reload
+		;;
 	status)
 		rh_status
-		RETVAL=$?
+		;;
+	condrestart|try-restart)
+		rh_status_q || exit 0
+		restart
 		;;
 	*)	
-		echo "Usage: $0 {start|stop|restart|reload|force-reload|status}" >&2
+		echo "Usage: $0 {start|stop|status|restart|condrestart|try-restart|reload|force-reload}" >&2
 		exit 2
 		;;
 esac
 
-exit $RETVAL
+exit $?
