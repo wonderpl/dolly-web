@@ -13,7 +13,7 @@ from rockpack.mainsite.core.youtube import get_video_data
 from rockpack.mainsite.helpers.urls import url_for, url_to_endpoint
 from rockpack.mainsite.helpers.db import gen_videoid
 from rockpack.mainsite.services.video.models import (
-    Channel, ChannelLocaleMeta, Video, VideoInstance, VideoInstanceLocaleMeta, Category)
+    Channel, Video, VideoInstance, VideoInstanceLocaleMeta, Category)
 from rockpack.mainsite.services.cover_art.models import UserCoverArt, RockpackCoverArt
 from rockpack.mainsite.services.cover_art import api as cover_api
 from rockpack.mainsite.services.video import api as video_api
@@ -147,6 +147,28 @@ def add_videos_to_channel(channel, instance_list, locale):
             VideoInstance.video.in_(deleted_video_ids),
             VideoInstance.channel == channel.id
         ).delete(synchronize_session='fetch')
+
+
+def _user_list(paging, **filters):
+    users = User.query
+
+    if filters.get('subscribed_to'):
+        users = users.join(Subscription, Subscription.user == User.id).\
+                filter_by(channel=filters['subscribed_to'])
+
+    total = users.count()
+    offset, limit = paging
+    users = users.offset(offset).limit(limit)
+    data = []
+    for position, user in enumerate(users, offset):
+        data.append(dict(
+            position=position,
+            id=user.id,
+            resource_url=user.get_resource_url(),
+            display_name=user.display_name,
+            avatar_thumbnail_url=user.avatar.thumbnail_small,
+        ))
+    return data, total
 
 
 def action_object_list(user, action, limit):
@@ -362,18 +384,6 @@ class UserWS(WebService):
             abort(404)
         return _channel_info_response(channel, self.get_locale(), self.get_page(), True)
 
-    @expose_ajax('/<userid>/channels/<channelid>/public/', methods=('PUT',))
-    @check_authorization(self_auth=True)
-    def channel_public_toggle(self, userid, channelid):
-        channel = Channel.query.filter_by(id=channelid, deleted=False).first_or_404()
-        if not channel.owner == userid:
-            abort(403)
-        if not isinstance(request.json, bool):
-            abort(400, message="Boolean value required")
-        channel.public = request.json
-        channel = channel.save()
-        return channel.public
-
     @expose_ajax('/<userid>/channels/<channelid>/', methods=('PUT',))
     @check_authorization(self_auth=True)
     def channel_item_edit(self, userid, channelid):
@@ -396,6 +406,27 @@ class UserWS(WebService):
         return (dict(id=channel.id, resource_url=resource_url),
                 200, [('Location', resource_url)])
 
+    @expose_ajax('/<userid>/channels/<channelid>/', methods=('DELETE',))
+    @check_authorization(self_auth=True)
+    def channel_delete(self, userid, channelid):
+        channel = Channel.query.filter_by(id=channelid, deleted=False).first_or_404()
+        if not channel.owner == userid:
+            abort(403)
+        channel.deleted = True
+        channel.save()
+
+    @expose_ajax('/<userid>/channels/<channelid>/public/', methods=('PUT',))
+    @check_authorization(self_auth=True)
+    def channel_public_toggle(self, userid, channelid):
+        channel = Channel.query.filter_by(id=channelid, deleted=False).first_or_404()
+        if not channel.owner == userid:
+            abort(403)
+        if not isinstance(request.json, bool):
+            abort(400, message="Boolean value required")
+        channel.public = request.json
+        channel = channel.save()
+        return channel.public
+
     @expose_ajax('/<userid>/channels/<channelid>/videos/')
     @check_authorization()
     def channel_videos(self, userid, channelid):
@@ -414,14 +445,10 @@ class UserWS(WebService):
             abort(400, message='List can be empty, but must be present')
         add_videos_to_channel(channel, map(str, request.json), self.get_locale())
 
-    @expose_ajax('/<userid>/channels/<channelid>/', methods=('DELETE',))
-    @check_authorization(self_auth=True)
-    def channel_delete(self, userid, channelid):
-        channel = Channel.query.filter_by(id=channelid, deleted=False).first_or_404()
-        if not channel.owner == userid:
-            abort(403)
-        channel.deleted = True
-        channel.save()
+    @expose_ajax('/<userid>/channels/<channelid>/subscribers/', cache_age=60)
+    def channel_subscribers(self, userid, channelid):
+        items, total = _user_list(self.get_page(), subscribed_to=channelid)
+        return dict(users=dict(items=items, total=total))
 
     @expose_ajax('/<userid>/cover_art/', cache_age=60, cache_private=True)
     @check_authorization(self_auth=True)

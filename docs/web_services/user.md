@@ -448,6 +448,39 @@ Content-Type: application/json
 }
 ```
 
+Channel Videos
+==============
+
+### Get
+
+Get a list of users who are subscribed to a channel.
+
+```http
+GET /ws/USERID/channels/CHANNELID/subscribers/ HTTP/1.1
+```
+
+Returns a list of user records.
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{
+ "users": {
+  "items": [
+   {
+    "display_name": "Paul Egan",
+    "resource_url": "http://path/to/user/detail/",
+    "avatar_thumbnail_url": "http://path/to/user/avatar/img.jpg",
+    "id": "4vsl71w2T12q1k2RwVhdzg",
+    "position": 0
+   }
+  ],
+  "total": 1
+ }
+}
+```
+
 User Activity
 =============
 
