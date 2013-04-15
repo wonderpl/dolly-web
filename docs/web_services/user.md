@@ -777,3 +777,50 @@ Cache-Control: private, max-age=60
  }
 }
 ```
+
+Content Report
+==============
+
+### Post
+
+Post a record of content the user has flagged as inappropriate.
+
+```http
+POST /ws/USERID/content_report/?locale=LOCALE HTTP/1.1
+Authorization: Bearer TOKEN
+Content-Type: application/json
+
+{
+ "object_type": "channel",
+ "object_id": "123"
+}
+```
+
+Parameter      | Required? | Value                       | Description
+:------------- | :-------- | :-------------------------- | :----------
+object_type    | yes       | `channel`, `video`, `user`  | Specifies the type of content
+object_id      | yes       | unique content id           | The id of the channel, video, or user
+locale         | no        | IETF language tag           |
+
+On error:
+
+```http
+HTTP/1.1 400 BAD REQUEST
+Content-Type: application/json
+
+{
+ "error": "invalid_request",
+ "form_errors": {
+  "object_id": [
+   "invalid id"
+  ]
+ }
+}
+```
+
+On success:
+
+```http
+HTTP/1.1 204 NO CONTENT
+Content-Type: application/json
+```

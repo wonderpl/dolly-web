@@ -403,6 +403,20 @@ class ChannelLocaleMeta(db.Model):
         return self.locale + ' for channel ' + self.channel
 
 
+class ContentReport(db.Model):
+    __tablename__ = 'content_report'
+    __table_args__ = (
+        UniqueConstraint('object_type', 'object_id'),
+    )
+
+    id = Column(Integer, primary_key=True)
+    date_created = Column(DateTime(), nullable=False, default=func.now())
+    object_type = Column(String(16), nullable=False)
+    object_id = Column(String(64), nullable=False)
+    count = Column(Integer, nullable=False, default=1)
+    reviewed = Column(Boolean, nullable=False, default=False)
+
+
 ParentCategory = aliased(Category)
 
 

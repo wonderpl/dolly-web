@@ -13,7 +13,7 @@ from rockpack.mainsite.core.youtube import get_video_data
 from rockpack.mainsite.helpers.urls import url_for, url_to_endpoint
 from rockpack.mainsite.helpers.db import gen_videoid
 from rockpack.mainsite.services.video.models import (
-    Channel, Video, VideoInstance, VideoInstanceLocaleMeta, Category)
+    Channel, Video, VideoInstance, VideoInstanceLocaleMeta, Category, ContentReport)
 from rockpack.mainsite.services.cover_art.models import UserCoverArt, RockpackCoverArt
 from rockpack.mainsite.services.cover_art import api as cover_api
 from rockpack.mainsite.services.video import api as video_api
@@ -26,6 +26,14 @@ ACTION_COLUMN_VALUE_MAP = dict(
     select=('view_count', 1),
     star=('star_count', 1),
     unstar=('star_count', -1),
+)
+
+
+ACTIVITY_OBJECT_TYPE_MAP = dict(
+    user=User,
+    channel=Channel,
+    video=Video,
+    video_instance=VideoInstance,
 )
 
 
@@ -122,6 +130,19 @@ def save_video_activity(user, action, instance_id, locale):
                 channel.remove_videos([video_id])
             else:
                 channel.add_videos([video_id])
+
+
+@commit_on_success
+def save_content_report(user, object_type, object_id):
+    activity = dict(action='content_reported', user=user,
+                    object_type=object_type, object_id=object_id)
+    if not UserActivity.query.filter_by(**activity).count():
+        UserActivity(**activity).save()
+    report = dict(object_type=object_type, object_id=object_id)
+    updated = ContentReport.query.filter_by(**report).update(
+        {ContentReport.count: ContentReport.count + 1})
+    if not updated:
+        report = ContentReport(**report).save()
 
 
 @commit_on_success
@@ -229,6 +250,16 @@ class ChannelForm(form.BaseForm):
 class ActivityForm(wtf.Form):
     action = wtf.SelectField(choices=ACTION_COLUMN_VALUE_MAP.items())
     video_instance = wtf.StringField(validators=[wtf.Required()])
+
+
+class ContentReportForm(wtf.Form):
+    object_type = wtf.SelectField(choices=ACTIVITY_OBJECT_TYPE_MAP.items())
+    object_id = wtf.StringField(validators=[wtf.Required()])
+
+    def validate_object_id(self, field):
+        object_type = ACTIVITY_OBJECT_TYPE_MAP.get(self.object_type.data)
+        if object_type and not object_type.query.filter_by(id=field.data).count():
+            raise ValidationError('invalid id')
 
 
 def _channel_info_response(channel, locale, paging, owner_url):
@@ -347,6 +378,14 @@ class UserWS(WebService):
                             form.action.data,
                             form.video_instance.data,
                             self.get_locale())
+
+    @expose_ajax('/<userid>/content_reports/', methods=['POST'])
+    @check_authorization(self_auth=True)
+    def post_content_report(self, userid):
+        form = ContentReportForm(csrf_enabled=False)
+        if not form.validate():
+            abort(400, form_errors=form.errors)
+        save_content_report(userid, form.object_type.data, form.object_id.data)
 
     @expose_ajax('/<userid>/channels/', cache_private=True)
     @check_authorization(self_auth=True)

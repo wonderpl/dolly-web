@@ -180,6 +180,13 @@ class ChannelLocaleMeta(AdminView):
     column_filters = ('channel_rel', 'channel_locale')
 
 
+class ContentReport(AdminView):
+    model_name = 'content_report'
+    model = models.ContentReport
+
+    column_filters = ('date_created', 'reviewed', 'object_type')
+
+
 class ExternalCategoryMap(AdminView):
     model_name = 'external_category_map'
     model = models.ExternalCategoryMap
@@ -188,7 +195,7 @@ class ExternalCategoryMap(AdminView):
 registered = [
     Video, VideoInstanceLocaleMeta, VideoThumbnail, VideoInstance,
     Source, Category, CategoryMap, Locale, RockpackCoverArt,
-    UserCoverArt, Channel, ChannelLocaleMeta, ExternalCategoryMap]
+    UserCoverArt, Channel, ChannelLocaleMeta, ContentReport, ExternalCategoryMap]
 
 
 def admin_views():
