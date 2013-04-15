@@ -154,7 +154,7 @@ def _user_list(paging, **filters):
 
     if filters.get('subscribed_to'):
         users = users.join(Subscription, Subscription.user == User.id).\
-                filter_by(channel=filters['subscribed_to'])
+            filter_by(channel=filters['subscribed_to'])
 
     total = users.count()
     offset, limit = paging
@@ -476,15 +476,14 @@ class UserWS(WebService):
             abort(404)
 
     @expose_ajax('/<userid>/subscriptions/')
-    @check_authorization(self_auth=True)
     def get_subscriptions(self, userid):
-        channels = user_subscriptions(userid).join(Channel).filter(Channel.deleted == False).values('id', 'owner')
-        items = [dict(resource_url=url_for('userws.delete_subscription_item',
-                                           userid=userid, channelid=channelid),
-                      channel_url=url_for('userws.channel_info',
-                                          userid=owner, channelid=channelid))
-                 for channelid, owner in channels]
-        return dict(subscriptions=dict(items=items, total=len(items)))
+        channels = user_subscriptions(userid).values('channel')
+        items, total = video_api.get_local_channel(
+            self.get_locale(), self.get_page(), channels=channels)
+        for item in items:
+            item['subscription_resource_url'] =\
+                url_for('userws.delete_subscription_item', userid=userid, channelid=item['id'])
+        return dict(channels=dict(items=items, total=total))
 
     @expose_ajax('/<userid>/subscriptions/', methods=['POST'])
     @check_authorization(self_auth=True)

@@ -1,5 +1,5 @@
 from collections import defaultdict
-from sqlalchemy.orm import contains_eager
+from sqlalchemy.orm import contains_eager, lazyload
 from sqlalchemy.sql.expression import desc
 from flask import g, request
 from rockpack.mainsite.core.webservice import WebService, expose_ajax
@@ -44,8 +44,13 @@ def channel_dict(channel, with_owner=True, owner_url=False):
 def get_local_channel(locale, paging, **filters):
     metas = models.ChannelLocaleMeta.query.filter_by(visible=True, locale=locale)
     metas = metas.join(models.Channel).\
-        options(contains_eager(models.ChannelLocaleMeta.channel_rel))
-    metas = metas.filter(models.Channel.public==True, models.Channel.deleted==False)
+        options(lazyload('channel_rel.category_rel'),
+                contains_eager(models.ChannelLocaleMeta.channel_rel))
+    metas = metas.filter(models.Channel.public == True,
+                         models.Channel.deleted == False)
+
+    if filters.get('channels'):
+        metas = metas.filter(models.Channel.id.in_(filters['channels']))
     if filters.get('category'):
         metas = _filter_by_category(metas, models.Channel, filters['category'])
     if filters.get('query'):
