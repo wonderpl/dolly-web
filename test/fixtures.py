@@ -64,6 +64,7 @@ class RockpackCoverArtData(DataSet):
 
 class UserData(DataSet):
     class test_user_a:
+        id = 'xtpqTpGMTti2OAyohMRPLQ'
         username = 'test_user_1'
         password_hash = ''
         email = 'test@user.com'
@@ -74,6 +75,38 @@ class UserData(DataSet):
         is_active = True
         refresh_token = ''
         locale = LocaleData.US.id
+
+
+class ChannelData(DataSet):
+    class channel1:
+        id = 'ch6JCPZAcXSjGroanQdVB8jw'
+        owner = UserData.test_user_a.id
+        title = 'channel #1'
+        description = ''
+        cover = ''
+        category = 3
+
+
+class ChannelLocaleMetaData(DataSet):
+    class channel1_meta:
+        channel = ChannelData.channel1.id
+        locale = LocaleData.US.id
+
+
+class VideoData(DataSet):
+    class video1:
+        id = 'RP000001ZQAIPJR6SDO436GDXWNPBOH6YXPLSOFZ'
+        title = 'A video'
+        source = 1
+        source_videoid = 'xxx'
+
+
+class VideoInstanceData(DataSet):
+    class video_instance1:
+        id = 'viw4MLuit1R5WAB4LSQDUo7Q'
+        video = VideoData.video1.id
+        channel = ChannelData.channel1.id
+        category = 0
 
 
 all_data = [v for k, v in globals().copy().iteritems() if k.endswith('Data')]
@@ -108,6 +141,10 @@ def install(*args):
             'RockpackCoverArtData': RockpackCoverArt,
             'SourceData': video_models.Source,
             'UserData': User,
+            'ChannelData': video_models.Channel,
+            'ChannelLocaleMetaData': video_models.ChannelLocaleMeta,
+            'VideoData': video_models.Video,
+            'VideoInstanceData': video_models.VideoInstance,
         },
         engine=db.engine)
 
