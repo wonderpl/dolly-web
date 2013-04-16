@@ -59,9 +59,9 @@ class VideoInstance(AdminView):
 
     form_overrides = dict(video_rel=wtf.TextField)
 
-    column_list = ('video_rel', 'video_channel', 'date_added', 'thumbnail')
+    column_list = ('video_rel', 'video_channel', 'date_added', 'category_rel', 'thumbnail')
     column_formatters = dict(thumbnail=_format_video_thumbnail, video_rel=_format_video_instance_link)
-    column_filters = ('video_channel', 'video_rel', 'metas')
+    column_filters = ('video_channel', 'video_rel', 'metas', 'category_rel')
     form_columns = ('video_channel', 'video_rel')
 
     inline_models = (VideoInstanceLocaleMetaFormAdmin(models.VideoInstanceLocaleMeta),)
@@ -73,17 +73,17 @@ class Source(AdminView):
 
 
 class ChildCategoryFormAdmin(InlineFormAdmin):
-    form_columns = ('name', 'priority', 'id')
+    form_columns = ('name', 'id')
 
 
 class Category(AdminView):
     model_name = 'category'
     model = models.Category
 
-    column_list = ('name', 'parent', 'locale')
-    column_filters = ('locale', 'parent')
+    column_list = ('name', 'parent', )
+    column_filters = ('parent', )
     column_searchable_list = ('name',)
-    form_columns = ('name', 'priority', 'locales')
+    form_columns = ('name', )
 
     inline_models = (ChildCategoryFormAdmin(models.Category),)
 
@@ -95,12 +95,9 @@ class Category(AdminView):
         return filters
 
 
-class CategoryMap(AdminView):
-    model_name = models.CategoryMap.__tablename__
-    model = models.CategoryMap
-
-    column_list = ('category_here.locale', 'category_here',
-                   'category_there.locale', 'category_there')
+class CategoryTranslation(AdminView):
+    model_name = models.CategoryTranslation.__tablename__
+    model = models.CategoryTranslation
 
 
 class Locale(AdminView):
@@ -187,7 +184,7 @@ class ExternalCategoryMap(AdminView):
 
 registered = [
     Video, VideoInstanceLocaleMeta, VideoThumbnail, VideoInstance,
-    Source, Category, CategoryMap, Locale, RockpackCoverArt,
+    Source, Category, CategoryTranslation, Locale, RockpackCoverArt,
     UserCoverArt, Channel, ChannelLocaleMeta, ExternalCategoryMap]
 
 

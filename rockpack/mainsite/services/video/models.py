@@ -31,72 +31,43 @@ class Category(db.Model):
     """ Categories for each `locale` """
 
     __tablename__ = 'category'
-    __table_args__ = (
-        UniqueConstraint('locale', 'parent', 'name'),
-    )
 
     id = Column(Integer, primary_key=True)
     name = Column(String(32), nullable=False)
-    priority = Column(Integer, nullable=False, server_default='0')
 
     parent = Column(ForeignKey('category.id'), nullable=True)
-    locale = Column(ForeignKey('locale.id'), nullable=False)
 
     parent_category = relationship('Category', remote_side=[id], backref='children')
-    locales = relationship('Locale', backref='categories')
-
     video_instancess = relationship('VideoInstance', backref='category_ref',
                                       passive_deletes=True)
-    external_category_maps = relationship('ExternalCategoryMap', backref='category_ref')
+    translations = relationship('CategoryTranslation', backref='category_rel')
 
     def __unicode__(self):
         parent_name = ''
         if self.parent_category:
             parent_name = self.parent_category.name + ' >'
-        return '({}) {} {}'.format(self.locales.name, parent_name, self.name)
-
-    @classmethod
-    def map_to(cls, category, locale):
-        """Return the equivalent category for the given locale"""
-        map = lambda here, there: cls.query.join(
-            CategoryMap, (there == cls.id) & (cls.locale == locale)).\
-            filter(here == category).value(there)
-        return map(CategoryMap.here, CategoryMap.there) or \
-            map(CategoryMap.there, CategoryMap.here)
-
-    @classmethod
-    def get_default_category_id(cls, locale):
-        # TODO: cache/memoize
-        return cls.query.filter_by(locale=locale, name='Other', parent=None).value('id')
+        return '{} {}'.format(parent_name, self.name)
 
     @classmethod
     def get_form_choices(cls, locale):
-        query = cls.query.filter_by(parent=ParentCategory.id, locale=locale).\
-            values(cls.id, cls.name, ParentCategory.name)
-        for id, name, parent in query:
-            yield id, '%s - %s' % (parent, name)
+        query = cls.query.filter(CategoryTranslation.category == Category.id,
+        CategoryTranslation.locale == locale).order_by('parent asc')
+        for q in query:
+            pname = q.parent_category.name if q.parent_category else '-'
+            yield q.id, '%s - %s' % (pname, q.name)
 
 
-class CategoryMap(db.Model):
-    """ Mapping between localised categories """
-
-    __tablename__ = 'category_locale'
+class CategoryTranslation(db.Model):
+    __tablename__ = 'category_translation'
     __table_args__ = (
-        UniqueConstraint('here', 'there'),
+        UniqueConstraint('locale', 'category', 'name'),
     )
 
     id = Column(Integer, primary_key=True)
-
-    here = Column(ForeignKey('category.id'), nullable=False)
-    there = Column(ForeignKey('category.id'), nullable=False)
-
-    category_here = relationship('Category', foreign_keys=[here])
-    category_there = relationship('Category', foreign_keys=[there])
-
-    def __unicode__(self):
-        return '{} translates to {}'.format(
-               ':'.join([self.here.name, self.here.locale]),
-               ':'.join([self.there.name, self.there.locale]),)
+    locale = Column(ForeignKey('locale.id'), nullable=False)
+    category = Column(ForeignKey('category.id'), nullable=False)
+    priority = Column(Integer, nullable=False, server_default='0')
+    name = Column(String(32), nullable=False)
 
 
 class ExternalCategoryMap(db.Model):
@@ -241,6 +212,7 @@ class VideoInstance(db.Model):
     category = Column(ForeignKey('category.id'), nullable=False)
 
     metas = relationship('VideoInstanceLocaleMeta', backref='video_instance_rel', cascade='all,delete')
+    category_rel = relationship('Category', backref='video_instance_rel')
 
     @property
     def default_thumbnail(self):
@@ -328,19 +300,10 @@ class Channel(db.Model):
         return cls.query.filter_by(owner=owner).values(cls.id, cls.title)
 
     @classmethod
-    def channelmeta_for_category(cls, category, locale):
-        if locale is None:
-            locale = Category.query.filter_by(id=category).value('locale')
-        return [ChannelLocaleMeta(
-            locale=locale)]
-
-    @classmethod
     def create(cls, locale=None, public=True, **kwargs):
         """Create & save a new channel record along with appropriate category metadata"""
         channel = Channel(**kwargs)
         channel.public = channel.should_be_public(channel, public)
-        if kwargs.get('category'):
-            channel.metas = cls.channelmeta_for_category(kwargs['category'], locale)
         return channel.save()
 
     def get_resource_url(self, own=False):
@@ -404,12 +367,6 @@ class ChannelLocaleMeta(db.Model):
 
 
 ParentCategory = aliased(Category)
-
-
-@event.listens_for(Category, 'before_insert')
-def _set_child_category_locale(mapper, connection, target):
-    if not target.locale and target.parent_category:
-        target.locale = target.parent_category.locale
 
 
 event.listen(Video, 'before_insert', add_video_pk)
