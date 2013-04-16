@@ -13,8 +13,10 @@ class RockpackCoverArt(db.Model):
     id = Column(Integer, primary_key=True)
     cover = Column(ImageType('CHANNEL'), nullable=False)
     locale = Column(ForeignKey('locale.id'), nullable=False)
+    category = Column(ForeignKey('category.id'), nullable=True)
 
     locale_rel = relationship('Locale', backref='cover_art')
+    category_rel = relationship('Category', backref='cover_art')
 
 
 class UserCoverArt(db.Model):

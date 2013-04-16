@@ -148,8 +148,8 @@ class RockpackCoverArt(AdminView):
     model = coverart_models.RockpackCoverArt
     model_name = coverart_models.RockpackCoverArt.__tablename__
 
-    column_list = ('locale_rel', 'cover.thumbnail_large')
-    column_filters = ('locale_rel',)
+    column_list = ('locale_rel', 'cover.thumbnail_large', 'category_rel')
+    column_filters = ('locale_rel', 'category_rel')
 
     edit_template = 'admin/cover_art.html'
 
