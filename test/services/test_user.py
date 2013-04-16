@@ -35,7 +35,7 @@ class TestProfileEdit(base.RockPackTestCase):
             field_map = {"first_name": 'James',
                     "last_name": 'Hong',
                     "email": 'bigtrouble@littlechina.com',
-                    "password": 'lopanisgod',
+                    "password": {'old': 'password', 'new': 'lopanisgod'},
                     "locale": 'en-us',
                     "gender": "m",
                     "date_of_birth": '1901-01-01'}
@@ -49,7 +49,7 @@ class TestProfileEdit(base.RockPackTestCase):
                 self.assertEquals(r.status_code, 204, "{} - {}".format(field, r.data))
 
             user = User.query.get(new_user.id)
-            self.assertEquals(user.check_password(field_map['password']), True)
+            self.assertEquals(user.check_password(field_map['password']['new']), True)
             self.assertEquals(field_map['locale'], user.locale)
             self.assertEquals(field_map['email'], user.email)
             self.assertEquals(field_map['gender'], user.gender)
