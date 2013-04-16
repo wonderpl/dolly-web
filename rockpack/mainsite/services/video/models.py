@@ -5,8 +5,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import relationship, aliased
 from rockpack.mainsite.core.dbapi import db
 from rockpack.mainsite.helpers.db import (
-    add_base64_pk, add_video_pk, add_video_meta_pk,
-    insert_new_only, ImageType)
+    add_base64_pk, add_video_pk, insert_new_only, ImageType)
 from rockpack.mainsite.helpers.urls import url_for
 from rockpack.mainsite.services.user.models import User
 from rockpack.mainsite import app
@@ -31,6 +30,9 @@ class Category(db.Model):
     """ Categories for each `locale` """
 
     __tablename__ = 'category'
+    __table_args__ = (
+        UniqueConstraint('name', 'parent'),
+    )
 
     id = Column(Integer, primary_key=True)
     name = Column(String(32), nullable=False)

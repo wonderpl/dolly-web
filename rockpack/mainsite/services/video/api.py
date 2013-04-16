@@ -164,8 +164,9 @@ class CategoryWS(WebService):
     def category_list(self):
         items = []
         children = defaultdict(list)
-        for cat in models.Category.query.filter_by(locale=self.get_locale()):
-            info = dict(id=str(cat.id), name=cat.name, priority=cat.priority)
+        for cat in models.Category.query.filter(models.CategoryTranslation.category == models.Category.id,
+                models.CategoryTranslation.locale == self.get_locale()):
+            info = dict(id=str(cat.id), name=cat.translations[0].name, priority=cat.translations[0].priority)
             if cat.parent:
                 children[cat.parent].append(info)
             else:

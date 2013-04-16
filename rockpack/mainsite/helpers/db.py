@@ -42,14 +42,6 @@ def add_video_pk(mapper, connection, instance):
         instance.id = gen_videoid(None, instance.source, instance.source_videoid)
 
 
-def add_video_meta_pk(mapper, connection, instance):
-    if not instance.id:
-        instance.id = gen_videoid(
-                instance.locale,
-                instance.video_instance_rel.video_rel.source,
-                instance.video_instance_rel.video_rel.source_videoid)
-
-
 def get_column_property(model, column, prop):
     return getattr(model._sa_class_manager.mapper.get_property(column).columns[0].type, prop)
 
