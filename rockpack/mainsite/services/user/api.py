@@ -159,7 +159,7 @@ def add_videos_to_channel(channel, instance_list, locale):
         if video_id not in added:
             instance = existing.get(video_id) or VideoInstance(video=video_id, channel=channel.id)
             instance.position = position
-            g.session.add(instance)
+            VideoInstance.query.session.add(instance)
             added.append(video_id)
 
     deleted_video_ids = set(existing.keys()).difference(id_map.values())
@@ -180,16 +180,16 @@ def _user_list(paging, **filters):
     total = users.count()
     offset, limit = paging
     users = users.offset(offset).limit(limit)
-    data = []
+    items = []
     for position, user in enumerate(users, offset):
-        data.append(dict(
+        items.append(dict(
             position=position,
             id=user.id,
             resource_url=user.get_resource_url(),
             display_name=user.display_name,
             avatar_thumbnail_url=user.avatar.thumbnail_small,
         ))
-    return data, total
+    return items, total
 
 
 def action_object_list(user, action, limit):
@@ -314,7 +314,7 @@ class UserWS(WebService):
             date_of_birth=user.date_of_birth.isoformat() if user.date_of_birth else None,
         )
         for key in 'channels', 'activity', 'cover_art', 'subscriptions':
-            info[key] = dict(resource_url=url_for('userws.get_%s' % key, userid=userid))
+            info[key] = dict(resource_url=url_for('userws.post_%s' % key, userid=userid))
         info['channels'].update(items=channels, total=len(channels))
         return info
 
@@ -396,7 +396,7 @@ class UserWS(WebService):
 
     @expose_ajax('/<userid>/channels/', methods=('POST',))
     @check_authorization(self_auth=True)
-    def channel_item_create(self, userid):
+    def post_channels(self, userid):
         form = ChannelForm(csrf_enabled=False)
         form.userid = userid
         if not form.validate():
@@ -516,9 +516,13 @@ class UserWS(WebService):
 
     @expose_ajax('/<userid>/subscriptions/')
     def get_subscriptions(self, userid):
-        channels = user_subscriptions(userid).values('channel')
-        items, total = video_api.get_local_channel(
-            self.get_locale(), self.get_page(), channels=channels)
+        subscriptions = user_subscriptions(userid)
+        if subscriptions.count():
+            channels = [s[0] for s in subscriptions.values('channel')]
+            items, total = video_api.get_local_channel(
+                self.get_locale(), self.get_page(), channels=channels)
+        else:
+            items, total = [], 0
         for item in items:
             item['subscription_resource_url'] =\
                 url_for('userws.delete_subscription_item', userid=userid, channelid=item['id'])
@@ -526,7 +530,7 @@ class UserWS(WebService):
 
     @expose_ajax('/<userid>/subscriptions/', methods=['POST'])
     @check_authorization(self_auth=True)
-    def create_subscription(self, userid):
+    def post_subscriptions(self, userid):
         endpoint, args = url_to_endpoint(request.json or '')
         if endpoint not in ('userws.owner_channel_info', 'userws.channel_info'):
             abort(400, message='Invalid channel url')
@@ -549,19 +553,14 @@ class UserWS(WebService):
         if not user_subscriptions(userid).filter_by(channel=channelid).delete():
             abort(404)
 
-    # TODO: remove me - needed for backwards compatibility with iOS app prototype
-    @expose_ajax('/USERID/subscriptions/recent_videos/', cache_age=60)
-    def all_recent_videos(self):
-        data, total = video_api.get_local_videos(self.get_locale(), self.get_page(), date_order=True, **request.args)
-        return {'videos': {'items': data, 'total': total}}
-
     @expose_ajax('/<userid>/subscriptions/recent_videos/', cache_age=60, cache_private=True)
     @check_authorization(self_auth=True)
     def recent_videos(self, userid):
-        channels = user_subscriptions(userid)
-        if channels.count():
-            data, total = video_api.get_local_videos(self.get_locale(), self.get_page(),
-                                                     date_order=True, channels=channels.values('channel'))
+        subscriptions = user_subscriptions(userid)
+        if subscriptions.count():
+            channels = [s[0] for s in subscriptions.values('channel')]
+            items, total = video_api.get_local_videos(self.get_locale(), self.get_page(),
+                                                     date_order=True, channels=channels)
         else:
-            data, total = [], 0
-        return {'videos': {'items': data, 'total': total}}
+            items, total = [], 0
+        return dict(videos=dict(items=items, total=total))

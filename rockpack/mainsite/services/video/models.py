@@ -4,9 +4,7 @@ from sqlalchemy import (
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import relationship, aliased
 from rockpack.mainsite.core.dbapi import db
-from rockpack.mainsite.helpers.db import (
-    add_base64_pk, add_video_pk, add_video_meta_pk,
-    insert_new_only, ImageType)
+from rockpack.mainsite.helpers.db import add_base64_pk, add_video_pk, insert_new_only, ImageType
 from rockpack.mainsite.helpers.urls import url_for
 from rockpack.mainsite.services.user.models import User
 from rockpack.mainsite import app
@@ -45,8 +43,7 @@ class Category(db.Model):
     parent_category = relationship('Category', remote_side=[id], backref='children')
     locales = relationship('Locale', backref='categories')
 
-    video_instancess = relationship('VideoInstance', backref='category_ref',
-                                      passive_deletes=True)
+    video_instancess = relationship('VideoInstance', backref='category_ref', passive_deletes=True)
     external_category_maps = relationship('ExternalCategoryMap', backref='category_ref')
 
     def __unicode__(self):
@@ -238,7 +235,7 @@ class VideoInstance(db.Model):
 
     video = Column(ForeignKey('video.id', ondelete='CASCADE'), nullable=False)
     channel = Column(ForeignKey('channel.id'), nullable=False)
-    category = Column(ForeignKey('category.id'), nullable=False)
+    category = Column(ForeignKey('category.id'), nullable=True)
 
     metas = relationship('VideoInstanceLocaleMeta', backref='video_instance_rel', cascade='all,delete')
 
@@ -273,8 +270,7 @@ class VideoInstance(db.Model):
         ).delete(synchronize_session='fetch')
 
     def add_meta(self, locale):
-        return VideoInstanceLocaleMeta(video_instance=self,
-                locale=locale).save()
+        return VideoInstanceLocaleMeta(video_instance=self.id, locale=locale).save()
 
     def __unicode__(self):
         return self.video

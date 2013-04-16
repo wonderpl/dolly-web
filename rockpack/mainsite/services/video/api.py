@@ -1,7 +1,7 @@
 from collections import defaultdict
-from sqlalchemy.orm import contains_eager, lazyload
+from sqlalchemy.orm import contains_eager, lazyload, joinedload
 from sqlalchemy.sql.expression import desc
-from flask import g, request
+from flask import request
 from rockpack.mainsite.core.webservice import WebService, expose_ajax
 from rockpack.mainsite.services.video import models
 
@@ -108,12 +108,13 @@ def video_dict(video):
 
 
 def get_local_videos(loc, paging, with_channel=True, **filters):
-    videos = g.session.query(models.VideoInstance, models.Video
-            ).join(models.Video
-            ).filter(models.Video.visible == True
-                    ).outerjoin(models.VideoInstanceLocaleMeta,
-                            (models.VideoInstanceLocaleMeta.video_instance == models.VideoInstance.id) &
-                            (models.VideoInstanceLocaleMeta.locale == loc))
+    videos = models.VideoInstance.query.join(
+        models.Video,
+        (models.Video.id == models.VideoInstance.video) &
+        (models.Video.visible == True)).\
+        options(contains_eager(models.VideoInstance.video_rel))
+    if with_channel:
+        videos = videos.options(joinedload(models.VideoInstance.video_channel))
 
     if filters.get('channel'):
         filters.setdefault('channels', [filters['channel']])
@@ -128,6 +129,10 @@ def get_local_videos(loc, paging, with_channel=True, **filters):
         videos = videos.order_by(models.VideoInstance.position)
 
     if filters.get('star_order'):
+        videos = videos.outerjoin(
+            models.VideoInstanceLocaleMeta,
+            (models.VideoInstanceLocaleMeta.video_instance == models.VideoInstance.id) &
+            (models.VideoInstanceLocaleMeta.locale == loc))
         videos = videos.order_by(desc(models.VideoInstanceLocaleMeta.star_count))
 
     if filters.get('date_order'):
@@ -140,13 +145,13 @@ def get_local_videos(loc, paging, with_channel=True, **filters):
     for position, v in enumerate(videos, offset):
         item = dict(
             position=position,
-            date_added=v.VideoInstance.date_added.isoformat(),
-            video=video_dict(v.Video),
-            id=v.VideoInstance.id,
-            title=v.Video.title,
+            date_added=v.date_added.isoformat(),
+            video=video_dict(v.video_rel),
+            id=v.id,
+            title=v.video_rel.title,
         )
         if with_channel:
-            item['channel'] = channel_dict(v.VideoInstance.video_channel)
+            item['channel'] = channel_dict(v.video_channel)
         data.append(item)
     return data, total
 
