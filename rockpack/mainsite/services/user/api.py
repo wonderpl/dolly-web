@@ -1,5 +1,6 @@
 from werkzeug.datastructures import MultiDict
 from sqlalchemy import desc
+from sqlalchemy.orm import lazyload
 from sqlalchemy.orm.exc import NoResultFound
 from flask import abort, request, g
 from flask.ext import wtf
@@ -284,7 +285,8 @@ class UserWS(WebService):
     def user_info(self, userid):
         user = User.query.get_or_404(userid)
         channels = [video_api.channel_dict(c, with_owner=False, owner_url=False) for c in
-                    Channel.query.filter_by(owner=user.id, deleted=False, public=True)]
+                    Channel.query.options(lazyload('category_rel')).\
+                        filter_by(owner=user.id, deleted=False, public=True)]
         return dict(
             id=user.id,
             name=user.username,     # XXX: backwards compatibility
