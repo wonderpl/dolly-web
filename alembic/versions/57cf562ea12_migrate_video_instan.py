@@ -13,7 +13,6 @@ down_revision = '4a8bd38846f1'
 from alembic import op
 import sqlalchemy as sa
 
-
 def upgrade():
     from rockpack.mainsite.services.video.models import VideoInstanceLocaleMeta
     from rockpack.mainsite.helpers.db import add_base64_pk

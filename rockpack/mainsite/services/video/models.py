@@ -4,8 +4,7 @@ from sqlalchemy import (
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import relationship, aliased
 from rockpack.mainsite.core.dbapi import db
-from rockpack.mainsite.helpers.db import (
-    add_base64_pk, add_video_pk, insert_new_only, ImageType)
+from rockpack.mainsite.helpers.db import add_base64_pk, add_video_pk, insert_new_only, ImageType
 from rockpack.mainsite.helpers.urls import url_for
 from rockpack.mainsite.services.user.models import User
 from rockpack.mainsite import app
@@ -40,9 +39,9 @@ class Category(db.Model):
     parent = Column(ForeignKey('category.id'), nullable=True)
 
     parent_category = relationship('Category', remote_side=[id], backref='children')
-    video_instancess = relationship('VideoInstance', backref='category_ref',
-                                      passive_deletes=True)
     translations = relationship('CategoryTranslation', backref='category_rel')
+    video_instancess = relationship('VideoInstance', backref='category_ref', passive_deletes=True)
+    external_category_maps = relationship('ExternalCategoryMap', backref='category_ref')
 
     def __unicode__(self):
         parent_name = ''
@@ -211,7 +210,7 @@ class VideoInstance(db.Model):
 
     video = Column(ForeignKey('video.id', ondelete='CASCADE'), nullable=False)
     channel = Column(ForeignKey('channel.id'), nullable=False)
-    category = Column(ForeignKey('category.id'), nullable=False)
+    category = Column(ForeignKey('category.id'), nullable=True)
 
     metas = relationship('VideoInstanceLocaleMeta', backref='video_instance_rel', cascade='all,delete')
     category_rel = relationship('Category', backref='video_instance_rel')
@@ -247,8 +246,7 @@ class VideoInstance(db.Model):
         ).delete(synchronize_session='fetch')
 
     def add_meta(self, locale):
-        return VideoInstanceLocaleMeta(video_instance=self,
-                locale=locale).save()
+        return VideoInstanceLocaleMeta(video_instance=self.id, locale=locale).save()
 
     def __unicode__(self):
         return self.video
@@ -366,6 +364,20 @@ class ChannelLocaleMeta(db.Model):
 
     def __unicode__(self):
         return self.locale + ' for channel ' + self.channel
+
+
+class ContentReport(db.Model):
+    __tablename__ = 'content_report'
+    __table_args__ = (
+        UniqueConstraint('object_type', 'object_id'),
+    )
+
+    id = Column(Integer, primary_key=True)
+    date_created = Column(DateTime(), nullable=False, default=func.now())
+    object_type = Column(String(16), nullable=False)
+    object_id = Column(String(64), nullable=False)
+    count = Column(Integer, nullable=False, default=1)
+    reviewed = Column(Boolean, nullable=False, default=False)
 
 
 ParentCategory = aliased(Category)

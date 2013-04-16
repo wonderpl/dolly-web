@@ -1,7 +1,7 @@
 from collections import defaultdict
-from sqlalchemy.orm import contains_eager
+from sqlalchemy.orm import contains_eager, lazyload, joinedload
 from sqlalchemy.sql.expression import desc
-from flask import g, request
+from flask import request
 from rockpack.mainsite.core.webservice import WebService, expose_ajax
 from rockpack.mainsite.services.video import models
 
@@ -44,8 +44,13 @@ def channel_dict(channel, with_owner=True, owner_url=False):
 def get_local_channel(locale, paging, **filters):
     metas = models.ChannelLocaleMeta.query.filter_by(visible=True, locale=locale)
     metas = metas.join(models.Channel).\
-        options(contains_eager(models.ChannelLocaleMeta.channel_rel))
-    metas = metas.filter(models.Channel.public==True, models.Channel.deleted==False)
+        options(lazyload('channel_rel.category_rel'),
+                contains_eager(models.ChannelLocaleMeta.channel_rel))
+    metas = metas.filter(models.Channel.public == True,
+                         models.Channel.deleted == False)
+
+    if filters.get('channels'):
+        metas = metas.filter(models.Channel.id.in_(filters['channels']))
     if filters.get('category'):
         metas = _filter_by_category(metas, models.Channel, filters['category'])
     if filters.get('query'):
@@ -103,12 +108,13 @@ def video_dict(video):
 
 
 def get_local_videos(loc, paging, with_channel=True, **filters):
-    videos = g.session.query(models.VideoInstance, models.Video
-            ).join(models.Video
-            ).filter(models.Video.visible == True
-                    ).outerjoin(models.VideoInstanceLocaleMeta,
-                            (models.VideoInstanceLocaleMeta.video_instance == models.VideoInstance.id) &
-                            (models.VideoInstanceLocaleMeta.locale == loc))
+    videos = models.VideoInstance.query.join(
+        models.Video,
+        (models.Video.id == models.VideoInstance.video) &
+        (models.Video.visible == True)).\
+        options(contains_eager(models.VideoInstance.video_rel))
+    if with_channel:
+        videos = videos.options(joinedload(models.VideoInstance.video_channel))
 
     if filters.get('channel'):
         filters.setdefault('channels', [filters['channel']])
@@ -123,6 +129,10 @@ def get_local_videos(loc, paging, with_channel=True, **filters):
         videos = videos.order_by(models.VideoInstance.position)
 
     if filters.get('star_order'):
+        videos = videos.outerjoin(
+            models.VideoInstanceLocaleMeta,
+            (models.VideoInstanceLocaleMeta.video_instance == models.VideoInstance.id) &
+            (models.VideoInstanceLocaleMeta.locale == loc))
         videos = videos.order_by(desc(models.VideoInstanceLocaleMeta.star_count))
 
     if filters.get('date_order'):
@@ -135,13 +145,13 @@ def get_local_videos(loc, paging, with_channel=True, **filters):
     for position, v in enumerate(videos, offset):
         item = dict(
             position=position,
-            date_added=v.VideoInstance.date_added.isoformat(),
-            video=video_dict(v.Video),
-            id=v.VideoInstance.id,
-            title=v.Video.title,
+            date_added=v.date_added.isoformat(),
+            video=video_dict(v.video_rel),
+            id=v.id,
+            title=v.video_rel.title,
         )
         if with_channel:
-            item['channel'] = channel_dict(v.VideoInstance.video_channel)
+            item['channel'] = channel_dict(v.video_channel)
         data.append(item)
     return data, total
 

@@ -5,9 +5,12 @@ from flask import Flask
 
 app = Flask(__name__)
 
-app.config.from_pyfile('settings/common.py')
-app.config.from_pyfile('settings/local.py', silent=True)
-app.config.from_envvar('ROCKPACK_SETTINGS', silent=True)
+
+def configure():
+    app.config.from_pyfile('settings/common.py')
+    app.config.from_pyfile('settings/local.py', silent=True)
+    app.config.from_envvar('ROCKPACK_SETTINGS', silent=True)
+configure()
 
 
 SERVICES = (
