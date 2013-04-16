@@ -42,33 +42,31 @@ def channel_dict(channel, with_owner=True, owner_url=False):
 
 
 def get_local_channel(locale, paging, **filters):
-    metas = models.ChannelLocaleMeta.query.filter_by(visible=True, locale=locale)
-    metas = metas.join(models.Channel).\
-        options(lazyload('channel_rel.category_rel'),
-                contains_eager(models.ChannelLocaleMeta.channel_rel))
-    metas = metas.filter(models.Channel.public == True,
-                         models.Channel.deleted == False)
+    channels = models.Channel.query.filter_by(public=True, deleted=False).\
+        outerjoin(
+            models.ChannelLocaleMeta,
+            ((models.ChannelLocaleMeta.channel == models.Channel.id) &
+            (models.ChannelLocaleMeta.visible == True) &
+            (models.ChannelLocaleMeta.locale == locale))).\
+        options(lazyload('category_rel'))
 
     if filters.get('channels'):
-        metas = metas.filter(models.Channel.id.in_(filters['channels']))
+        channels = channels.filter(models.Channel.id.in_(filters['channels']))
     if filters.get('category'):
-        metas = _filter_by_category(metas, models.Channel, filters['category'])
+        channels = _filter_by_category(channels, models.Channel, filters['category'])
     if filters.get('query'):
-        metas = metas.filter(models.Channel.title.ilike('%%%s%%' % filters['query']))
+        channels = channels.filter(models.Channel.title.ilike('%%%s%%' % filters['query']))
 
     if filters.get('date_order'):
-        metas = metas.order_by(desc(models.ChannelLocaleMeta.date_added))
+        channels = channels.order_by(desc(models.Channel.date_added))
 
-    total = metas.count()
+    total = channels.count()
     offset, limit = paging
-    metas = metas.offset(offset).limit(limit)
+    channels = channels.offset(offset).limit(limit)
     channel_data = []
-    for position, meta in enumerate(metas, offset):
-        item = dict(
-            position=position,
-            id=meta.id,
-        )
-        item.update(channel_dict(meta.channel_rel))
+    for position, channel in enumerate(channels, offset):
+        item = channel_dict(channel)
+        item['position'] = position
         channel_data.append(item)
 
     return channel_data, total
