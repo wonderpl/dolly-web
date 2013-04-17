@@ -31,7 +31,7 @@ class ImportForm(form.BaseForm):
     commit = wtf.HiddenField()
     user = wtf.TextField()
     channel = wtf.TextField()
-    channel_description = wtf.TextAreaField()
+    channel_description = wtf.TextAreaField(validators=[wtf.Length(max=200)])
 
     def validate(self):
         if not super(ImportForm, self).validate():

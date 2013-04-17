@@ -111,11 +111,6 @@ class Locale(AdminView):
 class ChannelLocaleMetaFormAdmin(InlineFormAdmin):
     form_columns = ('id', 'channel_locale', 'visible')
 
-    def postprocess_form(self, form):
-        # TODO: make category selection dynamic, based on locale
-        #form.category_ref = wtf.HiddenField()
-        return form
-
 
 def _format_channel_video_count(context, channel, name):
     count = models.VideoInstance.query.filter(models.VideoInstance.channel == channel.id).count()
@@ -129,6 +124,7 @@ class Channel(AdminView):
     form_overrides = dict(owner_rel=wtf.TextField)
     form_args = dict(
         ecommerce_url=dict(validators=[wtf.Optional()]),
+        description=dict(validators=[wtf.Length(max=200)]),
     )
     column_auto_select_related = True
     column_display_all_relations = True
