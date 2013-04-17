@@ -222,15 +222,6 @@ class VideoInstance(db.Model):
         return self.video_rel.player_link
 
     @classmethod
-    def add_from_video_ids(cls, video_ids, channel, category):
-        """ Bulk add video instances from a list of videos"""
-
-        session = cls.query.session
-        instances = [cls(video=v, channel=channel, category=category) for v in video_ids]
-        session.add_all(instances)
-        session.commit()
-
-    @classmethod
     def remove_from_video_ids(cls, video_ids):
         # Cascading delete
         cls.query.filter(
@@ -304,9 +295,8 @@ class Channel(db.Model):
     resource_url = property(get_resource_url)
 
     def add_videos(self, videos):
-        VideoInstance.add_from_video_ids([getattr(v, 'id', v) for v in videos], self.id, self.category)
-
-        instances = [VideoInstance(channel=self.id, video=getattr(v, 'id', v)) for v in videos]
+        instances = [VideoInstance(channel=self.id, video=getattr(v, 'id', v),
+                                   category=self.category) for v in videos]
         session = self.query.session
         try:
             with session.begin_nested():
