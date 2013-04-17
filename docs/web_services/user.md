@@ -261,7 +261,7 @@ Authorization: Bearer TOKEN
 Parameter      | Required? | Value             | Description
 :------------- | :-------- | :---------------- | :----------
 title          | Yes       | unicode string    | May be empty string. If not specified, a default title will be assigned.
-description    | Yes       | unicode string    | May be empty string.
+description    | Yes       | unicode string    | May be empty string. Maximum 200 chars (line-breaks are stripped).
 category       | Yes       | category id       | Id of assigned category. May be empty string to leave unassigned.
 cover          | Yes       | cover image ref   | Reference for cover art image. May be empty string to leave unassigned.
 public         | Yes       | `true` or `false` | Toggles whether a channel is public. May be empty string, but will default to `true`. If other fields are unassigned, field will default to `false`.
