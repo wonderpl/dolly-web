@@ -222,18 +222,12 @@ class VideoInstance(db.Model):
         return self.video_rel.player_link
 
     @classmethod
-    def add_from_video_ids(cls, video_ids, channel, category, locale):
-        """ Bulk add video instances from a list of videos
-            and attach meta records """
+    def add_from_video_ids(cls, video_ids, channel, category):
+        """ Bulk add video instances from a list of videos"""
 
         session = cls.query.session
         instances = [cls(video=v, channel=channel, category=category) for v in video_ids]
         session.add_all(instances)
-        session.commit()
-
-        for i in instances:
-            i.metas.append(VideoInstanceLocaleMeta(locale=locale))
-            session.add(i)
         session.commit()
 
     @classmethod
@@ -309,8 +303,8 @@ class Channel(db.Model):
         return url_for(view, userid=self.owner_rel.id, channelid=self.id)
     resource_url = property(get_resource_url)
 
-    def add_videos(self, videos, locale):
-        VideoInstance.add_from_video_ids([getattr(v, 'id', v) for v in videos], self.id, self.category, locale)
+    def add_videos(self, videos):
+        VideoInstance.add_from_video_ids([getattr(v, 'id', v) for v in videos], self.id, self.category)
 
         instances = [VideoInstance(channel=self.id, video=getattr(v, 'id', v)) for v in videos]
         session = self.query.session
