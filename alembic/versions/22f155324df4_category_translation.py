@@ -8,7 +8,7 @@ Create Date: 2013-04-15 19:28:36.259451
 
 # revision identifiers, used by Alembic.
 revision = '22f155324df4'
-down_revision = '57cf562ea12'
+down_revision = '45e6dd8a6356'
 
 from alembic import op
 import sqlalchemy as sa
@@ -28,6 +28,7 @@ def upgrade():
     sa.UniqueConstraint('locale','category','name')
     )
     op.execute("insert into category_translation (category, name, locale, priority) select id, name, locale, priority from category where locale = 'en-us'")
+    op.execute("insert into category_translation (category, name, locale, priority) select id, name, 'en-gb', priority from category where locale = 'en-us'")
     ### end Alembic commands ###
 
 

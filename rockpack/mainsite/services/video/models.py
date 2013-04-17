@@ -44,10 +44,8 @@ class Category(db.Model):
     external_category_maps = relationship('ExternalCategoryMap', backref='category_ref')
 
     def __unicode__(self):
-        parent_name = ''
-        if self.parent_category:
-            parent_name = self.parent_category.name + ' >'
-        return '{} {}'.format(parent_name, self.name)
+        pname = self.parent_category.name if self.parent_category else '-'
+        return '{} - {}'.format(pname, self.name)
 
     @classmethod
     def get_form_choices(cls, locale):
