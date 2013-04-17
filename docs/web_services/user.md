@@ -98,13 +98,13 @@ Where `ATTRIBUTE` can be one of:
 Attribute     | Value  | Description
 :------------ | :----- | :----------
 username      | String | Characters allowed should match regex [a-zA-Z0-9]
-password      | String | Minimum 6 characters
 first_name    | String |
 last_name     | String |
 date_of_birth | String | YYYY-MM-DD formatted date string
 locale        | String | IETF language tag
 email         | String | Email address
 gender        | String | `m` or `f`
+password      |        | Special case. See [Change Password](#change-password) below
 
 Responds with a `204`
 
@@ -128,6 +128,66 @@ Content-Type: application/json
 }
 ```
 See the Registration section of [oauth documentation](oauth.md) for a comprehensive list of errors
+
+
+### Change password
+
+Change a users password. The old password must be supplied to validate the change.
+
+```http
+PUT /ws/USERID/password/ HTTP/1.1
+Content-Type: application/json
+
+{
+    "old": "oldpassword",
+    "new": "newpassword"
+}
+```
+
+New password must be:
+
+Value  | Description
+:----- | :----------
+String | Minimum 6 characters
+
+Responds with a `204`
+
+```http
+HTTP/1.1 204 OK
+Content-Type: application/json
+```
+
+Possible errors
+
+```http
+HTTP/1.1 400 BAD REQUEST
+Content-Type: application/json
+
+{
+    "error": "invalid request",
+    "message": "Minimum 6 characters"
+}
+```
+
+```http
+HTTP/1.1 400 BAD REQUEST
+Content-Type: application/json
+
+{
+    "error": "invalid request",
+    "message": "Old password is incorrect"
+}
+```
+
+```http
+HTTP/1.1 400 BAD REQUEST
+Content-Type: application/json
+
+{
+    "error": "invalid request",
+    "message": "Both old and new passwords must be supplied"
+}
+```
 
 Avatar
 ======
