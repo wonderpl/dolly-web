@@ -59,7 +59,7 @@ class Category(db.Model):
 class CategoryTranslation(db.Model):
     __tablename__ = 'category_translation'
     __table_args__ = (
-        UniqueConstraint('locale', 'category', 'name'),
+        UniqueConstraint('locale', 'category'),
     )
 
     id = Column(Integer, primary_key=True)
