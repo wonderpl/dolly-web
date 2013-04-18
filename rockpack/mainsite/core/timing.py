@@ -2,7 +2,7 @@ import time
 import logging
 from functools import wraps
 from flask import request, json
-from sqlalchemy.interfaces import ConnectionProxy
+from sqlalchemy.engine.base import Connection
 import requests.api
 
 
@@ -42,7 +42,7 @@ def before_request():
 
 def after_request(response):
     timing = getattr(request, '_timing', None)
-    if timing:
+    if timing and request.endpoint:
         response_time = time.time() - timing.pop('_start_request')
         metric = lambda n: '.'.join(('views', request.endpoint, n))
         record_timing(metric('response_time'), response_time)
@@ -62,7 +62,7 @@ def setup_timing(app):
     if app.config.get('ENABLE_TIMINGS'):
         json.loads = wrap(json.loads, 'json.')
         json.dumps = wrap(json.dumps, 'json.')
-        ConnectionProxy.execute = wrap(ConnectionProxy.execute, 'db.')
+        Connection.execute = wrap(Connection.execute, 'db.')
         requests.api.request = wrap(requests.api.request, 'requests.')
         app.before_request(before_request)
         app.after_request(after_request)
