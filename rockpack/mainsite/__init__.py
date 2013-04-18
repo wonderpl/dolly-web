@@ -23,6 +23,7 @@ SERVICES = (
     'rockpack.mainsite.services.pubsubhubbub',
 )
 REGISTER_SETUPS = (
+    ('rockpack.mainsite.core.timing', 'setup_timing'),
     ('rockpack.mainsite.core.webservice', 'setup_abort_mapping'),
     ('rockpack.mainsite.admin.auth', 'setup_auth'),
     ('rockpack.mainsite.admin', 'setup_admin'),
