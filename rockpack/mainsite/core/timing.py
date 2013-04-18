@@ -24,12 +24,19 @@ def record_counter(name, value):
         log.info('%s: %d', name, value)
 
 
+def request_timing():
+    try:
+        return request._timing
+    except Exception:
+        pass
+
+
 def wrap(f, prefix=''):
     @wraps(f)
     def wrapper(*args, **kwargs):
         start = time.time()
         result = f(*args, **kwargs)
-        timing = getattr(request, '_timing', None)
+        timing = request_timing()
         if timing:
             timing.setdefault(prefix + f.__name__, []).append(time.time() - start)
         return result
@@ -41,7 +48,7 @@ def before_request():
 
 
 def after_request(response):
-    timing = getattr(request, '_timing', None)
+    timing = request_timing()
     if timing and request.endpoint:
         response_time = time.time() - timing.pop('_start_request')
         metric = lambda n: '.'.join(('views', request.endpoint, n))
