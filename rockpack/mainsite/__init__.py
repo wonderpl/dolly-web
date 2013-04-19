@@ -5,9 +5,12 @@ from flask import Flask
 
 app = Flask(__name__)
 
-app.config.from_pyfile('settings/common.py')
-app.config.from_pyfile('settings/local.py', silent=True)
-app.config.from_envvar('ROCKPACK_SETTINGS', silent=True)
+
+def configure():
+    app.config.from_pyfile('settings/common.py')
+    app.config.from_pyfile('settings/local.py', silent=True)
+    app.config.from_envvar('ROCKPACK_SETTINGS', silent=True)
+configure()
 
 
 SERVICES = (
@@ -39,7 +42,7 @@ def run_setups():
 
 
 def import_services():
-    from rockpack.mainsite.core.webservice import WebService  # TODO: move this, obviously
+    from rockpack.mainsite.core.webservice import WebService
     services = []
     for s in SERVICES:
         import_name = s + '.api'
@@ -63,5 +66,12 @@ def import_services():
 def init_app():
     if not app.debug:
         app.logger.addHandler(logging.StreamHandler())
+    if app.debug:
+        try:
+            from flask_debugtoolbar import DebugToolbarExtension
+        except ImportError:
+            pass
+        else:
+            DebugToolbarExtension(app)
     run_setups()
     import_services()

@@ -1,3 +1,4 @@
+from urlparse import urlparse
 import pyes
 from . import mappings
 from rockpack.mainsite import app
@@ -67,8 +68,8 @@ class IndexSearch(object):
 def add_owner_to_index(conn, owner):
     i = conn.index({
         'id': owner.id,
-        'avatar_thumbnail': str(owner.avatar),
-        'resource_url': owner.get_resource_url(False),
+        'avatar_thumbnail': urlparse(str(owner.avatar)).path,
+        'resource_url': urlparse(owner.get_resource_url(False)).path,
         'display_name': owner.display_name,
         'name': owner.username},
         mappings.USER_INDEX,
@@ -87,11 +88,11 @@ def add_channel_to_index(conn, channel):
         'subscribe_count': channel['subscribe_count'],
         'category': channel['category'],
         'description': channel['description'],
-        'thumbnail_url': channel['thumbnail_url'],
-        'cover_thumbnail_small_url': channel['cover_thumbnail_small_url'],
-        'cover_thumbnail_large_url': channel['cover_thumbnail_large_url'],
-        'cover_background_url': channel['cover_background_url'],
-        'resource_url': channel['resource_url'],
+        'thumbnail_url': urlparse(channel['thumbnail_url']).path,
+        'cover_thumbnail_small_url': urlparse(channel['cover_thumbnail_small_url']).path,
+        'cover_thumbnail_large_url': urlparse(channel['cover_thumbnail_large_url']).path,
+        'cover_background_url': urlparse(channel['cover_background_url']).path,
+        'resource_url': urlparse(channel['resource_url']).path,
         'title': channel['title'],
         'date_added': channel['date_added'],
         'owner': channel['owner_id'],

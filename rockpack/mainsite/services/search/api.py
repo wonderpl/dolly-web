@@ -79,7 +79,6 @@ class CompleteWS(WebService):
         # Use same javascript format as google complete for the sake of
         # consistency with /complete/videos
         query = _query_term()
-        terms = g.session.query(Channel.title).\
-            filter(Channel.title.ilike('%s%%' % query)).limit(10)
-        result = json.dumps((query, [(t.title, 0, []) for t in terms], {}))
+        channels = Channel.query.filter(Channel.title.ilike('%s%%' % query)).limit(10)
+        result = json.dumps((query, [(c.title, 0, []) for c in channels.values('title')], {}))
         return Response('window.google.ac.h(%s)' % result, mimetype='text/javascript')

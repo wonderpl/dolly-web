@@ -78,8 +78,10 @@ setup(
     data_files=[
         ('/etc/rockpack/mainsite', ['uwsgi.ini']),
         ('/etc/cron.d', ['rockpack-mainsite.cron']),
-        ('/etc/init.d', [name]),
-    ],
+        ('/etc/rc.d/init.d', [name]),
+        ('share/rockpack/mainsite', ['alembic.ini']),
+    ] + [('share/rockpack/mainsite/' + x[0], map(lambda y: x[0] + '/' + y, x[2]))
+                for x in os.walk('alembic')],
     entry_points={
         'console_scripts': ['%s-manage = rockpack.mainsite.manager:run' % name]
     },

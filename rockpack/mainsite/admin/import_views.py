@@ -92,7 +92,6 @@ class ImportView(BaseView):
             form.import_data.videos,
             form.source.data,
             form.locale.data,
-            form.channel.data,
             form.category.data)
 
         channel = form.channel.data   # XXX: Need to validate?
@@ -109,7 +108,7 @@ class ImportView(BaseView):
                 self.record_action('created', channel)
             else:
                 channel = Channel.query.get(channel)
-            channel.add_videos(form.import_data.videos, form.locale.data)
+            channel.add_videos(form.import_data.videos)
             self.record_action('imported', channel, '%d videos' % count)
             push_config = form.import_data.push_config
             if push_config and channel.id:

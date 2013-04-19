@@ -66,7 +66,6 @@ class ChannelCreateTestCase(base.RockPackTestCase):
             self.assertEquals(200, r.status_code)
 
             # test public toggle
-            print 'privating'
             r = client.put(resource + 'public/',
                     data=json.dumps(False),
                     content_type='application/json',

@@ -1,9 +1,11 @@
+import urlparse
 import pyes
-from sqlalchemy.orm import contains_eager
-from sqlalchemy.sql.expression import desc
 from flask import request
+from collections import defaultdict
+from sqlalchemy.orm import contains_eager, lazyload, joinedload
+from sqlalchemy.sql.expression import desc
 from rockpack.mainsite import app
-from rockpack.mainsite.core.dbapi import db
+from rockpack.mainsite.helpers.urls import url_for
 from rockpack.mainsite.core.es import get_es_connection
 from rockpack.mainsite.core.webservice import WebService, expose_ajax
 from rockpack.mainsite.services.video import models
@@ -46,28 +48,31 @@ def channel_dict(channel, with_owner=True, owner_url=False):
 
 
 def get_local_channel(locale, paging, **filters):
-    metas = models.ChannelLocaleMeta.query.filter_by(visible=True, locale=locale)
-    metas = metas.join(models.Channel).\
-        options(contains_eager(models.ChannelLocaleMeta.channel_rel))
-    metas = metas.filter(models.Channel.public==True, models.Channel.deleted==False)
+    channels = models.Channel.query.filter_by(public=True, deleted=False).\
+        outerjoin(
+            models.ChannelLocaleMeta,
+            ((models.ChannelLocaleMeta.channel == models.Channel.id) &
+            (models.ChannelLocaleMeta.visible == True) &
+            (models.ChannelLocaleMeta.locale == locale))).\
+        options(lazyload('category_rel'))
+
+    if filters.get('channels'):
+        channels = channels.filter(models.Channel.id.in_(filters['channels']))
     if filters.get('category'):
-        metas = _filter_by_category(metas, models.Channel, filters['category'])
+        channels = _filter_by_category(channels, models.Channel, filters['category'])
     if filters.get('query'):
-        metas = metas.filter(models.Channel.title.ilike('%%%s%%' % filters['query']))
+        channels = channels.filter(models.Channel.title.ilike('%%%s%%' % filters['query']))
 
     if filters.get('date_order'):
-        metas = metas.order_by(desc(models.ChannelLocaleMeta.date_added))
+        channels = channels.order_by(desc(models.Channel.date_added))
 
-    total = metas.count()
+    total = channels.count()
     offset, limit = paging
-    metas = metas.offset(offset).limit(limit)
+    channels = channels.offset(offset).limit(limit)
     channel_data = []
-    for position, meta in enumerate(metas, offset):
-        item = dict(
-            position=position,
-            id=meta.id,
-        )
-        item.update(channel_dict(meta.channel_rel))
+    for position, channel in enumerate(channels, offset):
+        item = channel_dict(channel)
+        item['position'] = position
         channel_data.append(item)
 
     return channel_data, total
@@ -95,12 +100,13 @@ def video_dict(video):
 
 
 def get_local_videos(loc, paging, with_channel=True, **filters):
-    videos = db.session.query(models.VideoInstance, models.Video
-            ).join(models.Video
-            ).filter(models.Video.visible == True
-                    ).outerjoin(models.VideoInstanceLocaleMeta,
-                            (models.VideoInstanceLocaleMeta.video_instance == models.VideoInstance.id) &
-                            (models.VideoInstanceLocaleMeta.locale == loc))
+    videos = models.VideoInstance.query.join(
+        models.Video,
+        (models.Video.id == models.VideoInstance.video) &
+        (models.Video.visible == True)).\
+        options(contains_eager(models.VideoInstance.video_rel))
+    if with_channel:
+        videos = videos.options(joinedload(models.VideoInstance.video_channel))
 
     if filters.get('channel'):
         filters.setdefault('channels', [filters['channel']])
@@ -115,6 +121,10 @@ def get_local_videos(loc, paging, with_channel=True, **filters):
         videos = videos.order_by(models.VideoInstance.position)
 
     if filters.get('star_order'):
+        videos = videos.outerjoin(
+            models.VideoInstanceLocaleMeta,
+            (models.VideoInstanceLocaleMeta.video_instance == models.VideoInstance.id) &
+            (models.VideoInstanceLocaleMeta.locale == loc))
         videos = videos.order_by(desc(models.VideoInstanceLocaleMeta.star_count))
 
     if filters.get('date_order'):
@@ -125,22 +135,15 @@ def get_local_videos(loc, paging, with_channel=True, **filters):
     videos = videos.offset(offset).limit(limit)
     data = []
     for position, v in enumerate(videos, offset):
-        cats = []
-        if v.VideoInstance.category:
-            cats.append(v.VideoInstance.category_ref.id)
-            if v.VideoInstance.category_ref.parent:
-                cats.append(v.VideoInstance.category_ref.parent)
-
         item = dict(
-            category=cats,
-            position=v.VideoInstance.position,
-            date_added=v.VideoInstance.date_added.isoformat(),
-            video=video_dict(v.Video),
-            id=v.VideoInstance.id,
-            title=v.Video.title,
+            position=position,
+            date_added=v.date_added.isoformat(),
+            video=video_dict(v.video_rel),
+            id=v.id,
+            title=v.video_rel.title,
         )
         if with_channel:
-            item['channel'] = channel_dict(v.VideoInstance.video_channel)
+            item['channel'] = channel_dict(v.video_channel)
         data.append(item)
     return data, total
 
@@ -178,6 +181,18 @@ def _sort_string(**kwargs):
             sort.append('{}:{}'.format(k.lower(), v.lower()))
     return {'sort': ','.join(sort)} if sort else {}
 
+
+def _es_build_urls(dict_):
+    for k, v in dict_.iteritems():
+        if isinstance(v, dict):
+            _es_build_urls(v)
+            dict_[k] = v
+            continue
+
+        if isinstance(v, str) and k.endswith('_url') and not urlparse.urlparse(v).scheme:
+            dict_[k] = urlparse.urljoin(url_for('basews.discover'), v)
+
+
 def es_get_videos(conn, category=None, paging=None, channel_ids=None, star_order=None, locale=None, date_order=None, position=None):
     search = IndexSearch(conn, 'video', locale)
     if category:
@@ -204,6 +219,7 @@ def es_get_videos(conn, category=None, paging=None, channel_ids=None, star_order
         if locale:
             v['video']['view_count'] = v['locale'][locale]['view_count']
             v['video']['star_count'] = v['locale'][locale]['star_count']
+            v['video']['thumbnail_url'] = urlparse.urljoin(url_for('basews.discover'), v['video']['thumbnail_url'])
         del v['locale']
         vlist.append(v)
     return vlist, videos.total
@@ -234,13 +250,21 @@ def es_get_channels(conn, channel_ids=None, category=None, paging=None, locale=N
             del channel['date_added']
         except KeyError:
             pass
+
         # XXX: tis a bit dangerous to assume max(cat)
         # is the child category. review this
-        channel['category'] = max(channel['category']) if isinstance(channel['category'], list) else channel['category']
+        for k, v in channel.iteritems():
+            if isinstance(v, (str, unicode)) and k.endswith('_url'):
+                channel[k] = urlparse.urljoin(url_for('basews.discover'), v)
+            if k == 'category':
+                channel[k] = max(channel[k]) if channel[k] and isinstance(channel[k], list) else channel[k]
+
         channel_list.append(channel)
         owner_list[channel['owner']] = None
 
     for owner in es_get_owners(conn, owner_list.keys()):
+        owner['resource_url'] = urlparse.urljoin(url_for('basews.discover'), owner['resource_url'])
+        owner['avatar_thumbnail'] = urlparse.urljoin(url_for('basews.discover'), owner['avatar_thumbnail'])
         owner_list[owner['id']] = owner
     es_owner_to_channel_map(channel_list, owner_list)
     return channel_list, channels.total
@@ -269,11 +293,11 @@ class VideoWS(WebService):
 
         conn = get_es_connection()
         videos, total = es_get_videos(conn,
-                category=category,
-                paging=self.get_page(),
-                star_order=request.args.get('star_order'),
-                locale=self.get_locale(),
-                date_order=request.args.get('date_order'))
+            category=category,
+            paging=self.get_page(),
+            star_order=request.args.get('star_order'),
+            locale=self.get_locale(),
+            date_order=request.args.get('date_order'))
 
         channels, _ = es_get_channels(conn, channel_ids=[v['channel'] for v in videos])
 
@@ -291,8 +315,8 @@ class ChannelWS(WebService):
     def channel_list(self):
         if not app.config.get('ELASTICSEARCH_URL'):
             data, total = get_local_channel(self.get_locale(),
-                    self.get_page(),
-                    category=request.args.get('category'))
+                self.get_page(),
+                category=request.args.get('category'))
             return dict(channels=dict(items=data, total=total))
 
         conn = get_es_connection()
@@ -313,22 +337,16 @@ class CategoryWS(WebService):
 
     endpoint = '/categories'
 
-    @staticmethod
-    def cat_dict(instance):
-        data = dict(
-            id=str(instance.id),
-            name=instance.name,
-            priority=instance.priority,
-        )
-        for c in instance.children:
-            data.setdefault('sub_categories', []).append(CategoryWS.cat_dict(c))
-        return data
-
-    def _get_cats(self, **filters):
-        cats = models.Category.query.filter_by(locale=self.get_locale(), parent=None)
-        return [self.cat_dict(c) for c in cats]
-
     @expose_ajax('/', cache_age=3600)
     def category_list(self):
-        data = self._get_cats(**request.args)
-        return dict(categories=dict(items=data))
+        items = []
+        children = defaultdict(list)
+        for cat in models.Category.query.filter(models.CategoryTranslation.category == models.Category.id,
+                models.CategoryTranslation.locale == self.get_locale()):
+            info = dict(id=str(cat.id), name=cat.translations[0].name, priority=cat.translations[0].priority)
+            if cat.parent:
+                children[cat.parent].append(info)
+            else:
+                info['sub_categories'] = children[cat.id]
+                items.append(info)
+        return dict(categories=dict(items=items))

@@ -225,7 +225,9 @@ def username_exists(username):
 def _es_owner_insert(mapper, connection, target):
     from rockpack.mainsite.core.es.api import add_owner_to_index
     from rockpack.mainsite.core.es import get_es_connection
-    add_owner_to_index(get_es_connection(), target)
+    conn = get_es_connection()
+    if conn is not None:
+        add_owner_to_index(get_es_connection(), target)
 
 
 event.listen(User, 'after_insert', _es_owner_insert)

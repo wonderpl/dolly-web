@@ -59,9 +59,9 @@ class VideoInstance(AdminView):
 
     form_overrides = dict(video_rel=wtf.TextField)
 
-    column_list = ('video_rel', 'video_channel', 'date_added', 'thumbnail')
+    column_list = ('video_rel', 'video_channel', 'date_added', 'category_rel', 'thumbnail')
     column_formatters = dict(thumbnail=_format_video_thumbnail, video_rel=_format_video_instance_link)
-    column_filters = ('video_channel', 'video_rel', 'metas')
+    column_filters = ('video_channel', 'video_rel', 'metas', 'category_rel')
     form_columns = ('video_channel', 'video_rel')
 
     inline_models = (VideoInstanceLocaleMetaFormAdmin(models.VideoInstanceLocaleMeta),)
@@ -73,17 +73,17 @@ class Source(AdminView):
 
 
 class ChildCategoryFormAdmin(InlineFormAdmin):
-    form_columns = ('name', 'priority', 'id')
+    form_columns = ('name', 'id')
 
 
 class Category(AdminView):
     model_name = 'category'
     model = models.Category
 
-    column_list = ('name', 'parent', 'locale')
-    column_filters = ('locale', 'parent')
+    column_list = ('name', 'parent', )
+    column_filters = ('parent', )
     column_searchable_list = ('name',)
-    form_columns = ('name', 'priority', 'locales')
+    form_columns = ('name', )
 
     inline_models = (ChildCategoryFormAdmin(models.Category),)
 
@@ -95,12 +95,9 @@ class Category(AdminView):
         return filters
 
 
-class CategoryMap(AdminView):
-    model_name = models.CategoryMap.__tablename__
-    model = models.CategoryMap
-
-    column_list = ('category_here.locale', 'category_here',
-                   'category_there.locale', 'category_there')
+class CategoryTranslation(AdminView):
+    model_name = models.CategoryTranslation.__tablename__
+    model = models.CategoryTranslation
 
 
 class Locale(AdminView):
@@ -151,8 +148,8 @@ class RockpackCoverArt(AdminView):
     model = coverart_models.RockpackCoverArt
     model_name = coverart_models.RockpackCoverArt.__tablename__
 
-    column_list = ('locale_rel', 'cover.thumbnail_large')
-    column_filters = ('locale_rel',)
+    column_list = ('locale_rel', 'cover.thumbnail_large', 'category_rel')
+    column_filters = ('locale_rel', 'category_rel')
 
     edit_template = 'admin/cover_art.html'
 
@@ -180,6 +177,13 @@ class ChannelLocaleMeta(AdminView):
     column_filters = ('channel_rel', 'channel_locale')
 
 
+class ContentReport(AdminView):
+    model_name = 'content_report'
+    model = models.ContentReport
+
+    column_filters = ('date_created', 'reviewed', 'object_type')
+
+
 class ExternalCategoryMap(AdminView):
     model_name = 'external_category_map'
     model = models.ExternalCategoryMap
@@ -187,8 +191,8 @@ class ExternalCategoryMap(AdminView):
 
 registered = [
     Video, VideoInstanceLocaleMeta, VideoThumbnail, VideoInstance,
-    Source, Category, CategoryMap, Locale, RockpackCoverArt,
-    UserCoverArt, Channel, ChannelLocaleMeta, ExternalCategoryMap]
+    Source, Category, CategoryTranslation, Locale, RockpackCoverArt,
+    UserCoverArt, Channel, ChannelLocaleMeta, ContentReport, ExternalCategoryMap]
 
 
 def admin_views():

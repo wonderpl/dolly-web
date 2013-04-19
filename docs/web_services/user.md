@@ -448,6 +448,39 @@ Content-Type: application/json
 }
 ```
 
+Channel Videos
+==============
+
+### Get
+
+Get a list of users who are subscribed to a channel.
+
+```http
+GET /ws/USERID/channels/CHANNELID/subscribers/ HTTP/1.1
+```
+
+Returns a list of user records.
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{
+ "users": {
+  "items": [
+   {
+    "display_name": "Paul Egan",
+    "resource_url": "http://path/to/user/detail/",
+    "avatar_thumbnail_url": "http://path/to/user/avatar/img.jpg",
+    "id": "4vsl71w2T12q1k2RwVhdzg",
+    "position": 0
+   }
+  ],
+  "total": 1
+ }
+}
+```
+
 User Activity
 =============
 
@@ -599,19 +632,35 @@ GET /ws/USERID/subscriptions/ HTTP/1.1
 Authorization: Bearer TOKEN
 ```
 
-Each item in the response includes a `resource_url`, used for deleting/unsubscribing,
-and a `channel_url` for retrieving detail about the channel.
+Returns a list of channel records, similar to the popular channels service but
+including `subscription_resource_url` field (used for deleting/unsubscribing).
 
 ```http
 HTTP/1.1 200 OK
 Content-Type: application/json
 
 {
- "subscriptions": {
+ "channels": {
   "items": [
    {
-    "resource_url": "http://path/to/channel/subscription/item/",
-    "channel_url": "http://path/to/associated/channel/info/"
+    "position": 0,
+    "id": "chsE-yf_sySKqvLvV0_SVw1A",
+    "resource_url": "http://path/to/channel/detail/",
+    "subscription_resource_url": "http://path/to/subscription/resource/",
+    "category": 215,
+    "subscribe_count": 30,
+    "description": "desc",
+    "title": "title",
+    "public": true,
+    "cover_thumbnail_small_url": "http://path/to/thumbnail/small.jpg",
+    "cover_thumbnail_large_url": "http://path/to/thumbnail/large.jpg",
+    "cover_background_url": "http://path/to/thumbnail/background.jpg",
+    "owner": {
+     "id": "qC3ZtYRqQNCAUzrsIeWmUg",
+     "avatar_thumbnail_url": "http://path/to/user/avatar/img.jpg",
+     "resource_url": "http://path/to/user/resource/",
+     "display_name": "user name"
+    }
    }
   ],
   "total": 1
@@ -727,4 +776,51 @@ Cache-Control: private, max-age=60
   ]
  }
 }
+```
+
+Content Report
+==============
+
+### Post
+
+Post a record of content the user has flagged as inappropriate.
+
+```http
+POST /ws/USERID/content_report/?locale=LOCALE HTTP/1.1
+Authorization: Bearer TOKEN
+Content-Type: application/json
+
+{
+ "object_type": "channel",
+ "object_id": "123"
+}
+```
+
+Parameter      | Required? | Value                       | Description
+:------------- | :-------- | :-------------------------- | :----------
+object_type    | yes       | `channel`, `video`, `user`  | Specifies the type of content
+object_id      | yes       | unique content id           | The id of the channel, video, or user
+locale         | no        | IETF language tag           |
+
+On error:
+
+```http
+HTTP/1.1 400 BAD REQUEST
+Content-Type: application/json
+
+{
+ "error": "invalid_request",
+ "form_errors": {
+  "object_id": [
+   "invalid id"
+  ]
+ }
+}
+```
+
+On success:
+
+```http
+HTTP/1.1 204 NO CONTENT
+Content-Type: application/json
 ```
