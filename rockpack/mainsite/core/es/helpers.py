@@ -11,38 +11,29 @@ init_app()
 conn = get_es_connection()
 
 
-
-try:
-    conn.indices.create_index(mappings.USER_INDEX)
-except:
-    pass
+def delete_index(conn, index):
+    conn.indices.delete_index_if_exists(index)
 
 
-try:
-    conn.indices.create_index(mappings.CHANNEL_INDEX)
-except:
-    pass
-
-
-try:
-    conn.indices.create_index(mappings.VIDEO_INDEX)
-except:
-    pass
+def build_indexes(rebuild=False):
+    for index in (mappings.USER_INDEX, mappings.CHANNEL_INDEX, mappings.VIDEO_INDEX):
+        if rebuild:
+            delete_index(conn, index)
+        conn.indices.create_index(index)
 
 
 conn.indices.put_mapping(mappings.VIDEO_TYPE, mappings.video_mapping, [mappings.VIDEO_INDEX])
 conn.indices.put_mapping(mappings.CHANNEL_TYPE, mappings.channel_mapping, [mappings.CHANNEL_INDEX])
 
 
-def delete_index(conn, index):
-    conn.indices.delete_index_if_exists(index)
-
-
 def import_owners():
     from rockpack.mainsite.services.user import models
     with app.test_request_context():
+        print '--------------- importing owners'
+        query = models.User.query.all()
+        total = query.count()
         for user in models.User.query.all():
-            print conn.index({
+            conn.index({
                 'id': user.id,
                 'avatar_thumbnail': str(user.avatar),
                 'resource_url': user.get_resource_url(False),
@@ -52,7 +43,7 @@ def import_owners():
                 mappings.USER_INDEX,
                 mappings.USER_TYPE,
                 id=user.id)
-    print 'done'
+    print '{} imported.'.format(total)
 
 
 def import_channels():
@@ -63,6 +54,7 @@ def import_channels():
     cat_map = {c[0]:c[1] for c in Category.query.filter(Category.parent!=None).values('id', 'parent')}
 
     with app.test_request_context():
+        print '--------------- importing channels'
         for i, channel in enumerate(Channel.query.filter(Channel.public == True)):
             try:
                 category = [channel.category, cat_map[channel.category]] if channel.category else []
@@ -95,10 +87,9 @@ def import_videos():
     with app.test_request_context():
         query = VideoInstance.query.join(Channel, Video).filter(Video.visible == True, Channel.public == True)
         total = query.count()
-        print '{} to import'.format(total)
         step = 400
+        print '--------------- importing videos: stepping in {}s of {}'.format(step, total)
         for i in xrange(0, total, step):
-            print '--------------- {} to {} of {}'.format(i, i + step, total)
             for v in query.offset(i).limit(step):
                 api.add_video_to_index(
                     conn,
