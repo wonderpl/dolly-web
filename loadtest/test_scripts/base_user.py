@@ -1,3 +1,5 @@
+import sys
+import os
 import time
 import random
 import re
@@ -8,9 +10,16 @@ import simplejson as json
 import requests
 
 
-SERVER = 'http://10.250.237.240'
-DISCOVER_URL = 'http://lb.us.rockpack.com/ws/'
-CLIENT_AUTH_HEADER = 'Authorization', 'Basic YzhmZTVmNnJvY2s4NzNkcGFjazE5UTo='
+sys.path.append(reduce(lambda d, _: os.path.dirname(d), xrange(3), os.path.abspath(__file__)))
+try:
+    from rockpack.mainsite import app
+except ImportError:
+    app = type('App', (object,), dict(config={}))
+
+
+SERVER = app.config.get('LOADTEST_SERVER', 'http://127.0.0.1:5000')
+DISCOVER_URL = app.config.get('LOADTEST_DISCOVER_URL', 'http://lb.us.rockpack.com/ws/')
+CLIENT_AUTH_HEADER = app.config.get('CLIENT_AUTH_HEADER', ('Authorization', 'Basic YzhmZTVmNnJvY2s4NzNkcGFjazE5UTo='))
 
 
 class BaseTransaction(object):
