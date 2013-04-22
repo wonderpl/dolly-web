@@ -1,9 +1,8 @@
-import requests
 from urllib import urlencode
 from urlparse import urljoin
 from flask import request, json, render_template
 from flask.ext import wtf
-from rockpack.mainsite import app
+from rockpack.mainsite import app, requests
 from rockpack.mainsite.core.token import parse_access_token
 from rockpack.mainsite.core.webservice import secure_view, JsonReponse
 from rockpack.mainsite.services.user.models import User

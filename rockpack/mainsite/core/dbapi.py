@@ -70,7 +70,10 @@ def sync_database():
 
 def get_sessionmanager(config=app.config['DATABASE_URL']):
     app.config['SQLALCHEMY_DATABASE_URI'] = config
-    return sqlalchemy.SQLAlchemy(app)
+    db = sqlalchemy.SQLAlchemy(app)
+    if app.config.get('USE_GEVENT'):
+        db.engine.pool._use_threadlocal = True
+    return db
 
 
 class _Model(sqlalchemy.Model):
