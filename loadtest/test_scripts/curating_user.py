@@ -31,7 +31,7 @@ class Transaction(BaseTransaction):
                       token=self.token)
             #yield True
 
-        category = random.choice(self.get_cat_ids())
+        category = random.choice(self.get_categories())
         cover = random.choice(self.get(self.urls['cover_art'])['cover_art']['items'])['cover_ref']
         chdata = dict(
             title=uuid.uuid4().hex,

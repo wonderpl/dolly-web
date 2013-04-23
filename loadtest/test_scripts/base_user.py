@@ -84,9 +84,9 @@ class BaseTransaction(object):
             self.urls[key] = userinfo[key]['resource_url']
         return userinfo
 
-    def get_cat_ids(self):
+    def get_categories(self, field='id'):
         categories = self.get(self.urls['categories'])['categories']['items']
-        return [c['id'] for c in chain(categories,
+        return [c[field] for c in chain(categories,
                 *(c.get('sub_categories', []) for c in categories))]
 
     def test(self):
