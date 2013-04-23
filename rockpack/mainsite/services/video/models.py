@@ -260,6 +260,9 @@ class Channel(db.Model):
     description = Column(Text, nullable=False)
     cover = Column(ImageType('CHANNEL', reference_only=True), nullable=False)
     public = Column(Boolean(), nullable=False, server_default='true', default=True)
+    view_count = Column(Integer, nullable=False, server_default='0', default=0)
+    star_count = Column(Integer, nullable=False, server_default='0', default=0)
+    subscriber_count = Column(Integer, nullable=False, server_default='0', default=0)
     date_added = Column(DateTime(), nullable=False, default=func.now())
     date_updated = Column(DateTime(), nullable=False, default=func.now(), onupdate=func.now())
     ecommerce_url = Column(String(1024), nullable=False, server_default='')
@@ -313,6 +316,9 @@ class Channel(db.Model):
                 getattr(v, 'id', v)
                 for v in videos.query.filter_by(channel=self.id)))
 
+    def add_meta(self, locale):
+        return ChannelLocaleMeta(channel=self.id, locale=locale).save()
+
     @classmethod
     def should_be_public(self, channel, public):
         """ Return False if conditions for
@@ -333,6 +339,7 @@ class ChannelLocaleMeta(db.Model):
 
     id = Column(CHAR(24), primary_key=True)
     visible = Column(Boolean(), nullable=False, server_default='true', default=True)
+    subscriber_count = Column(Integer, nullable=False, server_default='0', default=0)
     view_count = Column(Integer, nullable=False, server_default='0', default=0)
     star_count = Column(Integer, nullable=False, server_default='0', default=0)
     date_added = Column(DateTime(), nullable=False, default=func.now())

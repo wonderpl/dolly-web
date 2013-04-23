@@ -25,7 +25,8 @@ def channel_dict(channel, with_owner=True, owner_url=False):
         title=channel.title,
         thumbnail_url=channel.cover.thumbnail_large,
         description=channel.description,
-        subscribe_count=0,  # TODO: implement this for real
+        subscriber_count=channel.subscriber_count,
+        subscribe_count=channel.subscriber_count,   # XXX: backwards compatibility
         public=channel.public,
         category=channel.category,
     )

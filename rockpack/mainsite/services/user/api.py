@@ -14,7 +14,7 @@ from rockpack.mainsite.core.youtube import get_video_data
 from rockpack.mainsite.helpers.urls import url_for, url_to_endpoint
 from rockpack.mainsite.helpers.db import gen_videoid
 from rockpack.mainsite.services.video.models import (
-    Channel, Video, VideoInstance, VideoInstanceLocaleMeta, Category, ContentReport)
+    Channel, ChannelLocaleMeta, Video, VideoInstance, VideoInstanceLocaleMeta, Category, ContentReport)
 from rockpack.mainsite.services.cover_art.models import UserCoverArt, RockpackCoverArt
 from rockpack.mainsite.services.cover_art import api as cover_api
 from rockpack.mainsite.services.video import api as video_api
@@ -27,6 +27,8 @@ ACTION_COLUMN_VALUE_MAP = dict(
     select=('view_count', 1),
     star=('star_count', 1),
     unstar=('star_count', -1),
+    subscribe=('subscriber_count', 1),
+    unsubscribe=('subscriber_count', -1),
 )
 
 
@@ -131,6 +133,21 @@ def save_video_activity(user, action, instance_id, locale):
                 channel.remove_videos([video_id])
             else:
                 channel.add_videos([video_id])
+
+
+@commit_on_success
+def save_channel_activity(channelid, action, locale):
+    """Update channel with subscriber, view, or star count changes."""
+    try:
+        column, value = ACTION_COLUMN_VALUE_MAP[action]
+    except KeyError:
+        abort(400, message='invalid action')
+    incr = lambda m: {getattr(m, column): getattr(m, column) + value}
+    # Update channel record:
+    Channel.query.filter_by(id=channelid).update(incr(Channel))
+    # Update or create locale meta record:
+    ChannelLocaleMeta.query.filter_by(channel=channelid, locale=locale).update(incr(ChannelLocaleMeta)) or \
+        ChannelLocaleMeta(channel=channelid, locale=locale, **{column: value}).save()
 
 
 @commit_on_success
@@ -284,9 +301,9 @@ class UserWS(WebService):
     @expose_ajax('/<userid>/', cache_age=60, secure=False)
     def user_info(self, userid):
         user = User.query.get_or_404(userid)
-        channels = [video_api.channel_dict(c, with_owner=False, owner_url=False) for c in
-                    Channel.query.options(lazyload('category_rel')).\
-                        filter_by(owner=user.id, deleted=False, public=True)]
+        channels = [video_api.channel_dict(c, with_owner=False, owner_url=False)
+                    for c in Channel.query.options(lazyload('category_rel')).
+                    filter_by(owner=user.id, deleted=False, public=True)]
         return dict(
             id=user.id,
             name=user.username,     # XXX: backwards compatibility
@@ -380,6 +397,9 @@ class UserWS(WebService):
                             form.action.data,
                             form.video_instance.data,
                             self.get_locale())
+        channelid = VideoInstance.query.filter_by(id=form.video_instance.data).value('channel')
+        if channelid:
+            save_channel_activity(channelid, form.action.data, self.get_locale())
 
     @expose_ajax('/<userid>/content_reports/', methods=['POST'])
     @check_authorization(self_auth=True)
@@ -539,7 +559,10 @@ class UserWS(WebService):
         channelid = args['channelid']
         if not Channel.query.filter_by(id=channelid, deleted=False).count():
             abort(400, message='Channel not found')
+        if Subscription.query.filter_by(user=userid, channel=channelid).count():
+            abort(400, message='Already subscribed')
         subs = Subscription(user=userid, channel=channelid).save()
+        save_channel_activity(channelid, 'subscribe', self.get_locale())
         return ajax_create_response(subs)
 
     @expose_ajax('/<userid>/subscriptions/<channelid>/')
@@ -554,6 +577,7 @@ class UserWS(WebService):
     def delete_subscription_item(self, userid, channelid):
         if not user_subscriptions(userid).filter_by(channel=channelid).delete():
             abort(404)
+        save_channel_activity(channelid, 'unsubscribe', self.get_locale())
 
     @expose_ajax('/<userid>/subscriptions/recent_videos/', cache_age=60, cache_private=True)
     @check_authorization(self_auth=True)
@@ -562,7 +586,7 @@ class UserWS(WebService):
         if subscriptions.count():
             channels = [s[0] for s in subscriptions.values('channel')]
             items, total = video_api.get_local_videos(self.get_locale(), self.get_page(),
-                                                     date_order=True, channels=channels)
+                                                      date_order=True, channels=channels)
         else:
             items, total = [], 0
         return dict(videos=dict(items=items, total=total))
