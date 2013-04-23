@@ -1,3 +1,4 @@
+import os
 import logging
 from flask import Flask
 
@@ -24,6 +25,8 @@ else:
 # for pyflakes
 requests
 
+# hack to avoid django import issues via pyes
+os.environ['DJANGO_SETTINGS_MODULE'] = 'none'
 
 SERVICES = (
     'rockpack.mainsite.services.base',
