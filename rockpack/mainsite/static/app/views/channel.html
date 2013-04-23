@@ -2,25 +2,18 @@
   <img ng-src="{{channel.cover_background_url}}" id="bgimage">   
   <div class="channelheader">
     <div class="wrapper" ng-style="wrapperWidth()">
-      <ul>
-        <li><img class="user-profile" ng-src="{{channel.owner.avatar_thumbnail_url}}"></li>
-        <li class="title">
-          <h1>{{channel.title| truncate: channelTitleLength}}</h1>
-          <h4>BY {{channel.owner.name}}</h4>
-        </li>
-        <li class="right hidden-phone getappcontainer"><a href="#" class="btn btn-blue getappbtn">Get the app</a> <h2 class="hidden-tablet">Curated with Rockpack on ipad</h2></li>
+      <h1>{{channel.title| truncate: channelTitleLength}}</h1>
+      <div id="details">{{channel.videos.total}} Videos / {{channel.subscribe_count}} Subscribers</div>
+      <ul id="userdetails">
+          <li><img class="user-profile" ng-src="{{channel.owner.avatar_thumbnail_url}}"></li>
+          <li id="curatedby">curated by <span id="username">{{channel.owner.name}}</span></li>
       </ul>
+      <a href="#" class="btn btn-blue getappbtn">Create Your Channel</a>
     </div>
   </div>
   <div id="channeloverlay" class="clearfix" when-scrolled="load_videos()">
     <div ng-include src="'videoplayer.html'"></div>
     <div class="wrapper" ng-style="wrapperWidth()">
-      <ul class="channeldetails">
-        <li><div class="bluenumber">{{channel.videos.total}}</div><div class="desc">Videos</div></li>
-        <li><div class="bluenumber">{{channel.subscribe_count}}</div><div class="desc">Followers</div></li>
-        <li class="channeldesc hidden-phone">{{channel.description | truncate: channelDescriptionLength}}</li>
-        <li class="visible-phone"><a href="#" class="btn btn-blue">Get the app</a></li>
-      </ul>
       <ul id="videoslist">
         <li ng-click="setCurrentVideo(video)" ng-repeat="video in channel.videos.items" video-cell></li>
       </ul>

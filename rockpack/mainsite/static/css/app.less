@@ -23,29 +23,29 @@ html, body {
 
 #topnav {
   
-  height: 60px;
+  height: 50px;
   background: url(/static/images/headerbg.png) repeat-x;
-  background-size: 24px 60px;
-  -webkit-box-shadow:  0px 2px 8px 0px rgba(0, 0, 0, 0.99);    
-  box-shadow:  0px 2px 8px 0px rgba(0, 0, 0, 0.99);
   overflow: hidden;
   position: fixed;
   top: 0;
   width: 100%;
   z-index: 100;
+  -webkit-box-shadow:  0px 2px 2px 0px rgba(0, 0, 0, 0.15);
+  box-shadow:  0px 2px 2px 0px rgba(0, 0, 0, 0.15);
+
 
   #rightmenu {
     float: right;
 
     li {
       &:first-child {
-        -webkit-box-shadow:  -2px -1px 1px 0px rgba(0, 0, 0, 0.2);    
-        box-shadow:  -2px -1px 1px 0px rgba(0, 0, 0, 0.2);
+        -webkit-box-shadow:  -1px -1px 1px 0px rgb(238, 238, 238);
+        box-shadow:  -1px -1px 1px 0px rgb(238, 238, 238);
       }
 
       &:last-child {
-        -webkit-box-shadow:  2px 1px 1px 0px rgba(255, 255, 255, 0.1);    
-        box-shadow:  2px 1px 1px 0px rgba(255, 255, 255, 0.1);
+        -webkit-box-shadow:  1px 1px 1px 0px rgb(255, 255, 255);
+        box-shadow:  1px 1px 1px 0px rgb(255, 255, 255);
       }
     }
   }
@@ -63,8 +63,8 @@ html, body {
       }
 
       &:last-child {
-        -webkit-box-shadow:  2px 1px 1px 0px rgba(255, 255, 255, 0.1);    
-        box-shadow:  2px 1px 1px 0px rgba(255, 255, 255, 0.1);
+        -webkit-box-shadow:  1px 1px 1px 0px rgb(255, 255, 255);
+        box-shadow:  1px 1px 1px 0px rgb(255, 255, 255);
       }
 
     }
@@ -77,73 +77,41 @@ html, body {
 
   li {
     float: left;
-    border-right: 1px solid rgba(0, 0, 0, .2);
-    border-left: 1px solid rgba(255, 255, 255, .1);
-    line-height: 70px;
+    border-right: 1px solid rgb(238, 238, 238);
+    border-left: 1px solid rgb(255, 255, 255);
+    line-height: 52px;
     text-align: center;
-    -webkit-transition: all 0.5s;
-    -moz-transition: all 0.5s;
-    -ms-transition: all 0.5s;
-    -o-transition: all 0.5s;
-    transition: all 0.5s;
-
-
 
     a {
       display:inline-block;
       padding: 0 20px;
-      color: #fff;
+      color: #282d33;
       font-family:'dn-bold';
       font-size: 14px;
       text-transform: uppercase;
-      text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.75);
       text-decoration:none;
-      -webkit-transition: all 0.3s;
-      -moz-transition: all 0.3s;
-      -ms-transition: all 0.3s;
-      -o-transition: all 0.3s;
-      transition: all 0.3s;
-
-      &.gettheapp {
-        background: url(/static/images/getTheApp.png) no-repeat -19px 0;
-        padding-left: 50px;
-      }
-      &.gettheapp:hover {
-        background: url(/static/images/getTheAppHover.png) repeat-y -19px 60px;
-        -webkit-transition: all 0.15s;
-        -moz-transition: all 0.15s;
-        -ms-transition: all 0.15s;
-        -o-transition: all 0.15s;
-        transition: all 0.15s;
-      }
 
       &:hover {
-        color:#57def3;
+        color: #fff;
       }
     }
 
     &:hover {
-      background: rgba(28,31,33,0.6) url(/static/images/headerbghover.png) repeat-x 0 0;
+      background: url(/static/images/headerbghover.png) repeat-x 0 0;
 
     }
 
     &:active, &.active {
-      background: rgba(0,0,0,1.0) url(/static/images/headerbg.png) repeat-x 0 0;
-      
-
+      background: url(/static/images/headerbg.png) repeat-x 0 0;
     }
 
     &.logo {
       
       img {
-        width: 139px;
-        height: 31px;
+        width: 115px;
+        height: 22px;
         margin-top: -8px;
         margin-left: 7px;
-      }
-
-      &:hover {
-        background: none;
       }
     }
 
@@ -235,14 +203,10 @@ body {
 
 .channelheader {
   text-transform: uppercase;  
-  margin-top: 400px;
-  background: url(/static/images/channelHeaderBg.png) repeat-x;
-  height: 77px;
-  -webkit-box-shadow:  4px 4px 4px 6px rgba(0, 0, 0, 0.3);
-  box-shadow:  4px 4px 4px 6px rgba(0, 0, 0, 0.3);    
+  margin-top: 150px;
 
   .getappbtn {
-    margin-right: 5px;
+    margin: 30px 0 90px 0;
   }
 
   .getappcontainer {
@@ -269,7 +233,7 @@ body {
   h1 {
     color: #f2f3f3;
     font-family: "dn-regular";
-    font-size: 27px;
+    font-size: 55px;
     line-height: 27px;
     margin: 0 0 5px 0;
     padding: 0;
@@ -296,22 +260,49 @@ body {
     font-weight: normal;
     text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.75);
   }
+
+  #details {
+    color: #fff;
+    font-family: "dn-regular";
+    font-size: 15px;
+    margin: 30px 0;
+  }
+
+  #userdetails {
+
+    color: #fff;
+    font-size: 18px;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    text-shadow: 2px 2px 5px rgba(0,0,0,0.2);
+
+    li {
+      float: left;
+    }
+
+    #curatedby {
+      margin: 10px 0 0 15px;
+
+      #username {
+        font-family: "dn-bold";
+        display: block;
+        margin-top: 8px;
+      }
+    }
+  }
 }
 
 #channeloverlay {
-  background: #f3f3f3 url(/static/images/channelbg.png) repeat-x;
+  background: url(/static/images/channelbg.png) repeat-x;
   padding-bottom: 30px;
+  background-position: fixed;
+  min-height: 500px;
 
   ul {
     list-style: none;
     padding: 0;
     .clearfix();
-  }
-
-  .bluenumber {
-    font-size: 18px;
-    font-family: "dn-bold";
-    color: #888;
   }
 
   .desc {
@@ -321,33 +312,13 @@ body {
     text-transform: uppercase;
     text-shadow: 1px 1px 1px rgba(255, 255, 255, 1);
   }
-
-  .channeldetails {
-    padding: 28px 0 24px 10px;
-    margin: 0;
-
-    li {
-      display: inline-block;      
-      margin-right: 65px;
-      text-align: center;
-    }
-
-    .channeldesc {
-      margin-right: 0;
-      text-align: left;
-      width: 70%;
-      color: #515151;
-      text-shadow: 1px 1px 1px rgba(255, 255, 255, 1);
-    }
-  } 
-
 }
 
 .user-profile {
-  max-width: 44px;
+  max-width: 60px;
   height: auto;
   width: auto;
-  border: 1px solid #2d3136;
+  border: 2px solid #fff;
   vertical-align: bottom;
   -webkit-box-shadow:  0px 0px 6px 1px rgba(0, 0, 0, 0.4);    
   box-shadow:  0px 0px 6px 1px rgba(0, 0, 0, 0.4);      
@@ -785,24 +756,6 @@ footer {
     }
   }
 
-  #channeloverlay {
-
-    .bluenumber {
-      font-size: 15px;
-    }
-
-    .channeldetails {
-
-      li {
-        margin-right: 20px;
-
-        &:last-child {
-          margin-right: 0;
-        }
-      }
-    }
-  }
-
   #videoslist {
     li {
       margin: 0 5px 24px 5px;
@@ -867,14 +820,5 @@ footer {
 
   #topnav {
     height: 60px;    
-  }
-  
-
-  #channeloverlay {
-    .channeldetails {
-      .channeldesc {
-        width: 60%;
-      }
-    }
   }
 }
