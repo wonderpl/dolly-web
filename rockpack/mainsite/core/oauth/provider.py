@@ -1,6 +1,6 @@
-import json
 from datetime import datetime
 import flask
+from flask import json
 from flask.ext import login
 from pyoauth2.provider import AuthorizationProvider, ResourceProvider
 

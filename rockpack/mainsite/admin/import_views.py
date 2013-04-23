@@ -2,11 +2,11 @@ import re
 import logging
 from datetime import date
 from cStringIO import StringIO
-import requests
 from flask import request, url_for, redirect, flash, jsonify
 from flask.ext import wtf, login
 from flask.ext.admin import BaseView, expose, form
 from wtforms.validators import ValidationError
+from rockpack.mainsite import requests
 from rockpack.mainsite.core.dbapi import commit_on_success, db
 from rockpack.mainsite.core import youtube
 from rockpack.mainsite.helpers.db import resize_and_upload
@@ -88,6 +88,8 @@ class ImportView(BaseView):
 
     @commit_on_success
     def _import_videos(self, form):
+        for video in form.import_data.videos:
+            video.rockpack_curated = True
         count = Video.add_videos(
             form.import_data.videos,
             form.source.data,

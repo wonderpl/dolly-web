@@ -1,7 +1,6 @@
 import logging
 from flask import Flask
 
-#from rockpack.services.video import api
 
 app = Flask(__name__)
 
@@ -11,6 +10,19 @@ def configure():
     app.config.from_pyfile('settings/local.py', silent=True)
     app.config.from_envvar('ROCKPACK_SETTINGS', silent=True)
 configure()
+
+
+if app.config.get('USE_GEVENT'):
+    from gevent.monkey import patch_all
+    patch_all()
+    from psycogreen.gevent import patch_psycopg
+    patch_psycopg()
+    import grequests as requests
+else:
+    import requests
+
+# for pyflakes
+requests
 
 
 SERVICES = (
@@ -23,6 +35,7 @@ SERVICES = (
     'rockpack.mainsite.services.pubsubhubbub',
 )
 REGISTER_SETUPS = (
+    ('rockpack.mainsite.core.timing', 'setup_timing'),
     ('rockpack.mainsite.core.webservice', 'setup_abort_mapping'),
     ('rockpack.mainsite.admin.auth', 'setup_auth'),
     ('rockpack.mainsite.admin', 'setup_admin'),

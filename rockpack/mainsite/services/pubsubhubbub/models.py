@@ -1,11 +1,10 @@
 from datetime import datetime, timedelta
 import hmac
 import hashlib
-import requests
 from sqlalchemy import (Column, Integer, String, Boolean,
                         DateTime, ForeignKey, UniqueConstraint, func)
 from sqlalchemy.orm import relationship
-from rockpack.mainsite import app
+from rockpack.mainsite import app, requests
 from rockpack.mainsite.core.dbapi import db
 from rockpack.mainsite.helpers.db import make_id
 from rockpack.mainsite.helpers.urls import url_for

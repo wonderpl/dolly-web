@@ -75,6 +75,8 @@ DEFAULT_AVATAR = ''
 
 DEFAULT_EMAIL_SOURCE = 'rockpack <noreply@rockpack.com>'
 
+ENABLE_TIMINGS = True
+
 # Toggle to enable test url
 TEST_EXTERNAL_SYSTEM = False
 

@@ -1,9 +1,8 @@
 from datetime import datetime, timedelta
 from cStringIO import StringIO
-import requests
 from flask import request, abort, g
 from flask.ext import wtf
-from rockpack.mainsite import app
+from rockpack.mainsite import app, requests
 from rockpack.mainsite.helpers.db import get_column_property, get_column_validators
 from rockpack.mainsite.helpers.urls import url_for
 from rockpack.mainsite.core.token import create_access_token

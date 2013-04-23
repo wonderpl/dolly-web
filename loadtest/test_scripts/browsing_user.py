@@ -14,7 +14,7 @@ class Transaction(BaseTransaction):
         - Sleep up to 1s between each action
         """
         self.register_user()
-        for cat_id in random.sample(self.get_cat_ids(), random.randint(1, 5)):
+        for cat_id in random.sample(self.get_categories(), random.randint(1, 5)):
             channels = self.get(self.urls['popular_channels'], dict(category=cat_id))['channels']['items']
             for channel in channels[:random.randint(0, min(5, len(channels)))]:
                 videos = self.get(channel['resource_url'])['videos']['items']

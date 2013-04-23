@@ -85,7 +85,7 @@ Cache-Control: public, max-age=300
           "name": "Jimmy Wales",
           "id": "ziCAgGxbRpW-HNYTloYkQg"
         },
-        "subscribe_count": 69,
+        "subscriber_count": 69,
         "cover_thumbnail_large_url": "http://media.dev.rockpack.com/images/channel/thumbnail_large/hJSke4WyRci0mqhHzlZSZg.jpg",
         "cover_thumbnail_small_url": "http://media.dev.rockpack.com/images/channel/thumbnail_small/hJSke4WyRci0mqhHzlZSZg.jpg",
         "cover_background_url": "http://media.dev.rockpack.com/images/channel/background/hJSke4WyRci0mqhHzlZSZg.jpg"

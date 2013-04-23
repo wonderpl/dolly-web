@@ -31,7 +31,8 @@ def channel_dict(channel, with_owner=True, owner_url=False):
         title=channel.title,
         thumbnail_url=channel.cover.thumbnail_large,
         description=channel.description,
-        subscribe_count=0,  # TODO: implement this for real
+        subscriber_count=channel.subscriber_count,
+        subscribe_count=channel.subscriber_count,   # XXX: backwards compatibility
         public=channel.public,
         category=channel.category,
     )
@@ -344,14 +345,17 @@ class CategoryWS(WebService):
 
     @expose_ajax('/', cache_age=3600)
     def category_list(self):
+        translations = dict((c.category, (c.name, c.priority)) for c in
+                            models.CategoryTranslation.query.filter_by(locale=self.get_locale()))
         items = []
         children = defaultdict(list)
-        for cat in models.Category.query.filter(models.CategoryTranslation.category == models.Category.id,
-                models.CategoryTranslation.locale == self.get_locale()):
-            info = dict(id=str(cat.id), name=cat.translations[0].name, priority=cat.translations[0].priority)
-            if cat.parent:
-                children[cat.parent].append(info)
-            else:
-                info['sub_categories'] = children[cat.id]
-                items.append(info)
+        for cat in models.Category.query.all():
+            name, priority = translations.get(cat.id, (None, None))
+            if name:
+                info = dict(id=str(cat.id), name=name, priority=priority)
+                if cat.parent:
+                    children[cat.parent].append(info)
+                else:
+                    info['sub_categories'] = children[cat.id]
+                    items.append(info)
         return dict(categories=dict(items=items))

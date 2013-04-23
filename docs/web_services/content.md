@@ -80,7 +80,7 @@ Cache-Control: public, max-age=3600
         "position": 0,
         "id": "Tr3dHIt5_K9qdG",
         "channel": {
-          "subscribe_count": 113,
+          "subscriber_count": 113,
           "title": "Trending and featured",
           "cover_thumbnail_large_url": "http://path/to/channel/large.jpg",
           "thumbnail_url": "http://path/to/channel/tmb.jpg",
@@ -140,7 +140,7 @@ Cache-Control: public, max-age=3600
      "display_name": "User display name",
      "avatar_thumbnail_url": "https://path/to/avatar/small.jpg"
     },
-    "subscribe_count": 119
+    "subscriber_count": 119
    }
   ]
  }

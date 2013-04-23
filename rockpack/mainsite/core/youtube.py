@@ -1,6 +1,5 @@
 from collections import namedtuple
-import requests
-from rockpack.mainsite import app
+from rockpack.mainsite import app, requests
 from rockpack.mainsite.services.video.models import Video, VideoThumbnail, VideoRestriction
 
 
