@@ -1,9 +1,9 @@
 import time
 import logging
+import requests
 from functools import wraps
 from flask import request, json
 from sqlalchemy.engine.base import Connection
-import requests.api
 
 
 statsd_client = None
@@ -71,5 +71,6 @@ def setup_timing(app):
         json.dumps = wrap(json.dumps, 'json.')
         Connection.execute = wrap(Connection.execute, 'db.')
         requests.api.request = wrap(requests.api.request, 'requests.')
+        requests.Session.request = wrap(requests.Session.request, 'requests.')
         app.before_request(before_request)
         app.after_request(after_request)
