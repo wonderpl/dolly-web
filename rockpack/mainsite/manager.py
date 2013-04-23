@@ -69,7 +69,7 @@ def import_to_es():
     i = helpers.DBImport()
     i.import_channels()
     i.import_videos()
-    i.import_users()
+    i.import_owners()
 
 
 def run(*args):
