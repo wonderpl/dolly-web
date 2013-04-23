@@ -267,6 +267,7 @@ class Channel(db.Model):
     date_added = Column(DateTime(), nullable=False, default=func.now())
     date_updated = Column(DateTime(), nullable=False, default=func.now(), onupdate=func.now())
     ecommerce_url = Column(String(1024), nullable=False, server_default='')
+    subscribe_count = Column(Integer, nullable=False, server_default='0', default=0)
 
     category = Column(ForeignKey('category.id'), nullable=True)
     category_rel = relationship(Category, primaryjoin=(category == Category.id), lazy='joined')
@@ -295,7 +296,8 @@ class Channel(db.Model):
 
     def get_resource_url(self, own=False):
         view = 'userws.owner_channel_info' if own else 'userws.channel_info'
-        return url_for(view, userid=self.owner_rel.id, channelid=self.id)
+        return url_for(view, userid=self.owner, channelid=self.id)
+
     resource_url = property(get_resource_url)
 
     def add_videos(self, videos):
@@ -309,7 +311,9 @@ class Channel(db.Model):
             existing = [i.video for i in session.query(VideoInstance.video).
                         filter_by(channel=self.id).
                         filter(VideoInstance.video.in_(set(i.video for i in instances)))]
-            session.add_all(i for i in instances if i.video not in existing)
+            for i in instances:
+                if i.video not in existing:
+                    session.add_all(i)
 
     def remove_videos(self, videos):
         VideoInstance.remove_from_video_ids(
@@ -343,6 +347,7 @@ class ChannelLocaleMeta(db.Model):
     subscriber_count = Column(Integer, nullable=False, server_default='0', default=0)
     view_count = Column(Integer, nullable=False, server_default='0', default=0)
     star_count = Column(Integer, nullable=False, server_default='0', default=0)
+    subscribe_count = Column(Integer, nullable=False, server_default='0', default=0)
     date_added = Column(DateTime(), nullable=False, default=func.now())
     date_updated = Column(DateTime(), nullable=False, default=func.now(), onupdate=func.now())
 
@@ -371,6 +376,144 @@ class ContentReport(db.Model):
 
 
 ParentCategory = aliased(Category)
+
+
+def _locale_dict_from_object(metas):
+    locales = {el: {} for el in app.config.get('ENABLED_LOCALES')}
+    meta_dict = {m.locale: m for m in metas}
+    for loc in locales.keys():
+        meta = meta_dict.get(loc)
+        locales[loc] = {
+            'view_count': getattr(meta, 'view_count', 0),
+            'star_count': getattr(meta, 'star_count', 0)
+        }
+    return locales
+
+
+def _add_es_video(video_instance):
+    from rockpack.mainsite.core.es import get_es_connection, api
+    conn = get_es_connection()
+    if conn is not None:
+
+        video = Video.query.get(video_instance.video)
+        if video:
+            data = dict(
+                id=video_instance.id,
+                public=True,  # we only insert public records
+                video_id=video_instance.video,
+                title=video.title,
+                channel=video_instance.channel,
+                category=video_instance.category,
+                date_added=video_instance.date_added,
+                position=video_instance.position,
+                thumbnail_url=video.default_thumbnail if video.default_thumbnail else '',
+                source=video.source,
+                source_id=video.source_videoid,
+                duration=video.duration,
+                locale=_locale_dict_from_object(video_instance.metas))
+
+            print api.add_video_to_index(conn, data)
+
+
+def _add_es_channel(channel):
+    from rockpack.mainsite.core import es
+    conn = es.get_es_connection()
+    if conn is not None:
+
+        category = []
+        if channel.category:
+            category = Category.query.filter(
+                Category.parent is not None,
+                Category.id == channel.category).values('id', 'parent').next()
+
+        # HACK
+        if isinstance(channel.cover, (str, unicode)):
+            convert = lambda value: ImageType('CHANNEL').process_result_value(value, None)
+        else:
+            convert = lambda x: x
+
+        data = dict(
+            id=channel.id,
+            public=True,
+            category=category,
+            locale=_locale_dict_from_object(channel.metas),
+            owner_id=channel.owner,
+            subscribe_count=0,
+            date_added=channel.date_added,
+            description=channel.description,
+            resource_url=channel.get_resource_url(),
+            title=channel.title,
+            ecommerce_url=channel.ecommerce_url,
+            thumbnail_url=convert(channel.cover).thumbnail_large,
+            cover_thumbnail_small_url=convert(channel.cover).thumbnail_small,
+            cover_thumbnail_large_url=convert(channel.cover).thumbnail_large,
+            cover_background_url=convert(channel.cover).background)
+
+        print es.api.add_channel_to_index(conn, data)
+
+
+def _remove_es_channel(channel):
+    from rockpack.mainsite.core import es
+    conn = es.get_es_connection()
+    if conn is not None:
+        es.api.remove_channel_from_index(conn, channel.id)
+
+
+def _remove_es_video_instance(video_instance):
+    from rockpack.mainsite.core import es
+    conn = es.get_es_connection()
+    if conn is not None:
+        es.api.remove_video_from_index(conn, video_instance.id)
+
+
+@event.listens_for(VideoInstanceLocaleMeta, 'after_update')
+def _video_insert(mapper, connection, target):
+    _add_es_video(target.video_instance_rel)
+
+
+@event.listens_for(Video, 'after_update')
+def _video_update(mapper, connection, target):
+    if not target.visible:
+        for i in VideoInstance.query.filter_by(video=target.id):
+            _remove_es_video_instance(i)
+
+
+@event.listens_for(VideoInstance, 'after_insert')
+def _video_instance_insert(mapper, connection, target):
+    _add_es_video(target)
+
+
+@event.listens_for(VideoInstance, 'after_update')
+def _video_instance_update(mapper, connection, target):
+    _remove_es_video_instance(target)
+
+
+@event.listens_for(VideoInstance, 'after_delete')
+def _video_instance_delete(mapper, connection, target):
+    _remove_es_video_instance(target)
+
+
+@event.listens_for(ChannelLocaleMeta, 'after_insert')
+def _channel_insert(mapper, connection, target):
+    # NOTE: owner_rel isn't available on Channel if we pass channel_rel for owner.resource_url.
+    # possibly do a lookup owner in resource_url method instead of having it rely on self.owner_rel here
+    channel = Channel.query.get(target.channel)
+    _add_es_channel(channel)
+
+
+@event.listens_for(ChannelLocaleMeta, 'after_update')
+def _es_channel_update_from_clm(mapper, connection, target):
+    _add_es_channel(target.channel_rel)
+
+
+@event.listens_for(Channel, 'after_insert')
+def _es_channel_insert_from_channel(mapper, connection, target):
+    _add_es_channel(target)
+
+
+@event.listens_for(Channel, 'after_update')
+def _es_channel_update_from_channel(mapper, connection, target):
+    _add_es_channel(target)
 
 
 event.listen(Video, 'before_insert', add_video_pk)

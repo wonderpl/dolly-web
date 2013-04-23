@@ -8,6 +8,7 @@ from flask.ext.admin import form
 from wtforms.validators import ValidationError
 from rockpack.mainsite import app
 from rockpack.mainsite.core.dbapi import commit_on_success
+from rockpack.mainsite.core.es import get_es_connection
 from rockpack.mainsite.core.webservice import WebService, expose_ajax, ajax_create_response, process_image
 from rockpack.mainsite.core.oauth.decorators import check_authorization
 from rockpack.mainsite.core.youtube import get_video_data
@@ -15,6 +16,7 @@ from rockpack.mainsite.helpers.urls import url_for, url_to_endpoint
 from rockpack.mainsite.helpers.db import gen_videoid
 from rockpack.mainsite.services.video.models import (
     Channel, ChannelLocaleMeta, Video, VideoInstance, VideoInstanceLocaleMeta, Category, ContentReport)
+from rockpack.mainsite.services.oauth.api import RockRegistrationForm
 from rockpack.mainsite.services.cover_art.models import UserCoverArt, RockpackCoverArt
 from rockpack.mainsite.services.cover_art import api as cover_api
 from rockpack.mainsite.services.video import api as video_api
@@ -291,9 +293,6 @@ def _channel_info_response(channel, locale, paging, owner_url):
     return data
 
 
-from rockpack.mainsite.services.oauth.api import RockRegistrationForm
-
-
 class UserWS(WebService):
 
     endpoint = '/'
@@ -434,8 +433,15 @@ class UserWS(WebService):
 
     @expose_ajax('/<userid>/channels/<channelid>/', cache_age=60, secure=False)
     def channel_info(self, userid, channelid):
-        channel = Channel.query.filter_by(id=channelid, public=True, deleted=False).first_or_404()
-        return _channel_info_response(channel, self.get_locale(), self.get_page(), False)
+        if not app.config.get('ELASTICSEARCH_URL'):
+            channel = Channel.query.filter_by(id=channelid, public=True, deleted=False).first_or_404()
+            return _channel_info_response(channel, self.get_locale(), self.get_page(), False)
+
+        conn = get_es_connection()
+        channel, total = video_api.es_get_channels_with_videos(conn, channel_ids=[channelid])
+        if not channel:
+            abort(404)
+        return channel[0]
 
     @expose_ajax('/<userid>/channels/<channelid>/', cache_age=0)
     @check_authorization()

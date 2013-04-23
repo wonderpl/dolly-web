@@ -2,6 +2,7 @@ from datetime import date
 from fixture import DataSet
 from fixture import SQLAlchemyFixture
 
+from rockpack.mainsite import app
 from rockpack.mainsite.core.dbapi import db
 from rockpack.mainsite.services.cover_art.models import RockpackCoverArt
 from rockpack.mainsite.services.video import models as video_models
@@ -172,4 +173,5 @@ def install(*args):
         engine=db.engine)
 
     data = dbfixture.data(*args)
-    data.setup()
+    with app.test_request_context():
+        data.setup()
