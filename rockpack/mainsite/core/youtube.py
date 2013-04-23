@@ -1,6 +1,10 @@
+import logging
 from collections import namedtuple
 from rockpack.mainsite import app, requests
 from rockpack.mainsite.services.video.models import Video, VideoThumbnail, VideoRestriction
+
+
+log = logging.getLogger(__name__)
 
 
 PushConfig = namedtuple('PushConfig', 'hub topic')
@@ -12,8 +16,14 @@ def _youtube_feed(feed, id, params={}):
     """Get youtube feed data as json"""
     url = 'http://gdata.youtube.com/feeds/api/%s/%s' % (feed, id)
     params = dict(v=2, alt='json', **params)
-    response = requests.get(url, params=params)
-    response.raise_for_status()
+    try:
+        response = requests.get(url, params=params)
+        response.raise_for_status()
+    except Exception, e:
+        if hasattr(e, 'response'):
+            log.error('youtube request failed (%d): %s',
+                      e.response.status_code, e.response.text)
+        raise
     if isinstance(response.json, dict):
         return response.json
     return response.json()
