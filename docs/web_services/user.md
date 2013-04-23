@@ -448,8 +448,8 @@ Content-Type: application/json
 }
 ```
 
-Channel Videos
-==============
+Channel Subscribers
+===================
 
 ### Get
 
