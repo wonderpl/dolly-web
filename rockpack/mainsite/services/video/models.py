@@ -267,7 +267,6 @@ class Channel(db.Model):
     date_added = Column(DateTime(), nullable=False, default=func.now())
     date_updated = Column(DateTime(), nullable=False, default=func.now(), onupdate=func.now())
     ecommerce_url = Column(String(1024), nullable=False, server_default='')
-    subscribe_count = Column(Integer, nullable=False, server_default='0', default=0)
 
     category = Column(ForeignKey('category.id'), nullable=True)
     category_rel = relationship(Category, primaryjoin=(category == Category.id), lazy='joined')
@@ -347,7 +346,6 @@ class ChannelLocaleMeta(db.Model):
     subscriber_count = Column(Integer, nullable=False, server_default='0', default=0)
     view_count = Column(Integer, nullable=False, server_default='0', default=0)
     star_count = Column(Integer, nullable=False, server_default='0', default=0)
-    subscribe_count = Column(Integer, nullable=False, server_default='0', default=0)
     date_added = Column(DateTime(), nullable=False, default=func.now())
     date_updated = Column(DateTime(), nullable=False, default=func.now(), onupdate=func.now())
 
@@ -438,7 +436,7 @@ def _add_es_channel(channel):
             category=category,
             locale=_locale_dict_from_object(channel.metas),
             owner_id=channel.owner,
-            subscribe_count=0,
+            subscriber_count=channel.subscriber_count,
             date_added=channel.date_added,
             description=channel.description,
             resource_url=channel.get_resource_url(),

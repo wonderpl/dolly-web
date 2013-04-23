@@ -99,7 +99,7 @@ class DBImport(object):
                 data = {
                     'id': channel.id,
                     'locale': _locale_dict_from_object(channel.metas),
-                    'subscribe_count': channel.subscribe_count,
+                    'subscriber_count': channel.subscriber_count,
                     'category': category,
                     'description': channel.description,
                     'thumbnail_url': channel.cover.thumbnail_large,

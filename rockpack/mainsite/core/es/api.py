@@ -88,7 +88,7 @@ def add_channel_to_index(conn, channel):
             'public': True,  # we assume we dont insert private/invisible
             'locale': channel['locale'],
             'ecommerce_url': channel['ecommerce_url'],
-            'subscribe_count': channel['subscribe_count'],
+            'subscriber_count': channel['subscriber_count'],
             'category': channel['category'],
             'description': channel['description'],
             'thumbnail_url': urlparse(channel['thumbnail_url']).path,

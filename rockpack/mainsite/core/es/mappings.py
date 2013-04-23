@@ -101,7 +101,7 @@ channel_mapping = {
         "category": {
             "type": "integer",
         },
-        "subscribe_count": {"type": "integer"},
+        "subscriber_count": {"type": "integer"},
         "public": {"type": "boolean"},
         "description": {
             "type": "string",
