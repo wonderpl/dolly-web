@@ -10,7 +10,7 @@ class InvalidSearchIndexPrefix(Exception):
 
 class IndexSearch(object):
     def __init__(self, conn, prefix, locale):
-        if prefix.lower() not in ('channel', 'video'):
+        if prefix.lower() not in ('channel', 'video', 'user'):
             raise InvalidSearchIndexPrefix(prefix)
 
         self.conn = conn
@@ -66,12 +66,14 @@ class IndexSearch(object):
 
 
 def add_owner_to_index(conn, owner):
-    i = conn.index({
-        'id': owner.id,
-        'avatar_thumbnail': urlparse(str(owner.avatar)).path,
-        'resource_url': urlparse(owner.get_resource_url(False)).path,
-        'display_name': owner.display_name,
-        'name': owner.username},
+    i = conn.index(
+        {
+            'id': owner.id,
+            'avatar_thumbnail': urlparse(str(owner.avatar)).path,
+            'resource_url': urlparse(owner.get_resource_url(False)).path,
+            'display_name': owner.display_name,
+            'name': owner.username
+        },
         mappings.USER_INDEX,
         mappings.USER_TYPE,
         id=owner.id)
@@ -80,22 +82,23 @@ def add_owner_to_index(conn, owner):
 
 
 def add_channel_to_index(conn, channel):
-    i = conn.index({
-        'id': channel['id'],
-        'public': True, # we assume we dont insert private/invisible
-        'locale': channel['locale'],
-        'ecommerce_url': channel['ecommerce_url'],
-        'subscribe_count': channel['subscribe_count'],
-        'category': channel['category'],
-        'description': channel['description'],
-        'thumbnail_url': urlparse(channel['thumbnail_url']).path,
-        'cover_thumbnail_small_url': urlparse(channel['cover_thumbnail_small_url']).path,
-        'cover_thumbnail_large_url': urlparse(channel['cover_thumbnail_large_url']).path,
-        'cover_background_url': urlparse(channel['cover_background_url']).path,
-        'resource_url': urlparse(channel['resource_url']).path,
-        'title': channel['title'],
-        'date_added': channel['date_added'],
-        'owner': channel['owner_id'],
+    i = conn.index(
+        {
+            'id': channel['id'],
+            'public': True,  # we assume we dont insert private/invisible
+            'locale': channel['locale'],
+            'ecommerce_url': channel['ecommerce_url'],
+            'subscribe_count': channel['subscribe_count'],
+            'category': channel['category'],
+            'description': channel['description'],
+            'thumbnail_url': urlparse(channel['thumbnail_url']).path,
+            'cover_thumbnail_small_url': urlparse(channel['cover_thumbnail_small_url']).path,
+            'cover_thumbnail_large_url': urlparse(channel['cover_thumbnail_large_url']).path,
+            'cover_background_url': urlparse(channel['cover_background_url']).path,
+            'resource_url': urlparse(channel['resource_url']).path,
+            'title': channel['title'],
+            'date_added': channel['date_added'],
+            'owner': channel['owner_id'],
         },
         mappings.CHANNEL_INDEX,
         mappings.CHANNEL_TYPE,
@@ -105,21 +108,22 @@ def add_channel_to_index(conn, channel):
 
 
 def add_video_to_index(conn, video_instance):
-    i = conn.index({
-        'id': video_instance['id'],
-        'public': True, # we assume we dont insert private/invisible
-        'locale': video_instance['locale'],
-        'channel': video_instance['channel'],
-        'category': video_instance['category'],
-        'title': video_instance['title'],
-        'date_added': video_instance['date_added'],
-        'position': video_instance['position'],
-        'video': {
-            'id': video_instance['video_id'],
-            'thumbnail_url': video_instance['thumbnail_url'],
-            'source': video_instance['source'],
-            'source_id': video_instance['source_id'],
-            'duration': video_instance['duration'],
+    i = conn.index(
+        {
+            'id': video_instance['id'],
+            'public': True,  # we assume we dont insert private/invisible
+            'locale': video_instance['locale'],
+            'channel': video_instance['channel'],
+            'category': video_instance['category'],
+            'title': video_instance['title'],
+            'date_added': video_instance['date_added'],
+            'position': video_instance['position'],
+            'video': {
+                'id': video_instance['video_id'],
+                'thumbnail_url': video_instance['thumbnail_url'],
+                'source': video_instance['source'],
+                'source_id': video_instance['source_id'],
+                'duration': video_instance['duration'],
             }
         },
         mappings.VIDEO_INDEX,

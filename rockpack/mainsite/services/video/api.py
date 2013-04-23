@@ -230,8 +230,9 @@ def es_get_videos(conn, category=None, paging=None, channel_ids=None, star_order
 
 
 def es_get_owners(conn, ids):
-    q = pyes.TermsQuery(field='_id', value=ids)
-    return conn.search(query=pyes.Search(q), indices='users', doc_types=['user'])
+    search = IndexSearch(conn, 'user', None)
+    search.add_term('_id', ids)
+    return search.search()
 
 
 def es_get_channels(conn, channel_ids=None, category=None, paging=None, locale=None, star_order=None, date_order=None):
