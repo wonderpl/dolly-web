@@ -260,6 +260,7 @@ class Channel(db.Model):
     description = Column(Text, nullable=False)
     cover = Column(ImageType('CHANNEL', reference_only=True), nullable=False)
     public = Column(Boolean(), nullable=False, server_default='true', default=True)
+    verified = Column(Boolean(), nullable=False, server_default='false', default=False)
     view_count = Column(Integer, nullable=False, server_default='0', default=0)
     star_count = Column(Integer, nullable=False, server_default='0', default=0)
     subscriber_count = Column(Integer, nullable=False, server_default='0', default=0)
