@@ -53,6 +53,25 @@ def syncdb(options):
     dbapi.sync_database()
 
 
+@manager.command
+def init_es(rebuild=False):
+    """Initialise elasticsearch indexes"""
+    from rockpack.mainsite.core.es import helpers
+    i = helpers.Indexing()
+    i.create_all_indexes(rebuild=rebuild)
+    i.create_all_mappings()
+
+
+@manager.command
+def import_to_es():
+    """Import data into elasticsearch from the db"""
+    from rockpack.mainsite.core.es import helpers
+    i = helpers.DBImport()
+    i.import_channels()
+    i.import_videos()
+    i.import_users()
+
+
 def run(*args):
     init_app()
     if args:

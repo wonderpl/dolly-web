@@ -1,3 +1,4 @@
+import sys
 from . import api
 from . import mappings
 
@@ -62,10 +63,12 @@ class DBImport(object):
     def import_owners(self):
         from rockpack.mainsite.services.user import models
         with app.test_request_context():
-            app.logger.debug('importing owners')
+            app.logger.info('importing owners')
             query = models.User.query
             total = query.count()
             for user in models.User.query.all():
+                sys.stdout.write('.')
+                sys.stdout.flush()
                 self.conn.index(
                     {
                         'id': user.id,
@@ -85,8 +88,10 @@ class DBImport(object):
         cat_map = {c[0]: c[1] for c in Category.query.filter(Category.parent != None).values('id', 'parent')}
 
         with app.test_request_context():
-            app.logger.debug('importing channels')
+            app.logger.info('importing channels')
             for i, channel in enumerate(Channel.query.filter(Channel.public == True)):
+                sys.stdout.write('.')
+                sys.stdout.flush()
                 try:
                     category = [channel.category, cat_map[channel.category]] if channel.category else []
                 except KeyError:
@@ -116,8 +121,10 @@ class DBImport(object):
             query = VideoInstance.query.join(Channel, Video).filter(Video.visible == True, Channel.public == True)
             total = query.count()
             step = 400
-            app.logger.debug('importing videos: stepping in {}s of {}'.format(step, total))
+            app.logger.info('importing videos: stepping in {}s of {}'.format(step, total))
             for i in xrange(0, total, step):
+                sys.stdout.write('.')
+                sys.stdout.flush()
                 for v in query.offset(i).limit(step):
                     api.add_video_to_index(
                         self.conn,
