@@ -15,7 +15,7 @@ class Transaction(BaseTransaction):
         - Get recent videos for subscriptions 10 times
         """
         self.register_user()
-        for cat_id in random.sample(self.get_cat_ids(), 10):
+        for cat_id in random.sample(self.get_categories(), 10):
             channels = self.get(self.urls['popular_channels'], dict(category=cat_id))['channels']['items']
             if not channels:
                 continue

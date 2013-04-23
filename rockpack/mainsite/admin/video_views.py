@@ -126,6 +126,9 @@ class Channel(AdminView):
     model_name = 'channel'
     model = models.Channel
 
+    form_columns = ('title', 'description', 'ecommerce_url', 'cover',
+                    'owner_rel', 'category_rel',
+                    'public', 'verified', 'deleted')
     form_overrides = dict(owner_rel=wtf.TextField)
     form_args = dict(
         ecommerce_url=dict(validators=[wtf.Optional()]),
