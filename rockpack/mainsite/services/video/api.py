@@ -215,7 +215,11 @@ def es_get_videos(conn, category=None, paging=None, channel_ids=None, star_order
     for v in videos:
         # XXX: should return either datetime or isoformat - something is broken
         v['date_added'] = v['date_added'].isoformat() if not isinstance(v['date_added'], unicode) else v['date_added']
-        v['category'] = max(v['category']) if isinstance(v['category'], list) else v['category']
+        if v['category']:
+            v['category'] = max(v['category']) if isinstance(v['category'], list) else v['category']
+        else:
+            # v['category'] could be a list. We need pass an empty string if no data
+            v['category'] = ''
         if locale:
             v['video']['view_count'] = v['locale'][locale]['view_count']
             v['video']['star_count'] = v['locale'][locale]['star_count']

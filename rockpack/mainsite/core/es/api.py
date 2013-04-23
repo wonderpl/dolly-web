@@ -105,7 +105,7 @@ def add_channel_to_index(conn, channel):
 
 
 def add_video_to_index(conn, video_instance):
-    return conn.index({
+    i = conn.index({
         'id': video_instance['id'],
         'public': True, # we assume we dont insert private/invisible
         'locale': video_instance['locale'],
@@ -125,6 +125,8 @@ def add_video_to_index(conn, video_instance):
         mappings.VIDEO_INDEX,
         mappings.VIDEO_TYPE,
         id=video_instance['id'])
+    conn.indices.refresh(mappings.VIDEO_INDEX)
+    return i
 
 
 def remove_channel_from_index(conn, channel_id):

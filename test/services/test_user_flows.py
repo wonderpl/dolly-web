@@ -33,6 +33,7 @@ class BaseUserTestCase(RockPackTestCase):
 
     def tearDown(self):
         rockpack.mainsite.app = self.old_app
+        super(BaseUserTestCase, self).tearDown()
 
     def request(self, url, method='get', params=None, data=None, headers=[], token=None):
         parsed_url = urlparse.urlparse(url)
@@ -97,6 +98,9 @@ class BrowsingUserTestCase(BaseUserTestCase):
         """
         viewed_videos = []
         self.register_user()
+
+        import time
+        time.sleep(4)
 
         for cat_id in self.get_cat_ids():
             popular_channels = self.get(self.urls['popular_channels'], dict(category=cat_id))

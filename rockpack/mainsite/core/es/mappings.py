@@ -69,7 +69,7 @@ video_mapping = {
 }
 
 
-owner_mapping = {
+user_mapping = {
     "properties": {
         "avatar_thumbnail_url": {
             "type": "string",
