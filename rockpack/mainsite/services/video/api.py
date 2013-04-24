@@ -150,7 +150,7 @@ def get_local_videos(loc, paging, with_channel=True, **filters):
 
 
 def es_channel_to_video_map(videos, channel_dict):
-    for pos, video in enumerate(videos, len(videos)):
+    for pos, video in enumerate(videos):
         try:
             video['channel'] = channel_dict[video['channel']]
             video['position'] = pos
@@ -183,17 +183,6 @@ def _sort_string(**kwargs):
     return {'sort': ','.join(sort)} if sort else {}
 
 
-def _es_build_urls(dict_):
-    for k, v in dict_.iteritems():
-        if isinstance(v, dict):
-            _es_build_urls(v)
-            dict_[k] = v
-            continue
-
-        if isinstance(v, str) and k.endswith('_url') and not urlparse.urlparse(v).scheme:
-            dict_[k] = urlparse.urljoin(url_for('basews.discover'), v)
-
-
 def es_get_videos(conn, category=None, paging=None, channel_ids=None, star_order=None, locale=None, date_order=None, position=None):
     search = IndexSearch(conn, 'video', locale)
     if category:
@@ -213,7 +202,7 @@ def es_get_videos(conn, category=None, paging=None, channel_ids=None, star_order
     videos = search.search(**search_kwargs)
 
     vlist = []
-    for v in videos:
+    for pos, v in enumerate(videos):
         # XXX: should return either datetime or isoformat - something is broken
         v['date_added'] = v['date_added'].isoformat() if not isinstance(v['date_added'], unicode) else v['date_added']
         if v['category']:
@@ -224,8 +213,9 @@ def es_get_videos(conn, category=None, paging=None, channel_ids=None, star_order
         if locale:
             v['video']['view_count'] = v['locale'][locale]['view_count']
             v['video']['star_count'] = v['locale'][locale]['star_count']
-            v['video']['thumbnail_url'] = urlparse.urljoin(url_for('basews.discover'), v['video']['thumbnail_url'])
         del v['locale']
+        if not position:
+            v['position'] = pos
         vlist.append(v)
     return vlist, videos.total
 
@@ -261,7 +251,12 @@ def es_get_channels(conn, channel_ids=None, category=None, paging=None, locale=N
         # is the child category. review this
         for k, v in channel.iteritems():
             if isinstance(v, (str, unicode)) and k.endswith('_url'):
-                channel[k] = urlparse.urljoin(url_for('basews.discover'), v)
+                url = v
+                if k == 'resource_url':
+                    url = urlparse.urljoin(url_for('basews.discover'), v)
+                elif k != 'ecommerce_url':
+                    url = urlparse.urljoin(app.config.get('IMAGE_CDN', ''), v)
+                channel[k] = url
             if k == 'category':
                 channel[k] = max(channel[k]) if channel[k] and isinstance(channel[k], list) else channel[k]
 
