@@ -64,15 +64,13 @@ class DBImport(object):
         from rockpack.mainsite.services.user import models
         with app.test_request_context():
             app.logger.info('importing owners')
-            query = models.User.query
-            total = query.count()
             for user in models.User.query.all():
                 sys.stdout.write('.')
                 sys.stdout.flush()
                 self.conn.index(
                     {
                         'id': user.id,
-                        'avatar_thumbnail': str(user.avatar),
+                        'avatar_thumbnail': user.avatar.thumbnail_small,
                         'resource_url': user.get_resource_url(False),
                         'display_name': user.display_name,
                         'name': user.username
@@ -80,7 +78,6 @@ class DBImport(object):
                     mappings.USER_INDEX,
                     mappings.USER_TYPE,
                     id=user.id)
-        app.logger.debug('{} imported.'.format(total))
 
     def import_channels(self):
         from rockpack.mainsite.services.video.models import Category, Channel, _locale_dict_from_object

@@ -254,7 +254,7 @@ def es_get_channels(conn, channel_ids=None, category=None, paging=None, locale=N
 
     for owner in es_get_owners(conn, owner_list.keys()):
         owner['resource_url'] = urlparse.urljoin(url_for('basews.discover'), owner['resource_url'])
-        owner['avatar_thumbnail'] = urlparse.urljoin(app.config.get('IMAGE_CDN'), owner['avatar_thumbnail'])
+        owner['avatar_thumbnail'] = urlparse.urljoin(app.config.get('IMAGE_CDN', ''), owner['avatar_thumbnail'])
         owner_list[owner['id']] = owner
     es_owner_to_channel_map(channel_list, owner_list)
     return channel_list, channels.total

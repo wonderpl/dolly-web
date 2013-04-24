@@ -20,3 +20,4 @@ blinker==1.2
 requests==1.1.0
 cssmin==0.1.4
 pyes==0.19.1
+gdata==2.0.17
