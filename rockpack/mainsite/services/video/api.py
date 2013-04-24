@@ -1,5 +1,4 @@
 import urlparse
-import pyes
 from flask import request
 from collections import defaultdict
 from sqlalchemy.orm import contains_eager, lazyload, joinedload
@@ -158,16 +157,6 @@ def es_channel_to_video_map(videos, channel_dict):
             pass
 
 
-def es_video_to_channel_map(videos, channel_dict, total):
-    # need to sort these by position
-    for video in videos:
-        channel_dict[
-            video['channel']
-        ].setdefault('video', {}
-            ).setdefault('items', []).append(video)
-    channel_dict['video']['total'] = total
-
-
 def es_owner_to_channel_map(channels, owner_list):
     for channel in channels:
         channel['owner'] = owner_list[channel['owner']]
@@ -183,7 +172,7 @@ def _sort_string(**kwargs):
     return {'sort': ','.join(sort)} if sort else {}
 
 
-def es_get_videos(conn, category=None, paging=None, channel_ids=None, star_order=None, locale=None, date_order=None, position=None):
+def es_get_videos(conn, category=None, paging=None, channel_ids=None, star_order=None, locale=None, date_order='desc', position=None):
     search = IndexSearch(conn, 'video', locale)
     if category:
         search.add_term('category', category)
@@ -191,7 +180,7 @@ def es_get_videos(conn, category=None, paging=None, channel_ids=None, star_order
         search.add_term('channel', channel_ids)
 
     search_kwargs = {}
-    sorting = _sort_string(star_order=star_order, date_added=date_order, position=position)
+    sorting = _sort_string(star_order=star_order, position=position, date_added=date_order)
     if sorting:
         search_kwargs.update(sorting)
     if paging:

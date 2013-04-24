@@ -12,8 +12,8 @@ def _format_video_thumbnail(context, video, name):
 
 
 def _format_video_instance_link(context, video, name):
-    t = u'<a href="/admin/video_locale_meta/?flt1_2={}">{}</a>'
-    return Markup(t.format(video.video_rel.title, video.video_rel.title))
+    t = u'<a href="/admin/video/?flt1_0={}">{}</a>'
+    return Markup(t.format(video.video, video.video_rel.title))
 
 
 class VideoInstanceLocaleMetaFormAdmin(InlineFormAdmin):
@@ -26,7 +26,7 @@ class Video(AdminView):
 
     column_list = ('title', 'date_updated', 'thumbnail', 'visible')
     column_formatters = dict(thumbnail=_format_video_thumbnail)
-    column_filters = ('source_listid', 'sources', 'date_added', 'visible')
+    column_filters = ('id', 'source_listid', 'sources', 'date_added', 'visible')
     column_searchable_list = ('title',)
     form_columns = ('title', 'sources', 'source_videoid', 'rockpack_curated', 'visible')
 
@@ -41,14 +41,15 @@ class VideoThumbnail(AdminView):
 class VideoInstanceLocaleMeta(AdminView):
     model = models.VideoInstanceLocaleMeta
     model_name = model.__tablename__
-    form_overrides = dict(video_instance_rel=wtf.TextField,
-            view_count=wtf.TextField,
-            star_count=wtf.TextField,
-            )
+    form_overrides = dict(
+        video_instance_rel=wtf.TextField,
+        view_count=wtf.TextField,
+        star_count=wtf.TextField,
+    )
     from_args = dict(
-            view_count=dict(validators=[wtf.InputRequired()]),
-            star_count=dict(validators=[wtf.InputRequired()]),
-            )
+        view_count=dict(validators=[wtf.InputRequired()]),
+        star_count=dict(validators=[wtf.InputRequired()]),
+    )
 
     column_filters = ('video_instance_rel', 'locale_rel',)
 
@@ -62,7 +63,7 @@ class VideoInstance(AdminView):
     column_list = ('video_rel', 'video_channel', 'date_added', 'category_rel', 'thumbnail')
     column_formatters = dict(thumbnail=_format_video_thumbnail, video_rel=_format_video_instance_link)
     column_filters = ('video_channel', 'video_rel', 'metas', 'category_rel')
-    form_columns = ('video_channel', 'video_rel')
+    form_columns = ('video_channel', 'video_rel', 'position', 'date_added')
 
     inline_models = (VideoInstanceLocaleMetaFormAdmin(models.VideoInstanceLocaleMeta),)
 
@@ -172,10 +173,11 @@ class ChannelLocaleMeta(AdminView):
     model_name = 'channel_locale_meta'
     model = models.ChannelLocaleMeta
 
-    form_overrides = dict(channel_rel=wtf.TextField,
-            view_count=wtf.TextField,
-            star_count=wtf.TextField,
-            )
+    form_overrides = dict(
+        channel_rel=wtf.TextField,
+        view_count=wtf.TextField,
+        star_count=wtf.TextField,
+    )
 
     column_filters = ('channel_rel', 'channel_locale')
 
