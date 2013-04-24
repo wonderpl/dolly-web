@@ -3,6 +3,13 @@
 # All variables must be uppercase
 
 
+import pkg_resources
+try:
+    VERSION = pkg_resources.get_distribution('rockpack-mainsite').version
+except pkg_resources.DistributionNotFound:
+    VERSION = 'unknown'
+
+
 DATABASE_URL = ''  # e.g. postgresql://foo:bar@localhost:5432/rockpack
 
 AWS_ACCESS_KEY = None
@@ -30,6 +37,9 @@ ROCKPACK_JS_CLIENT_ID = 'orockgqRScSlWKjsfVuxrQ'
 CLIENT_IDS = ROCKPACK_APP_CLIENT_ID, ROCKPACK_JS_CLIENT_ID
 
 IGNORE_ACCESS_TOKEN = False
+
+# The "Mozilla Gecko" seems to be necessary for the gdata api to encode with gzip!
+USER_AGENT = 'rockpack/%s (Mozilla Gecko)' % VERSION
 
 # Default is first locale
 ENABLED_LOCALES = ('en-us', 'en-gb')

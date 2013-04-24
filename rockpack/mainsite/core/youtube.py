@@ -17,8 +17,9 @@ def _youtube_feed(feed, id, params={}):
     """Get youtube feed data as json"""
     url = 'http://gdata.youtube.com/feeds/api/%s/%s' % (feed, id)
     params = dict(v=2, alt='json', **params)
+    headers = {'User-Agent': app.config['USER_AGENT']}
     try:
-        response = requests.get(url, params=params)
+        response = requests.get(url, params=params, headers=headers)
         response.raise_for_status()
     except Exception, e:
         if hasattr(e, 'response'):
