@@ -81,7 +81,10 @@ def import_services():
 
 def init_app():
     if not app.debug:
-        app.logger.addHandler(logging.StreamHandler())
+        handler = logging.StreamHandler()
+        handler.setFormatter(logging.Formatter(
+            '%(asctime)s - %(levelname)s: %(message)s', '%Y-%m-%dT%H:%M:%S'))
+        app.logger.addHandler(handler)
     if app.debug:
         try:
             from flask_debugtoolbar import DebugToolbarExtension
