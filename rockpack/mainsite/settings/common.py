@@ -12,8 +12,12 @@ IMAGE_CDN = 'http://media.dev.rockpack.com'
 
 SECRET_KEY = '22a20453891f41148e2251c4b2cef0df3426c4193914409cb0c5994b58fe77c5'
 
+# For admin OAuth login:
 GOOGLE_CONSUMER_KEY = '902099289100.apps.googleusercontent.com'
 GOOGLE_CONSUMER_SECRET = 'ja-jW0BDASKVIwIRFurpCaZi'
+
+# For google API access:
+GOOGLE_DEVELOPER_KEY = 'AIzaSyAIV4F5dpvDltQpE9CAWipWN57zuT_EIq4'
 
 ELASTICSEARCH_URL = None
 
