@@ -13,7 +13,7 @@ Playlist = namedtuple('Playlist', 'title video_count videos push_config')
 Videolist = namedtuple('Videolist', 'video_count videos')
 
 
-def _youtube_feed(feed, id, params={}):
+def _youtube_feed_requests(feed, id, params={}):
     """Get youtube feed data as json"""
     url = 'http://gdata.youtube.com/feeds/api/%s/%s' % (feed, id)
     params = dict(v=2, alt='json', **params)
@@ -29,6 +29,41 @@ def _youtube_feed(feed, id, params={}):
     if isinstance(response.json, dict):
         return response.json
     return response.json()
+
+
+def _youtube_feed_ua(feed, id, params={}):
+    """Get youtube feed data as json"""
+    url = 'http://gdata.youtube.com/feeds/api/%s/%s' % (feed, id)
+    query = urlencode([('v', 2), ('alt', 'json')] +
+                      [(k, v) for k, v in params.items() if v is not None])
+    try:
+        response = _youtube_useragent.urlopen(url + '?' + query)
+    except Exception, e:
+        if hasattr(e, 'response'):
+            log.error('youtube request failed (%d): %s',
+                      e.response.status_code, e.response.content)
+        raise
+    try:
+        return simplejson.loads(response.content)
+    except Exception:
+        return response.content
+
+
+if app.config.get('USE_GEVENT'):
+    import simplejson
+    from urllib import urlencode
+    from geventhttpclient.useragent import UserAgent
+    _youtube_useragent = UserAgent(
+        concurrency=app.config.get('YOUTUBE_UA_CONCURRENCY', 64),
+        headers={
+            'User-Agent': app.config['USER_AGENT'],
+            'Accept-Encoding': 'gzip',
+            'Connection': 'keep-alive',
+        }
+    )
+    _youtube_feed = _youtube_feed_ua
+else:
+    _youtube_feed = _youtube_feed_requests
 
 
 def _get_atom_video_data(youtube_data, playlist=None):
