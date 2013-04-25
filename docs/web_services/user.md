@@ -402,7 +402,7 @@ Content-Type: application/json
 
 ### Update
 
-To add or delete videos from a channel, send a list of video instance ids that the
+To add or delete videos from a channel, `PUT` a list of video instance ids that the
 channel needs to contain. Any videos not included, but are currently in the channel,
 will be removed.
 
@@ -416,6 +416,29 @@ Authorization: Bearer TOKEN
 
 ["VIDEOINSTANCEID", "VIDEOINSTANCEID"]
 ```
+
+To add new videos only, keeping any existing, `POST` a list of video instance ids.
+
+```http
+POST /ws/USERID/channels/CHANNELID/videos/ HTTP/1.1
+Content-Type: application/json
+Authorization: Bearer TOKEN
+
+["VIDEOINSTANCEID"]
+```
+
+For videos from external sources the video instance can be defined as a `(source, source-id)`
+pair:
+
+```http
+POST /ws/USERID/channels/CHANNELID/videos/ HTTP/1.1
+Content-Type: application/json
+Authorization: Bearer TOKEN
+
+[["youtube", "9bZkp7q19f0"]]
+```
+
+On success:
 
 ```http
 HTTP/1.1 204 NO CONTENT
@@ -559,6 +582,8 @@ Cache-Control: private, max-age=60
     "total": 1,
     "items": [
       {
+        "position": 0,
+        "id": "123",
         "cover_ref": "coverartref",
         "background_url": "http://path/to/background/img.jpg",
         "carousel_url": "http://path/to/carousel/img.jpg"
