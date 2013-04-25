@@ -261,9 +261,11 @@ class ChannelForm(form.BaseForm):
     def validate_category(self, field):
         if field.data:
             try:
-                Category.query.filter_by(id=int(field.data)).one()
-            except (ValueError, NoResultFound):
+                field.data = Category.query.get(int(field.data)).id
+            except (ValueError, AttributeError):
                 raise ValidationError('invalid category')
+        else:
+            field.data = None
 
 
 class ActivityForm(wtf.Form):
