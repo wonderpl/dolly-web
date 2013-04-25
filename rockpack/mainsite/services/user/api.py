@@ -8,7 +8,6 @@ from flask.ext.admin import form
 from wtforms.validators import ValidationError
 from rockpack.mainsite import app
 from rockpack.mainsite.core.dbapi import commit_on_success
-from rockpack.mainsite.core.es import get_es_connection
 from rockpack.mainsite.core.webservice import WebService, expose_ajax, ajax_create_response, process_image
 from rockpack.mainsite.core.oauth.decorators import check_authorization
 from rockpack.mainsite.core.youtube import get_video_data
@@ -437,8 +436,7 @@ class UserWS(WebService):
             channel = Channel.query.filter_by(id=channelid, public=True, deleted=False).first_or_404()
             return _channel_info_response(channel, self.get_locale(), self.get_page(), False)
 
-        conn = get_es_connection()
-        channel, total = video_api.es_get_channels_with_videos(conn, channel_ids=[channelid])
+        channel, total = video_api.es_get_channels_with_videos(channel_ids=[channelid])
         if not channel:
             abort(404)
         return channel[0]

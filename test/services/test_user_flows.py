@@ -111,6 +111,10 @@ class BrowsingUserTestCase(BaseUserTestCase):
         viewed_videos = []
         self.register_user()
 
+        # Allow elasticsearch to catch up if necessary
+        import time
+        time.sleep(2)
+
         for cat_id in self.get_cat_ids():
             popular_channels = self.get(self.urls['popular_channels'], dict(category=cat_id))
             for channel in popular_channels['channels']['items']:

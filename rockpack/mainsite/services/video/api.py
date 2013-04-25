@@ -5,7 +5,6 @@ from sqlalchemy.orm import contains_eager, lazyload, joinedload
 from sqlalchemy.sql.expression import desc
 from rockpack.mainsite import app
 from rockpack.mainsite.helpers.urls import url_for
-from rockpack.mainsite.core.es import get_es_connection
 from rockpack.mainsite.core.webservice import WebService, expose_ajax
 from rockpack.mainsite.services.video import models
 from rockpack.mainsite.core.es.api import IndexSearch
@@ -172,8 +171,8 @@ def _sort_string(**kwargs):
     return {'sort': ','.join(sort)} if sort else {}
 
 
-def es_get_videos(conn, category=None, paging=None, channel_ids=None, star_order=None, locale=None, date_order='desc', position=None):
-    search = IndexSearch(conn, 'video', locale)
+def es_get_videos(category=None, paging=None, channel_ids=None, star_order=None, locale=None, date_order='desc', position=None):
+    search = IndexSearch('video', locale)
     if category:
         search.add_term('category', category)
     if channel_ids:
@@ -209,14 +208,14 @@ def es_get_videos(conn, category=None, paging=None, channel_ids=None, star_order
     return vlist, videos.total
 
 
-def es_get_owners(conn, ids):
-    search = IndexSearch(conn, 'user', None)
+def es_get_owners(ids):
+    search = IndexSearch('user', None)
     search.add_term('_id', ids)
     return search.search()
 
 
-def es_get_channels(conn, channel_ids=None, category=None, paging=None, locale=None, star_order=None, date_order=None):
-    search = IndexSearch(conn, 'channel', locale)
+def es_get_channels(channel_ids=None, category=None, paging=None, locale=None, star_order=None, date_order=None):
+    search = IndexSearch('channel', locale)
     if channel_ids:
         search.add_ids(channel_ids)
     if category:
@@ -252,7 +251,7 @@ def es_get_channels(conn, channel_ids=None, category=None, paging=None, locale=N
         channel_list.append(channel)
         owner_list[channel['owner']] = None
 
-    for owner in es_get_owners(conn, owner_list.keys()):
+    for owner in es_get_owners(owner_list.keys()):
         owner['resource_url'] = urlparse.urljoin(url_for('basews.discover'), owner['resource_url'])
         owner['avatar_thumbnail'] = urlparse.urljoin(app.config.get('IMAGE_CDN', ''), owner['avatar_thumbnail'])
         owner_list[owner['id']] = owner
@@ -260,10 +259,10 @@ def es_get_channels(conn, channel_ids=None, category=None, paging=None, locale=N
     return channel_list, channels.total
 
 
-def es_get_channels_with_videos(conn, channel_ids=None, paging=None):
-    channels, total = es_get_channels(conn, channel_ids=channel_ids, paging=paging)
+def es_get_channels_with_videos(channel_ids=None, paging=None):
+    channels, total = es_get_channels(channel_ids=channel_ids, paging=paging)
     for c in channels:
-        videos, vtotal = es_get_videos(conn, channel_ids=channel_ids, position='asc')
+        videos, vtotal = es_get_videos(channel_ids=channel_ids, position='asc')
         c.setdefault('videos', {}).setdefault('items', videos)
         c['videos']['total'] = vtotal
     return channels, total
@@ -281,15 +280,14 @@ class VideoWS(WebService):
 
         category = request.args.get('category')
 
-        conn = get_es_connection()
-        videos, total = es_get_videos(conn,
+        videos, total = es_get_videos(
             category=category,
             paging=self.get_page(),
             star_order=request.args.get('star_order'),
             locale=self.get_locale(),
             date_order=request.args.get('date_order'))
 
-        channels, _ = es_get_channels(conn, channel_ids=[v['channel'] for v in videos])
+        channels, _ = es_get_channels(channel_ids=[v['channel'] for v in videos])
 
         es_channel_to_video_map(videos, {c['id']: c for c in channels})
 
@@ -309,8 +307,7 @@ class ChannelWS(WebService):
                 category=request.args.get('category'))
             return dict(channels=dict(items=data, total=total))
 
-        conn = get_es_connection()
-        channels, total = es_get_channels(conn,
+        channels, total = es_get_channels(
             category=request.args.get('category'),
             paging=self.get_page(),
             locale=self.get_locale(),

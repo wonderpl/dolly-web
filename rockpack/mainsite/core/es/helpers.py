@@ -3,13 +3,13 @@ from . import api
 from . import mappings
 
 from rockpack.mainsite import app
-from rockpack.mainsite.core.es import get_es_connection
+from rockpack.mainsite.core.es import es_connection
 
 
 class Indexing(object):
 
     def __init__(self):
-        self.conn = get_es_connection()
+        self.conn = es_connection
 
         self.indexes = {
             'channel': {
@@ -58,7 +58,7 @@ class Indexing(object):
 class DBImport(object):
 
     def __init__(self):
-        self.conn = get_es_connection()
+        self.conn = es_connection
 
     def import_owners(self):
         from rockpack.mainsite.services.user import models
@@ -86,7 +86,7 @@ class DBImport(object):
 
         with app.test_request_context():
             app.logger.info('importing channels')
-            for i, channel in enumerate(Channel.query.filter(Channel.public == True)):
+            for channel in Channel.query.filter(Channel.public == True):
                 sys.stdout.write('.')
                 sys.stdout.flush()
                 try:
@@ -109,36 +109,41 @@ class DBImport(object):
                     'owner_id': channel.owner,
                     'ecommerce_url': channel.ecommerce_url
                 }
-                api.add_channel_to_index(self.conn, data)
+                api.add_channel_to_index(data, bulk=True, refresh=False)
 
     def import_videos(self):
-        from rockpack.mainsite.services.video.models import Category, Channel, Video, VideoInstance, _locale_dict_from_object
+        from rockpack.mainsite.services.video.models import Category, Channel, Video, VideoInstanceLocaleMeta, VideoInstance, _locale_dict_from_object
+        from sqlalchemy.orm import joinedload
         cat_map = {c[0]: c[1] for c in Category.query.filter(Category.parent != None).values('id', 'parent')}
         with app.test_request_context():
-            query = VideoInstance.query.join(Channel, Video).filter(Video.visible == True, Channel.public == True)
+            query = VideoInstance.query.join(
+                    Channel, Video).outerjoin((VideoInstanceLocaleMeta, VideoInstance.id == VideoInstanceLocaleMeta.video_instance)).options(joinedload(VideoInstance.metas)).options(joinedload(VideoInstance.video_rel)).options(joinedload(VideoInstance.video_channel)).filter(
+                            Video.visible == True, Channel.public == True)
             total = query.count()
-            step = 400
+            step = 1000
             app.logger.info('importing videos: stepping in {}s of {}'.format(step, total))
             for i in xrange(0, total, step):
                 sys.stdout.write('.')
                 sys.stdout.flush()
                 for v in query.offset(i).limit(step):
-                    api.add_video_to_index(
-                        self.conn,
-                        {
-                            'id': v.id,
-                            'channel': v.channel,
-                            'locale': _locale_dict_from_object(v.metas),
-                            'category': [v.category, cat_map[v.category]] if v.category else [],
-                            'title': v.video_rel.title,
-                            'date_added': v.date_added,
-                            'position': v.position,
-                            'video_id': v.video,
-                            'thumbnail_url': v.video_rel.thumbnails[0].url if v.video_rel.thumbnails else '',
-                            'view_count': v.video_rel.view_count,
-                            'star_count': v.video_rel.star_count,
-                            'source': v.video_rel.source,
-                            'source_id': v.video_rel.source_videoid,
-                            'duration': v.video_rel.duration,
-                        }
-                    )
+                    try:
+                        category = [v.category, cat_map[v.category]] if v.category else []
+                    except KeyError:
+                        category = [v.category]
+                    data = {
+                        'id': v.id,
+                        'channel': v.channel,
+                        'locale': _locale_dict_from_object(v.metas),
+                        'category': category,
+                        'title': v.video_rel.title,
+                        'date_added': v.date_added,
+                        'position': v.position,
+                        'video_id': v.video,
+                        'thumbnail_url': v.video_rel.thumbnails[0].url if v.video_rel.thumbnails else '',
+                        'view_count': v.video_rel.view_count,
+                        'star_count': v.video_rel.star_count,
+                        'source': v.video_rel.source,
+                        'source_id': v.video_rel.source_videoid,
+                        'duration': v.video_rel.duration,
+                    }
+                    api.add_video_to_index(data, bulk=True, refresh=False)

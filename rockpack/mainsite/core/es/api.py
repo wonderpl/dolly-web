@@ -1,6 +1,7 @@
 from urlparse import urlparse
 import pyes
 from . import mappings
+from . import es_connection
 from rockpack.mainsite import app
 
 
@@ -9,11 +10,11 @@ class InvalidSearchIndexPrefix(Exception):
 
 
 class IndexSearch(object):
-    def __init__(self, conn, prefix, locale):
+    def __init__(self, prefix, locale):
         if prefix.lower() not in ('channel', 'video', 'user'):
             raise InvalidSearchIndexPrefix(prefix)
 
-        self.conn = conn
+        self.conn = es_connection
         self.locale = locale
         self.index_name = prefix.upper() + '_INDEX'
         self.type_name = prefix.upper() + '_TYPE'
@@ -65,24 +66,35 @@ class IndexSearch(object):
             sort=sort)
 
 
-def add_owner_to_index(conn, owner):
-    i = conn.index(
+def add_to_index(data, index, _type, id, bulk=False):
+    try:
+        return es_connection.index(data, index, _type, id=id, bulk=bulk)
+    except Exception as e:
+        app.logger.critical("Failed to insert record to index '{}' with id '{}' with: {}".format(index, id, str(e)))
+
+
+def add_owner_to_index(owner, bulk=False, refresh=True):
+    conn = es_connection
+    i = add_to_index(
         {
-            'id': owner.id,
-            'avatar_thumbnail': urlparse(str(owner.avatar)).path,
-            'resource_url': urlparse(owner.get_resource_url(False)).path,
-            'display_name': owner.display_name,
-            'name': owner.username
+            'id': owner['id'],
+            'avatar_thumbnail': owner['avatar_thumbnail'],
+            'resource_url': owner['resource_url'],
+            'display_name': owner['display_name'],
+            'name': owner['name']
         },
         mappings.USER_INDEX,
         mappings.USER_TYPE,
-        id=owner.id)
-    conn.indices.refresh(mappings.USER_INDEX)
+        id=owner['id'],
+        bulk=bulk)
+    if refresh:
+        conn.indices.refresh(mappings.USER_INDEX)
     return i
 
 
-def add_channel_to_index(conn, channel):
-    i = conn.index(
+def add_channel_to_index(channel, bulk=False, refresh=True):
+    conn = es_connection
+    i = add_to_index(
         {
             'id': channel['id'],
             'public': True,  # we assume we dont insert private/invisible
@@ -102,13 +114,16 @@ def add_channel_to_index(conn, channel):
         },
         mappings.CHANNEL_INDEX,
         mappings.CHANNEL_TYPE,
-        id=channel['id'])
-    conn.indices.refresh(mappings.CHANNEL_INDEX)
+        id=channel['id'],
+        bulk=bulk)
+    if refresh:
+        conn.indices.refresh(mappings.CHANNEL_INDEX)
     return i
 
 
-def add_video_to_index(conn, video_instance):
-    i = conn.index(
+def add_video_to_index(video_instance, bulk=False, refresh=True):
+    conn = es_connection
+    i = add_to_index(
         {
             'id': video_instance['id'],
             'public': True,  # we assume we dont insert private/invisible
@@ -128,19 +143,23 @@ def add_video_to_index(conn, video_instance):
         },
         mappings.VIDEO_INDEX,
         mappings.VIDEO_TYPE,
-        id=video_instance['id'])
-    conn.indices.refresh(mappings.VIDEO_INDEX)
+        id=video_instance['id'],
+        bulk=bulk)
+    if refresh:
+        conn.indices.refresh(mappings.VIDEO_INDEX)
     return i
 
 
-def remove_channel_from_index(conn, channel_id):
+def remove_channel_from_index(channel_id):
+    conn = es_connection
     try:
         print conn.delete(mappings.CHANNEL_INDEX, mappings.CHANNEL_TYPE, channel_id)
     except pyes.exceptions.NotFoundException:
         pass
 
 
-def remove_video_from_index(conn, video_id):
+def remove_video_from_index(video_id):
+    conn = es_connection
     try:
         print conn.delete(mappings.VIDEO_INDEX, mappings.VIDEO_TYPE, video_id)
     except pyes.exceptions.NotFoundException:

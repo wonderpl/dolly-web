@@ -8,6 +8,7 @@ from rockpack.mainsite.helpers.db import add_base64_pk, add_video_pk, insert_new
 from rockpack.mainsite.helpers.urls import url_for
 from rockpack.mainsite.services.user.models import User
 from rockpack.mainsite import app
+from rockpack.mainsite.core.es import api as es_api
 
 
 class Locale(db.Model):
@@ -389,9 +390,7 @@ def _locale_dict_from_object(metas):
 
 
 def _add_es_video(video_instance):
-    from rockpack.mainsite.core.es import get_es_connection, api
-    conn = get_es_connection()
-    if conn is not None:
+    if app.config.get('ELASTICSEARCH_URL'):
 
         video = Video.query.get(video_instance.video)
         if video:
@@ -410,14 +409,11 @@ def _add_es_video(video_instance):
                 duration=video.duration,
                 locale=_locale_dict_from_object(video_instance.metas))
 
-            print api.add_video_to_index(conn, data)
+            print es_api.add_video_to_index(data)
 
 
 def _add_es_channel(channel):
-    from rockpack.mainsite.core import es
-    conn = es.get_es_connection()
-    if conn is not None:
-
+    if app.config.get('ELASTICSEARCH_URL'):
         category = []
         if channel.category:
             category = Category.query.filter(
@@ -447,21 +443,17 @@ def _add_es_channel(channel):
             cover_thumbnail_large_url=convert(channel.cover).thumbnail_large,
             cover_background_url=convert(channel.cover).background)
 
-        print es.api.add_channel_to_index(conn, data)
+        print es_api.add_channel_to_index(data)
 
 
 def _remove_es_channel(channel):
-    from rockpack.mainsite.core import es
-    conn = es.get_es_connection()
-    if conn is not None:
-        es.api.remove_channel_from_index(conn, channel.id)
+    if app.config.get('ELASTICSEARCH_URL'):
+        es_api.remove_channel_from_index(channel.id)
 
 
 def _remove_es_video_instance(video_instance):
-    from rockpack.mainsite.core import es
-    conn = es.get_es_connection()
-    if conn is not None:
-        es.api.remove_video_from_index(conn, video_instance.id)
+    if app.config.get('ELASTICSEARCH_URL'):
+        es_api.remove_video_from_index(video_instance.id)
 
 
 @event.listens_for(VideoInstanceLocaleMeta, 'after_update')
