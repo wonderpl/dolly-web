@@ -151,7 +151,6 @@ def es_channel_to_video_map(videos, channel_dict):
     for pos, video in enumerate(videos):
         try:
             video['channel'] = channel_dict[video['channel']]
-            video['position'] = pos
         except KeyError:
             pass
 
@@ -202,8 +201,7 @@ def es_get_videos(category=None, paging=None, channel_ids=None, star_order=None,
             v['video']['view_count'] = v['locale'][locale]['view_count']
             v['video']['star_count'] = v['locale'][locale]['star_count']
         del v['locale']
-        if not position:
-            v['position'] = pos
+        v['position'] = pos
         vlist.append(v)
     return vlist, videos.total
 
@@ -228,8 +226,9 @@ def es_get_channels(channel_ids=None, category=None, paging=None, locale=None, s
 
     channel_list = []
     owner_list = {}
-    for channel in channels:
+    for pos, channel in enumerate(channels):
         del channel['locale']
+        channel['position'] = pos
         try:
             del channel['date_added']
         except KeyError:
