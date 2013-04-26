@@ -2,7 +2,9 @@ import base64
 import uuid
 import hashlib
 import cStringIO
+from ast import literal_eval
 from sqlalchemy import types
+from sqlalchemy.dialects import postgres
 from flask import g
 from flask.ext import wtf
 from rockpack.mainsite import app
@@ -109,6 +111,22 @@ class ImageType(types.TypeDecorator):
 
     def process_result_value(self, value, dialect):
         return ImagePath(value, app.config['%s_IMG_PATHS' % self.cfgkey])
+
+
+class BoxType(types.TypeDecorator):
+
+    impl = postgres.ARRAY(types.Float)
+
+    def process_bind_param(self, value, dialect):
+        if value:
+            return get_box_value(value)
+
+
+def get_box_value(value):
+    value = map(float, literal_eval(value))
+    assert len(value) == 4
+    assert all(0 <= i <= 1 for i in value)
+    return value
 
 
 def resize_and_upload(fp, cfgkey):

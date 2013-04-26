@@ -4,7 +4,7 @@ from sqlalchemy import (
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import relationship, aliased
 from rockpack.mainsite.core.dbapi import db
-from rockpack.mainsite.helpers.db import add_base64_pk, add_video_pk, insert_new_only, ImageType
+from rockpack.mainsite.helpers.db import add_base64_pk, add_video_pk, insert_new_only, ImageType, BoxType
 from rockpack.mainsite.helpers.urls import url_for
 from rockpack.mainsite.services.user.models import User
 from rockpack.mainsite import app
@@ -260,6 +260,7 @@ class Channel(db.Model):
     title = Column(String(1024), nullable=False)
     description = Column(Text, nullable=False)
     cover = Column(ImageType('CHANNEL', reference_only=True), nullable=False)
+    cover_aoi = Column(BoxType, nullable=True)
     public = Column(Boolean(), nullable=False, server_default='true', default=True)
     verified = Column(Boolean(), nullable=False, server_default='false', default=False)
     view_count = Column(Integer, nullable=False, server_default='0', default=0)

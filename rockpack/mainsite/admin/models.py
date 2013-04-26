@@ -3,7 +3,7 @@ from flask.ext import login, wtf
 from flask.ext.admin.model.typefmt import BASE_FORMATTERS, Markup
 from flask.ext.admin.model.form import converts
 from flask.ext.admin.contrib.sqlamodel import ModelView, form, filters
-from rockpack.mainsite.helpers.db import ImageUrl, ImageType, resize_and_upload
+from rockpack.mainsite.helpers.db import ImageUrl, ImageType, resize_and_upload, get_box_value
 from rockpack.mainsite.core.dbapi import db
 
 
@@ -25,6 +25,13 @@ def _render_image(img):
     return Markup('<img src="%s"/>' % img)
 
 
+def _box_validator(form, field):
+    try:
+        get_box_value(field.data)
+    except (SyntaxError, AssertionError):
+        raise wtf.ValidationError('Must be of the form: [x1, y1, x2, y2]')
+
+
 class AdminModelConverter(form.AdminModelConverter):
     @converts('ImageType')
     def conv_ImagePath(self, field_args, **extra):
@@ -41,6 +48,11 @@ class AdminModelConverter(form.AdminModelConverter):
         except:
             pass
         return wtf.FileField(**field_args)
+
+    @converts('BoxType')
+    def conv_BoxType(self, field_args, **extra):
+        field_args['validators'].append(_box_validator)
+        return wtf.TextField(**field_args)
 
 
 class AdminFilterConverter(filters.FilterConverter):
