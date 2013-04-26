@@ -43,6 +43,7 @@
     newIframe.style.display = "none";
     document.body.appendChild(newIframe);
 
+    document.getElementById("movie_player").setAttribute('wmode','true');
     if (!window.addEventListener) {
       window.attachEvent("message", receiveMessage);
     }
