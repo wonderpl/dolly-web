@@ -44,6 +44,14 @@
     document.body.appendChild(newIframe);
 
     document.getElementById("movie_player").setAttribute('wmode','transparent');
+
+    var newdiv = document.createElement("div");
+    newdiv.id = "rockpackdiv";
+    document.getElementById("player-api").appendChild(newdiv);
+
+    document.getElementById('rockpackdiv').appendChild(document.getElementById('movie_player'));
+
+
     if (!window.addEventListener) {
       window.attachEvent("message", receiveMessage);
     }
