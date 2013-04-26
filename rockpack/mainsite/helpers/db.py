@@ -115,7 +115,7 @@ class ImageType(types.TypeDecorator):
 
 class BoxType(types.TypeDecorator):
 
-    if dbapi.db.engine.dialect.supports_sequences:
+    if 'postgres' in app.config.get('DATABASE_URL', ''):
         impl = postgres.ARRAY(types.Float)
     else:
         impl = types.String
