@@ -8,7 +8,7 @@ from sqlalchemy.dialects import postgres
 from flask import g
 from flask.ext import wtf
 from rockpack.mainsite import app
-from rockpack.mainsite.core import imaging
+from rockpack.mainsite.core import imaging, dbapi
 from .urls import image_url_from_path
 
 
@@ -115,7 +115,10 @@ class ImageType(types.TypeDecorator):
 
 class BoxType(types.TypeDecorator):
 
-    impl = postgres.ARRAY(types.Float)
+    if dbapi.db.engine.dialect.supports_sequences:
+        impl = postgres.ARRAY(types.Float)
+    else:
+        impl = types.String
 
     def process_bind_param(self, value, dialect):
         if value:
