@@ -50,7 +50,7 @@
       var element;
       element = document.getElementById("rockpackiframe");
       element.parentNode.removeChild(element);
-      window.removeEventListener('message');
+      window.removeEventListener('message', receiveMessage, false);
     }
 
     document.getElementById("rockpackiframe").onload = function() {
