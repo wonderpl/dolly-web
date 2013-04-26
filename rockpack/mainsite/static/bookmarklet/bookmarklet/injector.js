@@ -43,7 +43,13 @@
     newIframe.style.display = "none";
     document.body.appendChild(newIframe);
 
-    window.addEventListener('message', receiveMessage, false);
+    if (!window.addEventListener) {
+      window.attachEvent("message", receiveMessage);
+    }
+    else {
+      window.addEventListener('message', receiveMessage, false);
+    }
+    
 
     function receiveMessage(evt)
     {
