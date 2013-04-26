@@ -19,8 +19,8 @@ class AJSTemplates(Filter):
 
 
 class WebLiteTemplates(AJSTemplates):
-    name = 'ajstemplates'
-    module_name = 'WebLite'
+    name = 'weblighttemplates'
+    module_name = 'Weblight'
 
 
 register_filter(WebLiteTemplates)

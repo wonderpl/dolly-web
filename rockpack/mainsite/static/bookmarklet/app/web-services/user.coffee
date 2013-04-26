@@ -29,6 +29,23 @@ angular.module('Bookmarklet').factory('User', ($http, apiUrl) ->
           console.log data
         )
 
+    addVideo: (userID, bearerToken, videoID, channelID) ->
+      $http({
+      method: 'POST',
+      data: [["youtube", videoID]],
+      url: apiUrl + "ws/#{userID}/channels/#{channelID}/videos/",
+      headers: {"authorization": "Bearer #{bearerToken}", "Content-Type": "application/json; charset=UTF-8"},
+      })
+        .then(((data) ->
+          console.log data
+          return data.data
+        ),
+        (data) ->
+          console.log data
+        )
+
+
+
   }
 
   return User

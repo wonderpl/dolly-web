@@ -22,16 +22,51 @@ body {
   background: rgba(28,31,33,0.5);
 }
 
+#resetPassword {
+  width: 530px;
+  height: 425px;
+  margin: 100px auto;
+  background: #f1f1f1;
+  position: relative;  
+
+  button {
+    width: 307px;
+    margin: 0;
+    padding: 10px 0;
+    border: 0;
+    background: #fff;
+    font-family: "dn-bold";
+    font-size: 17px;
+    color: #000;
+    display: inline-block;
+    border-radius: 0;
+    text-transform: uppercase;
+  }
+
+  .text {
+    width: 307px;
+    color: #6a727a;
+    font-family: "dn-regular";
+    font-size: 20px;
+    margin: 0 auto;
+    text-align: center;
+  }
+
+  .back {
+    margin-top: 40px;
+    color: #21b8d5;
+    font-size: 11px;
+    text-align: center;
+    display: block;
+  }
+}
+
 #login {
   width: 530px;
   height: 425px;
   margin: 100px auto;
   background: #f1f1f1;
   position: relative;
-
-  #logo {
-    margin: 3px auto 0 0;
-  }
 
   #forgotpassword {
     font-size: 11px;
@@ -53,19 +88,6 @@ body {
     padding-left: 50px;
   }
 
-  input[type=text], input[type=password] {
-    width: 267px;
-    margin: 0;
-    padding: 10px 20px;
-    border: 0;
-    -webkit-box-shadow: inset 2px 2px 2px 2px rgba(245, 245, 245, 0.5);
-    box-shadow: inset 2px 2px 2px 2px rgba(245, 245, 245, 0.5);
-    background: #f9f9f9;
-    border-radius: 0;
-    font-family: "dn-regular";
-    font-size: 17px;
-  }
-
   button {
     width: 307px;
     margin: 0;
@@ -80,18 +102,6 @@ body {
     text-transform: uppercase;
   }
 
-  .control-group {
-    margin-left:110px;
-    margin-bottom: 8px;
-  }
-
-  hr {
-    width: 307px;
-    background: #ddd;
-    border-bottom: 1px solid #f9f9f9;
-    height: 1px;
-    margin: 10px auto;
-  }
 }
 
 #addtoChannel {
@@ -224,4 +234,57 @@ body {
   a, a:hover, a:visited {
     color: #21b8d5;
   }
+}
+
+#done {
+  width: 343px;
+  height: 135px;
+  margin: 100px auto;
+  background: #242729;
+  color: #fff;
+  font-family: "dn-regular";
+  font-size: 13px;
+  text-align: center; 
+  position: relative; 
+
+  .close {
+    position: absolute;
+    top: 0;
+    right: 0;
+  }
+
+  .done {
+    margin: 30px 0;
+  }
+}
+
+input[type=text], input[type=password] {
+  width: 267px;
+  margin: 0;
+  padding: 10px 20px;
+  border: 0;
+  -webkit-box-shadow: inset 2px 2px 2px 2px rgba(245, 245, 245, 0.5);
+  box-shadow: inset 2px 2px 2px 2px rgba(245, 245, 245, 0.5);
+  background: #f9f9f9;
+  border-radius: 0;
+  font-family: "dn-regular";
+  font-size: 17px;
+}
+
+hr {
+  width: 307px;
+  background: #ddd;
+  border: 0;
+  border-bottom: 1px solid #f9f9f9;
+  height: 1px;
+  margin: 10px auto;
+}
+
+.control-group {
+  margin-left:110px;
+  margin-bottom: 8px;
+}
+
+#logo {
+  margin: 3px auto 0 0;
 }

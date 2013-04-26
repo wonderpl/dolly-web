@@ -4,9 +4,9 @@ window.Bookmarklet = angular.module('Bookmarklet', [])
     $routeProvider.when('/addtochannel', {templateUrl: 'addtochannels.html'})
     $routeProvider.when('/createchannel', {templateUrl: 'createchannel.html'})
     $routeProvider.when('/resetpassword', {templateUrl: 'resetpassword.html'})
-
+    $routeProvider.when('/done', {templateUrl: 'done.html'})
   ])
-  .constant('apiUrl', 'http://localhost:5000/')
+  .constant('apiUrl', 'http://demo.rockpack.com/')
 
 window.fbAsyncInit = ->
   FB.init({ appId: 'Your_APP_ID',
@@ -16,4 +16,3 @@ window.fbAsyncInit = ->
   oauth: true})
 
   showLoader(true)
-

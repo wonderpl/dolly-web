@@ -64,7 +64,7 @@ angular.module('Bookmarklet').factory('OAuth', ($http, apiUrl) ->
         console.log data
       )
 
-    # Accepts Username or Password (supplied as username)
+    # Accepts Username or Email (supplied as username)
     resetPassword: (username) ->
       $http({
         method: 'POST',

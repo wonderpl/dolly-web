@@ -35,7 +35,7 @@
   {% endassets %}
 
   {% assets filters="bmtemplates", output="gen/bookmarklet_templates.%(version)s.js", 
-    "bookmarklet/app/views/addtochannels.html", "bookmarklet/app/views/createchannel.html", "bookmarklet/app/views/login.html", "bookmarklet/app/views/resetpassword.html" %}
+    "bookmarklet/app/views/addtochannels.html", "bookmarklet/app/views/createchannel.html", "bookmarklet/app/views/login.html", "bookmarklet/app/views/resetpassword.html", "bookmarklet/app/views/done.html" %}
     <script type="text/javascript" src="{{ ASSET_URL }}"></script>
   {% endassets %}
 
@@ -54,8 +54,8 @@
     window.fbAsyncInit = function() {
       // init the FB JS SDK
       FB.init({
-        appId      : '532695963449192',                        // App ID from the app dashboard
-//        channelUrl : '//127.0.0.1:9001/assets/channel.html', // Channel file for x-domain comms
+        appId      : '131721883664256',                        // App ID from the app dashboard
+       channelUrl : '//demo.rockpack.com/static/assets/channel.html', // Channel file for x-domain comms
         status     : true,                                 // Check Facebook Login status
         xfbml      : true                                  // Look for social plugins on the page
       });

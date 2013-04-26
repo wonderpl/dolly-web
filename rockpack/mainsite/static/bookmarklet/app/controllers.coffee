@@ -27,42 +27,34 @@ window.Bookmarklet.controller('LoginCtrl', ['$scope','$http', 'apiUrl', '$locati
     return
 
   $scope.facebook = ->
-    FB.getLoginStatus((response) ->
-      if (response.status == 'connected')
-        console.log response
+    console.log 'facebook clicked'
+    FB.login((response) ->
+      if (response.authResponse)
+        # connected
         OAuth.externalLogin('facebook', response.authResponse.accessToken)
           .then((data) ->
-            console.log data
+            cookies.set('refresh_token', data.refresh_token, 2678400)
+            cookies.set('user_id', data.user_id, 2678400)
+            $location.path('/addtochannel')
             return
           )
       else
-        # Not Logged in/User refused access
-        FB.login((response) ->
-          if (response.authResponse)
-            # connected
-            OAuth.externalLogin('facebook', response.authResponse.accessToken)
-              .then((data) ->
-                console.log data
-                return
-              )
-          else
-            # cancelled
-            console.log response
-        )
+        # cancelled
+        console.log response
     )
-
-
   $scope.close = ->
-    parent.removeIframe()
+    window.parent.postMessage('close', '*');
 
   return
 ])
 
-window.Bookmarklet.controller('AddtoChannelCtrl', ['$scope','$http', 'apiUrl', '$location', 'cookies', 'OAuth', 'User', ($scope, $http, apiUrl, $location, cookies, OAuth, User) ->
+window.Bookmarklet.controller('AddtoChannelCtrl', ['$scope','$http', 'apiUrl', '$location', 'cookies', 'OAuth', 'User', '$routeParams', ($scope, $http, apiUrl, $location, cookies, OAuth, User, $routeParams) ->
+
+  $scope.videoID = $routeParams.id
+  $scope.selectedChannel = null
 
   $scope.refresh_token = cookies.get('refresh_token')
   $scope.user_id = cookies.get('user_id')
-  $scope.selectedVideo = null
 
   # redirect user to login if he got here by chance
   if (@refresh_token == null or @user_id == null)
@@ -78,22 +70,29 @@ window.Bookmarklet.controller('AddtoChannelCtrl', ['$scope','$http', 'apiUrl', '
   )
 
   $scope.selectChannel = (el) ->
-    if $scope.selectedVideo == $(el.currentTarget).data("channelid")
-      $scope.selectedVideo = null
+    if $scope.selectedChannel == $(el.currentTarget).data("channelid")
+      $scope.selectedChannel = null
       $(el.currentTarget).removeClass("selected")
     else
-      $scope.selectedVideo = $(el.currentTarget).data("channelid")
+      $scope.selectedChannel = $(el.currentTarget).data("channelid")
       $(".selected").each(->
         $(this).removeClass('selected')
       )
       $(el.currentTarget).addClass("selected")
     return
 
+  $scope.addtoChannel = () ->
+    User.addVideo($scope.user_id, $scope.access_token, $scope.videoID,$scope.selectedChannel)
+    .then((data) ->
+      $location.path('/done')
+    )
+
   $scope.createChannel = ->
     $location.path('/createchannel')
 
   $scope.close = ->
-    parent.removeIframe()
+    window.parent.postMessage('close', '*');
+  
   return
 ])
 
@@ -106,6 +105,24 @@ window.Bookmarklet.controller('CreateChannelCtrl', ['$scope','$http', 'apiUrl', 
 
   $scope.addChannel = ->
     User.createChannel($scope.user_id, $scope.accessToken, $scope.channelName)
+    .then((data) ->
+      $location.path('/done')
+    )
   return
+
+])
+
+window.Bookmarklet.controller('DoneCtrl', ['$scope','$http', 'apiUrl', '$location', 'cookies', 'OAuth', 'User', ($scope, $http, apiUrl, $location, cookies, OAuth, User) ->
+  $scope.close = ->
+    window.parent.postMessage('close', '*');
+
+])
+
+window.Bookmarklet.controller('ResetPasswordCtrl', ['$scope','$http', 'apiUrl', '$location', 'cookies', 'OAuth', 'User', ($scope, $http, apiUrl, $location, cookies, OAuth, User) ->
+  $scope.close = ->
+    window.parent.postMessage('close', '*');
+
+  $scope.resetPassword = ->
+    OAuth.resetPassword($scope.username)
 
 ])
