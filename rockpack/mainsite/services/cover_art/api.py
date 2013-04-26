@@ -5,6 +5,7 @@ from rockpack.mainsite.services.cover_art.models import RockpackCoverArt
 
 def cover_art_dict(instance, own=False):
     data = dict(
+        id=str(instance.id),
         cover_ref=str(instance.cover),
         carousel_url=instance.cover.carousel,
         background_url=instance.cover.background,
@@ -17,7 +18,8 @@ def cover_art_dict(instance, own=False):
 def cover_art_response(covers, paging, own=False):
     total = covers.count()
     offset, limit = paging
-    items = [cover_art_dict(c, own) for c in covers.offset(offset).limit(limit)]
+    items = [dict(position=position, **cover_art_dict(cover_art, own))
+             for position, cover_art in enumerate(covers.offset(offset).limit(limit))]
     return dict(cover_art=dict(items=items, total=total))
 
 

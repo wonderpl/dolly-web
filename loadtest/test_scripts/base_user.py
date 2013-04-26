@@ -10,7 +10,7 @@ import simplejson as json
 import requests
 
 
-sys.path.append(reduce(lambda d, _: os.path.dirname(d), xrange(3), os.path.abspath(__file__)))
+sys.path.insert(0, reduce(lambda d, _: os.path.dirname(d), xrange(3), os.path.abspath(__file__)))
 try:
     from rockpack.mainsite import app
 except ImportError:

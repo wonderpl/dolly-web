@@ -1,7 +1,6 @@
 from werkzeug.datastructures import MultiDict
 from sqlalchemy import desc
 from sqlalchemy.orm import lazyload
-from sqlalchemy.orm.exc import NoResultFound
 from flask import abort, request, g
 from flask.ext import wtf
 from flask.ext.admin import form
@@ -15,6 +14,7 @@ from rockpack.mainsite.helpers.urls import url_for, url_to_endpoint
 from rockpack.mainsite.helpers.db import gen_videoid
 from rockpack.mainsite.services.video.models import (
     Channel, ChannelLocaleMeta, Video, VideoInstance, VideoInstanceLocaleMeta, Category, ContentReport)
+from rockpack.mainsite.services.oauth.api import RockRegistrationForm
 from rockpack.mainsite.services.cover_art.models import UserCoverArt, RockpackCoverArt
 from rockpack.mainsite.services.cover_art import api as cover_api
 from rockpack.mainsite.services.video import api as video_api
@@ -43,15 +43,32 @@ ACTIVITY_OBJECT_TYPE_MAP = dict(
 @commit_on_success
 def get_or_create_video_records(instance_ids, locale):
     """Take a list of instance ids and return mapping to associated video ids."""
+    def add(s, i):
+        if i and i not in s:
+            s.add(i)
+            instance_id_order.append(i)
 
-    # Split between "fake" search ids and real
-    search_instance_ids = set()
+    # Split between "fake" external ids and real
+    external_instance_ids = set()
     real_instance_ids = set()
+    invalid = []
+    instance_id_order = []
     for instance_id in instance_ids:
-        if instance_id.startswith(search_api.VIDEO_INSTANCE_PREFIX):
-            search_instance_ids.add(instance_id)
-        else:
-            real_instance_ids.add(instance_id)
+        try:
+            if instance_id.startswith(search_api.VIDEO_INSTANCE_PREFIX):
+                prefix, source, source_videoid = instance_id.split('-', 2)
+                add(external_instance_ids, (int(source), source_videoid))
+            else:
+                add(real_instance_ids, instance_id)
+        except (AttributeError, ValueError):  # not a string
+            try:
+                source, source_videoid = instance_id
+                source = ['rockpack', 'youtube'].index(source)  # TODO: use db mapping
+                add(external_instance_ids, (source, source_videoid))
+            except (TypeError, ValueError):
+                invalid.append(instance_id)
+    if invalid:
+        abort(400, message='Invalid video instance ids', data=invalid)
 
     # Check if any "real" ids are invalid
     if real_instance_ids:
@@ -63,41 +80,31 @@ def get_or_create_video_records(instance_ids, locale):
     else:
         existing_ids = {}
 
-    if not search_instance_ids:
-        return existing_ids
-
-    # Map search ids to real ids
-    video_id_map = dict()
-    invalid = []
-    for instance_id in search_instance_ids:
-        try:
-            prefix, source, source_videoid = instance_id.split('-', 2)
-            source = int(source)
-        except ValueError:
-            invalid.append(instance_id)
-        else:
+    if external_instance_ids:
+        # Map search ids to real ids
+        video_id_map = dict()
+        for source, source_videoid in external_instance_ids:
             video_id = gen_videoid(None, source, source_videoid)
-            video_id_map[video_id] = instance_id, source, source_videoid
-            existing_ids[instance_id] = video_id
-    if invalid:
-        abort(400, message='Invalid video instance ids', data=invalid)
+            video_id_map[video_id] = source, source_videoid
+            existing_ids[(source, source_videoid)] = video_id
 
-    # Check which video references from search instances already exist
-    # and create records for any that don't
-    search_video_ids = set(video_id_map.keys())
-    existing_video_ids = set(
-        v[0] for v in Video.query.filter(Video.id.in_(search_video_ids)).values('id'))
-    new_ids = search_video_ids - existing_video_ids
-    for video_id in new_ids:
-        instance_id, source, source_videoid = video_id_map[video_id]
-        # TODO: Use youtube batch request feature
-        try:
-            video_data = get_video_data(source_videoid)
-        except Exception:
-            abort(400, message='Invalid video instance ids', data=[instance_id])
-        Video.add_videos(video_data.videos, source, locale)
+        # Check which video references from search instances already exist
+        # and create records for any that don't
+        search_video_ids = set(video_id_map.keys())
+        existing_video_ids = set(
+            v[0] for v in Video.query.filter(Video.id.in_(search_video_ids)).values('id'))
+        new_ids = search_video_ids - existing_video_ids
+        for video_id in new_ids:
+            source, source_videoid = video_id_map[video_id]
+            # TODO: Use youtube batch request feature
+            try:
+                assert source == 1
+                video_data = get_video_data(source_videoid)
+            except Exception:
+                abort(400, message='Invalid video instance ids', data=[[source, source_videoid]])
+            Video.add_videos(video_data.videos, source, locale)
 
-    return existing_ids
+    return [existing_ids[id] for id in instance_id_order]
 
 
 @commit_on_success
@@ -107,7 +114,7 @@ def save_video_activity(user, action, instance_id, locale):
     except KeyError:
         abort(400, message='invalid action')
 
-    video_id = get_or_create_video_records([instance_id], locale)[instance_id]
+    video_id = get_or_create_video_records([instance_id], locale)[0]
     activity = dict(user=user, action=action,
                     object_type='video', object_id=video_id)
     if not UserActivity.query.filter_by(**activity).count():
@@ -164,28 +171,24 @@ def save_content_report(user, object_type, object_id):
 
 
 @commit_on_success
-def add_videos_to_channel(channel, instance_list, locale):
-    if all(i.startswith('RP') for i in instance_list):
-        # Backwards compatibility
-        id_map = dict((v[0], v[0]) for v in Video.query.filter(Video.id.in_(instance_list)).values('id'))
-    else:
-        id_map = get_or_create_video_records(instance_list, locale)
+def add_videos_to_channel(channel, instance_list, locale, delete_existing=False):
+    video_ids = get_or_create_video_records(instance_list, locale)
     existing = dict((v.video, v) for v in VideoInstance.query.filter_by(channel=channel.id))
     added = []
-    for position, instance_id in enumerate(instance_list):
-        video_id = id_map[instance_id]
+    for position, video_id in enumerate(video_ids):
         if video_id not in added:
             instance = existing.get(video_id) or VideoInstance(video=video_id, channel=channel.id)
             instance.position = position
             VideoInstance.query.session.add(instance)
             added.append(video_id)
 
-    deleted_video_ids = set(existing.keys()).difference(id_map.values())
-    if deleted_video_ids:
-        VideoInstance.query.filter(
-            VideoInstance.video.in_(deleted_video_ids),
-            VideoInstance.channel == channel.id
-        ).delete(synchronize_session='fetch')
+    if delete_existing:
+        deleted_video_ids = set(existing.keys()).difference(video_ids)
+        if deleted_video_ids:
+            VideoInstance.query.filter(
+                VideoInstance.video.in_(deleted_video_ids),
+                VideoInstance.channel == channel.id
+            ).delete(synchronize_session='fetch')
 
 
 def _user_list(paging, **filters):
@@ -260,9 +263,11 @@ class ChannelForm(form.BaseForm):
     def validate_category(self, field):
         if field.data:
             try:
-                Category.query.filter_by(id=int(field.data)).one()
-            except (ValueError, NoResultFound):
+                field.data = Category.query.get(int(field.data)).id
+            except (ValueError, AttributeError):
                 raise ValidationError('invalid category')
+        else:
+            field.data = None
 
 
 class ActivityForm(wtf.Form):
@@ -289,9 +294,6 @@ def _channel_info_response(channel, locale, paging, owner_url):
     data['category'] = channel.category
     data['videos'] = dict(items=items, total=total)
     return data
-
-
-from rockpack.mainsite.services.oauth.api import RockRegistrationForm
 
 
 class UserWS(WebService):
@@ -434,8 +436,14 @@ class UserWS(WebService):
 
     @expose_ajax('/<userid>/channels/<channelid>/', cache_age=60, secure=False)
     def channel_info(self, userid, channelid):
-        channel = Channel.query.filter_by(id=channelid, public=True, deleted=False).first_or_404()
-        return _channel_info_response(channel, self.get_locale(), self.get_page(), False)
+        if not app.config.get('ELASTICSEARCH_URL'):
+            channel = Channel.query.filter_by(id=channelid, public=True, deleted=False).first_or_404()
+            return _channel_info_response(channel, self.get_locale(), self.get_page(), False)
+
+        channel, total = video_api.es_get_channels_with_videos(channel_ids=[channelid])
+        if not channel:
+            abort(404)
+        return channel[0]
 
     @expose_ajax('/<userid>/channels/<channelid>/', cache_age=0)
     @check_authorization()
@@ -496,15 +504,15 @@ class UserWS(WebService):
             abort(403)
         return [v[0] for v in VideoInstance.query.filter_by(channel=channelid).order_by('position').values('video')]
 
-    @expose_ajax('/<userid>/channels/<channelid>/videos/', methods=('PUT',))
+    @expose_ajax('/<userid>/channels/<channelid>/videos/', methods=('PUT', 'POST'))
     @check_authorization(self_auth=True)
     def update_channel_videos(self, userid, channelid):
         channel = Channel.query.filter_by(id=channelid, deleted=False).first_or_404()
         if not channel.owner == userid:
             abort(403)
-        if not request.json or not isinstance(request.json, list):
+        if request.json is None or not isinstance(request.json, list):
             abort(400, message='List can be empty, but must be present')
-        add_videos_to_channel(channel, map(str, request.json), self.get_locale())
+        add_videos_to_channel(channel, request.json, self.get_locale(), request.method == 'PUT')
 
     @expose_ajax('/<userid>/channels/<channelid>/subscribers/', cache_age=60)
     def channel_subscribers(self, userid, channelid):

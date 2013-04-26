@@ -71,6 +71,9 @@ def setup_timing(app):
         json.dumps = wrap(json.dumps, 'json.')
         Connection.execute = wrap(Connection.execute, 'db.')
         requests.api.request = wrap(requests.api.request, 'requests.')
-        requests.Session.request = wrap(requests.Session.request, 'requests.')
+        if app.config.get('USE_GEVENT'):
+            requests.Session.request = wrap(requests.Session.request, 'requests.')
+            from geventhttpclient.client import HTTPClient
+            HTTPClient.request = wrap(HTTPClient.request, 'requests.')
         app.before_request(before_request)
         app.after_request(after_request)

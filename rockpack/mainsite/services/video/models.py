@@ -8,6 +8,7 @@ from rockpack.mainsite.helpers.db import add_base64_pk, add_video_pk, insert_new
 from rockpack.mainsite.helpers.urls import url_for
 from rockpack.mainsite.services.user.models import User
 from rockpack.mainsite import app
+from rockpack.mainsite.core.es import api as es_api
 
 
 class Locale(db.Model):
@@ -295,7 +296,8 @@ class Channel(db.Model):
 
     def get_resource_url(self, own=False):
         view = 'userws.owner_channel_info' if own else 'userws.channel_info'
-        return url_for(view, userid=self.owner_rel.id, channelid=self.id)
+        return url_for(view, userid=self.owner, channelid=self.id)
+
     resource_url = property(get_resource_url)
 
     def add_videos(self, videos):
@@ -309,7 +311,9 @@ class Channel(db.Model):
             existing = [i.video for i in session.query(VideoInstance.video).
                         filter_by(channel=self.id).
                         filter(VideoInstance.video.in_(set(i.video for i in instances)))]
-            session.add_all(i for i in instances if i.video not in existing)
+            for i in instances:
+                if i.video not in existing:
+                    session.add_all(i)
 
     def remove_videos(self, videos):
         VideoInstance.remove_from_video_ids(
@@ -371,6 +375,135 @@ class ContentReport(db.Model):
 
 
 ParentCategory = aliased(Category)
+
+
+def _locale_dict_from_object(metas):
+    locales = {el: {} for el in app.config.get('ENABLED_LOCALES')}
+    meta_dict = {m.locale: m for m in metas}
+    for loc in locales.keys():
+        meta = meta_dict.get(loc)
+        locales[loc] = {
+            'view_count': getattr(meta, 'view_count', 0),
+            'star_count': getattr(meta, 'star_count', 0)
+        }
+    return locales
+
+
+def _add_es_video(video_instance):
+    if app.config.get('ELASTICSEARCH_URL'):
+
+        video = Video.query.get(video_instance.video)
+        if video:
+            data = dict(
+                id=video_instance.id,
+                public=True,  # we only insert public records
+                video_id=video_instance.video,
+                title=video.title,
+                channel=video_instance.channel,
+                category=video_instance.category,
+                date_added=video_instance.date_added,
+                position=video_instance.position,
+                thumbnail_url=video.default_thumbnail if video.default_thumbnail else '',
+                source=video.source,
+                source_id=video.source_videoid,
+                duration=video.duration,
+                locale=_locale_dict_from_object(video_instance.metas))
+
+            print es_api.add_video_to_index(data)
+
+
+def _add_es_channel(channel):
+    if app.config.get('ELASTICSEARCH_URL'):
+        category = []
+        if channel.category:
+            category = Category.query.filter(
+                Category.parent is not None,
+                Category.id == channel.category).values('id', 'parent').next()
+
+        # HACK
+        if isinstance(channel.cover, (str, unicode)):
+            convert = lambda value: ImageType('CHANNEL').process_result_value(value, None)
+        else:
+            convert = lambda x: x
+
+        data = dict(
+            id=channel.id,
+            public=True,
+            category=category,
+            locale=_locale_dict_from_object(channel.metas),
+            owner_id=channel.owner,
+            subscriber_count=channel.subscriber_count,
+            date_added=channel.date_added,
+            description=channel.description,
+            resource_url=channel.get_resource_url(),
+            title=channel.title,
+            ecommerce_url=channel.ecommerce_url,
+            thumbnail_url=convert(channel.cover).thumbnail_large,
+            cover_thumbnail_small_url=convert(channel.cover).thumbnail_small,
+            cover_thumbnail_large_url=convert(channel.cover).thumbnail_large,
+            cover_background_url=convert(channel.cover).background)
+
+        print es_api.add_channel_to_index(data)
+
+
+def _remove_es_channel(channel):
+    if app.config.get('ELASTICSEARCH_URL'):
+        es_api.remove_channel_from_index(channel.id)
+
+
+def _remove_es_video_instance(video_instance):
+    if app.config.get('ELASTICSEARCH_URL'):
+        es_api.remove_video_from_index(video_instance.id)
+
+
+@event.listens_for(VideoInstanceLocaleMeta, 'after_update')
+def _video_insert(mapper, connection, target):
+    _add_es_video(target.video_instance_rel)
+
+
+@event.listens_for(Video, 'after_update')
+def _video_update(mapper, connection, target):
+    if not target.visible:
+        for i in VideoInstance.query.filter_by(video=target.id):
+            _remove_es_video_instance(i)
+
+
+@event.listens_for(VideoInstance, 'after_insert')
+def _video_instance_insert(mapper, connection, target):
+    _add_es_video(target)
+
+
+@event.listens_for(VideoInstance, 'after_update')
+def _video_instance_update(mapper, connection, target):
+    _remove_es_video_instance(target)
+
+
+@event.listens_for(VideoInstance, 'after_delete')
+def _video_instance_delete(mapper, connection, target):
+    _remove_es_video_instance(target)
+
+
+@event.listens_for(ChannelLocaleMeta, 'after_insert')
+def _channel_insert(mapper, connection, target):
+    # NOTE: owner_rel isn't available on Channel if we pass channel_rel for owner.resource_url.
+    # possibly do a lookup owner in resource_url method instead of having it rely on self.owner_rel here
+    channel = Channel.query.get(target.channel)
+    _add_es_channel(channel)
+
+
+@event.listens_for(ChannelLocaleMeta, 'after_update')
+def _es_channel_update_from_clm(mapper, connection, target):
+    _add_es_channel(target.channel_rel)
+
+
+@event.listens_for(Channel, 'after_insert')
+def _es_channel_insert_from_channel(mapper, connection, target):
+    _add_es_channel(target)
+
+
+@event.listens_for(Channel, 'after_update')
+def _es_channel_update_from_channel(mapper, connection, target):
+    _add_es_channel(target)
 
 
 event.listen(Video, 'before_insert', add_video_pk)

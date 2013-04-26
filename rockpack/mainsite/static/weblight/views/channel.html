@@ -3,7 +3,7 @@
   <div class="channelheader">
     <div class="wrapper" ng-style="wrapperWidth()">
       <h1>{{channel.title| truncate: channelTitleLength}}</h1>
-      <div id="details">{{channel.videos.total}} Videos / {{channel.subscribe_count}} Subscribers</div>
+      <div id="details">{{channel.videos.total}} Videos / {{channel.subscriber_count}} Subscribers</div>
       <ul id="userdetails">
           <li><img class="user-profile" ng-src="{{channel.owner.avatar_thumbnail_url}}"></li>
           <li id="curatedby">curated by <span id="username">{{channel.owner.name}}</span></li>

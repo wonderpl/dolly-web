@@ -1,8 +1,9 @@
+import os
 import random
-import uuid
-import string
-import simplejson as json
 from base_user import BaseTransaction
+
+
+terms = open(os.path.join(os.path.dirname(__file__), 'terms.txt')).read().split('\n')
 
 
 class Transaction(BaseTransaction):
@@ -13,7 +14,7 @@ class Transaction(BaseTransaction):
         - Search for videos with that term
         - Page through results, up to max 10 pages
         """
-        term = random.choice(self.get_categories('name'))
+        term = random.choice(terms)
         for page_count in xrange(random.randint(1, 10)):
             params = dict(q=term, start=page_count * 100, size=100)
             response = self.get(self.urls['video_search'], params=params)

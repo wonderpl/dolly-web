@@ -31,8 +31,21 @@ class BaseUserTestCase(RockPackTestCase):
         self.discovery_url = self.default_base_url + '/ws/'
         self.client = self.app.test_client()
 
+        if self.app.config.get('ELASTICSEARCH_URL'):
+            from rockpack.mainsite.core.es import helpers
+
+            i = helpers.Indexing()
+            i.create_all_indexes(rebuild=True)
+            i.create_all_mappings()
+
+            i = helpers.DBImport()
+            i.import_channels()
+            i.import_videos()
+            i.import_owners()
+
     def tearDown(self):
         rockpack.mainsite.app = self.old_app
+        super(BaseUserTestCase, self).tearDown()
 
     def request(self, url, method='get', params=None, data=None, headers=[], token=None):
         parsed_url = urlparse.urlparse(url)
@@ -98,9 +111,15 @@ class BrowsingUserTestCase(BaseUserTestCase):
         viewed_videos = []
         self.register_user()
 
+        # Allow elasticsearch to catch up if necessary
+        import time
+        time.sleep(2)
+
         for cat_id in self.get_cat_ids():
             popular_channels = self.get(self.urls['popular_channels'], dict(category=cat_id))
             for channel in popular_channels['channels']['items']:
+                if not channel['category']:
+                    continue
                 channel_detail = self.get(channel['resource_url'])
                 for video in channel_detail['videos']['items']:
                     self.post(self.urls['activity'],
