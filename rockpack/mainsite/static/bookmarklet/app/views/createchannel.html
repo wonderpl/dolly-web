@@ -1,0 +1,10 @@
+<div ng-controller="CreateChannelCtrl" id="createChannel">
+  <ul id="topmenu">
+    <li><img src="/static/assets/bookmarklet/images/close.png" ng-click="close()"></li>
+    <li class="title">Name Your New Channel</li>
+    <li><button class="blue-btn" ng-click="addChannel()">Add</button></li>
+  </ul>
+  <div>
+    <input type="text" id="createchannel" placeholder="Your channel name" ng-model="channelName">
+  </div>
+</div>

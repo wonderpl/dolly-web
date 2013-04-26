@@ -1,9 +1,7 @@
 import logging
 from flask import Flask
 
-
 app = Flask(__name__)
-
 
 def configure():
     app.config.from_pyfile('settings/common.py')

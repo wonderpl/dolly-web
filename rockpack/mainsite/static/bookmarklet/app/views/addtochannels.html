@@ -1,0 +1,21 @@
+<div ng-controller="AddtoChannelCtrl" id="addtoChannel">
+  <ul id="topmenu">
+    <li><img src="/static/assets/bookmarklet/images/close.png" ng-click="close()"></li>
+    <li class="title">Select a Channel</li>
+    <li><button class="blue-btn" ng-click"addChannel()>Add</button></li>
+  </ul>
+  <div>
+    Channels:
+    <ul id="chennellist">
+      <li class="channel newchannel" ng-click="createChannel()">
+        <div class="newchanneltext">Create New Channel</div>
+      </li>
+      <li class="channel" ng-repeat="channel in User.channels.items" ng-click="selectChannel($event)" data-channelid="{{channel.id}}">
+        <div class="channelname">{{channel.title}}</div>
+        <div class="selectedOverlay"></div>
+        <img src="/static/assets/bookmarklet/images/reflection.png" class="reflection">
+        <img ng-src="{{channel.thumbnail_url}}">
+      </li>
+    </ul>
+  </div>
+</div>
