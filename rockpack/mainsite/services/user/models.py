@@ -85,7 +85,14 @@ class User(db.Model):
 
     def get_credentials(self):
         expires_in = app.config.get('ACCESS_TOKEN_EXPIRY', 3600)
-        access_token = create_access_token(self.id, g.app_client_id, expires_in)
+        # This is mostly used in oauth/api.py where `app_client_id` is set in the
+        # `check_client_authorization` decorator from the Basic auth token. `client_id`
+        # is set in `check_authorization` from the Bearer token.
+        try:
+            client_id = g.app_client_id
+        except AttributeError:
+            client_id = g.authorized.clientid
+        access_token = create_access_token(self.id, client_id, expires_in)
         return dict(
             token_type='Bearer',
             access_token=access_token,
@@ -94,6 +101,14 @@ class User(db.Model):
             user_id=self.id,
             resource_url=self.get_resource_url(own=True),
         )
+
+    @classmethod
+    def change_password(cls, user, new_pwd):
+        user.set_password(new_pwd)
+        user.reset_refresh_token()
+        user = user.save()
+        return user.get_credentials()
+
 
     @classmethod
     def suggested_username(cls, source_name):
@@ -119,14 +134,17 @@ class User(db.Model):
     def sanitise_username(cls, name):
         return re.sub(r'\W+', '', name)
 
+    def reset_refresh_token(self):
+        self.refresh_token = uuid.uuid4().hex
+
     @classmethod
     def create_with_channel(cls, password=None, **kwargs):
         kwargs.setdefault('avatar', app.config['DEFAULT_AVATAR'])
         kwargs.setdefault('password_hash', '')
-        kwargs.setdefault('refresh_token', uuid.uuid4().hex)
         user = cls(**kwargs)
         if password:
             user.set_password(password)
+        user.reset_refresh_token()
         user = user.save()
 
         # Prevent circular import

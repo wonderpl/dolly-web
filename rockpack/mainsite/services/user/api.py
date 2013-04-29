@@ -344,21 +344,20 @@ class UserWS(WebService):
     def change_user_password(self, userid):
         data = request.json
         if not isinstance(data, dict) or not data.get('old') or not data.get('new'):
-            abort(400, message='Both old and new passwords must be supplied')
+            abort(400, message=['Both old and new passwords must be supplied.'])
 
         new_p = data.get('new')
         old_p = data.get('old')
 
         user = g.authorized.user
         if not user.check_password(old_p):
-            abort(400, message='Old password is incorrect')
+            abort(400, message=['Old password is incorrect.'])
 
         form = RockRegistrationForm(formdata=MultiDict([('password', new_p)]), csrf_enabled=False)
         if not form.password.validate(form.password.data):
             abort(400, message=form.password.errors)
 
-        user.set_password(new_p)
-        user.save()
+        return user.change_password(user, new_p)
 
     @expose_ajax('/<userid>/<any("username", "first_name", "last_name", "email", "locale", "date_of_birth", "gender"):attribute_name>/', methods=('PUT',))
     @check_authorization(self_auth=True)

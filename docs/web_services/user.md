@@ -150,11 +150,20 @@ Value  | Description
 :----- | :----------
 String | Minimum 6 characters
 
-Responds with a `204`
+Responds with a `200` and new access credentials
 
 ```http
-HTTP/1.1 204 OK
+HTTP/1.1 200 OK
 Content-Type: application/json
+
+{
+  "token_type": "Bearer",
+  "access_token": "some_new_access_token",
+  "expires_in": "3600",
+  "refresh_token": "some_new_refresh_token",
+  "user_id": "USERID",
+  "resource_url:" "http://path/to/user/info/"
+}
 ```
 
 Possible errors
@@ -165,7 +174,7 @@ Content-Type: application/json
 
 {
     "error": "invalid request",
-    "message": "Minimum 6 characters"
+    "message": ["Field must be at least 6 characters long."]
 }
 ```
 
@@ -175,7 +184,7 @@ Content-Type: application/json
 
 {
     "error": "invalid request",
-    "message": "Old password is incorrect"
+    "message": ["Old password is incorrect."]
 }
 ```
 
@@ -185,7 +194,7 @@ Content-Type: application/json
 
 {
     "error": "invalid request",
-    "message": "Both old and new passwords must be supplied"
+    "message": ["Both old and new passwords must be supplied."]
 }
 ```
 
