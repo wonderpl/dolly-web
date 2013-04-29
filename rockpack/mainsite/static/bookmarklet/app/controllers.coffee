@@ -27,7 +27,6 @@ window.Bookmarklet.controller('LoginCtrl', ['$scope','$http', 'apiUrl', '$locati
     return
 
   $scope.facebook = ->
-    console.log 'facebook clicked'
     FB.login((response) ->
       if (response.authResponse)
         # connected

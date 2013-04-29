@@ -12,7 +12,7 @@ window.Bookmarklet.factory('cookies', ['$rootScope', '$browser', ($rootScope, $b
       time = now.getTime()
       time += expires * 1000
       now.setTime(time)
-      c_value=escape(value) + "; expires=" + now.toGMTString()
+      c_value=escape(value) + "; expires=" + now.toUTCString()
       document.cookie = key + "=" + c_value
       return null
     )
