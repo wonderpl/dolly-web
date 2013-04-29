@@ -235,13 +235,17 @@ class ChannelForm(form.BaseForm):
         self._channel_id = None
 
     title = wtf.TextField(validators=[check_present])
-    description = wtf.TextField(validators=[check_present])
+    description = wtf.TextField(validators=[check_present, wtf.validators.Length(max=200)])
     category = wtf.TextField(validators=[check_present])
     cover = wtf.TextField(validators=[check_present])
     public = wtf.BooleanField(validators=[check_present])
 
     def for_channel_id(self, id):
         self._channel_id = id
+
+    def pre_validate(self):
+        if self.description.data:
+            self.description.data = ' '.join(map(lambda x: x.strip(), self.description.data.splitlines()))
 
     def validate_cover(self, field):
         exists = lambda m: m.query.filter_by(cover=field.data).count()
