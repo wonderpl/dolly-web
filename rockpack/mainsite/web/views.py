@@ -28,18 +28,8 @@ def homepage():
 
 @app.route('/bookmarklet', subdomain=app.config.get('DEFAULT_SUBDOMAIN'))
 def bookmarklet():
-    # Define filters for WebAssets
-    # lib = Bundle('bookmarklet/vendor/js/angular.js',
-    #             filters='jsmin', output='gen/bookmarklet_lib%(version)s.js')
-    # assets.register('libmin', lib)
-    # js = Bundle("bookmarklet/app/app.coffee", "bookmarklet/app/controllers.coffee", "bookmarklet/app/services.coffee", "bookmarklet/app/web-services/oauth.coffee", "bookmarklet/app/web-services/user.coffee",
-    #             filters='coffeescript', output='gen/bookmarklet_home%(version)s.js')
-    # assets.register('jsmin', js)
-    # templates = Bundle("bookmarklet/app/views/addtochannels.html", "bookmarklet/app/views/createchannel.html", "bookmarklet/app/views/login.html", "bookmarklet/app/views/resetpassword.html",
-    #             filters='ajstemplates', output='gen/bookmarklet_templates%(version)s.js')
-    # assets.register('templatesmin', templates)
-
-   return render_template('web/bookmarklet.html')
+    headers = {'P3P': 'CP="CAO PSA OUR"'}
+    return render_template('web/bookmarklet.html'), 200, headers
 
 @app.route('/channel/<slug>/<channelid>/', subdomain=app.config.get('DEFAULT_SUBDOMAIN'))
 def channel(slug, channelid):

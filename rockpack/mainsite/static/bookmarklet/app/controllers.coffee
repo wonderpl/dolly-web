@@ -10,21 +10,18 @@ window.Bookmarklet.controller('LoginCtrl', ['$scope','$http', 'apiUrl', '$locati
   $scope.submit = ->  
     if typeof $scope.username != "undefined" and typeof $scope.password != "undefined"
       OAuth.login($scope.username, $scope.password)
-      .then((data) ->
-        # Saving Access Token for 1 Hour
-        # Cookies.set('access_token', data.access_token, 3600)
+      .then(((data) ->
         # Saving refresh Token for 1 Month
         cookies.set('refresh_token', data.refresh_token, 2678400)
         cookies.set('user_id', data.user_id, 2678400)
+        console.log 'went ok'
         $location.path('/addtochannel')
         return
+      ),
+      (data) ->
+          alert ('Bad username/password')
+          return
       )
-      .error((data) ->
-        ## TODO give an error message
-        console.log data
-        return
-      )
-    return
 
   $scope.facebook = ->
     FB.login((response) ->
@@ -62,22 +59,19 @@ window.Bookmarklet.controller('AddtoChannelCtrl', ['$scope','$http', 'apiUrl', '
   # Access token is alway refreshed.
   $scope.refreshToken = OAuth.refreshToken($scope.refresh_token)
   .then((data)->
+    console.log 'got refresh token'
     $scope.access_token = data.access_token
     cookies.set('access_token', data.access_token, 3600)
     $scope.User = User.getUser($scope.user_id, $scope.access_token)
     return
   )
 
-  $scope.selectChannel = (el) ->
-    if $scope.selectedChannel == $(el.currentTarget).data("channelid")
-      $scope.selectedChannel = null
-      $(el.currentTarget).removeClass("selected")
-    else
-      $scope.selectedChannel = $(el.currentTarget).data("channelid")
-      $(".selected").each(->
-        $(this).removeClass('selected')
-      )
-      $(el.currentTarget).addClass("selected")
+  $scope.isSelected = (channelID) ->
+    console.log $scope.selectedChannel == channelID
+    return $scope.selectedChannel == channelID
+
+  $scope.selectChannel = (channelID) ->
+    $scope.selectedChannel = channelID
     return
 
   $scope.addtoChannel = () ->
