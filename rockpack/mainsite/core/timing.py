@@ -1,4 +1,5 @@
 import time
+import urllib3
 import logging
 import requests
 from functools import wraps
@@ -67,6 +68,7 @@ def setup_timing(app):
         statsd_client = pystatsd.Client(host=statsd_host, prefix=app.name)
 
     if app.config.get('ENABLE_TIMINGS'):
+        urllib3.connectionpool.HTTPConnectionPool.urlopen = wrap(urllib3.connectionpool.HTTPConnectionPool.urlopen, 'urllib3.')
         json.loads = wrap(json.loads, 'json.')
         json.dumps = wrap(json.dumps, 'json.')
         Connection.execute = wrap(Connection.execute, 'db.')
