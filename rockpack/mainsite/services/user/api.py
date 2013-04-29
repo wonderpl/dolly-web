@@ -108,14 +108,14 @@ def get_or_create_video_records(instance_ids, locale):
 
 
 @commit_on_success
-def save_video_activity(user, action, instance_id, locale):
+def save_video_activity(userid, action, instance_id, locale):
     try:
         column, value = ACTION_COLUMN_VALUE_MAP[action]
     except KeyError:
         abort(400, message='invalid action')
 
     video_id = get_or_create_video_records([instance_id], locale)[0]
-    activity = dict(user=user, action=action,
+    activity = dict(user=userid, action=action,
                     object_type='video', object_id=video_id)
     if not UserActivity.query.filter_by(**activity).count():
         # Increment value on each of instance, video, & locale meta
@@ -134,7 +134,7 @@ def save_video_activity(user, action, instance_id, locale):
 
     if action in ('star', 'unstar'):
         channel = Channel.query.filter_by(
-            owner=user, title=app.config['FAVOURITE_CHANNEL'][0]).first()
+            owner=userid, title=app.config['FAVOURITE_CHANNEL'][0]).first()
         if channel:
             if action == 'unstar':
                 channel.remove_videos([video_id])
@@ -143,7 +143,7 @@ def save_video_activity(user, action, instance_id, locale):
 
 
 @commit_on_success
-def save_channel_activity(channelid, action, locale):
+def save_channel_activity(userid, action, channelid, locale):
     """Update channel with subscriber, view, or star count changes."""
     try:
         column, value = ACTION_COLUMN_VALUE_MAP[action]
@@ -155,11 +155,13 @@ def save_channel_activity(channelid, action, locale):
     # Update or create locale meta record:
     ChannelLocaleMeta.query.filter_by(channel=channelid, locale=locale).update(incr(ChannelLocaleMeta)) or \
         ChannelLocaleMeta(channel=channelid, locale=locale, **{column: value}).save()
+    if action in ('subscribe', 'unsubscribe'):
+        UserActivity(user=userid, action=action, object_type='channel', object_id=channelid).save()
 
 
 @commit_on_success
-def save_content_report(user, object_type, object_id):
-    activity = dict(action='content_reported', user=user,
+def save_content_report(userid, object_type, object_id):
+    activity = dict(action='content_reported', user=userid,
                     object_type=object_type, object_id=object_id)
     if not UserActivity.query.filter_by(**activity).count():
         UserActivity(**activity).save()
@@ -383,14 +385,12 @@ class UserWS(WebService):
     @expose_ajax('/<userid>/activity/', cache_age=60, cache_private=True)
     @check_authorization(self_auth=True)
     def get_activity(self, userid):
-        subscriptions = user_subscriptions(userid).\
-            order_by(desc('date_created')).limit(self.max_page_size)
         ids = dict((key, action_object_list(userid, key, self.max_page_size))
                    for key in ACTION_COLUMN_VALUE_MAP)
         return dict(
             recently_viewed=ids['view'],
             recently_starred=list(set(ids['star']) - set(ids['unstar'])),
-            subscribed=[id for (id,) in subscriptions.values('channel')],
+            subscribed=list(set(ids['subscribe']) - set(ids['unsubscribe'])),
         )
 
     @expose_ajax('/<userid>/activity/', methods=['POST'])
@@ -405,7 +405,7 @@ class UserWS(WebService):
                             self.get_locale())
         channelid = VideoInstance.query.filter_by(id=form.video_instance.data).value('channel')
         if channelid:
-            save_channel_activity(channelid, form.action.data, self.get_locale())
+            save_channel_activity(userid, form.action.data, channelid, self.get_locale())
 
     @expose_ajax('/<userid>/content_reports/', methods=['POST'])
     @check_authorization(self_auth=True)
@@ -574,7 +574,7 @@ class UserWS(WebService):
         if Subscription.query.filter_by(user=userid, channel=channelid).count():
             abort(400, message='Already subscribed')
         subs = Subscription(user=userid, channel=channelid).save()
-        save_channel_activity(channelid, 'subscribe', self.get_locale())
+        save_channel_activity(userid, 'subscribe', channelid, self.get_locale())
         return ajax_create_response(subs)
 
     @expose_ajax('/<userid>/subscriptions/<channelid>/')
@@ -589,7 +589,7 @@ class UserWS(WebService):
     def delete_subscription_item(self, userid, channelid):
         if not user_subscriptions(userid).filter_by(channel=channelid).delete():
             abort(404)
-        save_channel_activity(channelid, 'unsubscribe', self.get_locale())
+        save_channel_activity(userid, 'unsubscribe', channelid, self.get_locale())
 
     @expose_ajax('/<userid>/subscriptions/recent_videos/', cache_age=60, cache_private=True)
     @check_authorization(self_auth=True)
