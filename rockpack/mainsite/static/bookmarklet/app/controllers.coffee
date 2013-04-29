@@ -59,7 +59,6 @@ window.Bookmarklet.controller('AddtoChannelCtrl', ['$scope','$http', 'apiUrl', '
   # Access token is alway refreshed.
   $scope.refreshToken = OAuth.refreshToken($scope.refresh_token)
   .then((data)->
-    console.log 'got refresh token'
     $scope.access_token = data.access_token
     cookies.set('access_token', data.access_token, 3600)
     $scope.User = User.getUser($scope.user_id, $scope.access_token)
@@ -67,7 +66,6 @@ window.Bookmarklet.controller('AddtoChannelCtrl', ['$scope','$http', 'apiUrl', '
   )
 
   $scope.isSelected = (channelID) ->
-    console.log $scope.selectedChannel == channelID
     return $scope.selectedChannel == channelID
 
   $scope.selectChannel = (channelID) ->
