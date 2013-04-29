@@ -1,7 +1,11 @@
+import logging
 from collections import namedtuple
-import requests
-from rockpack.mainsite import app
+import gdata.youtube
+from rockpack.mainsite import app, requests
 from rockpack.mainsite.services.video.models import Video, VideoThumbnail, VideoRestriction
+
+
+log = logging.getLogger(__name__)
 
 
 PushConfig = namedtuple('PushConfig', 'hub topic')
@@ -9,15 +13,57 @@ Playlist = namedtuple('Playlist', 'title video_count videos push_config')
 Videolist = namedtuple('Videolist', 'video_count videos')
 
 
-def _youtube_feed(feed, id, params={}):
+def _youtube_feed_requests(feed, id, params={}):
     """Get youtube feed data as json"""
     url = 'http://gdata.youtube.com/feeds/api/%s/%s' % (feed, id)
     params = dict(v=2, alt='json', **params)
-    response = requests.get(url, params=params)
-    response.raise_for_status()
+    headers = {'User-Agent': app.config['USER_AGENT']}
+    try:
+        response = requests.get(url, params=params, headers=headers)
+        response.raise_for_status()
+    except Exception, e:
+        if hasattr(e, 'response'):
+            log.error('youtube request failed (%d): %s',
+                      e.response.status_code, e.response.text)
+        raise
     if isinstance(response.json, dict):
         return response.json
     return response.json()
+
+
+def _youtube_feed_ua(feed, id, params={}):
+    """Get youtube feed data as json"""
+    url = 'http://gdata.youtube.com/feeds/api/%s/%s' % (feed, id)
+    query = urlencode([('v', 2), ('alt', 'json')] +
+                      [(k, v) for k, v in params.items() if v is not None])
+    try:
+        response = _youtube_useragent.urlopen(url + '?' + query)
+    except Exception, e:
+        if hasattr(e, 'response'):
+            log.error('youtube request failed (%d): %s',
+                      e.response.status_code, e.response.content)
+        raise
+    try:
+        return simplejson.loads(response.content)
+    except Exception:
+        return response.content
+
+
+if app.config.get('USE_GEVENT'):
+    import simplejson
+    from urllib import urlencode
+    from geventhttpclient.useragent import UserAgent
+    _youtube_useragent = UserAgent(
+        concurrency=app.config.get('YOUTUBE_UA_CONCURRENCY', 64),
+        headers={
+            'User-Agent': app.config['USER_AGENT'],
+            'Accept-Encoding': 'gzip',
+            'Connection': 'keep-alive',
+        }
+    )
+    _youtube_feed = _youtube_feed_ua
+else:
+    _youtube_feed = _youtube_feed_requests
 
 
 def _get_atom_video_data(youtube_data, playlist=None):
@@ -51,7 +97,6 @@ def _get_atom_video_data(youtube_data, playlist=None):
 
 def parse_atom_playlist_data(xml):
     """Parse atom feed for youtube video data."""
-    import gdata.youtube
     feed = gdata.youtube.YouTubePlaylistVideoFeedFromString(xml)
     type, id = feed.id.text.split(':', 3)[2:]
     if type == 'user':
@@ -97,6 +142,28 @@ def _get_video_data(youtube_data, playlist=None):
     return video
 
 
+def _get_video_data_v3(youtube_data, playlist=None):
+    snippet = youtube_data['snippet']
+    video = Video(
+        source_videoid=youtube_data['id']['videoId'],
+        source_listid=playlist,
+        title=snippet['title'],
+        # http://code.google.com/p/gdata-issues/issues/detail?id=4294
+        #duration=snippet['duration'],
+    )
+    video.source_category = None
+    video.source_view_count = None
+    video.source_date_uploaded = snippet['publishedAt']
+    video.restricted = None
+    for label, thumbnail in snippet['thumbnails'].items():
+        video.thumbnails.append(
+            VideoThumbnail(
+                url=thumbnail['url'],
+                width=None,
+                height=None))
+    return video
+
+
 def get_video_data(id, fetch_all_videos=True):
     """Return video data from youtube api as playlist of one."""
     youtube_data = _youtube_feed('videos', id)['entry']
@@ -138,7 +205,7 @@ def get_user_data(id, fetch_all_videos=False):
     return get_playlist_data('%s/uploads' % id, fetch_all_videos, 'users')
 
 
-def search(query, order=None, start=0, size=10, region=None, client_address=None, safe_search='strict'):
+def search_v2(query, order=None, start=0, size=10, region=None, client_address=None, safe_search='strict'):
     params = {
         'q': query,
         'orderby': order,
@@ -152,6 +219,38 @@ def search(query, order=None, start=0, size=10, region=None, client_address=None
     total = data['openSearch$totalResults']['$t']
     videos = [_get_video_data(e, id) for e in data.get('entry', [])]
     return Videolist(total, [v for v in videos if not v.restricted])
+
+
+def search_v3(query, order=None, start=0, size=10, region=None, client_address=None, safe_search='strict'):
+    # new http instance required for thread-safety
+    if not hasattr(_youtube_search_http, 'value'):
+        _youtube_search_http.value = httplib2.Http()
+    data = _youtube_search.list(
+        q=query,
+        type='video',
+        part='snippet',
+        order='date' if order == 'published' else order,
+        pageToken=None,     # start number doesn't map to page token easily :-(
+        maxResults=size,
+        regionCode=region,
+        userIp=client_address,
+        safeSearch=safe_search,
+        videoEmbeddable='true',
+    ).execute(http=_youtube_search_http.value)
+    total = data['pageInfo']['totalResults']
+    videos = [_get_video_data_v3(i) for i in data.get('items', [])]
+    return Videolist(total, videos)
+
+
+if 'search' in app.config.get('USE_YOUTUBE_V3_API', ''):
+    from apiclient.discovery import build
+    import httplib2
+    from threading import local
+    _youtube_search = build('youtube', 'v3', developerKey=app.config['GOOGLE_DEVELOPER_KEY']).search()
+    _youtube_search_http = local()
+    search = search_v3
+else:
+    search = search_v2
 
 
 def complete(query, **params):

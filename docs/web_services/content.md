@@ -80,7 +80,7 @@ Cache-Control: public, max-age=3600
         "position": 0,
         "id": "Tr3dHIt5_K9qdG",
         "channel": {
-          "subscribe_count": 113,
+          "subscriber_count": 113,
           "title": "Trending and featured",
           "cover_thumbnail_large_url": "http://path/to/channel/large.jpg",
           "thumbnail_url": "http://path/to/channel/tmb.jpg",
@@ -140,7 +140,7 @@ Cache-Control: public, max-age=3600
      "display_name": "User display name",
      "avatar_thumbnail_url": "https://path/to/avatar/small.jpg"
     },
-    "subscribe_count": 119
+    "subscriber_count": 119
    }
   ]
  }
@@ -152,12 +152,13 @@ Cache-Control: public, max-age=3600
 Get list of cover art images.
 
 ```http
-GET /ws/cover_art/?locale=LOCALE HTTP/1.1
+GET /ws/cover_art/?locale=LOCALE&category=CATID HTTP/1.1
 ```
 
 Parameter      | Required? | Value             | Description
 :------------- | :-------- | :---------------- | :----------
 locale         | yes       | IETF language tag | The locale gives a regional bias to the results
+category       | no        | Category id       | Filter the result by the specified category
 start          | no        | 0-based integer   | Used for paging through the result items
 size           | no        | Result page size  | Number of items to return - max 50.
 
@@ -171,6 +172,8 @@ Cache-Control: public, max-age=3600
     "total": 1,
     "items": [
       {
+        "position": 0,
+        "id": "1",
         "cover_ref": "img.png",
         "background_url": "http://path/to/background/img.jpg",
         "carousel_url": "http://path/to/carousel/img.jpg"

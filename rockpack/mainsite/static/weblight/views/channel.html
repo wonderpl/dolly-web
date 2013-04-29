@@ -1,0 +1,22 @@
+<div ng-controller="ChannelCtrl" id="ChannelCtrl">
+  <img ng-src="{{channel.cover_background_url}}" id="bgimage">   
+  <div class="channelheader">
+    <div class="wrapper" ng-style="wrapperWidth()">
+      <h1>{{channel.title| truncate: channelTitleLength}}</h1>
+      <div id="details">{{channel.videos.total}} Videos / {{channel.subscriber_count}} Subscribers</div>
+      <ul id="userdetails">
+          <li><img class="user-profile" ng-src="{{channel.owner.avatar_thumbnail_url}}"></li>
+          <li id="curatedby">curated by <span id="username">{{channel.owner.name}}</span></li>
+      </ul>
+      <a href="#" class="btn btn-blue getappbtn">Create Your Channel</a>
+    </div>
+  </div>
+  <div id="channeloverlay" class="clearfix" when-scrolled="load_videos()">
+    <div ng-include src="'videoplayer.html'"></div>
+    <div class="wrapper" ng-style="wrapperWidth()">
+      <ul id="videoslist">
+        <li ng-click="setCurrentVideo(video)" ng-repeat="video in channel.videos.items" video-cell></li>
+      </ul>
+    </div>
+  </div>
+</div>

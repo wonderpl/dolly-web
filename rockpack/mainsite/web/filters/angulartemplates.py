@@ -1,10 +1,12 @@
-from webassets.filter import Filter
-from webassets.filter import register_filter
+from webassets.filter import Filter, register_filter
+
+
 class AJSTemplates(Filter):
-    name = 'ajstemplates'
+    name = ''
+    module_name = ''
 
     def output(self, _in, out, **kwargs):
-        template = 'angular.module("Weblight").run(["$templateCache", function($templateCache) {\n %s \n}]);\n' % _in.read()
+        template = 'angular.module("' + self.module_name + '").run(["$templateCache", function($templateCache) {\n %s \n}]);\n' % _in.read()
         out.write(template)
 
     def input(self, _in, out, **kwargs):
@@ -15,4 +17,18 @@ class AJSTemplates(Filter):
         compiled_template = '\n  $templateCache.put("%s",\n    "%s"\n  );\n' % (template_name, cleaned)
         out.write(compiled_template)
 
-register_filter(AJSTemplates)
+
+class WebLiteTemplates(AJSTemplates):
+    name = 'weblighttemplates'
+    module_name = 'Weblight'
+
+
+register_filter(WebLiteTemplates)
+
+
+class BookmarkletTemplates(AJSTemplates):
+    name = 'bmtemplates'
+    module_name = 'Bookmarklet'
+
+
+register_filter(BookmarkletTemplates)

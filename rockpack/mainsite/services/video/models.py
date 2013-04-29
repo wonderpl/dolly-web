@@ -4,10 +4,11 @@ from sqlalchemy import (
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import relationship, aliased
 from rockpack.mainsite.core.dbapi import db
-from rockpack.mainsite.helpers.db import add_base64_pk, add_video_pk, insert_new_only, ImageType
+from rockpack.mainsite.helpers.db import add_base64_pk, add_video_pk, insert_new_only, ImageType, BoxType
 from rockpack.mainsite.helpers.urls import url_for
 from rockpack.mainsite.services.user.models import User
 from rockpack.mainsite import app
+from rockpack.mainsite.core.es import api as es_api
 
 
 class Locale(db.Model):
@@ -30,70 +31,43 @@ class Category(db.Model):
 
     __tablename__ = 'category'
     __table_args__ = (
-        UniqueConstraint('locale', 'parent', 'name'),
+        UniqueConstraint('name', 'parent'),
     )
 
     id = Column(Integer, primary_key=True)
     name = Column(String(32), nullable=False)
-    priority = Column(Integer, nullable=False, server_default='0')
 
     parent = Column(ForeignKey('category.id'), nullable=True)
-    locale = Column(ForeignKey('locale.id'), nullable=False)
 
     parent_category = relationship('Category', remote_side=[id], backref='children')
-    locales = relationship('Locale', backref='categories')
-
+    translations = relationship('CategoryTranslation', backref='category_rel')
     video_instancess = relationship('VideoInstance', backref='category_ref', passive_deletes=True)
     external_category_maps = relationship('ExternalCategoryMap', backref='category_ref')
 
     def __unicode__(self):
-        parent_name = ''
-        if self.parent_category:
-            parent_name = self.parent_category.name + ' >'
-        return '({}) {} {}'.format(self.locales.name, parent_name, self.name)
-
-    @classmethod
-    def map_to(cls, category, locale):
-        """Return the equivalent category for the given locale"""
-        map = lambda here, there: cls.query.join(
-            CategoryMap, (there == cls.id) & (cls.locale == locale)).\
-            filter(here == category).value(there)
-        return map(CategoryMap.here, CategoryMap.there) or \
-            map(CategoryMap.there, CategoryMap.here)
-
-    @classmethod
-    def get_default_category_id(cls, locale):
-        # TODO: cache/memoize
-        return cls.query.filter_by(locale=locale, name='Other', parent=None).value('id')
+        pname = self.parent_category.name if self.parent_category else '-'
+        return '{} - {}'.format(pname, self.name)
 
     @classmethod
     def get_form_choices(cls, locale):
-        query = cls.query.filter_by(parent=ParentCategory.id, locale=locale).\
-            values(cls.id, cls.name, ParentCategory.name)
-        for id, name, parent in query:
-            yield id, '%s - %s' % (parent, name)
+        query = cls.query.filter(CategoryTranslation.category == Category.id,
+        CategoryTranslation.locale == locale).order_by('parent asc')
+        for q in query:
+            pname = q.parent_category.name if q.parent_category else '-'
+            yield q.id, '%s - %s' % (pname, q.name)
 
 
-class CategoryMap(db.Model):
-    """ Mapping between localised categories """
-
-    __tablename__ = 'category_locale'
+class CategoryTranslation(db.Model):
+    __tablename__ = 'category_translation'
     __table_args__ = (
-        UniqueConstraint('here', 'there'),
+        UniqueConstraint('locale', 'category'),
     )
 
     id = Column(Integer, primary_key=True)
-
-    here = Column(ForeignKey('category.id'), nullable=False)
-    there = Column(ForeignKey('category.id'), nullable=False)
-
-    category_here = relationship('Category', foreign_keys=[here])
-    category_there = relationship('Category', foreign_keys=[there])
-
-    def __unicode__(self):
-        return '{} translates to {}'.format(
-               ':'.join([self.here.name, self.here.locale]),
-               ':'.join([self.there.name, self.there.locale]),)
+    locale = Column(ForeignKey('locale.id'), nullable=False)
+    category = Column(ForeignKey('category.id'), nullable=False)
+    priority = Column(Integer, nullable=False, server_default='0')
+    name = Column(String(32), nullable=False)
 
 
 class ExternalCategoryMap(db.Model):
@@ -238,6 +212,7 @@ class VideoInstance(db.Model):
     category = Column(ForeignKey('category.id'), nullable=True)
 
     metas = relationship('VideoInstanceLocaleMeta', backref='video_instance_rel', cascade='all,delete')
+    category_rel = relationship('Category', backref='video_instance_rel')
 
     @property
     def default_thumbnail(self):
@@ -246,21 +221,6 @@ class VideoInstance(db.Model):
     @property
     def player_link(self):
         return self.video_rel.player_link
-
-    @classmethod
-    def add_from_video_ids(cls, video_ids, channel, category, locale):
-        """ Bulk add video instances from a list of videos
-            and attach meta records """
-
-        session = cls.query.session
-        instances = [cls(video=v, channel=channel, category=category) for v in video_ids]
-        session.add_all(instances)
-        session.commit()
-
-        for i in instances:
-            i.metas.append(VideoInstanceLocaleMeta(locale=locale))
-            session.add(i)
-        session.commit()
 
     @classmethod
     def remove_from_video_ids(cls, video_ids):
@@ -300,7 +260,12 @@ class Channel(db.Model):
     title = Column(String(1024), nullable=False)
     description = Column(Text, nullable=False)
     cover = Column(ImageType('CHANNEL', reference_only=True), nullable=False)
+    cover_aoi = Column(BoxType, nullable=True)
     public = Column(Boolean(), nullable=False, server_default='true', default=True)
+    verified = Column(Boolean(), nullable=False, server_default='false', default=False)
+    view_count = Column(Integer, nullable=False, server_default='0', default=0)
+    star_count = Column(Integer, nullable=False, server_default='0', default=0)
+    subscriber_count = Column(Integer, nullable=False, server_default='0', default=0)
     date_added = Column(DateTime(), nullable=False, default=func.now())
     date_updated = Column(DateTime(), nullable=False, default=func.now(), onupdate=func.now())
     ecommerce_url = Column(String(1024), nullable=False, server_default='')
@@ -324,30 +289,21 @@ class Channel(db.Model):
         return cls.query.filter_by(owner=owner).values(cls.id, cls.title)
 
     @classmethod
-    def channelmeta_for_category(cls, category, locale):
-        if locale is None:
-            locale = Category.query.filter_by(id=category).value('locale')
-        return [ChannelLocaleMeta(
-            locale=locale)]
-
-    @classmethod
     def create(cls, locale=None, public=True, **kwargs):
         """Create & save a new channel record along with appropriate category metadata"""
         channel = Channel(**kwargs)
         channel.public = channel.should_be_public(channel, public)
-        if kwargs.get('category'):
-            channel.metas = cls.channelmeta_for_category(kwargs['category'], locale)
         return channel.save()
 
     def get_resource_url(self, own=False):
         view = 'userws.owner_channel_info' if own else 'userws.channel_info'
-        return url_for(view, userid=self.owner_rel.id, channelid=self.id)
+        return url_for(view, userid=self.owner, channelid=self.id)
+
     resource_url = property(get_resource_url)
 
-    def add_videos(self, videos, locale):
-        VideoInstance.add_from_video_ids([getattr(v, 'id', v) for v in videos], self.id, self.category, locale)
-
-        instances = [VideoInstance(channel=self.id, video=getattr(v, 'id', v)) for v in videos]
+    def add_videos(self, videos):
+        instances = [VideoInstance(channel=self.id, video=getattr(v, 'id', v),
+                                   category=self.category) for v in videos]
         session = self.query.session
         try:
             with session.begin_nested():
@@ -356,13 +312,18 @@ class Channel(db.Model):
             existing = [i.video for i in session.query(VideoInstance.video).
                         filter_by(channel=self.id).
                         filter(VideoInstance.video.in_(set(i.video for i in instances)))]
-            session.add_all(i for i in instances if i.video not in existing)
+            for i in instances:
+                if i.video not in existing:
+                    session.add_all(i)
 
     def remove_videos(self, videos):
         VideoInstance.remove_from_video_ids(
             set(
                 getattr(v, 'id', v)
                 for v in videos.query.filter_by(channel=self.id)))
+
+    def add_meta(self, locale):
+        return ChannelLocaleMeta(channel=self.id, locale=locale).save()
 
     @classmethod
     def should_be_public(self, channel, public):
@@ -384,6 +345,7 @@ class ChannelLocaleMeta(db.Model):
 
     id = Column(CHAR(24), primary_key=True)
     visible = Column(Boolean(), nullable=False, server_default='true', default=True)
+    subscriber_count = Column(Integer, nullable=False, server_default='0', default=0)
     view_count = Column(Integer, nullable=False, server_default='0', default=0)
     star_count = Column(Integer, nullable=False, server_default='0', default=0)
     date_added = Column(DateTime(), nullable=False, default=func.now())
@@ -416,10 +378,133 @@ class ContentReport(db.Model):
 ParentCategory = aliased(Category)
 
 
-@event.listens_for(Category, 'before_insert')
-def _set_child_category_locale(mapper, connection, target):
-    if not target.locale and target.parent_category:
-        target.locale = target.parent_category.locale
+def _locale_dict_from_object(metas):
+    locales = {el: {} for el in app.config.get('ENABLED_LOCALES')}
+    meta_dict = {m.locale: m for m in metas}
+    for loc in locales.keys():
+        meta = meta_dict.get(loc)
+        locales[loc] = {
+            'view_count': getattr(meta, 'view_count', 0),
+            'star_count': getattr(meta, 'star_count', 0)
+        }
+    return locales
+
+
+def _add_es_video(video_instance):
+    if app.config.get('ELASTICSEARCH_URL'):
+
+        video = Video.query.get(video_instance.video)
+        if video:
+            data = dict(
+                id=video_instance.id,
+                public=True,  # we only insert public records
+                video_id=video_instance.video,
+                title=video.title,
+                channel=video_instance.channel,
+                category=video_instance.category,
+                date_added=video_instance.date_added,
+                position=video_instance.position,
+                thumbnail_url=video.default_thumbnail if video.default_thumbnail else '',
+                source=video.source,
+                source_id=video.source_videoid,
+                duration=video.duration,
+                locale=_locale_dict_from_object(video_instance.metas))
+
+            print es_api.add_video_to_index(data)
+
+
+def _add_es_channel(channel):
+    if app.config.get('ELASTICSEARCH_URL'):
+        category = []
+        if channel.category:
+            category = Category.query.filter(
+                Category.parent is not None,
+                Category.id == channel.category).values('id', 'parent').next()
+
+        # HACK
+        if isinstance(channel.cover, (str, unicode)):
+            convert = lambda value: ImageType('CHANNEL').process_result_value(value, None)
+        else:
+            convert = lambda x: x
+
+        data = dict(
+            id=channel.id,
+            public=True,
+            category=category,
+            locale=_locale_dict_from_object(channel.metas),
+            owner_id=channel.owner,
+            subscriber_count=channel.subscriber_count,
+            date_added=channel.date_added,
+            description=channel.description,
+            resource_url=channel.get_resource_url(),
+            title=channel.title,
+            ecommerce_url=channel.ecommerce_url,
+            thumbnail_url=convert(channel.cover).thumbnail_large,
+            cover_thumbnail_small_url=convert(channel.cover).thumbnail_small,
+            cover_thumbnail_large_url=convert(channel.cover).thumbnail_large,
+            cover_background_url=convert(channel.cover).background)
+
+        print es_api.add_channel_to_index(data)
+
+
+def _remove_es_channel(channel):
+    if app.config.get('ELASTICSEARCH_URL'):
+        es_api.remove_channel_from_index(channel.id)
+
+
+def _remove_es_video_instance(video_instance):
+    if app.config.get('ELASTICSEARCH_URL'):
+        es_api.remove_video_from_index(video_instance.id)
+
+
+@event.listens_for(VideoInstanceLocaleMeta, 'after_update')
+def _video_insert(mapper, connection, target):
+    _add_es_video(target.video_instance_rel)
+
+
+@event.listens_for(Video, 'after_update')
+def _video_update(mapper, connection, target):
+    if not target.visible:
+        for i in VideoInstance.query.filter_by(video=target.id):
+            _remove_es_video_instance(i)
+
+
+@event.listens_for(VideoInstance, 'after_insert')
+def _video_instance_insert(mapper, connection, target):
+    _add_es_video(target)
+
+
+@event.listens_for(VideoInstance, 'after_update')
+def _video_instance_update(mapper, connection, target):
+    _remove_es_video_instance(target)
+
+
+@event.listens_for(VideoInstance, 'after_delete')
+def _video_instance_delete(mapper, connection, target):
+    _remove_es_video_instance(target)
+
+
+@event.listens_for(ChannelLocaleMeta, 'after_insert')
+def _channel_insert(mapper, connection, target):
+    # NOTE: owner_rel isn't available on Channel if we pass channel_rel for owner.resource_url.
+    # possibly do a lookup owner in resource_url method instead of having it rely on self.owner_rel here
+    channel = Channel.query.get(target.channel)
+    _add_es_channel(channel)
+
+
+@event.listens_for(ChannelLocaleMeta, 'after_update')
+def _es_channel_update_from_clm(mapper, connection, target):
+    _add_es_channel(target.channel_rel)
+
+
+@event.listens_for(Channel, 'after_insert')
+def _es_channel_insert_from_channel(mapper, connection, target):
+    _add_es_channel(target)
+
+
+@event.listens_for(Channel, 'after_update')
+def _es_channel_update_from_channel(mapper, connection, target):
+    _add_es_channel(target)
 
 
 event.listen(Video, 'before_insert', add_video_pk)

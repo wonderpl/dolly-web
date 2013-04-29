@@ -38,7 +38,7 @@ Cache-Control: public, max-age=60
         "resource_url": "http://path/to/users/channels/channelid/",
         "description": "channel description",
         "title": "channel title",
-        "subscribe_count": 123,
+        "subscriber_count": 123,
         "cover_background_url": "http://path/to/channel/bg.jpg",
         "cover_thumbnail_small_url": "http://path/to/channel/small.jpg",
         "cover_thumbnail_large_url": "http://path/to/channel/large.jpg"
@@ -261,7 +261,7 @@ Cache-Control: public, max-age=60
  "cover_background_url": "http://path/to/channel/bg.jpg",
  "cover_thumbnail_small_url": "http://path/to/channel/small.jpg",
  "cover_thumbnail_large_url": "http://path/to/channel/large.jpg",
- "subscribe_count": 119,
+ "subscriber_count": 119,
  "owner": {
   "id": "Unique user id",
   "display_name": "User display name",
@@ -462,7 +462,7 @@ Content-Type: application/json
 
 ### Update
 
-To add or delete videos from a channel, send a list of video instance ids that the
+To add or delete videos from a channel, `PUT` a list of video instance ids that the
 channel needs to contain. Any videos not included, but are currently in the channel,
 will be removed.
 
@@ -476,6 +476,29 @@ Authorization: Bearer TOKEN
 
 ["VIDEOINSTANCEID", "VIDEOINSTANCEID"]
 ```
+
+To add new videos only, keeping any existing, `POST` a list of video instance ids.
+
+```http
+POST /ws/USERID/channels/CHANNELID/videos/ HTTP/1.1
+Content-Type: application/json
+Authorization: Bearer TOKEN
+
+["VIDEOINSTANCEID"]
+```
+
+For videos from external sources the video instance can be defined as a `(source, source-id)`
+pair:
+
+```http
+POST /ws/USERID/channels/CHANNELID/videos/ HTTP/1.1
+Content-Type: application/json
+Authorization: Bearer TOKEN
+
+[["youtube", "9bZkp7q19f0"]]
+```
+
+On success:
 
 ```http
 HTTP/1.1 204 NO CONTENT
@@ -508,8 +531,8 @@ Content-Type: application/json
 }
 ```
 
-Channel Videos
-==============
+Channel Subscribers
+===================
 
 ### Get
 
@@ -619,6 +642,8 @@ Cache-Control: private, max-age=60
     "total": 1,
     "items": [
       {
+        "position": 0,
+        "id": "123",
         "cover_ref": "coverartref",
         "background_url": "http://path/to/background/img.jpg",
         "carousel_url": "http://path/to/carousel/img.jpg"
@@ -708,7 +733,7 @@ Content-Type: application/json
     "resource_url": "http://path/to/channel/detail/",
     "subscription_resource_url": "http://path/to/subscription/resource/",
     "category": 215,
-    "subscribe_count": 30,
+    "subscriber_count": 30,
     "description": "desc",
     "title": "title",
     "public": true,
@@ -824,7 +849,7 @@ Cache-Control: private, max-age=60
      "cover_background_url": "",
      "cover_thumbnail_large_url": "",
      "cover_thumbnail_small_url": "",
-     "subscribe_count": 0,
+     "subscriber_count": 0,
      "owner": {
       "id": "BJsFQkw7SpyNfi6xOBlA1Q",
       "resource_url": "http://rockpack.com/ws/BJsFQkw7SpyNfi6xOBlA1Q/",

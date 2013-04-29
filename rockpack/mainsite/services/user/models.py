@@ -11,6 +11,7 @@ from rockpack.mainsite.core.token import create_access_token
 from rockpack.mainsite.core.dbapi import db
 from rockpack.mainsite.helpers.db import ImageType, add_base64_pk, resize_and_upload
 from rockpack.mainsite.helpers.urls import url_for
+from rockpack.mainsite.core.es.api import add_owner_to_index
 
 
 EXTERNAL_SYSTEM_NAMES = 'facebook', 'twitter', 'google'
@@ -222,4 +223,22 @@ def username_exists(username):
         return 'reserved'
 
 
+def _es_owner_insert(mapper, connection, target):
+    if app.config.get('ELASTICSEARCH_URL'):
+
+        if isinstance(target.avatar, (str, unicode)):
+            convert = lambda value: ImageType('AVATAR').process_result_value(value, None)
+        else:
+            convert = lambda x: x
+        data = {
+            'id': target.id,
+            'avatar_thumbnail': convert(target.avatar).thumbnail_small,
+            'resource_url': target.get_resource_url(False),
+            'display_name': target.display_name,
+            'name': target.username}
+        add_owner_to_index(data)
+
+
+event.listen(User, 'after_insert', _es_owner_insert)
+event.listen(User, 'after_update', _es_owner_insert)
 event.listen(User, 'before_insert', lambda x, y, z: add_base64_pk(x, y, z))

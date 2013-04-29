@@ -2,6 +2,7 @@ from datetime import date
 from fixture import DataSet
 from fixture import SQLAlchemyFixture
 
+from rockpack.mainsite import app
 from rockpack.mainsite.core.dbapi import db
 from rockpack.mainsite.services.cover_art.models import RockpackCoverArt
 from rockpack.mainsite.services.video import models as video_models
@@ -34,26 +35,48 @@ class CategoryData(DataSet):
     class TV:
         id = 0
         name = 'TV'
-        locale = LocaleData.US.id
         parent = None
 
     class Series:
         id = 1
         name = 'Series'
-        locale = LocaleData.US.id
         parent = 1
 
     class Music:
         id = 2
         name = 'Music'
-        locale = LocaleData.US.id
         parent = None
 
     class Rock:
         id = 3
         name = 'Rock'
-        locale = LocaleData.US.id
         parent = 2
+
+
+class CategoryTranslationData(DataSet):
+    class TV:
+        id = 0
+        name = 'TV'
+        locale = LocaleData.US.id
+        category = CategoryData.TV.id
+
+    class Series:
+        id = 1
+        name = 'Series'
+        locale = LocaleData.US.id
+        category = CategoryData.Series.id
+
+    class Music:
+        id = 2
+        name = 'Music'
+        locale = LocaleData.US.id
+        category = CategoryData.Music.id
+
+    class Rock:
+        id = 3
+        name = 'Rock'
+        locale = LocaleData.US.id
+        category = CategoryData.Rock.id
 
 
 class RockpackCoverArtData(DataSet):
@@ -138,6 +161,7 @@ def install(*args):
         env={
             'LocaleData': video_models.Locale,
             'CategoryData': video_models.Category,
+            'CategoryTranslationData': video_models.CategoryTranslation,
             'RockpackCoverArtData': RockpackCoverArt,
             'SourceData': video_models.Source,
             'UserData': User,
@@ -149,4 +173,5 @@ def install(*args):
         engine=db.engine)
 
     data = dbfixture.data(*args)
-    data.setup()
+    with app.test_request_context():
+        data.setup()

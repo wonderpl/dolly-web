@@ -1,6 +1,6 @@
 from werkzeug.datastructures import MultiDict
 from sqlalchemy import desc
-from sqlalchemy.orm.exc import NoResultFound
+from sqlalchemy.orm import lazyload
 from flask import abort, request, g
 from flask.ext import wtf
 from flask.ext.admin import form
@@ -13,7 +13,8 @@ from rockpack.mainsite.core.youtube import get_video_data
 from rockpack.mainsite.helpers.urls import url_for, url_to_endpoint
 from rockpack.mainsite.helpers.db import gen_videoid
 from rockpack.mainsite.services.video.models import (
-    Channel, Video, VideoInstance, VideoInstanceLocaleMeta, Category, ContentReport)
+    Channel, ChannelLocaleMeta, Video, VideoInstance, VideoInstanceLocaleMeta, Category, ContentReport)
+from rockpack.mainsite.services.oauth.api import RockRegistrationForm
 from rockpack.mainsite.services.cover_art.models import UserCoverArt, RockpackCoverArt
 from rockpack.mainsite.services.cover_art import api as cover_api
 from rockpack.mainsite.services.video import api as video_api
@@ -26,6 +27,8 @@ ACTION_COLUMN_VALUE_MAP = dict(
     select=('view_count', 1),
     star=('star_count', 1),
     unstar=('star_count', -1),
+    subscribe=('subscriber_count', 1),
+    unsubscribe=('subscriber_count', -1),
 )
 
 
@@ -40,15 +43,32 @@ ACTIVITY_OBJECT_TYPE_MAP = dict(
 @commit_on_success
 def get_or_create_video_records(instance_ids, locale):
     """Take a list of instance ids and return mapping to associated video ids."""
+    def add(s, i):
+        if i and i not in s:
+            s.add(i)
+            instance_id_order.append(i)
 
-    # Split between "fake" search ids and real
-    search_instance_ids = set()
+    # Split between "fake" external ids and real
+    external_instance_ids = set()
     real_instance_ids = set()
+    invalid = []
+    instance_id_order = []
     for instance_id in instance_ids:
-        if instance_id.startswith(search_api.VIDEO_INSTANCE_PREFIX):
-            search_instance_ids.add(instance_id)
-        else:
-            real_instance_ids.add(instance_id)
+        try:
+            if instance_id.startswith(search_api.VIDEO_INSTANCE_PREFIX):
+                prefix, source, source_videoid = instance_id.split('-', 2)
+                add(external_instance_ids, (int(source), source_videoid))
+            else:
+                add(real_instance_ids, instance_id)
+        except (AttributeError, ValueError):  # not a string
+            try:
+                source, source_videoid = instance_id
+                source = ['rockpack', 'youtube'].index(source)  # TODO: use db mapping
+                add(external_instance_ids, (source, source_videoid))
+            except (TypeError, ValueError):
+                invalid.append(instance_id)
+    if invalid:
+        abort(400, message='Invalid video instance ids', data=invalid)
 
     # Check if any "real" ids are invalid
     if real_instance_ids:
@@ -60,41 +80,31 @@ def get_or_create_video_records(instance_ids, locale):
     else:
         existing_ids = {}
 
-    if not search_instance_ids:
-        return existing_ids
-
-    # Map search ids to real ids
-    video_id_map = dict()
-    invalid = []
-    for instance_id in search_instance_ids:
-        try:
-            prefix, source, source_videoid = instance_id.split('-', 2)
-            source = int(source)
-        except ValueError:
-            invalid.append(instance_id)
-        else:
+    if external_instance_ids:
+        # Map search ids to real ids
+        video_id_map = dict()
+        for source, source_videoid in external_instance_ids:
             video_id = gen_videoid(None, source, source_videoid)
-            video_id_map[video_id] = instance_id, source, source_videoid
-            existing_ids[instance_id] = video_id
-    if invalid:
-        abort(400, message='Invalid video instance ids', data=invalid)
+            video_id_map[video_id] = source, source_videoid
+            existing_ids[(source, source_videoid)] = video_id
 
-    # Check which video references from search instances already exist
-    # and create records for any that don't
-    search_video_ids = set(video_id_map.keys())
-    existing_video_ids = set(
-        v[0] for v in Video.query.filter(Video.id.in_(search_video_ids)).values('id'))
-    new_ids = search_video_ids - existing_video_ids
-    for video_id in new_ids:
-        instance_id, source, source_videoid = video_id_map[video_id]
-        # TODO: Use youtube batch request feature
-        try:
-            video_data = get_video_data(source_videoid)
-        except Exception:
-            abort(400, message='Invalid video instance ids', data=[instance_id])
-        Video.add_videos(video_data.videos, source, locale)
+        # Check which video references from search instances already exist
+        # and create records for any that don't
+        search_video_ids = set(video_id_map.keys())
+        existing_video_ids = set(
+            v[0] for v in Video.query.filter(Video.id.in_(search_video_ids)).values('id'))
+        new_ids = search_video_ids - existing_video_ids
+        for video_id in new_ids:
+            source, source_videoid = video_id_map[video_id]
+            # TODO: Use youtube batch request feature
+            try:
+                assert source == 1
+                video_data = get_video_data(source_videoid)
+            except Exception:
+                abort(400, message='Invalid video instance ids', data=[[source, source_videoid]])
+            Video.add_videos(video_data.videos, source, locale)
 
-    return existing_ids
+    return [existing_ids[id] for id in instance_id_order]
 
 
 @commit_on_success
@@ -104,7 +114,7 @@ def save_video_activity(user, action, instance_id, locale):
     except KeyError:
         abort(400, message='invalid action')
 
-    video_id = get_or_create_video_records([instance_id], locale)[instance_id]
+    video_id = get_or_create_video_records([instance_id], locale)[0]
     activity = dict(user=user, action=action,
                     object_type='video', object_id=video_id)
     if not UserActivity.query.filter_by(**activity).count():
@@ -133,6 +143,21 @@ def save_video_activity(user, action, instance_id, locale):
 
 
 @commit_on_success
+def save_channel_activity(channelid, action, locale):
+    """Update channel with subscriber, view, or star count changes."""
+    try:
+        column, value = ACTION_COLUMN_VALUE_MAP[action]
+    except KeyError:
+        abort(400, message='invalid action')
+    incr = lambda m: {getattr(m, column): getattr(m, column) + value}
+    # Update channel record:
+    Channel.query.filter_by(id=channelid).update(incr(Channel))
+    # Update or create locale meta record:
+    ChannelLocaleMeta.query.filter_by(channel=channelid, locale=locale).update(incr(ChannelLocaleMeta)) or \
+        ChannelLocaleMeta(channel=channelid, locale=locale, **{column: value}).save()
+
+
+@commit_on_success
 def save_content_report(user, object_type, object_id):
     activity = dict(action='content_reported', user=user,
                     object_type=object_type, object_id=object_id)
@@ -146,28 +171,24 @@ def save_content_report(user, object_type, object_id):
 
 
 @commit_on_success
-def add_videos_to_channel(channel, instance_list, locale):
-    if all(i.startswith('RP') for i in instance_list):
-        # Backwards compatibility
-        id_map = dict((v[0], v[0]) for v in Video.query.filter(Video.id.in_(instance_list)).values('id'))
-    else:
-        id_map = get_or_create_video_records(instance_list, locale)
+def add_videos_to_channel(channel, instance_list, locale, delete_existing=False):
+    video_ids = get_or_create_video_records(instance_list, locale)
     existing = dict((v.video, v) for v in VideoInstance.query.filter_by(channel=channel.id))
     added = []
-    for position, instance_id in enumerate(instance_list):
-        video_id = id_map[instance_id]
+    for position, video_id in enumerate(video_ids):
         if video_id not in added:
             instance = existing.get(video_id) or VideoInstance(video=video_id, channel=channel.id)
             instance.position = position
             VideoInstance.query.session.add(instance)
             added.append(video_id)
 
-    deleted_video_ids = set(existing.keys()).difference(id_map.values())
-    if deleted_video_ids:
-        VideoInstance.query.filter(
-            VideoInstance.video.in_(deleted_video_ids),
-            VideoInstance.channel == channel.id
-        ).delete(synchronize_session='fetch')
+    if delete_existing:
+        deleted_video_ids = set(existing.keys()).difference(video_ids)
+        if deleted_video_ids:
+            VideoInstance.query.filter(
+                VideoInstance.video.in_(deleted_video_ids),
+                VideoInstance.channel == channel.id
+            ).delete(synchronize_session='fetch')
 
 
 def _user_list(paging, **filters):
@@ -242,9 +263,11 @@ class ChannelForm(form.BaseForm):
     def validate_category(self, field):
         if field.data:
             try:
-                Category.query.filter_by(id=int(field.data)).one()
-            except (ValueError, NoResultFound):
+                field.data = Category.query.get(int(field.data)).id
+            except (ValueError, AttributeError):
                 raise ValidationError('invalid category')
+        else:
+            field.data = None
 
 
 class ActivityForm(wtf.Form):
@@ -273,9 +296,6 @@ def _channel_info_response(channel, locale, paging, owner_url):
     return data
 
 
-from rockpack.mainsite.services.oauth.api import RockRegistrationForm
-
-
 class UserWS(WebService):
 
     endpoint = '/'
@@ -283,8 +303,9 @@ class UserWS(WebService):
     @expose_ajax('/<userid>/', cache_age=60, secure=False)
     def user_info(self, userid):
         user = User.query.get_or_404(userid)
-        channels = [video_api.channel_dict(c, with_owner=False, owner_url=False) for c in
-                    Channel.query.filter_by(owner=user.id, deleted=False, public=True)]
+        channels = [video_api.channel_dict(c, with_owner=False, owner_url=False)
+                    for c in Channel.query.options(lazyload('category_rel')).
+                    filter_by(owner=user.id, deleted=False, public=True)]
         return dict(
             id=user.id,
             name=user.username,     # XXX: backwards compatibility
@@ -395,6 +416,9 @@ class UserWS(WebService):
                             form.action.data,
                             form.video_instance.data,
                             self.get_locale())
+        channelid = VideoInstance.query.filter_by(id=form.video_instance.data).value('channel')
+        if channelid:
+            save_channel_activity(channelid, form.action.data, self.get_locale())
 
     @expose_ajax('/<userid>/content_reports/', methods=['POST'])
     @check_authorization(self_auth=True)
@@ -429,8 +453,14 @@ class UserWS(WebService):
 
     @expose_ajax('/<userid>/channels/<channelid>/', cache_age=60, secure=False)
     def channel_info(self, userid, channelid):
-        channel = Channel.query.filter_by(id=channelid, public=True, deleted=False).first_or_404()
-        return _channel_info_response(channel, self.get_locale(), self.get_page(), False)
+        if not app.config.get('ELASTICSEARCH_URL'):
+            channel = Channel.query.filter_by(id=channelid, public=True, deleted=False).first_or_404()
+            return _channel_info_response(channel, self.get_locale(), self.get_page(), False)
+
+        channel, total = video_api.es_get_channels_with_videos(channel_ids=[channelid])
+        if not channel:
+            abort(404)
+        return channel[0]
 
     @expose_ajax('/<userid>/channels/<channelid>/', cache_age=0)
     @check_authorization()
@@ -491,15 +521,15 @@ class UserWS(WebService):
             abort(403)
         return [v[0] for v in VideoInstance.query.filter_by(channel=channelid).order_by('position').values('video')]
 
-    @expose_ajax('/<userid>/channels/<channelid>/videos/', methods=('PUT',))
+    @expose_ajax('/<userid>/channels/<channelid>/videos/', methods=('PUT', 'POST'))
     @check_authorization(self_auth=True)
     def update_channel_videos(self, userid, channelid):
         channel = Channel.query.filter_by(id=channelid, deleted=False).first_or_404()
         if not channel.owner == userid:
             abort(403)
-        if not request.json or not isinstance(request.json, list):
+        if request.json is None or not isinstance(request.json, list):
             abort(400, message='List can be empty, but must be present')
-        add_videos_to_channel(channel, map(str, request.json), self.get_locale())
+        add_videos_to_channel(channel, request.json, self.get_locale(), request.method == 'PUT')
 
     @expose_ajax('/<userid>/channels/<channelid>/subscribers/', cache_age=60)
     def channel_subscribers(self, userid, channelid):
@@ -554,7 +584,10 @@ class UserWS(WebService):
         channelid = args['channelid']
         if not Channel.query.filter_by(id=channelid, deleted=False).count():
             abort(400, message='Channel not found')
+        if Subscription.query.filter_by(user=userid, channel=channelid).count():
+            abort(400, message='Already subscribed')
         subs = Subscription(user=userid, channel=channelid).save()
+        save_channel_activity(channelid, 'subscribe', self.get_locale())
         return ajax_create_response(subs)
 
     @expose_ajax('/<userid>/subscriptions/<channelid>/')
@@ -569,6 +602,7 @@ class UserWS(WebService):
     def delete_subscription_item(self, userid, channelid):
         if not user_subscriptions(userid).filter_by(channel=channelid).delete():
             abort(404)
+        save_channel_activity(channelid, 'unsubscribe', self.get_locale())
 
     @expose_ajax('/<userid>/subscriptions/recent_videos/', cache_age=60, cache_private=True)
     @check_authorization(self_auth=True)
@@ -577,7 +611,7 @@ class UserWS(WebService):
         if subscriptions.count():
             channels = [s[0] for s in subscriptions.values('channel')]
             items, total = video_api.get_local_videos(self.get_locale(), self.get_page(),
-                                                     date_order=True, channels=channels)
+                                                      date_order=True, channels=channels)
         else:
             items, total = [], 0
         return dict(videos=dict(items=items, total=total))

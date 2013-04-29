@@ -1,10 +1,8 @@
+import os
 import logging
 from flask import Flask
 
-#from rockpack.services.video import api
-
 app = Flask(__name__)
-
 
 def configure():
     app.config.from_pyfile('settings/common.py')
@@ -12,6 +10,21 @@ def configure():
     app.config.from_envvar('ROCKPACK_SETTINGS', silent=True)
 configure()
 
+
+if app.config.get('USE_GEVENT'):
+    from gevent.monkey import patch_all
+    patch_all()
+    from psycogreen.gevent import patch_psycopg
+    patch_psycopg()
+    import grequests as requests
+else:
+    import requests
+
+# for pyflakes
+requests
+
+# hack to avoid django import issues via pyes
+os.environ['DJANGO_SETTINGS_MODULE'] = 'none'
 
 SERVICES = (
     'rockpack.mainsite.services.base',
@@ -23,6 +36,7 @@ SERVICES = (
     'rockpack.mainsite.services.pubsubhubbub',
 )
 REGISTER_SETUPS = (
+    ('rockpack.mainsite.core.timing', 'setup_timing'),
     ('rockpack.mainsite.core.webservice', 'setup_abort_mapping'),
     ('rockpack.mainsite.admin.auth', 'setup_auth'),
     ('rockpack.mainsite.admin', 'setup_admin'),
@@ -65,7 +79,10 @@ def import_services():
 
 def init_app():
     if not app.debug:
-        app.logger.addHandler(logging.StreamHandler())
+        handler = logging.StreamHandler()
+        handler.setFormatter(logging.Formatter(
+            '%(asctime)s - %(levelname)s: %(message)s', '%Y-%m-%dT%H:%M:%S'))
+        app.logger.addHandler(handler)
     if app.debug:
         try:
             from flask_debugtoolbar import DebugToolbarExtension

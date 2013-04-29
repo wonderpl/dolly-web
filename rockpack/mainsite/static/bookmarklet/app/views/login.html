@@ -1,0 +1,25 @@
+<div ng-controller="LoginCtrl" id="login">
+  <ul id="topmenu">
+    <li><img src="/static/assets/bookmarklet/images/close.png" ng-click="close()"></li>
+    <li class="title"><img src="/static/assets/bookmarklet/images/logo.png" id="logo"></li>
+  </ul>
+  <div id="facebooklogin" ng-click="facebook()">
+    Sign in with Facebook
+  </div>
+  <hr>
+  <form name="loginForm" class="form-horizontal" id="loginform">
+    <div class="control-group">
+        <input type="text" name="userName" ng-model="username" required placeholder="Username or email">
+    </div>
+    <div class="control-group">
+        <input type="password" name="Password" ng-model="password" required placeholder="Password">
+        <a id="forgotpassword" href="#/resetpassword">Forgot password?</a>
+    </div>
+    <div class="control-group">
+      <button ng-click="submit()" class="btn">Submit</button>
+    </div>
+  </form>
+  <div id="footer">
+    By using rockpack, You Agree to our <a href="#">Terms & Services</a> and <a href="#">Privacy Policy</a>
+  </div>
+</div>

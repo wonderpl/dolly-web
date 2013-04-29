@@ -2,11 +2,13 @@ import base64
 import uuid
 import hashlib
 import cStringIO
+from ast import literal_eval
 from sqlalchemy import types
+from sqlalchemy.dialects import postgres
 from flask import g
 from flask.ext import wtf
 from rockpack.mainsite import app
-from rockpack.mainsite.core import imaging
+from rockpack.mainsite.core import imaging, dbapi
 from .urls import image_url_from_path
 
 
@@ -40,14 +42,6 @@ def add_video_pk(mapper, connection, instance):
     """ set up the primary key """
     if not instance.id:
         instance.id = gen_videoid(None, instance.source, instance.source_videoid)
-
-
-def add_video_meta_pk(mapper, connection, instance):
-    if not instance.id:
-        instance.id = gen_videoid(
-                instance.locale,
-                instance.video_instance_rel.video_rel.source,
-                instance.video_instance_rel.video_rel.source_videoid)
 
 
 def get_column_property(model, column, prop):
@@ -117,6 +111,25 @@ class ImageType(types.TypeDecorator):
 
     def process_result_value(self, value, dialect):
         return ImagePath(value, app.config['%s_IMG_PATHS' % self.cfgkey])
+
+
+class BoxType(types.TypeDecorator):
+
+    if 'postgres' in app.config.get('DATABASE_URL', ''):
+        impl = postgres.ARRAY(types.Float)
+    else:
+        impl = types.String
+
+    def process_bind_param(self, value, dialect):
+        if value:
+            return get_box_value(value)
+
+
+def get_box_value(value):
+    value = map(float, literal_eval(value))
+    assert len(value) == 4
+    assert all(0 <= i <= 1 for i in value)
+    return value
 
 
 def resize_and_upload(fp, cfgkey):
