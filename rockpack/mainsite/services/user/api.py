@@ -116,7 +116,7 @@ def save_video_activity(userid, action, instance_id, locale):
 
     video_id = get_or_create_video_records([instance_id], locale)[0]
     activity = dict(user=userid, action=action,
-                    object_type='video', object_id=video_id)
+                    object_type='video_instance', object_id=instance_id)
     if not UserActivity.query.filter_by(**activity).count():
         # Increment value on each of instance, video, & locale meta
         incr = lambda m: {getattr(m, column): getattr(m, column) + value}

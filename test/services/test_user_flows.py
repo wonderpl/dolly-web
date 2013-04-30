@@ -125,7 +125,7 @@ class BrowsingUserTestCase(BaseUserTestCase):
                     self.post(self.urls['activity'],
                               dict(action='view', video_instance=video['id']),
                               token=self.token)
-                    viewed_videos.append(video['video']['id'])
+                    viewed_videos.append(video['id'])
 
         # confirm activity was recorded
         self.assertGreater(len(viewed_videos), 0)
