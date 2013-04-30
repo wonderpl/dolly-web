@@ -92,7 +92,7 @@ window.Bookmarklet.controller('CreateChannelCtrl', ['$scope','$http', 'apiUrl', 
   $scope.user_id = cookies.get('user_id')
 
   $scope.close = ->
-    parent.removeIframe()
+    window.parent.postMessage('close', '*');
 
   $scope.addChannel = ->
     User.createChannel($scope.user_id, $scope.accessToken, $scope.channelName)

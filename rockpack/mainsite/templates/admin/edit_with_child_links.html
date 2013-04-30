@@ -4,7 +4,14 @@
 <div style="float: right;">
     <h3>Upload channel cover</h3>
 <p id="coverupload_errors" style="color: #FF0000; font-weight: bold"></p>
-    <input type="file" name="coverfile" id="coverfile"/>
+    <div id="container">
+      <img id="uploadPreview" alt=''>
+      <div id="selector">
+        <div id="height"></div>
+        <div id="width"></div>
+      </div>
+    </div>
+    <input type="file" name="coverfile" id="coverfile" onchange="PreviewImage();"/>
     <!--input type="button" id="coversubmit" value="submit"-->
     <a href="#" style="font-weight: bold" id="coversubmit">&lt;submit&gt;</a>
 </div>
@@ -22,31 +29,72 @@
 
 {% block tail %}
 {{ super() }}
+
+<style>
+#selector {
+  display: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 200px;
+  height: 150px;
+}
+
+#height {
+  width: 20%;
+  height: 100%;
+  border: 1px solid #000;
+  left: 40%;
+  position: absolute;
+}
+
+#width {
+  width: 100%;
+  height: 30%;
+  border: 1px solid #000;
+  top: 30%;
+  position: absolute;
+}
+
+
+#container {
+  position: relative;
+  display: block;
+}
+</style>
+
 <script>
 $(document).ready(function(){
-    $('#coversubmit').click(function() {
-        console.log('in');
-        $('#coverupload_errors').text('uploading ....')
-        var formdata = new FormData();
-        formdata.append('cover', $('#coverfile')[0].files[0]);
-        formdata.append('owner', $('#owner_rel')[0].value);
-        $.ajax({
-            url: '{{ url_for("import.coverart") }}',
-            type: 'POST',
-            data: formdata,
-            success: function(data) {
-                $('#cover')[0].value = data['id'];
-                $('#coverupload_errors').text('');
-                $('#coverupload_errors').text('done')
-            },
-            error: function(data) {
-                $('#coverupload_errors').text($.parseJSON(data.responseText)['error']);
-            },
-            cache: false,
-            contentType: false,
-            processData: false,
-        });
-    });
+    selectorWidth = $("#selector").width(),
+    selectorHeight = $("#selector").height();
+
+    $("#submit").click(function(){
+        console.log (GetPosition());
+    })
+
+    // $('#coversubmit').click(function() {
+    //     console.log('in');
+    //     $('#coverupload_errors').text('uploading ....')
+    //     var formdata = new FormData();
+    //     formdata.append('cover', $('#coverfile')[0].files[0]);
+    //     formdata.append('owner', $('#owner_rel')[0].value);
+    //     $.ajax({
+    //         url: '{{ url_for("import.coverart") }}',
+    //         type: 'POST',
+    //         data: formdata,
+    //         success: function(data) {
+    //             $('#cover')[0].value = data['id'];
+    //             $('#coverupload_errors').text('');
+    //             $('#coverupload_errors').text('done')
+    //         },
+    //         error: function(data) {
+    //             $('#coverupload_errors').text($.parseJSON(data.responseText)['error']);
+    //         },
+    //         cache: false,
+    //         contentType: false,
+    //         processData: false,
+    //     });
+    // });
 });
 </script>
 {% endblock %}
