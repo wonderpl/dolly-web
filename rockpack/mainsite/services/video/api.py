@@ -78,15 +78,6 @@ def get_local_channel(locale, paging, **filters):
 
 
 def video_dict(video):
-    # TODO: unfudge this
-    thumbnail_url = None
-    for t in video.thumbnails:
-        if not thumbnail_url:
-            thumbnail_url = t.url
-        if t.url.count('mqdefault.jpg'):
-            thumbnail_url = t.url
-            break
-
     return dict(
         id=video.id,
         source=['rockpack', 'youtube'][video.source],    # TODO: read source map from db
@@ -94,7 +85,7 @@ def video_dict(video):
         duration=video.duration,
         view_count=video.view_count,
         star_count=video.star_count,
-        thumbnail_url=thumbnail_url,
+        thumbnail_url=video.default_thumbnail,
     )
 
 
