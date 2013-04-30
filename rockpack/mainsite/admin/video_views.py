@@ -151,7 +151,8 @@ class RockpackCoverArt(AdminView):
     column_list = ('locale_rel', 'cover.thumbnail_large', 'category_rel')
     column_filters = ('locale_rel', 'category_rel')
 
-    edit_template = 'admin/cover_art.html'
+    edit_template = 'admin/cover_art_edit.html'
+    create_template = 'admin/cover_art_create.html'
 
 
 class UserCoverArt(AdminView):

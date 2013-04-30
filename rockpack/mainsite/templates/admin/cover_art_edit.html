@@ -2,6 +2,7 @@
 
 {% block body %}
 {{ super() }}
+{% include 'admin/covereditor.html' %}
 <div class="cover-image-thumbnail-small">
     <div style="border-bottom:1px solid #000000">thumbnail small</div><div><img src="{{ form.cover.data.thumbnail_small }}" /></div>
 </div>
@@ -14,4 +15,12 @@
 <div class="cover-image-background">
     <div style="border-bottom:1px solid #000000">background</div><div><img src="{{ form.cover.data.background }}" /></div>
 </div>
+{% endblock %}
+
+{% block tail %}
+{{ super() }}
+<link rel="stylesheet" type="text/css" href="/static/assets/admin/jquery-ui.css" />
+<link rel="stylesheet" type="text/css" href="/static/assets/admin/cover.css" />
+<script type="text/javascript" src="/static/assets/admin/jquery-ui.js"></script>
+<script type="text/javascript" src="/static/assets/admin/cover.js"></script>
 {% endblock %}

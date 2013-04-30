@@ -1,0 +1,15 @@
+{% extends 'admin/model/create.html' %}
+
+{% block body %}
+{{ super() }}
+{% include 'admin/covereditor.html' %}
+{% endblock %}
+
+
+{% block tail %}
+{{ super() }}
+<link rel="stylesheet" type="text/css" href="/static/assets/admin/jquery-ui.css" />
+<link rel="stylesheet" type="text/css" href="/static/assets/admin/cover.css" />
+<script type="text/javascript" src="/static/assets/admin/jquery-ui.js"></script>
+<script type="text/javascript" src="/static/assets/admin/cover.js"></script>
+{% endblock %}
