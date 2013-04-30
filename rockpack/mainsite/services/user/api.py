@@ -340,6 +340,10 @@ class UserWS(WebService):
     @expose_ajax('/<userid>/', cache_age=60, secure=False)
     def user_info(self, userid):
         user = User.query.get_or_404(userid)
+        if app.config.get('ELASTICSEARCH_URL'):
+            data = video_api.es_get_owner_with_channels(user.id, paging=self.get_page())
+            return data
+
         channels = [video_api.channel_dict(c, with_owner=False, owner_url=False)
                     for c in Channel.query.options(lazyload('category_rel')).
                     filter_by(owner=user.id, deleted=False, public=True)]

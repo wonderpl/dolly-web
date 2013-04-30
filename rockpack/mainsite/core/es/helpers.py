@@ -73,7 +73,7 @@ class DBImport(object):
                         'avatar_thumbnail': user.avatar.thumbnail_small,
                         'resource_url': user.get_resource_url(False),
                         'display_name': user.display_name,
-                        'name': user.username
+                        'username': user.username
                     },
                     mappings.USER_INDEX,
                     mappings.USER_TYPE,
@@ -107,7 +107,9 @@ class DBImport(object):
                     'date_added': channel.date_added,
                     'title': channel.title,
                     'owner_id': channel.owner,
-                    'ecommerce_url': channel.ecommerce_url
+                    'ecommerce_url': channel.ecommerce_url,
+                    'favourite': channel.favourite,
+                    'verified': channel.verified
                 }
                 api.add_channel_to_index(data, bulk=True, refresh=False)
 

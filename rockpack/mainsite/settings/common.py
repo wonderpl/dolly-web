@@ -9,6 +9,7 @@ try:
 except pkg_resources.DistributionNotFound:
     VERSION = 'unknown'
 
+FORCE_INDEX_INSERT_REFRESH = False  # used by elasticsearch
 
 DATABASE_URL = ''  # e.g. postgresql://foo:bar@localhost:5432/rockpack
 

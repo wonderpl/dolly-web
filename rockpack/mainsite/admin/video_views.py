@@ -124,7 +124,7 @@ class Channel(AdminView):
 
     form_columns = ('title', 'description', 'ecommerce_url', 'cover', 'cover_aoi',
                     'owner_rel', 'category_rel',
-                    'public', 'verified', 'deleted')
+                    'public', 'verified', 'deleted', 'editorial_boost', 'favourite')
     form_overrides = dict(owner_rel=wtf.TextField)
     form_args = dict(
         ecommerce_url=dict(validators=[wtf.Optional()]),

@@ -66,63 +66,61 @@ class IndexSearch(object):
             sort=sort)
 
 
-def add_to_index(data, index, _type, id, bulk=False):
+def add_to_index(data, index, _type, id, bulk=False, refresh=False):
     try:
-        return es_connection.index(data, index, _type, id=id, bulk=bulk)
+        es_connection.index(data, index, _type, id=id, bulk=bulk)
     except Exception as e:
         app.logger.critical("Failed to insert record to index '{}' with id '{}' with: {}".format(index, id, str(e)))
+    else:
+        if refresh or app.config.get('FORCE_INDEX_INSERT_REFRESH', False):
+            es_connection.indices.refresh(index)
 
 
-def add_owner_to_index(owner, bulk=False, refresh=True):
-    conn = es_connection
+def add_owner_to_index(owner, bulk=False, refresh=False):
     i = add_to_index(
         {
             'id': owner['id'],
             'avatar_thumbnail': owner['avatar_thumbnail'],
             'resource_url': owner['resource_url'],
             'display_name': owner['display_name'],
-            'name': owner['name']
+            'username': owner['username']
         },
         mappings.USER_INDEX,
         mappings.USER_TYPE,
         id=owner['id'],
-        bulk=bulk)
-    if refresh:
-        conn.indices.refresh(mappings.USER_INDEX)
+        bulk=bulk,
+        refresh=refresh)
     return i
 
 
-def add_channel_to_index(channel, bulk=False, refresh=True):
-    conn = es_connection
-    i = add_to_index(
-        {
-            'id': channel['id'],
-            'public': True,  # we assume we dont insert private/invisible
-            'locale': channel['locale'],
-            'ecommerce_url': channel['ecommerce_url'],
-            'subscriber_count': channel['subscriber_count'],
-            'category': channel['category'],
-            'description': channel['description'],
-            'thumbnail_url': urlparse(channel['thumbnail_url']).path,
-            'cover_thumbnail_small_url': urlparse(channel['cover_thumbnail_small_url']).path,
-            'cover_thumbnail_large_url': urlparse(channel['cover_thumbnail_large_url']).path,
-            'cover_background_url': urlparse(channel['cover_background_url']).path,
-            'resource_url': urlparse(channel['resource_url']).path,
-            'title': channel['title'],
-            'date_added': channel['date_added'],
-            'owner': channel['owner_id'],
-        },
-        mappings.CHANNEL_INDEX,
-        mappings.CHANNEL_TYPE,
-        id=channel['id'],
-        bulk=bulk)
-    if refresh:
-        conn.indices.refresh(mappings.CHANNEL_INDEX)
+def add_channel_to_index(channel, bulk=False, refresh=False, boost=None):
+    data = {
+        'id': channel['id'],
+        'public': True,  # we assume we dont insert private/invisible
+        'locale': channel['locale'],
+        'ecommerce_url': channel['ecommerce_url'],
+        'subscriber_count': channel['subscriber_count'],
+        'category': channel['category'],
+        'description': channel['description'],
+        'thumbnail_url': urlparse(channel['thumbnail_url']).path,
+        'cover_thumbnail_small_url': urlparse(channel['cover_thumbnail_small_url']).path,
+        'cover_thumbnail_large_url': urlparse(channel['cover_thumbnail_large_url']).path,
+        'cover_background_url': urlparse(channel['cover_background_url']).path,
+        'resource_url': urlparse(channel['resource_url']).path,
+        'title': channel['title'],
+        'date_added': channel['date_added'],
+        'owner': channel['owner_id'],
+        'favourite': channel['favourite'],
+        'verified': channel['verified'],
+    }
+    if boost:
+        data['_boost'] = boost
+
+    i = add_to_index(data, mappings.CHANNEL_INDEX, mappings.CHANNEL_TYPE, id=channel['id'], bulk=bulk, refresh=refresh)
     return i
 
 
-def add_video_to_index(video_instance, bulk=False, refresh=True):
-    conn = es_connection
+def add_video_to_index(video_instance, bulk=False, refresh=False):
     i = add_to_index(
         {
             'id': video_instance['id'],
@@ -145,23 +143,22 @@ def add_video_to_index(video_instance, bulk=False, refresh=True):
         mappings.VIDEO_INDEX,
         mappings.VIDEO_TYPE,
         id=video_instance['id'],
-        bulk=bulk)
-    if refresh:
-        conn.indices.refresh(mappings.VIDEO_INDEX)
+        bulk=bulk,
+        refresh=refresh)
     return i
 
 
 def remove_channel_from_index(channel_id):
     conn = es_connection
     try:
-        print conn.delete(mappings.CHANNEL_INDEX, mappings.CHANNEL_TYPE, channel_id)
+        conn.delete(mappings.CHANNEL_INDEX, mappings.CHANNEL_TYPE, channel_id)
     except pyes.exceptions.NotFoundException:
-        pass
+        app.logger.warning("Failed to remove channel '{}' from index".format(channel_id))
 
 
 def remove_video_from_index(video_id):
     conn = es_connection
     try:
-        print conn.delete(mappings.VIDEO_INDEX, mappings.VIDEO_TYPE, video_id)
+        conn.delete(mappings.VIDEO_INDEX, mappings.VIDEO_TYPE, video_id)
     except pyes.exceptions.NotFoundException:
-        pass
+        app.logger.warning("Failed to remove video '{}' from index".format(video_id))

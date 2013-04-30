@@ -275,6 +275,8 @@ class Channel(db.Model):
     date_updated = Column(DateTime(), nullable=False, default=func.now(), onupdate=func.now())
     update_frequency = Column(Float, nullable=True)
     ecommerce_url = Column(String(1024), nullable=False, server_default='')
+    editorial_boost = Column(Float(precision=1), nullable=True, server_default='1.0', default=1.0)
+    favourite = Column(Boolean(), nullable=False, server_default='false', default=False)
 
     category = Column(ForeignKey('category.id'), nullable=True)
     category_rel = relationship(Category, primaryjoin=(category == Category.id), lazy='joined')
@@ -418,7 +420,7 @@ def _add_es_video(video_instance):
                 duration=video.duration,
                 locale=_locale_dict_from_object(video_instance.metas))
 
-            print es_api.add_video_to_index(data)
+            es_api.add_video_to_index(data)
 
 
 def _add_es_channel(channel):
@@ -450,9 +452,14 @@ def _add_es_channel(channel):
             thumbnail_url=convert(channel.cover).thumbnail_large,
             cover_thumbnail_small_url=convert(channel.cover).thumbnail_small,
             cover_thumbnail_large_url=convert(channel.cover).thumbnail_large,
-            cover_background_url=convert(channel.cover).background)
+            cover_background_url=convert(channel.cover).background,
+            favourite=channel.favourite,
+            verified=channel.verified)
 
-        print es_api.add_channel_to_index(data)
+        boost = None
+        if channel.editorial_boost:
+            boost = channel.editorial_boost
+        es_api.add_channel_to_index(data, boost=boost)
 
 
 def _remove_es_channel(channel):

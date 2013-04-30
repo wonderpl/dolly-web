@@ -265,7 +265,7 @@ def _es_owner_insert(mapper, connection, target):
             'avatar_thumbnail': convert(target.avatar).thumbnail_small,
             'resource_url': target.get_resource_url(False),
             'display_name': target.display_name,
-            'name': target.username}
+            'username': target.username}
         add_owner_to_index(data)
 
 
