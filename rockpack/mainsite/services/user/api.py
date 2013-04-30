@@ -1,7 +1,7 @@
 from werkzeug.datastructures import MultiDict
-from sqlalchemy import desc
+from sqlalchemy import desc, func
 from sqlalchemy.orm import lazyload
-from flask import abort, request, g
+from flask import abort, request, json, g
 from flask.ext import wtf
 from flask.ext.admin import form
 from wtforms.validators import ValidationError
@@ -19,7 +19,7 @@ from rockpack.mainsite.services.cover_art.models import UserCoverArt, RockpackCo
 from rockpack.mainsite.services.cover_art import api as cover_api
 from rockpack.mainsite.services.video import api as video_api
 from rockpack.mainsite.services.search import api as search_api
-from .models import User, UserActivity, Subscription
+from .models import User, UserActivity, UserNotification, Subscription
 
 
 ACTION_COLUMN_VALUE_MAP = dict(
@@ -215,6 +215,36 @@ def _user_list(paging, **filters):
     return items, total
 
 
+def _notification_list(userid, paging):
+    notifications = UserNotification.query.filter_by(
+        user=userid).order_by(desc('date_created'))
+    total = notifications.count()
+    offset, limit = paging
+    notifications = notifications.offset(offset).limit(limit)
+    items = [
+        dict(
+            id=notification.id,
+            date_created=notification.date_created.isoformat(),
+            message_type=notification.message_type,
+            # Might be worth optimising this by substituting the
+            # pre-formatted json directly into the response
+            message=json.loads(notification.message),
+            read=bool(notification.date_read),
+        ) for notification in notifications]
+    return items, total
+
+
+def _notification_unread_count(userid):
+    return UserNotification.query.filter_by(user=userid, date_read=None).count()
+
+
+@commit_on_success
+def _mark_read_notifications(userid, id_list):
+    UserNotification.query.filter_by(user=userid, date_read=None).\
+        filter(UserNotification.id.in_(id_list)).update(
+            {UserNotification.date_read: func.now()}, False)
+
+
 def action_object_list(user, action, limit):
     query = UserActivity.query.filter_by(user=user, action=action).\
         order_by(desc('id')).limit(limit)
@@ -340,9 +370,10 @@ class UserWS(WebService):
             avatar_thumbnail_url=user.avatar.thumbnail_small,
             date_of_birth=user.date_of_birth.isoformat() if user.date_of_birth else None,
         )
-        for key in 'channels', 'activity', 'cover_art', 'subscriptions':
+        for key in 'channels', 'activity', 'notifications', 'cover_art', 'subscriptions':
             info[key] = dict(resource_url=url_for('userws.post_%s' % key, userid=userid))
         info['channels'].update(items=channels, total=len(channels))
+        info['notifications'].update(unread_count=_notification_unread_count(userid))
         return info
 
     @expose_ajax('/<userid>/<any("username", "first_name", "last_name", "email", "password", "locale", "date_of_birth", "gender"):attribute_name>/', methods=('PUT',))
@@ -406,6 +437,28 @@ class UserWS(WebService):
         channelid = VideoInstance.query.filter_by(id=form.video_instance.data).value('channel')
         if channelid:
             save_channel_activity(userid, form.action.data, channelid, self.get_locale())
+
+    @expose_ajax('/<userid>/notifications/', cache_age=60, cache_private=True)
+    @check_authorization(self_auth=True)
+    def get_notifications(self, userid):
+        items, total = _notification_list(userid, self.get_page())
+        return dict(notifications=dict(items=items, total=total))
+
+    @expose_ajax('/<userid>/notifications/', methods=['POST'])
+    @check_authorization(self_auth=True)
+    def post_notifications(self, userid):
+        try:
+            notification_ids = map(int, request.json['mark_read'])
+        except (TypeError, KeyError):
+            abort(400, message='"mark_read" list parameter required')
+        except ValueError:
+            abort(400, message='Invalid id list')
+        return _mark_read_notifications(userid, notification_ids)
+
+    @expose_ajax('/<userid>/notifications/unread_count/', cache_age=60, cache_private=True)
+    @check_authorization(self_auth=True)
+    def get_notifications_unread_count(self, userid):
+        return _notification_unread_count(userid)
 
     @expose_ajax('/<userid>/content_reports/', methods=['POST'])
     @check_authorization(self_auth=True)

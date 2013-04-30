@@ -40,6 +40,7 @@ class User(db.Model):
     locale = Column(ForeignKey('locale.id'), nullable=False, server_default='')
 
     channels = relationship('Channel')
+    activity = relationship('UserActivity', backref='actor')
 
     def __unicode__(self):
         return self.username
@@ -171,6 +172,17 @@ class UserActivity(db.Model):
     date_actioned = Column(DateTime(), nullable=False, default=func.now())
     object_type = Column(String(16), nullable=False)
     object_id = Column(String(64), nullable=False)
+
+
+class UserNotification(db.Model):
+    __tablename__ = 'user_notification'
+
+    id = Column(Integer, primary_key=True)
+    user = Column(ForeignKey('user.id'), nullable=False)
+    date_created = Column(DateTime(), nullable=False, default=func.now())
+    date_read = Column(DateTime(), nullable=True)
+    message_type = Column(String(16), nullable=False)
+    message = Column(Text())
 
 
 class UserAccountEvent(db.Model):
