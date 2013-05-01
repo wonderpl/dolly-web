@@ -12,6 +12,10 @@ def url_for(*args, **kwargs):
     secure_subdomain = current_app.config.get('SECURE_SUBDOMAIN')
     if secure_subdomain and url.startswith('http://' + secure_subdomain + '.'):
         url = 'https://' + url[7:]
+    # Ensure urls on top-level don't use https:
+    servername = current_app.config.get('SERVER_NAME')
+    if servername and url.startswith('https://' + servername + '/'):
+        url = 'http://' + url[8:]
     return url
 
 
