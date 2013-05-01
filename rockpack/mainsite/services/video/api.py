@@ -77,15 +77,21 @@ def get_local_channel(locale, paging, **filters):
     return channel_data, total
 
 
-def video_dict(video):
+def video_dict(instance):
+    video = instance.video_rel
     return dict(
-        id=video.id,
-        source=['rockpack', 'youtube'][video.source],    # TODO: read source map from db
-        source_id=video.source_videoid,
-        duration=video.duration,
-        view_count=video.view_count,
-        star_count=video.star_count,
-        thumbnail_url=video.default_thumbnail,
+        id=instance.id,
+        title=video.title,
+        date_added=instance.date_added.isoformat(),
+        video=dict(
+            id=video.id,
+            source=['rockpack', 'youtube'][video.source],    # TODO: read source map from db
+            source_id=video.source_videoid,
+            duration=video.duration,
+            view_count=video.view_count,
+            star_count=video.star_count,
+            thumbnail_url=video.default_thumbnail,
+        )
     )
 
 
@@ -124,16 +130,11 @@ def get_local_videos(loc, paging, with_channel=True, **filters):
     offset, limit = paging
     videos = videos.offset(offset).limit(limit)
     data = []
-    for position, v in enumerate(videos, offset):
-        item = dict(
-            position=position,
-            date_added=v.date_added.isoformat(),
-            video=video_dict(v.video_rel),
-            id=v.id,
-            title=v.video_rel.title,
-        )
+    for position, video in enumerate(videos, offset):
+        item = video_dict(video)
+        item['position'] = position
         if with_channel:
-            item['channel'] = channel_dict(v.video_channel)
+            item['channel'] = channel_dict(video.video_channel)
         data.append(item)
     return data, total
 

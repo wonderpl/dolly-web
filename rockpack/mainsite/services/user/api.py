@@ -587,6 +587,11 @@ class UserWS(WebService):
             abort(400, message='List can be empty, but must be present')
         add_videos_to_channel(channel, request.json, self.get_locale(), request.method == 'PUT')
 
+    @expose_ajax('/<userid>/channels/<channelid>/videos/<videoid>/')
+    def channel_video_instance(self, userid, channelid, videoid):
+        instance = VideoInstance.query.filter_by(id=videoid, channel=channelid).first_or_404()
+        return video_api.video_dict(instance)
+
     @expose_ajax('/<userid>/channels/<channelid>/subscribers/', cache_age=60)
     def channel_subscribers(self, userid, channelid):
         items, total = _user_list(self.get_page(), subscribed_to=channelid)
