@@ -35,7 +35,10 @@ class RequestUser(object):
             return User.query.get(self.userid)
 
 
-def check_authorization(abort_on_fail=True, self_auth=False):
+def check_authorization(abort_on_fail=None, self_auth=False):
+    if abort_on_fail is None:
+        abort_on_fail = app.config.get('CHECK_AUTH_ABORT_ON_FAIL', True)
+
     def decorator(f):
         @wraps(f)
         def wrapper(*args, **kwargs):

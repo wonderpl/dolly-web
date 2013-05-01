@@ -9,7 +9,7 @@
       <li class="channel newchannel" ng-click="createChannel()">
         <div class="newchanneltext">Create New Channel</div>
       </li>
-      <li class="channel" ng-repeat="channel in User.channels.items" ng-click="selectChannel($event)" data-channelid="{{channel.id}}">
+      <li class="channel" ng-repeat="channel in User.channels.items" ng-click="selectChannel(channel.id)" ng-class="{selected : isSelected(channel.id)}">
         <div class="channelname">{{channel.title}}</div>
         <div class="selectedOverlay"></div>
         <img src="/static/assets/bookmarklet/images/reflection.png" class="reflection">

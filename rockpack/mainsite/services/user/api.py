@@ -1,7 +1,7 @@
 from werkzeug.datastructures import MultiDict
-from sqlalchemy import desc
+from sqlalchemy import desc, func
 from sqlalchemy.orm import lazyload
-from flask import abort, request, g
+from flask import abort, request, json, g
 from flask.ext import wtf
 from flask.ext.admin import form
 from wtforms.validators import ValidationError
@@ -19,7 +19,7 @@ from rockpack.mainsite.services.cover_art.models import UserCoverArt, RockpackCo
 from rockpack.mainsite.services.cover_art import api as cover_api
 from rockpack.mainsite.services.video import api as video_api
 from rockpack.mainsite.services.search import api as search_api
-from .models import User, UserActivity, Subscription
+from .models import User, UserActivity, UserNotification, Subscription
 
 
 ACTION_COLUMN_VALUE_MAP = dict(
@@ -108,15 +108,15 @@ def get_or_create_video_records(instance_ids, locale):
 
 
 @commit_on_success
-def save_video_activity(user, action, instance_id, locale):
+def save_video_activity(userid, action, instance_id, locale):
     try:
         column, value = ACTION_COLUMN_VALUE_MAP[action]
     except KeyError:
         abort(400, message='invalid action')
 
     video_id = get_or_create_video_records([instance_id], locale)[0]
-    activity = dict(user=user, action=action,
-                    object_type='video', object_id=video_id)
+    activity = dict(user=userid, action=action,
+                    object_type='video_instance', object_id=instance_id)
     if not UserActivity.query.filter_by(**activity).count():
         # Increment value on each of instance, video, & locale meta
         incr = lambda m: {getattr(m, column): getattr(m, column) + value}
@@ -134,7 +134,7 @@ def save_video_activity(user, action, instance_id, locale):
 
     if action in ('star', 'unstar'):
         channel = Channel.query.filter_by(
-            owner=user, title=app.config['FAVOURITE_CHANNEL'][0]).first()
+            owner=userid, title=app.config['FAVOURITE_CHANNEL'][0]).first()
         if channel:
             if action == 'unstar':
                 channel.remove_videos([video_id])
@@ -143,7 +143,7 @@ def save_video_activity(user, action, instance_id, locale):
 
 
 @commit_on_success
-def save_channel_activity(channelid, action, locale):
+def save_channel_activity(userid, action, channelid, locale):
     """Update channel with subscriber, view, or star count changes."""
     try:
         column, value = ACTION_COLUMN_VALUE_MAP[action]
@@ -155,11 +155,13 @@ def save_channel_activity(channelid, action, locale):
     # Update or create locale meta record:
     ChannelLocaleMeta.query.filter_by(channel=channelid, locale=locale).update(incr(ChannelLocaleMeta)) or \
         ChannelLocaleMeta(channel=channelid, locale=locale, **{column: value}).save()
+    if action in ('subscribe', 'unsubscribe'):
+        UserActivity(user=userid, action=action, object_type='channel', object_id=channelid).save()
 
 
 @commit_on_success
-def save_content_report(user, object_type, object_id):
-    activity = dict(action='content_reported', user=user,
+def save_content_report(userid, object_type, object_id):
+    activity = dict(action='content_reported', user=userid,
                     object_type=object_type, object_id=object_id)
     if not UserActivity.query.filter_by(**activity).count():
         UserActivity(**activity).save()
@@ -213,6 +215,36 @@ def _user_list(paging, **filters):
     return items, total
 
 
+def _notification_list(userid, paging):
+    notifications = UserNotification.query.filter_by(
+        user=userid).order_by(desc('date_created'))
+    total = notifications.count()
+    offset, limit = paging
+    notifications = notifications.offset(offset).limit(limit)
+    items = [
+        dict(
+            id=notification.id,
+            date_created=notification.date_created.isoformat(),
+            message_type=notification.message_type,
+            # Might be worth optimising this by substituting the
+            # pre-formatted json directly into the response
+            message=json.loads(notification.message),
+            read=bool(notification.date_read),
+        ) for notification in notifications]
+    return items, total
+
+
+def _notification_unread_count(userid):
+    return UserNotification.query.filter_by(user=userid, date_read=None).count()
+
+
+@commit_on_success
+def _mark_read_notifications(userid, id_list):
+    UserNotification.query.filter_by(user=userid, date_read=None).\
+        filter(UserNotification.id.in_(id_list)).update(
+            {UserNotification.date_read: func.now()}, False)
+
+
 def action_object_list(user, action, limit):
     query = UserActivity.query.filter_by(user=user, action=action).\
         order_by(desc('id')).limit(limit)
@@ -235,13 +267,17 @@ class ChannelForm(form.BaseForm):
         self._channel_id = None
 
     title = wtf.TextField(validators=[check_present])
-    description = wtf.TextField(validators=[check_present])
+    description = wtf.TextField(validators=[check_present, wtf.validators.Length(max=200)])
     category = wtf.TextField(validators=[check_present])
     cover = wtf.TextField(validators=[check_present])
     public = wtf.BooleanField(validators=[check_present])
 
     def for_channel_id(self, id):
         self._channel_id = id
+
+    def pre_validate(self):
+        if self.description.data:
+            self.description.data = ' '.join(map(lambda x: x.strip(), self.description.data.splitlines()))
 
     def validate_cover(self, field):
         exists = lambda m: m.query.filter_by(cover=field.data).count()
@@ -334,9 +370,10 @@ class UserWS(WebService):
             avatar_thumbnail_url=user.avatar.thumbnail_small,
             date_of_birth=user.date_of_birth.isoformat() if user.date_of_birth else None,
         )
-        for key in 'channels', 'activity', 'cover_art', 'subscriptions':
+        for key in 'channels', 'activity', 'notifications', 'cover_art', 'subscriptions':
             info[key] = dict(resource_url=url_for('userws.post_%s' % key, userid=userid))
         info['channels'].update(items=channels, total=len(channels))
+        info['notifications'].update(unread_count=_notification_unread_count(userid))
         return info
 
     @expose_ajax('/<userid>/password/', methods=('PUT',))
@@ -395,14 +432,12 @@ class UserWS(WebService):
     @expose_ajax('/<userid>/activity/', cache_age=60, cache_private=True)
     @check_authorization(self_auth=True)
     def get_activity(self, userid):
-        subscriptions = user_subscriptions(userid).\
-            order_by(desc('date_created')).limit(self.max_page_size)
         ids = dict((key, action_object_list(userid, key, self.max_page_size))
                    for key in ACTION_COLUMN_VALUE_MAP)
         return dict(
             recently_viewed=ids['view'],
             recently_starred=list(set(ids['star']) - set(ids['unstar'])),
-            subscribed=[id for (id,) in subscriptions.values('channel')],
+            subscribed=list(set(ids['subscribe']) - set(ids['unsubscribe'])),
         )
 
     @expose_ajax('/<userid>/activity/', methods=['POST'])
@@ -417,7 +452,29 @@ class UserWS(WebService):
                             self.get_locale())
         channelid = VideoInstance.query.filter_by(id=form.video_instance.data).value('channel')
         if channelid:
-            save_channel_activity(channelid, form.action.data, self.get_locale())
+            save_channel_activity(userid, form.action.data, channelid, self.get_locale())
+
+    @expose_ajax('/<userid>/notifications/', cache_age=60, cache_private=True)
+    @check_authorization(self_auth=True)
+    def get_notifications(self, userid):
+        items, total = _notification_list(userid, self.get_page())
+        return dict(notifications=dict(items=items, total=total))
+
+    @expose_ajax('/<userid>/notifications/', methods=['POST'])
+    @check_authorization(self_auth=True)
+    def post_notifications(self, userid):
+        try:
+            notification_ids = map(int, request.json['mark_read'])
+        except (TypeError, KeyError):
+            abort(400, message='"mark_read" list parameter required')
+        except ValueError:
+            abort(400, message='Invalid id list')
+        return _mark_read_notifications(userid, notification_ids)
+
+    @expose_ajax('/<userid>/notifications/unread_count/', cache_age=60, cache_private=True)
+    @check_authorization(self_auth=True)
+    def get_notifications_unread_count(self, userid):
+        return _notification_unread_count(userid)
 
     @expose_ajax('/<userid>/content_reports/', methods=['POST'])
     @check_authorization(self_auth=True)
@@ -586,7 +643,7 @@ class UserWS(WebService):
         if Subscription.query.filter_by(user=userid, channel=channelid).count():
             abort(400, message='Already subscribed')
         subs = Subscription(user=userid, channel=channelid).save()
-        save_channel_activity(channelid, 'subscribe', self.get_locale())
+        save_channel_activity(userid, 'subscribe', channelid, self.get_locale())
         return ajax_create_response(subs)
 
     @expose_ajax('/<userid>/subscriptions/<channelid>/')
@@ -601,7 +658,7 @@ class UserWS(WebService):
     def delete_subscription_item(self, userid, channelid):
         if not user_subscriptions(userid).filter_by(channel=channelid).delete():
             abort(404)
-        save_channel_activity(channelid, 'unsubscribe', self.get_locale())
+        save_channel_activity(userid, 'unsubscribe', channelid, self.get_locale())
 
     @expose_ajax('/<userid>/subscriptions/recent_videos/', cache_age=60, cache_private=True)
     @check_authorization(self_auth=True)

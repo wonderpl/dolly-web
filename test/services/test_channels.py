@@ -54,7 +54,9 @@ class ChannelCreateTestCase(base.RockPackTestCase):
 
             # check that the dup-title error isnt triggered when updating
             # but not changing the title
+            # also check stripping of returns (200 chars not including break)
             new_description = 'this is a new description!'
+            new_description = "hjdk adhaj dsjakhkdsjf yhsdjhf sdjhfksdkfjhsdfsjdfjsdfh sdhf sdjkhf jhsjkhsf sdjhkf sdjkhsdfjkhfsdh\n\rhjdk adhaj dsjakhkdsjf yhsdjhf sdjhfksdkfjhsdfsjdfjsdfh sdhf sdjkhf jhsjkhsf sdjhkf sdjkhsdfjkhfsdh"
             r = client.put(resource,
                     data=json.dumps(dict(title='',
                         description=new_description,
@@ -64,6 +66,18 @@ class ChannelCreateTestCase(base.RockPackTestCase):
                     content_type='application/json',
                     headers=[get_auth_header(user.id)])
             self.assertEquals(200, r.status_code)
+
+            # check description limit (201 chars below)
+            new_description = "ihjdk adhaj dsjakhkdsjf yhsdjhf sdjhfksdkfjhsdfsjdfjsdfh sdhf sdjkhf jhsjkhsf sdjhkf sdjkhsdfjkhfsdh\n\rhjdk adhaj dsjakhkdsjf yhsdjhf sdjhfksdkfjhsdfsjdfjsdfh sdhf sdjkhf jhsjkhsf sdjhkf sdjkhsdfjkhfsdh"
+            r = client.put(resource,
+                    data=json.dumps(dict(title='',
+                        description=new_description,
+                    category=3,
+                    cover=RockpackCoverArtData.comic_cover.cover,
+                    public=False)),
+                    content_type='application/json',
+                    headers=[get_auth_header(user.id)])
+            self.assertEquals(400, r.status_code)
 
             # test public toggle
             r = client.put(resource + 'public/',

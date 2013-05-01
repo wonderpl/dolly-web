@@ -1,5 +1,5 @@
 from sqlalchemy import (
-    Text, String, Column, Boolean, Integer, ForeignKey, DateTime, CHAR,
+    Text, String, Column, Boolean, Integer, Float, ForeignKey, DateTime, CHAR,
     UniqueConstraint, event, func)
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import relationship, aliased
@@ -50,8 +50,9 @@ class Category(db.Model):
 
     @classmethod
     def get_form_choices(cls, locale):
-        query = cls.query.filter(CategoryTranslation.category == Category.id,
-        CategoryTranslation.locale == locale).order_by('parent asc')
+        query = cls.query.filter(
+            CategoryTranslation.category == Category.id,
+            CategoryTranslation.locale == locale).order_by('parent asc')
         for q in query:
             pname = q.parent_category.name if q.parent_category else '-'
             yield q.id, '%s - %s' % (pname, q.name)
@@ -113,6 +114,7 @@ class Video(db.Model):
 
     id = Column(CHAR(40), primary_key=True)
     title = Column(String(1024), nullable=False)
+    source = Column(ForeignKey('source.id'), nullable=False)
     source_videoid = Column(String(128), nullable=False)
     source_listid = Column(String(128), nullable=True)
     date_added = Column(DateTime(), nullable=False, default=func.now())
@@ -123,10 +125,8 @@ class Video(db.Model):
     rockpack_curated = Column(Boolean, nullable=False, server_default='false', default=False)
     visible = Column(Boolean(), nullable=False, server_default='true', default=True)
 
-    source = Column(ForeignKey('source.id'), nullable=False)
-
     thumbnails = relationship('VideoThumbnail', backref='video_rel',
-                              lazy='joined', passive_deletes=True,
+                              passive_deletes=True,
                               cascade="all, delete-orphan")
     instances = relationship('VideoInstance', backref=db.backref('video_rel', lazy='joined'),
                              passive_deletes=True, cascade="all, delete-orphan")
@@ -137,6 +137,9 @@ class Video(db.Model):
 
     @property
     def default_thumbnail(self):
+        # Short-circuit for youtube to avoid join:
+        if self.source == 1:
+            return 'http://i.ytimg.com/vi/%s/mqdefault.jpg' % self.source_videoid
         for thumb in self.thumbnails:
             if 'default.jpg' in thumb.url:
                 return thumb.url
@@ -268,6 +271,7 @@ class Channel(db.Model):
     subscriber_count = Column(Integer, nullable=False, server_default='0', default=0)
     date_added = Column(DateTime(), nullable=False, default=func.now())
     date_updated = Column(DateTime(), nullable=False, default=func.now(), onupdate=func.now())
+    update_frequency = Column(Float, nullable=True)
     ecommerce_url = Column(String(1024), nullable=False, server_default='')
 
     category = Column(ForeignKey('category.id'), nullable=True)

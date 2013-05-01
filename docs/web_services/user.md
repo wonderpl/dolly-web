@@ -71,6 +71,10 @@ Cache-Control: private
  "activity": {
   "resource_url": "https://path/to/activity/resource/base/url/"
  },
+ "notifications": {
+  "unread_count": 3,
+  "resource_url": "https://path/to/notifications/resource/base/url/"
+ },
  "cover_art": {
   "resource_url": "https://path/to/cover_art/resource/base/url/"
  },
@@ -330,7 +334,7 @@ Authorization: Bearer TOKEN
 Parameter      | Required? | Value             | Description
 :------------- | :-------- | :---------------- | :----------
 title          | Yes       | unicode string    | May be empty string. If not specified, a default title will be assigned.
-description    | Yes       | unicode string    | May be empty string.
+description    | Yes       | unicode string    | May be empty string. Maximum 200 chars (line-breaks are stripped).
 category       | Yes       | category id       | Id of assigned category. May be empty string to leave unassigned.
 cover          | Yes       | cover image ref   | Reference for cover art image. May be empty string to leave unassigned.
 public         | Yes       | `true` or `false` | Toggles whether a channel is public. May be empty string, but will default to `true`. If other fields are unassigned, field will default to `false`.
@@ -621,6 +625,133 @@ Cache-Control: private, max-age=60
  "recently_viewed": [ "video instance id", "..." ],
  "recently_starred": [ "video id", "..." ],
  "subscribed": [ "channel id", "..." ]
+}
+```
+
+User Notifications
+==================
+
+### Retrieve
+
+Get a list of notification messages for the user.
+
+```http
+GET /ws/USERID/notifications/ HTTP/1.1
+Authorization: Bearer TOKEN
+```
+
+Each notification item in the list has a `message_type` and `message` data.  The message data
+contains a `user` record representing the user who's action triggered the notification and a
+content record representing the video or channel that was acted upon.
+
+Message Type | Content Record | Description
+:----------- | :------------- | :----------
+`subscribed` | `channel`      | Message contains channel thumbnail and resource url
+`starred`    | `video`        | Message contains video thumbnail and channel resource url
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+Cache-Control: private, max-age=60
+
+{
+ "notifications": {
+  "total": 2,
+  "items": [
+   {
+    "id": 1,
+    "message_type": "starred",
+    "date_created": "2013-04-29T18:16:05.950486",
+    "read": false,
+    "message": {
+     "video": {
+      "thumbnail_url": "http://i.ytimg.com/vi/m04evx91lh8/mqdefault.jpg",
+      "id": "VIDEOINSTANCEID",
+      "channel": {
+       "resource_url": "http://path/to/channel/resource/url/",
+       "id": "CHANNELID"
+      }
+     },
+     "user": {
+      "id": "USERID",
+      "resource_url": "http://path/to/user/resource/url/",
+      "display_name": "user",
+      "avatar_thumbnail_url": "http://path/to/avatar/img.jpg"
+     }
+    }
+   },
+   {
+    "id": 2,
+    "message_type": "subscribed",
+    "date_created": "2013-04-29T12:23:13.762358",
+    "read": true,
+    "message": {
+     "channel": {
+      "resource_url": "http://path/to/channel/resource/url/",
+      "thumbnail_url": "http://path/to/channel/cover.jpg",
+      "id": "CHANNELID"
+     },
+     "user": {
+      "id": "USERID",
+      "resource_url": "http://path/to/user/resource/url/",
+      "display_name": "user",
+      "avatar_thumbnail_url": "http://path/to/avatar/img.jpg"
+     }
+    }
+   }
+  ]
+ }
+}
+```
+
+### Unread count
+
+Get the number of unread notifications messages.
+Note: This count is also available on the user service.
+
+```http
+GET /ws/USERID/notifications/unread_count/ HTTP/1.1
+Authorization: Bearer TOKEN
+```
+
+Returns a single integer value.
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+Cache-Control: private, max-age=60
+
+88
+```
+
+### Mark read
+
+Post a list of message ids to mark as read.
+
+```http
+POST /ws/oCRwcy5MRIiWmsJjvbFbHA/notifications/ HTTP/1.1
+Authorization: Bearer TOKEN
+Content-Type: application/json
+
+{
+ "mark_read": [1, 2]
+}
+```
+
+Responds with a 204 if successful.
+
+```http
+HTTP/1.1 204 NO CONTENT
+Content-Type: application/json
+```
+
+```http
+HTTP/1.1 400 BAD REQUEST
+Content-Type: application/json
+
+{
+ "message":"Invalid id list",
+ "error":"invalid_request"
 }
 ```
 

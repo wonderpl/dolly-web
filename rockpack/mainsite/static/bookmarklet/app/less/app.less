@@ -109,6 +109,9 @@ body {
   height: 425px;
   margin: 100px auto;
   background: #242729;
+  -webkit-box-shadow: 1px 1px 5px rgba(50, 50, 50, 0.7);
+  -moz-box-shadow:    1px 1px 5px rgba(50, 50, 50, 0.7);
+  box-shadow:         1px 1px 5px rgba(50, 50, 50, 0.7);
 }
 
 #createChannel {
@@ -116,6 +119,14 @@ body {
   height: 425px;
   margin: 100px auto;
   background: #242729;
+  -webkit-box-shadow: 1px 1px 5px rgba(50, 50, 50, 0.7);
+  -moz-box-shadow:    1px 1px 5px rgba(50, 50, 50, 0.7);
+  box-shadow:         1px 1px 5px rgba(50, 50, 50, 0.7);
+
+  #create-container {
+    width: 307px;
+    margin: 100px auto;
+  }
 }
 
 #chennellist {
@@ -155,12 +166,12 @@ body {
       left: 0;
       z-index: 110;
       color: #fff;
-      margin-left: 10px;
+      margin: 0 0 10px 10px;
     }
 
     &.selected {
       .selectedOverlay {
-        background: rgba(40,45,51,0.8) url(/static/assets/bookmarklet/images/selected.png) 50% 50% no-repeat;
+        background: url(/static/assets/bookmarklet/images/selected.png) 0 0 no-repeat;
         width: 117px;
         height: 87px;
         position: absolute;
@@ -176,7 +187,7 @@ body {
     color: #21b7d4;
 
     .newchanneltext {
-      margin: 30px auto;
+      margin: 34px auto;
       width: 80px;
       text-align: center;
       line-height: 12px;
@@ -198,12 +209,17 @@ body {
 
   .title {
     width: 400px;
-    line-height: 36px;
+    line-height: 42px;
   }
 
   li {
     float: left;
+
+    &:last-child {
+      float: right;
+    }
   }
+
 }
 
 .blue-btn {
@@ -218,8 +234,10 @@ body {
   background: -ms-linear-gradient(top, #20c2e0 0%,#21b6d2 100%);
   background: linear-gradient(to bottom, #20c2e0 0%,#21b6d2 100%);
   filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#20c2e0', endColorstr='#21b6d2',GradientType=0 );
-  padding: 10px 20px;
+  padding: 12px 20px;
+  margin: 0;
   border: 0;
+  text-transform: uppercase;
 }
 
 #footer {
@@ -267,7 +285,7 @@ input[type=text], input[type=password] {
   box-shadow: inset 2px 2px 2px 2px rgba(245, 245, 245, 0.5);
   background: #f9f9f9;
   border-radius: 0;
-  font-family: "dn-regular";
+  color: #000;
   font-size: 17px;
 }
 

@@ -10,24 +10,20 @@ window.Bookmarklet.controller('LoginCtrl', ['$scope','$http', 'apiUrl', '$locati
   $scope.submit = ->  
     if typeof $scope.username != "undefined" and typeof $scope.password != "undefined"
       OAuth.login($scope.username, $scope.password)
-      .then((data) ->
-        # Saving Access Token for 1 Hour
-        # Cookies.set('access_token', data.access_token, 3600)
+      .then(((data) ->
         # Saving refresh Token for 1 Month
         cookies.set('refresh_token', data.refresh_token, 2678400)
         cookies.set('user_id', data.user_id, 2678400)
+        console.log 'went ok'
         $location.path('/addtochannel')
         return
+      ),
+      (data) ->
+          alert ('Bad username/password')
+          return
       )
-      .error((data) ->
-        ## TODO give an error message
-        console.log data
-        return
-      )
-    return
 
   $scope.facebook = ->
-    console.log 'facebook clicked'
     FB.login((response) ->
       if (response.authResponse)
         # connected
@@ -69,16 +65,11 @@ window.Bookmarklet.controller('AddtoChannelCtrl', ['$scope','$http', 'apiUrl', '
     return
   )
 
-  $scope.selectChannel = (el) ->
-    if $scope.selectedChannel == $(el.currentTarget).data("channelid")
-      $scope.selectedChannel = null
-      $(el.currentTarget).removeClass("selected")
-    else
-      $scope.selectedChannel = $(el.currentTarget).data("channelid")
-      $(".selected").each(->
-        $(this).removeClass('selected')
-      )
-      $(el.currentTarget).addClass("selected")
+  $scope.isSelected = (channelID) ->
+    return $scope.selectedChannel == channelID
+
+  $scope.selectChannel = (channelID) ->
+    $scope.selectedChannel = channelID
     return
 
   $scope.addtoChannel = () ->
@@ -101,7 +92,7 @@ window.Bookmarklet.controller('CreateChannelCtrl', ['$scope','$http', 'apiUrl', 
   $scope.user_id = cookies.get('user_id')
 
   $scope.close = ->
-    parent.removeIframe()
+    window.parent.postMessage('close', '*');
 
   $scope.addChannel = ->
     User.createChannel($scope.user_id, $scope.accessToken, $scope.channelName)

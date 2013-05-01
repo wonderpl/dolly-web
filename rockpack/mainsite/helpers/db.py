@@ -1,5 +1,5 @@
+import os
 import base64
-import uuid
 import hashlib
 import cStringIO
 from ast import literal_eval
@@ -8,7 +8,7 @@ from sqlalchemy.dialects import postgres
 from flask import g
 from flask.ext import wtf
 from rockpack.mainsite import app
-from rockpack.mainsite.core import imaging, dbapi
+from rockpack.mainsite.core import imaging
 from .urls import image_url_from_path
 
 
@@ -19,12 +19,12 @@ class PKPrefixLengthError(Exception):
     pass
 
 
-def make_id(prefix=''):
+def make_id(prefix='', length=16):
     """ Creates an id up to 24 chars long (22 without prefix) """
     if prefix and not isinstance(prefix, str) and not len(prefix) == 2:
         raise PKPrefixLengthError('{} prefix is not 2 chars'
                                   'in length or string'.format(prefix))
-    return prefix + base64.urlsafe_b64encode(uuid.uuid4().bytes)[:-2]
+    return prefix + base64.urlsafe_b64encode(os.urandom(length)).rstrip('=')
 
 
 def add_base64_pk(mapper, connection, instance, prefix=''):
