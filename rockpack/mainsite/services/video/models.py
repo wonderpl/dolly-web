@@ -1,5 +1,5 @@
 from sqlalchemy import (
-    Text, String, Column, Boolean, Integer, ForeignKey, DateTime, CHAR,
+    Text, String, Column, Boolean, Integer, Float, ForeignKey, DateTime, CHAR,
     UniqueConstraint, event, func)
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import relationship, aliased
@@ -50,8 +50,9 @@ class Category(db.Model):
 
     @classmethod
     def get_form_choices(cls, locale):
-        query = cls.query.filter(CategoryTranslation.category == Category.id,
-        CategoryTranslation.locale == locale).order_by('parent asc')
+        query = cls.query.filter(
+            CategoryTranslation.category == Category.id,
+            CategoryTranslation.locale == locale).order_by('parent asc')
         for q in query:
             pname = q.parent_category.name if q.parent_category else '-'
             yield q.id, '%s - %s' % (pname, q.name)
@@ -270,6 +271,7 @@ class Channel(db.Model):
     subscriber_count = Column(Integer, nullable=False, server_default='0', default=0)
     date_added = Column(DateTime(), nullable=False, default=func.now())
     date_updated = Column(DateTime(), nullable=False, default=func.now(), onupdate=func.now())
+    update_frequency = Column(Float, nullable=True)
     ecommerce_url = Column(String(1024), nullable=False, server_default='')
 
     category = Column(ForeignKey('category.id'), nullable=True)
