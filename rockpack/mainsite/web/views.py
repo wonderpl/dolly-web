@@ -75,8 +75,7 @@ def reset_password():
         form = ResetPasswordForm(token=token)
         if form.validate_on_submit():
             user = User.query.get(userid)
-            user.set_password(form.password.data)
-            user.save()
+            user.change_password(user, form.password.data)
             record_user_event(user.username, 'password changed')
     return render_template('web/reset_password.html', **locals())
 
