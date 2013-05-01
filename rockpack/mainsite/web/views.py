@@ -38,12 +38,17 @@ def bookmarklet():
 @expose_web('/channel/<slug>/<channelid>/', 'web/channel.html', cache_age=3600)
 def channel(slug, channelid):
     channel_data = ws_request('/ws/-/channels/%s/' % channelid, size=40)
-    api_urls = ws_request('/ws/')
+    #api_urls = ws_request('/ws/')
+    selected_video = None
     if 'video' in request.args:
         for instance in channel_data['videos']['items']:
             if instance['id'] == request.args['video']:
-                channel_data['selected_instance'] = instance
-    return dict(ctx={'api_urls': api_urls, 'channel_data': channel_data})
+                selected_video = instance
+        # Not in the first 40 - try fetching separately:
+        if not selected_video:
+            selected_video = ws_request(
+                '/ws/-/channels/%s/videos/%s/' % (channelid, request.args['video']))
+    return dict(channel_data=channel_data, selected_video=selected_video)
 
 
 @expose_web('/s/<linkid>', cache_age=60, cache_private=True)
