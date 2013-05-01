@@ -1,12 +1,14 @@
 from urllib import urlencode
 from urlparse import urljoin
-from flask import request, json, render_template
+from flask import request, json, render_template, redirect
 from flask.ext import wtf
 from rockpack.mainsite import app, requests
 from rockpack.mainsite.core.token import parse_access_token
 from rockpack.mainsite.core.webservice import secure_view, JsonReponse
 from rockpack.mainsite.services.user.models import User
+from rockpack.mainsite.services.share.models import ShareLink
 from rockpack.mainsite.services.oauth.api import record_user_event
+
 
 def ws_request(url, **kwargs):
     ws_base_url = app.config.get('WEB_WS_SERVICE_URL')
@@ -26,10 +28,12 @@ def ws_request(url, **kwargs):
 def homepage():
     return render_template('web/home.html')
 
+
 @app.route('/bookmarklet', subdomain=app.config.get('DEFAULT_SUBDOMAIN'))
 def bookmarklet():
     headers = {'P3P': 'CP="CAO PSA OUR"'}
     return render_template('web/bookmarklet.html'), 200, headers
+
 
 @app.route('/channel/<slug>/<channelid>/', subdomain=app.config.get('DEFAULT_SUBDOMAIN'))
 def channel(slug, channelid):
@@ -41,6 +45,12 @@ def channel(slug, channelid):
     ## channel_data=channel_data change view TODO
     ctx = {'api_urls': api_urls, 'channel_data': channel_data}
     return render_template('web/channel.html', ctx=ctx)
+
+
+@app.route('/s/<linkid>', subdomain=app.config.get('DEFAULT_SUBDOMAIN'))
+def share_redirect(linkid):
+    link = ShareLink.query.get_or_404(linkid)
+    return redirect(link.process_redirect())
 
 
 class ResetPasswordForm(wtf.Form):
