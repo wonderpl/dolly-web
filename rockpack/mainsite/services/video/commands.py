@@ -22,7 +22,11 @@ def set_update_frequency(time_from=None, time_to=None):
     channels = Channel.query
     if time_from and time_to:
         channels = channels.filter(func.cast(Channel.date_added, TIME).between(time_from, time_to))
-    channels.update({Channel.update_frequency: freq.as_scalar()}, False)
+    channels.update(
+        {
+            Channel.update_frequency: freq.as_scalar(),
+            Channel.date_updated: Channel.date_updated,     # override column onupdate
+        }, False)
 
 
 @manager.cron_command
