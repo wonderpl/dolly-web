@@ -304,6 +304,16 @@ class VideoWS(WebService):
 
         category = request.args.get('category')
 
+        vs = VideoSearch(self.get_locale())
+        offset, limit = self.get_page()
+        vs.set_paging(offset, limit)
+        vs.filter_category(category)
+        vs.star_order_sort(request.args.get('star_order'))
+        vs.date_sort(request.args.get('date_order'))
+        videos = vs.videos()
+        total = vs.total
+
+        """
         videos, total = es_get_videos(
             category=category,
             paging=self.get_page(),

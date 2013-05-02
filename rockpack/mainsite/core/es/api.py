@@ -19,12 +19,33 @@ SHOULD = 'shoud'
 class CategoryMixin(object):
     """ Provides `filter_category` method to restrict
         queries to a specific category
-        
+
         Assumes a top-level category field """
+
+    def __init__(self, *args, **kwargs):
+        super(CategoryMixin).__init__(*args, **kwargs)
 
     def filter_category(self, category):
         if category:
             self.add_term('category', category)
+
+
+class MediaSortMixin(object):
+
+    def __init__(self, *args, **kwargs):
+        super(MediaSortMixin).__init__(*args, **kwargs)
+
+    def _get_order(self, order):
+        if (order != 'desc') and (order != 'asc'):
+            order = 'desc'
+
+    def favourite_sort(self, order):
+        if order:
+            self.add_sort('favourite', self._get_order(order))
+
+    def star_order_sort(self, order):
+        if order:
+            self.add_sort('star_count', self._get_order(order))
 
 
 class EntitySearch(object):
@@ -41,7 +62,7 @@ class EntitySearch(object):
 
         self._must_terms = []
         self._should_terms = []
-        self._must_not_terms =[]
+        self._must_not_terms = []
 
         self._query_params = {}
         self._sorting = []
@@ -115,17 +136,25 @@ class EntitySearch(object):
             value  - some value
             occurs - query constraint (MUST, MUST_NOT, OR SHOULD) """
 
-        term = pyes.TermsQuery if isinstance(value, list) else pyes.TermQuery
-        self._add_term_occurs(term, occurs)
+        f = pyes.TermsQuery if isinstance(value, list) else pyes.TermQuery
+        term_query = f(field=field, value=value)
+        self._add_term_occurs(term_query, occurs)
 
     def add_filter(self, filter_):
         self._filters.append(filter_)
 
-    def add_sort(self, sort):
+    def add_sort(self, sort, order='desc'):
+        sort = ':'.join([sort, order])
         sort_string = self._query_params.get('sort', sort)
         if sort_string != sort:
             sort_string = ','.join([sort_string, sort])
         self._update_query_params({'sort': self.sorting})
+
+    def date_sort(self, order):
+        if order:
+            if (order != 'desc') and (order != 'asc'):
+                order = 'desc'
+            self.add_sort('date_added', order)
 
     def set_paging(self, offset=0, limit=100):
         self.paging = (offset, limit)
@@ -135,7 +164,6 @@ class EntitySearch(object):
             return self._results
         self._results = self._es_search()
         return self._results
-
 
     def add_ids(self, ids):
         if isinstance(ids, (list, set)):
@@ -156,13 +184,10 @@ class EntitySearch(object):
         return self._results.total
 
 
-
-
-class ChannelSearch(EntitySearch, CategoryMixin):
+class ChannelSearch(EntitySearch, CategoryMixin, MediaSortMixin):
 
     def __init__(self, locale):
         super(ChannelSearch, self).__init__('channel', locale)
-        self._category = None
         self._channel_results = None
 
     @classmethod
@@ -218,8 +243,45 @@ class ChannelSearch(EntitySearch, CategoryMixin):
         return self._channel_results
 
 
-class VideoSearch(EntitySearch, CategoryMixin):
-    pass
+class VideoSearch(EntitySearch, CategoryMixin, MediaSortMixin):
+
+    def __init__(self, locale):
+        super(VideoSearch, self).__init__('video', locale)
+        self._video_results = None
+
+    @classmethod
+    def _format_results(cls, videos, locale, with_channels=True):
+        vlist = []
+        for pos, v in enumerate(videos):
+            video = dict(
+                id=v.id,
+                title=v.title,
+                # XXX: should return either datetime or isoformat - something is broken
+                date_added= v.date_added.isoformat() if not isinstance(v.date_added, (str, unicode)) else v.date_added,
+                public=v.public,
+                category='',
+                video=dict(
+                    id=v.video.id,
+                    source=v.video.source,
+                    source_id=v.video.source_id,
+                    view_count=v['locale'][locale]['view_count'],
+                    star_count=v['locale'][locale]['star_count'],
+                    duration=v.video.duration,
+                    thumbnail=urljoin(app.config.get('IMAGE_CDN', ''), v.video.thumbnail_url),
+                ),
+                position=pos
+            )
+            if v.category:
+                video['category'] = max(v.category) if isinstance(v.category, list) else v.category
+            vlist.append(video)
+
+        return vlist
+
+    def videos(self, with_channels=True):
+        if not self._video_results:
+            r = self.results()
+            self._video_results = self._format_results(r, self.locale, with_channels=with_channels)
+        return self._video_results
 
 
 class OwnerSearch(EntitySearch):
