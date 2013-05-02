@@ -163,119 +163,6 @@ def get_local_videos(loc, paging, with_channel=True, **filters):
         return {'sort': ','.join(sort)} if sort else {}
 
 
-    def es_get_videos(category=None, paging=None, channel_ids=None, star_order=None, locale=None, date_order='desc', position=None):
-        search = IndexSearch('video', locale)
-        if category:
-            search.add_term('category', category)
-        if channel_ids:
-            search.add_term('channel', channel_ids)
-
-        search_kwargs = {}
-        sorting = _sort_string(star_order=star_order, position=position, date_added=date_order)
-        if sorting:
-            search_kwargs.update(sorting)
-        if paging:
-            search_kwargs.update(
-                {'start': paging[0],
-                'limit': paging[1]})
-
-        videos = search.search(**search_kwargs)
-
-        vlist = []
-        for pos, v in enumerate(videos):
-            # XXX: should return either datetime or isoformat - something is broken
-            v['date_added'] = v['date_added'].isoformat() if not isinstance(v['date_added'], unicode) else v['date_added']
-            if v['category']:
-                v['category'] = max(v['category']) if isinstance(v['category'], list) else v['category']
-            else:
-                # v['category'] could be a list. We need pass an empty string if no data
-                v['category'] = ''
-            if locale:
-                v['video']['view_count'] = v['locale'][locale]['view_count']
-                v['video']['star_count'] = v['locale'][locale]['star_count']
-            del v['locale']
-            v['position'] = pos
-            vlist.append(v)
-        return vlist, videos.total
-
-
-    def es_get_owners(ids):
-        search = IndexSearch('user', None)
-        search.add_term('_id', ids)
-        owners = search.search()
-        return [
-            dict(
-                id=owner['id'],
-                resource_url=urlparse.urljoin(url_for('basews.discover'), owner['resource_url']),
-                avatar_thumbnail=urlparse.urljoin(app.config.get('IMAGE_CDN', ''), owner['avatar_thumbnail']),
-                display_name=owner['display_name'],
-                username=owner['username']
-            ) for owner in owners]
-
-
-
-class SearchChannels(object):
-
-    def es_get_channels(channel_ids=None, category=None, paging=None, locale=None,
-            star_order=None, date_order=None, favourite=None, user_id=None, with_owner=True):
-        """ Builds the channel list based on filters and sorting applied
-
-            - Apply filters
-            - Apply sorting and paging/limits
-            - Build channel dicts and construct any urls for each
-            - Add user dict to channels if required
-        """
-
-        search = IndexSearch('channel', locale)
-        if channel_ids:
-            search.add_ids(channel_ids)
-        if category:
-            search.add_term('category', category)
-        if user_id:
-            search.add_term('owner', user_id)
-
-        sorting = _sort_string(star_order=star_order, date_added=date_order, favourite=favourite)
-
-        offset, limit = paging if paging else 0, 100
-        channels = search.search(offset, limit, sort=sorting.get('sort', ''))
-
-        channel_list = []
-        owner_list = []
-        for pos, channel in enumerate(channels):
-            ch = dict(
-                id=channel.id,
-                owner=channel.owner,
-                category=channel.category,
-                subscriber_count=channel.subscriber_count,
-                description=channel.description,
-                title=channel.title,
-                public=channel.public,
-                favourite=channel.favourite,
-                position=pos
-            )
-
-            # XXX: tis a bit dangerous to assume max(cat)
-            # is the child category. review this
-            for k, v in channel.iteritems():
-                if isinstance(v, (str, unicode)) and k.endswith('_url'):
-                    url = v
-                    if k == 'resource_url':
-                        url = urlparse.urljoin(url_for('basews.discover'), v)
-                    elif k != 'ecommerce_url':
-                        url = urlparse.urljoin(app.config.get('IMAGE_CDN', ''), v)
-                    ch[k] = url
-                if k == 'category':
-                    ch[k] = max(channel[k]) if channel[k] and isinstance(channel[k], list) else channel[k]
-
-            channel_list.append(ch)
-            owner_list.append(channel['owner'])
-
-        if with_owner:
-            owner_map = {owner['id']: owner for owner in es_get_owners(list(set(owner_list)))}
-            es_owner_to_channel_map(channel_list, owner_map)
-        return channel_list, channels.total
-
-
     def es_get_channels_with_videos(channel_ids=None, paging=None):
         channels, total = es_get_channels(channel_ids=channel_ids, paging=paging)
         for c in channels:
@@ -310,20 +197,8 @@ class VideoWS(WebService):
         vs.filter_category(category)
         vs.star_order_sort(request.args.get('star_order'))
         vs.date_sort(request.args.get('date_order'))
-        videos = vs.videos()
+        videos = vs.videos(with_channels=True)
         total = vs.total
-
-        """
-        videos, total = es_get_videos(
-            category=category,
-            paging=self.get_page(),
-            star_order=request.args.get('star_order'),
-            locale=self.get_locale(),
-            date_order=request.args.get('date_order'))
-
-        channels, _ = es_get_channels(channel_ids=[v['channel'] for v in videos])
-
-        es_channel_to_video_map(videos, {c['id']: c for c in channels})
 
         return dict(videos={'items': videos}, total=total)
 
@@ -345,23 +220,20 @@ class ChannelWS(WebService):
         offset, limit = self.get_page()
         cs.set_paging(offset, limit)
         cs.filter_category(request.args.get('category'))
-        channels = cs.channels()
+        cs.star_order_sort(request.args.get('star_order'))
+        cs.favourite_sort(request.args.get('favourite'))
+        cs.date_sort(request.args.get('date_order'))
+        if request.args.get('user_id'):
+            cs.add_term('owner', request.args.get('user_id'))
+        channels = cs.channels(with_videos=True)
         total = cs.total
-        """
-        channels, total = es_get_channels(
-            category=request.args.get('category'),
-            paging=self.get_page(),
-            locale=self.get_locale(),
-            star_order=request.args.get('star_order'),
-            date_order=request.args.get('date_order'),
-            favourite=request.args.get('favourite'),
-            user_id=request.args.get('user_id'),
-            )
 
         return dict(
             channels=dict(
                 items=channels,
-                total=total))
+                total=total
+            )
+        )
 
 
 class CategoryWS(WebService):

@@ -84,10 +84,11 @@ class EntitySearch(object):
     def _apply_default_filters(self):
         for filter_ in DEFAULT_FILTERS:
             f = filter_(self)
-            if isinstance(f, list):
-                self._filters += f
-            else:
-                self._filters.append(f)
+            if f:
+                if isinstance(f, list):
+                    self._filters += f
+                else:
+                    self._filters.append(f)
 
     def _construct_terms(self):
         if self._must_terms or self._should_terms or self._must_not_terms:
@@ -195,8 +196,15 @@ class ChannelSearch(EntitySearch, CategoryMixin, MediaSortMixin):
         for channel in channels:
             channel['owner'] = owners[channel['owner']]
 
-    def _format_results(self, channels, with_owners=False):
+    @classmethod
+    def add_videos_to_channels(cls, channels, videos):
+        for channel in channels:
+            channel.setdefault('videos', {}).setdefault('items', videos.get(channel['id'], []))
+            channel['videos']['total'] = len(channel['videos']['items'])
+
+    def _format_results(self, channels, with_owners=False, with_videos=False):
         channel_list = []
+        channel_id_list = []
         owner_list = []
         for pos, channel in enumerate(channels):
             ch = dict(
@@ -226,7 +234,9 @@ class ChannelSearch(EntitySearch, CategoryMixin, MediaSortMixin):
 
             channel_list.append(ch)
             if with_owners:
-                owner_list.append(channel['owner'])
+                owner_list.append(channel.owner)
+            if with_videos:
+                channel_id_list.append(channel.id)
 
         if with_owners:
             ows = OwnerSearch()
@@ -234,12 +244,21 @@ class ChannelSearch(EntitySearch, CategoryMixin, MediaSortMixin):
             ows.add_id(owner_list)
             owner_map = {owner['id']: owner for owner in ows.owners()}
             self.add_owner_to_channels(channel_list, owner_map)
+
+        if with_videos:
+            vs = VideoSearch(self.locale)
+            vs.set_paging(limit=len(channel_id_list))
+            vs.add_term('channel', channel_id_list)
+            video_map = {}
+            for v in vs.videos():
+                video_map.setdefault(v['channel'], []).append(v)
+            self.add_videos_to_channels(channel_list, video_map)
         return channel_list
 
     def channels(self, with_owners=True, with_videos=False):
         if not self._channel_results:
             r = self.results()
-            self._channel_results = self._format_results(r, with_owners=with_owners)
+            self._channel_results = self._format_results(r, with_owners=with_owners, with_videos=with_videos)
         return self._channel_results
 
 
@@ -250,22 +269,32 @@ class VideoSearch(EntitySearch, CategoryMixin, MediaSortMixin):
         self._video_results = None
 
     @classmethod
-    def _format_results(cls, videos, locale, with_channels=True):
+    def add_channels_to_videos(cls, videos, channels):
+        for video in videos:
+            try:
+                video['channel'] = channels[video['channel']]
+            except KeyError:
+                app.logger.warning("Missing channel '{}' during mapping".format(video['channel']))
+
+    def _format_results(self, videos, with_channels=True):
         vlist = []
+        channel_list = []
+            
         for pos, v in enumerate(videos):
             video = dict(
                 id=v.id,
                 title=v.title,
                 # XXX: should return either datetime or isoformat - something is broken
-                date_added= v.date_added.isoformat() if not isinstance(v.date_added, (str, unicode)) else v.date_added,
+                date_added=v.date_added.isoformat() if not isinstance(v.date_added, (str, unicode)) else v.date_added,
                 public=v.public,
                 category='',
+                channel=v.channel,
                 video=dict(
                     id=v.video.id,
+                    view_count=v['locale'][self.locale]['view_count'],
+                    star_count=v['locale'][self.locale]['star_count'],
                     source=v.video.source,
                     source_id=v.video.source_id,
-                    view_count=v['locale'][locale]['view_count'],
-                    star_count=v['locale'][locale]['star_count'],
                     duration=v.video.duration,
                     thumbnail=urljoin(app.config.get('IMAGE_CDN', ''), v.video.thumbnail_url),
                 ),
@@ -274,13 +303,22 @@ class VideoSearch(EntitySearch, CategoryMixin, MediaSortMixin):
             if v.category:
                 video['category'] = max(v.category) if isinstance(v.category, list) else v.category
             vlist.append(video)
+            if with_channels:
+                channel_list.append(v.channel)
+
+        if with_channels:
+            ch = ChannelSearch()
+            ch.set_paging(limit=len(vlist))
+            ch.add_id(channel_list)
+            channel_map = {c['id']: c for c in ch.channels()}
+            self.add_channels_to_videos(vlist, channel_map)
 
         return vlist
 
-    def videos(self, with_channels=True):
+    def videos(self, with_channels=False):
         if not self._video_results:
             r = self.results()
-            self._video_results = self._format_results(r, self.locale, with_channels=with_channels)
+            self._video_results = self._format_results(r, with_channels=with_channels)
         return self._video_results
 
 

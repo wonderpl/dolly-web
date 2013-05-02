@@ -15,7 +15,7 @@ def locale_filter(entity):
         
         """
     if not entity.locale:
-        return []
+        return None
 
     filters = []
     for el in app.config.get('ENABLED_LOCALES'):
