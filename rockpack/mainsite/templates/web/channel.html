@@ -15,6 +15,11 @@
 
     <!--[if lt IE 9]>
       <script src="vendor/js-no-compile/html5.js"></script>
+      <style type="text/css">
+        .gradient {
+          filter: none;
+        }
+      </style>
     <![endif]-->
 
     <!--[if lte IE 8]>
@@ -45,7 +50,7 @@
     {% endassets %}
 
     {% assets filters="weblighttemplates", output="gen/templates.%(version)s.js", 
-      "weblight/views/about.html", "weblight/views/channel.html", "weblight/views/footer.html", "weblight/views/header.html", "weblight/views/jobs.html", "weblight/views/Videocell.html", "weblight/views/videoplayer.html", "weblight/views/headermobile.html" %}
+      "weblight/views/people.html", "weblight/views/channel.html", "weblight/views/footer.html", "weblight/views/header.html", "weblight/views/jobs.html", "weblight/views/Videocell.html", "weblight/views/videoplayer.html", "weblight/views/headermobile.html" %}
       <script type="text/javascript" src="{{ ASSET_URL }}"></script>
     {% endassets %}
 
@@ -66,12 +71,12 @@
     {% endassets %}
 
   </head>
-  <body ng-controller="AppCtrl" id="app" ng-class="{true:'mobile', false:''}[isMobile]">
+  <body ng-controller="AppCtrl" ng-class="currentPage">
     <div ng-switch on="isMobile">
       <div ng-switch-when="true"><div ng-include src="'headermobile.html'"></div></div>
       <div ng-switch-when="false"><div ng-include src="'header.html'"></div></div>
     </div>
     <div class="ng-view"></div>
-    <div ng-include src="'footer.html'"></div>
+    <div ng-include src="'footer.html'" ></div>
   </body>
 </html>

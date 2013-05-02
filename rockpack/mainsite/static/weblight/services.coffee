@@ -10,7 +10,7 @@ angular.module('channelServices', ['ngResource'])
     return {
       get: (channelid, size, start, locale) -> 
         parms = "#{channelid}/?size=#{size}&start=#{start}&locale=#{locale}"
-        return $http.get( 'http://lb.demo.rockpack.com/ws/abcd/channels/' + parms ).then( (data) ->
+        return $http.get( 'http://demo.rockpack.com//ws/abcd/channels/' + parms ).then( (data) ->
           return data.data.videos.items
         )
     }

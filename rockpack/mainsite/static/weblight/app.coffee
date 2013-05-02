@@ -11,12 +11,16 @@ window.Weblight = angular.module('Weblight', ['channelServices'])
   # .constant('isMobile', true)
   .constant('channelData', window.channel_data)
 
-  # Router
-  .config(['$routeProvider', ($routeProvider) ->
+  .config(['$routeProvider', '$interpolateProvider', ($routeProvider, $interpolateProvider) ->
+
+    $interpolateProvider.startSymbol('((');
+    $interpolateProvider.endSymbol('))');
+
+    # Router
     $routeProvider.when('/', {templateUrl: 'channel.html', reloadOnSearch: false})
     # $routeProvider.when('/channel/:channelid', {templateUrl: 'channel.html', reloadOnSearch: false})
     $routeProvider.when('/jobs', {templateUrl: 'jobs.html'})
-    $routeProvider.when('/about', {templateUrl: 'about.html'})
+    $routeProvider.when('/people', {templateUrl: 'people.html'})
   ])
   .directive('bgImage', ->
     return (scope, element, attrs) ->

@@ -9,8 +9,8 @@ window.Weblight.controller('VideoCtrl', ['$scope', '$rootScope', '$routeParams',
       @playerWidth = window.window.screen.width
       @playerHeight = window.window.screen.width*9/16
     else
-      @playerWidth = 738
-      @playerHeight = 415
+      @playerWidth = 840
+      @playerHeight = 473
 
 
   $scope.PlayVideo = =>
@@ -36,7 +36,9 @@ window.Weblight.controller('VideoCtrl', ['$scope', '$rootScope', '$routeParams',
           autoplay: 1,
           showinfo: 0,
           modestbranding: 0,
-          wmode: "opaque"
+          wmode: "opaque",
+          controls: 0,
+          modestbranding: 1
         }
       })
 

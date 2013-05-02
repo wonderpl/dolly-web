@@ -1,4 +1,8 @@
-window.Weblight.controller('AppCtrl', ['$routeParams', 'isMobile', '$scope', ($routeParams, isMobile, $scope) -> 
+window.Weblight.controller('AppCtrl', ['$routeParams', 'isMobile', '$scope', '$location', ($routeParams, isMobile, $scope, $location) ->
+
+  $scope.$watch((-> $location.url()), (newValue, oldValue) ->
+    $scope.currentPage = newValue.substring(1)
+  )
 
   $scope.isMobile = isMobile
 
@@ -24,5 +28,5 @@ window.Weblight.controller('AppCtrl', ['$routeParams', 'isMobile', '$scope', ($r
     if isMobile
       {width: Math.floor(($scope.window_width) / 150) * 150 + 'px'}
     else
-      { width: Math.floor(($scope.window_width - 40 ) / 235) * 235 + 'px'}
+      { width: Math.floor(($scope.window_width - 40 ) / 258) * 258 + 'px'}
 ])

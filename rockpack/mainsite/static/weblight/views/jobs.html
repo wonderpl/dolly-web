@@ -1,11 +1,10 @@
 <div ng-controller="PageCtrl" id="jobs" class="content-page">
-  <div class="wrapper" ng-style="wrapperWidth()">
-    <div id="navbackground"></div>
-    <header>
-      <h1 class="title">JOBS</h1>
-      <h2>We Want You</h2>
-    </header>
-  </div>
+  <header>
+    <div class="wrapper" ng-style="wrapperWidth()">
+        <h1 class="title">JOBS</h1>
+        <h2>We Want You</h2>
+    </div>
+  </header>
   <div class="main-content">
     <div class="wrapper" ng-style="wrapperWidth()">
       <h1 class="title">
@@ -17,10 +16,10 @@
           <div class="readmoretext">
             <p>Experienced mobile app developer with portfolio of commercial apps. Working alongside a small but highly skilled team of mobile & backend software engineers in a sociable collaborative environment. Required: 1+ years experience of using Objective-C and the iOS SDK using Xcode. Fundamentals of object-oriented design patterns, data structures and algorithms. Experience with other object-oriented programming languages (Java, C++, Python). Understanding of source control techniques (Git, Subversion, Mercurial, etc.). Use of issue tracking systems (GitHub, Lighthouse, Trac, etc.) Web services integration (REST, JSON). Team player who is self-motivated and well organised. Good oral and written communication skills. Strong attention to detail, organisation, and time management skills. Preferable/bonus: Understanding of the latest features and development best practices for iOS. Experience in building multi-threaded iOS apps. Exposure to other mobile platforms (e.g. Android). Contributions to open-source projects and developer communities. Use of graphic design and prototyping tools (Photoshop, Balsamiq).</p>
           </div>
-          <a class="readmorebtn" ng-click="toggleReadMore($event, 'readmoretext')">Read More</a>
-        </div>
+          <a class="readmorebtn" ng-click="toggleReadMore($event, 'readmoretext')"><span class="arrow"></span> <span class="btntext">Read More</span></a>
       </div>
     </div>
+  </div>
   </div>
   <div class="main-content">
     <div class="wrapper" ng-style="wrapperWidth()">
@@ -34,7 +33,7 @@
             <p>You must have a strong interest in popular culture from film, food, music, fashion and sport. The right candidate will need a good understanding of engaging audiences within the different channel.</p>
             <p>We are looking for a dynamic person who can write to a high standard, and have proven experience of delivering well written and creative communication material to contribute to our site & content.You will have the ability to think laterally and creatively about curation, be aesthetic and visually inclined. Perhaps you are a data analyst with an artistic side. You will need to be able to work with excel spreadsheets and analyse viewer traffic. We need to optimize the playlists for the website so a basic understanding of SEO and creating SEO optimised content would be beneficial. Email us at hello@rockpack.com</p>
           </div>
-          <a class="readmorebtn" ng-click="toggleReadMore($event, 'readmoretext')">Read More</a>
+          <a class="readmorebtn" ng-click="toggleReadMore($event, 'readmoretext')"><span class="arrow"></span> <span class="btntext">Read More</span></a>
         </div>
       </div>
     </div>

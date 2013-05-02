@@ -33,8 +33,9 @@ class BaseWS(WebService):
     @check_authorization()
     def secure_discover(self):
         result = _discover_response()
-        result.update(dict(
-            user=url_for('userws.own_user_info', userid=g.authorized.userid),
-            subscription_updates=url_for('userws.recent_videos', userid=g.authorized.userid),
-        ))
+        if g.authorized:
+            result.update(dict(
+                user=url_for('userws.own_user_info', userid=g.authorized.userid),
+                subscription_updates=url_for('userws.recent_videos', userid=g.authorized.userid),
+            ))
         return result

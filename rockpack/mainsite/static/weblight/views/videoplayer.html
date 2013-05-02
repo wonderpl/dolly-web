@@ -1,9 +1,11 @@
 <div ng-controller="VideoCtrl" ng-click="hide()" id="lightbox">
   <div id="playercontainer">
-    <img src="/static/assets/weblight/images/closeicon.png" id="closeplayer">
+    <div id="playerheader">
+      <img src="/static/assets/weblight/images/closeplayer.jpg" id="closeplayer">
+      <div id="videotitle">{{videodata.title | truncate: 45}}</div>
+    </div>
     <div id="player"></div>
     <div id="playerinfo">
-      <div id="videotitle">{{videodata.title | truncate: 45}}</div>
       <ul>
         <li id="channelthumb"><img ng-src="{{channel.cover_thumbnail_small_url}}"></li>
         <li>
