@@ -4,6 +4,7 @@ from flask import Flask
 
 app = Flask(__name__)
 
+
 def configure():
     app.config.from_pyfile('settings/common.py')
     app.config.from_pyfile('settings/local.py', silent=True)
@@ -33,6 +34,7 @@ SERVICES = (
     'rockpack.mainsite.services.user',
     'rockpack.mainsite.services.search',
     'rockpack.mainsite.services.oauth',
+    'rockpack.mainsite.services.share',
     'rockpack.mainsite.services.pubsubhubbub',
 )
 REGISTER_SETUPS = (

@@ -376,7 +376,27 @@ class UserWS(WebService):
         info['notifications'].update(unread_count=_notification_unread_count(userid))
         return info
 
-    @expose_ajax('/<userid>/<any("username", "first_name", "last_name", "email", "password", "locale", "date_of_birth", "gender"):attribute_name>/', methods=('PUT',))
+    @expose_ajax('/<userid>/password/', methods=('PUT',))
+    @check_authorization(self_auth=True)
+    def change_user_password(self, userid):
+        data = request.json
+        if not isinstance(data, dict) or not data.get('old') or not data.get('new'):
+            abort(400, message=['Both old and new passwords must be supplied.'])
+
+        new_p = data.get('new')
+        old_p = data.get('old')
+
+        user = g.authorized.user
+        if not user.check_password(old_p):
+            abort(400, message=['Old password is incorrect.'])
+
+        form = RockRegistrationForm(formdata=MultiDict([('password', new_p)]), csrf_enabled=False)
+        if not form.password.validate(form.password.data):
+            abort(400, message=form.password.errors)
+
+        return user.change_password(user, new_p)
+
+    @expose_ajax('/<userid>/<any("username", "first_name", "last_name", "email", "locale", "date_of_birth", "gender"):attribute_name>/', methods=('PUT',))
     @check_authorization(self_auth=True)
     def change_user_info(self, userid, attribute_name):
         value = request.json
@@ -389,11 +409,7 @@ class UserWS(WebService):
                 response.update({'suggested_username': User.suggested_username(value)})
             abort(400, **response)
         user = g.authorized.user
-        # special case for password
-        if attribute_name == 'password':
-            user.set_password(form.password.data)
-        else:
-            setattr(user, attribute_name, field.data)
+        setattr(user, attribute_name, field.data)
         if attribute_name == 'username':
             if user.username_updated:
                 abort(400, message='Limit for changing username has been reached')
@@ -570,6 +586,11 @@ class UserWS(WebService):
         if request.json is None or not isinstance(request.json, list):
             abort(400, message='List can be empty, but must be present')
         add_videos_to_channel(channel, request.json, self.get_locale(), request.method == 'PUT')
+
+    @expose_ajax('/<userid>/channels/<channelid>/videos/<videoid>/')
+    def channel_video_instance(self, userid, channelid, videoid):
+        instance = VideoInstance.query.filter_by(id=videoid, channel=channelid).first_or_404()
+        return video_api.video_dict(instance)
 
     @expose_ajax('/<userid>/channels/<channelid>/subscribers/', cache_age=60)
     def channel_subscribers(self, userid, channelid):

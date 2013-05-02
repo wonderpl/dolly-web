@@ -1,8 +1,17 @@
 <!DOCTYPE html>
-<html lang="en" id="ng-app" ng-app="Weblight" xmlns:ng="http://angularjs.org">
+<html lang="en" id="ng-app" ng-app="Weblight" xmlns:ng="http://angularjs.org"
+  prefix="og: http://ogp.me/ns# {{ config.FACEBOOK_APP_NAMESPACE }}: http://ogp.me/ns/apps/{{ config.FACEBOOK_APP_NAMESPACE }}#">
 <head>
     <meta charset="utf-8">
-    <title>rockpack</title>
+    {%- with %}
+    {% set title_prefix = '"%s" on ' % selected_video.title if selected_video.title else '' %}
+    {% set title = '%s"%s" by %s' % (title_prefix, channel_data.title, channel_data.owner.display_name) -%}
+    <title>{{ title }}</title>
+    <meta property="fb:app_id" content="{{ config.FACEBOOK_APP_ID }}" />
+    <meta property="og:title" content="{{ title }}" />
+    <meta property="og:image" content="{{ channel_data.cover_thumbnail_large_url }}" />
+    <meta property="og:description" content="{% if channel_data.description %}{{ channel_data.description }}{% else %}{{ title }}, a channel on rockpack.{% endif %}" />
+    {% endwith %}
     <meta name="HandheldFriendly" content="True">
     <meta name="MobileOptimized" content="320">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1.0, user-scalable=no">
@@ -35,7 +44,7 @@
     <![endif]-->
 
     <script>
-      var channel_data = {{ ctx.channel_data|tojson|safe }},
+      var channel_data = {{ channel_data|tojson|safe }},
           channelUrl = "{{ url_for('userws.channel_info', userid='-', channelid='-') }}"
     </script>
 

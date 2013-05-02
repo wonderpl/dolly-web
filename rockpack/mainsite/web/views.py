@@ -4,9 +4,12 @@ from flask import request, json, render_template
 from flask.ext import wtf
 from rockpack.mainsite import app, requests
 from rockpack.mainsite.core.token import parse_access_token
-from rockpack.mainsite.core.webservice import secure_view, JsonReponse
+from rockpack.mainsite.core.webservice import JsonReponse
 from rockpack.mainsite.services.user.models import User
+from rockpack.mainsite.services.share.models import ShareLink
 from rockpack.mainsite.services.oauth.api import record_user_event
+from .decorators import expose_web
+
 
 def ws_request(url, **kwargs):
     ws_base_url = app.config.get('WEB_WS_SERVICE_URL')
@@ -22,25 +25,36 @@ def ws_request(url, **kwargs):
     return json.loads(response)
 
 
-@app.route('/', subdomain=app.config.get('DEFAULT_SUBDOMAIN'))
+@expose_web('/', 'web/home.html', cache_age=3600)
 def homepage():
-    return render_template('web/home.html')
+    pass
 
-@app.route('/bookmarklet', subdomain=app.config.get('DEFAULT_SUBDOMAIN'))
+
+@expose_web('/bookmarklet', 'web/bookmarklet.html')
 def bookmarklet():
-    headers = {'P3P': 'CP="CAO PSA OUR"'}
-    return render_template('web/bookmarklet.html'), 200, headers
+    return None, 200, {'P3P': 'CP="CAO PSA OUR"'}
 
-@app.route('/channel/<slug>/<channelid>/', subdomain=app.config.get('DEFAULT_SUBDOMAIN'))
+
+@expose_web('/channel/<slug>/<channelid>/', 'web/channel.html', cache_age=3600)
 def channel(slug, channelid):
     channel_data = ws_request('/ws/-/channels/%s/' % channelid, size=40)
-    api_urls = ws_request('/ws/')
-    # for instance in channel_data['videos']['items']:
-    #     if instance['id'] == request.args.get('video'):
-    #         channel_data['selected_instance'] = instance
-    ## channel_data=channel_data change view TODO
-    ctx = {'api_urls': api_urls, 'channel_data': channel_data}
-    return render_template('web/channel.html', ctx=ctx)
+    #api_urls = ws_request('/ws/')
+    selected_video = None
+    if 'video' in request.args:
+        for instance in channel_data['videos']['items']:
+            if instance['id'] == request.args['video']:
+                selected_video = instance
+        # Not in the first 40 - try fetching separately:
+        if not selected_video:
+            selected_video = ws_request(
+                '/ws/-/channels/%s/videos/%s/' % (channelid, request.args['video']))
+    return dict(channel_data=channel_data, selected_video=selected_video)
+
+
+@expose_web('/s/<linkid>', cache_age=60, cache_private=True)
+def share_redirect(linkid):
+    link = ShareLink.query.get_or_404(linkid)
+    return None, 302, {'Location': link.process_redirect()}
 
 
 class ResetPasswordForm(wtf.Form):
@@ -53,8 +67,7 @@ class ResetPasswordForm(wtf.Form):
             raise wtf.ValidationError('Passwords must match.')
 
 
-@app.route('/reset_password/', methods=('GET', 'POST'), subdomain=app.config.get('SECURE_SUBDOMAIN'))
-@secure_view()
+@expose_web('/reset_password/', 'web/reset_password.html', methods=('GET', 'POST'), secure=True)
 def reset_password():
     token = (request.form or request.args).get('token')
     try:
@@ -65,10 +78,9 @@ def reset_password():
         form = ResetPasswordForm(token=token)
         if form.validate_on_submit():
             user = User.query.get(userid)
-            user.set_password(form.password.data)
-            user.save()
+            user.change_password(user, form.password.data)
             record_user_event(user.username, 'password changed')
-    return render_template('web/reset_password.html', **locals())
+    return locals()
 
 
 @app.route('/status/', subdomain='<sub>')
