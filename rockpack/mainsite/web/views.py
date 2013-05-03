@@ -5,6 +5,7 @@ from flask.ext import wtf
 from rockpack.mainsite import app, requests
 from rockpack.mainsite.core.token import parse_access_token
 from rockpack.mainsite.core.webservice import JsonReponse
+from rockpack.mainsite.helpers.urls import url_for, slugify
 from rockpack.mainsite.services.user.models import User
 from rockpack.mainsite.services.share.models import ShareLink
 from rockpack.mainsite.services.oauth.api import record_user_event
@@ -20,7 +21,7 @@ def ws_request(url, **kwargs):
         env = request.environ.copy()
         env['PATH_INFO'] = url
         env['QUERY_STRING'] = urlencode(kwargs)
-        response = ''.join(app.wsgi_app(env, lambda status, headers: None))
+        response = u''.join(app.wsgi_app(env, lambda status, headers: None))
         # TODO: Catch non-200 responses
     return json.loads(response)
 
@@ -46,8 +47,14 @@ def channel(slug, channelid):
                 selected_video = instance
         # Not in the first 40 - try fetching separately:
         if not selected_video:
-            selected_video = ws_request(
+            video_data = ws_request(
                 '/ws/-/channels/%s/videos/%s/' % (channelid, request.args['video']))
+            if 'error' not in video_data:
+                selected_video = video_data
+    channel_data['canonical_url'] = url_for(
+        'channel', slug=slugify(channel_data['title']) or '-', channelid=channelid)
+    if selected_video:
+        channel_data['canonical_url'] += '?video=' + selected_video['id']
     return dict(channel_data=channel_data, selected_video=selected_video)
 
 
