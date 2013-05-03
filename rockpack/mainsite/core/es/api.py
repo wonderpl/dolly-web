@@ -181,7 +181,7 @@ class EntitySearch(object):
     @property
     def total(self):
         if not self._results:
-            return None
+            return 0
         return self._results.total
 
 
@@ -240,14 +240,12 @@ class ChannelSearch(EntitySearch, CategoryMixin, MediaSortMixin):
 
         if with_owners:
             ows = OwnerSearch()
-            ows.set_paging(limit=len(channels))
             ows.add_id(owner_list)
             owner_map = {owner['id']: owner for owner in ows.owners()}
             self.add_owner_to_channels(channel_list, owner_map)
 
         if with_videos:
             vs = VideoSearch(self.locale)
-            vs.set_paging(limit=len(channel_id_list))
             vs.add_term('channel', channel_id_list)
             video_map = {}
             for v in vs.videos():
@@ -255,7 +253,7 @@ class ChannelSearch(EntitySearch, CategoryMixin, MediaSortMixin):
             self.add_videos_to_channels(channel_list, video_map)
         return channel_list
 
-    def channels(self, with_owners=True, with_videos=False):
+    def channels(self, with_owners=False, with_videos=False):
         if not self._channel_results:
             r = self.results()
             self._channel_results = self._format_results(r, with_owners=with_owners, with_videos=with_videos)
@@ -279,7 +277,7 @@ class VideoSearch(EntitySearch, CategoryMixin, MediaSortMixin):
     def _format_results(self, videos, with_channels=True):
         vlist = []
         channel_list = []
-            
+
         for pos, v in enumerate(videos):
             video = dict(
                 id=v.id,
@@ -307,10 +305,9 @@ class VideoSearch(EntitySearch, CategoryMixin, MediaSortMixin):
                 channel_list.append(v.channel)
 
         if with_channels:
-            ch = ChannelSearch()
-            ch.set_paging(limit=len(vlist))
+            ch = ChannelSearch(self.locale)
             ch.add_id(channel_list)
-            channel_map = {c['id']: c for c in ch.channels()}
+            channel_map = {c['id']: c for c in ch.channels(with_owners=True)}
             self.add_channels_to_videos(vlist, channel_map)
 
         return vlist
@@ -335,87 +332,16 @@ class OwnerSearch(EntitySearch):
                     id=owner.id,
                     username=owner.username,
                     display_name=owner.display_name,
+                    resource_url=owner.resource_url,
                     avatar_thumbnail_url=urljoin(app.config.get('IMAGE_CDN', ''), owner.avatar_thumbnail_url)
                 )
             )
         return owner_list
 
-    def owners(self, with_channels=False):
+    def owners(self):
         if not self._owner_results:
             self._owner_results = self._format_results(self.results())
         return self._owner_results
-
-
-class IndexSearch(object):
-    def __init__(self, prefix, locale):
-        if prefix.lower() not in ('channel', 'video', 'user'):
-            raise exceptions.InvalidSearchIndexPrefix(prefix)
-
-        self.conn = es_connection
-        self.locale = locale
-        self.index_name = prefix.upper() + '_INDEX'
-        self.type_name = prefix.upper() + '_TYPE'
-
-        self.terms = []
-        self.filters = []
-
-        # apply default filters
-        self._locale_filters()
-
-    def _locale_filters(self):
-        """ Prioritises results for a given locale.
-
-            For the current locale, apply a boost factor where the view_count
-            is higher than another locale. This should result in relevant documents
-            for this locale rising to the top (showing all results, but prioritising
-            this locale). """
-        if not self.locale:
-            return []
-
-        filters = []
-        for el in app.config.get('ENABLED_LOCALES'):
-            if self.locale != el:
-                # NOTE: This might get unwieldy for a large number of locales,
-                # Need to find a better way of doing this
-                script = "doc['locale.{}.view_count'].value > doc['locale.{}.view_count'].value ? 1 : 0".format(self.locale, el)
-                filters.append(pyes.CustomFiltersScoreQuery.Filter(pyes.ScriptFilter(script=script), 5.0))
-        self.filters += filters
-
-    def add_term(self, field, value):
-        """ Field or fields to perform a query against,
-            and the value to be queried """
-        # TODO: field should use dot notation. Need to test.
-        f = pyes.TermsQuery if isinstance(value, list) else pyes.TermQuery
-        self.terms.append(f(field=field, value=value))
-
-    def add_ids(self, ids):
-        """ IDs of the documents to be queried """
-        self.terms.append(pyes.IdsQuery(ids))
-
-    def add_filter(self, filter_):
-        """ Add a pyes filter object """
-        self.filters.append(filter_)
-
-    def _apply_all(self):
-        """ Apply all filters and queries
-            and return final query """
-
-        query = pyes.MatchAllQuery()
-        if self.terms:
-            query = self.terms[0] if len(self.terms) == 1 else pyes.BoolQuery(must=self.terms)
-        if self.filters:
-            query = pyes.CustomFiltersScoreQuery(query, self.filters)
-        return query
-
-    def search(self, start=None, limit=None, sort=''):
-        search_kwargs = {}
-        if start is not None and limit is not None:
-            search_kwargs.update({'start': start, 'size': limit})
-        return self.conn.search(
-            query=pyes.Search(self._apply_all(), **search_kwargs),
-            indices=getattr(mappings, self.index_name),
-            doc_types=[getattr(mappings, self.type_name)],
-            sort=sort)
 
 
 class CustomScoreFilters:

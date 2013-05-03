@@ -20,6 +20,7 @@ from rockpack.mainsite.services.cover_art import api as cover_api
 from rockpack.mainsite.services.video import api as video_api
 from rockpack.mainsite.services.search import api as search_api
 from .models import User, UserActivity, UserNotification, Subscription
+from rockpack.mainsite.core.es import api
 
 
 ACTION_COLUMN_VALUE_MAP = dict(
@@ -339,14 +340,26 @@ class UserWS(WebService):
 
     @expose_ajax('/<userid>/', cache_age=60, secure=False)
     def user_info(self, userid):
-        user = User.query.get_or_404(userid)
         if app.config.get('ELASTICSEARCH_URL'):
-            data = video_api.es_get_owner_with_channels(user.id, paging=self.get_page())
-            return data
+            ows = api.OwnerSearch()
+            ows.add_id(userid)
+            owners = ows.owners()
+            if not owners:
+                abort(404)
+            owner = owners[0]
+            ch = api.ChannelSearch(self.get_locale())
+            offset, limit = self.get_page()
+            ch.set_paging(offset, limit)
+            ch.add_term('owner', userid)
+            owner.setdefault('channels', {})['items'] = ch.channels(with_owners=False)
+            owner['channels']['total'] = ch.total
+            return owner
 
+        user = User.query.get_or_404(userid)
         channels = [video_api.channel_dict(c, with_owner=False, owner_url=False)
                     for c in Channel.query.options(lazyload('category_rel')).
                     filter_by(owner=user.id, deleted=False, public=True)]
+
         return dict(
             id=user.id,
             name=user.username,     # XXX: backwards compatibility
@@ -515,14 +528,17 @@ class UserWS(WebService):
 
     @expose_ajax('/<userid>/channels/<channelid>/', cache_age=60, secure=False)
     def channel_info(self, userid, channelid):
-        if not app.config.get('ELASTICSEARCH_URL'):
-            channel = Channel.query.filter_by(id=channelid, public=True, deleted=False).first_or_404()
-            return _channel_info_response(channel, self.get_locale(), self.get_page(), False)
+        if app.config.get('ELASTICSEARCH_URL'):
+            ch = api.ChannelSearch(self.get_locale())
+            ch.add_id(channelid)
+            offset, limit = self.get_page()
+            ch.set_paging(offset, limit)
+            if not ch.channels(with_videos=True, with_owners=True):
+                abort(404)
+            return ch.channels()[0]
 
-        channel, total = video_api.es_get_channels_with_videos(channel_ids=[channelid])
-        if not channel:
-            abort(404)
-        return channel[0]
+        channel = Channel.query.filter_by(id=channelid, public=True, deleted=False).first_or_404()
+        return _channel_info_response(channel, self.get_locale(), self.get_page(), False)
 
     @expose_ajax('/<userid>/channels/<channelid>/', cache_age=0)
     @check_authorization()

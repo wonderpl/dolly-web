@@ -215,5 +215,5 @@ class CuratingUserTestCase(BaseUserTestCase):
         channels = self.get(self.urls['channel_search'], dict(q=chdata['title']))['channels']
         self.assertEquals(channels['total'], 1)
         videos = self.get(channels['items'][0]['resource_url'])['videos']
-        self.assertListEqual(selected_source_ids,
-                             [v['video']['source_id'] for v in videos['items']])
+        source_ids = [v['video']['source_id'] for v in videos['items']]
+        self.assertEquals([], list(set(selected_source_ids).difference(source_ids)))

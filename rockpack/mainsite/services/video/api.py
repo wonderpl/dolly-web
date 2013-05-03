@@ -225,7 +225,7 @@ class ChannelWS(WebService):
         cs.date_sort(request.args.get('date_order'))
         if request.args.get('user_id'):
             cs.add_term('owner', request.args.get('user_id'))
-        channels = cs.channels(with_videos=True)
+        channels = cs.channels(with_owners=True)
         total = cs.total
 
         return dict(
