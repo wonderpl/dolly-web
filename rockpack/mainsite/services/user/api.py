@@ -11,7 +11,7 @@ from rockpack.mainsite.core.webservice import WebService, expose_ajax, ajax_crea
 from rockpack.mainsite.core.oauth.decorators import check_authorization
 from rockpack.mainsite.core.youtube import get_video_data
 from rockpack.mainsite.helpers.urls import url_for, url_to_endpoint
-from rockpack.mainsite.helpers.db import gen_videoid
+from rockpack.mainsite.helpers.db import gen_videoid, get_column_validators
 from rockpack.mainsite.services.video.models import (
     Channel, ChannelLocaleMeta, Video, VideoInstance, VideoInstanceLocaleMeta, Category, ContentReport)
 from rockpack.mainsite.services.oauth.api import RockRegistrationForm
@@ -160,12 +160,12 @@ def save_channel_activity(userid, action, channelid, locale):
 
 
 @commit_on_success
-def save_content_report(userid, object_type, object_id):
+def save_content_report(userid, object_type, object_id, reason):
     activity = dict(action='content_reported', user=userid,
                     object_type=object_type, object_id=object_id)
     if not UserActivity.query.filter_by(**activity).count():
         UserActivity(**activity).save()
-    report = dict(object_type=object_type, object_id=object_id)
+    report = dict(object_type=object_type, object_id=object_id, reason=reason)
     updated = ContentReport.query.filter_by(**report).update(
         {ContentReport.count: ContentReport.count + 1})
     if not updated:
@@ -314,6 +314,7 @@ class ActivityForm(wtf.Form):
 class ContentReportForm(wtf.Form):
     object_type = wtf.SelectField(choices=ACTIVITY_OBJECT_TYPE_MAP.items())
     object_id = wtf.StringField(validators=[wtf.Required()])
+    reason = wtf.StringField(validators=get_column_validators(ContentReport, 'reason'))
 
     def validate_object_id(self, field):
         object_type = ACTIVITY_OBJECT_TYPE_MAP.get(self.object_type.data)
@@ -482,7 +483,8 @@ class UserWS(WebService):
         form = ContentReportForm(csrf_enabled=False)
         if not form.validate():
             abort(400, form_errors=form.errors)
-        save_content_report(userid, form.object_type.data, form.object_id.data)
+        save_content_report(userid, form.object_type.data,
+                            form.object_id.data, form.reason.data)
 
     @expose_ajax('/<userid>/channels/', cache_private=True)
     @check_authorization(self_auth=True)

@@ -1011,13 +1011,14 @@ Content Report
 Post a record of content the user has flagged as inappropriate.
 
 ```http
-POST /ws/USERID/content_report/?locale=LOCALE HTTP/1.1
+POST /ws/USERID/content_reports/?locale=LOCALE HTTP/1.1
 Authorization: Bearer TOKEN
 Content-Type: application/json
 
 {
  "object_type": "channel",
- "object_id": "123"
+ "object_id": "123",
+ "reason": "just because"
 }
 ```
 
@@ -1025,6 +1026,7 @@ Parameter      | Required? | Value                       | Description
 :------------- | :-------- | :-------------------------- | :----------
 object_type    | yes       | `channel`, `video`, `user`  | Specifies the type of content
 object_id      | yes       | unique content id           | The id of the channel, video, or user
+reason         | yes       | string                      | Limited to 256 characters
 locale         | no        | IETF language tag           |
 
 On error:
