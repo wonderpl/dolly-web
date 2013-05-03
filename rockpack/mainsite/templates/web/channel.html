@@ -1,15 +1,15 @@
 <!DOCTYPE html>
-<html lang="en" id="ng-app" ng-app="Weblight" xmlns:ng="http://angularjs.org"
-  prefix="og: http://ogp.me/ns# {{ config.FACEBOOK_APP_NAMESPACE }}: http://ogp.me/ns/apps/{{ config.FACEBOOK_APP_NAMESPACE }}#">
-<head>
+<html lang="en" id="ng-app" ng-app="Weblight" xmlns:ng="http://angularjs.org">
+<head prefix="og: http://ogp.me/ns# {{ config.FACEBOOK_APP_NAMESPACE }}: http://ogp.me/ns/apps/{{ config.FACEBOOK_APP_NAMESPACE }}#">
     <meta charset="utf-8">
     {%- with %}
-    {% set title_prefix = '"%s" on ' % selected_video.title if selected_video.title else '' %}
+    {% set title_prefix = '"%s" on ' % selected_video.title if selected_video else '' %}
     {% set title = '%s"%s" by %s' % (title_prefix, channel_data.title, channel_data.owner.display_name) -%}
     <title>{{ title }}</title>
     <meta property="fb:app_id" content="{{ config.FACEBOOK_APP_ID }}" />
+    <meta property="og:url" content="{{ channel_data.canonical_url }}" />
     <meta property="og:title" content="{{ title }}" />
-    <meta property="og:image" content="{{ channel_data.cover_thumbnail_large_url }}" />
+    <meta property="og:image" content="{{ channel_data.cover_background_url }}" />
     <meta property="og:description" content="{% if channel_data.description %}{{ channel_data.description }}{% else %}{{ title }}, a channel on rockpack.{% endif %}" />
     {% endwith %}
     <meta name="HandheldFriendly" content="True">
@@ -17,6 +17,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1.0, user-scalable=no">
     <meta http-equiv="cleartype" content="on">
     <meta name="apple-mobile-web-app-capable" content="yes" />
+    <link rel="canonical" href="{{ channel_data.canonical_url }}" />
 
     <!--[if lt IE 9]>
       <link rel="stylesheet" type="text/css" href="ie.css" />

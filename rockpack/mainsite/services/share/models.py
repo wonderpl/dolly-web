@@ -55,7 +55,7 @@ class ShareLink(db.Model):
             channel = channel.filter(
                 (VideoInstance.channel == Channel.id) &
                 (VideoInstance.id == self.object_id))
-            params = dict(video_instance=self.object_id)
+            params = dict(video=self.object_id)
         else:
             channel = channel.filter_by(id=self.object_id)
             params = dict()
