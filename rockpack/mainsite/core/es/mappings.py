@@ -113,7 +113,7 @@ channel_mapping = {
         },
         "title": {
             "type": "string",
-            "index": "analyzed"
+            "analyzer": "snowball"
         },
         "thumbnail_url": {
             "type": "string",

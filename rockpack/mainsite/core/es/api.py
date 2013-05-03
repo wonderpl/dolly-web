@@ -130,6 +130,12 @@ class EntitySearch(object):
         """ IDs of the documents to be queried """
         self._add_term_occurs(pyes.IdsQuery(id), MUST)
 
+    def add_text(self, field, value):
+        if not(field and value):
+            return
+        term = pyes.TextQuery(field, value)
+        self._add_term_occurs(term, MUST)
+
     def add_term(self, field, value, occurs=MUST):
         """ Condition to apply
 
@@ -137,6 +143,8 @@ class EntitySearch(object):
             value  - some value
             occurs - query constraint (MUST, MUST_NOT, OR SHOULD) """
 
+        if not (field and value):
+            return
         f = pyes.TermsQuery if isinstance(value, list) else pyes.TermQuery
         term_query = f(field=field, value=value)
         self._add_term_occurs(term_query, occurs)
@@ -238,13 +246,13 @@ class ChannelSearch(EntitySearch, CategoryMixin, MediaSortMixin):
             if with_videos:
                 channel_id_list.append(channel.id)
 
-        if with_owners:
+        if with_owners and owner_list:
             ows = OwnerSearch()
             ows.add_id(owner_list)
             owner_map = {owner['id']: owner for owner in ows.owners()}
             self.add_owner_to_channels(channel_list, owner_map)
 
-        if with_videos:
+        if with_videos and channel_id_list:
             vs = VideoSearch(self.locale)
             vs.add_term('channel', channel_id_list)
             video_map = {}
@@ -304,7 +312,7 @@ class VideoSearch(EntitySearch, CategoryMixin, MediaSortMixin):
             if with_channels:
                 channel_list.append(v.channel)
 
-        if with_channels:
+        if with_channels and channel_list:
             ch = ChannelSearch(self.locale)
             ch.add_id(channel_list)
             channel_map = {c['id']: c for c in ch.channels(with_owners=True)}
@@ -342,21 +350,6 @@ class OwnerSearch(EntitySearch):
         if not self._owner_results:
             self._owner_results = self._format_results(self.results())
         return self._owner_results
-
-
-class CustomScoreFilters:
-
-    @staticmethod
-    def verified_channel_boost():
-        return pyes.CustomFiltersScoreQuery.Filter(
-            pyes.TermFilter(field='verified', value=True, boost=1.5)
-        )
-
-    @staticmethod
-    def editorial_boost():
-        return pyes.CustomFiltersScoreQuery.Filter(
-            pyes.TermFilter(script="_score * doc['editorial_boost'].value")
-        )
 
 
 def add_to_index(data, index, _type, id, bulk=False, refresh=False):
