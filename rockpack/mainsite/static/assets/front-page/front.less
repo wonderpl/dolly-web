@@ -1,4 +1,10 @@
-@import "mixins.less";  
+/* Micro ClearFix Mixin */
+.clearfix{
+  zoom:1;
+  &:before, &:after{ content:""; display:table; }
+  &:after{ clear: both; }
+}
+
 @import url("http://fast.fonts.com/t/1.css?apiType=css&projectid=e8c15b58-fc59-463c-be33-77dba4bf5031");
 
 @font-face{
@@ -13,18 +19,77 @@
   src:url("/static/assets/fonts/da088ecc-a53c-4831-a95b-6fd81b5b338a.eot?#iefix") format("eot"),url("/static/assets/fonts/c5a7f89e-15b6-49a9-8259-5ea665e72191.woff") format("woff"),url("/static/assets/fonts/868c94b5-ca49-46b7-b62b-297f8d861125.ttf") format("truetype"),url("/static/assets/fonts/e3145f65-29b5-4f7f-8c6e-2dc135021b6a.svg#e3145f65-29b5-4f7f-8c6e-2dc135021b6a") format("svg");
 }
 
-body {
-  background: #f1f1f1;
+.wrapper {
+  margin: 0 auto;
+  width: 960px;
+  .clearfix();
+}
+
+#header {
+  color: #fff;
+  position: relative;
+
+  .ipadscontainer {
+    height: 397px;
+    width: 40%;
+    overflow: hidden;
+    position: absolute;
+    right: 0;
+    text-align: right;
+    top: 40%;
+    margin-top: -200px;
+
+    .ipadsimgs {
+      height: 397px;
+      width: 724px;
+      background: url(/static/assets/front-page/images/ipads.png) no-repeat;
+      display: inline-block;
+    }
+  }
+
+  h1 {
+    font-size: 55px;
+    line-height: 55px;
+    font-family: "dn-bold";
+  }
+
+  h2 {
+    font-family: "dn-regular";
+    font-size: 20px;
+    line-height: 20px;
+    margin-top: 30px;
+  }
+
+  #logo {
+    margin-top: 30px;
+    background: #d9dbdc;
+    padding: 10px 20px 10px 65px;
+    display: inline-block;
+    z-index: 10;
+    position: absolute;
+    top: 0;
+
+    .btn {
+      margin-left: 40px;
+    }
+  }
+
+  .headline {
+    position: absolute;
+    top: 200px;
+    left: 60px;
+  }
+}
+
+#video {
+  margin-top: 30px;
 }
 
 footer {
   font-family: "dn-regular";
   color: #aaa;
-  background: #f8f8f8;
+  background: #282d33;
   padding: 30px 0;
-  display: block;
-  padding: 20px;
-  position: relative;
 
   ul {
     list-style: none;
@@ -56,84 +121,4 @@ footer {
     text-decoration: underline;
   }
 
-}
-
-#header {
-
-  background: #282d33;
-  color: #fff;
-  border-bottom: #5e6166 solid 1px;
-
-  .titlebar {
-    padding: 40px 0;
-  }
-
-  #logo {
-    margin-top: 30px;
-    background: #fff;
-    padding: 10px 20px 10px 65px;
-    display: inline-block;
-
-    .btn {
-      margin-left: 40px;
-    }
-  }
-
-  h1.title {
-    font-size: 35px;
-    font-family: "dn-bold";
-  }
-
-  h2.title {
-    font-size: 32px;
-    font-family: "dn-regular";
-    margin-top: 13px;
-  }
-}
-
-.btn-blue {
-  font-family: "dn-bold";
-  text-transform: uppercase;
-  text-shadow: 0;
-  color: #ffffff;
-  background: url(/static/assets/weblight/images/blue-btn-bg.png) repeat-x;
-  font-size: 15px;
-  padding: 14px 10px;
-  border-radius: 0;
-}
-
-input[type=password] {
-  width: 267px;
-  margin: 0;
-  padding: 10px 20px;
-  border: 0;
-  -webkit-box-shadow: inset 2px 2px 2px 2px rgba(245, 245, 245, 0.5);
-  box-shadow: inset 2px 2px 2px 2px rgba(245, 245, 245, 0.5);
-  background: #f9f9f9;
-  border-radius: 0;
-  color: #000;
-  font-size: 17px;
-  margin: 5px 0;
-}
-
-input[type=submit] {
-  width: 306px;
-  margin-top: 15px;
-  font-family: "dn-bold";
-  margin: 0;
-  padding: 10px 20px;
-  border: 0;
-  background: #f9f9f9;
-  border-radius: 0;
-  color: #000;
-  font-size: 17px;
-  margin: 5px 0;
-  border-top: 1px solid #fff;
-  -webkit-box-shadow: 0px 3px 0px 0px rgba(0, 0, 0, 0.1);
-  box-shadow: 0px 3px 0px 0px rgba(0, 0, 0, 0.1);
-
-}
-
-.main-content {
-  margin-top: 50px;
 }

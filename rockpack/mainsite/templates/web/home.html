@@ -24,9 +24,42 @@
       <script src="vendor/js-no-compile/json2.js"></script>
     <![endif]-->
 
+    {% assets filters="cssmin", output="gen/front.%(version)s.css", "assets/vendor/css/bootstrap.css", "assets/vendor/css/bootstrap-responsive.css" %}
+    <link rel="stylesheet" href="{{ ASSET_URL }}"/>
+    {% endassets %}
 
+    {% assets filters="less", output="gen/home.%(version)s.css", "assets/front-page/front.less" %}
+    <link rel="stylesheet" href="{{ ASSET_URL }}"/>
+    {% endassets %}
+
+    {% assets output="gen/front.%(version)s.js",
+    "assets/vendor/js/jquery-1.9.1.js", "assets/front-page/front.js" %}
+    <script type="text/javascript" src="{{ ASSET_URL }}"></script>
+    {% endassets %}
   </head>
-  <body ng-controller="AppCtrl" id="app">
-    Home
+  <body >
+    <div id="header">
+      <img src="/static/assets/front-page/images/top.jpg" id="topbg">
+      <div id="logo">
+        <img src="/static/assets/weblight/images/logo.png">
+        <button class="btn-blue btn">Get the app</button>
+      </div>
+      <div class="ipadscontainer">
+        <div class="ipadsimgs"></div>
+      </div>
+      <div class="row headline">
+        <div class="span6">
+          <h1>WHAT’S ON YOUR CHANNEL?</h1>
+          <h2>Rockpack is the curation tool that makes it easy to create and share beautiful, personal video channels</h2>
+          <img src="/static/assets/front-page/images/downloadbig.png">
+        </div>
+      </div>
+    </div>
+    <div id="video">
+      <img src="/static/assets/front-page/images/video.jpg">
+      <div class="wrapper">
+
+      </div>
+    </div>
   </body>
 </html>
