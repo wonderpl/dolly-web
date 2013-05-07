@@ -41,32 +41,58 @@ class Resizer(object):
             return
         raise self.FileDoesNotExist
 
-    def crop_and_scale(self, img, w, h):
-        old_w, old_h = img.size
-        new_w, new_h = w, h
-        old_ratio = float(old_w) / float(old_h)
-        new_ratio = float(new_w) / float(new_h)
+    def crop_and_scale(self, img, size, aoi=None):
+        ow, oh = img.size
+        ratio = float(size[0]) / float(size[1])
 
-        if new_ratio < old_ratio:
-            crop_height = old_h
-            crop_width = crop_height * new_ratio
-            x_offset = int(float(old_w - crop_width) / 2)
-            y_offset = 0
+        # Find center of aoi (Area Of Interest):
+        if aoi:
+            x1, y1, x2, y2 = map(float, aoi)
+            old_ratio = 0
         else:
-            crop_width = old_w
-            crop_height = crop_width / new_ratio
-            x_offset = 0
-            y_offset = int(float(old_h - crop_height) / 3)
+            x1, y1, x2, y2 = 0.0, 0.0, 1.0, 1.0
+            old_ratio = float(ow) / float(oh)
+        centerX = (x2 + x1) * ow / 2
+        centerY = (y2 + y1) * oh / 2
+        print 'aoi', aoi
 
-        new_img = img.crop(
-            (x_offset,
-                y_offset,
-                x_offset + int(crop_width),
-                y_offset + int(crop_height)))
+        # Define (dx, dy), the crop boundaries:
+        if (aoi and ratio < 1) or (old_ratio and ratio > old_ratio):
+            # portrait
+            dx = (x2 - x1) * ow / 2
+            dy = dx / ratio
+        elif (aoi and ratio > 1) or (old_ratio):
+            # landscape
+            dy = (y2 - y1) * oh / 2
+            dx = dy * ratio
+        else:
+            # square, using the 16:9 height as boundary
+            dx = (x2 - x1) * ow / 2 / 9 * 16
+            dy = dx
 
-        return new_img.resize((w, h,), Image.ANTIALIAS)
+        # Define the crop bounding box:
+        dx1 = centerX - dx
+        dy1 = centerY - dy
+        dx2 = centerX + dx
+        dy2 = centerY + dy
 
-    def resize(self, image_path=None, f_obj=None):
+        # Shift crop bounding box to fit within source image:
+        if dx1 < 0:
+            dx2 = min(dx2 - dx1, ow)
+            dx1 = 0
+        if dx2 > ow:
+            dx1 = max(dx1 - (dx2 - ow), 0)
+            dx2 = ow
+        if dy1 < 0:
+            dy2 = min(dy2 - dy1, oh)
+            dy1 = 0
+        if dy2 > oh:
+            dy1 = max(dy1 - (dy2 - oh), 0)
+            dy2 = oh
+
+        return img.crop(map(int, (dx1, dy1, dx2, dy2))).resize(size, Image.ANTIALIAS)
+
+    def resize(self, image_path=None, f_obj=None, aoi=None):
         if not self.configuration:
             raise self.ConfigurationMissingError
 
@@ -81,7 +107,7 @@ class Resizer(object):
             img = img.convert('RGBA')
         resized = {}
         for name, sizing in self.configuration.iteritems():
-            new_img = self.crop_and_scale(img, sizing[0], sizing[1])
+            new_img = self.crop_and_scale(img, (sizing[0], sizing[1]), aoi)
             resized.update({name: new_img})
 
         return resized

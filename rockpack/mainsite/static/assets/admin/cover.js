@@ -53,8 +53,8 @@ $(document).ready(function() {
         GetPosition();
     });
 
-    if (typeof ($(".cover-image-background img").attr('src')) !== "undefined") {
-        ShowImage($(".cover-image-background img").attr('src'));
+    if (typeof ($("#uploadPreview").attr('src')) !== "undefined") {
+        ShowImage($("#uploadPreview").attr('src'));
     }
 
 })

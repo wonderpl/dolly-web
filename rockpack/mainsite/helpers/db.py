@@ -93,8 +93,10 @@ class ImagePath(object):
                 return ''
             # If the original image wasn't a jpg, we need
             # to change the extension to grab the jpg versions
-            sans_ext = self.path.rsplit('.', 1)[0]
-            path = '.'.join([sans_ext, IMAGE_CONVERSION_FORMAT[1]])
+            if name == 'original':
+                path = self.path
+            else:
+                path = self.path.rsplit('.', 1)[0] + '.' + IMAGE_CONVERSION_FORMAT[1]
             url = image_url_from_path(base + path)
             return ImageUrl(url)
 
@@ -132,7 +134,7 @@ def get_box_value(value):
     return value
 
 
-def resize_and_upload(fp, cfgkey):
+def resize_and_upload(fp, cfgkey, aoi=None):
     """Takes file-like object and uploads thumbnails to s3."""
     uploader = imaging.ImageUploader()
 
@@ -143,7 +145,7 @@ def resize_and_upload(fp, cfgkey):
 
     # Resize images
     resizer = imaging.Resizer(img_resize_config)
-    resized = resizer.resize(fp)
+    resized = resizer.resize(fp, aoi=aoi)
 
     # Upload original
     orig_ext = resizer.original_extension

@@ -88,8 +88,11 @@ class AdminView(ModelView):
             if isinstance(field, wtf.FileField):
                 if field.data:
                     cfgkey = self.model.__table__.columns.get(field.name).type.cfgkey
+                    aoi = form.data.get(field.name + '_aoi')
+                    if aoi:
+                        aoi = get_box_value(aoi)
                     try:
-                        field.data = resize_and_upload(field.data, cfgkey)
+                        field.data = resize_and_upload(field.data, cfgkey, aoi)
                     except IOError, e:
                         # The form has already been validated at this stage but
                         # if we return False then BaseModelView.create_view will
