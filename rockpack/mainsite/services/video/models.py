@@ -117,6 +117,7 @@ class Video(db.Model):
     source = Column(ForeignKey('source.id'), nullable=False)
     source_videoid = Column(String(128), nullable=False)
     source_listid = Column(String(128), nullable=True)
+    source_username = Column(String(128), nullable=True)
     date_added = Column(DateTime(), nullable=False, default=func.now())
     date_updated = Column(DateTime(), nullable=False, default=func.now(), onupdate=func.now())
     duration = Column(Integer, nullable=False, server_default='0')
@@ -413,6 +414,7 @@ def _add_es_video(video_instance):
                 thumbnail_url=video.default_thumbnail if video.default_thumbnail else '',
                 source=video.source,
                 source_id=video.source_videoid,
+                source_username=video.source_username,
                 duration=video.duration,
                 locale=_locale_dict_from_object(video_instance.metas))
 

@@ -1,5 +1,5 @@
 import re
-from flask import request, json, Response, g
+from flask import request, json, Response
 from rockpack.mainsite.core.webservice import WebService, expose_ajax
 from rockpack.mainsite.core import youtube
 from rockpack.mainsite.helpers.db import gen_videoid
@@ -45,6 +45,7 @@ class SearchWS(WebService):
                         source_id=video.source_videoid,
                         source_date_uploaded=video.source_date_uploaded,
                         source_view_count=video.source_view_count,
+                        source_username=video.source_username,
                         duration=video.duration,
                         thumbnail_url=video.default_thumbnail,
                     )

@@ -75,6 +75,7 @@ def _get_atom_video_data(youtube_data, playlist=None):
     video = Video(
         source_videoid=media.FindExtensions('videoid')[0].text,
         source_listid=playlist,
+        source_username=youtube_data.author[0].name.text,
         title=youtube_data.title.text,
         duration=int(media.duration.seconds) if media.duration else 0,
     )
@@ -115,6 +116,7 @@ def _get_video_data(youtube_data, playlist=None):
     video = Video(
         source_videoid=media['yt$videoid']['$t'],
         source_listid=playlist,
+        source_username=youtube_data['author'][0]['name']['$t'],
         title=youtube_data['title']['$t'],
         duration=int(media['yt$duration']['seconds']) if 'yt$duration' in media else -1,
     )

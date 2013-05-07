@@ -69,12 +69,13 @@ Cache-Control: public, max-age=3600
       {
         "title": "Star Trek Into Darkness - Extra Footage Japanese Teaser (HD)",
         "video": {
-          "view_count": "4536",
-          "star_count": "4455",
+          "id": "RP000001TWSWZX4WH7EFFE44AUBVWI6OXALNKFTP",
           "source": "youtube",
-          "thumbnail_url": "http://i.ytimg.com/vi/BrHlQUXFzfw/0.jpg",
           "source_id": "BrHlQUXFzfw",
-          "id": "RP000001TWSWZX4WH7EFFE44AUBVWI6OXALNKFTP"
+          "source_username": "yt user",
+          "thumbnail_url": "http://i.ytimg.com/vi/BrHlQUXFzfw/0.jpg",
+          "view_count": "4536",
+          "star_count": "4455"
         },
         "date_added": "2012-12-06T08:28:05.000Z",
         "position": 0,

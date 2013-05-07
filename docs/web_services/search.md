@@ -27,6 +27,7 @@ Cache-Control: public, max-age=300
 
 {
   "videos": {
+    "total": 1,
     "items": [
       {
         "position": 0,
@@ -36,14 +37,14 @@ Cache-Control: public, max-age=300
           "id": "RP000001PXGLP4XTKU4VDFO37XZKEBMURKPOB6RQ",
           "source": "youtube",
           "source_id": "guFf8zveF0M",
-          "duration", 123,
-          "thumbnail_url": "http://i.ytimg.com/vi/guFf8zveF0M/mqdefault.jpg",
-          "source_view_count", 1000,
-          "source_date_uploaded": "2012-12-01T02:06:14.000Z"
+          "source_username": "Some Youtube User",
+          "source_view_count": 1000,
+          "source_date_uploaded": "2012-12-01T02:06:14.000Z",
+          "duration": 123,
+          "thumbnail_url": "http://i.ytimg.com/vi/guFf8zveF0M/mqdefault.jpg"
         }
       }
     ]
-    "total": 1
   }
 }
 ```

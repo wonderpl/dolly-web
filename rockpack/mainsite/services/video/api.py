@@ -87,6 +87,7 @@ def video_dict(instance):
             id=video.id,
             source=['rockpack', 'youtube'][video.source],    # TODO: read source map from db
             source_id=video.source_videoid,
+            source_username=video.source_username,
             duration=video.duration,
             view_count=video.view_count,
             star_count=video.star_count,
@@ -282,8 +283,7 @@ class VideoWS(WebService):
 
         es_channel_to_video_map(videos, {c['id']: c for c in channels})
 
-        return dict(videos={'items': videos},
-                total=total)
+        return dict(videos={'items': videos}, total=total)
 
 
 class ChannelWS(WebService):
@@ -293,7 +293,8 @@ class ChannelWS(WebService):
     @expose_ajax('/', cache_age=300)
     def channel_list(self):
         if not app.config.get('ELASTICSEARCH_URL'):
-            data, total = get_local_channel(self.get_locale(),
+            data, total = get_local_channel(
+                self.get_locale(),
                 self.get_page(),
                 category=request.args.get('category'))
             return dict(channels=dict(items=data, total=total))

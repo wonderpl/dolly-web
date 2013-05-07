@@ -138,6 +138,7 @@ def add_video_to_index(video_instance, bulk=False, refresh=True):
                 'thumbnail_url': video_instance['thumbnail_url'],
                 'source': video_instance['source'],
                 'source_id': video_instance['source_id'],
+                'source_username': video_instance['source_username'],
                 'duration': video_instance['duration'],
             }
         },

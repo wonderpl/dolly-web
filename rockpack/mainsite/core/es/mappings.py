@@ -62,6 +62,7 @@ video_mapping = {
                     "type": "string",
                     "index": "not_analyzed"},
                 "source_id": {"type": "string"},
+                "source_username": {"type": "string"},
                 "duration": {"type": "integer"}
             }
         }

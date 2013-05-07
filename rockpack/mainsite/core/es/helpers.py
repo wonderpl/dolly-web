@@ -144,6 +144,7 @@ class DBImport(object):
                         'star_count': v.video_rel.star_count,
                         'source': v.video_rel.source,
                         'source_id': v.video_rel.source_videoid,
+                        'source_username': v.video_rel.source_username,
                         'duration': v.video_rel.duration,
                     }
                     api.add_video_to_index(data, bulk=True, refresh=False)
