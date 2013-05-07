@@ -130,7 +130,8 @@ class Video(db.Model):
                               cascade="all, delete-orphan")
     instances = relationship('VideoInstance', backref=db.backref('video_rel', lazy='joined'),
                              passive_deletes=True, cascade="all, delete-orphan")
-    restrictions = relationship('VideoRestriction', backref='videos')
+    restrictions = relationship('VideoRestriction', backref='videos',
+                                cascade="all, delete-orphan", passive_deletes=True)
 
     def __str__(self):
         return self.title

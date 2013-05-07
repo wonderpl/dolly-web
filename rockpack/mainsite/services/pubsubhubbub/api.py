@@ -9,7 +9,8 @@ from .models import Subscription
 
 def subscribe(hub, topic, channel_id):
     subs = Subscription(hub=hub, topic=topic, channel_id=channel_id)
-    return subs.subscribe()
+    subs.subscribe()
+    return subs
 
 
 @commit_on_success
