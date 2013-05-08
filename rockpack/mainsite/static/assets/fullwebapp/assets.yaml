@@ -26,9 +26,9 @@ fullwebJS:
     output: gen/fullweb_js.%(version)s.js
     contents:
         - fullwebapp/app.coffee
+        - fullwebapp/services/*.coffee
         - fullwebapp/controllers/*.coffee
         - fullwebapp/directives/*.coffee
-        - fullwebapp/services/*.coffee
 
 fullwebTemplates:
     filters: fullweb

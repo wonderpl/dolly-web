@@ -1,4 +1,4 @@
-angular.module('WebApp').factory('Content', ($http, apiUrl, locale) ->
+angular.module('WebApp').factory('Content', ($http, locale) ->
 
   Content = {
 

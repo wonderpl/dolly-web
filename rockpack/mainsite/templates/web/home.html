@@ -32,6 +32,10 @@
   <script type="text/javascript" src="{{ ASSET_URL }}"></script>
   {% endassets %}
 
+  <script type="text/javascript">
+    window.apiUrls = jQuery.parseJSON('{{api_urls|safe}}')
+  </script>
+
   {% assets "fullwebJS" %}
   <script type="text/javascript" src="{{ ASSET_URL }}"></script>
   {% endassets %}
@@ -41,7 +45,7 @@
   {% endassets %}
 
 </head>
-<body>
+<body ng-controller="AppCtrl">
   <div ng-include src="'header.html'"></div>
   <div class="ng-view"></div>
   <div ng-include src="'footer.html'" ></div>

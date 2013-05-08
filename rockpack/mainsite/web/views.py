@@ -28,7 +28,8 @@ def ws_request(url, **kwargs):
 
 @expose_web('/', 'web/home.html', cache_age=3600)
 def homepage():
-    pass
+    api_urls = json.dumps(ws_request('/ws/'))
+    return dict(api_urls=api_urls)
 
 
 @expose_web('/bookmarklet', 'web/bookmarklet.html')

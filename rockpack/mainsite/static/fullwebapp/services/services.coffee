@@ -8,13 +8,18 @@ window.WebApp.factory('cookies', ['$rootScope', '$browser', ($rootScope, $browse
     return null
   ),
   set: ((key, value, expires) ->
+    expires = expires ? 3600
     secure = if window.isSecure then ';secure' else ''
     now = new Date()
     time = now.getTime()
     time += expires * 1000
     now.setTime(time)
-    c_value=escape(value) + "; expires=" + now.toUTCString()
-    document.cookie = key + "=" + c_value + secure
+    # Delete cookie if value is empty, used for logout
+    if value != ''
+      c_value=escape(value) + "; expires=" + now.toUTCString()
+      document.cookie = key + "=" + c_value + secure
+    else
+      document.cookie = key + '=; expires=Thu, 01-Jan-70 00:00:01 GMT;'
     return null
   )
   }

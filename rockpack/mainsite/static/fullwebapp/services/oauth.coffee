@@ -1,26 +1,20 @@
-angular.module('WebApp').factory('OAuth', ($http, apiUrl, Services) ->
+angular.module('WebApp').factory('OAuth', ($http) ->
 
   headers = {"authorization": 'basic b3JvY2tncVJTY1NsV0tqc2ZWdXhyUTo=', "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"}
 
-  OAuth = {}
-  ServiceUrls = Services
-    # TOOD: Implement Facebook registration/login
   OAuth = {
-
     login: (username, password) ->
-      ServiceUrls.then( (data)-> 
-        $http({
-          method: 'POST',
-          data: $.param({username: username, password: password, grant_type: 'password'}),
-          url: data.login,
-          headers: headers
-        })
-        .then(((data) ->
-          return data.data
-        ),
-        (data) ->
-          console.log data
-        )
+      $http({
+        method: 'POST',
+        data: $.param({username: username, password: password, grant_type: 'password'}),
+        url: window.apiUrls['login'],
+        headers: headers
+      })
+      .then(((data) ->
+        return data.data
+      ),
+      (data) ->
+        console.log data
       )
 
     ###
@@ -36,11 +30,11 @@ angular.module('WebApp').factory('OAuth', ($http, apiUrl, Services) ->
       "date_of_birth": "2003-01-24",
       "locale": "en-us",
       "email": "spidey@theavengers.com"
-    }  
+    }
     ###
 
     register: (userParms) ->
-      ServiceUrls.then( (data)-> 
+      ServiceUrls.then( (data)->
         $http({
           method: 'POST',
           data: $.param(userParms),
@@ -85,7 +79,7 @@ angular.module('WebApp').factory('OAuth', ($http, apiUrl, Services) ->
       (data) ->
         console.log data
       )
- 
+
     # facebook: (external_token) ->
   }
 

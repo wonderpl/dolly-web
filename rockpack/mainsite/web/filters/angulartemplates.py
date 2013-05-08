@@ -1,6 +1,7 @@
 from webassets.filter import Filter, register_filter
 
 
+# FIX: empty files will not be named correctly.
 class AJSTemplates(Filter):
     name = ''
     module_name = ''
