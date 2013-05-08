@@ -1,0 +1,38 @@
+fullwebVendorCss:
+    filters: cssmin
+    output: gen/fullweb_vendor.%(version)s.css
+    contents:
+        - assets/vendor/css/bootstrap.css
+        - assets/vendor/css/bootstrap-responsive.css
+
+fullwebCss:
+    filters: less,cssmin
+    output: gen/fullweb_css.%(version)s.css
+    contents:
+        - fullwebapp/css/*.less
+
+fullwebVendorJS:
+    filters: rjsmin
+    output: gen/fullweb_vendor.%(version)s.js
+    contents:
+        - assets/vendor/js/jquery-1.9.1.js
+        - assets/vendor/js/angular.js
+        - assets/vendor/js/angular-resource.js
+        - assets/vendor/js/ng-infinite-scroll.js
+        - assets/vendor/js/ui-bootstrap-tpls-0.2.0.js
+
+fullwebJS:
+    filters: coffeescript
+    output: gen/fullweb_js.%(version)s.js
+    contents:
+        - fullwebapp/app.coffee
+        - fullwebapp/controllers/*.coffee
+        - fullwebapp/directives/*.coffee
+        - fullwebapp/services/*.coffee
+
+fullwebTemplates:
+    filters: fullweb
+    output: gen/fullweb_templates.%(version)s.js
+    contents:
+        - fullwebapp/views/*.html
+#
