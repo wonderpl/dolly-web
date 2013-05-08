@@ -1,13 +1,12 @@
-import urlparse
 from flask import request
 from collections import defaultdict
 from sqlalchemy.orm import contains_eager, lazyload, joinedload
 from sqlalchemy.sql.expression import desc
 from rockpack.mainsite import app
-from rockpack.mainsite.helpers.urls import url_for
 from rockpack.mainsite.core.webservice import WebService, expose_ajax
 from rockpack.mainsite.services.video import models
-from rockpack.mainsite.core.es.api import OwnerSearch, VideoSearch, ChannelSearch
+from rockpack.mainsite.core.es.api import VideoSearch, ChannelSearch
+from rockpack.mainsite.core.es.api import filters
 
 
 def _filter_by_category(query, type, category_id):
@@ -219,9 +218,13 @@ class ChannelWS(WebService):
         cs = ChannelSearch(self.get_locale())
         offset, limit = self.get_page()
         cs.set_paging(offset, limit)
+        # Boost popular channels based on ...
+        cs.add_filter(filters.boost_from_field_value('subscriber_count'))
+        view_count_field = '.'.join(['locale', self.get_locale(), 'view_count'])
+        star_count_field = '.'.join(['locale', self.get_locale(), 'star_count'])
+        cs.add_filter(filters.boost_from_field_value(view_count_field))
+        cs.add_filter(filters.boost_from_field_value(star_count_field))
         cs.filter_category(request.args.get('category'))
-        cs.star_order_sort(request.args.get('star_order'))
-        cs.favourite_sort(request.args.get('favourite'))
         cs.date_sort(request.args.get('date_order'))
         if request.args.get('user_id'):
             cs.add_term('owner', request.args.get('user_id'))

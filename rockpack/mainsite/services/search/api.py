@@ -1,11 +1,13 @@
 import re
 from flask import request, json, Response
+from rockpack.mainsite import app
 from rockpack.mainsite.core.webservice import WebService, expose_ajax
 from rockpack.mainsite.core import youtube
 from rockpack.mainsite.helpers.db import gen_videoid
 from rockpack.mainsite.services.video.api import get_local_channel
 from rockpack.mainsite.services.video.models import Channel
 from rockpack.mainsite.core.es.api import ChannelSearch
+from rockpack.mainsite.core.es import filters
 
 
 SEARCH_TERM_RE = re.compile('^[\w ]+$')
@@ -56,14 +58,16 @@ class SearchWS(WebService):
 
     @expose_ajax('/channels/', cache_age=300)
     def search_channels(self):
-        ch = ChannelSearch(self.get_locale())
-        offset, limit = self.get_page()
-        ch.set_paging(offset, limit)
-        ch.add_text('title', _query_term().lower())
-        if request.args.get('order') == 'latest':
-            ch.date_sort('desc')
-        channels = ch.channels(with_owners=True)
-        return dict(channels=dict(items=channels, total=ch.total))
+        if app.config.get('ELASTICSEARCH_URL'):
+            ch = ChannelSearch(self.get_locale())
+            offset, limit = self.get_page()
+            ch.set_paging(offset, limit)
+            ch.add_text('title', _query_term().lower())
+            ch.add_filter(filters.verified_channel_boost())
+            if request.args.get('order') == 'latest':
+                ch.date_sort('desc')
+            channels = ch.channels(with_owners=True)
+            return dict(channels=dict(items=channels, total=ch.total))
 
         # XXX: Obviously this needs to be replaced by a search engine
         date_order = True if request.args.get('order') == 'latest' else False

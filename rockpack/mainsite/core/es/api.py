@@ -98,7 +98,7 @@ class EntitySearch(object):
     def _construct_filters(self, query):
         """ Wraps a query to apply score filters to """
         if self._filters:
-            return pyes.CustomFiltersScoreQuery(query, self._filters)
+            return pyes.CustomFiltersScoreQuery(query, self._filters, score_mode='multiply')
         return query
 
     def _construct_query(self):
@@ -109,7 +109,7 @@ class EntitySearch(object):
 
     def _update_query_params(self, dict_):
         if dict_:
-            self.query_params.update(dict_)
+            self._query_params.update(dict_)
 
     def _es_search(self):
         query = self._construct_query()
@@ -157,7 +157,7 @@ class EntitySearch(object):
         sort_string = self._query_params.get('sort', sort)
         if sort_string != sort:
             sort_string = ','.join([sort_string, sort])
-        self._update_query_params({'sort': self.sorting})
+        self._update_query_params({'sort': sort_string})
 
     def date_sort(self, order):
         if order:

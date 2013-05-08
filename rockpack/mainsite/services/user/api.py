@@ -350,6 +350,7 @@ class UserWS(WebService):
             ch = api.ChannelSearch(self.get_locale())
             offset, limit = self.get_page()
             ch.set_paging(offset, limit)
+            ch.favourite_sort('desc')
             ch.add_term('owner', userid)
             owner.setdefault('channels', {})['items'] = ch.channels(with_owners=False)
             owner['channels']['total'] = ch.total
@@ -376,7 +377,7 @@ class UserWS(WebService):
             return self.user_info(userid)
         user = g.authorized.user
         channels = [video_api.channel_dict(c, with_owner=False, owner_url=True) for c in
-                    Channel.query.filter_by(owner=user.id, deleted=False)]
+                    Channel.query.filter_by(owner=user.id, deleted=False).order_by('favourite desc')]
         info = dict(
             id=user.id,
             username=user.username,
