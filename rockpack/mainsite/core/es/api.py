@@ -98,7 +98,7 @@ class EntitySearch(object):
     def _construct_filters(self, query):
         """ Wraps a query to apply score filters to """
         if self._filters:
-            return pyes.CustomFiltersScoreQuery(query, self._filters, score_mode='multiply')
+            return pyes.CustomFiltersScoreQuery(query, self._filters, score_mode='total')
         return query
 
     def _construct_query(self):
@@ -114,11 +114,24 @@ class EntitySearch(object):
     def _es_search(self):
         query = self._construct_query()
         search_query = pyes.Search(query, start=self.paging[0], size=self.paging[1])
-        return self._conn.search(
+        explain = False
+        if app.config.get('DEBUG'):
+            explain = True
+        result = self._conn.search(
             query=search_query,
             indices=self.get_index_name(),
             doc_types=self.get_type_name(),
+            explain=explain,
             **self._query_params)
+        if explain:
+            from pprint import pprint as pp
+            try:
+                result.__dict__
+                pp(result.__dict__['hits'])
+            except:
+                pass
+            pp(result.__dict__['query'])
+        return result
 
     def get_index_name(self):
         return getattr(mappings, self.entity.upper() + '_INDEX')

@@ -108,6 +108,7 @@ class ChannelData(DataSet):
         description = ''
         cover = RockpackCoverArtData.comic_cover.cover
         category = 3
+        subscriber_count = 34
 
     class channel2:
         id = 'ch6JCPZAfsdsGroanQdVB8jw'
@@ -116,6 +117,7 @@ class ChannelData(DataSet):
         description = ''
         cover = RockpackCoverArtData.comic_cover.cover
         category = 3
+        subscriber_count = 7
 
     class channel3:
         id = 'ch6JCPZAcXSj4r34eQdVB8jw'
@@ -124,6 +126,7 @@ class ChannelData(DataSet):
         description = ''
         cover = RockpackCoverArtData.comic_cover.cover
         category = 3
+        subscriber_count = 10
 
     class channel4:
         id = 'ch6JCPZAc5g4wsg4nQdVB8jw'
@@ -132,6 +135,7 @@ class ChannelData(DataSet):
         description = ''
         cover = RockpackCoverArtData.comic_cover.cover
         category = 3
+        subscriber_count = 2
 
     class channel5:
         id = 'ch6JCPZlkjhlkloanQdVB8jw'
@@ -140,6 +144,7 @@ class ChannelData(DataSet):
         description = ''
         cover = RockpackCoverArtData.comic_cover.cover
         category = 3
+        subscriber_count = 60
 
     class channel6:
         id = 'ch6JCPZAcXSjGrfdsa8908jw'
@@ -148,6 +153,7 @@ class ChannelData(DataSet):
         description = ''
         cover = RockpackCoverArtData.comic_cover.cover
         category = 3
+        subscriber_count = 9
 
 
 class ChannelLocaleMetaData(DataSet):

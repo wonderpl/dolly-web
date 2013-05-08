@@ -18,6 +18,10 @@ class ChannelPopularity(base.RockPackTestCase):
                     headers=[get_auth_header(user.id)])
 
 
+            data = json.loads(r.data)
+            self.assertEquals(data['channels']['items'][0]['title'], 'channel #6')
+
+
 class ChannelCreateTestCase(base.RockPackTestCase):
 
     def test_new_channel(self):
