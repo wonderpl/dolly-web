@@ -96,6 +96,8 @@ channel_mapping = {
         "date_added": {"type": "date"},
         "video_frequency": {"type": "integer"},
         "video_last_added": {"type": "date"},
+        "update_frequency": {"type": "float", "null_value": 0.0},
+        "editorial_boost": {"type": "float", "null_value": 1.0},
         "favourite": {"type": "boolean"},
         "verified": {"type": "boolean"},
         "ecommerce_url": {

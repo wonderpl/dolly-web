@@ -21,7 +21,7 @@ def locale_filter(entity):
         if entity.locale != el:
             # NOTE: This might get unwieldy for a large number of locales,
             # Need to find a better way of doing this
-            script = "doc['locale.{}.view_count'].value > doc['locale.{}.view_count'].value ? 1 : 0".format(entity.locale, el)
+            script = "doc['locales.{}.view_count'].value > doc['locales.{}.view_count'].value ? 1 : 0".format(entity.locale, el)
             filters.append(pyes.CustomFiltersScoreQuery.Filter(pyes.ScriptFilter(script=script), 100))
     return filters
 

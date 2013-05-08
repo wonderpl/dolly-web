@@ -180,9 +180,11 @@ class ChannelWS(WebService):
         offset, limit = self.get_page()
         cs.set_paging(offset, limit)
         # Boost popular channels based on ...
+        cs.add_filter(filters.boost_from_field_value('editorial_boost'))
         cs.add_filter(filters.boost_from_field_value('subscriber_count'))
-        view_count_field = '.'.join(['locale', self.get_locale(), 'view_count'])
-        star_count_field = '.'.join(['locale', self.get_locale(), 'star_count'])
+        cs.add_filter(filters.boost_from_field_value('update_frequency'))
+        view_count_field = '.'.join(['locales', self.get_locale(), 'view_count'])
+        star_count_field = '.'.join(['locales', self.get_locale(), 'star_count'])
         cs.add_filter(filters.boost_from_field_value(view_count_field))
         cs.add_filter(filters.boost_from_field_value(star_count_field))
         cs.filter_category(request.args.get('category'))

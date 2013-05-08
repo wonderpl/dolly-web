@@ -179,6 +179,8 @@ class EntitySearch(object):
             self.add_sort('date_added', order)
 
     def set_paging(self, offset=0, limit=100):
+        if limit == -1:
+            limit = 1000
         self.paging = (offset, limit)
 
     def results(self, force=False):
@@ -262,12 +264,14 @@ class ChannelSearch(EntitySearch, CategoryMixin, MediaSortMixin):
         if with_owners and owner_list:
             ows = OwnerSearch()
             ows.add_id(owner_list)
+            ows.set_paging(0, -1)
             owner_map = {owner['id']: owner for owner in ows.owners()}
             self.add_owner_to_channels(channel_list, owner_map)
 
         if with_videos and channel_id_list:
             vs = VideoSearch(self.locale)
             vs.add_term('channel', channel_id_list)
+            vs.set_paging(0, -1)
             video_map = {}
             for v in vs.videos():
                 video_map.setdefault(v['channel'], []).append(v)
@@ -310,8 +314,8 @@ class VideoSearch(EntitySearch, CategoryMixin, MediaSortMixin):
                 channel=v.channel,
                 video=dict(
                     id=v.video.id,
-                    view_count=v['locale'][self.locale]['view_count'],
-                    star_count=v['locale'][self.locale]['star_count'],
+                    view_count=v['locales'][self.locale]['view_count'],
+                    star_count=v['locales'][self.locale]['star_count'],
                     source=v.video.source,
                     source_id=v.video.source_id,
                     duration=v.video.duration,
@@ -396,7 +400,7 @@ def add_channel_to_index(channel, bulk=False, refresh=False, boost=None):
     data = {
         'id': channel['id'],
         'public': True,  # we assume we dont insert private/invisible
-        'locale': channel['locale'],
+        'locales': channel['locales'],
         'ecommerce_url': channel['ecommerce_url'],
         'subscriber_count': channel['subscriber_count'],
         'category': channel['category'],
@@ -411,6 +415,8 @@ def add_channel_to_index(channel, bulk=False, refresh=False, boost=None):
         'owner': channel['owner_id'],
         'favourite': channel['favourite'],
         'verified': channel['verified'],
+        'update_frequency': channel['update_frequency'],
+        'editorial_boost': channel['editorial_boost']
     }
     if boost:
         data['_boost'] = boost
@@ -424,7 +430,7 @@ def add_video_to_index(video_instance, bulk=False, refresh=False):
         {
             'id': video_instance['id'],
             'public': True,  # we assume we dont insert private/invisible
-            'locale': video_instance['locale'],
+            'locales': video_instance['locales'],
             'channel': video_instance['channel'],
             'category': video_instance['category'],
             'title': video_instance['title'],

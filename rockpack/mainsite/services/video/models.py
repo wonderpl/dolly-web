@@ -418,7 +418,7 @@ def _add_es_video(video_instance):
                 source_id=video.source_videoid,
                 source_username=video.source_username,
                 duration=video.duration,
-                locale=_locale_dict_from_object(video_instance.metas))
+                locales=_locale_dict_from_object(video_instance.metas))
 
             es_api.add_video_to_index(data)
 
@@ -441,7 +441,7 @@ def _add_es_channel(channel):
             id=channel.id,
             public=True,
             category=category,
-            locale=_locale_dict_from_object(channel.metas),
+            locales=_locale_dict_from_object(channel.metas),
             owner_id=channel.owner,
             subscriber_count=channel.subscriber_count,
             date_added=channel.date_added,
@@ -454,12 +454,11 @@ def _add_es_channel(channel):
             cover_thumbnail_large_url=convert(channel.cover).thumbnail_large,
             cover_background_url=convert(channel.cover).background,
             favourite=channel.favourite,
-            verified=channel.verified)
+            verified=channel.verified,
+            update_frequency=channel.update_frequency,
+            editorial_boost=channel.editorial_boost.get(1.0))
 
-        boost = None
-        if channel.editorial_boost:
-            boost = channel.editorial_boost
-        es_api.add_channel_to_index(data, boost=boost)
+        es_api.add_channel_to_index(data)
 
 
 def _remove_es_channel(channel):

@@ -95,7 +95,7 @@ class DBImport(object):
                     category = [channel.category]
                 data = {
                     'id': channel.id,
-                    'locale': _locale_dict_from_object(channel.metas),
+                    'locales': _locale_dict_from_object(channel.metas),
                     'subscriber_count': channel.subscriber_count,
                     'category': category,
                     'description': channel.description,
@@ -109,7 +109,9 @@ class DBImport(object):
                     'owner_id': channel.owner,
                     'ecommerce_url': channel.ecommerce_url,
                     'favourite': channel.favourite,
-                    'verified': channel.verified
+                    'verified': channel.verified,
+                    'update_frequency': channel.update_frequency,
+                    'editorial_boost': channel.editorial_boost
                 }
                 api.add_channel_to_index(data, bulk=True, refresh=False)
 
@@ -135,7 +137,7 @@ class DBImport(object):
                     data = {
                         'id': v.id,
                         'channel': v.channel,
-                        'locale': _locale_dict_from_object(v.metas),
+                        'locales': _locale_dict_from_object(v.metas),
                         'category': category,
                         'title': v.video_rel.title,
                         'date_added': v.date_added,
