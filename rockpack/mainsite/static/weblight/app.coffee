@@ -1,4 +1,4 @@
-window.Weblight = angular.module('Weblight', ['channelServices'])
+window.Weblight = angular.module('Weblight', ['channelServices', 'infinite-scroll'])
   
   # Detect if user is browsing using a mobile browser
   .constant('isMobile', ( (a) -> 
@@ -18,7 +18,7 @@ window.Weblight = angular.module('Weblight', ['channelServices'])
 
     # Router
     $routeProvider.when('/', {templateUrl: 'channel.html', reloadOnSearch: false})
-    # $routeProvider.when('/channel/:channelid', {templateUrl: 'channel.html', reloadOnSearch: false})
+#    $routeProvider.when('/channel/:channelid', {templateUrl: 'channel.html', reloadOnSearch: false})
     $routeProvider.when('/jobs', {templateUrl: 'jobs.html'})
     $routeProvider.when('/people', {templateUrl: 'people.html'})
   ])
@@ -52,16 +52,16 @@ window.Weblight = angular.module('Weblight', ['channelServices'])
         else
             return String(text).substring(0, length-end.length) + end
   )
-  .directive('whenScrolled', () ->
-    return (scope, elm, attr) ->
-      raw = elm[0]
-
-      $(window).bind('scroll', ->
-        if ($(window).scrollTop() >= $(document).height() - $(window).height() - 200)  
-          scope.$apply(attr.whenScrolled)
-      )
-      return
-  )
+#  .directive('whenScrolled', () ->
+#    return (scope, elm, attr) ->
+#      raw = elm[0]
+#
+#      $(window).bind('scroll', ->
+#        if ($(window).scrollTop() >= $(document).height() - $(window).height() - 200)
+#          scope.$apply(attr.whenScrolled)
+#      )
+#      return
+#  )
 
 window.onYouTubeIframeAPIReady = ->
   updateScope()

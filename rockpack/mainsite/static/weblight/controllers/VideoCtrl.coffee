@@ -4,7 +4,6 @@ window.Weblight.controller('VideoCtrl', ['$scope', '$rootScope', '$routeParams',
   $rootScope.currentVideo = {}
 
   @getPlayerWidth = ->
-    console.log window.screen.width
     if window.window.screen.width < 750
       @playerWidth = window.window.screen.width
       @playerHeight = window.window.screen.width*9/16
@@ -50,6 +49,7 @@ window.Weblight.controller('VideoCtrl', ['$scope', '$rootScope', '$routeParams',
   )
 
   $scope.$watch((-> $routeParams.videoid), (newValue) ->
+    console.log 'got player id'
     if newValue
       $scope.PlayVideo()
     return

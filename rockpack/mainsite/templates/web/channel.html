@@ -50,7 +50,7 @@
     </script>
 
     {% assets output="gen/lib.%(version)s.js",
-              "assets/vendor/js/jquery-1.9.1.js", "assets/vendor/js/lodash.js", "assets/vendor/js/angular.js", "assets/vendor/js/angular-resource.js",
+              "assets/vendor/js/jquery-1.9.1.js", "assets/vendor/js/lodash.js", "assets/vendor/js/angular.js", "assets/vendor/js/angular-resource.js", "assets/vendor/js/ng-infinite-scroll.js",
               "assets/vendor/js/ui-bootstrap-tpls-0.2.0.js" %}
       <script type="text/javascript" src="{{ ASSET_URL }}"></script>
     {% endassets %}
@@ -81,7 +81,7 @@
     {% endassets %}
 
   </head>
-  <body ng-controller="AppCtrl" ng-class="currentPage">
+  <body ng-controller="AppCtrl" ng-class="currentPage" id="app">
     <div ng-switch on="isMobile">
       <div ng-switch-when="true"><div ng-include src="'headermobile.html'"></div></div>
       <div ng-switch-when="false"><div ng-include src="'header.html'"></div></div>
