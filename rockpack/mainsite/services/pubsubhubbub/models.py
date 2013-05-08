@@ -69,6 +69,6 @@ class Subscription(db.Model):
             'hub.verify_token': self.verify_token,
             'hub.secret': self.secret,
         }
-        response = requests.post(self.hub, data)
+        response = requests.post(self.hub, data=data)
         response.raise_for_status()
         return response

@@ -93,7 +93,7 @@ PUSH_ATOM_XML = '''<?xml version="1.0" encoding="UTF-8"?>
 
 class PubSubHubbubTestCase(RockPackTestCase):
 
-    @patch('requests.post')
+    @patch('rockpack.mainsite.requests.post')
     def setUp(self, requests_post):
         super(PubSubHubbubTestCase, self).setUp()
         self.ctx = self.app.test_request_context()
