@@ -456,7 +456,7 @@ def _add_es_channel(channel):
             favourite=channel.favourite,
             verified=channel.verified,
             update_frequency=channel.update_frequency,
-            editorial_boost=channel.editorial_boost.get(1.0))
+            editorial_boost=channel.editorial_boost)
 
         es_api.add_channel_to_index(data)
 
