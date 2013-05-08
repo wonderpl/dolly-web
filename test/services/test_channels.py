@@ -12,7 +12,7 @@ class ChannelPopularity(base.RockPackTestCase):
     def test_channel_order(self):
         with self.app.test_client() as client:
             user = self.create_test_user()
-            
+
             r= client.get('/ws/channels/',
                     content_type='application/json',
                     headers=[get_auth_header(user.id)])

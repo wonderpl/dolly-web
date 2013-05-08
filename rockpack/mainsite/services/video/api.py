@@ -139,45 +139,6 @@ def get_local_videos(loc, paging, with_channel=True, **filters):
     return data, total
 
 
-    def es_channel_to_video_map(videos, channel_dict):
-        for pos, video in enumerate(videos):
-            try:
-                video['channel'] = channel_dict[video['channel']]
-            except KeyError:
-                pass
-
-
-    def es_owner_to_channel_map(channels, owner_list):
-        for channel in channels:
-            channel['owner'] = owner_list[channel['owner']]
-
-
-    def _sort_string(**kwargs):
-        sort = []
-        for k, v in kwargs.iteritems():
-            if v is not None:
-                if v.lower() != 'asc':
-                    v = 'desc'
-                sort.append('{}:{}'.format(k.lower(), v.lower()))
-        return {'sort': ','.join(sort)} if sort else {}
-
-
-    def es_get_channels_with_videos(channel_ids=None, paging=None):
-        channels, total = es_get_channels(channel_ids=channel_ids, paging=paging)
-        for c in channels:
-            videos, vtotal = es_get_videos(channel_ids=channel_ids, position='asc')
-            c.setdefault('videos', {}).setdefault('items', videos)
-            c['videos']['total'] = vtotal
-        return channels, total
-
-
-    def es_get_owner_with_channels(user_id, paging=None):
-        owner = es_get_owners(user_id)[0]
-        channels, total = es_get_channels(user_id=user_id, paging=paging, favourite='desc', date_order='desc', with_owner=False)
-        owner['channels'] = dict(items=channels, total=total)
-        return owner
-
-
 class VideoWS(WebService):
 
     endpoint = '/videos'
