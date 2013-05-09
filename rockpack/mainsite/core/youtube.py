@@ -1,43 +1,61 @@
 import logging
 from collections import namedtuple
 import gdata.youtube
+import gdata.data
 from rockpack.mainsite import app, requests
 from rockpack.mainsite.services.video.models import Video, VideoThumbnail, VideoRestriction
 
 
 log = logging.getLogger(__name__)
 
+GDATA_URL = 'http://gdata.youtube.com/feeds/api/%s/%s'
 
 PushConfig = namedtuple('PushConfig', 'hub topic')
 Playlist = namedtuple('Playlist', 'title video_count videos push_config')
 Videolist = namedtuple('Videolist', 'video_count videos')
 
 
-def _youtube_feed_requests(feed, id, params={}):
+def _youtube_feed_requests(feed, id, params=None, content=None):
     """Get youtube feed data as json"""
-    url = 'http://gdata.youtube.com/feeds/api/%s/%s' % (feed, id)
-    params = dict(v=2, alt='json', **params)
+    url = GDATA_URL % (feed, id)
+    params = dict(v=2, alt='json', **(params or {}))
     headers = {'User-Agent': app.config['USER_AGENT']}
+    if content:
+        method = 'POST'
+        headers['Content-Type'], data = content
+    else:
+        method = 'GET'
+        data = None
     try:
-        response = requests.get(url, params=params, headers=headers)
+        response = requests.request(method, url, headers=headers,
+                                    params=params, data=data)
         response.raise_for_status()
     except Exception, e:
         if hasattr(e, 'response'):
             log.error('youtube request failed (%d): %s',
                       e.response.status_code, e.response.text)
         raise
-    if isinstance(response.json, dict):
-        return response.json
-    return response.json()
-
-
-def _youtube_feed_ua(feed, id, params={}):
-    """Get youtube feed data as json"""
-    url = 'http://gdata.youtube.com/feeds/api/%s/%s' % (feed, id)
-    query = urlencode([('v', 2), ('alt', 'json')] +
-                      [(k, v) for k, v in params.items() if v is not None])
     try:
-        response = _youtube_useragent.urlopen(url + '?' + query)
+        return response.json()
+    except Exception:
+        return response.content
+
+
+def _youtube_feed_ua(feed, id, params=None, content=None):
+    """Get youtube feed data as json"""
+    url = GDATA_URL % (feed, id)
+    params = [(k, v) for k, v in params.items() if v is not None] if params else []
+    query = urlencode([('v', 2), ('alt', 'json')] + params)
+    headers = {}
+    if content:
+        method = 'POST'
+        headers['Content-Type'], data = content
+    else:
+        method = 'GET'
+        data = None
+    try:
+        response = _youtube_useragent.urlopen(
+            url + '?' + query, method=method, headers=headers, payload=data)
     except Exception, e:
         if hasattr(e, 'response'):
             log.error('youtube request failed (%d): %s',
@@ -64,6 +82,15 @@ if app.config.get('USE_GEVENT'):
     _youtube_feed = _youtube_feed_ua
 else:
     _youtube_feed = _youtube_feed_requests
+
+
+def batch_query(ids, params=None):
+    request = gdata.data.BatchFeed()
+    for id in ids:
+        request.add_query(GDATA_URL % id)
+    content = 'application/atom+xml', str(request)
+    result = _youtube_feed('videos', 'batch', params, content)
+    return gdata.BatchFeedFromString(result)
 
 
 def _get_atom_video_data(youtube_data, playlist=None):
