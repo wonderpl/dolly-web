@@ -387,6 +387,7 @@ class UserWS(WebService):
             email=user.email,
             gender=user.gender,
             avatar_thumbnail_url=user.avatar.thumbnail_small,
+            display_fullname=user.display_fullname,
             date_of_birth=user.date_of_birth.isoformat() if user.date_of_birth else None,
         )
         for key in 'channels', 'activity', 'notifications', 'cover_art', 'subscriptions':
@@ -394,6 +395,20 @@ class UserWS(WebService):
         info['channels'].update(items=channels, total=len(channels))
         info['notifications'].update(unread_count=_notification_unread_count(userid))
         return info
+
+    @expose_ajax('/<userid>/display_fullname/', methods=('PUT',))
+    @check_authorization(self_auth=True)
+    def toggle_display_fullname(self, userid):
+        data = request.json
+        if not isinstance(data, bool):
+            abort(400, message='Value must be a boolean.')
+
+        user = g.authorized.user
+
+        if user.display_fullname != data:
+            user.display_fullname = data
+            user.save()
+        return None, 204
 
     @expose_ajax('/<userid>/password/', methods=('PUT',))
     @check_authorization(self_auth=True)

@@ -36,6 +36,7 @@ class User(db.Model):
     username_updated = Column(Boolean, nullable=False, server_default='false', default=False)
     date_joined = Column(DateTime(), nullable=False, default=func.now())
     date_updated = Column(DateTime(), nullable=False, default=func.now(), onupdate=func.now())
+    display_fullname = Column(Boolean, nullable=False, server_default='true', default=True)
 
     locale = Column(ForeignKey('locale.id'), nullable=False, server_default='')
 
@@ -74,7 +75,7 @@ class User(db.Model):
     @property
     def display_name(self):
         # XXX: Needs to be more general?
-        if self.first_name:
+        if self.first_name and self.display_fullname:
             return u'%s %s' % (self.first_name, self.last_name)
         else:
             return self.username
