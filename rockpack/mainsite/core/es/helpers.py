@@ -99,10 +99,6 @@ class DBImport(object):
                     'subscriber_count': channel.subscriber_count,
                     'category': category,
                     'description': channel.description,
-                    'thumbnail_url': channel.cover.thumbnail_large,
-                    'cover_thumbnail_small_url': channel.cover.thumbnail_small,
-                    'cover_thumbnail_large_url': channel.cover.thumbnail_large,
-                    'cover_background_url': channel.cover.background,
                     'resource_url': channel.get_resource_url(),
                     'date_added': channel.date_added,
                     'title': channel.title,
@@ -111,8 +107,15 @@ class DBImport(object):
                     'favourite': channel.favourite,
                     'verified': channel.verified,
                     'update_frequency': channel.update_frequency,
-                    'editorial_boost': channel.editorial_boost
+                    'editorial_boost': channel.editorial_boost,
+                    'cover': {
+                        'thumbnail_url': channel.cover.url,
+                        'aoi': channel.cover_aoi,
+                    }
                 }
+                if app.config.get('SHOW_OLD_CHANNEL_COVER_URLS', True):
+                    for k in 'thumbnail_large', 'thumbnail_small', 'background':
+                        data['cover_%s_url' % k] = getattr(channel.cover, k)
                 api.add_channel_to_index(data, bulk=True, refresh=False)
 
     def import_videos(self):

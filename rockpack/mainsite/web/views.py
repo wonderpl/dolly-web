@@ -53,6 +53,8 @@ def channel(slug, channelid):
                 selected_video = video_data
     channel_data['canonical_url'] = url_for(
         'channel', slug=slugify(channel_data['title']) or '-', channelid=channelid)
+    channel_data['cover_background_url'] =\
+        channel_data['cover']['thumbnail_url'].replace('thumbnail_medium', 'background')
     if selected_video:
         channel_data['canonical_url'] += '?video=' + selected_video['id']
     return dict(channel_data=channel_data, selected_video=selected_video)

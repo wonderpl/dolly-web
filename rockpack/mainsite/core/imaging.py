@@ -54,7 +54,6 @@ class Resizer(object):
             old_ratio = float(ow) / float(oh)
         centerX = (x2 + x1) * ow / 2
         centerY = (y2 + y1) * oh / 2
-        print 'aoi', aoi
 
         # Define (dx, dy), the crop boundaries:
         if (aoi and ratio < 1) or (old_ratio and ratio > old_ratio):

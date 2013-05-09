@@ -117,6 +117,10 @@ channel_mapping = {
             "type": "string",
             "analyzer": "snowball"
         },
+        "cover": {
+            "type": "object",
+            "analyzer": "not_analyzed"
+        },
         "thumbnail_url": {
             "type": "string",
             "index": "not_analyzed"},

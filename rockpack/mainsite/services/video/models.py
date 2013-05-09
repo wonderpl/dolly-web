@@ -433,9 +433,9 @@ def _add_es_channel(channel):
 
         # HACK
         if isinstance(channel.cover, (str, unicode)):
-            convert = lambda value: ImageType('CHANNEL').process_result_value(value, None)
+            cover = ImageType('CHANNEL').process_result_value(channel.cover, None)
         else:
-            convert = lambda x: x
+            cover = channel.cover
 
         data = dict(
             id=channel.id,
@@ -449,14 +449,18 @@ def _add_es_channel(channel):
             resource_url=channel.get_resource_url(),
             title=channel.title,
             ecommerce_url=channel.ecommerce_url,
-            thumbnail_url=convert(channel.cover).thumbnail_large,
-            cover_thumbnail_small_url=convert(channel.cover).thumbnail_small,
-            cover_thumbnail_large_url=convert(channel.cover).thumbnail_large,
-            cover_background_url=convert(channel.cover).background,
             favourite=channel.favourite,
             verified=channel.verified,
             update_frequency=channel.update_frequency,
-            editorial_boost=channel.editorial_boost)
+            editorial_boost=channel.editorial_boost,
+            cover=dict(
+                thumbnail_url=cover.url,
+                aoi=channel.cover_aoi,
+            )
+        )
+        if app.config.get('SHOW_OLD_CHANNEL_COVER_URLS', True):
+            for k in 'thumbnail_large', 'thumbnail_small', 'background':
+                data['cover_%s_url' % k] = getattr(cover, k)
 
         es_api.add_channel_to_index(data)
 

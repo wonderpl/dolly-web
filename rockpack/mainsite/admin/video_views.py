@@ -133,7 +133,7 @@ class Channel(AdminView):
     column_auto_select_related = True
     column_display_all_relations = True
 
-    column_list = ('title', 'owner_rel', 'public', 'cover.thumbnail_large', 'category_rel', 'video_count', 'date_added')
+    column_list = ('title', 'owner_rel', 'public', 'cover.url', 'category_rel', 'video_count', 'date_added')
     column_filters = ('owner', 'title', 'public', 'category_rel', 'description', 'owner_rel', 'deleted')
     column_searchable_list = ('title',)
     column_formatters = dict(video_count=_format_channel_video_count)
@@ -148,7 +148,7 @@ class RockpackCoverArt(AdminView):
     model = coverart_models.RockpackCoverArt
     model_name = coverart_models.RockpackCoverArt.__tablename__
 
-    column_list = ('locale_rel', 'cover.thumbnail_large', 'category_rel')
+    column_list = ('locale_rel', 'cover.url', 'category_rel')
     column_filters = ('locale_rel', 'category_rel')
 
     edit_template = 'admin/cover_art_edit.html'
@@ -160,10 +160,10 @@ class UserCoverArt(AdminView):
     model_name = coverart_models.UserCoverArt.__tablename__
 
     form_overrides = dict(owner_rel=wtf.TextField)
-    column_list = ('owner_rel', 'cover.thumbnail_large', 'cover',)
+    column_list = ('owner_rel', 'cover.url')
     column_filters = ('owner_rel',)
 
-    edit_template = 'admin/cover_art.html'
+    edit_template = 'admin/cover_art_edit.html'
 
 
 class ChannelLocaleMeta(AdminView):

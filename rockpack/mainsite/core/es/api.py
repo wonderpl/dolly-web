@@ -405,10 +405,6 @@ def add_channel_to_index(channel, bulk=False, refresh=False, boost=None):
         'subscriber_count': channel['subscriber_count'],
         'category': channel['category'],
         'description': channel['description'],
-        'thumbnail_url': urlparse(channel['thumbnail_url']).path,
-        'cover_thumbnail_small_url': urlparse(channel['cover_thumbnail_small_url']).path,
-        'cover_thumbnail_large_url': urlparse(channel['cover_thumbnail_large_url']).path,
-        'cover_background_url': urlparse(channel['cover_background_url']).path,
         'resource_url': urlparse(channel['resource_url']).path,
         'title': channel['title'],
         'date_added': channel['date_added'],
@@ -416,8 +412,15 @@ def add_channel_to_index(channel, bulk=False, refresh=False, boost=None):
         'favourite': channel['favourite'],
         'verified': channel['verified'],
         'update_frequency': channel['update_frequency'],
-        'editorial_boost': channel['editorial_boost']
+        'editorial_boost': channel['editorial_boost'],
+        'cover': {
+            'thumbnail_url': urlparse(channel['cover']['thumbnail_url']).path,
+            'aoi': channel['cover']['aoi'],
+        }
     }
+    if app.config.get('SHOW_OLD_CHANNEL_COVER_URLS', True):
+        for k in 'cover_thumbnail_small_url', 'cover_thumbnail_large_url', 'cover_background_url':
+            data[k] = urlparse(channel[k]).path
     if boost:
         data['_boost'] = boost
 

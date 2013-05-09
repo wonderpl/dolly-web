@@ -39,9 +39,10 @@ Cache-Control: public, max-age=60
         "description": "channel description",
         "title": "channel title",
         "subscriber_count": 123,
-        "cover_background_url": "http://path/to/channel/bg.jpg",
-        "cover_thumbnail_small_url": "http://path/to/channel/small.jpg",
-        "cover_thumbnail_large_url": "http://path/to/channel/large.jpg"
+        "cover": {
+          "thumbnail_url": "http://path/to/channel/cover.jpg",
+          "aoi": [0, 0, 1, 1],
+        }
       }
     ]
   }
@@ -271,10 +272,11 @@ Cache-Control: public, max-age=60
  "resource_url": "http://base/ws/USERID/channels/CHANNELID/",
  "title": "Channel title",
  "ecommerce_url": "",
- "cover_background_url": "http://path/to/channel/bg.jpg",
- "cover_thumbnail_small_url": "http://path/to/channel/small.jpg",
- "cover_thumbnail_large_url": "http://path/to/channel/large.jpg",
  "subscriber_count": 119,
+ "cover": {
+   "thumbnail_url": "http://path/to/channel/cover.jpg",
+   "aoi": [0, 0, 1, 1],
+ },
  "owner": {
   "id": "Unique user id",
   "display_name": "User display name",
@@ -786,8 +788,7 @@ Cache-Control: private, max-age=60
         "position": 0,
         "id": "123",
         "cover_ref": "coverartref",
-        "background_url": "http://path/to/background/img.jpg",
-        "carousel_url": "http://path/to/carousel/img.jpg"
+        "thumbnail_url": "http://path/to/thumbnail/img.jpg"
       }
     ]
   }
@@ -800,10 +801,31 @@ Cache-Control: private, max-age=60
 
 ```http
 POST /ws/USERID/cover_art/ HTTP/1.1
-Content-Type: image/png
 Authorization: Bearer TOKEN
+Content-Type: image/png
 
 .........IMAGE DATA....
+```
+
+To specify an aoi (area of interest) use a multipart post with an `image` and `aoi` part.
+The aoi should be of the form `[x1, y1, x2, y2]`, where each value is a float between 0 and 1.
+
+```http
+POST /ws/USERID/cover_art/ HTTP/1.1
+Authorization: Bearer TOKEN
+Content-Type: multipart/form-data; boundary=----------------------------95229d819206
+
+------------------------------95229d819206
+Content-Disposition: form-data; name="image"; filename="image.png"
+Content-Type: image/png
+
+.........IMAGE DATA....
+------------------------------95229d819206
+Content-Disposition: form-data; name="aoi"
+Content-Type: application/json
+
+[0, 0, 1, 1]
+------------------------------95229d819206--
 ```
 
 If the image data cannot be processed you'll get an `400` response:
@@ -827,8 +849,7 @@ Location: http://path/to/cover/art/resource/url.png
 {
  "cover_ref": "coverartref",
  "resource_url": "http://path/to/cover/art/resource/url.png",
- "background_url": "http://path/to/uploaded/image/background/size.jpg",
- "carousel_url": "http://path/to/uploaded/image/carousel/size.jpg"
+ "thumbnail_url": "http://path/to/thumbnail/img.jpg"
 }
 ```
 
@@ -878,9 +899,10 @@ Content-Type: application/json
     "description": "desc",
     "title": "title",
     "public": true,
-    "cover_thumbnail_small_url": "http://path/to/thumbnail/small.jpg",
-    "cover_thumbnail_large_url": "http://path/to/thumbnail/large.jpg",
-    "cover_background_url": "http://path/to/thumbnail/background.jpg",
+    "cover": {
+      "thumbnail_url": "http://path/to/channel/cover.jpg",
+      "aoi": [0, 0, 1, 1],
+    },
     "owner": {
      "id": "qC3ZtYRqQNCAUzrsIeWmUg",
      "avatar_thumbnail_url": "http://path/to/user/avatar/img.jpg",
@@ -988,10 +1010,11 @@ Cache-Control: private, max-age=60
      "resource_url": "http://rockpack.com/ws/BJsFQkw7SpyNfi6xOBlA1Q/channels/chEK9lwEXBTNCBp9Xp8g1FAV/",
      "title": "favourites",
      "description": "",
-     "cover_background_url": "",
-     "cover_thumbnail_large_url": "",
-     "cover_thumbnail_small_url": "",
      "subscriber_count": 0,
+     "cover": {
+       "thumbnail_url": "http://path/to/channel/cover.jpg",
+       "aoi": [0, 0, 1, 1],
+     },
      "owner": {
       "id": "BJsFQkw7SpyNfi6xOBlA1Q",
       "resource_url": "http://rockpack.com/ws/BJsFQkw7SpyNfi6xOBlA1Q/",
