@@ -8,6 +8,20 @@ from rockpack.mainsite import app
 from rockpack.mainsite.services.video import models
 
 
+class ChannelPopularity(base.RockPackTestCase):
+    def test_channel_order(self):
+        with self.app.test_client() as client:
+            user = self.create_test_user()
+
+            r= client.get('/ws/channels/',
+                    content_type='application/json',
+                    headers=[get_auth_header(user.id)])
+
+
+            data = json.loads(r.data)
+            self.assertEquals(data['channels']['items'][0]['title'], 'channel #6')
+
+
 class ChannelCreateTestCase(base.RockPackTestCase):
 
     def test_new_channel(self):

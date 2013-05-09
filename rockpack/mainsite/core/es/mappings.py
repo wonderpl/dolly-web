@@ -2,7 +2,6 @@ CHANNEL_INDEX = 'channels'
 VIDEO_INDEX = 'videos'
 USER_INDEX = 'users'
 
-
 CHANNEL_TYPE = 'channel'
 VIDEO_TYPE = 'video'
 USER_TYPE = 'user'
@@ -79,7 +78,7 @@ user_mapping = {
             "type": "string",
             "index": "not_analyzed"},
         "display_name": {"type": "string"},
-        "name": {"type": "string"},
+        "username": {"type": "string"},
         "id": {
             "type": "string",
             "index": "not_analyzed"
@@ -95,6 +94,12 @@ channel_mapping = {
             "index": "not_analyzed"},
         "locales": locale_count_dict,
         "date_added": {"type": "date"},
+        "video_frequency": {"type": "integer"},
+        "video_last_added": {"type": "date"},
+        "update_frequency": {"type": "float", "null_value": 0.0},
+        "editorial_boost": {"type": "float", "null_value": 1.0},
+        "favourite": {"type": "boolean"},
+        "verified": {"type": "boolean"},
         "ecommerce_url": {
             "type": "string",
             "index": "not_analyzed"
@@ -110,7 +115,7 @@ channel_mapping = {
         },
         "title": {
             "type": "string",
-            "index": "analyzed"
+            "analyzer": "snowball"
         },
         "thumbnail_url": {
             "type": "string",

@@ -13,6 +13,7 @@ def pytest_configure(config):
         i.create_all_mappings()
 
     app.config['DATABASE_URL'] = 'sqlite://'
+    app.config['FORCE_INDEX_INSERT_REFRESH'] = True
 
     # Seems to be required for sub-transaction support:
     from rockpack.mainsite.core import dbapi

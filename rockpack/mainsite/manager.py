@@ -54,22 +54,26 @@ def syncdb(options):
 
 
 @manager.command
-def init_es(rebuild=False):
+def init_es(rebuild=False, map_only=False):
     """Initialise elasticsearch indexes"""
     from rockpack.mainsite.core.es import helpers
     i = helpers.Indexing()
-    i.create_all_indexes(rebuild=rebuild)
+    if not map_only:
+        i.create_all_indexes(rebuild=rebuild)
     i.create_all_mappings()
 
 
 @manager.command
-def import_to_es():
+def import_to_es(channels_only=False, videos_only=False, owners_only=False):
     """Import data into elasticsearch from the db"""
     from rockpack.mainsite.core.es import helpers
     i = helpers.DBImport()
-    i.import_channels()
-    i.import_videos()
-    i.import_owners()
+    if not (videos_only or owners_only):
+        i.import_channels()
+    if not (channels_only or owners_only):
+        i.import_videos()
+    if not (channels_only or videos_only):
+        i.import_owners()
 
 
 def run(*args):
