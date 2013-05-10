@@ -1,5 +1,6 @@
-window.WebApp.controller('FeedCtrl', ['$scope', 'cookies', 'OAuth', '$location', ($scope, cookies, OAuth, $location) ->
+window.WebApp.controller('FeedCtrl', ['$scope', 'cookies', 'userObj', ($scope, cookies, userObj) ->
 
-  console.log 'feed loaded'
+  User = userObj
 
+  console.log User.details
 ])

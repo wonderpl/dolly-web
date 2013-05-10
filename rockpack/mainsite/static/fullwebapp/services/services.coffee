@@ -19,7 +19,7 @@ window.WebApp.factory('cookies', ['$rootScope', '$browser', ($rootScope, $browse
       c_value=escape(value) + "; expires=" + now.toUTCString()
       document.cookie = key + "=" + c_value + secure
     else
-      document.cookie = key + '=; expires=Thu, 01-Jan-70 00:00:01 GMT;'
+      document.cookie = key + "=; expires=Thu, 01-Jan-70 00:00:01 GMT;"
     return null
   )
   }

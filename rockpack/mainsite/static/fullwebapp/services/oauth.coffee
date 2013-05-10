@@ -52,7 +52,7 @@ angular.module('WebApp').factory('OAuth', ($http) ->
       $http({
         method: 'POST',
         data: $.param({refresh_token: refreshToken, grant_type: 'refresh_token'}),
-        url: apiUrl + 'ws/token/',
+        url: window.apiUrls['refresh_token'],
         headers: headers
       })
       .then(((data) ->
@@ -61,24 +61,24 @@ angular.module('WebApp').factory('OAuth', ($http) ->
       (data) ->
         console.log data
       )
-
-    # Accepts Username or Password (supplied as username)
-    resetPassword: (username) ->
-      $http({
-        method: 'POST',
-        data: $.param({username: username, grant_type: 'refresh_token'}),
-        url: apiUrl + 'ws/reset-password/',
-        headers: headers
-      })
-      .then(((data) ->
-        if data.status == 204
-          return {"status": 'success'}
-        else
-          return {"error": "invalid_request"}
-      ),
-      (data) ->
-        console.log data
-      )
+#
+#    # Accepts Username or Password (supplied as username)
+#    resetPassword: (username) ->
+#      $http({
+#        method: 'POST',
+#        data: $.param({username: username, grant_type: 'refresh_token'}),
+#        url: apiUrl + 'ws/reset-password/',
+#        headers: headers
+#      })
+#      .then(((data) ->
+#        if data.status == 204
+#          return {"status": 'success'}
+#        else
+#          return {"error": "invalid_request"}
+#      ),
+#      (data) ->
+#        console.log data
+#      )
 
     # facebook: (external_token) ->
   }
