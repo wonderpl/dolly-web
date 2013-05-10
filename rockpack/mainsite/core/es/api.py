@@ -410,9 +410,8 @@ def convert(obj, attr, type_):
 
 def check_es(no_check=False):
     if not no_check:
-       if not app.config.get('ELASTICSEARCH_URL'):
-           app.logger.warning('elasticsearch not configured')
-           return False
+        if not app.config.get('ELASTICSEARCH_URL'):
+            return False
     return True
 
 
@@ -428,6 +427,7 @@ def add_owner_to_index(owner, bulk=False, refresh=False, no_check=False):
         username=owner.username
     )
     return add_to_index(data, mappings.USER_INDEX, mappings.USER_TYPE, id=owner.id, bulk=bulk, refresh=refresh)
+
 
 def add_channel_to_index(channel, bulk=False, refresh=False, boost=None, no_check=False):
     if not check_es(no_check):
@@ -453,11 +453,11 @@ def add_channel_to_index(channel, bulk=False, refresh=False, boost=None, no_chec
         verified=channel.verified,
         update_frequency=channel.update_frequency,
         editorial_boost=channel.editorial_boost,
-            cover=dict(
-                thumbnail_url=urlparse(convert(channel, 'cover', 'CHANNEL').url).path,
-                aoi=channel.cover_aoi,
-            )
+        cover=dict(
+            thumbnail_url=urlparse(convert(channel, 'cover', 'CHANNEL').url).path,
+            aoi=channel.cover_aoi
         )
+    )
 
     if app.config.get('SHOW_OLD_CHANNEL_COVER_URLS', True):
         for k in 'thumbnail_large', 'thumbnail_small', 'background':
@@ -490,6 +490,9 @@ def add_video_to_index(video_instance, bulk=False, refresh=False, no_check=False
 
 
 def remove_channel_from_index(channel_id):
+    if not check_es():
+        return
+
     conn = es_connection
     try:
         conn.delete(mappings.CHANNEL_INDEX, mappings.CHANNEL_TYPE, channel_id)
@@ -498,6 +501,9 @@ def remove_channel_from_index(channel_id):
 
 
 def remove_video_from_index(video_id):
+    if not check_es():
+        return
+
     conn = es_connection
     try:
         conn.delete(mappings.VIDEO_INDEX, mappings.VIDEO_TYPE, video_id)
