@@ -3,6 +3,8 @@ import logging
 from flask.ext.script import Manager as BaseManager
 from flask.ext.assets import ManageAssets
 from rockpack.mainsite import app, init_app
+from rockpack.mainsite.helpers.db import resize_and_upload
+from rockpack.mainsite.helpers.http import get_external_resource
 
 
 class Manager(BaseManager):
@@ -54,22 +56,52 @@ def syncdb(options):
 
 
 @manager.command
-def init_es(rebuild=False):
+def init_es(rebuild=False, map_only=False):
     """Initialise elasticsearch indexes"""
     from rockpack.mainsite.core.es import helpers
     i = helpers.Indexing()
-    i.create_all_indexes(rebuild=rebuild)
+    if not map_only:
+        i.create_all_indexes(rebuild=rebuild)
     i.create_all_mappings()
 
 
 @manager.command
-def import_to_es():
+def import_to_es(channels_only=False, videos_only=False, owners_only=False):
     """Import data into elasticsearch from the db"""
     from rockpack.mainsite.core.es import helpers
     i = helpers.DBImport()
-    i.import_channels()
-    i.import_videos()
-    i.import_owners()
+    if not (videos_only or owners_only):
+        i.import_channels()
+    if not (channels_only or owners_only):
+        i.import_videos()
+    if not (channels_only or videos_only):
+        i.import_owners()
+
+
+@manager.command
+def update_image_thumbnails(fieldname):
+    """Re-process all images for the specified Model.field."""
+    from rockpack.mainsite.services.user import api
+    try:
+        model, fieldname = fieldname.split('.')
+        model = getattr(api, model)
+        getattr(model, fieldname)
+    except Exception, e:
+        print >>sys.stderr, 'Invalid field name: %s: %s' % (fieldname, e)
+        sys.exit(2)
+
+    cfgkey = model.__table__.columns.get(fieldname).type.cfgkey
+    for instance in model.query.filter(getattr(model, fieldname) != ''):
+        try:
+            data = get_external_resource(getattr(instance, fieldname).original)
+        except Exception, e:
+            msg = e.response.reason if hasattr(e, 'response') else e.message
+            logging.error('Unable to process %s: %s', getattr(instance, fieldname).path, msg)
+            continue
+        aoi = getattr(instance, '%s_aoi' % fieldname, None)
+        image_path = resize_and_upload(data, cfgkey, aoi)
+        setattr(instance, fieldname, image_path)
+        instance.save()
 
 
 def run(*args):

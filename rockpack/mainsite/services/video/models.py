@@ -275,6 +275,8 @@ class Channel(db.Model):
     date_updated = Column(DateTime(), nullable=False, default=func.now(), onupdate=func.now())
     update_frequency = Column(Float, nullable=True)
     ecommerce_url = Column(String(1024), nullable=False, server_default='')
+    editorial_boost = Column(Float(precision=1), nullable=True, server_default='1.0', default=1.0)
+    favourite = Column(Boolean(), nullable=False, server_default='false', default=False)
 
     category = Column(ForeignKey('category.id'), nullable=True)
     category_rel = relationship(Category, primaryjoin=(category == Category.id), lazy='joined')
@@ -416,9 +418,9 @@ def _add_es_video(video_instance):
                 source_id=video.source_videoid,
                 source_username=video.source_username,
                 duration=video.duration,
-                locale=_locale_dict_from_object(video_instance.metas))
+                locales=_locale_dict_from_object(video_instance.metas))
 
-            print es_api.add_video_to_index(data)
+            es_api.add_video_to_index(data)
 
 
 def _add_es_channel(channel):
@@ -431,15 +433,15 @@ def _add_es_channel(channel):
 
         # HACK
         if isinstance(channel.cover, (str, unicode)):
-            convert = lambda value: ImageType('CHANNEL').process_result_value(value, None)
+            cover = ImageType('CHANNEL').process_result_value(channel.cover, None)
         else:
-            convert = lambda x: x
+            cover = channel.cover
 
         data = dict(
             id=channel.id,
             public=True,
             category=category,
-            locale=_locale_dict_from_object(channel.metas),
+            locales=_locale_dict_from_object(channel.metas),
             owner_id=channel.owner,
             subscriber_count=channel.subscriber_count,
             date_added=channel.date_added,
@@ -447,12 +449,20 @@ def _add_es_channel(channel):
             resource_url=channel.get_resource_url(),
             title=channel.title,
             ecommerce_url=channel.ecommerce_url,
-            thumbnail_url=convert(channel.cover).thumbnail_large,
-            cover_thumbnail_small_url=convert(channel.cover).thumbnail_small,
-            cover_thumbnail_large_url=convert(channel.cover).thumbnail_large,
-            cover_background_url=convert(channel.cover).background)
+            favourite=channel.favourite,
+            verified=channel.verified,
+            update_frequency=channel.update_frequency,
+            editorial_boost=channel.editorial_boost,
+            cover=dict(
+                thumbnail_url=cover.url,
+                aoi=channel.cover_aoi,
+            )
+        )
+        if app.config.get('SHOW_OLD_CHANNEL_COVER_URLS', True):
+            for k in 'thumbnail_large', 'thumbnail_small', 'background':
+                data['cover_%s_url' % k] = getattr(cover, k)
 
-        print es_api.add_channel_to_index(data)
+        es_api.add_channel_to_index(data)
 
 
 def _remove_es_channel(channel):

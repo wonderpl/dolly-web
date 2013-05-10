@@ -11,7 +11,7 @@ from rockpack.mainsite.core.webservice import WebService, expose_ajax, ajax_crea
 from rockpack.mainsite.core.oauth.decorators import check_authorization
 from rockpack.mainsite.core.youtube import get_video_data
 from rockpack.mainsite.helpers.urls import url_for, url_to_endpoint
-from rockpack.mainsite.helpers.db import gen_videoid, get_column_validators
+from rockpack.mainsite.helpers.db import gen_videoid, get_column_validators, get_box_value
 from rockpack.mainsite.services.video.models import (
     Channel, ChannelLocaleMeta, Video, VideoInstance, VideoInstanceLocaleMeta, Category, ContentReport)
 from rockpack.mainsite.services.oauth.api import RockRegistrationForm
@@ -20,6 +20,7 @@ from rockpack.mainsite.services.cover_art import api as cover_api
 from rockpack.mainsite.services.video import api as video_api
 from rockpack.mainsite.services.search import api as search_api
 from .models import User, UserActivity, UserNotification, Subscription
+from rockpack.mainsite.core.es import api
 
 
 ACTION_COLUMN_VALUE_MAP = dict(
@@ -210,7 +211,7 @@ def _user_list(paging, **filters):
             id=user.id,
             resource_url=user.get_resource_url(),
             display_name=user.display_name,
-            avatar_thumbnail_url=user.avatar.thumbnail_small,
+            avatar_thumbnail_url=user.avatar.url,
         ))
     return items, total
 
@@ -270,6 +271,7 @@ class ChannelForm(form.BaseForm):
     description = wtf.TextField(validators=[check_present, wtf.validators.Length(max=200)])
     category = wtf.TextField(validators=[check_present])
     cover = wtf.TextField(validators=[check_present])
+    cover_aoi = wtf.Field()  # set from cover reference
     public = wtf.BooleanField(validators=[check_present])
 
     def for_channel_id(self, id):
@@ -280,9 +282,16 @@ class ChannelForm(form.BaseForm):
             self.description.data = ' '.join(map(lambda x: x.strip(), self.description.data.splitlines()))
 
     def validate_cover(self, field):
-        exists = lambda m: m.query.filter_by(cover=field.data).count()
-        if field.data and not (exists(RockpackCoverArt) or exists(UserCoverArt)):
-            raise ValidationError('Invalid cover reference')
+        if field.data:
+            found = False
+            for model in RockpackCoverArt, UserCoverArt:
+                cover = model.query.with_entities(model.cover_aoi).filter_by(cover=field.data).first()
+                if cover:
+                    self.cover_aoi.data = cover.cover_aoi
+                    found = True
+                    break
+            if not found:
+                raise ValidationError('Invalid cover reference')
 
     def validate_title(self, field):
         user_channels = Channel.query.filter_by(owner=self.userid)
@@ -339,16 +348,33 @@ class UserWS(WebService):
 
     @expose_ajax('/<userid>/', cache_age=60, secure=False)
     def user_info(self, userid):
+        if app.config.get('ELASTICSEARCH_URL'):
+            ows = api.OwnerSearch()
+            ows.add_id(userid)
+            owners = ows.owners()
+            if not owners:
+                abort(404)
+            owner = owners[0]
+            ch = api.ChannelSearch(self.get_locale())
+            offset, limit = self.get_page()
+            ch.set_paging(offset, limit)
+            ch.favourite_sort('desc')
+            ch.add_term('owner', userid)
+            owner.setdefault('channels', {})['items'] = ch.channels(with_owners=False)
+            owner['channels']['total'] = ch.total
+            return owner
+
         user = User.query.get_or_404(userid)
         channels = [video_api.channel_dict(c, with_owner=False, owner_url=False)
                     for c in Channel.query.options(lazyload('category_rel')).
                     filter_by(owner=user.id, deleted=False, public=True)]
+
         return dict(
             id=user.id,
             name=user.username,     # XXX: backwards compatibility
             username=user.username,
             display_name=user.display_name,
-            avatar_thumbnail_url=user.avatar.thumbnail_small,
+            avatar_thumbnail_url=user.avatar.url,
             channels=dict(items=channels, total=len(channels)),
         )
 
@@ -359,7 +385,7 @@ class UserWS(WebService):
             return self.user_info(userid)
         user = g.authorized.user
         channels = [video_api.channel_dict(c, with_owner=False, owner_url=True) for c in
-                    Channel.query.filter_by(owner=user.id, deleted=False)]
+                    Channel.query.filter_by(owner=user.id, deleted=False).order_by('favourite desc')]
         info = dict(
             id=user.id,
             username=user.username,
@@ -368,7 +394,7 @@ class UserWS(WebService):
             last_name=user.last_name,
             email=user.email,
             gender=user.gender,
-            avatar_thumbnail_url=user.avatar.thumbnail_small,
+            avatar_thumbnail_url=user.avatar.url,
             date_of_birth=user.date_of_birth.isoformat() if user.date_of_birth else None,
         )
         for key in 'channels', 'activity', 'notifications', 'cover_art', 'subscriptions':
@@ -420,7 +446,7 @@ class UserWS(WebService):
     @expose_ajax('/<userid>/avatar/', cache_age=60)
     def get_avatar(self, userid):
         user = User.query.get_or_404(userid)
-        return None, 302, [('Location', user.avatar.thumbnail_large)]
+        return None, 302, [('Location', user.avatar.url)]
 
     @expose_ajax('/<userid>/avatar/', methods=['PUT'])
     @check_authorization(self_auth=True)
@@ -428,7 +454,7 @@ class UserWS(WebService):
         user = User.query.get_or_404(userid)
         user.avatar = process_image(User.avatar)
         user.save()
-        return None, 204, [('Location', user.avatar.thumbnail_large)]
+        return None, 204, [('Location', user.avatar.url)]
 
     @expose_ajax('/<userid>/activity/', cache_age=60, cache_private=True)
     @check_authorization(self_auth=True)
@@ -505,20 +531,24 @@ class UserWS(WebService):
             title=form.title.data,
             description=form.description.data,
             cover=form.cover.data,
+            cover_aoi=form.cover_aoi.data,
             category=form.category.data,
             public=form.public.data)
         return ajax_create_response(channel)
 
     @expose_ajax('/<userid>/channels/<channelid>/', cache_age=60, secure=False)
     def channel_info(self, userid, channelid):
-        if not app.config.get('ELASTICSEARCH_URL'):
-            channel = Channel.query.filter_by(id=channelid, public=True, deleted=False).first_or_404()
-            return _channel_info_response(channel, self.get_locale(), self.get_page(), False)
+        if app.config.get('ELASTICSEARCH_URL'):
+            ch = api.ChannelSearch(self.get_locale())
+            ch.add_id(channelid)
+            offset, limit = self.get_page()
+            ch.set_paging(offset, limit)
+            if not ch.channels(with_videos=True, with_owners=True):
+                abort(404)
+            return ch.channels()[0]
 
-        channel, total = video_api.es_get_channels_with_videos(channel_ids=[channelid])
-        if not channel:
-            abort(404)
-        return channel[0]
+        channel = Channel.query.filter_by(id=channelid, public=True, deleted=False).first_or_404()
+        return _channel_info_response(channel, self.get_locale(), self.get_page(), False)
 
     @expose_ajax('/<userid>/channels/<channelid>/', cache_age=0)
     @check_authorization()
@@ -542,6 +572,7 @@ class UserWS(WebService):
         channel.title = form.title.data
         channel.description = form.description.data
         channel.cover = form.cover.data
+        channel.cover_aoi = form.cover_aoi.data
         channel.category = form.category.data
         channel.public = Channel.should_be_public(channel, form.public.data)
         channel.save()
@@ -608,14 +639,20 @@ class UserWS(WebService):
     @expose_ajax('/<userid>/cover_art/', methods=['POST'])
     @check_authorization(self_auth=True)
     def post_cover_art(self, userid):
+        aoi = request.form.get('aoi')
+        if aoi:
+            try:
+                aoi = get_box_value(aoi)
+            except:
+                abort(400, message='aoi must be of the form [x1, y1, x2, y2]')
         path = process_image(UserCoverArt.cover)
-        cover = UserCoverArt(cover=path, owner=userid).save()
+        cover = UserCoverArt(cover=path, cover_aoi=aoi, owner=userid).save()
         return ajax_create_response(cover, cover_api.cover_art_dict(cover, own=True))
 
     @expose_ajax('/<userid>/cover_art/<ref>', cache_age=3600)
     def redirect_cover_art_item(self, userid, ref):
         cover = UserCoverArt.query.filter_by(cover=ref).first_or_404()
-        return None, 302, [('Location', cover.cover.background)]
+        return None, 302, [('Location', cover.cover.url)]
 
     @expose_ajax('/<userid>/cover_art/<ref>', methods=['DELETE'])
     @check_authorization(self_auth=True)

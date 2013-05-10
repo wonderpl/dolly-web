@@ -73,7 +73,7 @@ class DBImport(object):
                         'avatar_thumbnail': user.avatar.thumbnail_small,
                         'resource_url': user.get_resource_url(False),
                         'display_name': user.display_name,
-                        'name': user.username
+                        'username': user.username
                     },
                     mappings.USER_INDEX,
                     mappings.USER_TYPE,
@@ -95,20 +95,27 @@ class DBImport(object):
                     category = [channel.category]
                 data = {
                     'id': channel.id,
-                    'locale': _locale_dict_from_object(channel.metas),
+                    'locales': _locale_dict_from_object(channel.metas),
                     'subscriber_count': channel.subscriber_count,
                     'category': category,
                     'description': channel.description,
-                    'thumbnail_url': channel.cover.thumbnail_large,
-                    'cover_thumbnail_small_url': channel.cover.thumbnail_small,
-                    'cover_thumbnail_large_url': channel.cover.thumbnail_large,
-                    'cover_background_url': channel.cover.background,
                     'resource_url': channel.get_resource_url(),
                     'date_added': channel.date_added,
                     'title': channel.title,
                     'owner_id': channel.owner,
-                    'ecommerce_url': channel.ecommerce_url
+                    'ecommerce_url': channel.ecommerce_url,
+                    'favourite': channel.favourite,
+                    'verified': channel.verified,
+                    'update_frequency': channel.update_frequency,
+                    'editorial_boost': channel.editorial_boost,
+                    'cover': {
+                        'thumbnail_url': channel.cover.url,
+                        'aoi': channel.cover_aoi,
+                    }
                 }
+                if app.config.get('SHOW_OLD_CHANNEL_COVER_URLS', True):
+                    for k in 'thumbnail_large', 'thumbnail_small', 'background':
+                        data['cover_%s_url' % k] = getattr(channel.cover, k)
                 api.add_channel_to_index(data, bulk=True, refresh=False)
 
     def import_videos(self):
@@ -133,7 +140,7 @@ class DBImport(object):
                     data = {
                         'id': v.id,
                         'channel': v.channel,
-                        'locale': _locale_dict_from_object(v.metas),
+                        'locales': _locale_dict_from_object(v.metas),
                         'category': category,
                         'title': v.video_rel.title,
                         'date_added': v.date_added,

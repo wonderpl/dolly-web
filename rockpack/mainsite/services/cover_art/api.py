@@ -7,8 +7,7 @@ def cover_art_dict(instance, own=False):
     data = dict(
         id=str(instance.id),
         cover_ref=str(instance.cover),
-        carousel_url=instance.cover.carousel,
-        background_url=instance.cover.background,
+        thumbnail_url=instance.cover.url,
     )
     if own:
         data['resource_url'] = instance.get_resource_url(own)

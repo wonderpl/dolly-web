@@ -1,11 +1,13 @@
+import time
 import logging
 from datetime import datetime
 from sqlalchemy import func, text, TIME
 from rockpack.mainsite import app
 from rockpack.mainsite.manager import manager
 from rockpack.mainsite.core.dbapi import commit_on_success
+from rockpack.mainsite.core.youtube import batch_query
 from rockpack.mainsite.services.base.models import JobControl
-from rockpack.mainsite.services.video.models import Channel, VideoInstance
+from rockpack.mainsite.services.video.models import Channel, Video, VideoInstance
 
 
 @commit_on_success
@@ -40,3 +42,28 @@ def update_channel_stats():
 
     job_control.last_run = now
     job_control.save()
+
+
+@manager.command
+def update_video_data():
+    """Query youtube for updated video data."""
+    fields = 'atom:entry(batch:status,atom:id,atom:author(name))'
+    while True:
+        videos = dict((v.source_videoid, v) for v in
+                      Video.query.filter_by(source_username='').limit(50))
+        if not videos:
+            break
+        feed_ids = [('videos', id) for id in videos.keys()]
+        for entry in batch_query(feed_ids, dict(fields=fields)).entry:
+            id = entry.id.text[-11:]
+            if entry.batch_status.code == '200':
+                videos[id].source_username = entry.author[0].name.text
+            elif entry.batch_status.code == '404':
+                logging.error('Failed to update %s: %s', id, entry.batch_status.reason)
+                videos[id].source_username = 'Unknown'
+                videos[id].visible = False
+            else:
+                logging.warning('%s: %s', id, entry.batch_status.reason)
+                time.sleep(1)
+        Video.query.session.commit()
+        time.sleep(60)
