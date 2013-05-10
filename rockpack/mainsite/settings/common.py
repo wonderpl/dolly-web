@@ -45,35 +45,22 @@ USER_AGENT = 'rockpack/%s (Mozilla Gecko)' % VERSION
 # Default is first locale
 ENABLED_LOCALES = ('en-us', 'en-gb')
 
-# TODO: rename to VIDEO_IMG_SIZES or similar
-VIDEO_IMAGES = {'thumbnail_small': (249, 140,),
-        'thumbnail_large': (137, 77,),
-        'bar': (123, 69,)}
+# Base path on S3_BUCKET for images
+IMAGE_BASE_PATH = 'images'
 
-VIDEO_IMG_PATHS = {'original': 'images/videos/original/',
-        'thumbnail_large': 'images/videos/thumbnail_large/',
-        'thumbnail_small': 'images/videos/thumbnail_small/',
-        'bar': 'images/videos/bar/'}
+CHANNEL_IMAGES = dict(
+    thumbnail_small=(44, 44),
+    thumbnail_medium=(152, 152),
+    thumbnail_large=(243, 243),
+    background_portrait=(320, 568),
+    background=(1024, 1004),
+)
 
-CHANNEL_IMAGES = {'thumbnail_large': (241, 171,),
-        'thumbnail_small': (48, 34,),
-        'carousel': (341, 190,),
-        'background': (1024, 705,)}
-
-CHANNEL_IMG_PATHS = {'original': 'images/channel/original/',
-        'thumbnail_large': 'images/channel/thumbnail_large/',
-        'thumbnail_small': 'images/channel/thumbnail_small/',
-        'carousel': 'images/channel/carousel/',
-        'background': 'images/channel/background/'}
-
-AVATAR_IMAGES = {'thumbnail_small': (72, 72,),
-        'thumbnail_medium': (94, 94,),
-        'thumbnail_large': (114, 114,)}
-
-AVATAR_IMG_PATHS = {'original': 'images/avatar/original/',
-        'thumbnail_small': 'images/avatar/thumbnail_small/',
-        'thumbnail_medium': 'images/avatar/thumbnail_medium/',
-        'thumbnail_large': 'images/avatar/thumbnail_large/'}
+AVATAR_IMAGES = dict(
+    thumbnail_small=(44, 44),
+    thumbnail_medium=(60, 60),
+    thumbnail_large=(120, 120),
+)
 
 ASSETS_MANIFEST = 'file'
 ASSETS_CACHE = False

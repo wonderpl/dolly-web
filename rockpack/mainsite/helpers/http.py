@@ -1,5 +1,8 @@
+from cStringIO import StringIO
+from werkzeug import FileStorage
 from functools import wraps
 from flask import request
+from rockpack.mainsite import requests
 
 
 def add_response_headers(headers={}, cache_max_age=None, cache_private=False):
@@ -30,3 +33,10 @@ def add_response_headers(headers={}, cache_max_age=None, cache_private=False):
 
 def cache_for(seconds=None, private=False):
     return add_response_headers(cache_max_age=seconds, cache_private=private)
+
+
+def get_external_resource(url):
+    """Get the specified http resource and return a FileStorage-wrapped buffer."""
+    response = requests.get(url)
+    response.raise_for_status()
+    return FileStorage(StringIO(response.content), response.url)

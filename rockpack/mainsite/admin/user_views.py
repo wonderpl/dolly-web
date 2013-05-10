@@ -7,7 +7,7 @@ class UserView(AdminView):
     model = models.User
     model_name = models.User.__tablename__
 
-    column_list = ('username', 'display_name', 'avatar.thumbnail_medium')
+    column_list = ('username', 'display_name', 'avatar.url')
     column_filters = ('username', 'email',)
 
     edit_template = 'admin/edit_with_child_links.html'

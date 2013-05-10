@@ -68,6 +68,10 @@ def insert_new_only(model, instances):
     return new_ids, existing_ids
 
 
+def image_base(type, name):
+    return '/'.join((app.config['IMAGE_BASE_PATH'], type.lower(), name, ''))
+
+
 class ImageUrl(str):
     # Type is used for matching with ModelView.column_type_formatters
     pass
@@ -76,29 +80,28 @@ class ImageUrl(str):
 class ImagePath(object):
     """Wrapper around image path string that can generate thumbnail urls."""
 
-    def __init__(self, path, pathmap):
+    def __init__(self, path, type):
         self.path = path
-        self.pathmap = pathmap
+        self._type = type
+        self._names = app.config['%s_IMAGES' % type]
 
     def __str__(self):
         return self.path
 
     def __getattr__(self, name):
-        try:
-            base = self.pathmap[name]
-        except KeyError, e:
-            raise AttributeError(e.message)
+        if name == 'original':
+            path = self.path
         else:
-            if not self.path:
-                return ''
-            # If the original image wasn't a jpg, we need
-            # to change the extension to grab the jpg versions
-            if name == 'original':
-                path = self.path
-            else:
-                path = self.path.rsplit('.', 1)[0] + '.' + IMAGE_CONVERSION_FORMAT[1]
-            url = image_url_from_path(base + path)
-            return ImageUrl(url)
+            if name == 'url':
+                name = 'thumbnail_medium'
+            if name not in self._names:
+                raise AttributeError(name)
+            path = self.path.rsplit('.', 1)[0] + '.' + IMAGE_CONVERSION_FORMAT[1]
+        if self.path:
+            path = image_base(self._type, name) + path
+            return ImageUrl(image_url_from_path(path))
+        else:
+            return ''
 
 
 class ImageType(types.TypeDecorator):
@@ -112,7 +115,7 @@ class ImageType(types.TypeDecorator):
         self.cfgkey = cfgkey
 
     def process_result_value(self, value, dialect):
-        return ImagePath(value, app.config['%s_IMG_PATHS' % self.cfgkey])
+        return ImagePath(value, self.cfgkey)
 
 
 class BoxType(types.TypeDecorator):
@@ -128,7 +131,8 @@ class BoxType(types.TypeDecorator):
 
 
 def get_box_value(value):
-    value = map(float, literal_eval(value))
+    if isinstance(value, basestring):
+        value = map(float, literal_eval(value))
     assert len(value) == 4
     assert all(0 <= i <= 1 for i in value)
     return value
@@ -137,24 +141,20 @@ def get_box_value(value):
 def resize_and_upload(fp, cfgkey, aoi=None):
     """Takes file-like object and uploads thumbnails to s3."""
     uploader = imaging.ImageUploader()
-
-    img_resize_config = app.config['%s_IMAGES' % cfgkey]
-    img_path_config = app.config['%s_IMG_PATHS' % cfgkey]
-
     new_name = make_id()
 
     # Resize images
-    resizer = imaging.Resizer(img_resize_config)
+    resizer = imaging.Resizer(app.config['%s_IMAGES' % cfgkey])
     resized = resizer.resize(fp, aoi=aoi)
 
     # Upload original
     orig_ext = resizer.original_extension
-    uploader.from_file(fp, img_path_config['original'], new_name, orig_ext)
+    uploader.from_file(fp, image_base(cfgkey, 'original'), new_name, orig_ext)
 
     for name, img in resized.iteritems():
         f = cStringIO.StringIO()
         img.save(f, IMAGE_CONVERSION_FORMAT[0], quality=90)
-        uploader.from_file(f, img_path_config[name], new_name, IMAGE_CONVERSION_FORMAT[1])
+        uploader.from_file(f, image_base(cfgkey, name), new_name, IMAGE_CONVERSION_FORMAT[1])
         f.close()
     if orig_ext:
         return '.'.join([new_name, orig_ext])

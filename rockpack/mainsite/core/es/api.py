@@ -445,14 +445,19 @@ def add_channel_to_index(channel, bulk=False, refresh=False, boost=None, no_chec
         resource_url=urlparse(channel.get_resource_url()).path,
         title=channel.title,
         ecommerce_url=channel.ecommerce_url,
-        thumbnail_url=urlparse(convert(channel, 'cover', 'CHANNEL').thumbnail_large).path,
-        cover_thumbnail_small_url=urlparse(convert(channel, 'cover', 'CHANNEL').thumbnail_small).path,
-        cover_thumbnail_large_url=urlparse(convert(channel, 'cover', 'CHANNEL').thumbnail_large).path,
-        cover_background_url=urlparse(convert(channel, 'cover', 'CHANNEL').background).path,
         favourite=channel.favourite,
         verified=channel.verified,
         update_frequency=channel.update_frequency,
-        editorial_boost=channel.editorial_boost)
+        editorial_boost=channel.editorial_boost,
+            cover=dict(
+                thumbnail_url=urlparse(convert(channel, 'cover', 'CHANNEL').url).path,
+                aoi=channel.cover_aoi,
+            )
+        )
+
+    if app.config.get('SHOW_OLD_CHANNEL_COVER_URLS', True):
+        for k in 'thumbnail_large', 'thumbnail_small', 'background':
+            data['cover_%s_url' % k] = urlparse(getattr(convert(channel, 'cover', 'CHANNEL'), k)).path
 
     return add_to_index(data, mappings.CHANNEL_INDEX, mappings.CHANNEL_TYPE, id=channel.id, bulk=bulk, refresh=refresh)
 
@@ -477,8 +482,7 @@ def add_video_to_index(video_instance, bulk=False, refresh=False, no_check=False
         date_added=video_instance.date_added,
         position=video_instance.position,
         locales=locale_dict_from_object(video_instance.metas))
-    i = add_to_index(data, mappings.VIDEO_INDEX, mappings.VIDEO_TYPE, id=video_instance.id, bulk=bulk, refresh=refresh)
-    return i
+    return add_to_index(data, mappings.VIDEO_INDEX, mappings.VIDEO_TYPE, id=video_instance.id, bulk=bulk, refresh=refresh)
 
 
 def remove_channel_from_index(channel_id):

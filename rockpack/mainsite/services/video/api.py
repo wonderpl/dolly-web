@@ -20,18 +20,18 @@ def _filter_by_category(query, type, category_id):
 
 
 def channel_dict(channel, with_owner=True, owner_url=False):
-    sizes = ['thumbnail_large', 'thumbnail_small', 'background']
-    images = {'cover_%s_url' % s: getattr(channel.cover, s) for s in sizes}
     ch_data = dict(
         id=channel.id,
         resource_url=channel.get_resource_url(owner_url),
         title=channel.title,
-        thumbnail_url=channel.cover.thumbnail_large,
-        description=channel.description,
         subscriber_count=channel.subscriber_count,
         subscribe_count=channel.subscriber_count,   # XXX: backwards compatibility
         public=channel.public,
         category=channel.category,
+        cover=dict(
+            thumbnail_url=channel.cover.url,
+            aoi=channel.cover_aoi,
+        )
     )
     if with_owner:
         ch_data['owner'] = dict(
@@ -41,7 +41,11 @@ def channel_dict(channel, with_owner=True, owner_url=False):
             name=channel.owner_rel.display_name,    # XXX: backwards compatibility
             avatar_thumbnail_url=channel.owner_rel.avatar.thumbnail_small,
         )
-    ch_data.update(images)
+    if app.config.get('SHOW_CHANNEL_DESCRIPTION', False):
+        ch_data['description'] = channel.description
+    if app.config.get('SHOW_OLD_CHANNEL_COVER_URLS', True):
+        for k in 'thumbnail_large', 'thumbnail_small', 'background':
+            ch_data['cover_%s_url' % k] = getattr(channel.cover, k)
     return ch_data
 
 

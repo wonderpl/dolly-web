@@ -87,7 +87,10 @@ class DBImport(object):
         from sqlalchemy.orm import joinedload
         with app.test_request_context():
             query = VideoInstance.query.join(
-                    Channel, Video).outerjoin((VideoInstanceLocaleMeta, VideoInstance.id == VideoInstanceLocaleMeta.video_instance)).options(joinedload(VideoInstance.metas)).options(joinedload(VideoInstance.video_rel)).options(joinedload(VideoInstance.video_channel)).filter(
+                    Channel, Video).outerjoin((VideoInstanceLocaleMeta, VideoInstance.id == VideoInstanceLocaleMeta.video_instance)).options(
+                            joinedload(VideoInstance.metas)).options(
+                                    joinedload(VideoInstance.video_rel)).options(
+                                            joinedload(VideoInstance.video_channel)).filter(
                             Video.visible == True, Channel.public == True)
             total = query.count()
             step = 1000
