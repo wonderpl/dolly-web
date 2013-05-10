@@ -410,7 +410,7 @@ def convert(obj, attr, type_):
 
 def check_es(no_check=False):
     if not no_check:
-        if not app.config.get('ELASTICSEARCH_URL'):
+        if not app.config.get('ELASTICSEARCH_URL', False):
             return False
     return True
 
