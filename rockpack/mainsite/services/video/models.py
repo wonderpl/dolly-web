@@ -388,24 +388,21 @@ ParentCategory = aliased(Category)
 
 
 def _add_es_video(video_instance):
-    if app.config.get('ELASTICSEARCH_URL'):
-        if video_instance.video_rel:
-            es_api.add_video_to_index(video_instance)
+    if not video_instance.video_rel:
+        video_instance = VideoInstance.query.get(video_instance.id)
+    es_api.add_video_to_index(video_instance)
 
 
 def _add_es_channel(channel):
-    if app.config.get('ELASTICSEARCH_URL'):
-        es_api.add_channel_to_index(channel)
+    es_api.add_channel_to_index(channel)
 
 
 def _remove_es_channel(channel):
-    if app.config.get('ELASTICSEARCH_URL'):
-        es_api.remove_channel_from_index(channel.id)
+    es_api.remove_channel_from_index(channel.id)
 
 
 def _remove_es_video_instance(video_instance):
-    if app.config.get('ELASTICSEARCH_URL'):
-        es_api.remove_video_from_index(video_instance.id)
+    es_api.remove_video_from_index(video_instance.id)
 
 
 @event.listens_for(VideoInstanceLocaleMeta, 'after_update')

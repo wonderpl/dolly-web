@@ -254,8 +254,7 @@ def username_exists(username):
 
 
 def _es_owner_insert(mapper, connection, target):
-    if not app.config.get('ELASTICSEARCH_URL'):
-        add_owner_to_index(target)
+    add_owner_to_index(target)
 
 
 event.listen(User, 'after_insert', _es_owner_insert)
