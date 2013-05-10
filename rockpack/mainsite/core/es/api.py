@@ -240,7 +240,11 @@ class ChannelSearch(EntitySearch, CategoryMixin, MediaSortMixin):
                 title=channel.title,
                 public=channel.public,
                 favourite=channel.favourite,
-                position=pos
+                position=pos,
+                cover=dict(
+                    thumbnail_url=urljoin(app.config.get('IMAGE_CDN', ''), channel.cover.thumbnail_url),
+                    aoi=channel.aoi
+                )
             )
 
             for k, v in channel.iteritems():
