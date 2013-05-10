@@ -438,7 +438,7 @@ def _video_instance_delete(mapper, connection, target):
 @event.listens_for(ChannelLocaleMeta, 'after_insert')
 def _channel_insert(mapper, connection, target):
     # NOTE: owner_rel isn't available on Channel if we pass channel_rel for owner.resource_url.
-    # possibly do a lookup owner in resource_url method instead of having it rely on self.owner_rel here
+    # possibly do a lookup for owner in resource_url method instead of having it rely on self.owner_rel here
     channel = Channel.query.get(target.channel)
     _add_es_channel(channel)
 
@@ -450,7 +450,7 @@ def _es_channel_update_from_clm(mapper, connection, target):
 
 @event.listens_for(Channel, 'after_insert')
 def _es_channel_insert_from_channel(mapper, connection, target):
-    _add_es_channel(target)
+    _add_es_channel(Channel.query.get(target.id))
 
 
 @event.listens_for(Channel, 'after_update')
