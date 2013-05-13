@@ -26,6 +26,7 @@ class ChannelCreateTestCase(base.RockPackTestCase):
     def test_new_channel(self):
         with self.app.test_client() as client:
             user = self.create_test_user()
+            user2 = self.create_test_user()
 
             r = client.post('/ws/{}/channels/'.format(user.id),
                     data=json.dumps(dict(title='',
@@ -43,6 +44,18 @@ class ChannelCreateTestCase(base.RockPackTestCase):
             new_ch = models.Channel.query.filter(
                 models.Channel.title.like(app.config['UNTITLED_CHANNEL'] + '%')).one()
             self.assertEquals(False, resp['public'], 'channel should be private')
+
+            # Visible to owner
+            r = client.get('/ws/{}/channels/{}/'.format(user.id, new_ch.id),
+                    content_type='application/json',
+                    headers=[get_auth_header(user.id)])
+            self.assertEquals('200 OK', r.status)
+
+            # Invisible to public
+            r = client.get('/ws/{}/channels/{}/'.format(user.id, new_ch.id),
+                    content_type='application/json',
+                    headers=[get_auth_header(user2.id)])
+            self.assertEquals('404 NOT FOUND', r.status)
 
             # test channel update
             new_title = 'a new channel title'

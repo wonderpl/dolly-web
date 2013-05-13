@@ -495,9 +495,8 @@ def remove_channel_from_index(channel_id):
     if not check_es():
         return
 
-    conn = es_connection
     try:
-        conn.delete(mappings.CHANNEL_INDEX, mappings.CHANNEL_TYPE, channel_id)
+        es_connection.delete(mappings.CHANNEL_INDEX, mappings.CHANNEL_TYPE, channel_id)
     except pyes.exceptions.NotFoundException:
         app.logger.warning("Failed to remove channel '{}' from index".format(channel_id))
 
@@ -506,8 +505,7 @@ def remove_video_from_index(video_id):
     if not check_es():
         return
 
-    conn = es_connection
     try:
-        conn.delete(mappings.VIDEO_INDEX, mappings.VIDEO_TYPE, video_id)
+        es_connection.delete(mappings.VIDEO_INDEX, mappings.VIDEO_TYPE, video_id)
     except pyes.exceptions.NotFoundException:
         app.logger.warning("Failed to remove video '{}' from index".format(video_id))
