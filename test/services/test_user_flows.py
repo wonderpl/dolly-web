@@ -1,4 +1,5 @@
 import uuid
+import time
 import json
 import random
 import urllib
@@ -112,7 +113,6 @@ class BrowsingUserTestCase(BaseUserTestCase):
         self.register_user()
 
         # Allow elasticsearch to catch up if necessary
-        import time
         time.sleep(2)
 
         for cat_id in self.get_cat_ids():
@@ -144,7 +144,7 @@ class SubscribingUserTestCase(BaseUserTestCase):
         """
         subscribed_channels = []
         self.register_user()
-
+        time.sleep(2)  # time for es to index
         for cat_id in self.get_cat_ids():
             popular_channels = self.get(self.urls['popular_channels'], dict(category=cat_id))
             if popular_channels['channels']['total'] == 0:
@@ -210,7 +210,9 @@ class CuratingUserTestCase(BaseUserTestCase):
             public=True,
         )
         channel = self.post(self.urls['channels'], chdata, token=self.token)
+        time.sleep(2)
         self.put(channel['resource_url'] + 'videos/', selected_videos, token=self.token)
+        time.sleep(2)
 
         # Verify results
         channels = self.get(self.urls['channel_search'], dict(q=chdata['title']))['channels']

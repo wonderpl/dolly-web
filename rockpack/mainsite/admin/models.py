@@ -93,13 +93,10 @@ class AdminView(ModelView):
                 aoi = form.data.get(field.name + '_aoi')
                 if aoi:
                     aoi = get_box_value(aoi)
-                old_aoi = getattr(model, field.name + '_aoi')
                 if field.data:
                     # New image upload
                     data = field.data
-                elif model and aoi and not old_aoi == aoi:
-                    print type(old_aoi), repr(old_aoi)
-                    print type(aoi), repr(aoi)
+                elif aoi and model and not getattr(model, field.name + '_aoi') == aoi:
                     # Same image, aoi updated - need to fetch the image data
                     data = getattr(model, field.name).original
                 else:

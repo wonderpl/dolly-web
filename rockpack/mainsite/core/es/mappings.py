@@ -119,7 +119,15 @@ channel_mapping = {
         },
         "cover": {
             "type": "object",
-            "analyzer": "not_analyzed"
+            "properties": {
+                "thumbnail_url": {
+                    "type": "string",
+                    "index": "not_analyzed"
+                },
+                "aoi": {
+                    "type": "integer",
+                }
+            },
         },
         "thumbnail_url": {
             "type": "string",
