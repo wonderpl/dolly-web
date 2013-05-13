@@ -53,7 +53,7 @@ CHANNEL_IMAGES = dict(
     thumbnail_medium=(152, 152),
     thumbnail_large=(243, 243),
     background_portrait=(320, 568),
-    background=(1024, 1004),
+    background=(1024, 1024),
 )
 
 AVATAR_IMAGES = dict(
