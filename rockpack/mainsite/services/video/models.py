@@ -447,11 +447,14 @@ def _es_channel_update_from_clm(mapper, connection, target):
 
 @event.listens_for(Channel, 'after_insert')
 def _es_channel_insert_from_channel(mapper, connection, target):
-    _add_es_channel(Channel.query.get(target.id))
+    if target.public:
+        _add_es_channel(Channel.query.get(target.id))
 
 
 @event.listens_for(Channel, 'after_update')
 def _es_channel_update_from_channel(mapper, connection, target):
+    if not target.public or target.deleted:
+        _remove_es_channel(target)
     _add_es_channel(target)
 
 

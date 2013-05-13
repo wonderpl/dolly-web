@@ -34,6 +34,28 @@ class TestProfileEdit(base.RockPackTestCase):
 
             self.assertEquals(r.status_code, 204)
 
+    def test_fullname_toggle(self):
+        with self.app.test_client() as client:
+            new_user = self.create_test_user()
+
+            r = client.get('/ws/{}/'.format(new_user.id),
+                content_type='application/json',
+                headers=[get_auth_header(new_user.id)])
+            old_data = json.loads(r.data)
+
+            client.put('/ws/{}/display_fullname/'.format(new_user.id),
+                data=json.dumps(False),
+                content_type='application/json',
+                headers=[get_auth_header(new_user.id)])
+
+            r = client.get('/ws/{}/'.format(new_user.id),
+                content_type='application/json',
+                headers=[get_auth_header(new_user.id)])
+            new_data = json.loads(r.data)
+
+            self.assertNotEquals(old_data['display_name'], new_data['display_name'])
+            self.assertEquals(new_data['username'], new_data['display_name'])
+
     def test_password_change(self):
         with self.app.test_client() as client:
             new_user = self.create_test_user()
