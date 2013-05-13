@@ -1,5 +1,5 @@
-<div class="overlay"></div>
-<div class="videocell" bg-image="{{video.video.thumbnail_url}}"></div>
+<img src="/static/assets/weblight/images/videoOverlay.png" class="overlay">
+<img class="videocell" ng-src="{{video.video.thumbnail_url}}">
 <div class="videocelltitle">
   {{video.title | truncate: videoCellTitleLength}}
 </div>

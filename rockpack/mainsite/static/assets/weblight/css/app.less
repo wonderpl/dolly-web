@@ -30,15 +30,18 @@ body {
 }
 
 #header {
-  #logo {
-    margin-top: 30px;
-    background: #d9dbdc;
-    padding: 10px 20px 10px 65px;
-    display: inline-block;
+  background: #fff;
+  height: 50px;
+  line-height: 46px;
+  position: fixed;
+  width: 100%;
+  z-index: 1000;
 
-    .btn {
-      margin-left: 40px;
-    }
+  img {
+    width: 125px;
+    height: 22px;
+    vertical-align: middle;
+
   }
 }
 
@@ -51,17 +54,12 @@ body {
 #videoslist {
 
   margin: 30px 0 0 0;
+  padding: 0 20px;
 
   &>div {
-    display: block;
-    float: left;
+    display: inline-block;
     position: relative;
-    margin: 0 10px 40px 10px;
-    width: 238px;
-    height: 134px;
-    -webkit-box-shadow:  0px 2px 2px 0px rgba(0, 0, 0, 0.15);    
-    box-shadow:  0px 2px 2px 0px rgba(0, 0, 0, 0.15);
-    opacity: 1;
+    margin: 0 15px 25px 15px;
     -webkit-transition: 0.5s;
     -moz-transition: 0.5s all;
     -ms-transition: 0.5s all;
@@ -72,10 +70,8 @@ body {
       position: absolute;
       top: 0;
       left: 0;
-      background: url(/static/assets/weblight/images/videoOverlay.png);
-      background-size: 238px 134px;
-      width: 238px;
-      height: 134px;
+      width: 188px;
+      height: 110px;
       -webkit-transition: 0.1s;
       -moz-transition: 0.1s all;
       -ms-transition: 0.1s all;
@@ -84,7 +80,7 @@ body {
 
       &:hover {
         background: url(/static/assets/weblight/images/overlayhover.png);
-        background-size: 215px 121px;
+        background-size: 188px 110px;
       }
     }
 
@@ -95,19 +91,16 @@ body {
     }
 
     .videocell {
-      background-size: 238px 134px;
-      width: 238px;
-      height: 134px;
+      width: 188px;
+      height: 110px;
     }
 
     .videocelltitle {
-      color: #fff;
-      font-family: "dn-bold";
+      color: #2e2f37;
+      font-family: "dn-regular";
       text-transform: uppercase;
-      position: absolute;
-      bottom: 10px;
-      left: 10px;
-      text-shadow: 0px 4px 0px rgba(0,0,0,0.25);
+      font-size: 12px;
+      margin-top: 10px;
     }
 
   }
@@ -115,7 +108,7 @@ body {
 
 .channelheader {
   text-transform: uppercase;  
-  margin: 130px 0 75px 0;
+  padding: 240px 0 75px 0;
 
 
   h1 {
@@ -154,9 +147,8 @@ body {
   #details {
     color: #fff;
     font-family: "dn-regular";
-    text-shadow: -2px 2px 2px rgba(0, 0, 0, 0.4);
     font-size: 18px;
-    margin: 30px 0;
+    margin: 20px 0;
   }
 
   #userdetails {
@@ -174,7 +166,7 @@ body {
     }
 
     #curatedby {
-      margin: 10px 0 0 15px;
+      margin: 0 0 0 15px;
 
       #username {
         font-family: "dn-bold";
@@ -183,17 +175,14 @@ body {
       }
     }
   }
+
+  .gettheapp {
+    float: right;
+  }
 }
 
 #channeloverlay {
-  background: url(data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiA/Pgo8c3ZnIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgdmlld0JveD0iMCAwIDEgMSIgcHJlc2VydmVBc3BlY3RSYXRpbz0ibm9uZSI+CiAgPGxpbmVhckdyYWRpZW50IGlkPSJncmFkLXVjZ2ctZ2VuZXJhdGVkIiBncmFkaWVudFVuaXRzPSJ1c2VyU3BhY2VPblVzZSIgeDE9IjAlIiB5MT0iMCUiIHgyPSIwJSIgeTI9IjEwMCUiPgogICAgPHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iI2ZmZmZmZiIgc3RvcC1vcGFjaXR5PSIwIi8+CiAgICA8c3RvcCBvZmZzZXQ9IjE1JSIgc3RvcC1jb2xvcj0iIzI4MmQzMyIgc3RvcC1vcGFjaXR5PSIxIi8+CiAgICA8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiMyODJkMzMiIHN0b3Atb3BhY2l0eT0iMSIvPgogIDwvbGluZWFyR3JhZGllbnQ+CiAgPHJlY3QgeD0iMCIgeT0iMCIgd2lkdGg9IjEiIGhlaWdodD0iMSIgZmlsbD0idXJsKCNncmFkLXVjZ2ctZ2VuZXJhdGVkKSIgLz4KPC9zdmc+);
-  background: -moz-linear-gradient(top,  rgba(40,45,51,0.2) 0%, rgba(40,45,51,1) 15%, rgba(40,45,51,1) 100%);
-  background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,rgba(40,45,51,0.2)), color-stop(15%,rgba(40,45,51,1)), color-stop(100%,rgba(40,45,51,1)));
-  background: -webkit-linear-gradient(top,  rgba(40,45,51,0.2) 0%,rgba(40,45,51,1) 15%,rgba(40,45,51,1) 100%);
-  background: -o-linear-gradient(top,  rgba(40,45,51,0.2) 0%,rgba(40,45,51,1) 15%,rgba(40,45,51,1) 100%);
-  background: -ms-linear-gradient(top,  rgba(40,45,51,0.2) 0%,rgba(40,45,51,1) 15%,rgba(40,45,51,1) 100%);
-  background: linear-gradient(to bottom,  rgba(40,45,51,0.2) 0%,rgba(40,45,51,1) 15%,rgba(40,45,51,1) 100%);
-  filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#00ffffff', endColorstr='#282d33',GradientType=0 );
+  background: #fff;
   .clearfix();
 }
 
@@ -211,7 +200,7 @@ body {
 footer {
   font-family: "dn-regular";
   color: #aaa;
-  background: #282d33;
+  background: #fff;
   padding: 30px 0;
 
   ul {
@@ -222,16 +211,15 @@ footer {
 
     li {
       line-height: 17px;
-      margin-right: 15px;
+      margin: 7px 0;
       font-size: 17px;
       text-transform: uppercase;
     }
   }
 
   .rights {
-    position: absolute;
-    bottom: 0;
-    right: 0;
+    text-align: center;
+    margin-top: 30px;
   }
 
   a, a:visited, a:active {
@@ -249,7 +237,8 @@ footer {
 .wrapper {
   position: relative;
   margin: 0 auto;
-  padding-top: 0;
+  width: 923px;
+  .clearfix();
 }
 
 #lightbox {
@@ -640,7 +629,6 @@ footer {
       margin: 0 5px 24px 5px;
       width: 140px;
       opacity: 1;
-      .clearfix();
 
       .overlay {
         position: absolute;
