@@ -2,5 +2,7 @@ window.WebApp.controller('FeedCtrl', ['$scope', 'cookies', 'userObj', ($scope, c
 
   User = userObj
 
-  console.log User.details
+  $scope.feed = User.FetchRecentSubscriptions()
+
+  console.log User
 ])

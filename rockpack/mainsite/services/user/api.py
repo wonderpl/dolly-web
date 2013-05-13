@@ -399,6 +399,9 @@ class UserWS(WebService):
         )
         for key in 'channels', 'activity', 'notifications', 'cover_art', 'subscriptions':
             info[key] = dict(resource_url=url_for('userws.post_%s' % key, userid=userid))
+
+        info['subscriptions'][ 'updates'] = url_for('userws.recent_videos', userid=userid)
+
         info['channels'].update(items=channels, total=len(channels))
         info['notifications'].update(unread_count=_notification_unread_count(userid))
         return info

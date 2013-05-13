@@ -1,20 +1,28 @@
-window.WebApp.factory('RefreshTokenService', ['UserManager', '$rootScope', 'OAuth', '$location', 'cookies', '$q', (UserManager, $rootScope, OAuth, $location, cookies, $q) ->
-
-  deferred = $q.defer()
-  refresh_token = cookies.get('refresh_token')
-  user_id = cookies.get('user_id')
+window.WebApp.factory('RequireLoginService', ['UserManager', '$rootScope', '$location', '$q', (UserManager, $rootScope, $location, $q) ->
 
   User = UserManager
 
-  # No user cradentials, redirect to login
-  if (refresh_token == null or user_id == null)
-    deferred.reject("error")
+  deferred = $q.defer()
+  if User.credentials.refresh_token?
+    console.log 'We have a refresh token (lets relog)'
+    User.refreshToken(User.credentials.refresh_token)
+      .success((data) ->
+        console.log ("refresh token success")
+
+        # Fetch full user details on first load (no previous refresh)
+        User.FetchUserData(User.details.resource_url)
+          .success((data) ->
+            console.log 'deferred'
+            deferred.resolve(User)
+          )
+      )
+      .error((data) =>
+        console.log ("Refresh fails, token might no longer be valid")
+        console.log (data)
+      )
   else
-    # Otherwise lets log in
-    User.refreshToken(refresh_token)
-    .success ((data) ->
-      deferred.resolve(data)
-    )
+    console.log ("no user cradentials avilable, redirecting to login")
+    $location.path("/login").replace()
 
   return deferred.promise
 ])

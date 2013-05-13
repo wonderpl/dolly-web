@@ -1,1 +1,6 @@
 Feed View
+<div>
+  <div style="display: inline-block" ng-repeat="singlevideo in feed.data.videos.items">
+    <img ng-src="{{singlevideo.video.thumbnail_url}}">
+  </div>
+</div>
