@@ -4,6 +4,7 @@ from functools import wraps
 from collections import namedtuple
 from werkzeug.exceptions import HTTPException, Unauthorized, BadRequest, Forbidden
 from flask import Blueprint, Response, request, current_app, abort, json
+from rockpack.mainsite.helpers import lazy_gettext as _
 from rockpack.mainsite.helpers.http import cache_for
 from rockpack.mainsite.helpers.db import resize_and_upload
 
@@ -89,7 +90,7 @@ def process_image(field, data=None):
         elif request.mimetype.startswith('multipart/form-data'):
             data = request.files['image']
         else:
-            abort(400, message='no image data')
+            abort(400, message=_('No image data'))
 
     cfgkey = field.class_.__table__.columns.get(field.key).type.cfgkey
 
