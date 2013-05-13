@@ -1,6 +1,9 @@
 def pytest_configure(config):
     from rockpack.mainsite import app, init_app
 
+    app.config['DATABASE_URL'] = 'sqlite://'
+    app.config['FORCE_INDEX_INSERT_REFRESH'] = True
+
     if app.config.get('ELASTICSEARCH_URL'):
         from rockpack.mainsite.core.es import mappings, helpers
 
@@ -11,9 +14,6 @@ def pytest_configure(config):
         i = helpers.Indexing()
         i.create_all_indexes(rebuild=True)
         i.create_all_mappings()
-
-    app.config['DATABASE_URL'] = 'sqlite://'
-    app.config['FORCE_INDEX_INSERT_REFRESH'] = True
 
     # Seems to be required for sub-transaction support:
     from rockpack.mainsite.core import dbapi

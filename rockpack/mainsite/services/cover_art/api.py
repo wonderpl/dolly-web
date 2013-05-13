@@ -1,4 +1,5 @@
 from flask import request
+from sqlalchemy import desc
 from rockpack.mainsite.core.webservice import WebService, expose_ajax
 from rockpack.mainsite.services.cover_art.models import RockpackCoverArt
 
@@ -7,8 +8,7 @@ def cover_art_dict(instance, own=False):
     data = dict(
         id=str(instance.id),
         cover_ref=str(instance.cover),
-        carousel_url=instance.cover.carousel,
-        background_url=instance.cover.background,
+        thumbnail_url=instance.cover.url,
     )
     if own:
         data['resource_url'] = instance.get_resource_url(own)
@@ -29,7 +29,8 @@ class CoverArtWS(WebService):
 
     @expose_ajax('/', cache_age=600)
     def rockpack_cover_art(self):
-        query = RockpackCoverArt.query.filter_by(locale=self.get_locale())
+        query = RockpackCoverArt.query.filter_by(locale=self.get_locale()).\
+            filter(RockpackCoverArt.priority != -1).order_by(desc('priority'))
         if request.args.get('category'):
             query = query.filter_by(category=request.args.get('category'))
         return cover_art_response(query, self.get_page())

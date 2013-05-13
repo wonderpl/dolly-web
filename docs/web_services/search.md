@@ -80,16 +80,16 @@ Cache-Control: public, max-age=300
         "id": "chHRF0V4rMT4CqULiSajAP2Q",
         "resource_url": "http://dev.rockpack.com/ws/ziCAgGxbRpW-HNYTloYkQg/channels/chHRF0V4rMT4CqULiSajAP2Q/",
         "title": "MY FAVOURITE TED TALKS",
-        "description": "My favourite Ted Talks",
-        "owner": {
-          "avatar_thumbnail_url": "http://media.dev.rockpack.com/images/avatar/thumbnail_small/wbHLckR0Tg25CEly3HElqQ.jpg",
-          "name": "Jimmy Wales",
-          "id": "ziCAgGxbRpW-HNYTloYkQg"
-        },
         "subscriber_count": 69,
-        "cover_thumbnail_large_url": "http://media.dev.rockpack.com/images/channel/thumbnail_large/hJSke4WyRci0mqhHzlZSZg.jpg",
-        "cover_thumbnail_small_url": "http://media.dev.rockpack.com/images/channel/thumbnail_small/hJSke4WyRci0mqhHzlZSZg.jpg",
-        "cover_background_url": "http://media.dev.rockpack.com/images/channel/background/hJSke4WyRci0mqhHzlZSZg.jpg"
+        "cover": {
+          "thumbnail_url": "http://path/to/channel/cover.jpg",
+          "aoi": [0, 0, 1, 1],
+        },
+        "owner": {
+          "id": "ziCAgGxbRpW-HNYTloYkQg",
+          "name": "Jimmy Wales",
+          "avatar_thumbnail_url": "http://path/to/avatar/small.jpg"
+        }
       }
     ],
     "total": 1

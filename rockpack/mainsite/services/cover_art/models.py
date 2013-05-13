@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, ForeignKey, CHAR
+from sqlalchemy import Column, Integer, String, ForeignKey, CHAR
 from sqlalchemy.orm import relationship
 from rockpack.mainsite.core.dbapi import db
 from rockpack.mainsite.helpers.db import ImageType, BoxType
@@ -15,6 +15,8 @@ class RockpackCoverArt(db.Model):
     cover_aoi = Column(BoxType, nullable=True)
     locale = Column(ForeignKey('locale.id'), nullable=False)
     category = Column(ForeignKey('category.id'), nullable=True)
+    priority = Column(Integer, nullable=False, default='1')
+    attribution = Column(String(1024), nullable=True)
 
     locale_rel = relationship('Locale', backref='cover_art')
     category_rel = relationship('Category', backref='cover_art')

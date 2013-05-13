@@ -255,19 +255,7 @@ def username_exists(username):
 
 
 def _es_owner_insert(mapper, connection, target):
-    if app.config.get('ELASTICSEARCH_URL'):
-
-        if isinstance(target.avatar, (str, unicode)):
-            convert = lambda value: ImageType('AVATAR').process_result_value(value, None)
-        else:
-            convert = lambda x: x
-        data = {
-            'id': target.id,
-            'avatar_thumbnail': convert(target.avatar).thumbnail_small,
-            'resource_url': target.get_resource_url(False),
-            'display_name': target.display_name,
-            'username': target.username}
-        add_owner_to_index(data)
+    add_owner_to_index(target)
 
 
 event.listen(User, 'after_insert', _es_owner_insert)

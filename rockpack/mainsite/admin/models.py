@@ -1,9 +1,11 @@
 from sqlalchemy import String, Column, Integer, DateTime, func
+from werkzeug import FileStorage
 from flask.ext import login, wtf
 from flask.ext.admin.model.typefmt import BASE_FORMATTERS, Markup
 from flask.ext.admin.model.form import converts
 from flask.ext.admin.contrib.sqlamodel import ModelView, form, filters
 from rockpack.mainsite.helpers.db import ImageUrl, ImageType, resize_and_upload, get_box_value
+from rockpack.mainsite.helpers.http import get_external_resource
 from rockpack.mainsite.core.dbapi import db
 
 
@@ -83,25 +85,34 @@ class AdminView(ModelView):
     def is_accessible(self):
         return self.is_authenticated()
 
-    def _process_image_data(self, form):
+    def _process_image_data(self, form, model=None):
         for field in form:
             if isinstance(field, wtf.FileField):
+                data = None
+                cfgkey = self.model.__table__.columns.get(field.name).type.cfgkey
+                aoi = form.data.get(field.name + '_aoi')
+                if aoi:
+                    aoi = get_box_value(aoi)
                 if field.data:
-                    cfgkey = self.model.__table__.columns.get(field.name).type.cfgkey
-                    aoi = form.data.get(field.name + '_aoi')
-                    if aoi:
-                        aoi = get_box_value(aoi)
+                    # New image upload
+                    data = field.data
+                elif aoi and model and not getattr(model, field.name + '_aoi') == aoi:
+                    # Same image, aoi updated - need to fetch the image data
+                    data = getattr(model, field.name).original
+                else:
+                    # Allow form to be edited without replacing existing image
+                    form._fields.pop(field.name)
+                if data:
                     try:
-                        field.data = resize_and_upload(field.data, cfgkey, aoi)
+                        if not isinstance(data, FileStorage):
+                            data = get_external_resource(data)
+                        field.data = resize_and_upload(data, cfgkey, aoi)
                     except IOError, e:
                         # The form has already been validated at this stage but
                         # if we return False then BaseModelView.create_view will
                         # still drop through and render the errors
                         field.errors = [getattr(e, 'message', str(e))]
                         return False
-                else:
-                    # Allow form to be edited without replacing existing image
-                    form._fields.pop(field.name)
         return True
 
     def create_model(self, form):
@@ -122,7 +133,7 @@ class AdminView(ModelView):
             return super(AdminView, self).create_model(form)
 
     def update_model(self, form, model):
-        if self._process_image_data(form):
+        if self._process_image_data(form, model):
             # hack for owner_rel passing models around
             for f in filter(lambda x: x.endswith('_rel'), form.data.keys()):
                 if isinstance(getattr(form, f).data, unicode) or isinstance(getattr(form, f).data, str):

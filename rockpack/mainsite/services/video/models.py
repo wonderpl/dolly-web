@@ -387,88 +387,22 @@ class ContentReport(db.Model):
 ParentCategory = aliased(Category)
 
 
-def _locale_dict_from_object(metas):
-    locales = {el: {} for el in app.config.get('ENABLED_LOCALES')}
-    meta_dict = {m.locale: m for m in metas}
-    for loc in locales.keys():
-        meta = meta_dict.get(loc)
-        locales[loc] = {
-            'view_count': getattr(meta, 'view_count', 0),
-            'star_count': getattr(meta, 'star_count', 0)
-        }
-    return locales
-
-
 def _add_es_video(video_instance):
-    if app.config.get('ELASTICSEARCH_URL'):
-
-        video = Video.query.get(video_instance.video)
-        if video:
-            data = dict(
-                id=video_instance.id,
-                public=True,  # we only insert public records
-                video_id=video_instance.video,
-                title=video.title,
-                channel=video_instance.channel,
-                category=video_instance.category,
-                date_added=video_instance.date_added,
-                position=video_instance.position,
-                thumbnail_url=video.default_thumbnail if video.default_thumbnail else '',
-                source=video.source,
-                source_id=video.source_videoid,
-                source_username=video.source_username,
-                duration=video.duration,
-                locales=_locale_dict_from_object(video_instance.metas))
-
-            es_api.add_video_to_index(data)
+    if not video_instance.video_rel:
+        video_instance = VideoInstance.query.get(video_instance.id)
+    es_api.add_video_to_index(video_instance)
 
 
 def _add_es_channel(channel):
-    if app.config.get('ELASTICSEARCH_URL'):
-        category = []
-        if channel.category:
-            category = Category.query.filter(
-                Category.parent is not None,
-                Category.id == channel.category).values('id', 'parent').next()
-
-        # HACK
-        if isinstance(channel.cover, (str, unicode)):
-            convert = lambda value: ImageType('CHANNEL').process_result_value(value, None)
-        else:
-            convert = lambda x: x
-
-        data = dict(
-            id=channel.id,
-            public=True,
-            category=category,
-            locales=_locale_dict_from_object(channel.metas),
-            owner_id=channel.owner,
-            subscriber_count=channel.subscriber_count,
-            date_added=channel.date_added,
-            description=channel.description,
-            resource_url=channel.get_resource_url(),
-            title=channel.title,
-            ecommerce_url=channel.ecommerce_url,
-            thumbnail_url=convert(channel.cover).thumbnail_large,
-            cover_thumbnail_small_url=convert(channel.cover).thumbnail_small,
-            cover_thumbnail_large_url=convert(channel.cover).thumbnail_large,
-            cover_background_url=convert(channel.cover).background,
-            favourite=channel.favourite,
-            verified=channel.verified,
-            update_frequency=channel.update_frequency,
-            editorial_boost=channel.editorial_boost)
-
-        es_api.add_channel_to_index(data)
+    es_api.add_channel_to_index(channel)
 
 
 def _remove_es_channel(channel):
-    if app.config.get('ELASTICSEARCH_URL'):
-        es_api.remove_channel_from_index(channel.id)
+    es_api.remove_channel_from_index(channel.id)
 
 
 def _remove_es_video_instance(video_instance):
-    if app.config.get('ELASTICSEARCH_URL'):
-        es_api.remove_video_from_index(video_instance.id)
+    es_api.remove_video_from_index(video_instance.id)
 
 
 @event.listens_for(VideoInstanceLocaleMeta, 'after_update')
@@ -501,7 +435,7 @@ def _video_instance_delete(mapper, connection, target):
 @event.listens_for(ChannelLocaleMeta, 'after_insert')
 def _channel_insert(mapper, connection, target):
     # NOTE: owner_rel isn't available on Channel if we pass channel_rel for owner.resource_url.
-    # possibly do a lookup owner in resource_url method instead of having it rely on self.owner_rel here
+    # possibly do a lookup for owner in resource_url method instead of having it rely on self.owner_rel here
     channel = Channel.query.get(target.channel)
     _add_es_channel(channel)
 
@@ -513,7 +447,7 @@ def _es_channel_update_from_clm(mapper, connection, target):
 
 @event.listens_for(Channel, 'after_insert')
 def _es_channel_insert_from_channel(mapper, connection, target):
-    _add_es_channel(target)
+    _add_es_channel(Channel.query.get(target.id))
 
 
 @event.listens_for(Channel, 'after_update')

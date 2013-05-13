@@ -81,19 +81,19 @@ Cache-Control: public, max-age=3600
         "position": 0,
         "id": "Tr3dHIt5_K9qdG",
         "channel": {
-          "subscriber_count": 113,
+          "id": "UCRX7UEyE8kp35mPrgC2sosA",
+          "resource_url": "http://base/ws/USERID/channels/CHANNELID/",
           "title": "Trending and featured",
-          "cover_thumbnail_large_url": "http://path/to/channel/large.jpg",
-          "thumbnail_url": "http://path/to/channel/tmb.jpg",
-          "cover_thumbnail_small_url": "http://path/to/channel/small.jpg",
+          "subscriber_count": 113,
+          "cover": {
+            "thumbnail_url": "http://path/to/channel/cover.jpg",
+            "aoi": [0, 0, 1, 1],
+          },
           "owner": {
             "avatar_thumbnail_url": "http://path/to/avatar/small.jpg",
             "id": "Tr3dHIt5_K9qdGtR",
             "display_name": "joblomovienetwork"
-          },
-          "resource_url": "http://base/ws/USERID/channels/CHANNELID/",
-          "id": "UCRX7UEyE8kp35mPrgC2sosA",
-          "cover_background_url": "http://path/to/channel/bg.jpg"
+          }
         }
       }
     ],
@@ -133,9 +133,10 @@ Cache-Control: public, max-age=3600
     "id": "Unique channel id",
     "resource_url": "http://base/ws/USERID/channels/CHANNELID/",
     "title": "Channel title",
-    "cover_background_url": "http://path/to/channel/bg.jpg",
-    "cover_thumbnail_small_url": "http://path/to/channel/small.jpg",
-    "cover_thumbnail_large_url": "http://path/to/channel/large.jpg",
+    "cover": {
+      "thumbnail_url": "http://path/to/channel/cover.jpg",
+      "aoi": [0, 0, 1, 1],
+    },
     "owner": {
      "id": "Unique user id",
      "display_name": "User display name",
@@ -176,8 +177,7 @@ Cache-Control: public, max-age=3600
         "position": 0,
         "id": "1",
         "cover_ref": "img.png",
-        "background_url": "http://path/to/background/img.jpg",
-        "carousel_url": "http://path/to/carousel/img.jpg"
+        "thumbnail_url": "http://path/to/thumbnail/img.jpg"
       }
     ]
   }

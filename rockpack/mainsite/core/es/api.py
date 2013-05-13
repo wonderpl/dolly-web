@@ -5,6 +5,7 @@ from . import es_connection
 from . import exceptions
 from . import filters
 from rockpack.mainsite import app
+from rockpack.mainsite.helpers.db import ImageType
 from rockpack.mainsite.helpers.urls import url_for
 
 
@@ -239,7 +240,11 @@ class ChannelSearch(EntitySearch, CategoryMixin, MediaSortMixin):
                 title=channel.title,
                 public=channel.public,
                 favourite=channel.favourite,
-                position=pos
+                position=pos,
+                cover=dict(
+                    thumbnail_url=urljoin(app.config.get('IMAGE_CDN', ''), channel.cover.thumbnail_url),
+                    aoi=channel.aoi
+                )
             )
 
             for k, v in channel.iteritems():
@@ -253,7 +258,12 @@ class ChannelSearch(EntitySearch, CategoryMixin, MediaSortMixin):
                 # XXX: tis a bit dangerous to assume max(cat)
                 # is the child category. review this
                 if k == 'category':
-                    ch[k] = max(channel[k]) if channel[k] and isinstance(channel[k], list) else channel[k]
+                    if not channel[k]:
+                        ch[k] = None
+                    elif isinstance(channel[k], list):
+                        ch[k] = channel[k][0]  # First item is subcat
+                    else:
+                        ch[k] = channel[k]
 
             channel_list.append(ch)
             if with_owners:
@@ -319,7 +329,7 @@ class VideoSearch(EntitySearch, CategoryMixin, MediaSortMixin):
                     source=v.video.source,
                     source_id=v.video.source_id,
                     duration=v.video.duration,
-                    thumbnail=urljoin(app.config.get('IMAGE_CDN', ''), v.video.thumbnail_url),
+                    thumbnail_url=urljoin(app.config.get('IMAGE_CDN', ''), v.video.thumbnail_url),
                 ),
                 position=pos
             )
@@ -357,7 +367,7 @@ class OwnerSearch(EntitySearch):
                     id=owner.id,
                     username=owner.username,
                     display_name=owner.display_name,
-                    resource_url=owner.resource_url,
+                    resource_url=urlparse(owner.resource_url).path,
                     avatar_thumbnail_url=urljoin(app.config.get('IMAGE_CDN', ''), owner.avatar_thumbnail_url)
                 )
             )
@@ -371,7 +381,7 @@ class OwnerSearch(EntitySearch):
 
 def add_to_index(data, index, _type, id, bulk=False, refresh=False):
     try:
-        es_connection.index(data, index, _type, id=id, bulk=bulk)
+        return es_connection.index(data, index, _type, id=id, bulk=bulk)
     except Exception as e:
         app.logger.critical("Failed to insert record to index '{}' with id '{}' with: {}".format(index, id, str(e)))
     else:
@@ -379,81 +389,110 @@ def add_to_index(data, index, _type, id, bulk=False, refresh=False):
             es_connection.indices.refresh(index)
 
 
-def add_owner_to_index(owner, bulk=False, refresh=False):
-    i = add_to_index(
-        {
-            'id': owner['id'],
-            'avatar_thumbnail': owner['avatar_thumbnail'],
-            'resource_url': owner['resource_url'],
-            'display_name': owner['display_name'],
-            'username': owner['username']
-        },
-        mappings.USER_INDEX,
-        mappings.USER_TYPE,
-        id=owner['id'],
-        bulk=bulk,
-        refresh=refresh)
-    return i
+def locale_dict_from_object(metas):
+    locales = {el: {} for el in app.config.get('ENABLED_LOCALES')}
+    meta_dict = {m.locale: m for m in metas}
+    for loc in locales.keys():
+        meta = meta_dict.get(loc)
+        locales[loc] = {
+            'view_count': getattr(meta, 'view_count', 0),
+            'star_count': getattr(meta, 'star_count', 0)
+        }
+    return locales
 
 
-def add_channel_to_index(channel, bulk=False, refresh=False, boost=None):
-    data = {
-        'id': channel['id'],
-        'public': True,  # we assume we dont insert private/invisible
-        'locales': channel['locales'],
-        'ecommerce_url': channel['ecommerce_url'],
-        'subscriber_count': channel['subscriber_count'],
-        'category': channel['category'],
-        'description': channel['description'],
-        'thumbnail_url': urlparse(channel['thumbnail_url']).path,
-        'cover_thumbnail_small_url': urlparse(channel['cover_thumbnail_small_url']).path,
-        'cover_thumbnail_large_url': urlparse(channel['cover_thumbnail_large_url']).path,
-        'cover_background_url': urlparse(channel['cover_background_url']).path,
-        'resource_url': urlparse(channel['resource_url']).path,
-        'title': channel['title'],
-        'date_added': channel['date_added'],
-        'owner': channel['owner_id'],
-        'favourite': channel['favourite'],
-        'verified': channel['verified'],
-        'update_frequency': channel['update_frequency'],
-        'editorial_boost': channel['editorial_boost']
-    }
-    if boost:
-        data['_boost'] = boost
-
-    i = add_to_index(data, mappings.CHANNEL_INDEX, mappings.CHANNEL_TYPE, id=channel['id'], bulk=bulk, refresh=refresh)
-    return i
+def convert(obj, attr, type_):
+    obj_attr = getattr(obj, attr)
+    if isinstance(obj_attr, (str, unicode)):
+        return ImageType(type_).process_result_value(obj_attr, None)
+    return obj_attr
 
 
-def add_video_to_index(video_instance, bulk=False, refresh=False):
-    i = add_to_index(
-        {
-            'id': video_instance['id'],
-            'public': True,  # we assume we dont insert private/invisible
-            'locales': video_instance['locales'],
-            'channel': video_instance['channel'],
-            'category': video_instance['category'],
-            'title': video_instance['title'],
-            'date_added': video_instance['date_added'],
-            'position': video_instance['position'],
-            'video': {
-                'id': video_instance['video_id'],
-                'thumbnail_url': video_instance['thumbnail_url'],
-                'source': video_instance['source'],
-                'source_id': video_instance['source_id'],
-                'source_username': video_instance['source_username'],
-                'duration': video_instance['duration'],
-            }
-        },
-        mappings.VIDEO_INDEX,
-        mappings.VIDEO_TYPE,
-        id=video_instance['id'],
-        bulk=bulk,
-        refresh=refresh)
-    return i
+def check_es(no_check=False):
+    if not no_check:
+        if not app.config.get('ELASTICSEARCH_URL', False):
+            return False
+    return True
+
+
+def add_owner_to_index(owner, bulk=False, refresh=False, no_check=False):
+    if not check_es(no_check):
+        return
+
+    data = dict(
+        id=owner.id,
+        avatar_thumbnail=urlparse(convert(owner, 'avatar', 'AVATAR').thumbnail_small).path,
+        resource_url=owner.resource_url,
+        display_name=owner.display_name,
+        username=owner.username
+    )
+    return add_to_index(data, mappings.USER_INDEX, mappings.USER_TYPE, id=owner.id, bulk=bulk, refresh=refresh)
+
+
+def add_channel_to_index(channel, bulk=False, refresh=False, boost=None, no_check=False):
+    if not check_es(no_check):
+        return
+
+    category = []
+    if channel.category:
+        category = [channel.category_rel.id, channel.category_rel.parent]
+
+    data = dict(
+        id=channel.id,
+        public=channel.public,
+        category=category,
+        locales=locale_dict_from_object(channel.metas),
+        owner=channel.owner,
+        subscriber_count=channel.subscriber_count,
+        date_added=channel.date_added,
+        description=channel.description,
+        resource_url=urlparse(channel.get_resource_url()).path,
+        title=channel.title,
+        ecommerce_url=channel.ecommerce_url,
+        favourite=channel.favourite,
+        verified=channel.verified,
+        update_frequency=channel.update_frequency,
+        editorial_boost=channel.editorial_boost,
+        cover=dict(
+            thumbnail_url=urlparse(convert(channel, 'cover', 'CHANNEL').url).path,
+            aoi=channel.cover_aoi
+        )
+    )
+
+    if app.config.get('SHOW_OLD_CHANNEL_COVER_URLS', True):
+        for k in 'thumbnail_large', 'thumbnail_small', 'background':
+            data['cover_%s_url' % k] = urlparse(getattr(convert(channel, 'cover', 'CHANNEL'), k)).path
+
+    return add_to_index(data, mappings.CHANNEL_INDEX, mappings.CHANNEL_TYPE, id=channel.id, bulk=bulk, refresh=refresh)
+
+
+def add_video_to_index(video_instance, bulk=False, refresh=False, no_check=False):
+    if not check_es(no_check):
+        return
+
+    data = dict(
+        id=video_instance.id,
+        public=video_instance.video_rel.visible,
+        video=dict(
+            id=video_instance.video,
+            thumbnail_url=video_instance.video_rel.default_thumbnail,
+            source=video_instance.video_rel.source,
+            source_id=video_instance.video_rel.source_videoid,
+            source_username=video_instance.video_rel.source_username,
+            duration=video_instance.video_rel.duration),
+        title=video_instance.video_rel.title,
+        channel=video_instance.channel,
+        category=video_instance.category,
+        date_added=video_instance.date_added,
+        position=video_instance.position,
+        locales=locale_dict_from_object(video_instance.metas))
+    return add_to_index(data, mappings.VIDEO_INDEX, mappings.VIDEO_TYPE, id=video_instance.id, bulk=bulk, refresh=refresh)
 
 
 def remove_channel_from_index(channel_id):
+    if not check_es():
+        return
+
     conn = es_connection
     try:
         conn.delete(mappings.CHANNEL_INDEX, mappings.CHANNEL_TYPE, channel_id)
@@ -462,6 +501,9 @@ def remove_channel_from_index(channel_id):
 
 
 def remove_video_from_index(video_id):
+    if not check_es():
+        return
+
     conn = es_connection
     try:
         conn.delete(mappings.VIDEO_INDEX, mappings.VIDEO_TYPE, video_id)

@@ -13,10 +13,9 @@ class ChannelPopularity(base.RockPackTestCase):
         with self.app.test_client() as client:
             user = self.create_test_user()
 
-            r= client.get('/ws/channels/',
+            r = client.get('/ws/channels/',
                     content_type='application/json',
                     headers=[get_auth_header(user.id)])
-
 
             data = json.loads(r.data)
             #self.assertEquals(data['channels']['items'][0]['title'], 'channel #6')
@@ -46,9 +45,10 @@ class ChannelCreateTestCase(base.RockPackTestCase):
             self.assertEquals(False, resp['public'], 'channel should be private')
 
             # test channel update
+            new_title = 'a new channel title'
             new_description = 'this is a new description!'
             r = client.put(resource,
-                    data=json.dumps(dict(title='a new channel title',
+                    data=json.dumps(dict(title=new_title,
                         description=new_description,
                     category=3,
                     cover=RockpackCoverArtData.comic_cover.cover,
@@ -59,9 +59,9 @@ class ChannelCreateTestCase(base.RockPackTestCase):
 
             r = client.get(resource, headers=[get_auth_header(user.id)])
             updated_ch = json.loads(r.data)
-            self.assertEquals(new_description, updated_ch['description'],
-                    'channel descriptions should match')
-            self.assertNotEquals('', updated_ch['cover_background_url'],
+            self.assertEquals(new_title, updated_ch['title'],
+                    'channel titles should match')
+            self.assertNotEquals('', updated_ch['cover']['thumbnail_url'],
                     'channel cover should not be blank')
             channel = models.Channel.query.get(new_ch.id)
             self.assertEquals(channel.category, 3)
@@ -69,7 +69,6 @@ class ChannelCreateTestCase(base.RockPackTestCase):
             # check that the dup-title error isnt triggered when updating
             # but not changing the title
             # also check stripping of returns (200 chars not including break)
-            new_description = 'this is a new description!'
             new_description = "hjdk adhaj dsjakhkdsjf yhsdjhf sdjhfksdkfjhsdfsjdfjsdfh sdhf sdjkhf jhsjkhsf sdjhkf sdjkhsdfjkhfsdh\n\rhjdk adhaj dsjakhkdsjf yhsdjhf sdjhfksdkfjhsdfsjdfjsdfh sdhf sdjkhf jhsjkhsf sdjhkf sdjkhsdfjkhfsdh"
             r = client.put(resource,
                     data=json.dumps(dict(title='',
@@ -123,5 +122,5 @@ class ChannelCreateTestCase(base.RockPackTestCase):
                 "category": ["This field is required, but can be an empty string."],
                 "public": ["This field is required, but can be an empty string."],
                 "description": ["This field is required, but can be an empty string."],
-                "cover":["This field is required, but can be an empty string."]},
+                "cover": ["This field is required, but can be an empty string."]},
                 errors)
