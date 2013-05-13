@@ -207,7 +207,7 @@ Content-Type: application/json
 
 ### Toggle display of fullname
 
-Set whether a user's fullname or username is displayed.
+Set whether a user's fullname or username is displayed in the `User`'s `display_name` field.
 
 ```http
 PUT /ws/USERID/display_fullname/ HTTP/1.1
@@ -219,7 +219,7 @@ false
 
 Parameter      | Required? | Value             | Description
 :------------- | :-------- | :---------------- | :----------
-               | Yes       | `true` or `false` | Toggles display of fullname (`true`) or username (`false`)
+               | Yes       | `true` or `false` | Toggles display of fullname (`true`) or username (`false`) in `display_name` `User` field
 
 Responds with a `204`
 
