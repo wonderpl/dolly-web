@@ -322,9 +322,7 @@ class Channel(db.Model):
             existing = [i.video for i in session.query(VideoInstance.video).
                         filter_by(channel=self.id).
                         filter(VideoInstance.video.in_(set(i.video for i in instances)))]
-            for i in instances:
-                if i.video not in existing:
-                    session.add_all(i)
+            session.add_all(i for i in instances if i.video not in existing)
 
     def remove_videos(self, videos):
         VideoInstance.remove_from_video_ids(
