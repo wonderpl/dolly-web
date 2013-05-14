@@ -39,42 +39,51 @@
   </head>
   <body >
     <div id="header">
-      <img src="/static/assets/front-page/images/top.jpg" id="topbg">
-      <div id="logo">
+      <div class="wrapper">
         <img src="/static/assets/weblight/images/logo.png">
-        <button class="btn-blue btn">Get the app</button>
       </div>
-      <div class="ipadscontainer">
-        <div class="ipadsimgs"></div>
-      </div>
-      <div class="row headline">
-        <div class="span6">
+    </div>
+    <div id="whatson">
+      <img src="/static/assets/front-page/images/top.jpg">
+      <div class="abs-wrapper">
+        <div class="headline">
           <h1>WHAT’S ON YOUR CHANNEL?</h1>
           <h2>Rockpack is the curation tool that makes it easy to create and share beautiful, personal video channels</h2>
           <img src="/static/assets/front-page/images/downloadbig.png">
         </div>
       </div>
+      <div class="ipadscontainer">
+        <div class="ipadsimgs"></div>
+      </div>
     </div>
-    <div id="video">
-      <img src="/static/assets/front-page/images/video.jpg">
-      <div class="wrapper">
-        <img src="/static/assets/front-page/images/play.png" id="play">
-        <h2>Life is everyday curation.</h2>
+    <div class="wrapper">
+      <div id="video">
+        <div>
+          <img src="/static/assets/front-page/images/play.png" id="play">
+          <h2>Life is everyday curation.</h2>
+        </div>
       </div>
     </div>
     <div class="wrapper" id="iphones">
       <h2>Create your channel in just three taps.</h2>
       <div class="left">
-        <img src="/static/assets/front-page/images/iphone1.png">
-        <h3>CREATE</h3>
-        <p>Personalise your channel with a unique cover or your own favourite photos</p>
+        <div id="create">
+          <img src="/static/assets/front-page/images/iphone1.png">
+          <h3>CREATE</h3>
+          <p>Personalise your channel with a unique cover or your own favourite photos.</p>
+        </div>
         <img src="/static/assets/front-page/images/iphone3.png">
       </div>
       <div class="right">
-        <p>Add videos from across the web with an easy tap to start compiling your channel</p>
+        <div id="addvideo">
+          <img src="/static/assets/front-page/images/plus.png" class="plus">
+          <p>Add videos from across the web with an easy tap to start compiling your channel.</p>
+        </div>
         <img src="/static/assets/front-page/images/iphone2.png">
-        <h3>SUBSCRIBE</h3>
-        <p>Subscribe to channels curated by family, friends and experts. Watch the world with the people who inspire you.</p>
+        <div id="subscribe">
+          <h3>SUBSCRIBE</h3>
+          <p>Subscribe to channels curated by family, friends and experts. Watch the world with the people who inspire you.</p>
+        </div>
       </div>
     </div>
     <div id="share">
@@ -82,17 +91,18 @@
         <ul>
           <li>
             <h3>Get the app</h3>
+            <a href="#"><img src="/static/assets/front-page/images/downloadbig.png"></a>
           </li>
           <li>
-            <h3>Install the bookmarklet</h3>
+            <h3>INSTALL THE BOOKMARKLET</h3>
+            <a href="#/bookmarklet"><button class="btn btn-blue">+ PACK IT</button></a>
           </li>
           <li>
-            <h3>Join the community</h3>
-            <ul>
+            <h3>FOLLOW US</h3>
+            <ul id="social">
               <li><img src="/static/assets/front-page/images/blog.jpg"></li>
               <li><img src="/static/assets/front-page/images/twitter.jpg"></li>
               <li><img src="/static/assets/front-page/images/facebook.jpg"></li>
-              <li><img src="/static/assets/front-page/images/googleplus.jpg"></li>
             </ul>
           </li>
         </ul>

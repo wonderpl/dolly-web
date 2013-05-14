@@ -177,12 +177,22 @@ body {
   }
 
   .gettheapp {
-    float: right;
+    position: absolute;
+    bottom: 75px;
+    right: 0;
+    text-align: center;
+    font-family: "dn-regular";
+    font-size: 15px;
+    color: #fff;
+
+    p {
+      margin-bottom: 5px;
+    }
   }
 }
 
 #channeloverlay {
-  background: #fff;
+  background: #f7f7f7;
   .clearfix();
 }
 
@@ -336,7 +346,7 @@ footer {
   height: auto;
   
   /* Set up positioning */
-  position: fixed;
+  position: absolute;
   top: 0;
   left: 0;
 
@@ -348,30 +358,33 @@ footer {
   text-transform: uppercase;
   text-shadow: 0;
   color: #ffffff;
-  background: url(/static/assets/weblight/images/blue-btn-bg.png) repeat-x;
-  font-size: 15px;
-  padding: 14px 10px;
-  border-radius: 0;
+  background: rgb(13,169,174);
+  background: url(data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiA/Pgo8c3ZnIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgdmlld0JveD0iMCAwIDEgMSIgcHJlc2VydmVBc3BlY3RSYXRpbz0ibm9uZSI+CiAgPGxpbmVhckdyYWRpZW50IGlkPSJncmFkLXVjZ2ctZ2VuZXJhdGVkIiBncmFkaWVudFVuaXRzPSJ1c2VyU3BhY2VPblVzZSIgeDE9IjAlIiB5MT0iMCUiIHgyPSIwJSIgeTI9IjEwMCUiPgogICAgPHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iIzBkYTlhZSIgc3RvcC1vcGFjaXR5PSIxIi8+CiAgICA8c3RvcCBvZmZzZXQ9IjM1JSIgc3RvcC1jb2xvcj0iIzBhYTNhOCIgc3RvcC1vcGFjaXR5PSIxIi8+CiAgPC9saW5lYXJHcmFkaWVudD4KICA8cmVjdCB4PSIwIiB5PSIwIiB3aWR0aD0iMSIgaGVpZ2h0PSIxIiBmaWxsPSJ1cmwoI2dyYWQtdWNnZy1nZW5lcmF0ZWQpIiAvPgo8L3N2Zz4=);
+  background: -moz-linear-gradient(top,  rgba(13,169,174,1) 0%, rgba(10,163,168,1) 35%);
+  background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,rgba(13,169,174,1)), color-stop(35%,rgba(10,163,168,1)));
+  background: -webkit-linear-gradient(top,  rgba(13,169,174,1) 0%,rgba(10,163,168,1) 35%);
+  background: -o-linear-gradient(top,  rgba(13,169,174,1) 0%,rgba(10,163,168,1) 35%);
+  background: -ms-linear-gradient(top,  rgba(13,169,174,1) 0%,rgba(10,163,168,1) 35%);
+  background: linear-gradient(to bottom,  rgba(13,169,174,1) 0%,rgba(10,163,168,1) 35%);
+  filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#0da9ae', endColorstr='#0aa3a8',GradientType=0 );
+  -webkit-box-shadow: inset 0px 0px 0px 1px rgba(18, 18, 18, 0.15);
+  box-shadow: inset 0px 0px 0px 1px rgba(18, 18, 18, 0.15);  font-size: 15px;
+  padding: 10px 30px;
+  border-radius: 5px;
+  border: 0;
 }
 
 
 
 // Jobs
 
-.jobs, .people {
-  footer {
-    background: #f8f8f8;
-  }
-}
-
 .content-page {
   min-height: 100%;
   color: #1c1f21;
 
   header {
-    height: 210px;
+    min-height: 210px;
     color: #fff;
-    margin-top: -110px;
     background: #282d33;
 
     h1 {
@@ -385,7 +398,7 @@ footer {
       font-size: 32px;
       text-transform: uppercase;
       font-family: "dn-regular";
-      padding-top:160px;
+      padding-top:150px;
     }
   }
 
@@ -455,7 +468,7 @@ footer {
   }
 
   .title {
-    width: 250px;
+    width: 200px;
     margin-right: 25px;
     text-transform: uppercase;
     vertical-align: top;
@@ -475,7 +488,7 @@ footer {
     }
 
     .main-text {
-      margin-left: 285px;
+      margin-left: 235px;
     }
 
     &.contact {
@@ -605,85 +618,37 @@ footer {
 }
 
 
-@media (max-width: 767px) {
-  .wrapper {
-    min-width: 0;
-  }
-
-  .channelheader {
-
-    margin-top: 200px;
-    .clearfix();
-
-    h1 {
-      font-size: 18px;
-    }
-
-    h4 {
-      font-size: 12px;
-    }
-  }
-
-  #videoslist {
-    li {
-      margin: 0 5px 24px 5px;
-      width: 140px;
-      opacity: 1;
-
-      .overlay {
-        position: absolute;
-        top: 0;
-        left: 0;
-        background: url(/static/assets/weblight/images/videoOverlay.png);
-        background-size: 140px 79px;
-        width: 140px;
-        height: 79px;
-        -webkit-transition: 0.5s;
-        -moz-transition: 0.5s all;
-        -ms-transition: 0.5s all;
-        -o-transition: 0.5s all;
-        transition: 0.5s all;
-
-        &:hover {
-          background: url(/static/assets/weblight/images/overlayhover.png);
-          background-size: 140px 79px;
-        }
-      }
-
-      .videocell {
-        width: 140px;
-        height: 79px;
-      }
-    }
-  }
-
-  #playercontainer {
-    width: 100%;
-    height: 100%;
-    padding: 0;
-    margin-top: 0;
-    margin-left: 0;
-    top: 0;
-    left: 0;
-  }
-
-  footer {
-    .right {
-      float: left;
-    }
-
-    ul {
-
-      .clearfix();
-      padding: 10px 0;
-
-      li {
-        line-height: 20px;
-      }
-    }
-  }
-}
 
 @media (min-width: 768px) and (max-width: 979px) {
 
+  .wrapper {
+    width: 768px;
+  }
+
+  #videoslist {
+    padding: 0 57px;
+  }
+
+  .content-page {
+
+    header {
+
+      h2 {
+        padding-top: 10px;
+      }
+    }
+
+    .title {
+      float: none;
+      padding-left: 0;
+    }
+
+    .main-content {
+
+      .main-text {
+        margin-left: 0;
+      }
+
+    }
+  }
 }
