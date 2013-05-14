@@ -70,6 +70,8 @@ class CategoryTranslation(db.Model):
     priority = Column(Integer, nullable=False, server_default='0')
     name = Column(String(32), nullable=False)
 
+    locale_rel = relationship('Locale', backref='categorytranslations')
+
 
 class ExternalCategoryMap(db.Model):
 
