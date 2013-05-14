@@ -1,8 +1,11 @@
 def pytest_configure(config):
     from rockpack.mainsite import app, init_app
 
-    app.config['DATABASE_URL'] = 'sqlite://'
     app.config['FORCE_INDEX_INSERT_REFRESH'] = True
+    app.config['DATABASE_URL'] = app.config.get('TEST_DATABASE_URL', 'sqlite://')
+
+    # import after setting DATABASE_URL
+    from rockpack.mainsite.core import dbapi
 
     if app.config.get('ELASTICSEARCH_URL'):
         from rockpack.mainsite.core.es import mappings, helpers
@@ -16,10 +19,10 @@ def pytest_configure(config):
         i.create_all_mappings()
 
     # Seems to be required for sub-transaction support:
-    from rockpack.mainsite.core import dbapi
-    dbapi.db.engine.raw_connection().connection.isolation_level = None
+    if 'sqlite:' in app.config['DATABASE_URL']:
+        dbapi.db.engine.raw_connection().connection.isolation_level = None
 
-    dbapi.sync_database()
+    dbapi.sync_database(drop_all=True)
 
     from test.test_helpers import install_mocks
     from test.fixtures import install, all_data

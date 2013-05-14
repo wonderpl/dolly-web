@@ -132,6 +132,7 @@ class ImportView(BaseView):
             last_name=form.last_name.data,
             email='',
             date_of_birth=date(1900, 1, 1),
+            locale='en-us',
             avatar=avatar,
             refresh_token='',
             is_active=True)

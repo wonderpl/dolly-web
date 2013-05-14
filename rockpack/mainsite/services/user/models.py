@@ -30,7 +30,7 @@ class User(db.Model):
     last_name = Column(String(32), nullable=False)
     date_of_birth = Column(Date())
     avatar = Column(ImageType('AVATAR'), nullable=False)
-    gender = Column(Enum(*GENDERS), nullable=True)
+    gender = Column(Enum(*GENDERS, name='gender_enum'), nullable=True)
     is_active = Column(Boolean, nullable=False, server_default='true', default=True)
     refresh_token = Column(String(1024), nullable=False)
     username_updated = Column(Boolean, nullable=False, server_default='false', default=False)
@@ -221,7 +221,7 @@ class ReservedUsername(db.Model):
     __tablename__ = 'reserved_username'
 
     username = Column(String(52), nullable=False, primary_key=True)
-    external_system = Column(Enum(*EXTERNAL_SYSTEM_NAMES), nullable=False)
+    external_system = Column(Enum(*EXTERNAL_SYSTEM_NAMES, name='external_system_names'), nullable=False)
     external_uid = Column(String(1024), nullable=False)
     external_data = Column(Text())
 

@@ -29,4 +29,5 @@ class RockPackTestCase(unittest.TestCase):
             avatar='',
             refresh_token='',
             is_active=True,
+            locale='en-us',
         ).save()

@@ -132,6 +132,7 @@ class ExternalTokenTestCase(base.RockPackTestCase):
                 date_of_birth=date(2000, 1,1),
                 email='em@ail.com',
                 avatar='',
+                locale='en-us',
                 refresh_token='',
                 is_active=True)
         return u.save()
