@@ -19,4 +19,10 @@ if 'SECURE_SUBDOMAIN' in app.config:
             return 'Insecurities make the world go round', 404
     app.before_request(check_if_secure)
 
+if 'AUTH_HEADER_SANITY_CHECK' in app.config:
+    def check_auth_header():
+        if not request.is_secure and 'Authorization' in request.headers:
+            return 'A small leak will sink a great ship', 412
+    app.before_request(check_auth_header)
+
 application = app
