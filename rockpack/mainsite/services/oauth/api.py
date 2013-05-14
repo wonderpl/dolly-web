@@ -3,6 +3,7 @@ from cStringIO import StringIO
 from flask import request, abort, g
 from flask.ext import wtf
 from rockpack.mainsite import app, requests
+from rockpack.mainsite.helpers import lazy_gettext as _
 from rockpack.mainsite.helpers.db import get_column_property, get_column_validators
 from rockpack.mainsite.helpers.urls import url_for
 from rockpack.mainsite.core.token import create_access_token
@@ -83,26 +84,26 @@ class LoginWS(WebService):
 def username_validator():
     def _valid(form, field):
         if field.data != User.sanitise_username(field.data):
-            raise wtf.ValidationError('Username can only contain alphanumerics.')
+            raise wtf.ValidationError(_('Username can only contain alphanumerics.'))
         exists = username_exists(field.data)
         if exists == 'reserved':
-            raise wtf.ValidationError('"%s" is reserved.' % field.data)
+            raise wtf.ValidationError(_('"%s" is reserved.') % field.data)
         elif exists:
-            raise wtf.ValidationError('"%s" already taken.' % field.data)
+            raise wtf.ValidationError(_('"%s" already taken.') % field.data)
     return _valid
 
 
 def email_registered_validator():
     def _registered(form, field):
         if User.query.filter_by(email=field.data).count():
-            raise wtf.ValidationError('Email address already registered.')
+            raise wtf.ValidationError(_('Email address already registered.'))
     return _registered
 
 
 def gender_validator():
     def _valid(form, field):
         if field.data not in GENDERS:
-            raise wtf.ValidationError('Invalid gender.')
+            raise wtf.ValidationError(_('Invalid gender.'))
     return _valid
 
 
@@ -123,7 +124,7 @@ class ExternalRegistrationForm(wtf.Form):
 
     def validate_external_system(form, value):
         if value.data not in models.EXTERNAL_SYSTEM_NAMES:
-            raise wtf.ValidationError('external system invalid')
+            raise wtf.ValidationError(_('External system invalid.'))
 
 
 # TODO: currently only Facebook - change
