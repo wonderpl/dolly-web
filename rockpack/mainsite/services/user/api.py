@@ -368,7 +368,8 @@ class UserWS(WebService):
         user = User.query.get_or_404(userid)
         channels = [video_api.channel_dict(c, with_owner=False, owner_url=False)
                     for c in Channel.query.options(lazyload('category_rel')).
-                    filter_by(owner=user.id, deleted=False, public=True)]
+                    filter_by(owner=user.id, deleted=False, public=True).
+                    order_by('favourite desc', 'channel.date_updated desc')]
 
         return dict(
             id=user.id,
@@ -385,8 +386,10 @@ class UserWS(WebService):
         if not userid == g.authorized.userid:
             return self.user_info(userid)
         user = g.authorized.user
-        channels = [video_api.channel_dict(c, with_owner=False, owner_url=True) for c in
-                    Channel.query.filter_by(owner=user.id, deleted=False).order_by('favourite desc')]
+        channels = [video_api.channel_dict(c, with_owner=False, owner_url=True)
+                    for c in Channel.query.options(lazyload('owner_rel'), lazyload('category_rel')).
+                    filter_by(owner=user.id, deleted=False).
+                    order_by('favourite desc', 'date_updated desc')]
         info = dict(
             id=user.id,
             username=user.username,
