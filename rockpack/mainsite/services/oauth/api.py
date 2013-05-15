@@ -74,10 +74,12 @@ class LoginWS(WebService):
         if not user:
             # New user
             user = User.create_from_external_system(eu)
+            record_user_event(user.username, 'registration succeeded', user.id)
 
         # Update the token record if needed
         models.ExternalToken.update_token(user, eu)
 
+        record_user_event(user.username, 'login succeeded', user.id)
         return user.get_credentials()
 
 
