@@ -312,6 +312,7 @@ class Channel(db.Model):
     resource_url = property(get_resource_url)
 
     def add_videos(self, videos):
+        existing_videos = bool(self.video_instances)
         instances = [VideoInstance(channel=self.id, video=getattr(v, 'id', v),
                                    category=self.category) for v in videos]
         session = self.query.session
@@ -324,11 +325,26 @@ class Channel(db.Model):
                         filter(VideoInstance.video.in_(set(i.video for i in instances)))]
             session.add_all(i for i in instances if i.video not in existing)
 
+        # If ...
+        # - we have no videos yet
+        # - we've just added videos
+        # - we're currently not public
+        # - and we could otherwise be
+        # ... make us public
+        if not existing_videos and instances and not self.public and self.should_be_public(self, True):
+            self.public = True
+            self.save()
+
     def remove_videos(self, videos):
         VideoInstance.remove_from_video_ids(
             set(
                 getattr(v, 'id', v)
                 for v in videos.query.filter_by(channel=self.id)))
+
+        # If we shouldn't be public and we are, toggle
+        if not self.should_be_public(self, self.public) and self.public:
+            self.public = False
+            self.save()
 
     def add_meta(self, locale):
         return ChannelLocaleMeta(channel=self.id, locale=locale).save()
@@ -338,7 +354,8 @@ class Channel(db.Model):
         """ Return False if conditions for
             visibility are not met """
         if not (channel.description and channel.cover and
-                (channel.title and not channel.title.startswith(app.config['UNTITLED_CHANNEL']))):
+                (channel.title and not channel.title.startswith(app.config['UNTITLED_CHANNEL'])) and
+                channel.video_instances):
             return False
 
         return public

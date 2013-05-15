@@ -2,7 +2,7 @@ import uuid
 import json
 from urlparse import urlsplit
 from test import base
-from test.fixtures import RockpackCoverArtData
+from test.fixtures import RockpackCoverArtData, VideoInstanceData
 from test.test_helpers import get_auth_header
 from rockpack.mainsite import app
 from rockpack.mainsite.services.video import models
@@ -70,6 +70,8 @@ class ChannelCreateTestCase(base.RockPackTestCase):
                     headers=[get_auth_header(user.id)])
             self.assertEquals(200, r.status_code)
 
+            resource = urlsplit(r.headers['Location']).path
+
             r = client.get(resource, headers=[get_auth_header(user.id)])
             updated_ch = json.loads(r.data)
             self.assertEquals(new_title, updated_ch['title'],
@@ -86,9 +88,19 @@ class ChannelCreateTestCase(base.RockPackTestCase):
             r = client.put(resource,
                     data=json.dumps(dict(title='',
                         description=new_description,
-                    category=3,
-                    cover=RockpackCoverArtData.comic_cover.cover,
-                    public=False)),
+                        category=3,
+                        cover=RockpackCoverArtData.comic_cover.cover,
+                        public=False)),
+                    content_type='application/json',
+                    headers=[get_auth_header(user.id)])
+            self.assertEquals(200, r.status_code)
+
+            r = client.put(resource,
+                    data=json.dumps(dict(title='new title',
+                        description=new_description,
+                        category=3,
+                        cover=RockpackCoverArtData.comic_cover.cover,
+                        public=False)),
                     content_type='application/json',
                     headers=[get_auth_header(user.id)])
             self.assertEquals(200, r.status_code)
@@ -98,9 +110,9 @@ class ChannelCreateTestCase(base.RockPackTestCase):
             r = client.put(resource,
                     data=json.dumps(dict(title='',
                         description=new_description,
-                    category=3,
-                    cover=RockpackCoverArtData.comic_cover.cover,
-                    public=False)),
+                        category=3,
+                        cover=RockpackCoverArtData.comic_cover.cover,
+                        public=False)),
                     content_type='application/json',
                     headers=[get_auth_header(user.id)])
             self.assertEquals(400, r.status_code)
@@ -112,13 +124,39 @@ class ChannelCreateTestCase(base.RockPackTestCase):
                     headers=[get_auth_header(user.id)])
             data = json.loads(r.data)
             self.assertEquals(data, False)
+            self.assertEquals(models.Channel.query.get(new_ch.id).public, False)
 
             r = client.put(resource + 'public/',
                     data=json.dumps(True),
                     content_type='application/json',
                     headers=[get_auth_header(user.id)])
             data = json.loads(r.data)
-            self.assertEquals(data, True)
+            self.assertEquals(data, False)
+            self.assertEquals(
+                models.Channel.query.get(new_ch.id).public,
+                False,
+                'channel should be private without videos even if detail-complete')
+
+            r = client.post(resource + 'videos/',
+                    data=json.dumps([VideoInstanceData.video_instance1.id]),
+                    content_type='application/json',
+                    headers=[get_auth_header(user.id)])
+            self.assertEquals(r.status_code, 204)
+            self.assertEquals(
+                models.Channel.query.get(new_ch.id).public,
+                True,
+                'channel should be public if adding a video and detail-complete')
+
+            r = client.put(resource + 'public/',
+                    data=json.dumps(False),
+                    content_type='application/json',
+                    headers=[get_auth_header(user.id)])
+            data = json.loads(r.data)
+            self.assertEquals(data, False)
+            self.assertEquals(
+                models.Channel.query.get(new_ch.id).public,
+                False,
+                'channel should not be public if privacy is toggled false')
 
     def test_failed_channel_create(self):
         with self.app.test_client() as client:

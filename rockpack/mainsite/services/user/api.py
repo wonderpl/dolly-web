@@ -614,8 +614,10 @@ class UserWS(WebService):
             abort(403)
         if not isinstance(request.json, bool):
             abort(400, message=_('Boolean value required'))
-        channel.public = request.json
-        channel = channel.save()
+        intended_public = channel.should_be_public(channel, request.json)
+        if channel.public != intended_public:
+            channel.public = intended_public
+            channel = channel.save()
         return channel.public
 
     @expose_ajax('/<userid>/channels/<channelid>/videos/')
@@ -634,7 +636,16 @@ class UserWS(WebService):
             abort(403)
         if request.json is None or not isinstance(request.json, list):
             abort(400, message=_('List can be empty, but must be present'))
+        existing_videos = len(channel.video_instances)
         add_videos_to_channel(channel, request.json, self.get_locale(), request.method == 'PUT')
+
+        intended_public = channel.should_be_public(channel, channel.public)
+        if not channel.video_instances and not intended_public:
+            channel.public = intended_public
+            channel.save()
+        elif not existing_videos and channel.should_be_public(channel, True):
+            channel.public = True
+            channel.save()
 
     @expose_ajax('/<userid>/channels/<channelid>/videos/<videoid>/')
     def channel_video_instance(self, userid, channelid, videoid):
