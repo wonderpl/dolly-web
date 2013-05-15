@@ -70,6 +70,8 @@ class CategoryTranslation(db.Model):
     priority = Column(Integer, nullable=False, server_default='0')
     name = Column(String(32), nullable=False)
 
+    locale_rel = relationship('Locale', backref='categorytranslations')
+
 
 class ExternalCategoryMap(db.Model):
 
@@ -320,9 +322,7 @@ class Channel(db.Model):
             existing = [i.video for i in session.query(VideoInstance.video).
                         filter_by(channel=self.id).
                         filter(VideoInstance.video.in_(set(i.video for i in instances)))]
-            for i in instances:
-                if i.video not in existing:
-                    session.add_all(i)
+            session.add_all(i for i in instances if i.video not in existing)
 
     def remove_videos(self, videos):
         VideoInstance.remove_from_video_ids(
