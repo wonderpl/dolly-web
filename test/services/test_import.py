@@ -98,7 +98,7 @@ class ImportFromYoutubeTestCase(base.RockPackTestCase):
             with self.app.test_client() as client:
                 data = self.data_video_1.copy()
                 data.update({
-                    'user': User.query.filter_by(username=UserData.test_user_a.username).first()})
+                    'user': User.query.filter_by(username=UserData.test_user_a.username).first().id})
 
                 r = client.post('/admin/import/', data=data)
 

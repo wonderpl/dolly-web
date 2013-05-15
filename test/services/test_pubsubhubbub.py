@@ -6,6 +6,7 @@ from rockpack.mainsite.services.video.models import Channel
 from rockpack.mainsite.services.pubsubhubbub.api import subscribe
 from rockpack.mainsite.services.pubsubhubbub.models import Subscription
 from ..base import RockPackTestCase
+from ..fixtures import UserData
 
 
 PUSH_ATOM_XML = '''<?xml version="1.0" encoding="UTF-8"?>
@@ -101,8 +102,9 @@ class PubSubHubbubTestCase(RockPackTestCase):
         super(PubSubHubbubTestCase, self).setUp()
         self.ctx = self.app.test_request_context()
         self.ctx.push()
-        self.channel = Channel(title='', description='', cover='').save()
-        self.channel.add_meta('en')
+        self.channel = Channel(title='', description='', cover='', owner=UserData.test_user_a.id).save()
+        assert Channel.query.get(self.channel.id), channel.id
+        self.channel.add_meta('en-us')
         self.subid = subscribe('test', uuid.uuid4().hex, self.channel.id).id
 
     def tearDown(self):
