@@ -660,7 +660,7 @@ class UserWS(WebService):
     @expose_ajax('/<userid>/cover_art/', cache_age=60, cache_private=True)
     @check_authorization(self_auth=True)
     def get_cover_art(self, userid):
-        covers = UserCoverArt.query.filter_by(owner=userid)
+        covers = UserCoverArt.query.filter_by(owner=userid).order_by(desc('date_created'))
         return cover_api.cover_art_response(covers, self.get_page(), own=True)
 
     @expose_ajax('/<userid>/cover_art/', methods=['POST'])

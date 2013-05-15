@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, CHAR
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, CHAR, func
 from sqlalchemy.orm import relationship
 from rockpack.mainsite.core.dbapi import db
 from rockpack.mainsite.helpers.db import ImageType, BoxType
@@ -14,6 +14,7 @@ class RockpackCoverArt(db.Model):
     cover = Column(ImageType('CHANNEL'), nullable=False)
     cover_aoi = Column(BoxType, nullable=True)
     locale = Column(ForeignKey('locale.id'), nullable=False)
+    date_created = Column(DateTime(), nullable=False, default=func.now())
     category = Column(ForeignKey('category.id'), nullable=True)
     priority = Column(Integer, nullable=False, default='1')
     attribution = Column(String(1024), nullable=True)
@@ -30,6 +31,7 @@ class UserCoverArt(db.Model):
     cover = Column(ImageType('CHANNEL'), nullable=False)
     cover_aoi = Column(BoxType, nullable=True)
     owner = Column(CHAR(22), ForeignKey('user.id'), nullable=False)
+    date_created = Column(DateTime(), nullable=False, default=func.now())
 
     owner_rel = relationship(User, primaryjoin=(owner == User.id))
 
