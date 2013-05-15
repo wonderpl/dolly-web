@@ -305,6 +305,20 @@ class Channel(db.Model):
         channel.public = channel.should_be_public(channel, public)
         return channel.save()
 
+    @classmethod
+    def should_be_public(self, channel, public):
+        """Return False if conditions for visibility are not met"""
+        if not (channel.cover and
+                (channel.title and not channel.title.startswith(app.config['UNTITLED_CHANNEL'])) and
+                channel.video_instances):
+            return False
+
+        return public
+
+    @property
+    def editable(self):
+        return not self.favourite
+
     def get_resource_url(self, own=False):
         view = 'userws.owner_channel_info' if own else 'userws.channel_info'
         return url_for(view, userid=self.owner, channelid=self.id)
@@ -348,17 +362,6 @@ class Channel(db.Model):
 
     def add_meta(self, locale):
         return ChannelLocaleMeta(channel=self.id, locale=locale).save()
-
-    @classmethod
-    def should_be_public(self, channel, public):
-        """ Return False if conditions for
-            visibility are not met """
-        if not (channel.description and channel.cover and
-                (channel.title and not channel.title.startswith(app.config['UNTITLED_CHANNEL'])) and
-                channel.video_instances):
-            return False
-
-        return public
 
 
 class ChannelLocaleMeta(db.Model):

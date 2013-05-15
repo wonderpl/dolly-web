@@ -223,7 +223,7 @@ class ChannelCreateTestCase(base.RockPackTestCase):
                     '/ws/{}/channels/'.format(user.id),
                     data=json.dumps(dict(
                         title=str(i),
-                        description='x',
+                        description='',
                         category='1',
                         cover=RockpackCoverArtData.comic_cover.cover,
                         public=True,
@@ -266,3 +266,40 @@ class ChannelCreateTestCase(base.RockPackTestCase):
                 self.assertEquals(channels['total'], 4)
                 titles = [c['title'] for c in channels['items']]
                 self.assertEquals(titles, ['Favourites', 'updated', '0', '2'])
+
+    def test_channel_editable(self):
+        with self.app.test_client() as client:
+            user = self.create_test_user()
+            r = client.post(
+                '/ws/{}/channels/'.format(user.id),
+                data=json.dumps(dict(title='x', category='', description='', cover='', public='')),
+                content_type='application/json',
+                headers=[get_auth_header(user.id)]
+            )
+            self.assertEquals(201, r.status_code, r.data)
+
+            r = client.get('/ws/{}/'.format(user.id), headers=[get_auth_header(user.id)])
+            channels = json.loads(r.data)['channels']['items']
+            favourites_url = [c['resource_url'] for c in channels if c.get('favourites')][0]
+            normal_url = [c['resource_url'] for c in channels if not c.get('favourites')][0]
+
+            for url, code in (favourites_url, 400), (normal_url, 200):
+                path = urlsplit(url).path
+                r = client.put(
+                    path,
+                    data=json.dumps(dict(title='test', category='', description='', cover='', public='')),
+                    content_type='application/json',
+                    headers=[get_auth_header(user.id)]
+                )
+                self.assertEquals(code, r.status_code, r.data)
+                r = client.put(
+                    path + 'public/',
+                    data='false',
+                    content_type='application/json',
+                    headers=[get_auth_header(user.id)]
+                )
+                self.assertEquals(code, r.status_code, r.data)
+                r = client.delete(path,
+                                  content_type='application/json',
+                                  headers=[get_auth_header(user.id)])
+                self.assertEquals(204 if code == 200 else code, r.status_code, r.data)

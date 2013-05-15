@@ -135,8 +135,7 @@ def save_video_activity(userid, action, instance_id, locale):
     UserActivity(**activity).save()
 
     if action in ('star', 'unstar'):
-        channel = Channel.query.filter_by(
-            owner=userid, title=app.config['FAVOURITE_CHANNEL'][0]).first()
+        channel = Channel.query.filter_by(owner=userid, favourite=True).first()
         if channel:
             if action == 'unstar':
                 channel.remove_videos([video_id])
@@ -583,6 +582,8 @@ class UserWS(WebService):
         channel = Channel.query.filter_by(id=channelid, deleted=False).first_or_404()
         if not channel.owner == userid:
             abort(403)
+        if not channel.editable:
+            abort(400, message=_('Channel not editable'))
         form = ChannelForm(csrf_enabled=False)
         form.userid = userid
         if not form.validate():
@@ -606,6 +607,8 @@ class UserWS(WebService):
         channel = Channel.query.filter_by(id=channelid, deleted=False).first_or_404()
         if not channel.owner == userid:
             abort(403)
+        if not channel.editable:
+            abort(400, message=_('Channel not editable'))
         channel.deleted = True
         channel.save()
 
@@ -615,6 +618,8 @@ class UserWS(WebService):
         channel = Channel.query.filter_by(id=channelid, deleted=False).first_or_404()
         if not channel.owner == userid:
             abort(403)
+        if not channel.editable:
+            abort(400, message=_('Channel not editable'))
         if not isinstance(request.json, bool):
             abort(400, message=_('Boolean value required'))
         intended_public = channel.should_be_public(channel, request.json)

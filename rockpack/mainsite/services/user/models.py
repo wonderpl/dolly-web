@@ -153,6 +153,7 @@ class User(db.Model):
         from rockpack.mainsite.services.video.models import Channel
         title, description, cover = app.config['FAVOURITE_CHANNEL']
         channel = Channel(
+            favourite=True,
             title=title,
             description=description,
             cover=cover,
