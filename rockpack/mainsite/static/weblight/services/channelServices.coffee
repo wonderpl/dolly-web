@@ -1,5 +1,3 @@
-'use strict';
-
 angular.module('channelServices', ['ngResource'])
 
   .constant('api_urls', window.api_urls)

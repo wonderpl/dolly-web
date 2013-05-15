@@ -24,9 +24,9 @@ window.Weblight.controller('AppCtrl', ['$routeParams', 'isMobile', '$scope', '$l
     # regular video size 235px, video margin 20px, container margin 60px
     # mobile video size 150px, video margin 5px, container margin 0px
 
-    # Video size + margin + container margin
+#    # Video size + margin + container margin
     if isMobile
-      {width: Math.floor(($scope.window_width) / 150) * 150 + 'px'}
+      return {width: Math.floor(($scope.window_width) / 150) * 150 + 'px', margin: '0 auto'}
     else
-      { width: Math.floor(($scope.window_width - 40 ) / 258) * 258 + 'px'}
+      return { width: Math.floor(($scope.window_width - 40 ) / 258) * 258 + 'px', margin: '0 auto'}
 ])
