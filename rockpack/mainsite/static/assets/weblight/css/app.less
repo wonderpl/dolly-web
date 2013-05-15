@@ -211,7 +211,7 @@ footer {
   font-family: "dn-regular";
   color: #aaa;
   background: #fff;
-  padding: 30px 0;
+  padding: 60px 0;
 
   ul {
     list-style: none;
@@ -247,7 +247,7 @@ footer {
 .wrapper {
   position: relative;
   margin: 0 auto;
-  width: 923px;
+  width: 980px;
   .clearfix();
 }
 
@@ -521,25 +521,15 @@ footer {
     margin-top: 30px;
 
     .images_container {
-      .clearfix();
-      width: 640px;
-      display: table-cell;
-
-      .people_left_side {
-        float: left;
-        width: 320px;
-      }
-
-      .people_right_side {
-        float: right;
-        width: 320px;
-      }
+      width: 650px;
+      margin: 0 auto;
 
       .image_cont {
-        float: left;
+        display: inline-block;
         width: 310px;
-        margin: 0 10px 10px 0;
+        margin: 5px;
         cursor: pointer;
+        vertical-align: top;
       }
 
       .jobheader {
@@ -615,6 +605,30 @@ footer {
       }
     }
   }
+
+  .wheretofindus {
+    background: #dde0e1;
+    margin-top: 300px;
+
+    h2 {
+      color: #fff;
+      font-family: "dn-bold";
+      font-size: 35px;
+      text-transform: uppercase;
+      margin-top: 30px;
+    }
+
+    img {
+      width: 100%;
+      margin-top: 30px;
+    }
+
+    p {
+      font-size: 18px;
+      font-family: "dn-regular";
+      text-transform: uppercase;
+    }
+  }
 }
 
 #channel-playbook {
@@ -671,6 +685,20 @@ footer {
   }
 }
 
+@media (min-width: 1200px) {
+  .wrapper {
+    width: 1200px;
+  }
+
+  #about {
+    .people {
+      .images_container {
+        width: 1000px;
+      }
+    }
+  }
+}
+
 @media (min-width: 768px) and (max-width: 979px) {
 
   .wrapper {
@@ -701,6 +729,30 @@ footer {
         margin-left: 0;
       }
 
+    }
+  }
+
+  #playbookmenu {
+    margin-left: 0;
+    top: 30px;
+    position: absolute;
+    border-right: 0;
+    font-size: 16px;
+    width: 100%;
+
+    div {
+      display: inline-block;
+      margin: 0 18px;
+    }
+  }
+
+  #playbookcontainer {
+    padding-top: 100px;
+  }
+
+  #playbookcontent {
+    #playbookcontentcontainer {
+      margin-left: 0;
     }
   }
 }
