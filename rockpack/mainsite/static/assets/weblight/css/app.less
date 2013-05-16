@@ -40,8 +40,13 @@ body {
   img {
     width: 125px;
     height: 22px;
-    vertical-align: middle;
+    margin-left: 35px;
+  }
 
+  .wrapper {
+    img {
+      margin-left: 0;
+    }
   }
 }
 
@@ -220,7 +225,7 @@ footer {
   ul {
     list-style: none;
     .clearfix();
-    margin: 0;
+    margin: 0 0 0 35px;
     display: inline-block;
 
     li {
@@ -228,6 +233,12 @@ footer {
       margin: 7px 0;
       font-size: 17px;
       text-transform: uppercase;
+    }
+  }
+
+  .wrapper {
+    ul {
+      margin: 0;
     }
   }
 
@@ -701,6 +712,75 @@ footer {
       }
     }
   }
+}
+
+.content-providers {
+  #contentproviders {
+    background: #eaeced;
+    padding: 117px 0 67px 0;
+    margin-bottom: 32px;
+
+    h1 {
+      font-family: "dn-bold";
+      font-size: 43px;
+      color: #686868;
+    }
+
+    h2 {
+      font-family: "dn-regular";
+      font-size: 33px;
+      color: #a9a9a9;
+    }
+
+    p {
+      font-family: "dn-regular";
+      color: #1c1f21;
+      font-size: 18px;
+      width: 700px;
+    }
+  }
+
+  #chalkboard {
+    width: 100%;
+  }
+
+  #iphonescontainer {
+
+    background: #eaeced;
+    padding-bottom: 60px;
+
+    #iphones {
+      display: block;
+      margin: -100px auto 0;
+    }
+
+    #iphonesinfo {
+
+      width: 910px;
+      margin: 0 auto;
+
+      h3 {
+        color: #1c1f21;
+        font-family: "dn-bold";
+        font-size: 20px;
+      }
+
+      p {
+        font-family: "dn-regular";
+        font-size: 18px;
+        color: #5b6267;
+      }
+
+      div {
+        display: inline-block;
+        width: 280px;
+        vertical-align: top;
+        margin: 0 10px;
+        text-align: center;
+      }
+    }
+  }
+
 }
 
 @media (min-width: 768px) and (max-width: 979px) {
