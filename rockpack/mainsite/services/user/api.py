@@ -283,6 +283,8 @@ class ChannelForm(form.BaseForm):
 
     def validate_cover(self, field):
         if field.data:
+            if field.data == 'KEEP':
+                return
             found = False
             for model in RockpackCoverArt, UserCoverArt:
                 cover = model.query.with_entities(model.cover_aoi).filter_by(cover=field.data).first()
@@ -593,8 +595,9 @@ class UserWS(WebService):
 
         channel.title = form.title.data
         channel.description = form.description.data
-        channel.cover = form.cover.data
-        channel.cover_aoi = form.cover_aoi.data
+        if not form.cover.data == 'KEEP':
+            channel.cover = form.cover.data
+            channel.cover_aoi = form.cover_aoi.data
         channel.category = form.category.data
         channel.public = Channel.should_be_public(channel, form.public.data)
         channel.save()
