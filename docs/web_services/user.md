@@ -304,11 +304,11 @@ Cache-Control: public, max-age=60
 
 {
  "id": "Unique channel id",
- "public": true,
  "description": "Channel description",
  "resource_url": "http://base/ws/USERID/channels/CHANNELID/",
  "title": "Channel title",
  "ecommerce_url": "",
+ "favourites": false,
  "subscriber_count": 119,
  "cover": {
    "thumbnail_url": "http://path/to/channel/cover.jpg",

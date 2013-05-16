@@ -135,8 +135,7 @@ def save_video_activity(userid, action, instance_id, locale):
     UserActivity(**activity).save()
 
     if action in ('star', 'unstar'):
-        channel = Channel.query.filter_by(
-            owner=userid, title=app.config['FAVOURITE_CHANNEL'][0]).first()
+        channel = Channel.query.filter_by(owner=userid, favourite=True).first()
         if channel:
             if action == 'unstar':
                 channel.remove_videos([video_id])
@@ -368,7 +367,8 @@ class UserWS(WebService):
         user = User.query.get_or_404(userid)
         channels = [video_api.channel_dict(c, with_owner=False, owner_url=False)
                     for c in Channel.query.options(lazyload('category_rel')).
-                    filter_by(owner=user.id, deleted=False, public=True)]
+                    filter_by(owner=user.id, deleted=False, public=True).
+                    order_by('favourite desc', 'channel.date_updated desc')]
 
         return dict(
             id=user.id,
@@ -385,8 +385,10 @@ class UserWS(WebService):
         if not userid == g.authorized.userid:
             return self.user_info(userid)
         user = g.authorized.user
-        channels = [video_api.channel_dict(c, with_owner=False, owner_url=True) for c in
-                    Channel.query.filter_by(owner=user.id, deleted=False).order_by('favourite desc')]
+        channels = [video_api.channel_dict(c, with_owner=False, owner_url=True)
+                    for c in Channel.query.options(lazyload('owner_rel'), lazyload('category_rel')).
+                    filter_by(owner=user.id, deleted=False).
+                    order_by('favourite desc', 'date_updated desc')]
         info = dict(
             id=user.id,
             username=user.username,
@@ -580,6 +582,8 @@ class UserWS(WebService):
         channel = Channel.query.filter_by(id=channelid, deleted=False).first_or_404()
         if not channel.owner == userid:
             abort(403)
+        if not channel.editable:
+            abort(400, message=_('Channel not editable'))
         form = ChannelForm(csrf_enabled=False)
         form.userid = userid
         if not form.validate():
@@ -603,6 +607,8 @@ class UserWS(WebService):
         channel = Channel.query.filter_by(id=channelid, deleted=False).first_or_404()
         if not channel.owner == userid:
             abort(403)
+        if not channel.editable:
+            abort(400, message=_('Channel not editable'))
         channel.deleted = True
         channel.save()
 
@@ -612,10 +618,14 @@ class UserWS(WebService):
         channel = Channel.query.filter_by(id=channelid, deleted=False).first_or_404()
         if not channel.owner == userid:
             abort(403)
+        if not channel.editable:
+            abort(400, message=_('Channel not editable'))
         if not isinstance(request.json, bool):
             abort(400, message=_('Boolean value required'))
-        channel.public = request.json
-        channel = channel.save()
+        intended_public = channel.should_be_public(channel, request.json)
+        if channel.public != intended_public:
+            channel.public = intended_public
+            channel = channel.save()
         return channel.public
 
     @expose_ajax('/<userid>/channels/<channelid>/videos/')
@@ -634,7 +644,16 @@ class UserWS(WebService):
             abort(403)
         if request.json is None or not isinstance(request.json, list):
             abort(400, message=_('List can be empty, but must be present'))
+        existing_videos = len(channel.video_instances)
         add_videos_to_channel(channel, request.json, self.get_locale(), request.method == 'PUT')
+
+        intended_public = channel.should_be_public(channel, channel.public)
+        if not channel.video_instances and not intended_public:
+            channel.public = intended_public
+            channel.save()
+        elif not existing_videos and channel.should_be_public(channel, True):
+            channel.public = True
+            channel.save()
 
     @expose_ajax('/<userid>/channels/<channelid>/videos/<videoid>/')
     def channel_video_instance(self, userid, channelid, videoid):
@@ -649,7 +668,7 @@ class UserWS(WebService):
     @expose_ajax('/<userid>/cover_art/', cache_age=60, cache_private=True)
     @check_authorization(self_auth=True)
     def get_cover_art(self, userid):
-        covers = UserCoverArt.query.filter_by(owner=userid)
+        covers = UserCoverArt.query.filter_by(owner=userid).order_by(desc('date_created'))
         return cover_api.cover_art_response(covers, self.get_page(), own=True)
 
     @expose_ajax('/<userid>/cover_art/', methods=['POST'])
