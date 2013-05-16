@@ -39,9 +39,9 @@ window.Weblight.controller('VideoCtrl', ['$scope', '$rootScope', '$routeParams',
           controls: 0,
           modestbranding: 1
         },
-        events: {
-        'onReady': onPlayerReady
-        }
+#        events: {
+#        'onReady': onPlayerReady
+#        }
       })
 
   onPlayerReady = (event) ->
