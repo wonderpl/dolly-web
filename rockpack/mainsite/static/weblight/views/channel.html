@@ -1,6 +1,6 @@
 <div ng-controller="ChannelCtrl" id="ChannelCtrl">
   <img ng-src="((channel.cover_background_url))" id="bgimage">   
-  <div class="wrapper channelheader">
+  <div class="channelheader" ng-style="wrapperWidth()">
     <div>
       <h1>((channel.title| truncate: channelTitleLength))</h1>
       <div id="details">((channel.subscriber_count)) Subscribers</div>
@@ -17,7 +17,7 @@
   </div>
   <div id="channeloverlay" when-scrolled="load_videos()">
     <div ng-include src="'videoplayer.html'"></div>
-    <div class="wrapper">
+    <div ng-style="wrapperWidth()">
       <div id="videoslist" infinite-scroll='load_videos()' infinite-scroll-distance='1'>
         <div ng-click="setCurrentVideo(video)" ng-repeat="video in channel.videos.items" video-cell></div>
       </div>
