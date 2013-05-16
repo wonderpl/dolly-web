@@ -1,8 +1,11 @@
-window.Weblight.controller('AppCtrl', ['$routeParams', 'isMobile', '$scope', '$location', ($routeParams, isMobile, $scope, $location) ->
+window.Weblight.controller('AppCtrl', ['$routeParams', 'isMobile', '$scope', '$location', '$rootScope', ($routeParams, isMobile, $scope, $location, $rootScope) ->
 
-  $scope.$watch((-> $location.url()), (newValue, oldValue) ->
+  $scope.$watch((-> $location.path()), (newValue, oldValue) ->
     $scope.currentPage = newValue.substring(1)
   )
+
+  $scope.videoWidth = if isMobile then 150 else 218
+  $scope.containerPadding = if isMobile then 0 else 40
 
   $scope.isMobile = isMobile
 
@@ -12,21 +15,12 @@ window.Weblight.controller('AppCtrl', ['$routeParams', 'isMobile', '$scope', '$l
   $scope.getWidth = ->
     return $(window).width()
 
-  $scope.$watch($scope.getWidth, (newValue, oldValue) ->
-    $scope.window_width = newValue
-    return
-  )
-
   window.onresize = ->
     $scope.$apply()
 
-  $scope.wrapperWidth = ->
-    # regular video size 235px, video margin 20px, container margin 60px
-    # mobile video size 150px, video margin 5px, container margin 0px
+  $scope.$watch($scope.getWidth, (newValue, oldValue) ->
+    $scope.windowWidth = { width: (Math.floor($(window).width() / $scope.videoWidth) * $scope.videoWidth + $scope.containerPadding) + 'px', margin: '0 auto'}
+    return
+  )
 
-#    # Video size + margin + container margin
-    if isMobile
-      return {width: Math.floor(($scope.window_width) / 150) * 150 + 'px', margin: '0 auto'}
-    else
-      return { width: Math.floor(($scope.window_width - 40 ) / 258) * 258 + 'px', margin: '0 auto'}
 ])
