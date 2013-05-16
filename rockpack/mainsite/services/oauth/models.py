@@ -42,6 +42,7 @@ class ExternalToken(db.Model):
 
     @classmethod
     def user_from_uid(cls, external_system, uid):
+
         try:
             e = cls.query.filter_by(external_system=external_system,
                                     external_uid=uid).one()

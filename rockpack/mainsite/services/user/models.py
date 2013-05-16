@@ -180,7 +180,9 @@ class User(db.Model):
             last_name=eu.last_name,
             email=eu.email,
             gender=eu.gender,
-            avatar=avatar)
+            avatar=avatar,
+            date_of_birth=eu.dob
+            )
 
 
 class UserActivity(db.Model):
