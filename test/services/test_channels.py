@@ -102,7 +102,7 @@ class ChannelCreateTestCase(base.RockPackTestCase):
             r = client.put(
                 resource,
                 data=json.dumps(dict(
-                    title='',
+                    title=new_title,
                     description=new_description,
                     category=3,
                     cover=RockpackCoverArtData.comic_cover.cover,
@@ -113,19 +113,23 @@ class ChannelCreateTestCase(base.RockPackTestCase):
             )
             self.assertEquals(200, r.status_code)
 
-            r = client.put(
-                resource,
+
+            # test duplicate title
+            r = client.post(
+                '/ws/{}/channels/'.format(user.id),
                 data=json.dumps(dict(
-                    title='new title',
-                    description=new_description,
-                    category=3,
-                    cover=RockpackCoverArtData.comic_cover.cover,
+                    title=new_title,
+                    description='test channel for user {}'.format(user.id),
+                    category=1,
+                    cover='',
                     public=False)
                 ),
                 content_type='application/json',
                 headers=[get_auth_header(user.id)]
             )
-            self.assertEquals(200, r.status_code)
+
+            self.assertEquals(400, r.status_code)
+            self.assertEquals('Duplicate title.', json.loads(r.data)['form_errors']['title'][0])
 
             # check description limit (201 chars below)
             new_description = "ihjdk adhaj dsjakhkdsjf yhsdjhf sdjhfksdkfjhsdfsjdfjsdfh sdhf sdjkhf jhsjkhsf sdjhkf sdjkhsdfjkhfsdh\n\rhjdk adhaj dsjakhkdsjf yhsdjhf sdjhfksdkfjhsdfsjdfjsdfh sdhf sdjkhf jhsjkhsf sdjhkf sdjkhsdfjkhfsdh"
