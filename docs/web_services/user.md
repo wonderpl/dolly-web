@@ -427,6 +427,8 @@ Authorization: Bearer TOKEN
 }
 ```
 
+Set `cover` to `"KEEP"` to leave the cover unmodified.
+
 Responds '200' with the original channel resource url.
 
 ```http

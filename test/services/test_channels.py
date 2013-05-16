@@ -48,7 +48,7 @@ class ChannelCreateTestCase(base.RockPackTestCase):
             resource = urlsplit(r.headers['Location']).path
             r = client.get(resource, headers=[get_auth_header(user.id)])
             resp = json.loads(r.data)
-            new_ch = models.Channel.query.filter(
+            new_ch = models.Channel.query.filter_by(owner=user.id).filter(
                 models.Channel.title.like(app.config['UNTITLED_CHANNEL'] + '%')).one()
             self.assertEquals(False, resp['public'], 'channel should be private')
 
@@ -102,7 +102,7 @@ class ChannelCreateTestCase(base.RockPackTestCase):
             r = client.put(
                 resource,
                 data=json.dumps(dict(
-                    title='',
+                    title=new_title,
                     description=new_description,
                     category=3,
                     cover=RockpackCoverArtData.comic_cover.cover,
@@ -113,19 +113,22 @@ class ChannelCreateTestCase(base.RockPackTestCase):
             )
             self.assertEquals(200, r.status_code)
 
-            r = client.put(
-                resource,
+            # test duplicate title
+            r = client.post(
+                '/ws/{}/channels/'.format(user.id),
                 data=json.dumps(dict(
-                    title='new title',
-                    description=new_description,
-                    category=3,
-                    cover=RockpackCoverArtData.comic_cover.cover,
+                    title=new_title,
+                    description='test channel for user {}'.format(user.id),
+                    category=1,
+                    cover='',
                     public=False)
                 ),
                 content_type='application/json',
                 headers=[get_auth_header(user.id)]
             )
-            self.assertEquals(200, r.status_code)
+
+            self.assertEquals(400, r.status_code)
+            self.assertEquals('Duplicate title.', json.loads(r.data)['form_errors']['title'][0])
 
             # check description limit (201 chars below)
             new_description = "ihjdk adhaj dsjakhkdsjf yhsdjhf sdjhfksdkfjhsdfsjdfjsdfh sdhf sdjkhf jhsjkhsf sdjhkf sdjkhsdfjkhfsdh\n\rhjdk adhaj dsjakhkdsjf yhsdjhf sdjhfksdkfjhsdfsjdfjsdfh sdhf sdjkhf jhsjkhsf sdjhkf sdjkhsdfjkhfsdh"
@@ -310,3 +313,34 @@ class ChannelCreateTestCase(base.RockPackTestCase):
                                   content_type='application/json',
                                   headers=[get_auth_header(user.id)])
                 self.assertEquals(204 if code == 200 else code, r.status_code, r.data)
+
+    def test_channel_cover(self):
+        with self.app.test_client() as client:
+            user_id = self.create_test_user().id
+            r = client.post(
+                '/ws/{}/channels/'.format(user_id),
+                data=json.dumps(dict(title='', category='', description='', public='', cover='')),
+                content_type='application/json',
+                headers=[get_auth_header(user_id)]
+            )
+            self.assertEquals(201, r.status_code, r.data)
+            resource = urlsplit(r.headers['Location']).path
+
+            # Check for empty values
+            data = json.loads(client.get(resource, headers=[get_auth_header(user_id)]).data)
+            self.assertEquals('', data['cover']['thumbnail_url'])
+            self.assertEquals(None, data['cover']['aoi'])
+
+            for cover, code in [(RockpackCoverArtData.comic_cover.cover, 200),
+                                ('KEEP', 200), ('keep', 400), ('', 200)]:
+                r = client.put(
+                    resource,
+                    data=json.dumps(dict(title='', category='', description='', public='', cover=cover)),
+                    content_type='application/json',
+                    headers=[get_auth_header(user_id)]
+                )
+                self.assertEquals(code, r.status_code)
+
+                data = json.loads(client.get(resource, headers=[get_auth_header(user_id)]).data)
+                name = RockpackCoverArtData.comic_cover.cover.replace('.png', '.jpg') if cover else ''
+                self.assertEquals(data['cover']['thumbnail_url'].split('/')[-1], name)

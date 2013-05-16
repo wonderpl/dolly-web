@@ -59,6 +59,7 @@ class LoginWS(WebService):
     @expose_ajax('/external/', methods=['POST'])
     @check_client_authorization
     def exeternal(self):
+
         form = ExternalRegistrationForm(request.form, csrf_enabled=False)
         if not form.validate():
             abort(400, form_errors=form.errors)
@@ -186,6 +187,15 @@ class ExternalUser:
         if 'gender' in self._user_data:
             return self._user_data['gender'][0]
         return ''
+
+    @property
+    def dob(self):
+        try:
+            dob = self._user_data['birthday']
+            month, day, year = map(int, dob.split('/'))
+            return datetime(month=month, day=day, year=year)
+        except KeyError:
+            return None
 
     @property
     def locale(self):

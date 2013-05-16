@@ -283,6 +283,8 @@ class ChannelForm(form.BaseForm):
 
     def validate_cover(self, field):
         if field.data:
+            if field.data == 'KEEP':
+                return
             found = False
             for model in RockpackCoverArt, UserCoverArt:
                 cover = model.query.with_entities(model.cover_aoi).filter_by(cover=field.data).first()
@@ -300,9 +302,10 @@ class ChannelForm(form.BaseForm):
             count = user_channels.filter(Channel.title.like(untitled_channel + '%')).count()
             field.data = untitled_channel + str(count + 1)
 
-        # If we have a channel with the same title, other than the one we're editing, ...
-        if user_channels.filter_by(title=field.data, deleted=False).count() and not (
-                self._channel_id and user_channels.filter_by(id=self._channel_id).count()):
+        # If this is a new channel (no channel.id) and there is an exisiting channel with dupe title, or
+        # if this is an existing channel (has channel.id) and we have another existing channel with a dupe title
+        # that isn't this channel, error.
+        if user_channels.filter_by(title=field.data, deleted=False).filter(Channel.id != self._channel_id).count():
             raise ValidationError(_('Duplicate title.'))
 
     def validate_category(self, field):
@@ -585,14 +588,16 @@ class UserWS(WebService):
         if not channel.editable:
             abort(400, message=_('Channel not editable'))
         form = ChannelForm(csrf_enabled=False)
+        form.for_channel_id(channelid)
         form.userid = userid
         if not form.validate():
             abort(400, form_errors=form.errors)
 
         channel.title = form.title.data
         channel.description = form.description.data
-        channel.cover = form.cover.data
-        channel.cover_aoi = form.cover_aoi.data
+        if not form.cover.data == 'KEEP':
+            channel.cover = form.cover.data
+            channel.cover_aoi = form.cover_aoi.data
         channel.category = form.category.data
         channel.public = Channel.should_be_public(channel, form.public.data)
         channel.save()
