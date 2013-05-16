@@ -709,20 +709,6 @@ footer {
   }
 }
 
-@media (min-width: 1200px) {
-  .wrapper {
-    width: 1200px;
-  }
-
-  #about {
-    .people {
-      .images_container {
-        width: 1000px;
-      }
-    }
-  }
-}
-
 .content-providers {
   #contentproviders {
     background: #eaeced;
@@ -753,6 +739,25 @@ footer {
     background: url(/static/assets/weblight/images/tileblackboard.jpg) repeat-x;
     height: 655px;
 
+    #leverageyourcommunity {
+      margin: 0 auto;
+      padding: 35px 0;
+      display: block;
+    }
+
+    #drawings {
+      margin: 0 auto;
+      width: 680px;
+
+      .arrows {
+        margin-right: 20px;
+      }
+    }
+
+    #bottomtext {
+      width: 706px;
+      margin: 30px auto 0;
+    }
   }
 
   #iphonescontainer {
@@ -768,7 +773,7 @@ footer {
     #iphonesinfo {
 
       width: 910px;
-      margin: 0 auto;
+      margin: 50px auto 0;
 
       h3 {
         color: #1c1f21;
@@ -794,7 +799,7 @@ footer {
 
   #faq {
     text-align: center;
-    margin: 60px 0 90px 0;
+    margin: 60px auto 90px;
 
     h2 {
       font-size: 35px;
@@ -809,7 +814,8 @@ footer {
     }
 
     .container {
-      margin: 0 55px;
+      width: 900px;
+      margin: 0 auto;
 
       h3 {
         color: #1c1f21;
@@ -843,6 +849,7 @@ footer {
   #share {
     background: #f0f0f0;
     text-align: center;
+    padding: 60px 0;
 
     .wrapper > ul {
       list-style-type: none;
@@ -865,6 +872,7 @@ footer {
         h3 {
           text-align: center;
           font-size: 20px;
+          line-height: 22px;
           font-family: "dn-regular";
         }
       }
@@ -883,7 +891,7 @@ footer {
 @media (min-width: 768px) and (max-width: 979px) {
 
   .wrapper {
-    width: 768px;
+    width: 668px;
   }
 
   #videoslist {
@@ -934,6 +942,111 @@ footer {
   #playbookcontent {
     #playbookcontentcontainer {
       margin-left: 0;
+    }
+  }
+
+  .content-providers {
+
+    #contentproviders {
+
+      p {
+        width: auto;
+      }
+    }
+
+    #iphonescontainer {
+
+      #iphonesinfo {
+        width: auto;
+
+        div {
+          width: 250px;
+        }
+      }
+    }
+
+    #faq {
+
+      .container {
+        width: auto;
+
+        .left {
+          width: auto;
+          float: none;
+        }
+
+        .right {
+          width: auto;
+          float: none;
+          margin-left: 0;
+        }
+      }
+    }
+  }
+}
+
+@media (min-width: 1200px) {
+  .wrapper {
+    width: 1200px;
+  }
+
+  #about {
+    .people {
+      .images_container {
+        width: 1000px;
+      }
+    }
+  }
+
+  .content-providers {
+
+    #chalkboard {
+
+      #drawings {
+        width: 950px;
+
+        .arrows {
+          margin: 0 80px;
+        }
+      }
+
+      #bottomtext {
+        width: 1070px;
+        margin: 30px auto 0;
+
+        img {
+          margin: 0 60px;
+        }
+      }
+    }
+
+    #iphonescontainer {
+
+      #iphonesinfo {
+
+        width: 1040px;
+
+        div {
+          margin: 0 30px;
+        }
+      }
+    }
+
+    #faq {
+      .container {
+        width: 1200px;
+        margin: 0 auto;
+
+        .left {
+          width: 480px;
+        }
+
+        .right {
+          width: 480px;
+          margin-left: 220px;
+        }
+      }
+
     }
   }
 }
