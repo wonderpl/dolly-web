@@ -1,6 +1,6 @@
-import time
 import uuid
 import json
+from datetime import datetime
 from urlparse import urlsplit
 from test import base
 from test.fixtures import RockpackCoverArtData, VideoInstanceData
@@ -213,12 +213,18 @@ class ChannelCreateTestCase(base.RockPackTestCase):
                 errors)
 
     def test_channel_order(self):
+        # Hack to ensure channels have ordered date_updated values
+        updated_default = models.Channel.__table__.columns['date_updated'].onupdate
+        updated_default_bak = updated_default.arg, updated_default.is_clause_element
+        updated_default.is_clause_element = False
+
         with self.app.test_client() as client:
             user = self.create_test_user()
             user2_id = self.create_test_user().id
 
             c1 = None
             for i in range(3):
+                updated_default.arg = datetime(2013, 1, i + 1)
                 r = client.post(
                     '/ws/{}/channels/'.format(user.id),
                     data=json.dumps(dict(
@@ -242,9 +248,7 @@ class ChannelCreateTestCase(base.RockPackTestCase):
                 )
                 self.assertEquals(r.status_code, 204)
 
-            # Ensure date_updated sorts OK with 1-second resolution
-            time.sleep(1)
-
+            updated_default.arg = datetime(2013, 2, 1)
             r = client.put(
                 '/ws/{}/channels/{}/'.format(user.id, c1),
                 data=json.dumps(dict(
@@ -265,7 +269,10 @@ class ChannelCreateTestCase(base.RockPackTestCase):
                 channels = json.loads(r.data)['channels']
                 self.assertEquals(channels['total'], 4)
                 titles = [c['title'] for c in channels['items']]
-                self.assertEquals(titles, ['Favourites', 'updated', '0', '2'])
+                self.assertEquals(titles, ['Favourites', 'updated', '2', '0'])
+
+        # restore date_updated onupdate default
+        updated_default.arg, updated_default.is_clause_element = updated_default_bak
 
     def test_channel_editable(self):
         with self.app.test_client() as client:
