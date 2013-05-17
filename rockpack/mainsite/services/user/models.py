@@ -109,8 +109,6 @@ class User(db.Model):
         user.set_password(new_pwd)
         user.reset_refresh_token()
         user = user.save()
-        return user.get_credentials()
-
 
     @classmethod
     def suggested_username(cls, source_name):
@@ -182,7 +180,7 @@ class User(db.Model):
             gender=eu.gender,
             avatar=avatar,
             date_of_birth=eu.dob
-            )
+        )
 
 
 class UserActivity(db.Model):

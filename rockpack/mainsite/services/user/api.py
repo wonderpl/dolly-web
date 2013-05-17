@@ -442,7 +442,8 @@ class UserWS(WebService):
         if not form.password.validate(form.password.data):
             abort(400, message=form.password.errors)
 
-        return user.change_password(user, new_p)
+        user.change_password(user, new_p)
+        return user.get_credentials()
 
     @expose_ajax('/<userid>/<any("username", "first_name", "last_name", "email", "locale", "date_of_birth", "gender"):attribute_name>/', methods=('PUT',))
     @check_authorization(self_auth=True)
