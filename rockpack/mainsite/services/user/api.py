@@ -563,9 +563,7 @@ class UserWS(WebService):
         if app.config.get('ELASTICSEARCH_URL'):
             ch = api.ChannelSearch(self.get_locale())
             ch.add_id(channelid)
-            offset, limit = self.get_page()
-            ch.set_paging(offset, limit)
-            if not ch.channels(with_videos=True, with_owners=True):
+            if not ch.channels(with_videos=self.get_page(), with_owners=True):
                 abort(404)
             return ch.channels()[0]
 
