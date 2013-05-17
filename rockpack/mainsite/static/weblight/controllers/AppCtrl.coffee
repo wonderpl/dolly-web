@@ -19,7 +19,7 @@ window.Weblight.controller('AppCtrl', ['$routeParams', 'isMobile', '$scope', '$l
     $scope.$apply()
 
   $scope.$watch($scope.getWidth, (newValue, oldValue) ->
-    $scope.windowWidth = { width: (Math.floor($(window).width() / $scope.videoWidth) * $scope.videoWidth + $scope.containerPadding) + 'px', margin: '0 auto'}
+    $scope.windowWidth = { width: (Math.floor(($(window).width() - $scope.containerPadding) / $scope.videoWidth) * $scope.videoWidth + $scope.containerPadding) + 'px', margin: '0 auto'}
     return
   )
 
