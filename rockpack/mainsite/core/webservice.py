@@ -163,7 +163,7 @@ class WebService(object):
         except ValueError:
             start = 0
         try:
-            size = min(self.max_page_size, int(request.args.get('size', '')))
+            size = max(0, min(self.max_page_size, int(request.args.get('size', ''))))
         except ValueError:
             size = self.default_page_size
         return start, size
