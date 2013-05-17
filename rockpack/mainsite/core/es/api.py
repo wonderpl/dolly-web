@@ -231,7 +231,7 @@ class ChannelSearch(EntitySearch, CategoryMixin, MediaSortMixin):
         channel_list = []
         channel_id_list = []
         owner_list = []
-        for pos, channel in enumerate(channels):
+        for pos, channel in enumerate(channels, self.paging[0]):
             ch = dict(
                 id=channel.id,
                 owner=channel.owner,
@@ -283,7 +283,7 @@ class ChannelSearch(EntitySearch, CategoryMixin, MediaSortMixin):
         if with_videos and channel_id_list:
             vs = VideoSearch(self.locale)
             vs.add_term('channel', channel_id_list)
-            vs.set_paging(0, -1)
+            vs.set_paging(*with_videos)
             video_map = {}
             for v in vs.videos():
                 video_map.setdefault(v['channel'], []).append(v)
@@ -315,7 +315,7 @@ class VideoSearch(EntitySearch, CategoryMixin, MediaSortMixin):
         vlist = []
         channel_list = []
 
-        for pos, v in enumerate(videos):
+        for pos, v in enumerate(videos, self.paging[0]):
             video = dict(
                 id=v.id,
                 title=v.title,
