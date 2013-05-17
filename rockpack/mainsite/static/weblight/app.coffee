@@ -23,6 +23,7 @@ window.Weblight = angular.module('Weblight', ['channelServices', 'infinite-scrol
     $routeProvider.when('/people', {templateUrl: 'people.html'})
     $routeProvider.when('/channel-playbook', {templateUrl: 'channelplaybook.html'})
     $routeProvider.when('/content-providers', {templateUrl: 'contentproviders.html'})
+    $routeProvider.when('/bookmarklet', {templateUrl: 'bookmarklet.html'})
   ])
   .directive('bgImage', ->
     return (scope, element, attrs) ->

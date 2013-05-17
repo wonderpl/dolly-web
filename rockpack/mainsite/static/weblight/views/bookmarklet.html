@@ -1,0 +1,46 @@
+<div ng-controller="PageCtrl" id="jobs" class="content-page">
+  <header id="bookmarklet-content">
+    <div class="wrapper">
+      <h1>THE BOOKMARKLET</h1>
+      <h2>
+        The rockpack bookmarklet lets you add any<br>
+        youtube videos to your channels wherever you<br>are on the web
+      </h2>
+      <a href="javascript:(function(){var%20s=document.createElement('script');s.setAttribute('src','http://demo.rockpack.com/static/bookmarklet/bookmarklet/injector.js?dummy='+Math.random());document.getElementsByTagName('body')[0].appendChild(s);})();" class="btn btn-blue">+ Pack It</a>
+      <div id="browsercontainer">
+        <div class="info">For ((browser.browser))</div>
+        <div ng-class="browser.browser" class="browser"></div>
+      </div>
+    </div>
+  </header>
+  <div id="instructions">
+    <div ng-switch on="browser.browser" class="wrapper">
+      <div ng-switch-when="Chrome">
+        <div class="step">
+          <div class="title">1</div>
+          <p>Make sure you bookmark bar is visible:
+            Click View > Toolbars > and check
+            "Bookmarks Bar".</p>
+        </div>
+        <div class="step">
+          <div class="title">2</div>
+          <p>Drag the button into your bookmarks bar</p>
+        </div>
+        <div class="step">
+          <div class="title">3</div>
+          <p>Click the <span style="cyan">“PACK IT"</span> button to add a YouTube video to your channel from any web page.
+          </p>
+        </div>
+      </div>
+      <div ng-switch-when="Safari">
+        Safari
+      </div>
+      <div ng-switch-when="Firefox">
+        Firefox
+      </div>
+      <div ng-switch-when="Explorer">
+        Explorer
+      </div>
+    </div>
+  </div>
+</div>

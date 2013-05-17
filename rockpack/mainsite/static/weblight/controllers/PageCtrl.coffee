@@ -1,4 +1,7 @@
-window.Weblight.controller('PageCtrl', ['isMobile', '$scope', '$location', (isMobile, $scope, $location) ->
+window.Weblight.controller('PageCtrl', ['isMobile', '$scope', '$location', 'browserServices', (isMobile, $scope, $location, browserServices) ->
+
+  $scope.browser = browserServices
+
   $scope.toggle = (e, hiddenelement) ->
     $(e.currentTarget).toggleClass('activestate').siblings('.bio').toggleClass('activestate')
 
