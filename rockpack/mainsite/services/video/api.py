@@ -167,6 +167,10 @@ class VideoWS(WebService):
 
         return dict(videos={'items': videos}, total=total)
 
+    @expose_ajax('/players/', cache_age=7200)
+    def players(self):
+        return dict(models.Source.query.values(models.Source.label, models.Source.player_template))
+
 
 class ChannelWS(WebService):
 
