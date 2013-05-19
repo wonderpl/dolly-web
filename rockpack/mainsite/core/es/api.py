@@ -423,7 +423,7 @@ def add_owner_to_index(owner, bulk=False, refresh=False, no_check=False):
 
     data = dict(
         id=owner.id,
-        avatar_thumbnail=urlparse(convert(owner, 'avatar', 'AVATAR').thumbnail_small).path,
+        avatar_thumbnail_url=urlparse(convert(owner, 'avatar', 'AVATAR').thumbnail_small).path,
         resource_url=urlparse(owner.resource_url).path,
         display_name=owner.display_name,
         username=owner.username
