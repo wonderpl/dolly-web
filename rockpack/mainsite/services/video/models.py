@@ -70,6 +70,8 @@ class CategoryTranslation(db.Model):
     priority = Column(Integer, nullable=False, server_default='0')
     name = Column(String(32), nullable=False)
 
+    locale_rel = relationship('Locale', backref='categorytranslations')
+
 
 class ExternalCategoryMap(db.Model):
 
@@ -303,6 +305,20 @@ class Channel(db.Model):
         channel.public = channel.should_be_public(channel, public)
         return channel.save()
 
+    @classmethod
+    def should_be_public(self, channel, public):
+        """Return False if conditions for visibility are not met"""
+        if not (channel.cover and
+                (channel.title and not channel.title.startswith(app.config['UNTITLED_CHANNEL'])) and
+                channel.video_instances):
+            return False
+
+        return public
+
+    @property
+    def editable(self):
+        return not self.favourite
+
     def get_resource_url(self, own=False):
         view = 'userws.owner_channel_info' if own else 'userws.channel_info'
         return url_for(view, userid=self.owner, channelid=self.id)
@@ -310,6 +326,7 @@ class Channel(db.Model):
     resource_url = property(get_resource_url)
 
     def add_videos(self, videos):
+        existing_videos = bool(self.video_instances)
         instances = [VideoInstance(channel=self.id, video=getattr(v, 'id', v),
                                    category=self.category) for v in videos]
         session = self.query.session
@@ -320,9 +337,17 @@ class Channel(db.Model):
             existing = [i.video for i in session.query(VideoInstance.video).
                         filter_by(channel=self.id).
                         filter(VideoInstance.video.in_(set(i.video for i in instances)))]
-            for i in instances:
-                if i.video not in existing:
-                    session.add_all(i)
+            session.add_all(i for i in instances if i.video not in existing)
+
+        # If ...
+        # - we have no videos yet
+        # - we've just added videos
+        # - we're currently not public
+        # - and we could otherwise be
+        # ... make us public
+        if not existing_videos and instances and not self.public and self.should_be_public(self, True):
+            self.public = True
+            self.save()
 
     def remove_videos(self, videos):
         VideoInstance.remove_from_video_ids(
@@ -330,18 +355,13 @@ class Channel(db.Model):
                 getattr(v, 'id', v)
                 for v in videos.query.filter_by(channel=self.id)))
 
+        # If we shouldn't be public and we are, toggle
+        if not self.should_be_public(self, self.public) and self.public:
+            self.public = False
+            self.save()
+
     def add_meta(self, locale):
         return ChannelLocaleMeta(channel=self.id, locale=locale).save()
-
-    @classmethod
-    def should_be_public(self, channel, public):
-        """ Return False if conditions for
-            visibility are not met """
-        if not (channel.description and channel.cover and
-                (channel.title and not channel.title.startswith(app.config['UNTITLED_CHANNEL']))):
-            return False
-
-        return public
 
 
 class ChannelLocaleMeta(db.Model):
@@ -447,11 +467,14 @@ def _es_channel_update_from_clm(mapper, connection, target):
 
 @event.listens_for(Channel, 'after_insert')
 def _es_channel_insert_from_channel(mapper, connection, target):
-    _add_es_channel(Channel.query.get(target.id))
+    if target.public:
+        _add_es_channel(Channel.query.get(target.id))
 
 
 @event.listens_for(Channel, 'after_update')
 def _es_channel_update_from_channel(mapper, connection, target):
+    if not target.public or target.deleted:
+        _remove_es_channel(target)
     _add_es_channel(target)
 
 

@@ -10,6 +10,7 @@ from rockpack.mainsite.core.dbapi import commit_on_success
 from rockpack.mainsite.core.webservice import WebService, expose_ajax, ajax_create_response, process_image
 from rockpack.mainsite.core.oauth.decorators import check_authorization
 from rockpack.mainsite.core.youtube import get_video_data
+from rockpack.mainsite.helpers import lazy_gettext as _
 from rockpack.mainsite.helpers.urls import url_for, url_to_endpoint
 from rockpack.mainsite.helpers.db import gen_videoid, get_column_validators, get_box_value
 from rockpack.mainsite.services.video.models import (
@@ -69,7 +70,7 @@ def get_or_create_video_records(instance_ids, locale):
             except (TypeError, ValueError):
                 invalid.append(instance_id)
     if invalid:
-        abort(400, message='Invalid video instance ids', data=invalid)
+        abort(400, message=_('Invalid video instance ids'), data=invalid)
 
     # Check if any "real" ids are invalid
     if real_instance_ids:
@@ -77,7 +78,7 @@ def get_or_create_video_records(instance_ids, locale):
         existing_ids = dict(instances.values('id', 'video'))
         invalid = list(real_instance_ids - set(existing_ids.keys()))
         if invalid:
-            abort(400, message='Invalid video instance ids', data=invalid)
+            abort(400, message=_('Invalid video instance ids'), data=invalid)
     else:
         existing_ids = {}
 
@@ -102,7 +103,7 @@ def get_or_create_video_records(instance_ids, locale):
                 assert source == 1
                 video_data = get_video_data(source_videoid)
             except Exception:
-                abort(400, message='Invalid video instance ids', data=[[source, source_videoid]])
+                abort(400, message=_('Invalid video instance ids'), data=[[source, source_videoid]])
             Video.add_videos(video_data.videos, source, locale)
 
     return [existing_ids[id] for id in instance_id_order]
@@ -113,7 +114,7 @@ def save_video_activity(userid, action, instance_id, locale):
     try:
         column, value = ACTION_COLUMN_VALUE_MAP[action]
     except KeyError:
-        abort(400, message='invalid action')
+        abort(400, message=_('Invalid action'))
 
     video_id = get_or_create_video_records([instance_id], locale)[0]
     activity = dict(user=userid, action=action,
@@ -134,8 +135,7 @@ def save_video_activity(userid, action, instance_id, locale):
     UserActivity(**activity).save()
 
     if action in ('star', 'unstar'):
-        channel = Channel.query.filter_by(
-            owner=userid, title=app.config['FAVOURITE_CHANNEL'][0]).first()
+        channel = Channel.query.filter_by(owner=userid, favourite=True).first()
         if channel:
             if action == 'unstar':
                 channel.remove_videos([video_id])
@@ -149,7 +149,7 @@ def save_channel_activity(userid, action, channelid, locale):
     try:
         column, value = ACTION_COLUMN_VALUE_MAP[action]
     except KeyError:
-        abort(400, message='invalid action')
+        abort(400, message=_('Invalid action'))
     incr = lambda m: {getattr(m, column): getattr(m, column) + value}
     # Update channel record:
     Channel.query.filter_by(id=channelid).update(incr(Channel))
@@ -259,7 +259,7 @@ def user_subscriptions(userid):
 
 def check_present(form, field):
     if field.name not in (request.json or request.form):
-        raise ValidationError('This field is required, but can be an empty string.')
+        raise ValidationError(_('This field is required, but can be an empty string.'))
 
 
 class ChannelForm(form.BaseForm):
@@ -283,6 +283,8 @@ class ChannelForm(form.BaseForm):
 
     def validate_cover(self, field):
         if field.data:
+            if field.data == 'KEEP':
+                return
             found = False
             for model in RockpackCoverArt, UserCoverArt:
                 cover = model.query.with_entities(model.cover_aoi).filter_by(cover=field.data).first()
@@ -291,7 +293,7 @@ class ChannelForm(form.BaseForm):
                     found = True
                     break
             if not found:
-                raise ValidationError('Invalid cover reference')
+                raise ValidationError(_('Invalid cover reference.'))
 
     def validate_title(self, field):
         user_channels = Channel.query.filter_by(owner=self.userid)
@@ -300,17 +302,18 @@ class ChannelForm(form.BaseForm):
             count = user_channels.filter(Channel.title.like(untitled_channel + '%')).count()
             field.data = untitled_channel + str(count + 1)
 
-        # If we have a channel with the same title, other than the one we're editing, ...
-        if user_channels.filter_by(title=field.data, deleted=False).count() and not (
-                self._channel_id and user_channels.filter_by(id=self._channel_id).count()):
-            raise ValidationError('Duplicate title')
+        # If this is a new channel (no channel.id) and there is an exisiting channel with dupe title, or
+        # if this is an existing channel (has channel.id) and we have another existing channel with a dupe title
+        # that isn't this channel, error.
+        if user_channels.filter_by(title=field.data, deleted=False).filter(Channel.id != self._channel_id).count():
+            raise ValidationError(_('Duplicate title.'))
 
     def validate_category(self, field):
         if field.data:
             try:
                 field.data = Category.query.get(int(field.data)).id
             except (ValueError, AttributeError):
-                raise ValidationError('invalid category')
+                raise ValidationError(_('Invalid category.'))
         else:
             field.data = None
 
@@ -328,7 +331,7 @@ class ContentReportForm(wtf.Form):
     def validate_object_id(self, field):
         object_type = ACTIVITY_OBJECT_TYPE_MAP.get(self.object_type.data)
         if object_type and not object_type.query.filter_by(id=field.data).count():
-            raise ValidationError('invalid id')
+            raise ValidationError(_('Invalid id.'))
 
 
 def _channel_info_response(channel, locale, paging, owner_url):
@@ -367,7 +370,8 @@ class UserWS(WebService):
         user = User.query.get_or_404(userid)
         channels = [video_api.channel_dict(c, with_owner=False, owner_url=False)
                     for c in Channel.query.options(lazyload('category_rel')).
-                    filter_by(owner=user.id, deleted=False, public=True)]
+                    filter_by(owner=user.id, deleted=False, public=True).
+                    order_by('favourite desc', 'channel.date_updated desc')]
 
         return dict(
             id=user.id,
@@ -384,8 +388,10 @@ class UserWS(WebService):
         if not userid == g.authorized.userid:
             return self.user_info(userid)
         user = g.authorized.user
-        channels = [video_api.channel_dict(c, with_owner=False, owner_url=True) for c in
-                    Channel.query.filter_by(owner=user.id, deleted=False).order_by('favourite desc')]
+        channels = [video_api.channel_dict(c, with_owner=False, owner_url=True)
+                    for c in Channel.query.options(lazyload('owner_rel'), lazyload('category_rel')).
+                    filter_by(owner=user.id, deleted=False).
+                    order_by('favourite desc', 'date_updated desc')]
         info = dict(
             id=user.id,
             username=user.username,
@@ -394,6 +400,7 @@ class UserWS(WebService):
             last_name=user.last_name,
             email=user.email,
             gender=user.gender,
+            display_fullname=user.display_fullname,
             avatar_thumbnail_url=user.avatar.url,
             date_of_birth=user.date_of_birth.isoformat() if user.date_of_birth else None,
         )
@@ -406,25 +413,40 @@ class UserWS(WebService):
         info['notifications'].update(unread_count=_notification_unread_count(userid))
         return info
 
+    @expose_ajax('/<userid>/display_fullname/', methods=('PUT',))
+    @check_authorization(self_auth=True)
+    def toggle_display_fullname(self, userid):
+        data = request.json
+        if not isinstance(data, bool):
+            abort(400, message=_('Value must be a boolean.'))
+
+        user = g.authorized.user
+
+        if user.display_fullname != data:
+            user.display_fullname = data
+            user.save()
+        return None, 204
+
     @expose_ajax('/<userid>/password/', methods=('PUT',))
     @check_authorization(self_auth=True)
     def change_user_password(self, userid):
         data = request.json
         if not isinstance(data, dict) or not data.get('old') or not data.get('new'):
-            abort(400, message=['Both old and new passwords must be supplied.'])
+            abort(400, message=[_('Both old and new passwords must be supplied.')])
 
         new_p = data.get('new')
         old_p = data.get('old')
 
         user = g.authorized.user
         if not user.check_password(old_p):
-            abort(400, message=['Old password is incorrect.'])
+            abort(400, message=[_('Old password is incorrect.')])
 
         form = RockRegistrationForm(formdata=MultiDict([('password', new_p)]), csrf_enabled=False)
         if not form.password.validate(form.password.data):
             abort(400, message=form.password.errors)
 
-        return user.change_password(user, new_p)
+        user.change_password(user, new_p)
+        return user.get_credentials()
 
     @expose_ajax('/<userid>/<any("username", "first_name", "last_name", "email", "locale", "date_of_birth", "gender"):attribute_name>/', methods=('PUT',))
     @check_authorization(self_auth=True)
@@ -442,7 +464,7 @@ class UserWS(WebService):
         setattr(user, attribute_name, field.data)
         if attribute_name == 'username':
             if user.username_updated:
-                abort(400, message='Limit for changing username has been reached')
+                abort(400, message=_('Limit for changing username has been reached'))
             user.username_updated = True
         user.save()
 
@@ -496,9 +518,9 @@ class UserWS(WebService):
         try:
             notification_ids = map(int, request.json['mark_read'])
         except (TypeError, KeyError):
-            abort(400, message='"mark_read" list parameter required')
+            abort(400, message=_('"mark_read" list parameter required'))
         except ValueError:
-            abort(400, message='Invalid id list')
+            abort(400, message=_('Invalid id list'))
         return _mark_read_notifications(userid, notification_ids)
 
     @expose_ajax('/<userid>/notifications/unread_count/', cache_age=60, cache_private=True)
@@ -544,9 +566,7 @@ class UserWS(WebService):
         if app.config.get('ELASTICSEARCH_URL'):
             ch = api.ChannelSearch(self.get_locale())
             ch.add_id(channelid)
-            offset, limit = self.get_page()
-            ch.set_paging(offset, limit)
-            if not ch.channels(with_videos=True, with_owners=True):
+            if not ch.channels(with_videos=self.get_page(), with_owners=True):
                 abort(404)
             return ch.channels()[0]
 
@@ -567,15 +587,19 @@ class UserWS(WebService):
         channel = Channel.query.filter_by(id=channelid, deleted=False).first_or_404()
         if not channel.owner == userid:
             abort(403)
+        if not channel.editable:
+            abort(400, message=_('Channel not editable'))
         form = ChannelForm(csrf_enabled=False)
+        form.for_channel_id(channelid)
         form.userid = userid
         if not form.validate():
             abort(400, form_errors=form.errors)
 
         channel.title = form.title.data
         channel.description = form.description.data
-        channel.cover = form.cover.data
-        channel.cover_aoi = form.cover_aoi.data
+        if not form.cover.data == 'KEEP':
+            channel.cover = form.cover.data
+            channel.cover_aoi = form.cover_aoi.data
         channel.category = form.category.data
         channel.public = Channel.should_be_public(channel, form.public.data)
         channel.save()
@@ -590,6 +614,8 @@ class UserWS(WebService):
         channel = Channel.query.filter_by(id=channelid, deleted=False).first_or_404()
         if not channel.owner == userid:
             abort(403)
+        if not channel.editable:
+            abort(400, message=_('Channel not editable'))
         channel.deleted = True
         channel.save()
 
@@ -599,10 +625,14 @@ class UserWS(WebService):
         channel = Channel.query.filter_by(id=channelid, deleted=False).first_or_404()
         if not channel.owner == userid:
             abort(403)
+        if not channel.editable:
+            abort(400, message=_('Channel not editable'))
         if not isinstance(request.json, bool):
-            abort(400, message="Boolean value required")
-        channel.public = request.json
-        channel = channel.save()
+            abort(400, message=_('Boolean value required'))
+        intended_public = channel.should_be_public(channel, request.json)
+        if channel.public != intended_public:
+            channel.public = intended_public
+            channel = channel.save()
         return channel.public
 
     @expose_ajax('/<userid>/channels/<channelid>/videos/')
@@ -620,8 +650,17 @@ class UserWS(WebService):
         if not channel.owner == userid:
             abort(403)
         if request.json is None or not isinstance(request.json, list):
-            abort(400, message='List can be empty, but must be present')
+            abort(400, message=_('List can be empty, but must be present'))
+        existing_videos = len(channel.video_instances)
         add_videos_to_channel(channel, request.json, self.get_locale(), request.method == 'PUT')
+
+        intended_public = channel.should_be_public(channel, channel.public)
+        if not channel.video_instances and not intended_public:
+            channel.public = intended_public
+            channel.save()
+        elif not existing_videos and channel.should_be_public(channel, True):
+            channel.public = True
+            channel.save()
 
     @expose_ajax('/<userid>/channels/<channelid>/videos/<videoid>/')
     def channel_video_instance(self, userid, channelid, videoid):
@@ -636,7 +675,7 @@ class UserWS(WebService):
     @expose_ajax('/<userid>/cover_art/', cache_age=60, cache_private=True)
     @check_authorization(self_auth=True)
     def get_cover_art(self, userid):
-        covers = UserCoverArt.query.filter_by(owner=userid)
+        covers = UserCoverArt.query.filter_by(owner=userid).order_by(desc('date_created'))
         return cover_api.cover_art_response(covers, self.get_page(), own=True)
 
     @expose_ajax('/<userid>/cover_art/', methods=['POST'])
@@ -647,7 +686,7 @@ class UserWS(WebService):
             try:
                 aoi = get_box_value(aoi)
             except:
-                abort(400, message='aoi must be of the form [x1, y1, x2, y2]')
+                abort(400, message=_('aoi must be of the form [x1, y1, x2, y2]'))
         path = process_image(UserCoverArt.cover)
         cover = UserCoverArt(cover=path, cover_aoi=aoi, owner=userid).save()
         return ajax_create_response(cover, cover_api.cover_art_dict(cover, own=True))
@@ -683,12 +722,12 @@ class UserWS(WebService):
     def post_subscriptions(self, userid):
         endpoint, args = url_to_endpoint(request.json or '')
         if endpoint not in ('userws.owner_channel_info', 'userws.channel_info'):
-            abort(400, message='Invalid channel url')
+            abort(400, message=_('Invalid channel url'))
         channelid = args['channelid']
         if not Channel.query.filter_by(id=channelid, deleted=False).count():
-            abort(400, message='Channel not found')
+            abort(400, message=_('Channel not found'))
         if Subscription.query.filter_by(user=userid, channel=channelid).count():
-            abort(400, message='Already subscribed')
+            abort(400, message=_('Already subscribed'))
         subs = Subscription(user=userid, channel=channelid).save()
         save_channel_activity(userid, 'subscribe', channelid, self.get_locale())
         return ajax_create_response(subs)

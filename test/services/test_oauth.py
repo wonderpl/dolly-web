@@ -33,6 +33,7 @@ FACEBOOK_GRAPH_DATA = {
     'last_name': 'Stark',
     'verified': True,
     'name': 'I am IronMan',
+    'birthday': '01/01/1973',
     'locale': 'en_US',
     'gender': 'male',
     'updated_time': '2013-02-25T10:31:31+0000',
@@ -132,6 +133,7 @@ class ExternalTokenTestCase(base.RockPackTestCase):
                 date_of_birth=date(2000, 1,1),
                 email='em@ail.com',
                 avatar='',
+                locale='en-us',
                 refresh_token='',
                 is_active=True)
         return u.save()
@@ -188,9 +190,11 @@ class RegisterTestCase(base.RockPackTestCase):
             for it on our end, we register the user and return an access token.
             If the user already exists on our system, we return and access token."""
 
-        _get_external_data.return_value = FACEBOOK_GRAPH_DATA
+        data = FACEBOOK_GRAPH_DATA.copy()
+        data['id'] = uuid.uuid4().hex
+        _get_external_data.return_value = data
         from rockpack.mainsite.services.oauth.api import ExternalUser
-        long_lived_fb_token = 'fdsuioncf3w8ryl38yb7y4eius'
+        long_lived_fb_token = 'fdsuioncf3w8ryl38yb7yfsfsdfsd4eius'
         get_new_token.return_value = ExternalUser('facebook', token=long_lived_fb_token, expires_in=3600)
 
         with self.app.test_client() as client:
@@ -211,6 +215,7 @@ class RegisterTestCase(base.RockPackTestCase):
 
             self.assertEquals(1, et.count(), 'should only be one token for user')
             uid = et.one().user
+            self.assertEquals(User.query.get(uid).gender, 'm')
 
             # We pretend that the new token represents the same user,
             # so we should still get a valid login

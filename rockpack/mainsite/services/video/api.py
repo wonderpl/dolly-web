@@ -25,22 +25,23 @@ def channel_dict(channel, with_owner=True, owner_url=False):
         resource_url=channel.get_resource_url(owner_url),
         title=channel.title,
         subscriber_count=channel.subscriber_count,
-        subscribe_count=channel.subscriber_count,   # XXX: backwards compatibility
-        public=channel.public,
         category=channel.category,
         cover=dict(
             thumbnail_url=channel.cover.url,
             aoi=channel.cover_aoi,
         )
     )
+    if channel.favourite:
+        ch_data['favourites'] = True
     if with_owner:
         ch_data['owner'] = dict(
             id=channel.owner_rel.id,
             resource_url=channel.owner_rel.get_resource_url(owner_url),
             display_name=channel.owner_rel.display_name,
-            name=channel.owner_rel.display_name,    # XXX: backwards compatibility
             avatar_thumbnail_url=channel.owner_rel.avatar.thumbnail_small,
         )
+    if owner_url:
+        ch_data['public'] = channel.public
     if app.config.get('SHOW_CHANNEL_DESCRIPTION', False):
         ch_data['description'] = channel.description
     if app.config.get('SHOW_OLD_CHANNEL_COVER_URLS', True):
@@ -165,6 +166,10 @@ class VideoWS(WebService):
         total = vs.total
 
         return dict(videos={'items': videos}, total=total)
+
+    @expose_ajax('/players/', cache_age=7200)
+    def players(self):
+        return dict(models.Source.query.values(models.Source.label, models.Source.player_template))
 
 
 class ChannelWS(WebService):

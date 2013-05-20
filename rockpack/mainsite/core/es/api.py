@@ -38,7 +38,8 @@ class MediaSortMixin(object):
 
     def _get_order(self, order):
         if (order != 'desc') and (order != 'asc'):
-            order = 'desc'
+            return 'desc'
+        return order
 
     def favourite_sort(self, order):
         if order:
@@ -230,7 +231,7 @@ class ChannelSearch(EntitySearch, CategoryMixin, MediaSortMixin):
         channel_list = []
         channel_id_list = []
         owner_list = []
-        for pos, channel in enumerate(channels):
+        for pos, channel in enumerate(channels, self.paging[0]):
             ch = dict(
                 id=channel.id,
                 owner=channel.owner,
@@ -242,7 +243,7 @@ class ChannelSearch(EntitySearch, CategoryMixin, MediaSortMixin):
                 favourite=channel.favourite,
                 position=pos,
                 cover=dict(
-                    thumbnail_url=urljoin(app.config.get('IMAGE_CDN', ''), channel.cover.thumbnail_url),
+                    thumbnail_url=urljoin(app.config.get('IMAGE_CDN', ''), channel.cover.thumbnail_url) if channel.cover.thumbnail_url else '',
                     aoi=channel.aoi
                 )
             )
@@ -250,10 +251,11 @@ class ChannelSearch(EntitySearch, CategoryMixin, MediaSortMixin):
             for k, v in channel.iteritems():
                 if isinstance(v, (str, unicode)) and k.endswith('_url'):
                     url = v
-                    if k == 'resource_url':
-                        url = urljoin(url_for('basews.discover'), v)
-                    elif k != 'ecommerce_url':
-                        url = urljoin(app.config.get('IMAGE_CDN', ''), v)
+                    if url:
+                        if k == 'resource_url':
+                            url = urljoin(url_for('basews.discover'), v)
+                        elif k != 'ecommerce_url':
+                            url = urljoin(app.config.get('IMAGE_CDN', ''), v)
                     ch[k] = url
                 # XXX: tis a bit dangerous to assume max(cat)
                 # is the child category. review this
@@ -281,7 +283,7 @@ class ChannelSearch(EntitySearch, CategoryMixin, MediaSortMixin):
         if with_videos and channel_id_list:
             vs = VideoSearch(self.locale)
             vs.add_term('channel', channel_id_list)
-            vs.set_paging(0, -1)
+            vs.set_paging(*with_videos)
             video_map = {}
             for v in vs.videos():
                 video_map.setdefault(v['channel'], []).append(v)
@@ -313,7 +315,7 @@ class VideoSearch(EntitySearch, CategoryMixin, MediaSortMixin):
         vlist = []
         channel_list = []
 
-        for pos, v in enumerate(videos):
+        for pos, v in enumerate(videos, self.paging[0]):
             video = dict(
                 id=v.id,
                 title=v.title,
@@ -326,10 +328,10 @@ class VideoSearch(EntitySearch, CategoryMixin, MediaSortMixin):
                     id=v.video.id,
                     view_count=v['locales'][self.locale]['view_count'],
                     star_count=v['locales'][self.locale]['star_count'],
-                    source=v.video.source,
+                    source=['rockpack', 'youtube'][v.video.source],
                     source_id=v.video.source_id,
                     duration=v.video.duration,
-                    thumbnail_url=urljoin(app.config.get('IMAGE_CDN', ''), v.video.thumbnail_url),
+                    thumbnail_url=urljoin(app.config.get('IMAGE_CDN', ''), v.video.thumbnail_url) if v.video.thumbnail_url else '',
                 ),
                 position=pos
             )
@@ -367,8 +369,8 @@ class OwnerSearch(EntitySearch):
                     id=owner.id,
                     username=owner.username,
                     display_name=owner.display_name,
-                    resource_url=urlparse(owner.resource_url).path,
-                    avatar_thumbnail_url=urljoin(app.config.get('IMAGE_CDN', ''), owner.avatar_thumbnail_url)
+                    resource_url=urljoin(url_for('basews.discover'), owner.resource_url),
+                    avatar_thumbnail_url=urljoin(app.config.get('IMAGE_CDN', ''), owner.avatar_thumbnail_url) if owner.avatar_thumbnail_url else ''
                 )
             )
         return owner_list
@@ -421,8 +423,8 @@ def add_owner_to_index(owner, bulk=False, refresh=False, no_check=False):
 
     data = dict(
         id=owner.id,
-        avatar_thumbnail=urlparse(convert(owner, 'avatar', 'AVATAR').thumbnail_small).path,
-        resource_url=owner.resource_url,
+        avatar_thumbnail_url=urlparse(convert(owner, 'avatar', 'AVATAR').thumbnail_small).path,
+        resource_url=urlparse(owner.resource_url).path,
         display_name=owner.display_name,
         username=owner.username
     )
@@ -493,9 +495,8 @@ def remove_channel_from_index(channel_id):
     if not check_es():
         return
 
-    conn = es_connection
     try:
-        conn.delete(mappings.CHANNEL_INDEX, mappings.CHANNEL_TYPE, channel_id)
+        es_connection.delete(mappings.CHANNEL_INDEX, mappings.CHANNEL_TYPE, channel_id)
     except pyes.exceptions.NotFoundException:
         app.logger.warning("Failed to remove channel '{}' from index".format(channel_id))
 
@@ -504,8 +505,7 @@ def remove_video_from_index(video_id):
     if not check_es():
         return
 
-    conn = es_connection
     try:
-        conn.delete(mappings.VIDEO_INDEX, mappings.VIDEO_TYPE, video_id)
+        es_connection.delete(mappings.VIDEO_INDEX, mappings.VIDEO_TYPE, video_id)
     except pyes.exceptions.NotFoundException:
         app.logger.warning("Failed to remove video '{}' from index".format(video_id))

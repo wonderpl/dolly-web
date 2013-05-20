@@ -77,16 +77,22 @@ class ChildCategoryFormAdmin(InlineFormAdmin):
     form_columns = ('name', 'id')
 
 
+class CategoryTranslationFormAdmin(InlineFormAdmin):
+    pass
+
+
 class Category(AdminView):
     model_name = 'category'
     model = models.Category
 
-    column_list = ('name', 'parent', )
-    column_filters = ('parent', )
+    column_list = ('name', 'parent_category', 'parent')
+    column_filters = ('parent', 'name')
     column_searchable_list = ('name',)
     form_columns = ('name', )
 
-    inline_models = (ChildCategoryFormAdmin(models.Category),)
+    inline_models = (
+        ChildCategoryFormAdmin(models.Category),
+        CategoryTranslationFormAdmin(models.CategoryTranslation))
 
     def scaffold_filters(self, name):
         filters = super(Category, self).scaffold_filters(name)
@@ -150,6 +156,7 @@ class RockpackCoverArt(AdminView):
 
     column_list = ('locale_rel', 'cover.url', 'category_rel')
     column_filters = ('locale_rel', 'category_rel')
+    form_columns = ('locale_rel', 'category_rel', 'cover', 'cover_aoi', 'priority', 'attribution')
 
     edit_template = 'admin/cover_art_edit.html'
     create_template = 'admin/cover_art_create.html'

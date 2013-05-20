@@ -12,7 +12,7 @@ from rockpack.mainsite.core import youtube
 from rockpack.mainsite.helpers.db import resize_and_upload
 from rockpack.mainsite.services.pubsubhubbub.api import subscribe
 from rockpack.mainsite.services.video.models import (
-    Locale, Source, Category, Video, VideoInstance, Channel)
+    Source, Category, Video, VideoInstance, Channel)
 from rockpack.mainsite.services.cover_art.models import UserCoverArt
 from rockpack.mainsite.services.user.models import User
 from rockpack.mainsite.services.oauth.api import RockRegistrationForm
@@ -24,7 +24,6 @@ class ImportForm(form.BaseForm):
     type = form.Select2Field(choices=(('video', 'Video'), ('user', 'User'), ('playlist', 'Playlist')),
                              validators=[wtf.validators.required()])
     id = wtf.TextField(validators=[wtf.validators.required()])
-    locale = form.Select2Field(default='en-gb')
     category = form.Select2Field(coerce=int, default=-1)
     cover = wtf.FileField(validators=[wtf.Optional()])
     cover_url = wtf.TextField(validators=[wtf.Optional(), wtf.URL()])
@@ -43,12 +42,14 @@ class ImportForm(form.BaseForm):
             cover = StringIO(requests.get(self.cover_url.data).content)
         else:
             cover = None
-        try:
-            self.cover.data = resize_and_upload(cover, 'CHANNEL') if cover else ''
-        except IOError, e:
-            self.cover.errors = [str(e)]
-            return
-        UserCoverArt(cover=self.cover.data, owner=self.user.data).save()
+
+        if self.user.data:
+            try:
+                self.cover.data = resize_and_upload(cover, 'CHANNEL') if cover else ''
+            except IOError, e:
+                self.cover.errors = [str(e)]
+                return
+            UserCoverArt(cover=self.cover.data, owner=self.user.data).save()
 
         if self.commit.data and self.category.data == -1:
             # category is required before commit
@@ -70,7 +71,6 @@ class UserForm(RockRegistrationForm):
     password = None
     date_of_birth = None
     email = None
-    locale = None
     avatar = wtf.FileField()
 
     def validate_avatar(form, field):
@@ -93,7 +93,6 @@ class ImportView(BaseView):
         count = Video.add_videos(
             form.import_data.videos,
             form.source.data,
-            form.locale.data,
             form.category.data)
 
         channel = form.channel.data   # XXX: Need to validate?
@@ -105,7 +104,6 @@ class ImportView(BaseView):
                     owner=user,
                     description=form.channel_description.data,
                     cover=form.cover.data,
-                    locale=form.locale.data,
                     category=form.category.data)
                 self.record_action('created', channel)
             else:
@@ -163,9 +161,8 @@ class ImportView(BaseView):
 
         form = ImportForm(data, csrf_enabled=False)
         form.source.choices = list(Source.get_form_choices())
-        form.locale.choices = list(Locale.get_form_choices())
         form.category.choices = [(-1, '')] +\
-            list(Category.get_form_choices(form.locale.data))
+            list(Category.get_form_choices('en-us'))
 
         user_form = UserForm(data, csrf_enabled=False)
         ctx['user_form'] = user_form

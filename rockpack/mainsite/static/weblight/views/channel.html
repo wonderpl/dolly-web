@@ -1,18 +1,23 @@
 <div ng-controller="ChannelCtrl" id="ChannelCtrl">
   <img ng-src="((channel.cover_background_url))" id="bgimage">   
-  <div class="channelheader">
-    <div class="wrapper" ng-style="wrapperWidth()">
+  <div class="channelheader" ng-style="windowWidth">
+    <div>
       <h1>((channel.title| truncate: channelTitleLength))</h1>
       <div id="details">((channel.subscriber_count)) Subscribers</div>
       <ul id="userdetails">
           <li><img class="user-profile" ng-src="((channel.owner.avatar_thumbnail_url))"></li>
-          <li id="curatedby">by <span id="username">((channel.owner.name))</span></li>
+          <li id="curatedby">by <span id="username">((channel.owner.display_name))</span></li>
       </ul>
+    </div>
+    <div class="gettheapp">
+      <p>CHANNEL CREATED<br>
+        WITH ROCKPACK</p>
+      <button class="btn btn-blue">Get The App</button>
     </div>
   </div>
   <div id="channeloverlay" when-scrolled="load_videos()">
     <div ng-include src="'videoplayer.html'"></div>
-    <div class="wrapper" ng-style="wrapperWidth()">
+    <div ng-style="windowWidth">
       <div id="videoslist" infinite-scroll='load_videos()' infinite-scroll-distance='1'>
         <div ng-click="setCurrentVideo(video)" ng-repeat="video in channel.videos.items" video-cell></div>
       </div>

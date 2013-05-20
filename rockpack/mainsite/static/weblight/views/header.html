@@ -1,6 +1,14 @@
 <div id="header">
-  <div id="logo">
-    <img src="/static/assets/weblight/images/logo.png">
-    <button class="btn-blue btn">Get the app</button>
+  <div ng-switch on="currentPage">
+    <div ng-switch-when="">
+      <div ng-style="windowWidth">
+        <img src="/static/assets/weblight/images/logo.png">
+      </div>
+    </div>
+    <div ng-switch-default>
+      <div class="wrapper">
+        <img src="/static/assets/weblight/images/logo.png">
+      </div>
+    </div>
   </div>
 </div>

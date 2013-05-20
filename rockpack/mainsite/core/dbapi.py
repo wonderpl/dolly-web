@@ -34,7 +34,7 @@ def create_database(db_url, drop_if_exists=False):
     engine.execute(command)
 
 
-def sync_database():
+def sync_database(drop_all=False):
     models = []
 
     def load_modules(module):
@@ -61,6 +61,8 @@ def sync_database():
 
     try:
         if table_list:
+            if drop_all:
+                db.Model.metadata.drop_all(db.engine)
             db.Model.metadata.create_all(db.engine, tables=table_list, checkfirst=True)
         else:
             print >> sys.stderr, 'no tables to build'

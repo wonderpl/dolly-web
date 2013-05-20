@@ -93,6 +93,7 @@ Change an individual attribute for a user, for example, username.
 
 ```http
 PUT /ws/USERID/ATTRIBUTE/ HTTP/1.1
+Authorization: Bearer TOKEN
 Content-Type: application/json
 
 "porkchopexpress"
@@ -141,6 +142,7 @@ Change a users password. The old password must be supplied to validate the chang
 
 ```http
 PUT /ws/USERID/password/ HTTP/1.1
+Authorization: Bearer TOKEN
 Content-Type: application/json
 
 {
@@ -200,6 +202,41 @@ Content-Type: application/json
 {
     "error": "invalid request",
     "message": ["Both old and new passwords must be supplied."]
+}
+```
+
+### Toggle display of fullname
+
+Set whether a user's fullname or username is displayed in the `User`'s `display_name` field.
+
+```http
+PUT /ws/USERID/display_fullname/ HTTP/1.1
+Authorization: Bearer TOKEN
+Content-Type: application/json
+
+false
+```
+
+Parameter      | Required? | Value             | Description
+:------------- | :-------- | :---------------- | :----------
+               | Yes       | `true` or `false` | Toggles display of fullname (`true`) or username (`false`) in `display_name` `User` field
+
+Responds with a `204`
+
+```http
+HTTP/1.1 204 NO CONTENT
+Content-Type: application/json
+```
+
+Possible errors
+
+```http
+HTTP/1.1 400 BAD REQUEST
+Content-Type: application/json
+
+{
+    "error": "invalid request",
+    "message": "Value must be a boolean."
 }
 ```
 
@@ -267,11 +304,11 @@ Cache-Control: public, max-age=60
 
 {
  "id": "Unique channel id",
- "public": true,
  "description": "Channel description",
  "resource_url": "http://base/ws/USERID/channels/CHANNELID/",
  "title": "Channel title",
  "ecommerce_url": "",
+ "favourites": false,
  "subscriber_count": 119,
  "cover": {
    "thumbnail_url": "http://path/to/channel/cover.jpg",
@@ -389,6 +426,8 @@ Authorization: Bearer TOKEN
     "public": true
 }
 ```
+
+Set `cover` to `"KEEP"` to leave the cover unmodified.
 
 Responds '200' with the original channel resource url.
 

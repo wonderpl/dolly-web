@@ -2,10 +2,11 @@ import hmac
 import hashlib
 import uuid
 from mock import patch
+from rockpack.mainsite.services.video.models import Channel
 from rockpack.mainsite.services.pubsubhubbub.api import subscribe
 from rockpack.mainsite.services.pubsubhubbub.models import Subscription
 from ..base import RockPackTestCase
-from ..fixtures import ChannelData
+from ..fixtures import UserData
 
 
 PUSH_ATOM_XML = '''<?xml version="1.0" encoding="UTF-8"?>
@@ -32,8 +33,12 @@ PUSH_ATOM_XML = '''<?xml version="1.0" encoding="UTF-8"?>
   <openSearch:totalResults>286</openSearch:totalResults>
   <openSearch:startIndex>1</openSearch:startIndex>
   <openSearch:itemsPerPage>25</openSearch:itemsPerPage>
+  %s
+</feed>
+'''
+PUSH_ENTRY_XML = '''
   <entry gd:etag="W/&quot;A0ADQX47eCp7I2A9WhBUGUs.&quot;">
-    <id>tag:youtube.com,2008:video:Z3f4kQLtfEQ</id>
+    <id>tag:youtube.com,2008:video:%(videoid)s</id>
     <published>2013-05-07T23:35:46.000Z</published>
     <updated>2013-05-07T23:36:10.000Z</updated>
     <category scheme="http://schemas.google.com/g/2005#kind" term="http://gdata.youtube.com/schemas/2007#video"/>
@@ -83,11 +88,10 @@ PUSH_ATOM_XML = '''<?xml version="1.0" encoding="UTF-8"?>
       <yt:duration seconds="248"/>
       <yt:uploaded>2013-05-07T23:35:46.000Z</yt:uploaded>
       <yt:uploaderId>UCeiunpfG3pQlnla6rvEicDQ</yt:uploaderId>
-      <yt:videoid>Z3f4kQLtfEQ</yt:videoid>
+      <yt:videoid>%(videoid)s</yt:videoid>
     </media:group>
     <yt:statistics favoriteCount="0" viewCount="2"/>
   </entry>
-</feed>
 '''
 
 
@@ -98,7 +102,10 @@ class PubSubHubbubTestCase(RockPackTestCase):
         super(PubSubHubbubTestCase, self).setUp()
         self.ctx = self.app.test_request_context()
         self.ctx.push()
-        self.subid = subscribe('test', uuid.uuid4().hex, ChannelData.channel1.id).id
+        self.channel = Channel(title='', description='', cover='', owner=UserData.test_user_a.id).save()
+        assert Channel.query.get(self.channel.id), channel.id
+        self.channel.add_meta('en-us')
+        self.subid = subscribe('test', uuid.uuid4().hex, self.channel.id).id
 
     def tearDown(self):
         self.ctx.pop()
@@ -121,20 +128,37 @@ class PubSubHubbubTestCase(RockPackTestCase):
             self.assertEquals(r.status_code, 200)
         self.assertTrue(subs.verified)
 
-    def test_post(self):
-        subs = Subscription.query.get(self.subid)
-        sig = hmac.new(subs.secret, PUSH_ATOM_XML, hashlib.sha1)
+    def _post_entries(self, subs, data):
+        sig = hmac.new(subs.secret, data, hashlib.sha1)
         with self.app.test_client() as client:
             r = client.post(
                 '/ws/pubsubhubbub/callback',
                 query_string={'id': subs.id},
                 content_type='application/atom+xml',
-                data=PUSH_ATOM_XML,
+                data=data,
                 headers={'X-Hub-Signature': 'sha1=' + sig.hexdigest()})
             self.assertEquals(r.status_code, 204)
 
+    def test_post(self):
+        entry = PUSH_ENTRY_XML % dict(videoid='xyzzy')
+        data = PUSH_ATOM_XML % dict(entry=entry)
+        subs = Subscription.query.get(self.subid)
+        self._post_entries(subs, data)
         video = subs.channel.video_instances[0].video_rel
-        self.assertEquals(video.source_videoid, 'Z3f4kQLtfEQ')
+        self.assertEquals(video.source_videoid, 'xyzzy')
         self.assertEquals(video.duration, 248)
         self.assertIn('BQ', [rst.country for rst in video.restrictions])
-        Subscription.query.session.delete(video)
+
+    def test_post_update(self):
+        # Double-check that subsequent updates and repeated videos
+        # are handled correctly.
+        ids = map(str, range(3))
+        entry = ''
+        for id in ids:
+            entry += PUSH_ENTRY_XML % dict(videoid=id)
+            data = PUSH_ATOM_XML % dict(entry=entry)
+            subs = Subscription.query.get(self.subid)
+            self._post_entries(subs, data)
+        channel_videos = [
+            v.video_rel.source_videoid for v in subs.channel.video_instances]
+        self.assertEquals(sorted(channel_videos), ids)

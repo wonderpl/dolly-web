@@ -1,5 +1,6 @@
-window.Weblight.controller('PageCtrl', ['isMobile', '$scope', '$location', (isMobile, $scope, $location) ->
-  $("body").css({"background-image": "url(/static/images/blueheader.png)", "background-repeat": "repeat-x", "background-color": "#f1f1f1"})
+window.Weblight.controller('PageCtrl', ['isMobile', '$scope', '$location', 'browserServices', (isMobile, $scope, $location, browserServices) ->
+
+  $scope.browser = browserServices
 
   $scope.toggle = (e, hiddenelement) ->
     $(e.currentTarget).toggleClass('activestate').siblings('.bio').toggleClass('activestate')

@@ -30,12 +30,13 @@ class User(db.Model):
     last_name = Column(String(32), nullable=False)
     date_of_birth = Column(Date())
     avatar = Column(ImageType('AVATAR'), nullable=False)
-    gender = Column(Enum(*GENDERS), nullable=True)
+    gender = Column(Enum(*GENDERS, name='gender_enum'), nullable=True)
     is_active = Column(Boolean, nullable=False, server_default='true', default=True)
     refresh_token = Column(String(1024), nullable=False)
     username_updated = Column(Boolean, nullable=False, server_default='false', default=False)
     date_joined = Column(DateTime(), nullable=False, default=func.now())
     date_updated = Column(DateTime(), nullable=False, default=func.now(), onupdate=func.now())
+    display_fullname = Column(Boolean, nullable=False, server_default='true', default=True)
 
     locale = Column(ForeignKey('locale.id'), nullable=False, server_default='')
 
@@ -74,7 +75,7 @@ class User(db.Model):
     @property
     def display_name(self):
         # XXX: Needs to be more general?
-        if self.first_name:
+        if self.first_name and self.display_fullname:
             return u'%s %s' % (self.first_name, self.last_name)
         else:
             return self.username
@@ -108,8 +109,6 @@ class User(db.Model):
         user.set_password(new_pwd)
         user.reset_refresh_token()
         user = user.save()
-        return user.get_credentials()
-
 
     @classmethod
     def suggested_username(cls, source_name):
@@ -152,6 +151,7 @@ class User(db.Model):
         from rockpack.mainsite.services.video.models import Channel
         title, description, cover = app.config['FAVOURITE_CHANNEL']
         channel = Channel(
+            favourite=True,
             title=title,
             description=description,
             cover=cover,
@@ -178,7 +178,9 @@ class User(db.Model):
             last_name=eu.last_name,
             email=eu.email,
             gender=eu.gender,
-            avatar=avatar)
+            avatar=avatar,
+            date_of_birth=eu.dob
+        )
 
 
 class UserActivity(db.Model):
@@ -220,7 +222,7 @@ class ReservedUsername(db.Model):
     __tablename__ = 'reserved_username'
 
     username = Column(String(52), nullable=False, primary_key=True)
-    external_system = Column(Enum(*EXTERNAL_SYSTEM_NAMES), nullable=False)
+    external_system = Column(Enum(*EXTERNAL_SYSTEM_NAMES, name='external_system_names'), nullable=False)
     external_uid = Column(String(1024), nullable=False)
     external_data = Column(Text())
 

@@ -33,13 +33,15 @@ window.Weblight.controller('VideoCtrl', ['$scope', '$rootScope', '$routeParams',
         videoId: $scope.videodata.video.source_id,
         playerVars: {
           autoplay: 1,
-          showinfo: 0,
-          modestbranding: 0,
+          showinfo: 1,
+          modestbranding: 1,
           wmode: "opaque",
-          controls: 0,
-          modestbranding: 1
+          controls: 1
         }
       })
+
+  onPlayerReady = (event) ->
+    event.target.playVideo()
 
   $scope.$watch((-> window.orientation), (newValue, oldValue) =>
     if oldValue != newValue
