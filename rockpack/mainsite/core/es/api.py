@@ -240,13 +240,14 @@ class ChannelSearch(EntitySearch, CategoryMixin, MediaSortMixin):
                 description=channel.description,
                 title=channel.title,
                 public=channel.public,
-                favourite=channel.favourite,
                 position=pos,
                 cover=dict(
                     thumbnail_url=urljoin(app.config.get('IMAGE_CDN', ''), channel.cover.thumbnail_url) if channel.cover.thumbnail_url else '',
                     aoi=channel.aoi
                 )
             )
+            if channel.favourite:
+                ch['favourites'] = True
 
             for k, v in channel.iteritems():
                 if isinstance(v, (str, unicode)) and k.endswith('_url'):
