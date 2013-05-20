@@ -1,4 +1,5 @@
 import uuid
+import time
 import json
 from datetime import datetime
 from urlparse import urlsplit
@@ -266,6 +267,7 @@ class ChannelCreateTestCase(base.RockPackTestCase):
             )
             self.assertEquals(200, r.status_code, r.data)
 
+            time.sleep(2)
             for user_id in user.id, user2_id:
                 r = client.get('/ws/{}/'.format(user.id), headers=[get_auth_header(user_id)])
                 self.assertEquals(200, r.status_code)

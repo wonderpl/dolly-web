@@ -362,6 +362,7 @@ class UserWS(WebService):
             offset, limit = self.get_page()
             ch.set_paging(offset, limit)
             ch.favourite_sort('desc')
+            ch.add_sort('date_updated')
             ch.add_term('owner', userid)
             owner.setdefault('channels', {})['items'] = ch.channels(with_owners=False)
             owner['channels']['total'] = ch.total
