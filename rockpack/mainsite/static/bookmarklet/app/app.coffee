@@ -6,7 +6,7 @@ window.Bookmarklet = angular.module('Bookmarklet', [])
     $routeProvider.when('/resetpassword', {templateUrl: 'resetpassword.html'})
     $routeProvider.when('/done', {templateUrl: 'done.html'})
   ])
-  .constant('apiUrl', 'http://demo.rockpack.com/')
+  .value('api_urls', window.api_urls)
 
 window.fbAsyncInit = ->
   FB.init({ appId: 'Your_APP_ID',

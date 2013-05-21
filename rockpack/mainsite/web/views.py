@@ -33,13 +33,17 @@ def homepage():
 
 @expose_web('/bookmarklet', 'web/bookmarklet.html')
 def bookmarklet():
+    api_urls = ws_request('/ws/')
+    return dict(api_urls = api_urls), 200, {'P3P': 'CP="CAO PSA OUR"'}
+
+@expose_web('/injectorjs', 'web/injector.js')
+def injector():
     return None, 200, {'P3P': 'CP="CAO PSA OUR"'}
 
 
 @expose_web('/channel/<slug>/<channelid>/', 'web/channel.html', cache_age=3600)
 def channel(slug, channelid):
     channel_data = ws_request('/ws/-/channels/%s/' % channelid, size=40)
-    #api_urls = ws_request('/ws/')
     selected_video = None
     if 'video' in request.args:
         for instance in channel_data['videos']['items']:
@@ -55,7 +59,8 @@ def channel(slug, channelid):
         'channel', slug=slugify(channel_data['title']) or '-', channelid=channelid)
     if selected_video:
         channel_data['canonical_url'] += '?video=' + selected_video['id']
-    return dict(channel_data=channel_data, selected_video=selected_video)
+    injectorUrl = url_for('injector')
+    return dict(channel_data=channel_data, selected_video=selected_video, injectorUrl=injectorUrl)
 
 
 @expose_web('/s/<linkid>', cache_age=60, cache_private=True)

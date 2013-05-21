@@ -378,24 +378,26 @@ footer {
 }
 
 .btn-blue {
-  font-family: "dn-bold";
+  font-family: "dn-bold", sans-serif;
   text-transform: uppercase;
   text-shadow: 0;
-  color: #ffffff;
-  background: rgb(13,169,174);
-  background: url(data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiA/Pgo8c3ZnIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgdmlld0JveD0iMCAwIDEgMSIgcHJlc2VydmVBc3BlY3RSYXRpbz0ibm9uZSI+CiAgPGxpbmVhckdyYWRpZW50IGlkPSJncmFkLXVjZ2ctZ2VuZXJhdGVkIiBncmFkaWVudFVuaXRzPSJ1c2VyU3BhY2VPblVzZSIgeDE9IjAlIiB5MT0iMCUiIHgyPSIwJSIgeTI9IjEwMCUiPgogICAgPHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iIzBkYTlhZSIgc3RvcC1vcGFjaXR5PSIxIi8+CiAgICA8c3RvcCBvZmZzZXQ9IjM1JSIgc3RvcC1jb2xvcj0iIzBhYTNhOCIgc3RvcC1vcGFjaXR5PSIxIi8+CiAgPC9saW5lYXJHcmFkaWVudD4KICA8cmVjdCB4PSIwIiB5PSIwIiB3aWR0aD0iMSIgaGVpZ2h0PSIxIiBmaWxsPSJ1cmwoI2dyYWQtdWNnZy1nZW5lcmF0ZWQpIiAvPgo8L3N2Zz4=);
-  background: -moz-linear-gradient(top,  rgba(13,169,174,1) 0%, rgba(10,163,168,1) 35%);
-  background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,rgba(13,169,174,1)), color-stop(35%,rgba(10,163,168,1)));
-  background: -webkit-linear-gradient(top,  rgba(13,169,174,1) 0%,rgba(10,163,168,1) 35%);
-  background: -o-linear-gradient(top,  rgba(13,169,174,1) 0%,rgba(10,163,168,1) 35%);
-  background: -ms-linear-gradient(top,  rgba(13,169,174,1) 0%,rgba(10,163,168,1) 35%);
-  background: linear-gradient(to bottom,  rgba(13,169,174,1) 0%,rgba(10,163,168,1) 35%);
-  filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#0da9ae', endColorstr='#0aa3a8',GradientType=0 );
-  -webkit-box-shadow: inset 0px 0px 0px 1px rgba(18, 18, 18, 0.15);
-  box-shadow: inset 0px 0px 0px 1px rgba(18, 18, 18, 0.15);  font-size: 15px;
+  color: rgba(255,255,255,.8);
+  text-shadow: 0 2px rgba(50,50,50,.15);
+  background: #0ba6ab;
+  font-size: 15px;
   padding: 10px 30px;
   border-radius: 5px;
-  border: 0;
+  border: none;
+  -webkit-transition: background-color .5s;
+  -moz-transition: background-color .5s;
+  transition:background-color .5s;
+  -ms-transition:background-color .5s;
+  -o-transition:background-color .5s;
+
+  &:hover {
+    color: rgba(255,255,255,.8);
+    background: #3ed2d7;
+  }
 }
 
 
@@ -1165,6 +1167,47 @@ footer {
 
     #browsercontainer {
       display: none;
+    }
+  }
+
+  .channelheader {
+    padding: 210px 0 35px 0;
+
+    .gettheapp {
+      top: 85px;
+      left: 50%;
+      margin-left: -110px;
+      font-size: 15px;
+      width: 220px;
+      padding: 0;
+    }
+
+    h1 {
+      font-size: 33px;
+    }
+
+    #details {
+      font-size: 16px;
+    }
+
+    #userdetails {
+      font-size: 16px;
+    }
+
+    .user-profile {
+      width: 55px;
+      height: 55px;
+    }
+  }
+
+  #videoslist {
+
+    & > div {
+
+      .videocell {
+        width: 310px;
+        height: 174px;
+      }
     }
   }
 }

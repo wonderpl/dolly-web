@@ -31,12 +31,12 @@
     inject = function (video) {
         var css, newIframe;
         css = document.createElement("link");
-        css.href = "http://demo.rockpack.com/static/bookmarklet/bookmarklet/style.css";
+        css.href = "/static/bookmarklet/bookmarklet/style.css";
         css.type = "text/css";
         css.rel = "stylesheet";
         document.getElementsByTagName("head")[0].appendChild(css);
         newIframe = document.createElement('iframe');
-        newIframe.src = 'http://demo.rockpack.com/bookmarklet#/?' + video;
+        newIframe.src = '/bookmarklet#/?' + video;
         newIframe.id = 'rockpackiframe';
         newIframe.name = "rockpackiframe";
         newIframe.setAttribute('allowtransparency', 'true');

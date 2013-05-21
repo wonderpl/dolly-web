@@ -1,5 +1,7 @@
 window.Weblight.controller('AppCtrl', ['$routeParams', 'isMobile', '$scope', '$location', '$rootScope', ($routeParams, isMobile, $scope, $location, $rootScope) ->
 
+  $scope.isVertical = false
+
   $scope.$watch((-> $location.path()), (newValue, oldValue) ->
     $scope.currentPage = newValue.substring(1)
   )
@@ -20,6 +22,10 @@ window.Weblight.controller('AppCtrl', ['$routeParams', 'isMobile', '$scope', '$l
 
   $scope.$watch($scope.getWidth, (newValue, oldValue) ->
     $scope.windowWidth = { width: (Math.floor(($(window).width() - $scope.containerPadding) / $scope.videoWidth) * $scope.videoWidth + $scope.containerPadding) + 'px', margin: '0 auto'}
+    if newValue < 768
+      $scope.isVertical = true
+    else
+      $scope.isVertical = false
     return
   )
 

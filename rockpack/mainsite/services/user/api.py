@@ -428,7 +428,7 @@ class UserWS(WebService):
     @check_authorization(self_auth=True)
     def change_user_password(self, userid):
         data = request.json
-        if not isinstance(data, dict) or not data.get('old') or not data.get('new'):
+        if not isinstance(data, dicturl_for) or not data.get('old') or not data.get('new'):
             abort(400, message=[_('Both old and new passwords must be supplied.')])
 
         new_p = data.get('new')
