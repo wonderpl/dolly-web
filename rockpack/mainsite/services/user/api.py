@@ -67,8 +67,9 @@ def get_or_create_video_records(instance_ids, locale):
             try:
                 source, source_videoid = instance_id
                 source = ['rockpack', 'youtube'].index(source)  # TODO: use db mapping
+                assert len(source_videoid)
                 add(external_instance_ids, (source, source_videoid))
-            except (TypeError, ValueError):
+            except (TypeError, ValueError, AssertionError):
                 invalid.append(instance_id)
     if invalid:
         abort(400, message=_('Invalid video instance ids'), data=invalid)
