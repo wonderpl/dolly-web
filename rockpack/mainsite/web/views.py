@@ -36,6 +36,7 @@ def bookmarklet():
     api_urls = ws_request('/ws/')
     return dict(api_urls=api_urls), 200, {'P3P': 'CP="CAO PSA OUR"'}
 
+
 @expose_web('/injectorjs', 'web/injector.js')
 def injector():
     return dict(iframe_url=url_for('bookmarklet'))
