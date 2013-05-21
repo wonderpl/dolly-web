@@ -87,7 +87,7 @@ window.Bookmarklet.controller('AddtoChannelCtrl', ['$scope','$http', '$location'
   return
 ])
 
-window.Bookmarklet.controller('CreateChannelCtrl', ['$scope','$http', '$location', 'cookies', 'OAuth', 'User', ($scope, $http, $location, cookies, OAuth, User) ->
+window.Bookmarklet.controller('CreateChannelCtrl', ['$scope','$http', '$location', 'cookies', 'OAuth', 'User', '$routeParams', ($scope, $http, $location, cookies, OAuth, User, $routeParams) ->
   $scope.accessToken = cookies.get('access_token')
   $scope.user_id = cookies.get('user_id')
 
@@ -95,21 +95,24 @@ window.Bookmarklet.controller('CreateChannelCtrl', ['$scope','$http', '$location
     window.parent.postMessage('close', '*');
 
   $scope.addChannel = ->
-    User.createChannel($scope.user_id, $scope.accessToken, $scope.channelName)
+    User.createChannel( $scope.accessToken, $scope.channelName)
     .then((data) ->
-      $location.path('/done')
+        User.addVideo($scope.access_token, $routeParams.id, data.resource_url)
+          .then((data) ->
+            $location.path('/done')
+          )
     )
   return
 
 ])
 
-window.Bookmarklet.controller('DoneCtrl', ['$scope','$http', 'apiUrl', '$location', 'cookies', 'OAuth', 'User', ($scope, $http, apiUrl, $location, cookies, OAuth, User) ->
+window.Bookmarklet.controller('DoneCtrl', ['$scope','$http', '$location', 'cookies', 'OAuth', 'User', ($scope, $http, $location, cookies, OAuth, User) ->
   $scope.close = ->
     window.parent.postMessage('close', '*');
 
 ])
 
-window.Bookmarklet.controller('ResetPasswordCtrl', ['$scope','$http', 'apiUrl', '$location', 'cookies', 'OAuth', 'User', ($scope, $http, apiUrl, $location, cookies, OAuth, User) ->
+window.Bookmarklet.controller('ResetPasswordCtrl', ['$scope','$http', '$location', 'cookies', 'OAuth', 'User', ($scope, $http, $location, cookies, OAuth, User) ->
   $scope.close = ->
     window.parent.postMessage('close', '*');
 

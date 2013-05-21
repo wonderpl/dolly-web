@@ -7,8 +7,6 @@ window.Weblight.controller('ChannelCtrl', ['$scope', 'Videos', '$routeParams', '
   $scope.channel = channelData
   $scope.videos = channelData.videos.items
 
-  #http://media.dev.rockpack.com/images/channel/thumbnail_medium/prWVvv-dUZfY33SmzrecPg.jpg
-
   $scope.channel.thumbnail = channelData.cover.thumbnail_url.replace('thumbnail_medium', 'thumbnail_small')
   $scope.channel.owner.avatar = channelData.owner.avatar_thumbnail_url.replace('thumbnail_small', 'thumbnail_large')
 
@@ -38,8 +36,13 @@ window.Weblight.controller('ChannelCtrl', ['$scope', 'Videos', '$routeParams', '
     return
 
   $scope.setCurrentVideo = (video) ->
-    $location.search( 'videoid', video.id );
+    $location.search( 'video', video.id );
     return
+
+  # Catch share of specific video url
+  url = $location.absUrl()
+  if url.indexOf('?video=') > 0 and not $routeParams.video?
+    $location.search( 'video',url.substring(url.indexOf('?video=')+7, url.length-2))
 
   return
 ])

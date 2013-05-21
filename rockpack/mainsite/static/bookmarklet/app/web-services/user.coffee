@@ -29,6 +29,7 @@ angular.module('Bookmarklet').factory('User', ($http) ->
         ),
         (data) ->
           console.log data
+          return data.data
         )
 
     addVideo: (bearerToken, videoID, resourceUrl) ->
