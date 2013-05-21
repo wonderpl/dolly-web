@@ -16,8 +16,7 @@ def subscribe(hub, topic, channel_id):
 @commit_on_success
 def add_videos_to_channel(channel, videos):
     source = 1  # XXX: Get this dynamically?
-    meta = channel.metas[0]
-    Video.add_videos(videos, source, meta.locale, meta.category)
+    Video.add_videos(videos, source)
     channel.add_videos(videos)
 
 

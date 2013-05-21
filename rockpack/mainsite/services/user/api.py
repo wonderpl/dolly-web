@@ -44,7 +44,7 @@ ACTIVITY_OBJECT_TYPE_MAP = dict(
 
 
 @commit_on_success
-def get_or_create_video_records(instance_ids, locale):
+def get_or_create_video_records(instance_ids):
     """Take a list of instance ids and return mapping to associated video ids."""
     def add(s, i):
         if i and i not in s:
@@ -106,7 +106,7 @@ def get_or_create_video_records(instance_ids, locale):
                 video_data = get_video_data(source_videoid)
             except Exception:
                 abort(400, message=_('Invalid video instance ids'), data=[[source, source_videoid]])
-            Video.add_videos(video_data.videos, source, locale)
+            Video.add_videos(video_data.videos, source)
 
     return [existing_ids[id] for id in instance_id_order]
 
@@ -118,7 +118,7 @@ def save_video_activity(userid, action, instance_id, locale):
     except KeyError:
         abort(400, message=_('Invalid action'))
 
-    video_id = get_or_create_video_records([instance_id], locale)[0]
+    video_id = get_or_create_video_records([instance_id])[0]
     activity = dict(user=userid, action=action,
                     object_type='video_instance', object_id=instance_id)
     if not UserActivity.query.filter_by(**activity).count():
@@ -177,7 +177,7 @@ def save_content_report(userid, object_type, object_id, reason):
 
 @commit_on_success
 def add_videos_to_channel(channel, instance_list, locale, delete_existing=False):
-    video_ids = get_or_create_video_records(instance_list, locale)
+    video_ids = get_or_create_video_records(instance_list)
     existing = dict((v.video, v) for v in VideoInstance.query.filter_by(channel=channel.id))
     added = []
     for position, video_id in enumerate(video_ids):

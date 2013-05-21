@@ -90,10 +90,7 @@ class ImportView(BaseView):
     def _import_videos(self, form):
         for video in form.import_data.videos:
             video.rockpack_curated = True
-        count = Video.add_videos(
-            form.import_data.videos,
-            form.source.data,
-            form.category.data)
+        count = Video.add_videos(form.import_data.videos, form.source.data)
 
         channel = form.channel.data   # XXX: Need to validate?
         user = form.user.data

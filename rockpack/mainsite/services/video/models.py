@@ -154,7 +154,7 @@ class Video(db.Model):
         return 'http://www.youtube.com/watch?v=' + self.source_videoid
 
     @classmethod
-    def add_videos(cls, videos, source, locale, category=None):
+    def add_videos(cls, videos, source):
         for video in videos:
             video.source = source
         session = cls.query.session
