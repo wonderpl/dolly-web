@@ -438,7 +438,12 @@ def add_channel_to_index(channel, bulk=False, refresh=False, boost=None, no_chec
 
     category = []
     if channel.category:
-        category = [channel.category_rel.id, channel.category_rel.parent]
+        if not channel.category_rel:
+            # Avoid circular import
+            from rockpack.mainsite.services.video.models import Category
+            category = Category.query.filter_by(id=channel.category).values('id', 'parent').next()
+        else:
+            category = [channel.category_rel.id, channel.category_rel.parent]
 
     data = dict(
         id=channel.id,
