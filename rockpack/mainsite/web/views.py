@@ -34,11 +34,12 @@ def homepage():
 @expose_web('/bookmarklet', 'web/bookmarklet.html')
 def bookmarklet():
     api_urls = ws_request('/ws/')
-    return dict(api_urls = api_urls), 200, {'P3P': 'CP="CAO PSA OUR"'}
+    return dict(api_urls=api_urls), 200, {'P3P': 'CP="CAO PSA OUR"'}
+
 
 @expose_web('/injectorjs', 'web/injector.js')
 def injector():
-    return dict(abspath = app.config), ['ASSETS_URL']), 200
+    return dict(abspath=app.config['ASSETS_URL']), 200
 
 
 @expose_web('/channel/<slug>/<channelid>/', 'web/channel.html', cache_age=3600)

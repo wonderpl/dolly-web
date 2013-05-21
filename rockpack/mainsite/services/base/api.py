@@ -20,7 +20,7 @@ def _discover_response():
         register=url_for('registrationws.register'),
         login_register_external=url_for('loginws.exeternal'),
         reset_password=url_for('resetws.reset_password'),
-        refresh_token= url_for('tokenws.token'),
+        refresh_token=url_for('tokenws.token'),
     )
 
 
