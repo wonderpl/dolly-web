@@ -4,6 +4,7 @@ from flask import request, abort, g
 from flask.ext import wtf
 from rockpack.mainsite import app, requests
 from rockpack.mainsite.helpers import lazy_gettext as _
+from rockpack.mainsite.helpers.forms import naughty_word_validator
 from rockpack.mainsite.helpers.db import get_column_property, get_column_validators
 from rockpack.mainsite.helpers.urls import url_for
 from rockpack.mainsite.core.token import create_access_token
@@ -93,6 +94,7 @@ def username_validator():
             raise wtf.ValidationError(_('"%s" is reserved.') % field.data)
         elif exists:
             raise wtf.ValidationError(_('"%s" already taken.') % field.data)
+        naughty_word_validator(form, field)
     return _valid
 
 

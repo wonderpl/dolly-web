@@ -330,3 +330,21 @@ class RegisterTestCase(base.RockPackTestCase):
                     data=dict(refresh_token='7348957nev9o3874nqlvcfh47lmqa'))
 
             self.assertEquals(400, r.status_code)
+
+    def test_naughty_username(self):
+        with self.app.test_client() as client:
+            for username, status in [('Scunthorpe', 200), ('HorIsACunt', 400)]:
+                r = client.post(
+                    '/ws/register/',
+                    headers=[get_client_auth_header()],
+                    data=dict(
+                        username=username,
+                        password='xxxxxx',
+                        first_name='foo',
+                        last_name='bar',
+                        date_of_birth='2000-01-01',
+                        locale='en-us',
+                        email='%s@spam.com' % username,
+                    )
+                )
+                self.assertEquals(status, r.status_code, r.data)

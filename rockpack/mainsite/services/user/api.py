@@ -11,6 +11,7 @@ from rockpack.mainsite.core.webservice import WebService, expose_ajax, ajax_crea
 from rockpack.mainsite.core.oauth.decorators import check_authorization
 from rockpack.mainsite.core.youtube import get_video_data
 from rockpack.mainsite.helpers import lazy_gettext as _
+from rockpack.mainsite.helpers.forms import naughty_word_validator
 from rockpack.mainsite.helpers.urls import url_for, url_to_endpoint
 from rockpack.mainsite.helpers.db import gen_videoid, get_column_validators, get_box_value
 from rockpack.mainsite.services.video.models import (
@@ -267,7 +268,7 @@ class ChannelForm(form.BaseForm):
         super(ChannelForm, self).__init__(*args, **kwargs)
         self._channel_id = None
 
-    title = wtf.TextField(validators=[check_present])
+    title = wtf.TextField(validators=[check_present, naughty_word_validator])
     description = wtf.TextField(validators=[check_present, wtf.validators.Length(max=200)])
     category = wtf.TextField(validators=[check_present])
     cover = wtf.TextField(validators=[check_present])
