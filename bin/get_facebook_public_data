@@ -1,0 +1,14 @@
+import sys
+import json
+import requests
+import lxml.html
+
+
+for username in sys.argv[1:]:
+    result = requests.get('https://www.facebook.com/' + username)
+    html = lxml.html.fromstring(result.content)
+    timeline_data = html.get_element_by_id('pagelet_timeline_main_column').get('data-gt')
+    fbid = json.loads(timeline_data)['profile_owner']
+    result = requests.get('http://graph.facebook.com/%s/picture/?type=large' % fbid, allow_redirects=False)
+    avatar_url = result.headers['location']
+    print username, fbid, avatar_url

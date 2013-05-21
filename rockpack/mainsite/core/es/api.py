@@ -240,13 +240,14 @@ class ChannelSearch(EntitySearch, CategoryMixin, MediaSortMixin):
                 description=channel.description,
                 title=channel.title,
                 public=channel.public,
-                favourite=channel.favourite,
                 position=pos,
                 cover=dict(
                     thumbnail_url=urljoin(app.config.get('IMAGE_CDN', ''), channel.cover.thumbnail_url) if channel.cover.thumbnail_url else '',
                     aoi=channel.aoi
                 )
             )
+            if channel.favourite:
+                ch['favourites'] = True
 
             for k, v in channel.iteritems():
                 if isinstance(v, (str, unicode)) and k.endswith('_url'):
@@ -447,6 +448,7 @@ def add_channel_to_index(channel, bulk=False, refresh=False, boost=None, no_chec
         owner=channel.owner,
         subscriber_count=channel.subscriber_count,
         date_added=channel.date_added,
+        date_updated=channel.date_updated,
         description=channel.description,
         resource_url=urlparse(channel.get_resource_url()).path,
         title=channel.title,
