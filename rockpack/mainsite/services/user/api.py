@@ -268,8 +268,12 @@ class ChannelForm(form.BaseForm):
         super(ChannelForm, self).__init__(*args, **kwargs)
         self._channel_id = None
 
-    title = wtf.TextField(validators=[check_present, naughty_word_validator])
-    description = wtf.TextField(validators=[check_present, wtf.validators.Length(max=200)])
+    title = wtf.TextField(
+        validators=[check_present, naughty_word_validator] +
+        get_column_validators(Channel, 'title', False))
+    description = wtf.TextField(
+        validators=[check_present] +
+        get_column_validators(Channel, 'description', False))
     category = wtf.TextField(validators=[check_present])
     cover = wtf.TextField(validators=[check_present])
     cover_aoi = wtf.Field()  # set from cover reference

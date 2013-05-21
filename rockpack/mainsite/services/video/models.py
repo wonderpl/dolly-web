@@ -264,8 +264,8 @@ class Channel(db.Model):
     __tablename__ = 'channel'
 
     id = Column(CHAR(24), primary_key=True)
-    title = Column(String(1024), nullable=False)
-    description = Column(Text, nullable=False)
+    title = Column(String(25), nullable=False)
+    description = Column(Text(200), nullable=False)
     cover = Column(ImageType('CHANNEL', reference_only=True), nullable=False)
     cover_aoi = Column(BoxType, nullable=True)
     public = Column(Boolean(), nullable=False, server_default='true', default=True)

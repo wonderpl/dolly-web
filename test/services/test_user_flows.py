@@ -203,7 +203,7 @@ class CuratingUserTestCase(BaseUserTestCase):
         category = random.choice(self.get_cat_ids())
         cover = random.choice(self.get(self.urls['cover_art'])['cover_art']['items'])['cover_ref']
         chdata = dict(
-            title=uuid.uuid4().hex,
+            title=uuid.uuid4().hex[:20],
             category=category,
             cover=cover,
             description='test',

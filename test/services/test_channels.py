@@ -131,6 +131,20 @@ class ChannelCreateTestCase(base.RockPackTestCase):
             self.assertEquals(400, r.status_code)
             self.assertEquals('Duplicate title.', json.loads(r.data)['form_errors']['title'][0])
 
+            r = client.put(
+                resource,
+                data=json.dumps(dict(
+                    title='A long title xxxxxxxxxxxxxxxxxxxxxxxx',
+                    description='',
+                    category='',
+                    cover='',
+                    public=False)
+                ),
+                content_type='application/json',
+                headers=[get_auth_header(user.id)]
+            )
+            self.assertEquals(400, r.status_code, r.data)
+
             # check description limit (201 chars below)
             new_description = "ihjdk adhaj dsjakhkdsjf yhsdjhf sdjhfksdkfjhsdfsjdfjsdfh sdhf sdjkhf jhsjkhsf sdjhkf sdjkhsdfjkhfsdh\n\rhjdk adhaj dsjakhkdsjf yhsdjhf sdjhfksdkfjhsdfsjdfjsdfh sdhf sdjkhf jhsjkhsf sdjhkf sdjkhsdfjkhfsdh"
             r = client.put(
@@ -210,6 +224,7 @@ class ChannelCreateTestCase(base.RockPackTestCase):
             self.assertEquals(400, r.status_code)
             errors = json.loads(r.data)['form_errors']
             self.assertEquals({
+                "title": ["Field cannot be longer than 25 characters."],
                 "category": ["This field is required, but can be an empty string."],
                 "public": ["This field is required, but can be an empty string."],
                 "description": ["This field is required, but can be an empty string."],
