@@ -346,3 +346,15 @@ class ChannelCreateTestCase(base.RockPackTestCase):
                 data = json.loads(client.get(resource, headers=[get_auth_header(user_id)]).data)
                 name = RockpackCoverArtData.comic_cover.cover.replace('.png', '.jpg') if cover else ''
                 self.assertEquals(data['cover']['thumbnail_url'].split('/')[-1], name)
+
+    def test_naughty_title(self):
+        user_id = self.create_test_user().id
+        with self.app.test_client() as client:
+            for title, status in [('fuck rockpack', 400), ('FuckRockpack', 400), ('scunthorpe', 201)]:
+                r = client.post(
+                    '/ws/{}/channels/'.format(user_id),
+                    data=json.dumps(dict(title=title, category='', description='', public='', cover='')),
+                    content_type='application/json',
+                    headers=[get_auth_header(user_id)]
+                )
+                self.assertEquals(status, r.status_code, r.data)
