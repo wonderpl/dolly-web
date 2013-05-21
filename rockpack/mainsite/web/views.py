@@ -38,7 +38,7 @@ def bookmarklet():
 
 @expose_web('/injectorjs', 'web/injector.js')
 def injector():
-    return dict(abspath = app.config['ASSETS_URL']), 200
+    return dict(abspath = app.config), ['ASSETS_URL']), 200
 
 
 @expose_web('/channel/<slug>/<channelid>/', 'web/channel.html', cache_age=3600)
