@@ -324,7 +324,6 @@ class VideoSearch(EntitySearch, CategoryMixin, MediaSortMixin):
                 date_added=v.date_added.isoformat() if not isinstance(v.date_added, (str, unicode)) else v.date_added,
                 public=v.public,
                 category='',
-                channel=v.channel,
                 video=dict(
                     id=v.video.id,
                     view_count=v['locales'][self.locale]['view_count'],
@@ -338,9 +337,10 @@ class VideoSearch(EntitySearch, CategoryMixin, MediaSortMixin):
             )
             if v.category:
                 video['category'] = max(v.category) if isinstance(v.category, list) else v.category
-            vlist.append(video)
             if with_channels:
+                video['channel'] = v.channel
                 channel_list.append(v.channel)
+            vlist.append(video)
 
         if with_channels and channel_list:
             ch = ChannelSearch(self.locale)
