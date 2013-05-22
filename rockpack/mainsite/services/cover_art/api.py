@@ -10,6 +10,8 @@ def cover_art_dict(instance, own=False):
         cover_ref=str(instance.cover),
         thumbnail_url=instance.cover.url,
     )
+    if getattr(instance, 'category', None):
+        data['category'] = str(instance.category)
     if own:
         data['resource_url'] = instance.get_resource_url(own)
     return data
