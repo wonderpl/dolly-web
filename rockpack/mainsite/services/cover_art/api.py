@@ -29,8 +29,11 @@ class CoverArtWS(WebService):
 
     @expose_ajax('/', cache_age=600)
     def rockpack_cover_art(self):
-        query = RockpackCoverArt.query.filter_by(locale=self.get_locale()).\
-            filter(RockpackCoverArt.priority != -1).order_by(desc('priority'))
+        # Get global and local cover art
+        query = RockpackCoverArt.query.\
+            filter(RockpackCoverArt.locale.in_(('', self.get_locale()))).\
+            filter(RockpackCoverArt.priority != -1).\
+            order_by(desc('priority'))
         if request.args.get('category'):
             query = query.filter_by(category=request.args.get('category'))
         return cover_art_response(query, self.get_page())
