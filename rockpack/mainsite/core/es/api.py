@@ -281,13 +281,16 @@ class ChannelSearch(EntitySearch, CategoryMixin, MediaSortMixin):
             owner_map = {owner['id']: owner for owner in ows.owners()}
             self.add_owner_to_channels(channel_list, owner_map)
 
+        # XXX: this assumes only 1 channel for now
+        # This WILL break if there is more than one channel to get videos for
+        # as a single video doesnt reference the channel it belongs to
         if with_videos and channel_id_list:
             vs = VideoSearch(self.locale)
             vs.add_term('channel', channel_id_list)
             vs.set_paging(*with_videos)
             video_map = {}
             for v in vs.videos():
-                video_map.setdefault(v['channel'], []).append(v)
+                video_map.setdefault(channel_id_list[0], []).append(v) # HACK: see above
             self.add_videos_to_channels(channel_list, video_map)
         return channel_list
 
