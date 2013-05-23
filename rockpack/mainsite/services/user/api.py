@@ -308,7 +308,7 @@ class ChannelForm(form.BaseForm):
         # If this is a new channel (no channel.id) and there is an exisiting channel with dupe title, or
         # if this is an existing channel (has channel.id) and we have another existing channel with a dupe title
         # that isn't this channel, error.
-        if user_channels.filter_by(title=field.data, deleted=False).filter(Channel.id != self._channelid).count():
+        if user_channels.filter_by(title=field.data).filter(Channel.id != self._channelid).count():
             raise ValidationError(_('Duplicate title.'))
 
     def validate_category(self, field):
