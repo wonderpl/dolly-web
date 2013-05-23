@@ -265,10 +265,6 @@ def check_present(form, field):
 
 
 class ChannelForm(form.BaseForm):
-    def __init__(self, *args, **kwargs):
-        super(ChannelForm, self).__init__(*args, **kwargs)
-        self._channel_id = None
-
     title = wtf.TextField(
         validators=[check_present, naughty_word_validator] +
         get_column_validators(Channel, 'title', False))
@@ -280,8 +276,9 @@ class ChannelForm(form.BaseForm):
     cover_aoi = wtf.Field()  # set from cover reference
     public = wtf.BooleanField(validators=[check_present])
 
-    def for_channel_id(self, id):
-        self._channel_id = id
+    def __init__(self, *args, **kwargs):
+        self._channelid = kwargs.pop('channelid', None)
+        super(ChannelForm, self).__init__(*args, **kwargs)
 
     def pre_validate(self):
         if self.description.data:
@@ -289,7 +286,7 @@ class ChannelForm(form.BaseForm):
 
     def validate_cover(self, field):
         if field.data:
-            if field.data == 'KEEP':
+            if self._channelid and field.data == 'KEEP':
                 return
             found = False
             for model in RockpackCoverArt, UserCoverArt:
@@ -311,7 +308,7 @@ class ChannelForm(form.BaseForm):
         # If this is a new channel (no channel.id) and there is an exisiting channel with dupe title, or
         # if this is an existing channel (has channel.id) and we have another existing channel with a dupe title
         # that isn't this channel, error.
-        if user_channels.filter_by(title=field.data, deleted=False).filter(Channel.id != self._channel_id).count():
+        if user_channels.filter_by(title=field.data, deleted=False).filter(Channel.id != self._channelid).count():
             raise ValidationError(_('Duplicate title.'))
 
     def validate_category(self, field):
@@ -593,8 +590,7 @@ class UserWS(WebService):
             abort(403)
         if not channel.editable:
             abort(400, message=_('Channel not editable'))
-        form = ChannelForm(csrf_enabled=False)
-        form.for_channel_id(channelid)
+        form = ChannelForm(csrf_enabled=False, channelid=channelid)
         form.userid = userid
         if not form.validate():
             abort(400, form_errors=form.errors)
