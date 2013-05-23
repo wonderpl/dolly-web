@@ -381,7 +381,7 @@ footer {
   font-family: "dn-bold", sans-serif;
   text-transform: uppercase;
   text-shadow: 0;
-  color: rgba(255,255,255,.8);
+  color: #fff;
   text-shadow: 0 2px rgba(50,50,50,.15);
   background: #0ba6ab;
   font-size: 15px;
@@ -395,12 +395,15 @@ footer {
   -o-transition:background-color .5s;
 
   &:hover {
-    color: rgba(255,255,255,.8);
+    color: #fff;
     background: #3ed2d7;
+    -webkit-transition: background-color .5s;
+    -moz-transition: background-color .5s;
+    transition:background-color .5s;
+    -ms-transition:background-color .5s;
+    -o-transition:background-color .5s;
   }
 }
-
-
 
 // Jobs
 

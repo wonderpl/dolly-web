@@ -21,7 +21,7 @@
 
 .wrapper {
   margin: 0 auto;
-  width: 960px;
+  width: 860px;
   .clearfix();
 }
 
@@ -51,8 +51,8 @@ body {
   position: relative;
 
   .ipadscontainer {
-    height: 397px;
-    width: 400px;
+    height: 467px;
+    width: 392px;
     position: absolute;
     right: 0;
     text-align: right;
@@ -60,8 +60,8 @@ body {
     overflow: hidden;
 
     .ipadsimgs {
-      height: 397px;
-      width: 724px;
+      height: 467px;
+      width: 392px;
       background: url(/static/assets/front-page/images/ipads.png) no-repeat;
       display: inline-block;
     }
@@ -90,6 +90,8 @@ body {
     font-size: 55px;
     line-height: 55px;
     font-family: "dn-bold";
+    text-shadow: 0px 3px 5px rgba(0,0,0,0.6);
+
   }
 
   h2 {
@@ -97,6 +99,7 @@ body {
     font-size: 20px;
     line-height: 20px;
     margin-top: 30px;
+    text-shadow: 0px 3px 5px rgba(0,0,0,0.6);
   }
 
   #logo {
@@ -119,6 +122,7 @@ body {
   position: relative;
   color: #fff;
   background: url(/static/assets/front-page/images/video.jpg) no-repeat;
+  background-size: cover;
   height: 374px;
 
   &>div {
@@ -130,6 +134,8 @@ body {
     margin-top: 55px;
     font-size: 30px;
     font-family: "dn-regular";
+    text-transform: uppercase;
+    text-shadow: 0px 3px 5px rgba(0,0,0,0.6);
   }
 
 }
@@ -137,15 +143,24 @@ body {
 #iphones {
   margin-top: 60px;
 
+  p {
+    font-size: 19px;
+    font-family: "dn-regular";
+    line-height: 19px;
+  }
+
   h2 {
     text-align: center;
     color: #858a8e;
     font-size: 35px;
     text-shadow: 1px 1px #fff;
     font-family: "dn-regular";
-    width: 400px;
     margin: 0 auto;
     margin-bottom: 65px;
+  }
+
+  h3 {
+    font-size: 20px;
   }
 
   .left {
@@ -160,41 +175,55 @@ body {
 
   #addvideo {
 
-    margin-bottom: 65px;
-    text-align: center;
+    margin-bottom: 110px;
 
-    .plus {
-      margin: 30px auto 65px auto;
+    &>img {
+      display: inline-block;
     }
 
-    p {
-      text-align: left;
+    .plus {
+      margin: 100px 0 0 30px;
+      display: inline-block;
+
+      img {
+        width: 35px;
+        height: 35px;
+        margin-bottom: 10px;
+      }
     }
   }
 
   #create {
+    margin-top: -200px;
     text-align: right;
-    margin-bottom: 60px;
-    .clearfix();
 
-
-    h3 {
-      margin-top: 60px;
+    .text {
+      display: inline-block;
+      margin: 30px 30px 0 0;
     }
 
-    p {
-      width: 380px;
-      float: right
+    img {
+      display: inline-block;
     }
   }
 
   #subscribe {
-    margin-top: 80px;
+    margin-top: -80px;
+
+    .text {
+      display: inline-block;
+      margin: 30px 0 0 30px;
+    }
+
+    img {
+      display: inline-block;
+    }
+
   }
 }
 
 #share {
-  background: #f0f0f0;
+  background: #dde0e1;
   text-align: center;
 
   .wrapper > ul {
@@ -219,8 +248,13 @@ body {
         text-align: center;
         font-size: 20px;
         font-family: "dn-regular";
+        text-transform: uppercase;
       }
     }
+  }
+
+  .btn-blue {
+    margin-top: 5px;
   }
 
   #social {
@@ -234,28 +268,32 @@ body {
 footer {
   font-family: "dn-regular";
   color: #aaa;
-  background: #f8f8f8;
-  padding: 30px 0;
-  position: relative;
+  background: #fff;
+  padding: 60px 0;
 
   ul {
     list-style: none;
     .clearfix();
-    margin: 0;
+    margin: 0 0 0 35px;
     display: inline-block;
 
     li {
       line-height: 17px;
-      margin-right: 15px;
+      margin: 7px 0;
       font-size: 17px;
       text-transform: uppercase;
     }
   }
 
+  .wrapper {
+    ul {
+      margin: 0;
+    }
+  }
+
   .rights {
-    position: absolute;
-    bottom: 0;
-    right: 0;
+    text-align: center;
+    margin-top: 30px;
   }
 
   a, a:visited, a:active {
@@ -270,30 +308,38 @@ footer {
 
 }
 
-.plus {
-  width: 35px;
-  height: 35px;
-}
 
 .btn-blue {
-  font-family: "dn-bold";
+  font-family: "dn-bold", sans-serif;
   text-transform: uppercase;
   text-shadow: 0;
-  color: #ffffff;
-  background: rgb(13,169,174);
-  background: url(data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiA/Pgo8c3ZnIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgdmlld0JveD0iMCAwIDEgMSIgcHJlc2VydmVBc3BlY3RSYXRpbz0ibm9uZSI+CiAgPGxpbmVhckdyYWRpZW50IGlkPSJncmFkLXVjZ2ctZ2VuZXJhdGVkIiBncmFkaWVudFVuaXRzPSJ1c2VyU3BhY2VPblVzZSIgeDE9IjAlIiB5MT0iMCUiIHgyPSIwJSIgeTI9IjEwMCUiPgogICAgPHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iIzBkYTlhZSIgc3RvcC1vcGFjaXR5PSIxIi8+CiAgICA8c3RvcCBvZmZzZXQ9IjM1JSIgc3RvcC1jb2xvcj0iIzBhYTNhOCIgc3RvcC1vcGFjaXR5PSIxIi8+CiAgPC9saW5lYXJHcmFkaWVudD4KICA8cmVjdCB4PSIwIiB5PSIwIiB3aWR0aD0iMSIgaGVpZ2h0PSIxIiBmaWxsPSJ1cmwoI2dyYWQtdWNnZy1nZW5lcmF0ZWQpIiAvPgo8L3N2Zz4=);
-  background: -moz-linear-gradient(top,  rgba(13,169,174,1) 0%, rgba(10,163,168,1) 35%);
-  background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,rgba(13,169,174,1)), color-stop(35%,rgba(10,163,168,1)));
-  background: -webkit-linear-gradient(top,  rgba(13,169,174,1) 0%,rgba(10,163,168,1) 35%);
-  background: -o-linear-gradient(top,  rgba(13,169,174,1) 0%,rgba(10,163,168,1) 35%);
-  background: -ms-linear-gradient(top,  rgba(13,169,174,1) 0%,rgba(10,163,168,1) 35%);
-  background: linear-gradient(to bottom,  rgba(13,169,174,1) 0%,rgba(10,163,168,1) 35%);
-  filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#0da9ae', endColorstr='#0aa3a8',GradientType=0 );
-  -webkit-box-shadow: inset 0px 0px 0px 1px rgba(18, 18, 18, 0.15);
-  box-shadow: inset 0px 0px 0px 1px rgba(18, 18, 18, 0.15);  font-size: 15px;
-  padding: 10px 30px;
+  color: #fff;
+  text-shadow: 0 2px rgba(50,50,50,.15);
+  background: #0ba6ab;
+  font-size: 15px;
+  padding: 10px 50px;
   border-radius: 5px;
-  border: 0;
+  border: none;
+  -webkit-transition: background-color .5s;
+  -moz-transition: background-color .5s;
+  transition:background-color .5s;
+  -ms-transition:background-color .5s;
+  -o-transition:background-color .5s;
+
+  &:hover {
+    color: #fff;
+    background: #3ed2d7;
+    -webkit-transition: background-color .5s;
+    -moz-transition: background-color .5s;
+    transition:background-color .5s;
+    -ms-transition:background-color .5s;
+    -o-transition:background-color .5s;
+  }
+}
+
+#gettheapp {
+  width: 168px;
+  height: 48px;
 }
 
 #cover {
@@ -304,6 +350,44 @@ footer {
 
   img {
     width: 100%;
-//    height: 621px;
+    height: 621px;
   }
+}
+
+@media (min-width: 1200px) {
+ .wrapper {
+   width: 1100px;
+ }
+
+  #iphones {
+
+    #addvideo, #create, #subscribe {
+      display: inline-block;
+      width: 33%;
+      vertical-align: top;
+      margin-top: 0;
+      position: relative;
+
+      img {
+        display: block;
+      }
+
+      .text {
+        display: block;
+      }
+    }
+
+    #create {
+
+      .text {
+        position: absolute;
+        bottom: 0;
+      }
+    }
+
+    #subscribe {
+    }
+
+  }
+
 }

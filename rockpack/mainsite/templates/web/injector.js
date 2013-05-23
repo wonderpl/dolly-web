@@ -32,7 +32,7 @@
     inject = function (video) {
         var css, newIframe;
         newIframe = document.createElement('iframe');
-        newIframe.src = '{{iframe_url}}?' + video;
+        newIframe.src = '{{iframe_url}}#?' + video;
         newIframe.id = 'rockpackiframe';
         newIframe.name = "rockpackiframe";
         newIframe.style['position'] = 'fixed';
