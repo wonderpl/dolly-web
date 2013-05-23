@@ -70,7 +70,7 @@ ASSETS_AUTO_BUILD = False
 UNTITLED_CHANNEL = 'Untitled'
 
 # Title, description, and cover image for default favourites channel
-FAVOURITE_CHANNEL = 'Favourites', 'My favourite videos', ''
+FAVOURITE_CHANNEL = 'Favorites', 'My favorite videos', 'fav1.jpg'
 
 # Path to default avatar image used when creating users
 DEFAULT_AVATAR = ''
