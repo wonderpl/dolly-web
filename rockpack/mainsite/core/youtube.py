@@ -152,9 +152,16 @@ def _get_video_data(youtube_data, playlist=None):
     video.source_date_uploaded = media['yt$uploaded']['$t']
     video.restricted = False
     if 'app$control' in youtube_data:
-        if ('yt$incomplete' in youtube_data['app$control'] or
-                youtube_data['app$control']['yt$state']['name'] == 'restricted'):
+        if 'yt$incomplete' in youtube_data['app$control']:
             video.restricted = True
+        else:
+            state = youtube_data['app$control']['yt$state']
+            if state['name'] == 'restricted':
+                if state['reasonCode'] == 'limitedSyndication':
+                    # see https://groups.google.com/d/msg/youtube-api-gdata/on504fCOEk0/oErUbCptWu4J
+                    video.restricted = not any(c.get('yt$format') == 5 for c in media['media$content'])
+                else:
+                    video.restricted = True
     for thumbnail in media.get('media$thumbnail', []):
         if 'time' not in thumbnail:
             video.thumbnails.append(
