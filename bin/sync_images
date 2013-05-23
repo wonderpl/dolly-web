@@ -1,0 +1,44 @@
+#!/usr/bin/python2.7
+import threading
+import string
+from datetime import datetime
+from boto import connect_s3
+
+
+threshold = datetime(2013, 5, 23)
+
+
+def worker(prefix):
+    success = skipped = failed = 0
+    conn = connect_s3()
+    sbucket = conn.get_bucket('media.us.rockpack.com')
+    dbucket = conn.get_bucket('media.dev.rockpack.com')
+    for k in sbucket.list(prefix):
+        modified = datetime.strptime(k.last_modified[:19], '%Y-%m-%dT%H:%M:%S')
+        if modified < threshold:
+            skipped += 1
+        else:
+            try:
+                dbucket.copy_key(k.name, sbucket.name, k.name, headers={'x-amz-acl':'public-read'})
+            except Exception:
+                print 'FAILED', k.name
+                failed += 1
+            else:
+                success += 1
+    print '%s: %d %d %d' % (prefix, success, skipped, failed)
+
+
+prefixes = [
+    'images/avatar/thumbnail_large/',
+    'images/avatar/thumbnail_medium/',
+    'images/avatar/thumbnail_small/',
+    'images/avatar/original/',
+    'images/channel/thumbnail_large/',
+    'images/channel/thumbnail_medium/',
+    'images/channel/thumbnail_small/',
+    'images/channel/background/',
+    'images/channel/background_portrait/',
+    'images/channel/original/',
+]
+for prefix in prefixes:
+    threading.Thread(target=worker, args=(prefix,)).start()
