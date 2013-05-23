@@ -11,7 +11,7 @@ class UserView(AdminView):
     column_filters = ('username', 'email',)
 
     edit_template = 'admin/edit_with_child_links.html'
-    child_links = (('Channels', 'channel', 'username'),)
+    child_links = (('Channels', 'channel', None),)
 
     form_args = dict(
         username=dict(validators=[wtf.Regexp('^\w{3,50}$', message='alphanumeric only')]),
