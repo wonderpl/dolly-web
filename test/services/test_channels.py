@@ -289,7 +289,7 @@ class ChannelCreateTestCase(base.RockPackTestCase):
                 channels = json.loads(r.data)['channels']
                 self.assertEquals(channels['total'], 4)
                 titles = [c['title'] for c in channels['items']]
-                self.assertEquals(titles, ['Favourites', 'updated', '2', '0'])
+                self.assertEquals(titles, [app.config['FAVOURITE_CHANNEL'][0], 'updated', '2', '0'])
 
         # restore date_updated onupdate default
         updated_default.arg, updated_default.is_clause_element = updated_default_bak
