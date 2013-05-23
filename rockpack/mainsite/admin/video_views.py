@@ -13,7 +13,10 @@ def _format_video_thumbnail(context, video, name):
 
 def _format_video_instance_link(context, video, name):
     t = u'<a href="/admin/video/?flt1_0={}">{}</a>'
-    return Markup(t.format(video.video, video.video_rel.title))
+    if video.video_rel:
+        return Markup(t.format(video.video, video.video_rel.title))
+    else:
+        return ''
 
 
 class VideoInstanceLocaleMetaFormAdmin(InlineFormAdmin):
@@ -140,7 +143,7 @@ class Channel(AdminView):
     column_display_all_relations = True
 
     column_list = ('title', 'owner_rel', 'public', 'cover.url', 'category_rel', 'video_count', 'date_added')
-    column_filters = ('owner', 'title', 'public', 'category_rel', 'description', 'owner_rel', 'deleted')
+    column_filters = ('owner', 'title', 'public', 'category_rel', 'description', 'owner_rel', 'deleted', 'date_added')
     column_searchable_list = ('title',)
     column_formatters = dict(video_count=_format_channel_video_count)
 
