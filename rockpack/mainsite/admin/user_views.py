@@ -9,6 +9,7 @@ class UserView(AdminView):
 
     column_list = ('username', 'display_name', 'avatar.url')
     column_filters = ('username', 'email',)
+    column_searchable_list = ('username',)
 
     edit_template = 'admin/edit_with_child_links.html'
     child_links = (('Channels', 'channel', None),)
