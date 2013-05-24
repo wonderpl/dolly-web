@@ -362,44 +362,6 @@ class ChannelCreateTestCase(base.RockPackTestCase):
                 name = RockpackCoverArtData.comic_cover.cover.replace('.png', '.jpg') if cover else ''
                 self.assertEquals(data['cover']['thumbnail_url'].split('/')[-1], name)
 
-    def test_dupe_title_when_deleted(self):
-        with self.app.test_client() as client:
-            user_id = self.create_test_user().id
-            title_a = 'knock knock'
-            title_b = 'im not in'
-            r = client.post(
-                '/ws/{}/channels/'.format(user_id),
-                data=json.dumps(dict(title=title_a, category='', description='', public='', cover='')),
-                content_type='application/json',
-                headers=[get_auth_header(user_id)]
-            )
-            self.assertEquals(201, r.status_code, r.data)
-            resource = urlsplit(r.headers['Location']).path
-
-            r = client.delete(
-                resource,
-                content_type='application/json',
-                headers=[get_auth_header(user_id)]
-            )
-            self.assertEquals(204, r.status_code, r.data)
-
-            r = client.post(
-                '/ws/{}/channels/'.format(user_id),
-                data=json.dumps(dict(title=title_a, category='', description='', public='', cover='')),
-                content_type='application/json',
-                headers=[get_auth_header(user_id)]
-            )
-            self.assertEquals(400, r.status_code, r.data)
-
-            r = client.post(
-                '/ws/{}/channels/'.format(user_id),
-                data=json.dumps(dict(title=title_b, category='', description='', public='', cover='')),
-                content_type='application/json',
-                headers=[get_auth_header(user_id)]
-            )
-
-            self.assertEquals(201, r.status_code, r.data)
-
     def test_naughty_title(self):
         user_id = self.create_test_user().id
         with self.app.test_client() as client:
