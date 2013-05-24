@@ -73,7 +73,8 @@ angular.module('WebApp').factory('ContentService', ($http, locale, apiUrl) ->
 
       $http({
       method: 'GET',
-      url: apiUrl.popular_channels,
+      url: apiUrl.channel_search,
+      url: 'http://myrockpack.com/ws/search/channels/',
       params: dataObj,
       })
         .then(((data) ->

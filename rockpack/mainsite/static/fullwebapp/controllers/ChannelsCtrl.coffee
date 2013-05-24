@@ -3,14 +3,18 @@ window.WebApp.controller('ChannelCtrl', ['$scope', 'cookies', 'ContentService', 
 
   # TODO: Load channels based on get variable (catid) currently being set but not read
 
-  $scope.categories = ContentService.getCategories()
-
   $scope.menu = {
     main: 0,
     sub: 0
   }
 
-  $scope.channels = ContentService.getChannel()
+  $scope.categories = ContentService.getCategories()
+
+  if $location.search().catid?
+    $scope.channels = ContentService.getChannel($location.search().catid)
+  else
+    $scope.channels = ContentService.getChannel()
+
 
   $scope.header = (id) ->
     $scope.menu.main = id
