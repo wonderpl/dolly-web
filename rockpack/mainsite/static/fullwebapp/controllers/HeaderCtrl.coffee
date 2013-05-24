@@ -1,9 +1,8 @@
-window.WebApp.controller('HeaderCtrl', ['$scope', 'cookies', 'OAuth', '$location', ($scope, cookies, OAuth, $location) ->
+window.WebApp.controller('HeaderCtrl', ['$scope', 'cookies', 'OAuth', '$location', 'UserManager', ($scope, cookies, OAuth, $location, UserManager) ->
+
+  $scope.user = UserManager
 
   $scope.logout = ->
-    cookies.set('access_token', '')
-    cookies.set('refresh_token', '')
-    cookies.set('user_id', '')
-    $location.path('/')
+    $scope.user.logOut()
 
 ])

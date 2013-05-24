@@ -1,1 +1,19 @@
-Channel View
+<div class="wrapper">
+  <h2>Channel View</h2>
+  <ul class="menu">
+    <li ng-repeat="category in categories">
+      <div ng-click="header(category.id)">{{category.name}}</div>
+      <ul ng-show="category.id == menu.main">
+        <li ng-repeat="subcategory in category.sub_categories">
+          <div ng-click="subheader(subcategory.id)">{{subcategory.name}}</div>
+        </li>
+      </ul>
+    </li>
+  </ul>
+
+  <div class="content">
+    <div ng-animate="'animate'" ng-repeat="channel in channels.items">
+      <img ng-src="{{channel.cover.thumbnail_url}}">
+    </div>
+  </div>
+</div>

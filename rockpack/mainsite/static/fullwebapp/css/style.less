@@ -1,0 +1,61 @@
+@import "mixins.less";
+
+
+#header {
+
+  div {
+    display: inline-block;
+  }
+}
+
+.wrapper {
+  margin: 0 auto;
+  width: 960px;
+}
+
+#userChannels, #userSubscriptions {
+  width: 40%;
+  display: inline-block;
+  overflow: hidden;
+  vertical-align: top;
+  text-align: center;
+}
+
+.menu {
+  list-style: none;
+  position: relative;
+  .clearfix();
+  height: 50px;
+  margin: 0;
+
+  li {
+    display: inline-block;
+    margin: 0 20px;
+
+    ul {
+      position: absolute;
+      left: 0;
+      margin: 0;
+
+      li {
+        margin: 0 10px;
+      }
+    }
+  }
+
+}
+
+.content {
+  display: inline-block;
+  min-height: 600px;
+
+  div {
+    display: inline-block;
+  }
+}
+
+#feed {
+  .video {
+    display: inline-block;
+  }
+}

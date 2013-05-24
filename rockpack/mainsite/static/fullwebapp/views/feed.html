@@ -1,6 +1,11 @@
-Feed View
-<div>
-  <div style="display: inline-block" ng-repeat="singlevideo in feed.data.videos.items">
-    <img ng-src="{{singlevideo.video.thumbnail_url}}">
+<div class="wrapper">
+  <h2>Feed View</h2>
+  <div id="feed" infinite-scroll='load_feed()' infinite-scroll-distance='1'>
+    <div ng-repeat="section in User.feed">
+      <h3>{{section.date}}</h3>
+      <div ng-repeat="video in section.videos" class="video">
+        <img ng-src="{{video.video.thumbnail_url}}">
+      </div>
+    </div>
   </div>
 </div>

@@ -1,8 +1,14 @@
 window.WebApp.controller('FeedCtrl', ['$scope', 'cookies', 'userObj', ($scope, cookies, userObj) ->
 
-  User = userObj
+  $scope.User = userObj
+  $scope.User.feed.position = 0
 
-  $scope.feed = User.FetchRecentSubscriptions()
+  $scope.load_feed = () ->
+    $scope.User.FetchRecentSubscriptions($scope.User.feed.position, 10)
+    $scope.User.feed.position += 10
 
-  console.log User
+  console.log 'aa'
+#  $scope.load_feed()
+
+  return
 ])

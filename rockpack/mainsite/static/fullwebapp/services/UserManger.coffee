@@ -11,6 +11,8 @@ window.WebApp.factory('UserManager', ['cookies', '$http', '$q', '$location', (co
 
     timeOfLastRefresh: null
 
+    feed: [],
+
     refreshToken: () ->
       $http({
         method: 'POST',
@@ -20,8 +22,7 @@ window.WebApp.factory('UserManager', ['cookies', '$http', '$q', '$location', (co
       })
       .success((data) =>
           cookies.set("access_token", data.access_token, data.expires)
-          User.credentials.access_token = data.access_token
-          @details = data
+          @credentials = data
 
           # Trigger next refresh
           @TriggerRefresh(data.expires_in*0.9*1000, data.refresh_token)
@@ -40,14 +41,11 @@ window.WebApp.factory('UserManager', ['cookies', '$http', '$q', '$location', (co
       })
       .success((data) =>
         @TriggerRefresh(data.expires_in*0.9*1000, data.refresh_token)
-        @details = data
+        @credentials = data
         console.log 'login'
         cookies.set("access_token", data.access_token, data.expires)
         cookies.set("refresh_token", data.refresh_token, 2678400)
         cookies.set("user_id", data.user_id, 2678400)
-        User.credentials.refresh_token = data.access_token
-        User.credentials.user_id = data.user_id
-        User.credentials.access_token = data.access_token
       )
       .error((data) =>
         console.log data
@@ -60,7 +58,7 @@ window.WebApp.factory('UserManager', ['cookies', '$http', '$q', '$location', (co
         headers: {"authorization": "Bearer #{@credentials.access_token}", "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"}
       })
       .success((data) ->
-        User.userdata = data
+        User.details = data
       )
       .error((data) =>
         console.log data
@@ -69,7 +67,7 @@ window.WebApp.factory('UserManager', ['cookies', '$http', '$q', '$location', (co
     FetchActivity: () ->
       $http({
       method: 'GET',
-      url: User.userdata.activity.resource_url,
+      url: User.details.activity.resource_url,
       headers: {"authorization": "Bearer #{@credentials.access_token}", "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"}
       })
         .success((data) ->
@@ -79,22 +77,55 @@ window.WebApp.factory('UserManager', ['cookies', '$http', '$q', '$location', (co
           console.log data
         )
 
-    FetchRecentSubscriptions: () ->
+    FetchRecentSubscriptions: (start, size) ->
       $http({
       method: 'GET',
-      url: User.userdata.subscriptions.updates,
+      url: User.details.subscriptions.updates,
+      params: {start: start, size: size}
       headers: {"authorization": "Bearer #{@credentials.access_token}", "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"}
       })
         .success((data) ->
-          console.log data
+          currentPos = 0
+          _.each(data.videos.items, (video) ->
+            datestring  = video.date_added.substr(0, 10)
+
+            while User.feed[currentPos]? and  User.feed[currentPos].date != datestring
+              currentPos++
+
+            if not (User.feed[currentPos]?)
+              User.feed[currentPos] = {date: datestring, videos: []}
+
+            User.feed[currentPos].videos.push(video)
+          )
         )
         .error((data) =>
           console.log data
         )
 
-    getTimeToNextRefresh: () ->
+    FetchSubscriptions: () ->
+      $http({
+      method: 'GET',
+      url: User.details.subscriptions.resource_url,
+      headers: {"authorization": "Bearer #{@credentials.access_token}", "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"}
+      })
+        .success((data) ->
+          User.details.subscriptions.subscribedChannels = data.channels
+        )
+        .error((data) =>
+          console.log data
+        )
+
+    logOut: () ->
+      cookies.set('access_token', '')
+      cookies.set('refresh_token', '')
+      cookies.set('user_id', '')
+      User.details = {}
+      User.credentials = {}
+
+
+  getTimeToNextRefresh: () ->
       if @timeOfLastRefresh?
-        return @details.expiers_in*0.9*1000 - ( (new Date()).getTime() - @timeOfLastRefresh )
+        return @credentials.expiers_in*0.9*1000 - ( (new Date()).getTime() - @timeOfLastRefresh )
       else
         return null
 

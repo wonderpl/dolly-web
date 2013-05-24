@@ -19,8 +19,8 @@ fullwebVendorJS:
         - assets/vendor/js/angular.js
         - assets/vendor/js/angular-resource.js
         - assets/vendor/js/ng-infinite-scroll.js
-        - assets/vendor/js/ui-bootstrap-tpls-0.2.0.js
         - assets/vendor/js/http-auth-interceptor.js
+        - assets/vendor/js/lodash.js
 
 fullwebJS:
     filters: coffeescript
