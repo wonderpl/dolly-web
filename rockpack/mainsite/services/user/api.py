@@ -11,6 +11,7 @@ from rockpack.mainsite.core.webservice import WebService, expose_ajax, ajax_crea
 from rockpack.mainsite.core.oauth.decorators import check_authorization
 from rockpack.mainsite.core.youtube import get_video_data
 from rockpack.mainsite.helpers import lazy_gettext as _
+from rockpack.mainsite.helpers.forms import naughty_word_validator
 from rockpack.mainsite.helpers.urls import url_for, url_to_endpoint
 from rockpack.mainsite.helpers.db import gen_videoid, get_column_validators, get_box_value
 from rockpack.mainsite.services.video.models import (
@@ -43,7 +44,7 @@ ACTIVITY_OBJECT_TYPE_MAP = dict(
 
 
 @commit_on_success
-def get_or_create_video_records(instance_ids, locale):
+def get_or_create_video_records(instance_ids):
     """Take a list of instance ids and return mapping to associated video ids."""
     def add(s, i):
         if i and i not in s:
@@ -66,8 +67,9 @@ def get_or_create_video_records(instance_ids, locale):
             try:
                 source, source_videoid = instance_id
                 source = ['rockpack', 'youtube'].index(source)  # TODO: use db mapping
+                assert len(source_videoid)
                 add(external_instance_ids, (source, source_videoid))
-            except (TypeError, ValueError):
+            except (TypeError, ValueError, AssertionError):
                 invalid.append(instance_id)
     if invalid:
         abort(400, message=_('Invalid video instance ids'), data=invalid)
@@ -104,7 +106,7 @@ def get_or_create_video_records(instance_ids, locale):
                 video_data = get_video_data(source_videoid)
             except Exception:
                 abort(400, message=_('Invalid video instance ids'), data=[[source, source_videoid]])
-            Video.add_videos(video_data.videos, source, locale)
+            Video.add_videos(video_data.videos, source)
 
     return [existing_ids[id] for id in instance_id_order]
 
@@ -116,7 +118,7 @@ def save_video_activity(userid, action, instance_id, locale):
     except KeyError:
         abort(400, message=_('Invalid action'))
 
-    video_id = get_or_create_video_records([instance_id], locale)[0]
+    video_id = get_or_create_video_records([instance_id])[0]
     activity = dict(user=userid, action=action,
                     object_type='video_instance', object_id=instance_id)
     if not UserActivity.query.filter_by(**activity).count():
@@ -175,7 +177,7 @@ def save_content_report(userid, object_type, object_id, reason):
 
 @commit_on_success
 def add_videos_to_channel(channel, instance_list, locale, delete_existing=False):
-    video_ids = get_or_create_video_records(instance_list, locale)
+    video_ids = get_or_create_video_records(instance_list)
     existing = dict((v.video, v) for v in VideoInstance.query.filter_by(channel=channel.id))
     added = []
     for position, video_id in enumerate(video_ids):
@@ -263,19 +265,20 @@ def check_present(form, field):
 
 
 class ChannelForm(form.BaseForm):
-    def __init__(self, *args, **kwargs):
-        super(ChannelForm, self).__init__(*args, **kwargs)
-        self._channel_id = None
-
-    title = wtf.TextField(validators=[check_present])
-    description = wtf.TextField(validators=[check_present, wtf.validators.Length(max=200)])
+    title = wtf.TextField(
+        validators=[check_present, naughty_word_validator] +
+        get_column_validators(Channel, 'title', False))
+    description = wtf.TextField(
+        validators=[check_present] +
+        get_column_validators(Channel, 'description', False))
     category = wtf.TextField(validators=[check_present])
     cover = wtf.TextField(validators=[check_present])
     cover_aoi = wtf.Field()  # set from cover reference
     public = wtf.BooleanField(validators=[check_present])
 
-    def for_channel_id(self, id):
-        self._channel_id = id
+    def __init__(self, *args, **kwargs):
+        self._channelid = kwargs.pop('channelid', None)
+        super(ChannelForm, self).__init__(*args, **kwargs)
 
     def pre_validate(self):
         if self.description.data:
@@ -283,7 +286,7 @@ class ChannelForm(form.BaseForm):
 
     def validate_cover(self, field):
         if field.data:
-            if field.data == 'KEEP':
+            if self._channelid and field.data == 'KEEP':
                 return
             found = False
             for model in RockpackCoverArt, UserCoverArt:
@@ -305,7 +308,7 @@ class ChannelForm(form.BaseForm):
         # If this is a new channel (no channel.id) and there is an exisiting channel with dupe title, or
         # if this is an existing channel (has channel.id) and we have another existing channel with a dupe title
         # that isn't this channel, error.
-        if user_channels.filter_by(title=field.data, deleted=False).filter(Channel.id != self._channel_id).count():
+        if user_channels.filter_by(title=field.data, deleted=False).filter(Channel.id != self._channelid).count():
             raise ValidationError(_('Duplicate title.'))
 
     def validate_category(self, field):
@@ -362,6 +365,7 @@ class UserWS(WebService):
             offset, limit = self.get_page()
             ch.set_paging(offset, limit)
             ch.favourite_sort('desc')
+            ch.add_sort('date_updated')
             ch.add_term('owner', userid)
             owner.setdefault('channels', {})['items'] = ch.channels(with_owners=False)
             owner['channels']['total'] = ch.total
@@ -589,8 +593,7 @@ class UserWS(WebService):
             abort(403)
         if not channel.editable:
             abort(400, message=_('Channel not editable'))
-        form = ChannelForm(csrf_enabled=False)
-        form.for_channel_id(channelid)
+        form = ChannelForm(csrf_enabled=False, channelid=channelid)
         form.userid = userid
         if not form.validate():
             abort(400, form_errors=form.errors)

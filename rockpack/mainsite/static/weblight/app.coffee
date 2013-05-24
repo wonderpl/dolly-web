@@ -11,10 +11,12 @@ window.Weblight = angular.module('Weblight', ['channelServices', 'infinite-scrol
   # .constant('isMobile', true)
   .constant('channelData', window.channel_data)
 
-  .config(['$routeProvider', '$interpolateProvider', ($routeProvider, $interpolateProvider) ->
+  .config(['$routeProvider', '$interpolateProvider' ,'$compileProvider', ($routeProvider, $interpolateProvider, $compileProvider) ->
 
     $interpolateProvider.startSymbol('((');
     $interpolateProvider.endSymbol('))');
+
+    $compileProvider.urlSanitizationWhitelist(/^\s*(https?|ftp|mailto|javascript):/)
 
     # Router
     $routeProvider.when('/', {templateUrl: 'channel.html', reloadOnSearch: false})
@@ -25,15 +27,7 @@ window.Weblight = angular.module('Weblight', ['channelServices', 'infinite-scrol
     $routeProvider.when('/content-providers', {templateUrl: 'contentproviders.html'})
     $routeProvider.when('/bookmarklet', {templateUrl: 'bookmarklet.html'})
   ])
-  .directive('bgImage', ->
-    return (scope, element, attrs) ->
-      attrs.$observe('bgImage', (value) ->
-        if value 
-          element.css({'background-image': "url(#{value})"})
-        return
-      )
-      return
-  )
+
   .directive('videoCell', ->
     return {
       restrict: 'A',
@@ -55,16 +49,6 @@ window.Weblight = angular.module('Weblight', ['channelServices', 'infinite-scrol
         else
             return String(text).substring(0, length-end.length) + end
   )
-#  .directive('whenScrolled', () ->
-#    return (scope, elm, attr) ->
-#      raw = elm[0]
-#
-#      $(window).bind('scroll', ->
-#        if ($(window).scrollTop() >= $(document).height() - $(window).height() - 200)
-#          scope.$apply(attr.whenScrolled)
-#      )
-#      return
-#  )
 
 window.onYouTubeIframeAPIReady = ->
   updateScope()

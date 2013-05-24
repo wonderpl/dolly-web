@@ -25,9 +25,13 @@
     <script src="js/json2.js"></script>
   <![endif]-->
 
-    <script>
-      window.isSecure = {% if config.get("SECURE_DOMAIN") %}true{% else %}false{% endif %};
-    </script>
+  <script type="text/javascript">
+    var api_urls = {{api_urls|tojson|safe}};
+  </script>
+
+  <script>
+    window.isSecure = {% if config.get("SECURE_DOMAIN") %}true{% else %}false{% endif %};
+  </script>
 
   {% assets output="gen/bookmarklet_lib.%(version)s.js",
             "assets/vendor/js/angular.js", "assets/vendor/js/jquery-1.9.1.js" %}

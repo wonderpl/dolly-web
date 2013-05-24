@@ -9,9 +9,10 @@ class UserView(AdminView):
 
     column_list = ('username', 'display_name', 'avatar.url')
     column_filters = ('username', 'email',)
+    column_searchable_list = ('username',)
 
     edit_template = 'admin/edit_with_child_links.html'
-    child_links = (('Channels', 'channel', 'username'),)
+    child_links = (('Channels', 'channel', None),)
 
     form_args = dict(
         username=dict(validators=[wtf.Regexp('^\w{3,50}$', message='alphanumeric only')]),

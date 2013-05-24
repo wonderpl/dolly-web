@@ -1,0 +1,14 @@
+import sys
+import requests
+import lxml.html
+
+#channel_id = 'UCOYWgypDktXdb-HfZnSMK6A'
+
+for channelid in sys.argv[1:]:
+    result = requests.post(
+        'https://www.youtube.com/guide_builder_ajax?action_get_preview_html',
+        dict(channel_preview_list=channelid, preview_index=1)
+    )
+    html = result.json()['data']['preview_overlay_html']
+    update_interval = float(lxml.html.fromstring(html).find_class('stat-value')[0].text)
+    print channelid, update_interval

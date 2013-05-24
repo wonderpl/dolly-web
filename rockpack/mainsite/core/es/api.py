@@ -240,13 +240,14 @@ class ChannelSearch(EntitySearch, CategoryMixin, MediaSortMixin):
                 description=channel.description,
                 title=channel.title,
                 public=channel.public,
-                favourite=channel.favourite,
                 position=pos,
                 cover=dict(
                     thumbnail_url=urljoin(app.config.get('IMAGE_CDN', ''), channel.cover.thumbnail_url) if channel.cover.thumbnail_url else '',
                     aoi=channel.aoi
                 )
             )
+            if channel.favourite:
+                ch['favourites'] = True
 
             for k, v in channel.iteritems():
                 if isinstance(v, (str, unicode)) and k.endswith('_url'):
@@ -280,13 +281,16 @@ class ChannelSearch(EntitySearch, CategoryMixin, MediaSortMixin):
             owner_map = {owner['id']: owner for owner in ows.owners()}
             self.add_owner_to_channels(channel_list, owner_map)
 
+        # XXX: this assumes only 1 channel for now
+        # This WILL break if there is more than one channel to get videos for
+        # as a single video doesnt reference the channel it belongs to
         if with_videos and channel_id_list:
             vs = VideoSearch(self.locale)
             vs.add_term('channel', channel_id_list)
             vs.set_paging(*with_videos)
             video_map = {}
             for v in vs.videos():
-                video_map.setdefault(v['channel'], []).append(v)
+                video_map.setdefault(channel_id_list[0], []).append(v) # HACK: see above
             self.add_videos_to_channels(channel_list, video_map)
         return channel_list
 
@@ -323,7 +327,6 @@ class VideoSearch(EntitySearch, CategoryMixin, MediaSortMixin):
                 date_added=v.date_added.isoformat() if not isinstance(v.date_added, (str, unicode)) else v.date_added,
                 public=v.public,
                 category='',
-                channel=v.channel,
                 video=dict(
                     id=v.video.id,
                     view_count=v['locales'][self.locale]['view_count'],
@@ -337,9 +340,10 @@ class VideoSearch(EntitySearch, CategoryMixin, MediaSortMixin):
             )
             if v.category:
                 video['category'] = max(v.category) if isinstance(v.category, list) else v.category
-            vlist.append(video)
             if with_channels:
+                video['channel'] = v.channel
                 channel_list.append(v.channel)
+            vlist.append(video)
 
         if with_channels and channel_list:
             ch = ChannelSearch(self.locale)
@@ -437,7 +441,12 @@ def add_channel_to_index(channel, bulk=False, refresh=False, boost=None, no_chec
 
     category = []
     if channel.category:
-        category = [channel.category_rel.id, channel.category_rel.parent]
+        if not channel.category_rel:
+            # Avoid circular import
+            from rockpack.mainsite.services.video.models import Category
+            category = Category.query.filter_by(id=channel.category).values('id', 'parent').next()
+        else:
+            category = [channel.category_rel.id, channel.category_rel.parent]
 
     data = dict(
         id=channel.id,
@@ -447,6 +456,7 @@ def add_channel_to_index(channel, bulk=False, refresh=False, boost=None, no_chec
         owner=channel.owner,
         subscriber_count=channel.subscriber_count,
         date_added=channel.date_added,
+        date_updated=channel.date_updated,
         description=channel.description,
         resource_url=urlparse(channel.get_resource_url()).path,
         title=channel.title,

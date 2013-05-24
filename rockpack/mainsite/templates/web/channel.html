@@ -46,7 +46,7 @@
 
     <script>
       var channel_data = {{ channel_data|tojson|safe }},
-          channelUrl = "{{ url_for('userws.channel_info', userid='-', channelid='-') }}"
+          injectorUrl = '{{injectorUrl}}';
     </script>
 
     {% assets output="gen/lib.%(version)s.js",

@@ -13,7 +13,7 @@ window.Weblight.controller('VideoCtrl', ['$scope', '$rootScope', '$routeParams',
 
 
   $scope.PlayVideo = =>
-    if $rootScope.playerReady && typeof $routeParams.videoid != "undefined"
+    if $rootScope.playerReady && typeof $routeParams.video != "undefined"
 
       @getPlayerWidth()
 
@@ -21,12 +21,11 @@ window.Weblight.controller('VideoCtrl', ['$scope', '$rootScope', '$routeParams',
       $("#lightbox").hide()
       $("#lightbox").show()
       $scope.videodata = _.find($scope.videos, (video) -> 
-        video.id == $routeParams.videoid
+        video.id == $routeParams.video
       )
       # if typeof $scope.player != "undefined" 
       #   $scope.player.loadVideoById($scope.videodata.video.source_id, 0, 'highres')
       # else 
-      console.log @playerWidth
       $scope.player = new YT.Player('player', {
         height: @playerHeight,
         width: @playerWidth,
@@ -50,7 +49,7 @@ window.Weblight.controller('VideoCtrl', ['$scope', '$rootScope', '$routeParams',
 
   )
 
-  $scope.$watch((-> $routeParams.videoid), (newValue) ->
+  $scope.$watch((-> $routeParams.video), (newValue) ->
     console.log 'got player id'
     if newValue
       $scope.PlayVideo()
@@ -66,7 +65,7 @@ window.Weblight.controller('VideoCtrl', ['$scope', '$rootScope', '$routeParams',
   $scope.hide = ->
     $('#lightbox').hide()
     $scope.player.destroy()
-    $location.search( 'videoid', null );
+    $location.search( 'video', null );
     return
 
   return

@@ -13,4 +13,8 @@ window.Weblight.controller('PageCtrl', ['isMobile', '$scope', '$location', 'brow
     else
       $(e.currentTarget).siblings(".readmoretext").hide("fast")
       $(e.currentTarget).children(".btntext").html('Read More')
+
+
+  $scope.injectorUrl = window.injectorUrl
+  console.log $scope.injectorUrl
 ])

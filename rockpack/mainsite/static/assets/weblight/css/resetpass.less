@@ -105,7 +105,7 @@ footer {
 input[type=password] {
   width: 267px;
   margin: 0;
-  padding: 10px 20px;
+  padding: 14px 20px;
   border: 0;
   -webkit-box-shadow: inset 2px 2px 2px 2px rgba(245, 245, 245, 0.5);
   box-shadow: inset 2px 2px 2px 2px rgba(245, 245, 245, 0.5);
@@ -136,4 +136,45 @@ input[type=submit] {
 
 .main-content {
   margin-top: 50px;
+}
+
+.error {
+  display: none;
+  position: absolute;
+  top: 5px;
+  background: #df3450;
+  font-size: 12px;
+  height: 48px;
+  right: -60px;
+  width: 280px;
+  line-height: 48px;
+  color: #dfe0e1;
+  padding-left: 15px;
+
+  &:before {
+    width: 0;
+    height: 0;
+    border-top: 24px solid transparent;
+    border-bottom: 24px solid transparent;
+    border-right:24px solid #df3450;
+    position: absolute;
+    left:-24px;
+    content: "";
+  }
+}
+
+.ok {
+  display: none;
+  width: 49px;
+  height: 49px;
+  background: url(/static/assets/weblight/images/ok.png);
+  position: absolute;
+  top: 5px;
+  right: 100px;
+}
+
+.fieldcontainer {
+  position: relative;
+  display: block;
+  width: 500px;
 }

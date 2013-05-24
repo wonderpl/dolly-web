@@ -154,7 +154,7 @@ class Video(db.Model):
         return 'http://www.youtube.com/watch?v=' + self.source_videoid
 
     @classmethod
-    def add_videos(cls, videos, source, locale, category=None):
+    def add_videos(cls, videos, source):
         for video in videos:
             video.source = source
         session = cls.query.session
@@ -264,8 +264,8 @@ class Channel(db.Model):
     __tablename__ = 'channel'
 
     id = Column(CHAR(24), primary_key=True)
-    title = Column(String(1024), nullable=False)
-    description = Column(Text, nullable=False)
+    title = Column(String(25), nullable=False)
+    description = Column(Text(200), nullable=False)
     cover = Column(ImageType('CHANNEL', reference_only=True), nullable=False)
     cover_aoi = Column(BoxType, nullable=True)
     public = Column(Boolean(), nullable=False, server_default='true', default=True)
@@ -475,7 +475,7 @@ def _es_channel_insert_from_channel(mapper, connection, target):
 def _es_channel_update_from_channel(mapper, connection, target):
     if not target.public or target.deleted:
         _remove_es_channel(target)
-    _add_es_channel(target)
+    _add_es_channel(Channel.query.get(target.id))
 
 
 event.listen(Video, 'before_insert', add_video_pk)

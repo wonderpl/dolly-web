@@ -1,4 +1,5 @@
 import uuid
+import time
 import json
 from datetime import datetime
 from urlparse import urlsplit
@@ -130,6 +131,20 @@ class ChannelCreateTestCase(base.RockPackTestCase):
             self.assertEquals(400, r.status_code)
             self.assertEquals('Duplicate title.', json.loads(r.data)['form_errors']['title'][0])
 
+            r = client.put(
+                resource,
+                data=json.dumps(dict(
+                    title='A long title xxxxxxxxxxxxxxxxxxxxxxxx',
+                    description='',
+                    category='',
+                    cover='',
+                    public=False)
+                ),
+                content_type='application/json',
+                headers=[get_auth_header(user.id)]
+            )
+            self.assertEquals(400, r.status_code, r.data)
+
             # check description limit (201 chars below)
             new_description = "ihjdk adhaj dsjakhkdsjf yhsdjhf sdjhfksdkfjhsdfsjdfjsdfh sdhf sdjkhf jhsjkhsf sdjhkf sdjkhsdfjkhfsdh\n\rhjdk adhaj dsjakhkdsjf yhsdjhf sdjhfksdkfjhsdfsjdfjsdfh sdhf sdjkhf jhsjkhsf sdjhkf sdjkhsdfjkhfsdh"
             r = client.put(
@@ -209,6 +224,7 @@ class ChannelCreateTestCase(base.RockPackTestCase):
             self.assertEquals(400, r.status_code)
             errors = json.loads(r.data)['form_errors']
             self.assertEquals({
+                "title": ["Field cannot be longer than 25 characters."],
                 "category": ["This field is required, but can be an empty string."],
                 "public": ["This field is required, but can be an empty string."],
                 "description": ["This field is required, but can be an empty string."],
@@ -266,13 +282,14 @@ class ChannelCreateTestCase(base.RockPackTestCase):
             )
             self.assertEquals(200, r.status_code, r.data)
 
+            time.sleep(2)
             for user_id in user.id, user2_id:
                 r = client.get('/ws/{}/'.format(user.id), headers=[get_auth_header(user_id)])
                 self.assertEquals(200, r.status_code)
                 channels = json.loads(r.data)['channels']
                 self.assertEquals(channels['total'], 4)
                 titles = [c['title'] for c in channels['items']]
-                self.assertEquals(titles, ['Favourites', 'updated', '2', '0'])
+                self.assertEquals(titles, [app.config['FAVOURITE_CHANNEL'][0], 'updated', '2', '0'])
 
         # restore date_updated onupdate default
         updated_default.arg, updated_default.is_clause_element = updated_default_bak
@@ -344,3 +361,15 @@ class ChannelCreateTestCase(base.RockPackTestCase):
                 data = json.loads(client.get(resource, headers=[get_auth_header(user_id)]).data)
                 name = RockpackCoverArtData.comic_cover.cover.replace('.png', '.jpg') if cover else ''
                 self.assertEquals(data['cover']['thumbnail_url'].split('/')[-1], name)
+
+    def test_naughty_title(self):
+        user_id = self.create_test_user().id
+        with self.app.test_client() as client:
+            for title, status in [('fuck rockpack', 400), ('FuckRockpack', 400), ('scunthorpe', 201)]:
+                r = client.post(
+                    '/ws/{}/channels/'.format(user_id),
+                    data=json.dumps(dict(title=title, category='', description='', public='', cover='')),
+                    content_type='application/json',
+                    headers=[get_auth_header(user_id)]
+                )
+                self.assertEquals(status, r.status_code, r.data)
