@@ -229,13 +229,6 @@ class VideoInstance(db.Model):
     def player_link(self):
         return self.video_rel.player_link
 
-    @classmethod
-    def remove_from_video_ids(cls, video_ids):
-        # Cascading delete
-        cls.query.filter(
-            cls.video.in_(video_ids)
-        ).delete(synchronize_session='fetch')
-
     def add_meta(self, locale):
         return VideoInstanceLocaleMeta(video_instance=self.id, locale=locale).save()
 
@@ -349,11 +342,8 @@ class Channel(db.Model):
             self.public = True
             self.save()
 
-    def remove_videos(self, videos):
-        VideoInstance.remove_from_video_ids(
-            set(
-                getattr(v, 'id', v)
-                for v in videos.query.filter_by(channel=self.id)))
+    def remove_videos(self, video_ids):
+        VideoInstance.query.filter_by(channel=self.id).filter(VideoInstance.video.in_(video_ids)).delete(synchronize_session=False)
 
         # If we shouldn't be public and we are, toggle
         if not self.should_be_public(self, self.public) and self.public:
