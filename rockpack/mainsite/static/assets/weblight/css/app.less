@@ -787,7 +787,6 @@ footer {
 
     #iphonesinfo {
 
-      width: 910px;
       margin: 50px auto 0;
 
       h3 {
@@ -804,7 +803,7 @@ footer {
 
       div {
         display: inline-block;
-        width: 280px;
+        width: 30%;
         vertical-align: top;
         margin: 0 10px;
         text-align: center;
@@ -866,6 +865,7 @@ footer {
     text-align: center;
     padding: 60px 0;
 
+
     .wrapper > ul {
       list-style-type: none;
       margin: 60px 0 15px 0;
@@ -895,10 +895,41 @@ footer {
 
     #social {
       list-style-type: none;
+      width: 161px;
+      margin: 0 auto;
+
+      #blog {
+        background: url(/static/assets/front-page/images/blog_ipad.png);
+        width: 161px;
+        height: 44px;
+        display: block;
+      }
+
+      #twitter {
+        background: url(/static/assets/front-page/images/twitter.png);
+        width: 50px;
+        height: 44px;
+        display: block;
+      }
+
+      #facebook {
+        background: url(/static/assets/front-page/images/facebook.png);
+        width: 50px;
+        height: 44px;
+        display: block;
+      }
+
+      #instagram {
+        background: url(/static/assets/front-page/images/instagram.png);
+        width: 50px;
+        height: 44px;
+        display: block;
+      }
 
       li {
         display: inline-block;
       }
+
     }
   }
 }
@@ -1053,17 +1084,6 @@ footer {
       }
     }
 
-    #iphonescontainer {
-
-      #iphonesinfo {
-        width: auto;
-
-        div {
-          width: 250px;
-        }
-      }
-    }
-
     #faq {
 
       .container {
@@ -1117,18 +1137,7 @@ footer {
           margin: 0 60px;
         }
       }
-    }
 
-    #iphonescontainer {
-
-      #iphonesinfo {
-
-        width: 1040px;
-
-        div {
-          margin: 0 30px;
-        }
-      }
     }
 
     #faq {
@@ -1146,6 +1155,12 @@ footer {
         }
       }
 
+    }
+
+    #share {
+      #social {
+        width: auto;
+      }
     }
   }
 }
@@ -1230,6 +1245,16 @@ footer {
       .videocell {
         width: 265px;
         height: 149px;
+      }
+    }
+  }
+
+  .content-providers {
+
+    #share {
+
+      #social {
+        width: 161px;
       }
     }
   }

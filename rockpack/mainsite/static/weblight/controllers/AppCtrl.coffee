@@ -6,7 +6,7 @@ window.Weblight.controller('AppCtrl', ['$routeParams', 'isMobile', '$scope', '$l
     $scope.currentPage = newValue.substring(1)
   )
 
-  isMobile = true
+#  isMobile = true
 
   $scope.videoWidth = if isMobile then 285 else 218
   $scope.containerPadding = if isMobile then 40 else 40
