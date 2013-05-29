@@ -2,6 +2,7 @@
 <html lang="en" id="ng-app" ng-app="Weblight" xmlns:ng="http://angularjs.org">
 <head>
     <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>rockpack</title>
 
     <!--[if lt IE 9]>
@@ -44,9 +45,7 @@
       </div>
     </div>
     <div id="whatson">
-      <div id="cover">
-        <!--<img src="/static/assets/front-page/images/cover.jpg">-->
-      </div>
+      <div id="cover" class="hidden-phone"></div>
       <div class="abs-wrapper">
         <div class="headline">
           <h1>WHAT’S ON YOUR CHANNEL?</h1>
@@ -54,11 +53,32 @@
           <img src="/static/assets/front-page/images/downloadbig.png">
         </div>
       </div>
-      <div class="ipadscontainer">
+      <div class="ipadscontainer hidden-phone">
         <div class="ipadsimgs"></div>
       </div>
     </div>
-    <div class="wrapper">
+
+    <div id="iphone-instructions" class="wrapper visible-phone">
+      <div class="imgcontainer">
+        <img src="/static/assets/front-page/images/iphone-mobile.png">
+      </div>
+      <div class="container">
+        <div class="plus">
+          <img src="/static/assets/front-page/images/plus.png">
+          <p>Tap the + to add videos<br>to your channels.</p>
+        </div>
+        <div class="text">
+          <h3>Create</h3>
+          <p>Personalize your channel<br>with a unique cover or your<br>own photos.</p>
+        </div>
+        <div class="text">
+          <h3>SUBSCRIBE</h3>
+          <p>Subscribe to channels<br>curated by family, friends<br>and experts.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="wrapper hidden-phone">
       <div id="video">
         <div>
           <img src="/static/assets/front-page/images/play.png" id="play">
@@ -66,11 +86,11 @@
         </div>
       </div>
     </div>
-    <div class="wrapper" id="iphones">
+    <div class="wrapper hidden-phone" id="iphones">
       <h2>TAP TO ADD, CREATE<br>AND SUBSCRIBE TO CHANNELS</h2>
 
       <div id="addvideo">
-        <img src="/static/assets/front-page/images/iphone1.jpg">
+        <div id="iphone1"></div>
         <div class="plus">
           <img src="/static/assets/front-page/images/plus.png">
           <p>Tap the + to add videos to your<br>channels.</p>
@@ -82,11 +102,11 @@
           <h3>CREATE</h3>
           <p>Personalise your channel with a unique<br>cover or your own favourite photos.</p>
         </div>
-        <img src="/static/assets/front-page/images/iphone2.jpg">
+        <div id="iphone2"></div>
       </div>
 
       <div id="subscribe">
-        <img src="/static/assets/front-page/images/iphone3.jpg">
+        <div id="iphone3"></div>
         <div class="text">
           <h3>SUBSCRIBE</h3>
           <p>Subscribe to channels curated by family, friends<br>and experts. </p>
@@ -94,7 +114,7 @@
       </div>
 
     </div>
-    <div id="share">
+    <div id="share" class="hidden-phone">
       <div class="wrapper">
         <ul>
           <li>
@@ -108,10 +128,10 @@
           <li>
             <h3>FOLLOW US</h3>
             <ul id="social">
-              <li><img src="/static/assets/front-page/images/blog.png"></li>
-              <li><img src="/static/assets/front-page/images/twitter.png"></li>
-              <li><img src="/static/assets/front-page/images/facebook.png"></li>
-              <li><img src="/static/assets/front-page/images/instagram.png"></li>
+              <li><a href="http://blog.rockpack.com/" id="blog" target="_blank"></a></li>
+              <li><a href="https://twitter.com/Rockpack" id="twitter" target="_blank"></a></li>
+              <li><a href="http://www.facebook.com/rockpack" id="facebook" target="_blank"></a></li>
+              <li><a href="http://instagram.com/officialrockpack" id="instagram" target="_blank"></a></li>
             </ul>
           </li>
         </ul>
