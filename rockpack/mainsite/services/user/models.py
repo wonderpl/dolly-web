@@ -155,7 +155,9 @@ class User(db.Model):
             title=title,
             description=description,
             cover=cover,
-            owner=user.id)
+            owner=user.id,
+            public=False,
+        )
         channel.save()
 
         return user
