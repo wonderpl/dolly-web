@@ -28,8 +28,10 @@ class build_static_assets(Command):
     def run(self):
         sys.path.insert(0, self.build_dir)
         from rockpack.mainsite.manager import run
-        run(*'assets --parse-templates build --production --no-cache'.split())
+        status = run(*'assets --parse-templates build --production --no-cache'.split())
         sys.path.remove(self.build_dir)
+        if status:
+            sys.exit(status)
 build.sub_commands.append(('build_static_assets', None))
 
 
