@@ -319,18 +319,10 @@ class Channel(db.Model):
     resource_url = property(get_resource_url)
 
     def add_videos(self, videos):
-        existing_videos = bool(self.video_instances)
         instances = [VideoInstance(channel=self.id, video=getattr(v, 'id', v),
                                    category=self.category) for v in videos]
-        session = self.query.session
-        try:
-            with session.begin_nested():
-                session.add_all(instances)
-        except IntegrityError:
-            existing = [i.video for i in session.query(VideoInstance.video).
-                        filter_by(channel=self.id).
-                        filter(VideoInstance.video.in_(set(i.video for i in instances)))]
-            session.add_all(i for i in instances if i.video not in existing)
+        existing = dict(VideoInstance.query.filter_by(channel=self.id).values('video', 'id'))
+        self.query.session.add_all(i for i in instances if i.video not in existing)
 
         # If ...
         # - we have no videos yet
@@ -338,7 +330,7 @@ class Channel(db.Model):
         # - we're currently not public
         # - and we could otherwise be
         # ... make us public
-        if not existing_videos and instances and not self.public and self.should_be_public(self, True):
+        if not existing and instances and not self.public and self.should_be_public(self, True):
             self.public = True
             self.save()
 
