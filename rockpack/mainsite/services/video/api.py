@@ -5,8 +5,8 @@ from sqlalchemy.sql.expression import desc
 from rockpack.mainsite import app
 from rockpack.mainsite.core.webservice import WebService, expose_ajax
 from rockpack.mainsite.services.video import models
+from rockpack.mainsite.core.es import use_elasticsearch, filters
 from rockpack.mainsite.core.es.api import VideoSearch, ChannelSearch
-from rockpack.mainsite.core.es.api import filters
 
 
 def _filter_by_category(query, type, category_id):
@@ -150,7 +150,7 @@ class VideoWS(WebService):
 
     @expose_ajax('/', cache_age=300)
     def video_list(self):
-        if not app.config.get('ELASTICSEARCH_URL'):
+        if not use_elasticsearch():
             data, total = get_local_videos(self.get_locale(), self.get_page(), star_order=True, **request.args)
             return dict(videos=dict(items=data, total=total))
 
@@ -178,7 +178,7 @@ class ChannelWS(WebService):
 
     @expose_ajax('/', cache_age=300)
     def channel_list(self):
-        if not app.config.get('ELASTICSEARCH_URL'):
+        if not use_elasticsearch():
             data, total = get_local_channel(
                 self.get_locale(),
                 self.get_page(),

@@ -1,13 +1,12 @@
 import re
 from flask import request, json, Response
-from rockpack.mainsite import app
 from rockpack.mainsite.core.webservice import WebService, expose_ajax
 from rockpack.mainsite.core import youtube
 from rockpack.mainsite.helpers.db import gen_videoid
 from rockpack.mainsite.services.video.api import get_local_channel
 from rockpack.mainsite.services.video.models import Channel
 from rockpack.mainsite.core.es.api import ChannelSearch
-from rockpack.mainsite.core.es import filters
+from rockpack.mainsite.core.es import use_elasticsearch, filters
 
 
 SEARCH_TERM_RE = re.compile('^[\w ]+$', re.UNICODE)
@@ -58,7 +57,7 @@ class SearchWS(WebService):
 
     @expose_ajax('/channels/', cache_age=300)
     def search_channels(self):
-        if app.config.get('ELASTICSEARCH_URL'):
+        if use_elasticsearch():
             ch = ChannelSearch(self.get_locale())
             offset, limit = self.get_page()
             ch.set_paging(offset, limit)

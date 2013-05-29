@@ -22,7 +22,7 @@ from rockpack.mainsite.services.cover_art import api as cover_api
 from rockpack.mainsite.services.video import api as video_api
 from rockpack.mainsite.services.search import api as search_api
 from .models import User, UserActivity, UserNotification, Subscription
-from rockpack.mainsite.core.es import api
+from rockpack.mainsite.core.es import use_elasticsearch, api
 
 
 ACTION_COLUMN_VALUE_MAP = dict(
@@ -354,7 +354,7 @@ class UserWS(WebService):
 
     @expose_ajax('/<userid>/', cache_age=60, secure=False)
     def user_info(self, userid):
-        if app.config.get('ELASTICSEARCH_URL'):
+        if use_elasticsearch():
             ows = api.OwnerSearch()
             ows.add_id(userid)
             owners = ows.owners()
@@ -564,7 +564,7 @@ class UserWS(WebService):
 
     @expose_ajax('/<userid>/channels/<channelid>/', cache_age=60, secure=False)
     def channel_info(self, userid, channelid):
-        if app.config.get('ELASTICSEARCH_URL'):
+        if use_elasticsearch():
             ch = api.ChannelSearch(self.get_locale())
             ch.add_id(channelid)
             if not ch.channels(with_videos=self.get_page(), with_owners=True):
