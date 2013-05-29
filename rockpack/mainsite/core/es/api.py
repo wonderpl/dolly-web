@@ -243,7 +243,7 @@ class ChannelSearch(EntitySearch, CategoryMixin, MediaSortMixin):
                 position=pos,
                 cover=dict(
                     thumbnail_url=urljoin(app.config.get('IMAGE_CDN', ''), channel.cover.thumbnail_url) if channel.cover.thumbnail_url else '',
-                    aoi=channel.aoi
+                    aoi=channel.cover.aoi
                 )
             )
             if channel.favourite:
