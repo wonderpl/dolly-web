@@ -32,3 +32,9 @@ class BookmarkletTemplates(AJSTemplates):
 
 
 register_filter(BookmarkletTemplates)
+
+class FrontTemplates(AJSTemplates):
+  name = 'fronttemplate'
+  module_name = 'contentApp'
+
+register_filter(FrontTemplates)

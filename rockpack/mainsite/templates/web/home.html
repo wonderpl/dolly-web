@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" id="ng-app" ng-app="Weblight" xmlns:ng="http://angularjs.org">
+<html lang="en" id="ng-app" ng-app="contentApp" xmlns:ng="http://angularjs.org">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
@@ -29,14 +29,29 @@
     <link rel="stylesheet" href="{{ ASSET_URL }}"/>
     {% endassets %}
 
-    {% assets filters="less", output="gen/home.%(version)s.css", "assets/front-page/front.less" %}
+    {% assets filters="less", output="gen/front_css.%(version)s.css", "assets/front/front.less" %}
     <link rel="stylesheet" href="{{ ASSET_URL }}"/>
     {% endassets %}
 
-    {% assets output="gen/front.%(version)s.js",
-    "assets/vendor/js/jquery-1.9.1.js", "assets/front-page/front.js" %}
+  {% assets output="gen/front-lib.%(version)s.js",
+    "assets/vendor/js/jquery-1.9.1.js", "assets/vendor/js/lodash.js", "assets/vendor/js/angular.js", "assets/vendor/js/angular-resource.js", "assets/vendor/js/ng-infinite-scroll.js",
+    "assets/vendor/js/ui-bootstrap-tpls-0.2.0.js" %}
     <script type="text/javascript" src="{{ ASSET_URL }}"></script>
     {% endassets %}
+
+    {% assets filters="coffeescript", output="gen/front.%(version)s.js", "front/app.coffee", "front/controllers/PageCtrl.coffee",
+    "front/controllers/ChannelPlaybookCtrl.coffee", "front/services/browserServices.coffee"
+    %}
+    <script type="text/javascript" src="{{ ASSET_URL }}"></script>
+    {% endassets %}
+
+    {% assets filters="fronttemplate", output="gen/front-templates.%(version)s.js",
+    "front/views/people.html", "front/views/jobs.html", "front/views/channelplaybook.html", "front/views/contentproviders.html", "front/views/bookmarklet.html",
+    "front/views/home.html"
+    %}
+    <script type="text/javascript" src="{{ ASSET_URL }}"></script>
+    {% endassets %}
+
   </head>
   <body >
     <div id="header">
@@ -44,103 +59,107 @@
         <img src="/static/assets/weblight/images/logo.png">
       </div>
     </div>
-    <div id="whatson">
-      <div id="cover" class="hidden-phone"></div>
-      <div class="abs-wrapper">
-        <div class="headline">
-          <h1>WHAT’S ON YOUR CHANNEL?</h1>
-          <h2>The app that makes it easy to create, share and subscribe to personalized video channels. Add your favorite videos from across the web with just one tap.</h2>
-          <img src="/static/assets/front-page/images/downloadbig.png">
+
+    <div id="maincontainer" class="ng-view">
+      <div id="whatson">
+        <div id="cover" class="hidden-phone"></div>
+        <div class="abs-wrapper">
+          <div class="headline">
+            <h1>WHAT’S ON YOUR CHANNEL?</h1>
+            <h2>The app that makes it easy to create, share and subscribe to personalized video channels. Add your favorite videos from across the web with just one tap.</h2>
+            <img src="/static/assets/front/images/downloadbig.png">
+          </div>
+        </div>
+        <div class="ipadscontainer hidden-phone">
+          <div class="ipadsimgs"></div>
         </div>
       </div>
-      <div class="ipadscontainer hidden-phone">
-        <div class="ipadsimgs"></div>
+
+      <div id="iphone-instructions" class="wrapper visible-phone">
+        <div class="imgcontainer">
+          <img src="/static/assets/front/images/iphone-mobile.png">
+        </div>
+        <div class="container">
+          <div class="plus">
+            <img src="/static/assets/front/images/plus.png">
+            <p>Tap the + to add videos<br>to your channels.</p>
+          </div>
+          <div class="text">
+            <h3>Create</h3>
+            <p>Personalize your channel<br>with a unique cover or your<br>own photos.</p>
+          </div>
+          <div class="text">
+            <h3>SUBSCRIBE</h3>
+            <p>Subscribe to channels<br>curated by family, friends<br>and experts.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="wrapper hidden-phone">
+        <div id="video">
+          <div>
+            <img src="/static/assets/front/images/play.png" id="play">
+            <h2>Life is everyday curation.</h2>
+          </div>
+        </div>
+      </div>
+      <div class="wrapper hidden-phone" id="iphones">
+        <h2>TAP TO ADD, CREATE<br>AND SUBSCRIBE TO CHANNELS</h2>
+
+        <div id="addvideo">
+          <div id="iphone1"></div>
+          <div class="plus">
+            <img src="/static/assets/front/images/plus.png">
+            <p>Tap the + to add videos to your<br>channels.</p>
+          </div>
+        </div>
+
+        <div id="create">
+          <div class="text">
+            <h3>CREATE</h3>
+            <p>Personalise your channel with a unique<br>cover or your own favourite photos.</p>
+          </div>
+          <div id="iphone2"></div>
+        </div>
+
+        <div id="subscribe">
+          <div id="iphone3"></div>
+          <div class="text">
+            <h3>SUBSCRIBE</h3>
+            <p>Subscribe to channels curated by family, friends<br>and experts. </p>
+          </div>
+        </div>
+
+      </div>
+      <div id="share" class="hidden-phone">
+        <div class="wrapper">
+          <ul>
+            <li>
+              <h3>Get the app</h3>
+              <a href="#"><img src="/static/assets/front/images/downloadbig.png" id="gettheapp"></a>
+            </li>
+            <li>
+              <h3>INSTALL THE BOOKMARKLET</h3>
+              <a href="#/bookmarklet"><button class="btn btn-blue">+ PACK IT</button></a>
+            </li>
+            <li>
+              <h3>FOLLOW US</h3>
+              <ul id="social">
+                <li><a href="http://blog.rockpack.com/" id="blog" target="_blank"></a></li>
+                <li><a href="https://twitter.com/Rockpack" id="twitter" target="_blank"></a></li>
+                <li><a href="http://www.facebook.com/rockpack" id="facebook" target="_blank"></a></li>
+                <li><a href="http://instagram.com/officialrockpack" id="instagram" target="_blank"></a></li>
+              </ul>
+            </li>
+          </ul>
+        </div>
       </div>
     </div>
 
-    <div id="iphone-instructions" class="wrapper visible-phone">
-      <div class="imgcontainer">
-        <img src="/static/assets/front-page/images/iphone-mobile.png">
-      </div>
-      <div class="container">
-        <div class="plus">
-          <img src="/static/assets/front-page/images/plus.png">
-          <p>Tap the + to add videos<br>to your channels.</p>
-        </div>
-        <div class="text">
-          <h3>Create</h3>
-          <p>Personalize your channel<br>with a unique cover or your<br>own photos.</p>
-        </div>
-        <div class="text">
-          <h3>SUBSCRIBE</h3>
-          <p>Subscribe to channels<br>curated by family, friends<br>and experts.</p>
-        </div>
-      </div>
-    </div>
-
-    <div class="wrapper hidden-phone">
-      <div id="video">
-        <div>
-          <img src="/static/assets/front-page/images/play.png" id="play">
-          <h2>Life is everyday curation.</h2>
-        </div>
-      </div>
-    </div>
-    <div class="wrapper hidden-phone" id="iphones">
-      <h2>TAP TO ADD, CREATE<br>AND SUBSCRIBE TO CHANNELS</h2>
-
-      <div id="addvideo">
-        <div id="iphone1"></div>
-        <div class="plus">
-          <img src="/static/assets/front-page/images/plus.png">
-          <p>Tap the + to add videos to your<br>channels.</p>
-        </div>
-      </div>
-
-      <div id="create">
-        <div class="text">
-          <h3>CREATE</h3>
-          <p>Personalise your channel with a unique<br>cover or your own favourite photos.</p>
-        </div>
-        <div id="iphone2"></div>
-      </div>
-
-      <div id="subscribe">
-        <div id="iphone3"></div>
-        <div class="text">
-          <h3>SUBSCRIBE</h3>
-          <p>Subscribe to channels curated by family, friends<br>and experts. </p>
-        </div>
-      </div>
-
-    </div>
-    <div id="share" class="hidden-phone">
-      <div class="wrapper">
-        <ul>
-          <li>
-            <h3>Get the app</h3>
-            <a href="#"><img src="/static/assets/front-page/images/downloadbig.png" id="gettheapp"></a>
-          </li>
-          <li>
-            <h3>INSTALL THE BOOKMARKLET</h3>
-            <a href="#/bookmarklet"><button class="btn btn-blue">+ PACK IT</button></a>
-          </li>
-          <li>
-            <h3>FOLLOW US</h3>
-            <ul id="social">
-              <li><a href="http://blog.rockpack.com/" id="blog" target="_blank"></a></li>
-              <li><a href="https://twitter.com/Rockpack" id="twitter" target="_blank"></a></li>
-              <li><a href="http://www.facebook.com/rockpack" id="facebook" target="_blank"></a></li>
-              <li><a href="http://instagram.com/officialrockpack" id="instagram" target="_blank"></a></li>
-            </ul>
-          </li>
-        </ul>
-      </div>
-    </div>
     <footer>
       <div class="wrapper" ng-style="wrapperWidth()">
         <ul>
-          <li class="hidden-phone"><a href="#/about">About</a></li>
+          <li class="hidden-phone"><a href="#">About</a></li>
           <li class="hidden-phone"><a href="#/help">Help</a></li>
           <li class="hidden-phone"><a href="#/people">People</a></li>
           <li class="hidden-phone"><a href="#/jobs">Jobs</a></li>
