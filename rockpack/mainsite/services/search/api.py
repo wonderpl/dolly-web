@@ -10,7 +10,7 @@ from rockpack.mainsite.core.es.api import ChannelSearch
 from rockpack.mainsite.core.es import filters
 
 
-SEARCH_TERM_RE = re.compile('^[\w ]+$')
+SEARCH_TERM_RE = re.compile('^[\w ]+$', re.UNICODE)
 
 VIDEO_INSTANCE_PREFIX = 'Svi0xYzZY'
 
