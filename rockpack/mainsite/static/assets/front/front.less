@@ -403,6 +403,10 @@ footer {
   }
 }
 
+#maincontainer {
+  min-height: 630px;
+}
+
 // Jobs
 
 .content-page {
@@ -712,224 +716,184 @@ footer {
   }
 }
 
-.content-providers {
-  #contentproviders {
-    background: #eaeced;
-    padding: 117px 0 67px 0;
-    margin-bottom: 32px;
+#contentproviders {
+  background: #eaeced;
+  padding: 117px 0 67px 0;
+  margin-bottom: 32px;
 
-    h1 {
-      font-family: "dn-bold";
-      font-size: 43px;
-      color: #686868;
+  h1 {
+    font-family: "dn-bold";
+    font-size: 43px;
+    color: #686868;
+  }
+
+  h2 {
+    font-family: "dn-regular";
+    font-size: 33px;
+    color: #a9a9a9;
+  }
+
+  p {
+    font-family: "dn-regular";
+    color: #1c1f21;
+    font-size: 18px;
+    width: 700px;
+  }
+}
+
+#chalkboard {
+  background: url(/static/assets/weblight/images/tileblackboard.jpg) repeat-x;
+  height: 655px;
+
+  #leverageyourcommunity {
+    margin: 0 auto;
+    padding: 35px 0;
+    display: block;
+  }
+
+  #drawings {
+    margin: 0 auto;
+    width: 680px;
+
+    .arrows {
+      margin-right: 20px;
     }
+  }
 
-    h2 {
-      font-family: "dn-regular";
-      font-size: 33px;
-      color: #a9a9a9;
+  #bottomtext {
+    width: 706px;
+    margin: 30px auto 0;
+  }
+}
+
+#iphonescontainer {
+
+  #threeiphones {
+
+    div {
+      width: 32%;
+      display: inline-block;
+      text-align: center;
+      margin-top: -60px;
+    }
+  }
+
+  background: #eaeced;
+  padding-bottom: 60px;
+
+  #iphones {
+    display: block;
+    margin: -100px auto 0;
+  }
+
+  #iphonesinfo {
+
+    margin: 50px auto 0;
+
+    h3 {
+      color: #1c1f21;
+      font-family: "dn-bold";
+      font-size: 20px;
     }
 
     p {
       font-family: "dn-regular";
-      color: #1c1f21;
       font-size: 18px;
-      width: 700px;
+      color: #5b6267;
+    }
+
+    div {
+      display: inline-block;
+      width: 30%;
+      vertical-align: top;
+      margin: 0 10px;
+      text-align: center;
     }
   }
+}
 
-  #chalkboard {
-    background: url(/static/assets/weblight/images/tileblackboard.jpg) repeat-x;
-    height: 655px;
+#faq {
+  text-align: center;
+  margin: 60px auto 90px;
 
-    #leverageyourcommunity {
-      margin: 0 auto;
-      padding: 35px 0;
-      display: block;
-    }
-
-    #drawings {
-      margin: 0 auto;
-      width: 680px;
-
-      .arrows {
-        margin-right: 20px;
-      }
-    }
-
-    #bottomtext {
-      width: 706px;
-      margin: 30px auto 0;
-    }
+  h2 {
+    font-size: 35px;
+    color: #858a8e;
+    text-transform: uppercase;
   }
 
-  #iphonescontainer {
-
-    #threeiphones {
-
-      div {
-        width: 32%;
-        display: inline-block;
-        text-align: center;
-        margin-top: -60px;
-      }
-    }
-
-    background: #eaeced;
-    padding-bottom: 60px;
-
-    #iphones {
-      display: block;
-      margin: -100px auto 0;
-    }
-
-    #iphonesinfo {
-
-      margin: 50px auto 0;
-
-      h3 {
-        color: #1c1f21;
-        font-family: "dn-bold";
-        font-size: 20px;
-      }
-
-      p {
-        font-family: "dn-regular";
-        font-size: 18px;
-        color: #5b6267;
-      }
-
-      div {
-        display: inline-block;
-        width: 30%;
-        vertical-align: top;
-        margin: 0 10px;
-        text-align: center;
-      }
-    }
+  p {
+    color: #1c1f21;
+    font-size: 19px;
+    font-family: "dn-regular";
   }
 
-  #faq {
-    text-align: center;
-    margin: 60px auto 90px;
+  .container {
+    width: 900px;
+    margin: 0 auto;
 
-    h2 {
-      font-size: 35px;
-      color: #858a8e;
+    h3 {
+      color: #1c1f21;
+      font-size: 20px;
+      font-family: "dn-bold";
+      line-height: 22px;
+      margin-top: 45px;
       text-transform: uppercase;
     }
 
     p {
-      color: #1c1f21;
-      font-size: 19px;
-      font-family: "dn-regular";
+      font-size: 18px;
+      color: #858a8e;
     }
 
-    .container {
-      width: 900px;
-      margin: 0 auto;
+    .left {
+      float: left;
+      width: 420px;
+      text-align: left;
+    }
+
+    .right {
+      float: left;
+      width: 420px;
+      margin-left: 40px;
+      text-align: left;
+    }
+  }
+
+}
+#share {
+  background: #f0f0f0;
+  text-align: center;
+  padding: 60px 0;
+
+
+  .wrapper > ul {
+    list-style-type: none;
+    margin: 60px 0 15px 0;
+    .clearfix();
+
+    & > li {
+      float: left;
+      width: 33%;
+      border-right: 1px solid #ddd;
+
+      &:first-child {
+        border-left: 0;
+      }
+
+      &:last-child {
+        border-right: 0;
+      }
 
       h3 {
-        color: #1c1f21;
+        text-align: center;
         font-size: 20px;
-        font-family: "dn-bold";
         line-height: 22px;
-        margin-top: 45px;
-        text-transform: uppercase;
+        font-family: "dn-regular";
       }
-
-      p {
-        font-size: 18px;
-        color: #858a8e;
-      }
-
-      .left {
-        float: left;
-        width: 420px;
-        text-align: left;
-      }
-
-      .right {
-        float: left;
-        width: 420px;
-        margin-left: 40px;
-        text-align: left;
-      }
-    }
-
-  }
-  #share {
-    background: #f0f0f0;
-    text-align: center;
-    padding: 60px 0;
-
-
-    .wrapper > ul {
-      list-style-type: none;
-      margin: 60px 0 15px 0;
-      .clearfix();
-
-      & > li {
-        float: left;
-        width: 33%;
-        border-right: 1px solid #ddd;
-
-        &:first-child {
-          border-left: 0;
-        }
-
-        &:last-child {
-          border-right: 0;
-        }
-
-        h3 {
-          text-align: center;
-          font-size: 20px;
-          line-height: 22px;
-          font-family: "dn-regular";
-        }
-      }
-    }
-
-    #social {
-      list-style-type: none;
-      width: 161px;
-      margin: 0 auto;
-
-      #blog {
-        background: url(/static/assets/front-page/images/blog_ipad.png);
-        width: 161px;
-        height: 44px;
-        display: block;
-      }
-
-      #twitter {
-        background: url(/static/assets/front-page/images/twitter.png);
-        width: 50px;
-        height: 44px;
-        display: block;
-      }
-
-      #facebook {
-        background: url(/static/assets/front-page/images/facebook.png);
-        width: 50px;
-        height: 44px;
-        display: block;
-      }
-
-      #instagram {
-        background: url(/static/assets/front-page/images/instagram.png);
-        width: 50px;
-        height: 44px;
-        display: block;
-      }
-
-      li {
-        display: inline-block;
-      }
-
     }
   }
+
 }
 
 #bookmarklet-content {
@@ -1227,6 +1191,7 @@ footer {
       width: 50%;
       display: inline-block;
       margin: 0;
+      vertical-align: bottom;
 
       .plus {
         img {
@@ -1242,6 +1207,40 @@ footer {
 
       p {
         font-size: 11px;
+      }
+    }
+  }
+
+  #iphoneShare {
+
+    .watchvideo {
+      background: url(/static/assets/front/images/watchvideo.jpg);
+      width: 180px;
+      height: 58px;
+      margin: 20px auto;
+    }
+
+    h2 {
+      text-align: center;
+      font-size: 18px;
+      line-height: 18px;
+      font-family: "dn-bold";
+      margin-top: 55px;
+    }
+
+    .download {
+      text-align: center;
+      display: block;
+      margin-top: 40px;
+    }
+
+    #share {
+
+      background: none;
+      margin: 10px 0 0 0;
+
+      #social {
+        margin: 30px 0 0 0;
       }
     }
   }
@@ -1279,5 +1278,11 @@ footer {
 
   footer {
     background: none;
+    padding: 30px 0;
+
+    .rights {
+      margin: 0;
+      padding: 0;
+    }
   }
 }
