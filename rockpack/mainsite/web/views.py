@@ -42,6 +42,17 @@ def bookmarklet():
     return dict(api_urls=api_urls), 200, {'P3P': 'CP="CAO PSA OUR"'}
 
 
+@expose_web('/terms-and-conditions', 'web/terms.html')
+def terms():
+    return None, 200, {}
+
+
+@expose_web('/privacy', 'web/privacy.html')
+def privacy():
+    api_urls = ws_request('/ws/')
+    return None, 200, {}
+
+
 @expose_web('/injectorjs', 'web/injector.js')
 def injector():
     return dict(iframe_url=url_for('bookmarklet'))
