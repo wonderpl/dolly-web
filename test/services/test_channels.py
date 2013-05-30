@@ -287,9 +287,11 @@ class ChannelCreateTestCase(base.RockPackTestCase):
                 r = client.get('/ws/{}/'.format(user.id), headers=[get_auth_header(user_id)])
                 self.assertEquals(200, r.status_code)
                 channels = json.loads(r.data)['channels']
-                self.assertEquals(channels['total'], 4)
-                titles = [c['title'] for c in channels['items']]
-                self.assertEquals(titles, [app.config['FAVOURITE_CHANNEL'][0], 'updated', '2', '0'])
+                titles = ['updated', '2', '0']
+                if user_id == user.id:
+                    # include private
+                    titles.insert(0, app.config['FAVOURITE_CHANNEL'][0])
+                self.assertEquals([c['title'] for c in channels['items']], titles)
 
         # restore date_updated onupdate default
         updated_default.arg, updated_default.is_clause_element = updated_default_bak

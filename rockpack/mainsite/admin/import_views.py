@@ -129,6 +129,7 @@ class ImportView(BaseView):
             date_of_birth=date(1900, 1, 1),
             avatar=avatar,
             refresh_token='',
+            locale='en-us',
             is_active=True)
         self.record_action('created', user)
         db.session.add(user)

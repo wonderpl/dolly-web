@@ -1,6 +1,6 @@
 from urllib import urlencode
 from urlparse import urljoin
-from flask import request, json, render_template
+from flask import request, json, render_template, abort
 from flask.ext import wtf
 from rockpack.mainsite import app, requests
 from rockpack.mainsite.core.token import parse_access_token
@@ -17,12 +17,17 @@ def ws_request(url, **kwargs):
     if ws_base_url:
         response = requests.get(urljoin(ws_base_url, url), params=kwargs).content
     else:
+        def start_response(status, headers):
+            meta['status'] = status
+            meta['headers'] = headers
         # Make local in-process request at top of WSGI stack
         env = request.environ.copy()
         env['PATH_INFO'] = url
         env['QUERY_STRING'] = urlencode(kwargs)
-        response = u''.join(app.wsgi_app(env, lambda status, headers: None))
-        # TODO: Catch non-200 responses
+        meta = {}
+        response = u''.join(app.wsgi_app(env, start_response))
+        if meta['status'] == '404 NOT FOUND':
+            abort(404)
     return json.loads(response)
 
 

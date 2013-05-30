@@ -226,6 +226,8 @@ class CategoryWS(WebService):
             if name:
                 info = dict(id=str(cat.id), name=name, priority=priority)
                 if cat.parent:
+                    if cat.name == 'other':
+                        info['default'] = True
                     children[cat.parent].append(info)
                 else:
                     info['sub_categories'] = children[cat.id]

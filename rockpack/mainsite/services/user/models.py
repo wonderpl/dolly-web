@@ -155,13 +155,15 @@ class User(db.Model):
             title=title,
             description=description,
             cover=cover,
-            owner=user.id)
+            owner=user.id,
+            public=False,
+        )
         channel.save()
 
         return user
 
     @classmethod
-    def create_from_external_system(cls, eu):
+    def create_from_external_system(cls, eu, locale):
         from rockpack.mainsite.services.oauth.models import ExternalToken
         if ExternalToken.query.filter_by(external_system=eu.system, external_uid=eu.id).count():
             return None
@@ -179,7 +181,8 @@ class User(db.Model):
             email=eu.email,
             gender=eu.gender,
             avatar=avatar,
-            date_of_birth=eu.dob
+            date_of_birth=eu.dob,
+            locale=locale,
         )
 
 
