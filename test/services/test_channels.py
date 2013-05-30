@@ -367,7 +367,12 @@ class ChannelCreateTestCase(base.RockPackTestCase):
     def test_naughty_title(self):
         user_id = self.create_test_user().id
         with self.app.test_client() as client:
-            for title, status in [('fuck rockpack', 400), ('FuckRockpack', 400), ('scunthorpe', 201)]:
+            for title, status in [
+                    ('fuck rockpack', 400),
+                    ('FuckRockpack', 400),
+                    ('SHIT', 400),
+                    ('shit!', 400),
+                    ('scunthorpe', 201)]:
                 r = client.post(
                     '/ws/{}/channels/'.format(user_id),
                     data=json.dumps(dict(title=title, category='', description='', public='', cover='')),
