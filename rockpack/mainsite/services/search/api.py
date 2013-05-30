@@ -55,6 +55,7 @@ class SearchWS(WebService):
             ch.set_paging(offset, limit)
             ch.add_text('title', request.args.get('q', ''))
             ch.add_filter(filters.verified_channel_boost())
+            ch.add_filter(filters.negatively_boost_favourites())
             if request.args.get('order') == 'latest':
                 ch.date_sort('desc')
             channels = ch.channels(with_owners=True)

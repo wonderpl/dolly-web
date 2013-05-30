@@ -26,6 +26,12 @@ def locale_filter(entity):
     return filters
 
 
+def negatively_boost_favourites():
+    return pyes.CustomFiltersScoreQuery.Filter(
+            pyes.TermFilter(field='favourite', value=True),
+            boost=-20)
+
+
 def verified_channel_boost():
     return pyes.CustomFiltersScoreQuery.Filter(
         pyes.TermFilter(field='verified', value=True),
