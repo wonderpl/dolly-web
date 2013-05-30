@@ -31,7 +31,7 @@ def homepage():
     pass
 
 
-@expose_web('/bookmarklet', 'web/bookmarklet.html')
+@expose_web('/bookmarklet', 'web/bookmarklet.html', secure=True)
 def bookmarklet():
     api_urls = ws_request('/ws/')
     return dict(api_urls=api_urls), 200, {'P3P': 'CP="CAO PSA OUR"'}
