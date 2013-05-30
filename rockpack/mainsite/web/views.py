@@ -34,7 +34,8 @@ def ws_request(url, **kwargs):
 
 @expose_web('/', 'web/home.html', cache_age=3600)
 def homepage():
-    pass
+    injectorUrl = url_for('injector')
+    return dict(injectorUrl=injectorUrl)
 
 
 @expose_web('/bookmarklet', 'web/bookmarklet.html', secure=True)
@@ -77,8 +78,7 @@ def channel(slug, channelid):
         'channel', slug=slugify(channel_data['title']) or '-', channelid=channelid)
     if selected_video:
         channel_data['canonical_url'] += '?video=' + selected_video['id']
-    injectorUrl = url_for('injector')
-    return dict(channel_data=channel_data, selected_video=selected_video, injectorUrl=injectorUrl)
+    return dict(channel_data=channel_data, selected_video=selected_video)
 
 
 @expose_web('/s/<linkid>', cache_age=60, cache_private=True)

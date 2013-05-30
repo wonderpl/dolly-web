@@ -52,6 +52,10 @@
     <script type="text/javascript" src="{{ ASSET_URL }}"></script>
     {% endassets %}
 
+  <script>
+    injectorUrl = '{{injectorUrl}}';
+  </script>
+
   </head>
   <body >
     <div id="header">
@@ -138,7 +142,7 @@
               <h3>Get the app</h3>
               <a href="#"><img src="/static/assets/front/images/downloadbig.png" id="gettheapp"></a>
             </li>
-            <li>
+            <li class="visible-desktop">
               <h3>INSTALL THE BOOKMARKLET</h3>
               <a href="#/bookmarklet"><button class="btn btn-blue">+ PACK IT</button></a>
             </li>
