@@ -172,7 +172,8 @@ class User(db.Model):
         if avatar:
             avatar = resize_and_upload(avatar, 'AVATAR')
 
-        new_username = cls.suggested_username(cls.sanitise_username(eu.username))
+        new_username = cls.suggested_username(
+            cls.sanitise_username(eu.username or eu.display_name))
 
         return cls.create_with_channel(
             username=new_username,
