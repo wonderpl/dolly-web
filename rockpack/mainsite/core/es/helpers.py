@@ -78,7 +78,7 @@ class DBImport(object):
         from rockpack.mainsite.services.video.models import Channel
         from sqlalchemy.orm import joinedload
         with app.test_request_context():
-            channels = Channel.query.filter(Channel.public == True).options(joinedload(Channel.category_rel), joinedload(Channel.metas))
+            channels = Channel.query.filter(Channel.public == True, Channel.deleted == False).options(joinedload(Channel.category_rel), joinedload(Channel.metas))
             total = channels.count()
             step = 2000
             print 'importing {} PUBLIC channels\r'.format(channels.count())
