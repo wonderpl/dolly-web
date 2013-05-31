@@ -1,5 +1,6 @@
 from urllib import urlencode
 from urlparse import urljoin
+import pyes
 from flask import request, json, render_template, abort
 from flask.ext import wtf
 from rockpack.mainsite import app, requests
@@ -115,6 +116,8 @@ def reset_password():
 @app.route('/status/', subdomain='<sub>')
 def status(sub):
     # TODO: some internal checks
+    es = pyes.ES(app.config.get('ELASTICSEARCH_URL'))
+    assert es.status()['ok']
     return 'OK', 200, [('Content-Type', 'text/plain')]
 
 
