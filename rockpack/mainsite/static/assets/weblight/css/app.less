@@ -65,6 +65,14 @@ body {
   top: 0;
 }
 
+#videoheader {
+  margin: 80px 0 0 40px;
+  color: #2b2121;
+  font-size: 51px;
+  font-family: "dn-bold";
+  text-transform: uppercase;
+}
+
 #videoslist {
 
   margin: 30px 0 0 0;
@@ -73,7 +81,8 @@ body {
   &>div {
     display: inline-block;
     position: relative;
-    margin: 0 15px 25px 15px;
+    vertical-align: top;
+    margin: 0 20px 70px 20px;
     -webkit-transition: 0.5s;
     -moz-transition: 0.5s all;
     -ms-transition: 0.5s all;
@@ -84,8 +93,8 @@ body {
       position: absolute;
       top: 0;
       left: 0;
-      width: 188px;
-      height: 110px;
+      width: 265px;
+      height: 149px;
       -webkit-transition: 0.1s;
       -moz-transition: 0.1s all;
       -ms-transition: 0.1s all;
@@ -94,7 +103,7 @@ body {
 
       &:hover {
         background: url(/static/assets/weblight/images/overlayhover.png);
-        background-size: 188px 110px;
+        background-size: 265px 149px;
       }
     }
 
@@ -105,16 +114,20 @@ body {
     }
 
     .videocell {
-      width: 188px;
-      height: 110px;
+      width: 265px;
+      height: 149px;
     }
 
     .videocelltitle {
       color: #2e2f37;
       font-family: "dn-regular";
       text-transform: uppercase;
-      font-size: 12px;
-      margin-top: 10px;
+      font-size: 16px;
+      width: 265px;
+      padding: 15px 0 0 10px;
+      height: 50px;
+      background: #fff;
+      border-bottom: 1px solid #d5d5d5;
     }
 
   }

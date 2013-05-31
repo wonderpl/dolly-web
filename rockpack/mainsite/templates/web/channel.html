@@ -45,7 +45,7 @@
     <![endif]-->
 
     <script>
-      var channel_data = {{ channel_data|tojson|safe }},
+      var channel_data = {{ channel_data|tojson|safe }};
     </script>
 
     {% assets output="gen/lib.%(version)s.js",
