@@ -455,6 +455,8 @@ class UserWS(WebService):
         value = request.json
         form = RockRegistrationForm(formdata=MultiDict([(attribute_name, value)]), csrf_enabled=False)
         field = getattr(form, attribute_name)
+        if field.data is None:
+            abort(400, message='No data given.')
         if not field.validate(field.data):
             response = {'message': field.errors}
             # special case for username

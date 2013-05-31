@@ -372,6 +372,7 @@ class ChannelCreateTestCase(base.RockPackTestCase):
                     ('FuckRockpack', 400),
                     ('SHIT', 400),
                     ('shit!', 400),
+                    ('OK!', 201),
                     ('scunthorpe', 201)]:
                 r = client.post(
                     '/ws/{}/channels/'.format(user_id),
