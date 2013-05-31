@@ -43,7 +43,7 @@ def bookmarklet():
     return dict(api_urls=api_urls), 200, {'P3P': 'CP="CAO PSA OUR"'}
 
 
-@expose_web('/terms-and-conditions', 'web/terms.html')
+@expose_web('/tos', 'web/terms.html')
 def terms():
     return None, 200, {}
 
