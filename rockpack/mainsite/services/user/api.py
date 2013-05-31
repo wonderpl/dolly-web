@@ -302,8 +302,12 @@ class ChannelForm(form.BaseForm):
         user_channels = Channel.query.filter_by(owner=self.userid)
         if not field.data:
             untitled_channel = app.config['UNTITLED_CHANNEL'] + ' '
-            count = user_channels.filter(Channel.title.like(untitled_channel + '%')).count()
-            field.data = untitled_channel + str(count + 1)
+            titles = [t[0] for t in user_channels.filter(Channel.title.like(untitled_channel + '%')).values('title')]
+            for i in xrange(1, 100):
+                t = untitled_channel + str(i)
+                if t not in titles:
+                    field.data = t
+                    break
 
         # If this is a new channel (no channel.id) and there is an exisiting channel with dupe title, or
         # if this is an existing channel (has channel.id) and we have another existing channel with a dupe title
