@@ -302,10 +302,10 @@ class ChannelForm(form.BaseForm):
         user_channels = Channel.query.filter_by(owner=self.userid)
         if not field.data:
             untitled_channel = app.config['UNTITLED_CHANNEL'] + ' '
-            titles = [t[0] for t in user_channels.filter(Channel.title.like(untitled_channel + '%')).values('title')]
-            for i in xrange(1, 100):
+            titles = [t[0].lower() for t in user_channels.filter(Channel.title.ilike(untitled_channel + '%')).values('title')]
+            for i in xrange(1, 1000):
                 t = untitled_channel + str(i)
-                if t not in titles:
+                if t.lower() not in titles:
                     field.data = t
                     break
 
