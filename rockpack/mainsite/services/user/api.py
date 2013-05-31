@@ -751,7 +751,8 @@ class UserWS(WebService):
     @expose_ajax('/<userid>/subscriptions/recent_videos/', cache_age=60, cache_private=True)
     @check_authorization(self_auth=True)
     def recent_videos(self, userid):
-        subscriptions = user_subscriptions(userid)
+        subscriptions = user_subscriptions(userid).\
+            join(Channel).filter_by(public=True, deleted=False)
         if subscriptions.count():
             channels = [s[0] for s in subscriptions.values('channel')]
             items, total = video_api.get_local_videos(self.get_locale(), self.get_page(),
