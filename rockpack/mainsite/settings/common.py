@@ -72,6 +72,12 @@ UNTITLED_CHANNEL = 'Untitled'
 # Title, description, and cover image for default favourites channel
 FAVOURITE_CHANNEL = 'Favorites', 'My favorite videos', 'fav1.jpg'
 
+# Mapping from share object type to message (can have formatting)
+SHARE_MESSAGE_MAP = dict(
+    channel='Check out this channel on Rockpack',
+    video_instance='Check out this video on Rockpack',
+)
+
 # Path to default avatar image used when creating users
 DEFAULT_AVATAR = ''
 
