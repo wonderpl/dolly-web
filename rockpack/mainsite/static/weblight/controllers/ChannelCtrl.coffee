@@ -30,7 +30,7 @@ window.Weblight.controller('ChannelCtrl', ['$scope', 'Videos', '$routeParams', '
 
     #only try to fech videos if there are hidden videos in the channel
     if @page*40 <= @totalvideos
-      Videos.get(@channelid, 40, @page*40, '').then (data) =>
+      Videos.get(40, @page*40).then (data) =>
         _.each(data, (video) =>
           $scope.videos.push(video)
         )
