@@ -33,7 +33,7 @@ class BaseWS(WebService):
         return _discover_response()
 
     @expose_ajax('/', cache_age=60, cache_private=True, secure=True)
-    @check_authorization()
+    @check_authorization(abort_on_fail=False)
     def secure_discover(self):
         result = _discover_response()
         if g.authorized:
