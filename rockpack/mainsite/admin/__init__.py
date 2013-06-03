@@ -3,7 +3,7 @@ from . import video_views, import_views, user_views
 
 
 def setup_admin(app):
-    subdomain = app.config.get('SECURE_SUBDOMAIN')
+    subdomain = app.config.get('ADMIN_SUBDOMAIN')
     admin = Admin(app, endpoint='admin', subdomain=subdomain, name='Rockpack Admin')
 
     # video
