@@ -28,7 +28,6 @@ Cache-Control: public, max-age=60
   "id": "userid",
   "username": "username",
   "display_name": "display name",
-  "gender": null,
   "avatar_thumbnail_url": "http://path/to/avatar/small.jpg",
   "channels": {
     "total": 1,
@@ -64,6 +63,8 @@ Cache-Control: private
  "first_name": "first",
  "last_name": "last",
  "email": "user@mail.com",
+ "locale": "en-us",
+ "gender": null,
  "avatar_thumbnail_url": "http://path/to/avatar.img",
  "date_of_birth": "1900-01-21",
  "subscriptions": {
