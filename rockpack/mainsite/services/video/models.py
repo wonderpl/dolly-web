@@ -426,7 +426,7 @@ def _video_instance_insert(mapper, connection, target):
 
 @event.listens_for(VideoInstance, 'after_update')
 def _video_instance_update(mapper, connection, target):
-    _remove_es_video_instance(target)
+    _add_es_video(target)
 
 
 @event.listens_for(VideoInstance, 'after_delete')
