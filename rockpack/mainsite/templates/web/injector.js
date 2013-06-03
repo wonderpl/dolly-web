@@ -40,7 +40,7 @@
         newIframe.style['height'] = '100%';
         newIframe.style['top'] = '0';
         newIframe.style['left'] = '0';
-        newIframe.style['z-index'] = '5000';
+        newIframe.style.zIndex = 5000;
         newIframe.setAttribute('allowtransparency', 'true');
         newIframe.style.display = "none";
         document.body.appendChild(newIframe);
