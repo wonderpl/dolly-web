@@ -1183,43 +1183,78 @@ footer {
   }
 }
 
+  /* Portrait */
+@media (max-width: 767px) and (orientation:portrait) {
+  #playercontainer {
+
+    margin: 0 auto;
+    position: relative;
+    width: 90%;
+    top: 30%;
+    left: 0;
+
+    #closeplayermobile {
+      position: absolute;
+      right: 10px;
+      bottom: 5px;
+    }
+
+    iframe {
+      margin: 0 auto;
+    }
+
+    #playerinfo {
+      position: relative;
+      height: auto;
+      background: #000;
+      margin: 0 auto;
+      padding: 5px 13px;
+    }
+  }
+
+  #videoslist {
+    padding: 0;
+
+    div {
+      margin: 0 25px 25px 25px;
+      width: 265px;
+    }
+  }
+}
+  /* Landscape */
+@media (max-width: 767px) and (orientation:landscape) {
+  #playercontainer {
+
+    margin: 0 auto;
+    position: relative;
+    width: 90%;
+    top: 0;
+    left: 0;
+
+    #closeplayermobile {
+      position: absolute;
+      right: 10px;
+      bottom: 5px;
+    }
+
+    iframe {
+      margin: 0 auto;
+    }
+
+    #playerinfo {
+      position: relative;
+      height: 25px;
+      background: #000;
+      margin: 0 auto;
+      padding: 2px 13px;
+    }
+  }
+}
+
 @media (max-width: 767px) {
 
   .wrapper {
     width: 95%;
-  }
-
-  #playercontainer {
-    width: 100%;
-    margin-left: 0;
-    left: 0;
-  }
-
-  #bookmarklet-content {
-
-    min-height: 350px;
-    text-align: center;
-
-    h1 {
-      font-size: 30px;
-      padding-top: 125px;
-    }
-
-    h2 {
-      font-size: 15px;
-      padding-top: 0;
-      font-family: "dn-regular";
-      line-height: 17px;
-      margin-bottom: 40px;
-    }
-
-    .wrapper {
-      min-height: 350px;
-    }
-
-    #browsercontainer {
-      display: none;
-    }
   }
 
   .channelheader {
