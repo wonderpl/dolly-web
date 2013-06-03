@@ -55,7 +55,7 @@ def privacy():
     return None, 200, {}
 
 
-@expose_web('/injectorjs', 'web/injector.js')
+@expose_web('/injectorjs', 'web/injector.js', secure=True)
 def injector():
     return dict(iframe_url=url_for('bookmarklet'))
 
