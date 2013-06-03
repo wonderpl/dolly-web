@@ -71,7 +71,7 @@ class DBImport(object):
             start = time.time()
             for i in xrange(0, total, step):
                 for owner in owners.offset(i).limit(step):
-                    api.add_owner_to_index(owner, bulk=False, refresh=False, no_check=True)
+                    api.add_owner_to_index(owner, bulk=True, refresh=False, no_check=True)
             print 'finished in', time.time() - start, 'seconds'
 
     def import_channels(self):
@@ -85,7 +85,7 @@ class DBImport(object):
             start = time.time()
             for i in xrange(0, total, step):
                 for channel in channels.offset(i).limit(step):
-                    api.add_channel_to_index(channel, bulk=False, refresh=False, no_check=True)
+                    api.add_channel_to_index(channel, bulk=True, refresh=False, no_check=True)
             print 'finished in', time.time() - start, 'seconds'
 
     def import_videos(self):
@@ -104,5 +104,5 @@ class DBImport(object):
             start = time.time()
             for i in xrange(0, total, step):
                 for v in query.offset(i).limit(step):
-                    api.add_video_to_index(v, bulk=False, refresh=False, no_check=True)
+                    api.add_video_to_index(v, bulk=True, refresh=False, no_check=True)
             print 'finished in', time.time() - start, 'seconds'

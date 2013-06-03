@@ -30,7 +30,7 @@
   </script>
 
   <script>
-    window.isSecure = {% if config.get("SECURE_DOMAIN") %}true{% else %}false{% endif %};
+    window.isSecure = {% if config.get("SECURE_SUBDOMAIN") %}true{% else %}false{% endif %};
   </script>
 
   {% assets output="gen/bookmarklet_lib.%(version)s.js",
