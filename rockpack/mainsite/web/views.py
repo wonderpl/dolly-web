@@ -44,6 +44,11 @@ def bookmarklet():
     return dict(api_urls=api_urls), 200, {'P3P': 'CP="CAO PSA OUR"'}
 
 
+@expose_web('/injectorjs', 'web/injector.js', secure=True)
+def injector():
+    return dict(iframe_url=url_for('bookmarklet')), 200, {'Content-Type': 'application/javascript'}
+
+
 @expose_web('/tos', 'web/terms.html')
 def terms():
     return None, 200, {}
@@ -53,11 +58,6 @@ def terms():
 def privacy():
     api_urls = ws_request('/ws/')
     return None, 200, {}
-
-
-@expose_web('/injectorjs', 'web/injector.js', secure=True)
-def injector():
-    return dict(iframe_url=url_for('bookmarklet'))
 
 
 @expose_web('/channel/<slug>/<channelid>/', 'web/channel.html', cache_age=3600)
