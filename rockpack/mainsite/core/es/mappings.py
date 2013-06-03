@@ -77,8 +77,12 @@ user_mapping = {
         "resource_url": {
             "type": "string",
             "index": "not_analyzed"},
-        "display_name": {"type": "string"},
-        "username": {"type": "string"},
+        "display_name": {
+            "type": "string",
+            "index": "not_analyzed"},
+        "username": {
+            "type": "string",
+            "index": "not_analyzed"},
         "id": {
             "type": "string",
             "index": "not_analyzed"
