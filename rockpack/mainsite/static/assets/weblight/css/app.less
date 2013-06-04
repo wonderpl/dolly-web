@@ -83,11 +83,11 @@ body {
     position: relative;
     vertical-align: top;
     margin: 0 20px 70px 20px;
-    -webkit-transition: 0.5s;
-    -moz-transition: 0.5s all;
-    -ms-transition: 0.5s all;
-    -o-transition: 0.5s all;
-    transition: 0.5s all;
+    -webkit-transition: 0.5s box-shadow;
+    -moz-transition: 0.5s box-shadow;
+    -ms-transition: 0.5s box-shadow;
+    -o-transition: 0.5s box-shadow;
+    transition: 0.5s box-shadow;
 
     .overlay {
       position: absolute;
@@ -95,11 +95,11 @@ body {
       left: 0;
       width: 265px;
       height: 149px;
-      -webkit-transition: 0.1s;
-      -moz-transition: 0.1s all;
-      -ms-transition: 0.1s all;
-      -o-transition: 0.1s all;
-      transition: 0.1s all;
+      -webkit-transition: 0.1s box-shadow;
+      -moz-transition: 0.1s box-shadow;
+      -ms-transition: 0.1s box-shadow;
+      -o-transition: 0.1s box-shadow;
+      transition: 0.1s box-shadow;
 
       &:hover {
         background-size: 265px 149px;
@@ -122,7 +122,7 @@ body {
       font-family: "dn-regular";
       text-transform: uppercase;
       font-size: 16px;
-      width: 265px;
+      width: 256px;
       padding: 15px 0 0 10px;
       height: 50px;
       background: #fff;
@@ -1229,6 +1229,26 @@ footer {
 }
   /* Landscape */
 @media (max-width: 767px) and (orientation:landscape) {
+
+  #videoslist
+  {
+
+   padding: 0;
+
+   &>div {
+
+     margin: 0 0 40px 0;
+
+     .overlay, .videocell {
+       width: 315px;
+       height: 177px;
+     }
+     .videocelltitle {
+       width: 305px;
+     }
+   }
+  }
+
   #playercontainer {
 
     margin: 0 auto;
@@ -1263,6 +1283,12 @@ footer {
     height: 50px;
     background: #fff;
     margin: 0 auto;
+    line-height: 50px;
+    text-align: center;
+
+    img {
+      width: 125px;
+    }
   }
 
   .wrapper {
@@ -1301,22 +1327,6 @@ footer {
     .user-profile {
       width: 55px;
       height: 55px;
-    }
-  }
-
-  #videoslist {
-
-    &>div {
-
-      .overlay {
-        width: 265px;
-        height: 149px;
-      }
-
-      .videocell {
-        width: 265px;
-        height: 149px;
-      }
     }
   }
 
