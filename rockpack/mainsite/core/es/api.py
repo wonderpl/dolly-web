@@ -294,13 +294,6 @@ class ChannelSearch(EntitySearch, CategoryMixin, MediaSortMixin):
             self.add_videos_to_channels(channel_list, video_map)
         return channel_list
 
-    def add_owner_search(self, name):
-        os = OwnerSearch()
-        os.add_term('display_name', name.lower())
-        owner_ids = [o['id'] for o in os.owners()]
-        if owner_ids:
-            self.add_term('owner', owner_ids, occurs=SHOULD)
-
     def channels(self, with_owners=False, with_videos=False):
         if not self._channel_results:
             r = self.results()
@@ -475,7 +468,8 @@ def add_channel_to_index(channel, bulk=False, refresh=False, boost=None, no_chec
         cover=dict(
             thumbnail_url=urlparse(convert(channel, 'cover', 'CHANNEL').url).path,
             aoi=channel.cover_aoi
-        )
+        ),
+        keywords=[channel.owner_rel.display_name, channel.owner_rel.username]
     )
 
     if app.config.get('SHOW_OLD_CHANNEL_COVER_URLS', True):

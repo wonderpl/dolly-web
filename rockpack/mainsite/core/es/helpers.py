@@ -26,7 +26,8 @@ class Indexing(object):
             'user': {
                 'index': mappings.USER_INDEX,
                 'type': mappings.USER_TYPE,
-                'mapping': mappings.user_mapping
+                'mapping': mappings.user_mapping,
+                'settings': mappings.user_settings
             },
         }
 
@@ -38,7 +39,7 @@ class Indexing(object):
         if rebuild:
             self.delete_index(index)
         app.logger.debug('creating {} index {}'.format(index, self.indexes[index]['index']))
-        self.conn.indices.create_index(self.indexes[index]['index'])
+        self.conn.indices.create_index(self.indexes[index]['index'], settings=self.indexes[index].get('settings'))
 
     def create_all_indexes(self, rebuild=False):
         for index in self.indexes.keys():
@@ -78,7 +79,7 @@ class DBImport(object):
         from rockpack.mainsite.services.video.models import Channel
         from sqlalchemy.orm import joinedload
         with app.test_request_context():
-            channels = Channel.query.filter(Channel.public == True, Channel.deleted == False).options(joinedload(Channel.category_rel), joinedload(Channel.metas))
+            channels = Channel.query.filter(Channel.public == True, Channel.deleted == False).options(joinedload(Channel.category_rel), joinedload(Channel.metas), joinedload(Channel.owner_rel))
             total = channels.count()
             step = 2000
             print 'importing {} PUBLIC channels\r'.format(channels.count())

@@ -79,13 +79,31 @@ user_mapping = {
             "index": "not_analyzed"},
         "display_name": {
             "type": "string",
-            "index": "not_analyzed"},
+            "analyzer": "full_phrase"},
         "username": {
             "type": "string",
             "index": "not_analyzed"},
         "id": {
             "type": "string",
             "index": "not_analyzed"
+        },
+    }
+}
+
+user_settings = {
+    "settings": {
+        "analysis": {
+            "filter": {
+            },
+            "analyzer": {
+                "full_phrase": {
+                    "filter": [
+                        "lowercase"
+                    ],
+                    "type": "custom",
+                    "tokenizer": "keyword"
+                }
+            }
         }
     }
 }
