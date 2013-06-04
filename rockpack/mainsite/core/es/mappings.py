@@ -130,7 +130,7 @@ channel_mapping = {
                     "index": "not_analyzed"
                 },
                 "aoi": {
-                    "type": "integer",
+                    "type": "float",
                 }
             },
         },

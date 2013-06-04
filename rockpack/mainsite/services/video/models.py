@@ -457,7 +457,8 @@ def _es_channel_insert_from_channel(mapper, connection, target):
 def _es_channel_update_from_channel(mapper, connection, target):
     if not target.public or target.deleted:
         _remove_es_channel(target)
-    _add_es_channel(Channel.query.get(target.id))
+    else:
+        _add_es_channel(Channel.query.get(target.id))
 
 
 event.listen(Video, 'before_insert', add_video_pk)
