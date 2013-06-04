@@ -402,6 +402,7 @@ class UserWS(WebService):
                     order_by('favourite desc', 'date_updated desc')]
         info = dict(
             id=user.id,
+            locale=user.locale,
             username=user.username,
             display_name=user.display_name,
             first_name=user.first_name,
