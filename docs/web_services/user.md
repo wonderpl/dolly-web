@@ -702,7 +702,7 @@ Cache-Control: private, max-age=60
   "total": 2,
   "items": [
    {
-    "id": "1",
+    "id": 1,
     "message_type": "starred",
     "date_created": "2013-04-29T18:16:05.950486",
     "read": false,
@@ -724,7 +724,7 @@ Cache-Control: private, max-age=60
     }
    },
    {
-    "id": "2",
+    "id": 2,
     "message_type": "subscribed",
     "date_created": "2013-04-29T12:23:13.762358",
     "read": true,
@@ -777,7 +777,7 @@ Authorization: Bearer TOKEN
 Content-Type: application/json
 
 {
- "mark_read": ["1", "2"]
+ "mark_read": [1, 2]
 }
 ```
 
