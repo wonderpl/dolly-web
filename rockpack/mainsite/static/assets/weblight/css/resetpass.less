@@ -145,7 +145,7 @@ input[type=submit] {
   background: #df3450;
   font-size: 12px;
   height: 48px;
-  right: -60px;
+  right: -20px;
   width: 280px;
   line-height: 48px;
   color: #dfe0e1;
@@ -177,4 +177,44 @@ input[type=submit] {
   position: relative;
   display: block;
   width: 500px;
+}
+
+.logo {
+  background: #fff;
+  height: 50px;
+  line-height: 50px;
+
+  img {
+    width: 125px;
+  }
+}
+
+@media (max-width: 767px) {
+  .reset-password-form {
+    width: 300px;
+    margin: 0 auto;
+  }
+
+  .fieldcontainer {
+    width: auto;
+  }
+
+  .error {
+    position: relative;
+    width: 292px;
+    right: 0;
+    top: 0;
+
+    &:before {
+      display: none;
+    }
+  }
+
+  .ok {
+    right: -8px;
+  }
+
+  .logo, .titlebar {
+    text-align: center;
+  }
 }

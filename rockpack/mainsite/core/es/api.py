@@ -141,17 +141,17 @@ class EntitySearch(object):
     def get_type_name(self):
         return getattr(mappings, self.entity.upper() + '_TYPE')
 
-    def add_id(self, id):
+    def add_id(self, id, occurs=MUST):
         """ IDs of the documents to be queried """
-        self._add_term_occurs(pyes.IdsQuery(id), MUST)
+        self._add_term_occurs(pyes.IdsQuery(id), occurs)
 
     def add_text(self, field, value):
         if not(field and value):
             return
         term = pyes.TextQuery(field, value)
-        self._add_term_occurs(term, MUST)
+        self._add_term_occurs(term, SHOULD)
 
-    def add_term(self, field, value, occurs=MUST):
+    def add_term(self, field, value, occurs=SHOULD):
         """ Condition to apply
 
             field  - field name
@@ -243,7 +243,7 @@ class ChannelSearch(EntitySearch, CategoryMixin, MediaSortMixin):
                 position=pos,
                 cover=dict(
                     thumbnail_url=urljoin(app.config.get('IMAGE_CDN', ''), channel.cover.thumbnail_url) if channel.cover.thumbnail_url else '',
-                    aoi=channel.aoi
+                    aoi=channel.cover.aoi
                 )
             )
             if channel.favourite:
@@ -293,6 +293,13 @@ class ChannelSearch(EntitySearch, CategoryMixin, MediaSortMixin):
                 video_map.setdefault(channel_id_list[0], []).append(v) # HACK: see above
             self.add_videos_to_channels(channel_list, video_map)
         return channel_list
+
+    def add_owner_search(self, name):
+        os = OwnerSearch()
+        os.add_term('display_name', name.lower())
+        owner_ids = [o['id'] for o in os.owners()]
+        if owner_ids:
+            self.add_term('owner', owner_ids, occurs=SHOULD)
 
     def channels(self, with_owners=False, with_videos=False):
         if not self._channel_results:

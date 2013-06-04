@@ -75,7 +75,7 @@ class LoginWS(WebService):
 
         if not user:
             # New user
-            user = User.create_from_external_system(eu)
+            user = User.create_from_external_system(eu, self.get_locale())
             record_user_event(user.username, 'registration succeeded', user.id)
 
         # Update the token record if needed

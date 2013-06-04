@@ -65,6 +65,14 @@ body {
   top: 0;
 }
 
+#videoheader {
+  margin: 80px 0 0 40px;
+  color: #2b2121;
+  font-size: 51px;
+  font-family: "dn-bold";
+  text-transform: uppercase;
+}
+
 #videoslist {
 
   margin: 30px 0 0 0;
@@ -73,28 +81,28 @@ body {
   &>div {
     display: inline-block;
     position: relative;
-    margin: 0 15px 25px 15px;
-    -webkit-transition: 0.5s;
-    -moz-transition: 0.5s all;
-    -ms-transition: 0.5s all;
-    -o-transition: 0.5s all;
-    transition: 0.5s all;
+    vertical-align: top;
+    margin: 0 20px 70px 20px;
+    -webkit-transition: 0.5s box-shadow;
+    -moz-transition: 0.5s box-shadow;
+    -ms-transition: 0.5s box-shadow;
+    -o-transition: 0.5s box-shadow;
+    transition: 0.5s box-shadow;
 
     .overlay {
       position: absolute;
       top: 0;
       left: 0;
-      width: 188px;
-      height: 110px;
-      -webkit-transition: 0.1s;
-      -moz-transition: 0.1s all;
-      -ms-transition: 0.1s all;
-      -o-transition: 0.1s all;
-      transition: 0.1s all;
+      width: 265px;
+      height: 149px;
+      -webkit-transition: 0.1s box-shadow;
+      -moz-transition: 0.1s box-shadow;
+      -ms-transition: 0.1s box-shadow;
+      -o-transition: 0.1s box-shadow;
+      transition: 0.1s box-shadow;
 
       &:hover {
-        background: url(/static/assets/weblight/images/overlayhover.png);
-        background-size: 188px 110px;
+        background-size: 265px 149px;
       }
     }
 
@@ -105,16 +113,20 @@ body {
     }
 
     .videocell {
-      width: 188px;
-      height: 110px;
+      width: 265px;
+      height: 149px;
     }
 
     .videocelltitle {
       color: #2e2f37;
       font-family: "dn-regular";
       text-transform: uppercase;
-      font-size: 12px;
-      margin-top: 10px;
+      font-size: 16px;
+      width: 256px;
+      padding: 15px 0 0 10px;
+      height: 50px;
+      background: #fff;
+      border-bottom: 1px solid #d5d5d5;
     }
 
   }
@@ -767,6 +779,16 @@ footer {
 
   #iphonescontainer {
 
+    #threeiphones {
+
+      div {
+        width: 32%;
+        display: inline-block;
+        text-align: center;
+        margin-top: -60px;
+      }
+    }
+
     background: #eaeced;
     padding-bottom: 60px;
 
@@ -777,7 +799,6 @@ footer {
 
     #iphonesinfo {
 
-      width: 910px;
       margin: 50px auto 0;
 
       h3 {
@@ -794,7 +815,7 @@ footer {
 
       div {
         display: inline-block;
-        width: 280px;
+        width: 30%;
         vertical-align: top;
         margin: 0 10px;
         text-align: center;
@@ -856,6 +877,7 @@ footer {
     text-align: center;
     padding: 60px 0;
 
+
     .wrapper > ul {
       list-style-type: none;
       margin: 60px 0 15px 0;
@@ -885,10 +907,41 @@ footer {
 
     #social {
       list-style-type: none;
+      width: 161px;
+      margin: 0 auto;
+
+      #blog {
+        background: url(/static/assets/front-page/images/blog_ipad.png);
+        width: 161px;
+        height: 44px;
+        display: block;
+      }
+
+      #twitter {
+        background: url(/static/assets/front-page/images/twitter.png);
+        width: 50px;
+        height: 44px;
+        display: block;
+      }
+
+      #facebook {
+        background: url(/static/assets/front-page/images/facebook.png);
+        width: 50px;
+        height: 44px;
+        display: block;
+      }
+
+      #instagram {
+        background: url(/static/assets/front-page/images/instagram.png);
+        width: 50px;
+        height: 44px;
+        display: block;
+      }
 
       li {
         display: inline-block;
       }
+
     }
   }
 }
@@ -1010,6 +1063,12 @@ footer {
     }
   }
 
+  #playercontainer {
+    width: 100%;
+    margin-left: 0;
+    left: 0;
+  }
+
   #playbookmenu {
     margin-left: 0;
     top: 30px;
@@ -1040,17 +1099,6 @@ footer {
 
       p {
         width: auto;
-      }
-    }
-
-    #iphonescontainer {
-
-      #iphonesinfo {
-        width: auto;
-
-        div {
-          width: 250px;
-        }
       }
     }
 
@@ -1107,18 +1155,7 @@ footer {
           margin: 0 60px;
         }
       }
-    }
 
-    #iphonescontainer {
-
-      #iphonesinfo {
-
-        width: 1040px;
-
-        div {
-          margin: 0 30px;
-        }
-      }
     }
 
     #faq {
@@ -1137,44 +1174,134 @@ footer {
       }
 
     }
+
+    #share {
+      #social {
+        width: auto;
+      }
+    }
+  }
+}
+
+  /* Portrait */
+@media (max-width: 767px) and (orientation:portrait) {
+  #playercontainer {
+
+    margin: 0 auto;
+    position: relative;
+    width: 90%;
+    top: 30%;
+    left: 0;
+
+    #closeplayermobile {
+      position: absolute;
+      right: 10px;
+      bottom: 5px;
+    }
+
+    iframe {
+      margin: 0 auto;
+    }
+
+    #playerinfo {
+      position: relative;
+      height: auto;
+      background: #000;
+      margin: 0 auto;
+      padding: 5px 13px;
+    }
+  }
+
+  #videoslist {
+    padding: 0;
+
+    div {
+      margin: 0 25px 25px 25px;
+      width: 265px;
+
+      .videocelltitle {
+        margin: 0;
+        padding: 10px;
+        width: 245px;
+      }
+    }
+  }
+}
+  /* Landscape */
+@media (max-width: 767px) and (orientation:landscape) {
+
+  #videoslist
+  {
+
+   padding: 0;
+
+   &>div {
+
+     margin: 0 0 40px 0;
+
+     .overlay, .videocell {
+       width: 315px;
+       height: 177px;
+     }
+     .videocelltitle {
+       width: 305px;
+     }
+   }
+  }
+
+  #playercontainer {
+
+    margin: 0 auto;
+    position: relative;
+    width: 90%;
+    top: 0;
+    left: 0;
+
+    #closeplayermobile {
+      position: absolute;
+      right: 10px;
+      bottom: 5px;
+    }
+
+    iframe {
+      margin: 0 auto;
+    }
+
+    #playerinfo {
+      position: relative;
+      height: 25px;
+      background: #000;
+      margin: 0 auto;
+      padding: 2px 13px;
+    }
   }
 }
 
 @media (max-width: 767px) {
 
+  #topnav {
+    height: 50px;
+    background: #fff;
+    margin: 0 auto;
+    line-height: 50px;
+    text-align: center;
+
+    img {
+      width: 125px;
+    }
+  }
+
   .wrapper {
     width: 95%;
   }
 
-  #bookmarklet-content {
-
-    min-height: 350px;
-    text-align: center;
-
-    h1 {
-      font-size: 30px;
-      padding-top: 125px;
-    }
-
-    h2 {
-      font-size: 15px;
-      padding-top: 0;
-      font-family: "dn-regular";
-      line-height: 17px;
-      margin-bottom: 40px;
-    }
-
-    .wrapper {
-      min-height: 350px;
-    }
-
-    #browsercontainer {
-      display: none;
-    }
-  }
-
   .channelheader {
     padding: 210px 0 35px 0;
+
+    h1 {
+      width: auto;
+      line-height: 33px;
+    }
 
     .gettheapp {
       top: 85px;
@@ -1203,13 +1330,12 @@ footer {
     }
   }
 
-  #videoslist {
+  .content-providers {
 
-    & > div {
+    #share {
 
-      .videocell {
-        width: 310px;
-        height: 174px;
+      #social {
+        width: 161px;
       }
     }
   }

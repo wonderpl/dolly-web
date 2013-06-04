@@ -1,6 +1,7 @@
 from urllib import urlencode
 from urlparse import urljoin
-from flask import request, json, render_template
+import pyes
+from flask import request, json, render_template, abort
 from flask.ext import wtf
 from rockpack.mainsite import app, requests
 from rockpack.mainsite.core.token import parse_access_token
@@ -17,12 +18,17 @@ def ws_request(url, **kwargs):
     if ws_base_url:
         response = requests.get(urljoin(ws_base_url, url), params=kwargs).content
     else:
+        def start_response(status, headers):
+            meta['status'] = status
+            meta['headers'] = headers
         # Make local in-process request at top of WSGI stack
         env = request.environ.copy()
         env['PATH_INFO'] = url
         env['QUERY_STRING'] = urlencode(kwargs)
-        response = u''.join(app.wsgi_app(env, lambda status, headers: None))
-        # TODO: Catch non-200 responses
+        meta = {}
+        response = u''.join(app.wsgi_app(env, start_response))
+        if meta['status'] == '404 NOT FOUND':
+            abort(404)
     return json.loads(response)
 
 
@@ -32,15 +38,26 @@ def homepage():
     return dict(api_urls=api_urls)
 
 
-@expose_web('/bookmarklet', 'web/bookmarklet.html')
+@expose_web('/bookmarklet', 'web/bookmarklet.html', secure=True)
 def bookmarklet():
     api_urls = ws_request('/ws/')
     return dict(api_urls=api_urls), 200, {'P3P': 'CP="CAO PSA OUR"'}
 
 
-@expose_web('/injectorjs', 'web/injector.js')
+@expose_web('/injectorjs', 'web/injector.js', secure=True)
 def injector():
-    return dict(iframe_url=url_for('bookmarklet'))
+    return dict(iframe_url=url_for('bookmarklet')), 200, {'Content-Type': 'application/javascript'}
+
+
+@expose_web('/tos', 'web/terms.html')
+def terms():
+    return None, 200, {}
+
+
+@expose_web('/privacy', 'web/privacy.html')
+def privacy():
+    api_urls = ws_request('/ws/')
+    return None, 200, {}
 
 
 @expose_web('/channel/<slug>/<channelid>/', 'web/channel.html', cache_age=3600)
@@ -61,8 +78,7 @@ def channel(slug, channelid):
         'channel', slug=slugify(channel_data['title']) or '-', channelid=channelid)
     if selected_video:
         channel_data['canonical_url'] += '?video=' + selected_video['id']
-    injectorUrl = url_for('injector')
-    return dict(channel_data=channel_data, selected_video=selected_video, injectorUrl=injectorUrl)
+    return dict(channel_data=channel_data, selected_video=selected_video)
 
 
 @expose_web('/s/<linkid>', cache_age=60, cache_private=True)
@@ -100,6 +116,8 @@ def reset_password():
 @app.route('/status/', subdomain='<sub>')
 def status(sub):
     # TODO: some internal checks
+    es = pyes.ES(app.config.get('ELASTICSEARCH_URL'))
+    assert es.status()['ok']
     return 'OK', 200, [('Content-Type', 'text/plain')]
 
 

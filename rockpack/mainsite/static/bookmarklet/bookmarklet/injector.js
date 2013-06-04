@@ -41,6 +41,7 @@
         newIframe.name = "rockpackiframe";
         newIframe.setAttribute('allowtransparency', 'true');
         newIframe.style.display = "none";
+        newIframe.style.zIndex = 1000;
         document.body.appendChild(newIframe);
 
         fix_flash();

@@ -28,7 +28,6 @@ Cache-Control: public, max-age=60
   "id": "userid",
   "username": "username",
   "display_name": "display name",
-  "gender": null,
   "avatar_thumbnail_url": "http://path/to/avatar/small.jpg",
   "channels": {
     "total": 1,
@@ -64,6 +63,8 @@ Cache-Control: private
  "first_name": "first",
  "last_name": "last",
  "email": "user@mail.com",
+ "locale": "en-us",
+ "gender": null,
  "avatar_thumbnail_url": "http://path/to/avatar.img",
  "date_of_birth": "1900-01-21",
  "subscriptions": {
@@ -639,7 +640,7 @@ Content-Type: application/json
 
 Parameter      | Required? | Value                     | Description
 :------------- | :-------- | :------------------------ | :----------
-action         | yes       | `star|unstar|view|select` | Specifies the action type
+action         | yes       | `star`¦`unstar`¦`view`¦`select` | Specifies the action type
 video_instance | yes       | instance id               | The id of the video instance that was viewed or starred
 locale         | no        | IETF language tag         | The action will be recorded for the given locale
 

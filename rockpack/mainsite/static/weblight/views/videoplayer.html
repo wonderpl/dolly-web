@@ -1,21 +1,24 @@
 <div ng-controller="VideoCtrl" id="lightbox">
   <div id="playercontainer">
-    <div id="playerheader">
+    <div id="playerheader" class="hidden-phone">
       <img src="/static/assets/weblight/images/closeplayer.jpg" id="closeplayer" ng-click="hide()">
       <div id="videotitle">((videodata.title | truncate: 45))</div>
     </div>
     <div id="player"></div>
     <div id="playerinfo">
       <ul>
-        <li id="channelthumb"><img ng-src="((channel.thumbnail))"></li>
+        <li id="channelthumb" class="hidden-phone"><img ng-src="((channel.thumbnail))"></li>
         <li>
           <div id="channeltitle">((channel.title))</div>
-          <div id="username">((channel.owner.name))</div>
+          <div id="username" class="hidden-phone">((channel.owner.name))</div>
         </li>
-        <li class="right" style="margin-right:25px">
+        <li class="right hidden-phone" style="margin-right:25px">
           <a href="#" class="btn btn-blue getappbtn">Get the app</a>
         </li>
       </ul>
+      <div id="closeplayermobile">
+        <img src="/static/assets/weblight/images/closeplayer_mobile.png" ng-click="hide()">
+      </div>
     </div>
   </div>
 </div>

@@ -22,7 +22,7 @@ from rockpack.mainsite.services.cover_art import api as cover_api
 from rockpack.mainsite.services.video import api as video_api
 from rockpack.mainsite.services.search import api as search_api
 from .models import User, UserActivity, UserNotification, Subscription
-from rockpack.mainsite.core.es import api
+from rockpack.mainsite.core.es import use_elasticsearch, api
 
 
 ACTION_COLUMN_VALUE_MAP = dict(
@@ -302,8 +302,12 @@ class ChannelForm(form.BaseForm):
         user_channels = Channel.query.filter_by(owner=self.userid)
         if not field.data:
             untitled_channel = app.config['UNTITLED_CHANNEL'] + ' '
-            count = user_channels.filter(Channel.title.like(untitled_channel + '%')).count()
-            field.data = untitled_channel + str(count + 1)
+            titles = [t[0].lower() for t in user_channels.filter(Channel.title.ilike(untitled_channel + '%')).values('title')]
+            for i in xrange(1, 1000):
+                t = untitled_channel + str(i)
+                if t.lower() not in titles:
+                    field.data = t
+                    break
 
         # If this is a new channel (no channel.id) and there is an exisiting channel with dupe title, or
         # if this is an existing channel (has channel.id) and we have another existing channel with a dupe title
@@ -354,7 +358,7 @@ class UserWS(WebService):
 
     @expose_ajax('/<userid>/', cache_age=60, secure=False)
     def user_info(self, userid):
-        if app.config.get('ELASTICSEARCH_URL'):
+        if use_elasticsearch():
             ows = api.OwnerSearch()
             ows.add_id(userid)
             owners = ows.owners()
@@ -398,6 +402,7 @@ class UserWS(WebService):
                     order_by('favourite desc', 'date_updated desc')]
         info = dict(
             id=user.id,
+            locale=user.locale,
             username=user.username,
             display_name=user.display_name,
             first_name=user.first_name,
@@ -458,6 +463,8 @@ class UserWS(WebService):
         value = request.json
         form = RockRegistrationForm(formdata=MultiDict([(attribute_name, value)]), csrf_enabled=False)
         field = getattr(form, attribute_name)
+        if field.data is None:
+            abort(400, message='No data given.')
         if not field.validate(field.data):
             response = {'message': field.errors}
             # special case for username
@@ -567,7 +574,7 @@ class UserWS(WebService):
 
     @expose_ajax('/<userid>/channels/<channelid>/', cache_age=60, secure=False)
     def channel_info(self, userid, channelid):
-        if app.config.get('ELASTICSEARCH_URL'):
+        if use_elasticsearch():
             ch = api.ChannelSearch(self.get_locale())
             ch.add_id(channelid)
             if not ch.channels(with_videos=self.get_page(), with_owners=True):
@@ -752,7 +759,8 @@ class UserWS(WebService):
     @expose_ajax('/<userid>/subscriptions/recent_videos/', cache_age=60, cache_private=True)
     @check_authorization(self_auth=True)
     def recent_videos(self, userid):
-        subscriptions = user_subscriptions(userid)
+        subscriptions = user_subscriptions(userid).\
+            join(Channel).filter_by(public=True, deleted=False)
         if subscriptions.count():
             channels = [s[0] for s in subscriptions.values('channel')]
             items, total = video_api.get_local_videos(self.get_locale(), self.get_page(),

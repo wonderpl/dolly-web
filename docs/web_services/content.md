@@ -25,14 +25,18 @@ Cache-Control: public, max-age=3600
    {
     "id": 1,
     "name": "Music",
+    "priority": 100,
     "sub_categories": [
      {
       "id": 2,
-      "name": "Pop"
+      "name": "Pop",
+      "priority": 50
      },
      {
       "id": 3,
-      "name": "Rock"
+      "name": "Other",
+      "priority": -1,
+      "default": true
      }
     ]
    }
@@ -40,6 +44,13 @@ Cache-Control: public, max-age=3600
  }
 }
 ```
+
+The `priority` field should be used to order the categories when displayed as a list.
+The item with highest priority value should be give the top/left-most position.
+A nagative priority denotes categories that should be hidden from the user interface.
+
+If a sub-category is labelled `default` then it should be used as the assigned category
+if the user selects the respective parent category.
 
 ### Videos
 

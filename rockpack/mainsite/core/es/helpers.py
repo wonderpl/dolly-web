@@ -71,21 +71,21 @@ class DBImport(object):
             start = time.time()
             for i in xrange(0, total, step):
                 for owner in owners.offset(i).limit(step):
-                    api.add_owner_to_index(owner, bulk=False, refresh=False, no_check=True)
+                    api.add_owner_to_index(owner, bulk=True, refresh=False, no_check=True)
             print 'finished in', time.time() - start, 'seconds'
 
     def import_channels(self):
         from rockpack.mainsite.services.video.models import Channel
         from sqlalchemy.orm import joinedload
         with app.test_request_context():
-            channels = Channel.query.filter(Channel.public == True).options(joinedload(Channel.category_rel), joinedload(Channel.metas))
+            channels = Channel.query.filter(Channel.public == True, Channel.deleted == False).options(joinedload(Channel.category_rel), joinedload(Channel.metas))
             total = channels.count()
             step = 2000
             print 'importing {} PUBLIC channels\r'.format(channels.count())
             start = time.time()
             for i in xrange(0, total, step):
                 for channel in channels.offset(i).limit(step):
-                    api.add_channel_to_index(channel, bulk=False, refresh=False, no_check=True)
+                    api.add_channel_to_index(channel, bulk=True, refresh=False, no_check=True)
             print 'finished in', time.time() - start, 'seconds'
 
     def import_videos(self):
@@ -104,5 +104,5 @@ class DBImport(object):
             start = time.time()
             for i in xrange(0, total, step):
                 for v in query.offset(i).limit(step):
-                    api.add_video_to_index(v, bulk=False, refresh=False, no_check=True)
+                    api.add_video_to_index(v, bulk=True, refresh=False, no_check=True)
             print 'finished in', time.time() - start, 'seconds'

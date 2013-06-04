@@ -24,6 +24,8 @@ export ROCKPACK_SETTINGS=/etc/rockpack/mainsite/config.py
 
 
 start() {
+	# Ensure log file is writable by $USER
+	[ -e $LOG ] || install -m 664 -o $USER /dev/null $LOG
 	echo -n "Starting $NAME: "
 	daemon $BIN $DAEMON_OPTS
 	RETVAL=$?

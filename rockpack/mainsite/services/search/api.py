@@ -1,23 +1,14 @@
-import re
 from flask import request, json, Response
-from rockpack.mainsite import app
 from rockpack.mainsite.core.webservice import WebService, expose_ajax
 from rockpack.mainsite.core import youtube
 from rockpack.mainsite.helpers.db import gen_videoid
 from rockpack.mainsite.services.video.api import get_local_channel
 from rockpack.mainsite.services.video.models import Channel
 from rockpack.mainsite.core.es.api import ChannelSearch
-from rockpack.mainsite.core.es import filters
+from rockpack.mainsite.core.es import use_elasticsearch, filters
 
-
-SEARCH_TERM_RE = re.compile('^[\w ]+$')
 
 VIDEO_INSTANCE_PREFIX = 'Svi0xYzZY'
-
-
-def _query_term(default=''):
-    query = request.args.get('q', '')
-    return query if SEARCH_TERM_RE.match(query) else default
 
 
 class SearchWS(WebService):
@@ -33,7 +24,7 @@ class SearchWS(WebService):
         order = 'published' if request.args.get('order') == 'latest' else None
         start, size = self.get_page()
         region = self.get_locale().split('-')[1]
-        result = youtube.search(_query_term(), order, start, size,
+        result = youtube.search(request.args.get('q', ''), order, start, size,
                                 region, request.remote_addr)
         items = []
         for position, video in enumerate(result.videos, start):
@@ -58,12 +49,14 @@ class SearchWS(WebService):
 
     @expose_ajax('/channels/', cache_age=300)
     def search_channels(self):
-        if app.config.get('ELASTICSEARCH_URL'):
+        if use_elasticsearch():
             ch = ChannelSearch(self.get_locale())
             offset, limit = self.get_page()
             ch.set_paging(offset, limit)
-            ch.add_text('title', _query_term().lower())
+            ch.add_text('title', request.args.get('q', ''))
             ch.add_filter(filters.verified_channel_boost())
+            ch.add_filter(filters.negatively_boost_favourites())
+            ch.add_owner_search(request.args.get('q', ''))
             if request.args.get('order') == 'latest':
                 ch.date_sort('desc')
             channels = ch.channels(with_owners=True)
@@ -73,7 +66,7 @@ class SearchWS(WebService):
         date_order = True if request.args.get('order') == 'latest' else False
         items, total = get_local_channel(self.get_locale(),
                                          self.get_page(),
-                                         query=_query_term(),
+                                         query=request.args.get('q', ''),
                                          date_order=date_order)
         return {'channels': {'items': items, 'total': total}}
 
@@ -86,14 +79,14 @@ class CompleteWS(WebService):
     def complete_video_terms(self):
         # Client should hit youtube service directly because this service
         # is likely to be throttled by IP address
-        result = youtube.complete(_query_term())
+        result = youtube.complete(request.args.get('q', ''))
         return Response(result, mimetype='text/javascript')
 
     @expose_ajax('/channels/', cache_age=3600)
     def complete_channel_terms(self):
         # Use same javascript format as google complete for the sake of
         # consistency with /complete/videos
-        query = _query_term()
+        query = request.args.get('q', '')
         channels = Channel.query.filter(Channel.title.ilike('%s%%' % query)).limit(10)
         result = json.dumps((query, [(c.title, 0, []) for c in channels.values('title')], {}))
         return Response('window.google.ac.h(%s)' % result, mimetype='text/javascript')

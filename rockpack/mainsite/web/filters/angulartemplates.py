@@ -40,3 +40,9 @@ class FullWeb(AJSTemplates):
 
 
 register_filter(FullWeb)
+
+class FrontTemplates(AJSTemplates):
+  name = 'fronttemplate'
+  module_name = 'contentApp'
+
+register_filter(FrontTemplates)

@@ -210,6 +210,61 @@ class ChannelCreateTestCase(base.RockPackTestCase):
                 False,
                 'channel should not be public if privacy is toggled false')
 
+    def test_dupe_channel_untitled(self):
+        with self.app.test_client() as client:
+            user = self.create_test_user()
+
+            r = client.post(
+                '/ws/{}/channels/'.format(user.id),
+                data=json.dumps(dict(
+                    title=app.config['UNTITLED_CHANNEL'] + ' 2',
+                    description='',
+                    category=1,
+                    cover='',
+                    public=False)
+                ),
+                content_type='application/json',
+                headers=[get_auth_header(user.id)]
+            )
+            self.assertEquals(201, r.status_code)
+
+            r = client.post(
+                '/ws/{}/channels/'.format(user.id),
+                data=json.dumps(dict(
+                    title='',
+                    description='',
+                    category=1,
+                    cover='',
+                    public=False)
+                ),
+                content_type='application/json',
+                headers=[get_auth_header(user.id)]
+            )
+            self.assertEquals(201, r.status_code)
+
+            resource = urlsplit(r.headers['Location']).path
+            r = client.get(resource, headers=[get_auth_header(user.id)])
+            self.assertEquals(json.loads(r.data)['title'], app.config['UNTITLED_CHANNEL'] + ' 1')
+
+            r = client.post(
+                '/ws/{}/channels/'.format(user.id),
+                data=json.dumps(dict(
+                    title='',
+                    description='',
+                    category=1,
+                    cover='',
+                    public=False)
+                ),
+                content_type='application/json',
+                headers=[get_auth_header(user.id)]
+            )
+            print r.data
+            self.assertEquals(201, r.status_code)
+
+            resource = urlsplit(r.headers['Location']).path
+            r = client.get(resource, headers=[get_auth_header(user.id)])
+            self.assertEquals(json.loads(r.data)['title'], app.config['UNTITLED_CHANNEL'] + ' 3')
+
     def test_failed_channel_create(self):
         with self.app.test_client() as client:
             user = self.create_test_user()
@@ -287,9 +342,11 @@ class ChannelCreateTestCase(base.RockPackTestCase):
                 r = client.get('/ws/{}/'.format(user.id), headers=[get_auth_header(user_id)])
                 self.assertEquals(200, r.status_code)
                 channels = json.loads(r.data)['channels']
-                self.assertEquals(channels['total'], 4)
-                titles = [c['title'] for c in channels['items']]
-                self.assertEquals(titles, [app.config['FAVOURITE_CHANNEL'][0], 'updated', '2', '0'])
+                titles = ['updated', '2', '0']
+                if user_id == user.id:
+                    # include private
+                    titles.insert(0, app.config['FAVOURITE_CHANNEL'][0])
+                self.assertEquals([c['title'] for c in channels['items']], titles)
 
         # restore date_updated onupdate default
         updated_default.arg, updated_default.is_clause_element = updated_default_bak
@@ -365,7 +422,13 @@ class ChannelCreateTestCase(base.RockPackTestCase):
     def test_naughty_title(self):
         user_id = self.create_test_user().id
         with self.app.test_client() as client:
-            for title, status in [('fuck rockpack', 400), ('FuckRockpack', 400), ('scunthorpe', 201)]:
+            for title, status in [
+                    ('fuck rockpack', 400),
+                    ('FuckRockpack', 400),
+                    ('SHIT', 400),
+                    ('shit!', 400),
+                    ('OK!', 201),
+                    ('scunthorpe', 201)]:
                 r = client.post(
                     '/ws/{}/channels/'.format(user_id),
                     data=json.dumps(dict(title=title, category='', description='', public='', cover='')),

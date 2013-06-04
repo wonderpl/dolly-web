@@ -7,12 +7,3 @@ window.Bookmarklet = angular.module('Bookmarklet', [])
     $routeProvider.when('/done', {templateUrl: 'done.html'})
   ])
   .value('api_urls', window.api_urls)
-
-window.fbAsyncInit = ->
-  FB.init({ appId: 'Your_APP_ID',
-  status: true,
-  cookie: true,
-  xfbml: true,
-  oauth: true})
-
-  showLoader(true)

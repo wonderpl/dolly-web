@@ -14,7 +14,6 @@ window.Bookmarklet.controller('LoginCtrl', ['$scope','$http', '$location', 'cook
         # Saving refresh Token for 1 Month
         cookies.set('refresh_token', data.refresh_token, 2678400)
         cookies.set('user_id', data.user_id, 2678400)
-        console.log 'went ok'
         $location.path('/addtochannel')
         return
       ),
@@ -36,7 +35,6 @@ window.Bookmarklet.controller('LoginCtrl', ['$scope','$http', '$location', 'cook
           )
       else
         # cancelled
-        console.log response
     )
   $scope.close = ->
     window.parent.postMessage('close', '*');
@@ -113,10 +111,20 @@ window.Bookmarklet.controller('DoneCtrl', ['$scope','$http', '$location', 'cooki
 ])
 
 window.Bookmarklet.controller('ResetPasswordCtrl', ['$scope','$http', '$location', 'cookies', 'OAuth', 'User', ($scope, $http, $location, cookies, OAuth, User) ->
+
+  $scope.message = {}
+
   $scope.close = ->
     window.parent.postMessage('close', '*');
 
   $scope.resetPassword = ->
+    $scope.error = ''
     OAuth.resetPassword($scope.username)
+    .success((data) ->
+        $scope.response = {message: "Check your email and follow the instructions", success: true}
+      )
+    .error((data)->
+        $scope.response = {message: "Sorry we did not recognise this username or email", success: false}
+    )
 
 ])
