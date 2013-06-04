@@ -226,7 +226,7 @@ def _notification_list(userid, paging):
     notifications = notifications.offset(offset).limit(limit)
     items = [
         dict(
-            id=notification.id,
+            id=str(notification.id),
             date_created=notification.date_created.isoformat(),
             message_type=notification.message_type,
             # Might be worth optimising this by substituting the
