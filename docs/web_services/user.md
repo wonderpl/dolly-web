@@ -640,7 +640,7 @@ Content-Type: application/json
 
 Parameter      | Required? | Value                     | Description
 :------------- | :-------- | :------------------------ | :----------
-action         | yes       | `star|unstar|view|select` | Specifies the action type
+action         | yes       | `star`¦`unstar`¦`view`¦`select` | Specifies the action type
 video_instance | yes       | instance id               | The id of the video instance that was viewed or starred
 locale         | no        | IETF language tag         | The action will be recorded for the given locale
 
