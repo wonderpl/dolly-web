@@ -1,3 +1,4 @@
+<div ng-controller="PageCtrl">
   <div id="contentproviders">
     <div class="wrapper">
       <h1>CONTENT PROVIDERS</h1>
@@ -150,7 +151,7 @@
         <ul>
           <li>
             <h3>Get the app</h3>
-            <a href="#"><img src="/static/assets/front/images/downloadbig.png"></a>
+            <img src="/static/assets/front/images/downloadbig.png" ng-click="triggerEvent('appStoreButtonClick')">
           </li>
           <li>
             <h3>INSTALL THE BOOKMARKLET</h3>
@@ -159,13 +160,14 @@
           <li>
             <h3>FOLLOW US</h3>
             <ul id="social">
-              <li><a href="http://blog.rockpack.com/" id="blog" target="_blank"></a></li>
-              <li><a href="https://twitter.com/Rockpack" id="twitter" target="_blank"></a></li>
-              <li><a href="http://www.facebook.com/rockpack" id="facebook" target="_blank"></a></li>
-              <li><a href="http://instagram.com/officialrockpack" id="instagram" target="_blank"></a></li>
+              <li ng-click="triggerEvent('followUsButtonClick', 'Blog')"><a href="http://blog.rockpack.com/" id="blog" target="_blank" ></a></li>
+              <li ng-click="triggerEvent('followUsButtonClick', 'Twitter')"><a href="https://twitter.com/Rockpack" id="twitter" target="_blank"></a></li>
+              <li ng-click="triggerEvent('followUsButtonClick', 'Facebook')"><a href="http://www.facebook.com/rockpack" id="facebook" target="_blank"></a></li>
+              <li ng-click="triggerEvent('followUsButtonClick', 'Instagram')"><a href="http://instagram.com/officialrockpack" id="instagram" target="_blank"></a></li>
             </ul>
           </li>
         </ul>
       </div>
     </div>
   </div>
+</div>

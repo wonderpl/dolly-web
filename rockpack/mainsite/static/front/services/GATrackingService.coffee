@@ -1,4 +1,7 @@
-window.contentApp.factory('GATrackingService', () ->
-  console.log 'tracking'
-  return true
+window.contentApp.factory('GATrackingService', ($route) ->
+
+  return {
+    push: () ->
+      return ga('send', 'pageview', $route.current.$route.templateUrl);
+  }
 )

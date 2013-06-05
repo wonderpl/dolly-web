@@ -14,6 +14,7 @@ window.Bookmarklet.controller('LoginCtrl', ['$scope','$http', '$location', 'cook
         # Saving refresh Token for 1 Month
         cookies.set('refresh_token', data.refresh_token, 2678400)
         cookies.set('user_id', data.user_id, 2678400)
+        ga('send', 'event', 'bookmarklet', 'login', 'rockpack')
         $location.path('/addtochannel')
         return
       ),
@@ -30,6 +31,7 @@ window.Bookmarklet.controller('LoginCtrl', ['$scope','$http', '$location', 'cook
           .then((data) ->
             cookies.set('refresh_token', data.data.refresh_token, 2678400)
             cookies.set('user_id', data.data.user_id, 2678400)
+            ga('send', 'event', 'bookmarklet', 'login', 'facebook')
             $location.path('/addtochannel')
             return
           )
@@ -107,6 +109,8 @@ window.Bookmarklet.controller('CreateChannelCtrl', ['$scope','$http', '$location
 window.Bookmarklet.controller('DoneCtrl', ['$scope','$http', '$location', 'cookies', 'OAuth', 'User', ($scope, $http, $location, cookies, OAuth, User) ->
   $scope.close = ->
     window.parent.postMessage('close', '*');
+
+  ga('send', 'event', 'bookmarklet', 'channelUpdated')
 
 ])
 

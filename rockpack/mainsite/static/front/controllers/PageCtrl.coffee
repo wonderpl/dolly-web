@@ -1,10 +1,7 @@
 window.contentApp.controller('PageCtrl', ['isMobile', '$scope', '$location', 'browserServices', (isMobile, $scope, $location, browserServices) ->
 
-
-
-  $scope.$watch("page_name", (newValue, oldValue) ->
-    _gaq.push(['_trackPageview', $scope.page_name])
-  )
+  $scope.triggerEvent = (action, label) ->
+    ga('send', 'event', 'uiAction', action, label)
 
   $scope.browser = browserServices
 

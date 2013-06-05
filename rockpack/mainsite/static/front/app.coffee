@@ -11,7 +11,7 @@ window.contentApp = angular.module('contentApp', [])
   # .constant('isMobile', true)
   .constant('channelData', window.channel_data)
 
-  .config(['$routeProvider', '$interpolateProvider' ,'$compileProvider', 'GATrackingService', ($routeProvider, $interpolateProvider, $compileProvider, GATrackingService) ->
+  .config(['$routeProvider', '$interpolateProvider' ,'$compileProvider', ($routeProvider, $interpolateProvider, $compileProvider) ->
 
     $interpolateProvider.startSymbol('((');
     $interpolateProvider.endSymbol('))');
@@ -19,11 +19,10 @@ window.contentApp = angular.module('contentApp', [])
     $compileProvider.urlSanitizationWhitelist(/^\s*(https?|ftp|mailto|javascript):/)
 
     # Router
-    #, resolve:{trackingCode: GATrackingService}
-    $routeProvider.when('/', {templateUrl: 'home.html'})
-    $routeProvider.when('/jobs', {templateUrl: 'jobs.html'})
-    $routeProvider.when('/people', {templateUrl: 'people.html'})
-    $routeProvider.when('/channel-playbook', {templateUrl: 'channelplaybook.html'})
-    $routeProvider.when('/content-providers', {templateUrl: 'contentproviders.html'})
-    $routeProvider.when('/bookmarklet', {templateUrl: 'bookmarklet.html'})
+    $routeProvider.when('/', {templateUrl: 'home.html', resolve:{trackingCode: (GATrackingService) -> return GATrackingService.push()}})
+    $routeProvider.when('/jobs', {templateUrl: 'jobs.html', resolve:{trackingCode: (GATrackingService) -> return GATrackingService.push()}})
+    $routeProvider.when('/people', {templateUrl: 'people.html', resolve:{trackingCode: (GATrackingService) -> return GATrackingService.push()}})
+    $routeProvider.when('/channel-playbook', {templateUrl: 'channelplaybook.html', resolve:{trackingCode: (GATrackingService) -> return GATrackingService.push()}})
+    $routeProvider.when('/content-providers', {templateUrl: 'contentproviders.html', resolve:{trackingCode: (GATrackingService) -> return GATrackingService.push()}})
+    $routeProvider.when('/bookmarklet', {templateUrl: 'bookmarklet.html', resolve:{trackingCode: (GATrackingService) -> return GATrackingService.push()}})
   ])

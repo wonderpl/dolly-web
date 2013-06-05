@@ -38,6 +38,7 @@ window.Weblight.controller('ChannelCtrl', ['$scope', 'Videos', '$routeParams', '
     return
 
   $scope.setCurrentVideo = (video) ->
+    ga('send', 'event', 'uiAction', 'videoPlayClick')
     $location.search( 'video', video.id );
     return
 
