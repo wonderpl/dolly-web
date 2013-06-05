@@ -136,8 +136,11 @@ class Video(db.Model):
     restrictions = relationship('VideoRestriction', backref='videos',
                                 cascade="all, delete-orphan", passive_deletes=True)
 
-    def __str__(self):
+    def __unicode__(self):
         return self.title
+
+    def __repr__(self):
+        return 'Video(id={v.id!r}, source_videoid={v.source_videoid!r})'.format(v=self)
 
     @property
     def default_thumbnail(self):
@@ -221,6 +224,12 @@ class VideoInstance(db.Model):
     metas = relationship('VideoInstanceLocaleMeta', backref='video_instance_rel', cascade='all,delete')
     category_rel = relationship('Category', backref='video_instance_rel')
 
+    def __unicode__(self):
+        return self.video
+
+    def __repr__(self):
+        return 'VideoInstance(id={v.id!r}, video={v.video!r})'.format(v=self)
+
     @property
     def default_thumbnail(self):
         return self.video_rel.default_thumbnail
@@ -231,9 +240,6 @@ class VideoInstance(db.Model):
 
     def add_meta(self, locale):
         return VideoInstanceLocaleMeta(video_instance=self.id, locale=locale).save()
-
-    def __unicode__(self):
-        return self.video
 
 
 class VideoThumbnail(db.Model):
@@ -286,6 +292,9 @@ class Channel(db.Model):
 
     def __unicode__(self):
         return self.title
+
+    def __repr__(self):
+        return 'Channel(id={c.id!r}, owner={c.owner!r})'.format(c=self)
 
     @classmethod
     def get_form_choices(cls, owner):
