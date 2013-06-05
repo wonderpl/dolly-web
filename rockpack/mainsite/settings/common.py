@@ -27,6 +27,9 @@ GOOGLE_CONSUMER_SECRET = 'ja-jW0BDASKVIwIRFurpCaZi'
 # For google API access:
 GOOGLE_DEVELOPER_KEY = 'AIzaSyAIV4F5dpvDltQpE9CAWipWN57zuT_EIq4'
 
+# For google analytics
+GOOGLE_ANALYTICS_ACCOUNT = 'UA-39188851-2'
+
 ELASTICSEARCH_URL = None
 
 # Client ID for the iOS app
