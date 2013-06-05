@@ -397,14 +397,14 @@ a:link, a:visited, div a {
                   <!-- *|IFNOT:ARCHIVE_PAGE|* -->
                   <td valign="top" width="190">
                     <div>
-                      <center>Is this email not displaying correctly? <a href="*|ARCHIVE|*" target="_blank">View it in your browser</a>.</center>
+                      <center>Is this email not displaying correctly? <a href="http://www.rockpack.com/welcome_email/" target="_blank">View it in your browser</a>.</center>
                     </div>
                   </td>
                   <!-- *|END:IF|* -->
                 </tr>
                 <tr>
                   <td>
-                    <center><img src="images/logo.png"></center>
+                      <center><img src="{{assets}}assets/emails/images/logo.png"></center>
                   </td>
                 </tr>
               </table>
@@ -441,7 +441,7 @@ a:link, a:visited, div a {
                     <table border="0" cellpadding="20" cellspacing="0" width="100%">
                       <tr>
                         <td valign="top">
-                          <img src="images/iphone.jpg" />
+                            <img src="{{assets}}assets/emails/images/iphone.jpg" />
                         </td>
                       </tr>
                     </table>
@@ -499,10 +499,10 @@ a:link, a:visited, div a {
         <table border="0" cellpadding="10" cellspacing="0" width="600" id="footer">
           <tr>
             <td>
-              <p>To ensure our emails reach your inbox please make sure to add notifications@rockpack.com</p>
+              <p>To ensure our emails reach your inbox please make sure to add {{email_sender|e}}</p>
               <p>to your address book or safe list.</p>
-              <p>You are subscribed as {{email}}. <a href="#">Unsubscribe</a> from account emails.</p>
-              <p>Your privacy is important to us, have a read to our <a href="#">privacy policy</a>.</p>
+              <p>You are subscribed as {{email}}.</p>
+              <p>Your privacy is important to us, have a read to our <a href="http://www.rockpack.com/privacy/">privacy policy</a>.</p>
             </td>
           </tr>
         </table>
