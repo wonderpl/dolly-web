@@ -129,7 +129,13 @@ def parse_atom_playlist_data(xml):
     type, id = feed.id.text.split(':', 3)[2:]
     if type == 'user':
         id = id.replace(':', '/')
-    videos = [_get_atom_video_data(e, id) for e in feed.entry]
+    seen = []
+    videos = []
+    for entry in feed.entry:
+        video = _get_atom_video_data(entry, id)
+        if video.source_videoid not in seen:
+            videos.append(video)
+            seen.append(video.source_videoid)
     return Playlist(feed.title.text, len(videos), videos, None)
 
 
