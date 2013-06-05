@@ -1,4 +1,5 @@
 import json
+import time
 from test import base
 from mock import patch
 from test.fixtures import ChannelData, VideoInstanceData
@@ -194,8 +195,12 @@ class TestProfileEdit(base.RockPackTestCase):
 
             from rockpack.mainsite.services.user import commands
             with patch('rockpack.mainsite.core.email.send_email') as send_email:
+                commands.send_registration_emails()
+                self.assertEquals(send_email.call_count, 1)
+                time.sleep(1)
+            with patch('rockpack.mainsite.core.email.send_email') as send_email:
                 user = self.create_test_user()
-                commands.registration_email()
+                commands.send_registration_emails()
                 self.assertEquals(send_email.call_count, 1)
                 assert user.email == send_email.call_args[0][0]
                 assert 'Welcome to Rockpack' == send_email.call_args[0][1]
@@ -204,7 +209,8 @@ class TestProfileEdit(base.RockPackTestCase):
                 assert 'To ensure our emails reach your inbox please make sure to add {}'.format(
                     app.config['DEFAULT_EMAIL_SOURCE']) in send_email.call_args[0][2]
 
+                time.sleep(1)
                 user2 = self.create_test_user()
-                commands.registration_email()
+                commands.send_registration_emails()
                 self.assertEquals(send_email.call_count, 2)
                 assert 'Hi {}'.format(user2.username) in send_email.call_args[0][2]

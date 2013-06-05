@@ -87,8 +87,8 @@ def create_new_notifications(date_from=None, date_to=None):
 env = Environment(loader=PackageLoader('rockpack.mainsite', 'static/assets/emails'))
 
 
-def send_registration_emails(date_from=None, date_to=None):
-    registration_window = User.query
+def create_registration_emails(date_from=None, date_to=None):
+    registration_window = User.query.filter(User.email != None)
     if date_from:
         registration_window = registration_window.filter(User.date_joined >= date_from)
     if date_to:
@@ -96,8 +96,11 @@ def send_registration_emails(date_from=None, date_to=None):
 
     template =  env.get_template('welcome.html')
     for user in registration_window:
-        body = template.render(username=user.username, email=user.email, email_sender=app.config['DEFAULT_EMAIL_SOURCE'])
-        email.send_email(user.email, 'Welcome to Rockpack', body)
+        try:
+            body = template.render(username=user.username, email=user.email, email_sender=app.config['DEFAULT_EMAIL_SOURCE'])
+            email.send_email(user.email, 'Welcome to Rockpack', body, format='html')
+        except Exception as e:
+            app.logger.error("Problem sending registration email for user.id '{}': {}".format(user.id, str(e)))
 
 
 @commit_on_success
@@ -130,15 +133,15 @@ def update_user_notifications():
 
 
 @manager.cron_command
-def registration_email():
+def send_registration_emails():
     """ Send an email based on a template """
     job_control = JobControl.query.get('send_registration_emails')
     if not job_control:
         job_control = JobControl(job='send_registration_emails')
-    now = datetime.now()
+    now = datetime.utcnow()
     logging.info('send_registration_emails: from %s to %s', job_control.last_run, now)
 
-    send_registration_emails(job_control.last_run, now)
+    create_registration_emails(job_control.last_run, now)
 
     job_control.last_run = now
     job_control.save()
