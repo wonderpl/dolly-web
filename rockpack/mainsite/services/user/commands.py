@@ -86,6 +86,8 @@ def create_new_notifications(date_from=None, date_to=None):
 
 env = Environment(loader=PackageLoader('rockpack.mainsite', 'static/assets/emails'))
 
+WELCOME_EMAIL_SUBJECT = 'Welcome to Rockpack'
+
 
 def create_registration_emails(date_from=None, date_to=None):
     registration_window = User.query.filter(User.email != None)
@@ -94,15 +96,17 @@ def create_registration_emails(date_from=None, date_to=None):
     if date_to:
         registration_window = registration_window.filter(User.date_joined < date_to)
 
-    template =  env.get_template('welcome.html')
+    template = env.get_template('welcome.html')
     for user in registration_window:
         try:
             body = template.render(
+                subject=WELCOME_EMAIL_SUBJECT,
                 username=user.username,
                 email=user.email,
                 email_sender=app.config['DEFAULT_EMAIL_SOURCE'],
-                assets=app.config.get('ASSETS_URL', ''))
-            email.send_email(user.email, 'Welcome to Rockpack', body, format='html')
+                assets=app.config.get('ASSETS_URL', '')
+            )
+            email.send_email(user.email, WELCOME_EMAIL_SUBJECT, body, format='html')
         except Exception as e:
             app.logger.error("Problem sending registration email for user.id '{}': {}".format(user.id, str(e)))
 
