@@ -1,5 +1,6 @@
 import json
 from test import base
+from mock import patch, PropertyMock
 from test.fixtures import ChannelData, VideoInstanceData
 from test.test_helpers import get_auth_header
 from test.test_helpers import get_client_auth_header
@@ -185,3 +186,16 @@ class TestProfileEdit(base.RockPackTestCase):
             message = json.loads(notification.message)
             self.assertEquals(message['user']['id'], user.id)
             self.assertEquals(message['video']['id'], video_instance.id)
+
+    def test_email_registration(self):
+        with self.app.test_client():
+            self.app.test_request_context().push()
+            user = self.create_test_user()
+
+            from rockpack.mainsite.services.user import commands
+            with patch('rockpack.mainsite.core.email.send_email') as send_email:
+                commands.send_registration_emails()
+                assert user.email == send_email.call_args[0][0]
+                assert 'Welcome to Rockpack' == send_email.call_args[0][1]
+                assert 'Hi {}'.format(user.username) in send_email.call_args[0][2]
+                assert 'You are subscribed as {}'.format(user.email) in send_email.call_args[0][2]

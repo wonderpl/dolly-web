@@ -3,11 +3,13 @@ from datetime import datetime, timedelta
 from flask import json
 from sqlalchemy import func
 from sqlalchemy.orm import joinedload
+from jinja2 import Environment, PackageLoader
 from rockpack.mainsite import app
 from rockpack.mainsite.manager import manager
 from rockpack.mainsite.core.dbapi import commit_on_success
+from rockpack.mainsite.core import email
 from rockpack.mainsite.services.base.models import JobControl
-from rockpack.mainsite.services.user.models import UserActivity, UserNotification
+from rockpack.mainsite.services.user.models import UserActivity, UserNotification, User
 from rockpack.mainsite.services.video.models import Channel, VideoInstance
 
 
@@ -82,6 +84,22 @@ def create_new_notifications(date_from=None, date_to=None):
                     ))
 
 
+env = Environment(loader=PackageLoader('rockpack.mainsite', 'static/assets/emails'))
+
+
+def send_registration_emails(date_from=None, date_to=None):
+    registration_window = User.query
+    if date_from:
+        registration_window = registration_window.filter(User.date_joined >= date_from)
+    if date_to:
+        registration_window = registration_window.filter(User.date_joined < date_to)
+
+    template =  env.get_template('welcome.html')
+    for user in registration_window:
+        body = template.render(username=user.username, email=user.email)
+        email.send_email(user.email, 'Welcome to Rockpack', body)
+
+
 @commit_on_success
 def remove_old_notifications():
     """Remove old messages but leave at least N notifications per user."""
@@ -106,6 +124,19 @@ def update_user_notifications():
 
     create_new_notifications(job_control.last_run, now)
     remove_old_notifications()
+
+    job_control.last_run = now
+    job_control.save()
+
+
+@manager.cron_command
+def activity_email():
+    """ Send an email based on a template """
+    job_control = JobControl.query.get('send_registration_emails')
+    now = datetime.now()
+    logging.info('send_registration_emails: from %s to %s', job_control.last_run, now)
+
+    send_registration_emails(job_control.last_run, now)
 
     job_control.last_run = now
     job_control.save()
