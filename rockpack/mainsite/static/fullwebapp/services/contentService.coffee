@@ -57,7 +57,7 @@ angular.module('WebApp').factory('ContentService', ($http, locale, apiUrl) ->
         console.log data
       )
 
-    getChannel: (categoryID, start, size) ->
+    getChannel: (start, size, categoryID) ->
       if typeof start == "undefined"
         start = 0
       if typeof size == "undefined"
@@ -68,17 +68,12 @@ angular.module('WebApp').factory('ContentService', ($http, locale, apiUrl) ->
       if typeof categoryID != "undefined"
         dataObj.category = categoryID
 
-        console.log dataObj
-
-
       $http({
       method: 'GET',
-      url: apiUrl.channel_search,
-      url: 'http://myrockpack.com/ws/search/channels/',
+      url: apiUrl.popular_channels,
       params: dataObj,
       })
         .then(((data) ->
-          console.log data.data.channels
           return data.data.channels
         ),
         (data) ->

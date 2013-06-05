@@ -1,6 +1,7 @@
-window.WebApp = angular.module('WebApp', ['infinite-scroll'])
+window.WebApp = angular.module('WebApp', ['infinite-scroll','ui.bootstrap'])
   .config(['$routeProvider', ($routeProvider) ->
     $routeProvider.when('/login', {templateUrl: 'login.html'})
+    $routeProvider.when('/search', {templateUrl: 'search.html'})
     $routeProvider.when('/feed', {
       templateUrl: 'feed.html',
       controller: 'FeedCtrl',

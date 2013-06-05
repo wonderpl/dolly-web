@@ -8,22 +8,35 @@ window.WebApp.controller('ChannelCtrl', ['$scope', 'cookies', 'ContentService', 
     sub: 0
   }
 
+  $scope.load_channels = () ->
+    if $scope.totalChannels > $scope.pagination || $scope.pagination  == 0
+      ContentService.getChannel($scope.pagination, 100, $location.search().catid)
+        .then((data)->
+          if $scope.pagination == 0
+            $scope.channels = data.items
+            $scope.totalChannels = data.total
+          else
+            $scope.channels = $scope.channels.concat(data.items)
+          $scope.pagination += 100
+        )
+
+  $scope.pagination = 0
+  $scope.totalChannels = 0
+
+  $scope.$watch((()-> return $location.search().catid), (newValue, oldValue) ->
+    if newValue != oldValue
+      $scope.pagination = 0
+      $scope.load_channels()
+  )
+
   $scope.categories = ContentService.getCategories()
 
-  if $location.search().catid?
-    $scope.channels = ContentService.getChannel($location.search().catid)
-  else
-    $scope.channels = ContentService.getChannel()
-
-
   $scope.header = (id) ->
+    $location.search("catid=#{id}")
     $scope.menu.main = id
     $scope.menu.sub = 0
-    $location.search("catid=#{id}")
-    $scope.channels = ContentService.getChannel(id)
 
   $scope.subheader = (id) ->
-    $scope.channels = ContentService.getChannel(id)
     $scope.menu.sub = id
     $location.search("catid=#{id}")
 

@@ -10,10 +10,9 @@
       </ul>
     </li>
   </ul>
-
-  <div class="content">
-    <div ng-animate="'animate'" ng-repeat="channel in channels.items">
-      <img ng-src="{{channel.cover.thumbnail_url}}">
+  <div class="content" infinite-scroll="load_channels()" infinite-scroll-distance="1">
+    <div  ng-repeat="channel in channels">
+      <a href="/#channel?{{channel.id}}"><img ng-src="{{channel.cover.thumbnail_url}}"></a>
     </div>
   </div>
 </div>

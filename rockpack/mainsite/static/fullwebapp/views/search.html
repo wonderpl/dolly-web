@@ -1,0 +1,24 @@
+<div ng-controller="SearchCtrl">
+  <div class="wrapper">
+    <input type="text" id="searchfield" ng-model="searchPhrase" typeaheadMinLength="2" typeahead="result for result in searchresults($viewValue)" required ">
+    <input type="submit" ng-click="fetchresults()">
+    </form>
+  </div>
+  <form id=searchform" >
+
+
+  <div class="wrapper">
+    <tabs>
+      <pane heading="Videos">
+        <div ng-repeat="video in videos.videos.items">
+          <img ng-src="{{video.video.thumbnail_url}}">
+        </div>
+      </pane>
+      <pane heading="Channels">
+        <div ng-repeat="channel in channels.channels.items">
+          <a href="/#channel?{{channel.id}}"><img ng-src="{{channel.cover.thumbnail_url}}"></a>
+        </div>
+      </pane>
+    </tabs>
+  </div>
+</div>

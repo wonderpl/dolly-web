@@ -2,13 +2,13 @@
   <h2>Profile View</h2>
   <ul id="userChannels">
     <li><h3>User Channels</h3></li>
-    <li ng-repeat="userchannel in User.details.channels.items">
+    <li ng-repeat="userchannel in User.details.channels.items" id="mychannels">
       <img ng-src="{{userchannel.cover.thumbnail_url}}">
     </li>
   </ul>
   <ul id="userSubscriptions">
     <li><h3>User Subscriptions</h3></li>
-    <li ng-repeat="subscribedchannel in User.details.subscriptions.subscribedChannels.items">
+    <li ng-repeat="subscribedchannel in User.details.subscriptions.subscribedChannels.items" id="mysubscriptions">
       <img ng-src="{{subscribedchannel.cover.thumbnail_url}}">
     </li>
   </ul>
