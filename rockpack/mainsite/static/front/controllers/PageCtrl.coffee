@@ -1,5 +1,11 @@
 window.contentApp.controller('PageCtrl', ['isMobile', '$scope', '$location', 'browserServices', (isMobile, $scope, $location, browserServices) ->
 
+
+
+  $scope.$watch("page_name", (newValue, oldValue) ->
+    _gaq.push(['_trackPageview', $scope.page_name])
+  )
+
   $scope.browser = browserServices
 
   $scope.toggle = (e, hiddenelement) ->
@@ -16,5 +22,5 @@ window.contentApp.controller('PageCtrl', ['isMobile', '$scope', '$location', 'br
 
 
   $scope.injectorUrl = window.injectorUrl
-  console.log $scope.injectorUrl
+
 ])

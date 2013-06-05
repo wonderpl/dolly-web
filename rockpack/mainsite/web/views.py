@@ -35,13 +35,13 @@ def ws_request(url, **kwargs):
 @expose_web('/', 'web/home.html', cache_age=3600)
 def homepage():
     injectorUrl = url_for('injector')
-    return dict(injectorUrl=injectorUrl)
+    return dict(injectorUrl=injectorUrl, ga_tracking=app.config.get('GOOGLE_ANALYTICS_ACCOUNT'))
 
 
 @expose_web('/bookmarklet', 'web/bookmarklet.html', secure=True)
 def bookmarklet():
     api_urls = ws_request('/ws/')
-    return dict(api_urls=api_urls), 200, {'P3P': 'CP="CAO PSA OUR"'}
+    return dict(api_urls=api_urls, ga_tracking=app.config.get('GOOGLE_ANALYTICS_ACCOUNT')), 200, {'P3P': 'CP="CAO PSA OUR"'}
 
 
 @expose_web('/injectorjs', 'web/injector.js', secure=True)
@@ -51,13 +51,12 @@ def injector():
 
 @expose_web('/tos', 'web/terms.html')
 def terms():
-    return None, 200, {}
+    return dict(ga_tracking=app.config.get('GOOGLE_ANALYTICS_ACCOUNT')), 200, {}
 
 
 @expose_web('/privacy', 'web/privacy.html')
 def privacy():
-    api_urls = ws_request('/ws/')
-    return None, 200, {}
+    return dict(ga_tracking=app.config.get('GOOGLE_ANALYTICS_ACCOUNT')), 200, {}
 
 
 @expose_web('/channel/<slug>/<channelid>/', 'web/channel.html', cache_age=3600)
@@ -78,7 +77,7 @@ def channel(slug, channelid):
         'channel', slug=slugify(channel_data['title']) or '-', channelid=channelid)
     if selected_video:
         channel_data['canonical_url'] += '?video=' + selected_video['id']
-    return dict(channel_data=channel_data, selected_video=selected_video)
+    return dict(channel_data=channel_data, selected_video=selected_video, ga_tracking=app.config.get('GOOGLE_ANALYTICS_ACCOUNT'))
 
 
 @expose_web('/s/<linkid>', cache_age=60, cache_private=True)

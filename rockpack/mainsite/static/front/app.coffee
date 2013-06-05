@@ -11,7 +11,7 @@ window.contentApp = angular.module('contentApp', [])
   # .constant('isMobile', true)
   .constant('channelData', window.channel_data)
 
-  .config(['$routeProvider', '$interpolateProvider' ,'$compileProvider', ($routeProvider, $interpolateProvider, $compileProvider) ->
+  .config(['$routeProvider', '$interpolateProvider' ,'$compileProvider', 'GATrackingService', ($routeProvider, $interpolateProvider, $compileProvider, GATrackingService) ->
 
     $interpolateProvider.startSymbol('((');
     $interpolateProvider.endSymbol('))');
@@ -19,6 +19,7 @@ window.contentApp = angular.module('contentApp', [])
     $compileProvider.urlSanitizationWhitelist(/^\s*(https?|ftp|mailto|javascript):/)
 
     # Router
+    #, resolve:{trackingCode: GATrackingService}
     $routeProvider.when('/', {templateUrl: 'home.html'})
     $routeProvider.when('/jobs', {templateUrl: 'jobs.html'})
     $routeProvider.when('/people', {templateUrl: 'people.html'})
