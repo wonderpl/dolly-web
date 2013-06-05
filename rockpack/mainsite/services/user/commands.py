@@ -97,7 +97,11 @@ def create_registration_emails(date_from=None, date_to=None):
     template =  env.get_template('welcome.html')
     for user in registration_window:
         try:
-            body = template.render(username=user.username, email=user.email, email_sender=app.config['DEFAULT_EMAIL_SOURCE'])
+            body = template.render(
+                username=user.username,
+                email=user.email,
+                email_sender=app.config['DEFAULT_EMAIL_SOURCE'],
+                assets=app.config.get('ASSETS_URL', ''))
             email.send_email(user.email, 'Welcome to Rockpack', body, format='html')
         except Exception as e:
             app.logger.error("Problem sending registration email for user.id '{}': {}".format(user.id, str(e)))
