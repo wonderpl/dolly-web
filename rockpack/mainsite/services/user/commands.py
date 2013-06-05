@@ -76,6 +76,9 @@ def create_new_notifications(date_from=None, date_to=None):
                 logging.info('read activity %d: %s: %s', activity.id, action, getattr(object, 'id', None))
                 if object:
                     user, type, body = get_message(activity, object)
+                    if user == activity.user:
+                        # Don't send notifications to self
+                        continue
                     UserNotification.query.session.add(UserNotification(
                         user=user,
                         date_created=activity.date_actioned,
