@@ -1,9 +1,10 @@
 import json
 from test import base
-from mock import patch, PropertyMock
+from mock import patch
 from test.fixtures import ChannelData, VideoInstanceData
 from test.test_helpers import get_auth_header
 from test.test_helpers import get_client_auth_header
+from rockpack.mainsite import app
 from rockpack.mainsite.services.video.models import Channel
 from rockpack.mainsite.services.user.models import User, UserActivity, UserNotification
 from rockpack.mainsite.services.user.commands import create_new_notifications
@@ -190,12 +191,20 @@ class TestProfileEdit(base.RockPackTestCase):
     def test_email_registration(self):
         with self.app.test_client():
             self.app.test_request_context().push()
-            user = self.create_test_user()
 
             from rockpack.mainsite.services.user import commands
             with patch('rockpack.mainsite.core.email.send_email') as send_email:
-                commands.send_registration_emails()
+                user = self.create_test_user()
+                commands.registration_email()
+                self.assertEquals(send_email.call_count, 1)
                 assert user.email == send_email.call_args[0][0]
                 assert 'Welcome to Rockpack' == send_email.call_args[0][1]
                 assert 'Hi {}'.format(user.username) in send_email.call_args[0][2]
                 assert 'You are subscribed as {}'.format(user.email) in send_email.call_args[0][2]
+                assert 'To ensure our emails reach your inbox please make sure to add {}'.format(
+                    app.config['DEFAULT_EMAIL_SOURCE']) in send_email.call_args[0][2]
+
+                user2 = self.create_test_user()
+                commands.registration_email()
+                self.assertEquals(send_email.call_count, 2)
+                assert 'Hi {}'.format(user2.username) in send_email.call_args[0][2]

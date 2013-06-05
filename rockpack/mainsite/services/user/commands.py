@@ -96,7 +96,7 @@ def send_registration_emails(date_from=None, date_to=None):
 
     template =  env.get_template('welcome.html')
     for user in registration_window:
-        body = template.render(username=user.username, email=user.email)
+        body = template.render(username=user.username, email=user.email, email_sender=app.config['DEFAULT_EMAIL_SOURCE'])
         email.send_email(user.email, 'Welcome to Rockpack', body)
 
 
@@ -130,9 +130,11 @@ def update_user_notifications():
 
 
 @manager.cron_command
-def activity_email():
+def registration_email():
     """ Send an email based on a template """
     job_control = JobControl.query.get('send_registration_emails')
+    if not job_control:
+        job_control = JobControl(job='send_registration_emails')
     now = datetime.now()
     logging.info('send_registration_emails: from %s to %s', job_control.last_run, now)
 
