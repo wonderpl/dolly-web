@@ -143,11 +143,13 @@ def update_user_notifications():
 @manager.cron_command
 def send_registration_emails():
     """ Send an email based on a template """
-    job_control = JobControl.query.get('send_registration_emails')
-    if not job_control:
-        job_control = JobControl(job='send_registration_emails')
+    JOB_NAME = 'send_registration_emails'
+    job_control = JobControl.query.get(JOB_NAME)
     now = datetime.utcnow()
-    logging.info('send_registration_emails: from %s to %s', job_control.last_run, now)
+    if not job_control:
+        job_control = JobControl(job=JOB_NAME)
+        job_control.last_run = now
+    logging.info('{}: from {} to {}'.format(JOB_NAME, job_control.last_run, now))
 
     create_registration_emails(job_control.last_run, now)
 

@@ -1,5 +1,6 @@
 import json
 import time
+import cgi
 from test import base
 from mock import patch
 from test.fixtures import ChannelData, VideoInstanceData
@@ -196,9 +197,7 @@ class TestProfileEdit(base.RockPackTestCase):
             from rockpack.mainsite.services.user import commands
             with patch('rockpack.mainsite.core.email.send_email') as send_email:
                 commands.send_registration_emails()
-                self.assertEquals(send_email.call_count, 1)
                 time.sleep(1)
-            with patch('rockpack.mainsite.core.email.send_email') as send_email:
                 user = self.create_test_user()
                 commands.send_registration_emails()
                 self.assertEquals(send_email.call_count, 1)
@@ -207,10 +206,20 @@ class TestProfileEdit(base.RockPackTestCase):
                 assert 'Hi {}'.format(user.username) in send_email.call_args[0][2]
                 assert 'You are subscribed as {}'.format(user.email) in send_email.call_args[0][2]
                 assert 'To ensure our emails reach your inbox please make sure to add {}'.format(
-                    app.config['DEFAULT_EMAIL_SOURCE']) in send_email.call_args[0][2]
+                    cgi.escape(app.config['DEFAULT_EMAIL_SOURCE'])) in send_email.call_args[0][2]
 
                 time.sleep(1)
                 user2 = self.create_test_user()
                 commands.send_registration_emails()
                 self.assertEquals(send_email.call_count, 2)
                 assert 'Hi {}'.format(user2.username) in send_email.call_args[0][2]
+
+                time.sleep(1)
+                user1 = self.create_test_user()
+                user2 = self.create_test_user()
+
+                user1.email = 'sadsadsadasdsadas'
+                user1.save()
+
+                commands.send_registration_emails()
+                self.assertEquals(send_email.call_count, 4)
