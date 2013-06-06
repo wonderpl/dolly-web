@@ -1,4 +1,5 @@
 import logging
+from datetime import datetime
 from collections import namedtuple
 import gdata.youtube
 import gdata.data
@@ -13,6 +14,10 @@ GDATA_URL = 'http://gdata.youtube.com/feeds/api/%s/%s'
 PushConfig = namedtuple('PushConfig', 'hub topic')
 Playlist = namedtuple('Playlist', 'title video_count videos push_config')
 Videolist = namedtuple('Videolist', 'video_count videos')
+
+
+def _parse_datetime(dt):
+    return datetime.strptime(dt[:19], '%Y-%m-%dT%H:%M:%S')
 
 
 def _youtube_feed_requests(feed, id, params=None, content=None):
@@ -103,6 +108,7 @@ def _get_atom_video_data(youtube_data, playlist=None):
         source_videoid=media.FindExtensions('videoid')[0].text,
         source_listid=playlist,
         source_username=youtube_data.author[0].name.text,
+        date_published=_parse_datetime(youtube_data.published.text),
         title=youtube_data.title.text,
         duration=int(media.duration.seconds) if media.duration else 0,
     )
@@ -150,6 +156,7 @@ def _get_video_data(youtube_data, playlist=None):
         source_videoid=media['yt$videoid']['$t'],
         source_listid=playlist,
         source_username=youtube_data['author'][0]['name']['$t'],
+        date_published=_parse_datetime(youtube_data['published']['$t']),
         title=youtube_data['title']['$t'],
         duration=int(media['yt$duration']['seconds']) if 'yt$duration' in media else -1,
     )
