@@ -255,7 +255,7 @@ def get_user_data(id, fetch_all_videos=False):
     return get_playlist_data('%s/uploads' % id, fetch_all_videos, 'users')
 
 
-def search_v2(query, order=None, start=0, size=10, region=None, client_address=None, safe_search='strict'):
+def search_v2(query, order=None, start=0, size=10, region=None, client_address=None):
     params = {
         'q': query,
         'orderby': order,
@@ -263,7 +263,7 @@ def search_v2(query, order=None, start=0, size=10, region=None, client_address=N
         'max-results': size,
         'region': region,
         'restriction': client_address,
-        'safeSearch': safe_search,
+        'safeSearch': app.config.get('YOUTUBE_SAFESEARCH'),
     }
     data = _youtube_feed('videos', '', params)['feed']
     total = data['openSearch$totalResults']['$t']
@@ -271,7 +271,7 @@ def search_v2(query, order=None, start=0, size=10, region=None, client_address=N
     return Videolist(total, [v for v in videos if not v.restricted])
 
 
-def search_v3(query, order=None, start=0, size=10, region=None, client_address=None, safe_search='strict'):
+def search_v3(query, order=None, start=0, size=10, region=None, client_address=None):
     # new http instance required for thread-safety
     if not hasattr(_youtube_search_http, 'value'):
         _youtube_search_http.value = httplib2.Http()
@@ -284,7 +284,7 @@ def search_v3(query, order=None, start=0, size=10, region=None, client_address=N
         maxResults=size,
         regionCode=region,
         userIp=client_address,
-        safeSearch=safe_search,
+        safeSearch=app.config.get('YOUTUBE_SAFESEARCH'),
         videoEmbeddable='true',
     ).execute(http=_youtube_search_http.value)
     total = data['pageInfo']['totalResults']
