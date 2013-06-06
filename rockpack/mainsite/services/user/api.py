@@ -717,7 +717,7 @@ class UserWS(WebService):
         if subscriptions.count():
             channels = [s[0] for s in subscriptions.values('channel')]
             items, total = video_api.get_local_channel(
-                self.get_locale(), self.get_page(), channels=channels)
+                self.get_locale(), self.get_page(), channels=channels, date_order=True)
         else:
             items, total = [], 0
         for item in items:
