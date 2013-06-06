@@ -286,6 +286,8 @@ class ChannelSearch(EntitySearch, CategoryMixin, MediaSortMixin):
         if with_videos and channel_id_list:
             vs = VideoSearch(self.locale)
             vs.add_term('channel', channel_id_list)
+            vs.add_sort('position', 'asc')
+            vs.date_sort('desc')
             vs.set_paging(offset=self.paging[0], limit=self.paging[1])
             video_map = {}
             for v in vs.videos():
