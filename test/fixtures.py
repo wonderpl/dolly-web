@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import datetime, date
 from fixture import DataSet
 from fixture import SQLAlchemyFixture
 
@@ -237,36 +237,42 @@ class VideoData(DataSet):
         title = 'A video'
         source = 1
         source_videoid = 'xxx'
+        date_published = datetime(2013, 1, 1, 0, 0, 0)
 
     class video2:
         id = 'RP000001BM5SNPLFSO4UKGVWVI4PKAY3S7WOTZQ4'
         title = 'Primer'
         source = 1
         source_videoid = 'xax'
+        date_published = datetime(2013, 1, 1, 0, 0, 0)
 
     class video3:
         id = 'RP000001ZQAIPJR6SDHKJLDHJKNPBOH6YXPLSOFZ'
         title = 'Another 48hrs'
         source = 1
         source_videoid = 'xxg'
+        date_published = datetime(2013, 1, 1, 0, 0, 0)
 
     class video4:
         id = 'RP000001DEZDWWGBIGYZ6W7T7PWYHAUV66SLRC35'
         title = 'Aliens'
         source = 1
         source_videoid = 'xqx'
+        date_published = datetime(2013, 1, 1, 0, 0, 0)
 
     class video5:
         id = 'RP000001AVL4XQTZAZV4BG6UE4ZFHMQLPAAR7DVL'
         title = 'Predator'
         source = 1
         source_videoid = 'xwx'
+        date_published = datetime(2013, 1, 1, 0, 0, 0)
 
     class video6:
         id = 'RP000001EWZR7BWQLFNDVZOIUIMAAIFUN5DGOSET'
         title = 'Office Space'
         source = 1
         source_videoid = 'xdx'
+        date_published = datetime(2013, 1, 1, 0, 0, 0)
 
 
 class VideoInstanceData(DataSet):

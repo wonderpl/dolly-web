@@ -120,6 +120,7 @@ class Video(db.Model):
     source_videoid = Column(String(128), nullable=False)
     source_listid = Column(String(128), nullable=True)
     source_username = Column(String(128), nullable=True)
+    date_published = Column(DateTime(), nullable=False)
     date_added = Column(DateTime(), nullable=False, default=func.now())
     date_updated = Column(DateTime(), nullable=False, default=func.now(), onupdate=func.now())
     duration = Column(Integer, nullable=False, server_default='0')

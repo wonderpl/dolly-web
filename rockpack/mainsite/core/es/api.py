@@ -288,6 +288,7 @@ class ChannelSearch(EntitySearch, CategoryMixin, MediaSortMixin):
             vs.add_term('channel', channel_id_list)
             vs.add_sort('position', 'asc')
             vs.date_sort('desc')
+            vs.add_sort('video.date_published', 'desc')
             vs.set_paging(offset=self.paging[0], limit=self.paging[1])
             video_map = {}
             for v in vs.videos():
@@ -493,6 +494,7 @@ def add_video_to_index(video_instance, bulk=False, refresh=False, no_check=False
             source=video_instance.video_rel.source,
             source_id=video_instance.video_rel.source_videoid,
             source_username=video_instance.video_rel.source_username,
+            date_published=video_instance.video_rel.date_published,
             duration=video_instance.video_rel.duration),
         title=video_instance.video_rel.title,
         channel=video_instance.channel,
