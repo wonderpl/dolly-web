@@ -33,4 +33,11 @@ window.Weblight.controller('AppCtrl', ['$routeParams', 'isMobile', '$scope', '$l
     return
   )
 
+  if typeof channel_data.category != "undefined"
+    ga('send', 'pageview', {
+      'dimension1':  channel_data.category
+    })
+  else
+    ga('send', 'pageview')
+
 ])
