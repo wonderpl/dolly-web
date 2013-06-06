@@ -21,7 +21,7 @@ def cover_art_response(covers, paging, own=False):
     total = covers.count()
     offset, limit = paging
     items = [dict(position=position, **cover_art_dict(cover_art, own))
-             for position, cover_art in enumerate(covers.offset(offset).limit(limit))]
+             for position, cover_art in enumerate(covers.offset(offset).limit(limit), offset)]
     return dict(cover_art=dict(items=items, total=total))
 
 

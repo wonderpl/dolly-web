@@ -3,11 +3,13 @@ from datetime import datetime, timedelta
 from flask import json
 from sqlalchemy import func
 from sqlalchemy.orm import joinedload
+from jinja2 import Environment, PackageLoader
 from rockpack.mainsite import app
 from rockpack.mainsite.manager import manager
 from rockpack.mainsite.core.dbapi import commit_on_success
+from rockpack.mainsite.core import email
 from rockpack.mainsite.services.base.models import JobControl
-from rockpack.mainsite.services.user.models import UserActivity, UserNotification
+from rockpack.mainsite.services.user.models import UserActivity, UserNotification, User
 from rockpack.mainsite.services.video.models import Channel, VideoInstance
 
 
@@ -74,12 +76,42 @@ def create_new_notifications(date_from=None, date_to=None):
                 logging.info('read activity %d: %s: %s', activity.id, action, getattr(object, 'id', None))
                 if object:
                     user, type, body = get_message(activity, object)
+                    if user == activity.user:
+                        # Don't send notifications to self
+                        continue
                     UserNotification.query.session.add(UserNotification(
                         user=user,
                         date_created=activity.date_actioned,
                         message_type=type,
                         message=json.dumps(body, separators=(',', ':')),
                     ))
+
+
+env = Environment(loader=PackageLoader('rockpack.mainsite', 'static/assets/emails'))
+
+WELCOME_EMAIL_SUBJECT = 'Welcome to Rockpack'
+
+
+def create_registration_emails(date_from=None, date_to=None):
+    registration_window = User.query.filter(User.email != None)
+    if date_from:
+        registration_window = registration_window.filter(User.date_joined >= date_from)
+    if date_to:
+        registration_window = registration_window.filter(User.date_joined < date_to)
+
+    template = env.get_template('welcome.html')
+    for user in registration_window:
+        try:
+            body = template.render(
+                subject=WELCOME_EMAIL_SUBJECT,
+                username=user.username,
+                email=user.email,
+                email_sender=app.config['DEFAULT_EMAIL_SOURCE'],
+                assets=app.config.get('ASSETS_URL', '')
+            )
+            email.send_email(user.email, WELCOME_EMAIL_SUBJECT, body, format='html')
+        except Exception as e:
+            app.logger.error("Problem sending registration email for user.id '{}': {}".format(user.id, str(e)))
 
 
 @commit_on_success
@@ -106,6 +138,23 @@ def update_user_notifications():
 
     create_new_notifications(job_control.last_run, now)
     remove_old_notifications()
+
+    job_control.last_run = now
+    job_control.save()
+
+
+@manager.cron_command
+def send_registration_emails():
+    """ Send an email based on a template """
+    JOB_NAME = 'send_registration_emails'
+    job_control = JobControl.query.get(JOB_NAME)
+    now = datetime.utcnow()
+    if not job_control:
+        job_control = JobControl(job=JOB_NAME)
+        job_control.last_run = now
+    logging.info('{}: from {} to {}'.format(JOB_NAME, job_control.last_run, now))
+
+    create_registration_emails(job_control.last_run, now)
 
     job_control.last_run = now
     job_control.save()

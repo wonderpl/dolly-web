@@ -222,10 +222,9 @@ class ChannelSearch(EntitySearch, CategoryMixin, MediaSortMixin):
             channel['owner'] = owners[channel['owner']]
 
     @classmethod
-    def add_videos_to_channels(cls, channels, videos):
-        for channel in channels:
-            channel.setdefault('videos', {}).setdefault('items', videos.get(channel['id'], []))
-            channel['videos']['total'] = len(channel['videos']['items'])
+    def add_videos_to_channel(cls, channel, videos, total):
+        channel.setdefault('videos', {}).setdefault('items', videos.get(channel['id'], []))
+        channel['videos']['total'] = total
 
     def _format_results(self, channels, with_owners=False, with_videos=False):
         channel_list = []
@@ -287,11 +286,11 @@ class ChannelSearch(EntitySearch, CategoryMixin, MediaSortMixin):
         if with_videos and channel_id_list:
             vs = VideoSearch(self.locale)
             vs.add_term('channel', channel_id_list)
-            vs.set_paging(*with_videos)
+            vs.set_paging(offset=self.paging[0], limit=self.paging[1])
             video_map = {}
             for v in vs.videos():
                 video_map.setdefault(channel_id_list[0], []).append(v) # HACK: see above
-            self.add_videos_to_channels(channel_list, video_map)
+            self.add_videos_to_channel(channel_list[0], video_map, vs.total)
         return channel_list
 
     def channels(self, with_owners=False, with_videos=False):

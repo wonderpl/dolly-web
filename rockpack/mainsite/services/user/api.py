@@ -574,7 +574,8 @@ class UserWS(WebService):
         if use_elasticsearch():
             ch = api.ChannelSearch(self.get_locale())
             ch.add_id(channelid)
-            if not ch.channels(with_videos=self.get_page(), with_owners=True):
+            ch.set_paging(self.get_page()[0], self.get_page()[1])
+            if not ch.channels(with_videos=True, with_owners=True):
                 abort(404)
             return ch.channels()[0]
 
