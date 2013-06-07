@@ -142,7 +142,8 @@ def save_video_activity(userid, action, instance_id, locale):
             if action == 'unstar':
                 channel.remove_videos([video_id])
             else:
-                channel.add_videos([video_id])
+                # Return new instance here so that it can be shared
+                return channel.add_videos([video_id])[0]
 
 
 @commit_on_success

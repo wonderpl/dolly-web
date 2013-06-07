@@ -344,6 +344,8 @@ class Channel(db.Model):
             self.public = True
             self.save()
 
+        return instances
+
     def remove_videos(self, video_ids):
         VideoInstance.query.filter_by(channel=self.id).filter(VideoInstance.video.in_(video_ids)).delete(synchronize_session=False)
 
