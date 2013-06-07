@@ -713,11 +713,15 @@ class UserWS(WebService):
 
     @expose_ajax('/<userid>/subscriptions/')
     def get_subscriptions(self, userid):
-        subscriptions = user_subscriptions(userid).order_by('date_created desc')
+        subscriptions = user_subscriptions(userid)
         if subscriptions.count():
-            channels = [s[0] for s in subscriptions.values('channel')]
+            subs = {s[0]: s[1] for s in subscriptions.values('channel', 'date_created')}
+
             items, total = video_api.get_local_channel(
-                self.get_locale(), self.get_page(), channels=channels)
+                self.get_locale(), self.get_page(), channels=subs.keys())
+
+            x = sorted([(subs[i['id']], i) for i in items], reverse=True)
+            items = [item for date, item in x]
         else:
             items, total = [], 0
         for item in items:
