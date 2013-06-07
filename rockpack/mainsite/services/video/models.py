@@ -344,7 +344,10 @@ class Channel(db.Model):
             self.public = True
             self.save()
 
-        return instances
+        # Get list of instance ids for requested videos
+        # XXX: Returning instance here too because id won't be set until after commit
+        return [existing[v] for v in videos if v in existing] +\
+            [j for j in instances if j.video not in existing]
 
     def remove_videos(self, video_ids):
         VideoInstance.query.filter_by(channel=self.id).filter(VideoInstance.video.in_(video_ids)).delete(synchronize_session=False)

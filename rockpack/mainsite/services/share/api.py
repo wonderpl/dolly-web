@@ -30,7 +30,8 @@ class ShareForm(wtf.Form):
             if field.data.startswith(VIDEO_INSTANCE_PREFIX):
                 # This is a video from search - we need to create a new
                 # video instance in the user's favourites channel
-                field.data = save_video_activity(self._user, 'star', field.data, self._locale).id
+                instance = save_video_activity(self._user, 'star', field.data, self._locale)
+                field.data = getattr(instance, 'id', instance)
 
             object = object_type.query.filter_by(id=field.data).first()
             if not object:
