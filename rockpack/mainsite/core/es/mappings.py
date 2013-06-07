@@ -79,33 +79,13 @@ user_mapping = {
             "type": "string",
             "index": "not_analyzed"},
         "display_name": {
-            "type": "string",
-            "analyzer": "full_phrase"},
+            "type": "string"},
         "username": {
-            "type": "string",
-            "index": "not_analyzed"},
+            "type": "string"},
         "id": {
             "type": "string",
             "index": "not_analyzed"
         },
-    }
-}
-
-user_settings = {
-    "settings": {
-        "analysis": {
-            "filter": {
-            },
-            "analyzer": {
-                "full_phrase": {
-                    "filter": [
-                        "lowercase"
-                    ],
-                    "type": "custom",
-                    "tokenizer": "keyword"
-                }
-            }
-        }
     }
 }
 
@@ -124,6 +104,10 @@ channel_mapping = {
         "editorial_boost": {"type": "float", "null_value": 1.0},
         "favourite": {"type": "boolean"},
         "verified": {"type": "boolean"},
+        "keywords": {
+            "type": "string",
+            "index": "not_analyzed"
+        },
         "ecommerce_url": {
             "type": "string",
             "index": "not_analyzed"

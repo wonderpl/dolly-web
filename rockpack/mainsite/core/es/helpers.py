@@ -26,8 +26,7 @@ class Indexing(object):
             'user': {
                 'index': mappings.USER_INDEX,
                 'type': mappings.USER_TYPE,
-                'mapping': mappings.user_mapping,
-                'settings': mappings.user_settings
+                'mapping': mappings.user_mapping
             },
         }
 
@@ -39,7 +38,7 @@ class Indexing(object):
         if rebuild:
             self.delete_index(index)
         app.logger.debug('creating {} index {}'.format(index, self.indexes[index]['index']))
-        self.conn.indices.create_index(self.indexes[index]['index'], settings=self.indexes[index].get('settings'))
+        self.conn.indices.create_index(self.indexes[index]['index'])
 
     def create_all_indexes(self, rebuild=False):
         for index in self.indexes.keys():

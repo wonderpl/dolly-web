@@ -471,7 +471,7 @@ def add_channel_to_index(channel, bulk=False, refresh=False, boost=None, no_chec
             thumbnail_url=urlparse(convert(channel, 'cover', 'CHANNEL').url).path,
             aoi=channel.cover_aoi
         ),
-        keywords=[channel.owner_rel.display_name, channel.owner_rel.username]
+        keywords=[channel.owner_rel.display_name.lower(), channel.owner_rel.username.lower()]
     )
 
     if app.config.get('SHOW_OLD_CHANNEL_COVER_URLS', True):
