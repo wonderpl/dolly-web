@@ -18,6 +18,8 @@ window.contentApp.controller('PageCtrl', ['isMobile', '$scope', '$location', 'br
       $(e.currentTarget).children(".btntext").html('Read More')
 
 
+  console.log window.assets_url
+  $scope.assets_url = window.assets_url
   $scope.injectorUrl = window.injectorUrl
 
 ])

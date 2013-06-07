@@ -40,4 +40,6 @@ window.Weblight.controller('AppCtrl', ['$routeParams', 'isMobile', '$scope', '$l
   else
     ga('send', 'pageview')
 
+  $scope.assets_url = assets_url
+
 ])

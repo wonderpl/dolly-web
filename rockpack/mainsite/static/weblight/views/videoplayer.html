@@ -1,7 +1,7 @@
 <div ng-controller="VideoCtrl" id="lightbox">
   <div id="playercontainer">
     <div id="playerheader" class="hidden-phone">
-      <img src="/static/assets/weblight/images/closeplayer.jpg" id="closeplayer" ng-click="hide()">
+      <img ng-src="((assets_url))/assets/weblight/images/closeplayer.jpg" id="closeplayer" ng-click="hide()">
       <div id="videotitle">((videodata.title | truncate: 45))</div>
     </div>
     <div id="player"></div>
@@ -17,7 +17,7 @@
         </li>
       </ul>
       <div id="closeplayermobile">
-        <img src="/static/assets/weblight/images/closeplayer_mobile.png" ng-click="hide()">
+        <img ng-src="((assets_url))/assets/weblight/images/closeplayer_mobile.png" ng-click="hide()">
       </div>
     </div>
   </div>

@@ -52,15 +52,16 @@
     <script type="text/javascript" src="{{ ASSET_URL }}"></script>
     {% endassets %}
 
-  <script>
-    injectorUrl = '{{injectorUrl}}';
+  <script type="text/javascript">
+    var injectorUrl = '{{injectorUrl}}',
+        assets_url = '{{config.ASSETS_URL}}';
   </script>
 
   </head>
   <body >
     <div id="header">
       <div class="wrapper">
-        <img src="/static/assets/weblight/images/logo.png">
+        <img src="{{config.ASSETS_URL}}/assets/weblight/images/logo.png">
       </div>
     </div>
 
@@ -71,7 +72,7 @@
           <div class="headline">
             <h1>WHAT’S ON YOUR CHANNEL?</h1>
             <h2>The app that makes it easy to create, share and subscribe to personalized video channels. Add your favorite videos from across the web with just one tap.</h2>
-            <img src="/static/assets/front/images/downloadbig.png">
+            <img src="{{config.ASSETS_URL}}/assets/front/images/downloadbig.png">
           </div>
         </div>
         <div class="ipadscontainer hidden-phone">
@@ -81,11 +82,11 @@
 
       <div id="iphone-instructions" class="wrapper visible-phone">
         <div class="imgcontainer">
-          <img src="/static/assets/front/images/iphone-mobile.png">
+          <img src="{{config.ASSETS_URL}}/assets/front/images/iphone-mobile.png">
         </div>
         <div class="container">
           <div class="plus">
-            <img src="/static/assets/front/images/plus.png">
+            <img src="{{config.ASSETS_URL}}/assets/front/images/plus.png">
             <p>Tap the + to add videos<br>to your channels.</p>
           </div>
           <div class="text">
@@ -102,7 +103,7 @@
       <div class="wrapper hidden-phone">
         <div id="video">
           <div>
-            <img src="/static/assets/front/images/play.png" id="play">
+            <img src="{{config.ASSETS_URL}}/assets/front/images/play.png" id="play">
             <h2>Life is everyday curation.</h2>
           </div>
         </div>
@@ -113,7 +114,7 @@
         <div id="addvideo">
           <div id="iphone1"></div>
           <div class="plus">
-            <img src="/static/assets/front/images/plus.png">
+            <img src="{{config.ASSETS_URL}}/assets/front/images/plus.png">
             <p>Tap the + to add videos to your<br>channels.</p>
           </div>
         </div>
@@ -140,7 +141,7 @@
           <ul>
             <li>
               <h3>Get the app</h3>
-              <a href="#"><img src="/static/assets/front/images/downloadbig.png" id="gettheapp"></a>
+              <a href="#"><img src="{{config.ASSETS_URL}}/assets/front/images/downloadbig.png" id="gettheapp"></a>
             </li>
             <li class="visible-desktop">
               <h3>INSTALL THE BOOKMARKLET</h3>
@@ -170,7 +171,7 @@
           <li class="hidden-phone"><a href="#/content-providers">Content Providers</a></li>
           <li class="hidden-phone"><a href="#/channel-playbook">Channel Playbook</a></li>
         </ul>
-        <div class="rights">By using Rockpack, you agree to our <a href="">terms of services</a> and <a href="">privacy policy</a>. All rights reserverd Rockpack ltd 2013.</div>
+        <div class="rights">By using Rockpack, you agree to our <a href="/tos">terms of services</a> and <a href="/privacy">privacy policy</a>. All rights reserverd Rockpack ltd 2013.</div>
       </div>
     </footer>
 
