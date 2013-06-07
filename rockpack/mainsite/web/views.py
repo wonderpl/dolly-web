@@ -3,6 +3,7 @@ from urlparse import urljoin
 import pyes
 from flask import request, json, render_template, abort
 from flask.ext import wtf
+from werkzeug.exceptions import NotFound
 from rockpack.mainsite import app, requests
 from rockpack.mainsite.core.token import parse_access_token
 from rockpack.mainsite.core.webservice import JsonReponse
@@ -69,10 +70,14 @@ def channel(slug, channelid):
                 selected_video = instance
         # Not in the first 40 - try fetching separately:
         if not selected_video:
-            video_data = ws_request(
-                '/ws/-/channels/%s/videos/%s/' % (channelid, request.args['video']))
-            if 'error' not in video_data:
-                selected_video = video_data
+            try:
+                video_data = ws_request(
+                    '/ws/-/channels/%s/videos/%s/' % (channelid, request.args['video']))
+            except NotFound:
+                pass
+            else:
+                if 'error' not in video_data:
+                    selected_video = video_data
     channel_data['canonical_url'] = url_for(
         'channel', slug=slugify(channel_data['title']) or '-', channelid=channelid)
     if selected_video:
