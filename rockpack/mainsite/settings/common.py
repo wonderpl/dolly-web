@@ -73,7 +73,7 @@ ASSETS_AUTO_BUILD = False
 UNTITLED_CHANNEL = 'Untitled'
 
 # Title, description, and cover image for default favourites channel
-FAVOURITE_CHANNEL = 'Favorites', 'My favorite videos', 'fav1.jpg'
+FAVOURITE_CHANNEL = 'Favorites', 'My favorite videos', 'fav2.jpg'
 
 # Mapping from share object type to message (can have formatting)
 SHARE_MESSAGE_MAP = dict(
