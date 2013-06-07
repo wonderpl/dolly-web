@@ -335,6 +335,7 @@ class VideoSearch(EntitySearch, CategoryMixin, MediaSortMixin):
                     star_count=v['locales'][self.locale]['star_count'],
                     source=['rockpack', 'youtube'][v.video.source],
                     source_id=v.video.source_id,
+                    source_username=v.video.source_username,
                     duration=v.video.duration,
                     thumbnail_url=urljoin(app.config.get('IMAGE_CDN', ''), v.video.thumbnail_url) if v.video.thumbnail_url else '',
                 ),
