@@ -126,7 +126,6 @@ channel_mapping = {
             "analyzer": "snowball"
         },
         "cover": {
-            "type": "object",
             "properties": {
                 "thumbnail_url": {
                     "type": "string",

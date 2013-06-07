@@ -38,7 +38,7 @@ def channel_dict(channel, with_owner=True, owner_url=False):
             id=channel.owner_rel.id,
             resource_url=channel.owner_rel.get_resource_url(owner_url),
             display_name=channel.owner_rel.display_name,
-            avatar_thumbnail_url=channel.owner_rel.avatar.thumbnail_small,
+            avatar_thumbnail_url=channel.owner_rel.avatar.thumbnail_medium,
         )
     if owner_url:
         ch_data['public'] = channel.public
