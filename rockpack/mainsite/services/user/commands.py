@@ -19,7 +19,7 @@ def activity_user(activity):
         id=activity.actor.id,
         resource_url=activity.actor.get_resource_url(),
         display_name=activity.actor.display_name,
-        avatar_thumbnail_url=activity.actor.avatar.thumbnail_small,
+        avatar_thumbnail_url=activity.actor.avatar.thumbnail_medium,
     )
 
 
@@ -29,7 +29,7 @@ def subscribe_message(activity, channel):
         channel=dict(
             id=channel.id,
             resource_url=channel.get_resource_url(True),
-            thumbnail_url=channel.cover.thumbnail_small,
+            thumbnail_url=channel.cover.thumbnail_medium,
         )
     )
 
