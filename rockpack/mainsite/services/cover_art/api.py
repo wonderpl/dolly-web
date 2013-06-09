@@ -35,7 +35,7 @@ class CoverArtWS(WebService):
         query = RockpackCoverArt.query.\
             filter(RockpackCoverArt.locale.in_(('', self.get_locale()))).\
             filter(RockpackCoverArt.priority != -1).\
-            order_by(desc('priority'))
+            order_by(desc('priority'), 'id')
         if request.args.get('category'):
             query = query.filter_by(category=request.args.get('category'))
         return cover_art_response(query, self.get_page())
