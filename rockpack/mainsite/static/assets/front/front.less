@@ -28,7 +28,7 @@
 .wrapper {
   margin: 0 auto;
   position: relative;
-  width: 860px;
+  width: 960px;
   .clearfix();
 }
 
@@ -61,7 +61,7 @@ body {
     width: 587px;
     height: 360px;
     position: absolute;
-    right: 0;
+    right: 15px;
     text-align: right;
     bottom: 15px;
     background: url(/static/assets/front/images/ipads.png) no-repeat;
@@ -71,7 +71,7 @@ body {
     width: 960px;
     height: 397px;
     position: absolute;
-    top: 85px;
+    top: 130px;
     margin-left: -480px;
     left: 50%;
 
@@ -80,7 +80,7 @@ body {
       color: #fff;
 
       img {
-        margin-top: 285px;
+        margin-top: 185px;
       }
     }
 
@@ -96,8 +96,8 @@ body {
 
   h2 {
     font-family: "dn-regular";
-    font-size: 20px;
-    line-height: 20px;
+    font-size: 24px;
+    line-height: 34px;
     margin-top: 30px;
     text-shadow: 0px 3px 5px rgba(0,0,0,0.6);
     font-weight: normal;
@@ -118,21 +118,25 @@ body {
   }
 }
 
-#video {
+.video-container {
+  background-color: #282d33;
   margin-top: 30px;
+}
+
+#video {
   position: relative;
   color: #fff;
   background: url(/static/assets/front/images/video.jpg) no-repeat;
-  background-size: cover;
-  height: 374px;
+  height: 397px;
+  width: 705px;
 
   &>div {
     text-align: center;
-    padding-top: 127px;
+    padding-top: 70px;
   }
 
   h2 {
-    margin-top: 55px;
+    margin-top: 70px;
     font-size: 30px;
     font-family: "dn-regular";
     text-transform: uppercase;
@@ -278,7 +282,6 @@ body {
 
     & > li {
       float: left;
-      width: 33%;
       border-right: 1px solid #ddd;
 
       &:first-child {
@@ -294,6 +297,7 @@ body {
         font-size: 20px;
         font-family: "dn-regular";
         text-transform: uppercase;
+        margin-bottom: 30px;
       }
     }
   }
@@ -319,7 +323,7 @@ footer {
   ul {
     list-style: none;
     .clearfix();
-    margin: 0 0 0 35px;
+    margin: 0 0 30px 35px;
     display: inline-block;
 
     li {
@@ -330,24 +334,18 @@ footer {
     }
   }
 
-  .wrapper {
-    ul {
-      margin: 0;
-    }
-  }
-
   .rights {
-    text-align: center;
-    margin-top: 30px;
+    text-align: right;
+    margin-top: 10px;
   }
 
   a, a:visited, a:active {
-    color: #1cb9be;
+    color: #0ba6ab;
     text-decoration: none;
   }
 
   a:hover {
-    color: #1cb9be;
+    color: #0ba6ab;
     text-decoration: underline;
   }
 
@@ -612,7 +610,7 @@ footer {
         }
 
         blockquote {
-          background: #1cb9be;
+          background: #0ba6ab;
           display: block;
           border: none;
           color: #fff;
@@ -860,18 +858,18 @@ footer {
 #share {
   background: #f0f0f0;
   text-align: center;
-  padding: 60px 0;
+  padding: 70px 0 55px 0;
 
 
   .wrapper > ul {
     list-style-type: none;
-    margin: 60px 0 15px 0;
+    margin: 0;
     .clearfix();
 
     & > li {
       float: left;
-      width: 33%;
       border-right: 1px solid #ddd;
+      padding: 20px;
 
       &:first-child {
         border-left: 0;
@@ -985,6 +983,13 @@ footer {
 
   .wrapper {
     width: 1100px;
+  }
+
+  #whatson {
+
+    .abs-wrapper {
+      margin-left: -557px;
+    }
   }
 
   #iphones {
@@ -1109,13 +1114,20 @@ footer {
 
 }
 
+#video {
+  position: relative;
+  color: #fff;
+  background: url(/static/assets/front/images/video_wide.jpg) no-repeat;
+  height: 458px;
+  width: 938px;
+}
 /**************************************/
 /********** MEDIA QUERIES *************/
 /**************************************/
 
 @media (min-width: 768px) and (max-width: 979px) {
   .wrapper {
-    width: 668px;
+    width: 725px;
   }
 
   #share {
@@ -1152,20 +1164,20 @@ footer {
 
     #iphone2 {
       background: url(/static/assets/front/images/iphone2.jpg);
-      width: 291px;
-      height: 386px;
+      width: 214px;
+      height: 445px;
     }
 
     #iphone1 {
       background: url(/static/assets/front/images/iphone1.jpg);
-      width: 282px;
-      height: 386px;
+      width: 210px;
+      height: 445px;
     }
 
     #iphone3 {
       background: url(/static/assets/front/images/iphone3.jpg);
-      width: 282px;
-      height: 357px;
+      width: 214px;
+      height: 445px;
     }
 
     #subscribe {
@@ -1181,12 +1193,32 @@ footer {
       text-shadow: 0px 3px 5px rgb(0,0,0);
     }
 
+    h2 {
+      font-size: 20px;
+      line-height: 25px;
+    }
+
+    .ipadsimgs {
+      width: 524px;
+      height: 322px;
+      position: absolute;
+      right: 15px;
+      text-align: right;
+      bottom: 15px;
+      background: url(/static/assets/front/images/ipads_small.png) no-repeat;
+    }
+
     .abs-wrapper {
       width: 500px;
       margin-left: -335px;
+      top: 85px;
 
       .headline {
         width: auto;
+
+        img {
+          margin-top: 285px;
+        }
       }
     }
 
@@ -1262,6 +1294,13 @@ footer {
     }
   }
 
+  #video {
+    background: url(/static/assets/front/images/video_small.jpg) no-repeat;
+    width: 771px;
+    height: 400px;
+  }
+
+
 }
 
 @media (max-width: 767px) {
@@ -1283,6 +1322,14 @@ footer {
   #iphone-instructions {
 
     text-align: center;
+
+
+    h3 {
+      color: #484d51;
+      font-size: 18px;
+      line-height: 20px;
+      margin-bottom: 20px;
+    }
 
     .imgcontainer {
       width: 40%;
@@ -1315,7 +1362,7 @@ footer {
       }
 
       p {
-        font-size: 11px;
+        font-size: 13px;
       }
     }
   }
@@ -1335,6 +1382,8 @@ footer {
       line-height: 18px;
       font-family: "dn-bold";
       margin-top: 55px;
+      color: #484d51;
+      text-transform: uppercase;
     }
 
     .download {
@@ -1347,6 +1396,7 @@ footer {
 
       background: none;
       margin: 10px 0 0 0;
+      padding: 10px;
 
       #social {
         margin: 30px 0 0 0;
@@ -1372,6 +1422,7 @@ footer {
           color: #484d51;
           text-shadow: none;
           font-size: 18px;
+          line-height: 20px;
         }
 
         h2 {
@@ -1379,6 +1430,7 @@ footer {
           text-shadow: none;
           font-size: 13px;
           width: 60%;
+          line-height: 18px;
           margin: 0 auto;
         }
 
@@ -1396,6 +1448,7 @@ footer {
     .rights {
       margin: 0;
       padding: 0;
+      text-align: center;
     }
   }
 
