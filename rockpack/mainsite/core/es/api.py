@@ -230,6 +230,8 @@ class ChannelSearch(EntitySearch, CategoryMixin, MediaSortMixin):
         channel_list = []
         channel_id_list = []
         owner_list = []
+        IMAGE_CDN = app.config.get('IMAGE_CDN', '')
+        BASE_URL = url_for('basews.discover')
         for pos, channel in enumerate(channels, self.paging[0]):
             ch = dict(
                 id=channel.id,
@@ -241,7 +243,7 @@ class ChannelSearch(EntitySearch, CategoryMixin, MediaSortMixin):
                 public=channel.public,
                 position=pos,
                 cover=dict(
-                    thumbnail_url=urljoin(app.config.get('IMAGE_CDN', ''), channel.cover.thumbnail_url) if channel.cover.thumbnail_url else '',
+                    thumbnail_url=urljoin(IMAGE_CDN, channel.cover.thumbnail_url) if channel.cover.thumbnail_url else '',
                     aoi=channel.cover.aoi
                 )
             )
@@ -253,9 +255,9 @@ class ChannelSearch(EntitySearch, CategoryMixin, MediaSortMixin):
                     url = v
                     if url:
                         if k == 'resource_url':
-                            url = urljoin(url_for('basews.discover'), v)
+                            url = urljoin(BASE_URL, v)
                         elif k != 'ecommerce_url':
-                            url = urljoin(app.config.get('IMAGE_CDN', ''), v)
+                            url = urljoin(IMAGE_CDN, v)
                     ch[k] = url
                 # XXX: tis a bit dangerous to assume max(cat)
                 # is the child category. review this
@@ -370,14 +372,16 @@ class OwnerSearch(EntitySearch):
 
     def _format_results(self, owners):
         owner_list = []
+        IMAGE_CDN = app.config.get('IMAGE_CDN', '')
+        BASE_URL = url_for('basews.discover')
         for owner in owners:
             owner_list.append(
                 dict(
                     id=owner.id,
                     username=owner.username,
                     display_name=owner.display_name,
-                    resource_url=urljoin(url_for('basews.discover'), owner.resource_url),
-                    avatar_thumbnail_url=urljoin(app.config.get('IMAGE_CDN', ''), owner.avatar_thumbnail_url) if owner.avatar_thumbnail_url else ''
+                    resource_url=urljoin(BASE_URL, owner.resource_url),
+                    avatar_thumbnail_url=urljoin(IMAGE_CDN, owner.avatar_thumbnail_url) if owner.avatar_thumbnail_url else ''
                 )
             )
         return owner_list
