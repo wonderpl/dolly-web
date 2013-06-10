@@ -29,9 +29,10 @@ window.Weblight.controller('VideoCtrl', ['$scope', '$rootScope', '$routeParams',
       $scope.videodata = _.find($scope.videos, (video) -> 
         video.id == $routeParams.video
       )
-      # if typeof $scope.player != "undefined" 
-      #   $scope.player.loadVideoById($scope.videodata.video.source_id, 0, 'highres')
-      # else 
+
+      if typeof $scope.videodata == "undefined"
+        $scope.videodata = window.selected_video
+
       $scope.player = new YT.Player('player', {
         height: @playerHeight,
         width: @playerWidth,

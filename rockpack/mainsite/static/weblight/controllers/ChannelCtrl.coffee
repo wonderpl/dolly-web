@@ -45,9 +45,8 @@ window.Weblight.controller('ChannelCtrl', ['$scope', 'Videos', '$routeParams', '
   # Catch share of specific video url
   url = $location.absUrl()
 
-  console.log selected_video_id != ''
-  if selected_video_id != ''
-    $location.search( 'video',selected_video_id)
+  if selected_video != ''
+    $location.search( 'video',selected_video.id)
 
   return
 ])

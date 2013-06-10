@@ -47,7 +47,7 @@
     <script type="text/javascript">
       var channel_data = {{ channel_data|tojson|safe }},
           assets_url = '{{config.ASSETS_URL}}',
-          selected_video_id = '{{selected_video.id}}',
+          selected_video = {{selected_video|tojson|safe}},
           full_path = '{{full_site}}';
     </script>
 
