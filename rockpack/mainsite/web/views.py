@@ -44,19 +44,19 @@ else:
 @expose_web(prelaunch_path, 'web/temp_landing.html', cache_age=3600)
 def prelaunch_homepage():
     injectorUrl = url_for('injector')
-    return dict(injectorUrl=injectorUrl, ga_tracking=app.config.get('GOOGLE_ANALYTICS_ACCOUNT'))
+    return dict(injectorUrl=injectorUrl)
 
 
 @expose_web(postlaunch_path, 'web/home.html', cache_age=3600)
 def homepage():
     injectorUrl = url_for('injector')
-    return dict(injectorUrl=injectorUrl, ga_tracking=app.config.get('GOOGLE_ANALYTICS_ACCOUNT'))
+    return dict(injectorUrl=injectorUrl)
 
 
 @expose_web('/bookmarklet', 'web/bookmarklet.html', cache_age=3600, secure=True)
 def bookmarklet():
     api_urls = ws_request('/ws/')
-    return dict(api_urls=api_urls, ga_tracking=app.config.get('GOOGLE_ANALYTICS_ACCOUNT')), 200, {'P3P': 'CP="CAO PSA OUR"'}
+    return dict(api_urls=api_urls), 200, {'P3P': 'CP="CAO PSA OUR"'}
 
 
 @expose_web('/injectorjs', 'web/injector.js', cache_age=3600, secure=True)
@@ -66,17 +66,17 @@ def injector():
 
 @expose_web('/tos', 'web/terms.html', cache_age=3600)
 def terms():
-    return dict(ga_tracking=app.config.get('GOOGLE_ANALYTICS_ACCOUNT'), full_site=postlaunch_path), 200, {}
+    return dict(full_site=postlaunch_path)
 
 
 @expose_web('/cookies', 'web/cookies.html', cache_age=3600)
-def terms():
-    return dict(ga_tracking=app.config.get('GOOGLE_ANALYTICS_ACCOUNT'), full_site=postlaunch_path), 200, {}
+def cookies():
+    return dict(full_site=postlaunch_path)
 
 
 @expose_web('/privacy', 'web/privacy.html', cache_age=3600)
 def privacy():
-    return dict(ga_tracking=app.config.get('GOOGLE_ANALYTICS_ACCOUNT'), full_site=postlaunch_path), 200, {}
+    return dict(full_site=postlaunch_path)
 
 
 @expose_web('/channel/<slug>/<channelid>/', 'web/channel.html', cache_age=3600)
@@ -101,7 +101,7 @@ def channel(slug, channelid):
         'channel', slug=slugify(channel_data['title']) or '-', channelid=channelid)
     if selected_video:
         channel_data['canonical_url'] += '?video=' + selected_video['id']
-    return dict(channel_data=channel_data, selected_video=selected_video, ga_tracking=app.config.get('GOOGLE_ANALYTICS_ACCOUNT'), full_site=postlaunch_path)
+    return dict(channel_data=channel_data, selected_video=selected_video, full_site=postlaunch_path)
 
 
 @expose_web('/s/<linkid>', cache_age=60, cache_private=True)
