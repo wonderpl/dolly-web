@@ -33,7 +33,21 @@ def ws_request(url, **kwargs):
     return json.loads(response)
 
 
-@expose_web('/', 'web/home.html', cache_age=3600)
+if app.config.get('PRE_LAUNCH'):
+    prelaunch_path = '/'
+    postlaunch_path = '/earlyaccess'
+else:
+    prelaunch_path = '/prelaunch'
+    postlaunch_path = '/'
+
+
+@expose_web(prelaunch_path, 'web/temp_landing.html', cache_age=3600)
+def prelaunch_homepage():
+    injectorUrl = url_for('injector')
+    return dict(injectorUrl=injectorUrl, ga_tracking=app.config.get('GOOGLE_ANALYTICS_ACCOUNT'))
+
+
+@expose_web(postlaunch_path, 'web/home.html', cache_age=3600)
 def homepage():
     injectorUrl = url_for('injector')
     return dict(injectorUrl=injectorUrl, ga_tracking=app.config.get('GOOGLE_ANALYTICS_ACCOUNT'))
