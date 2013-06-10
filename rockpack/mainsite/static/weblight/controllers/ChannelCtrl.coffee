@@ -8,7 +8,7 @@ window.Weblight.controller('ChannelCtrl', ['$scope', 'Videos', '$routeParams', '
   $scope.videos = channelData.videos.items
 
 
-  $scope.channel.owner.avatar = channelData.owner.avatar_thumbnail_url.replace('thumbnail_small', 'thumbnail_large')
+  $scope.channel.owner.avatar = channelData.owner.avatar_thumbnail_url.replace('thumbnail_medium', 'thumbnail_large')
   $scope.coverRegex = new RegExp("channel/.*/")
 
 
