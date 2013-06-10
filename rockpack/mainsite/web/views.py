@@ -53,28 +53,28 @@ def homepage():
     return dict(injectorUrl=injectorUrl, ga_tracking=app.config.get('GOOGLE_ANALYTICS_ACCOUNT'))
 
 
-@expose_web('/bookmarklet', 'web/bookmarklet.html', secure=True)
+@expose_web('/bookmarklet', 'web/bookmarklet.html', cache_age=3600, secure=True)
 def bookmarklet():
     api_urls = ws_request('/ws/')
     return dict(api_urls=api_urls, ga_tracking=app.config.get('GOOGLE_ANALYTICS_ACCOUNT')), 200, {'P3P': 'CP="CAO PSA OUR"'}
 
 
-@expose_web('/injectorjs', 'web/injector.js', secure=True)
+@expose_web('/injectorjs', 'web/injector.js', cache_age=3600, secure=True)
 def injector():
     return dict(iframe_url=url_for('bookmarklet')), 200, {'Content-Type': 'application/javascript'}
 
 
-@expose_web('/tos', 'web/terms.html')
+@expose_web('/tos', 'web/terms.html', cache_age=3600)
 def terms():
     return dict(ga_tracking=app.config.get('GOOGLE_ANALYTICS_ACCOUNT'), full_site=postlaunch_path), 200, {}
 
 
-@expose_web('/cookies', 'web/cookies.html')
+@expose_web('/cookies', 'web/cookies.html', cache_age=3600)
 def terms():
     return dict(ga_tracking=app.config.get('GOOGLE_ANALYTICS_ACCOUNT'), full_site=postlaunch_path), 200, {}
 
 
-@expose_web('/privacy', 'web/privacy.html')
+@expose_web('/privacy', 'web/privacy.html', cache_age=3600)
 def privacy():
     return dict(ga_tracking=app.config.get('GOOGLE_ANALYTICS_ACCOUNT'), full_site=postlaunch_path), 200, {}
 
