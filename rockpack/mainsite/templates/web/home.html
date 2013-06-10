@@ -59,13 +59,8 @@
 
   </head>
   <body >
-    <div id="header">
-      <div class="wrapper">
-        <a href="/#"><img src="{{config.ASSETS_URL}}/assets/weblight/images/logo.png"></a>
-      </div>
-    </div>
-
-    <div id="maincontainer" class="ng-view">
+  {% include 'web/header.html' %}
+  <div id="maincontainer" class="ng-view">
       <div id="whatson">
         <div id="cover" class="hidden-phone"></div>
         <div class="abs-wrapper">
@@ -158,23 +153,8 @@
         </div>
       </div>
     </div>
-
-    <footer>
-      <div class="wrapper" ng-style="wrapperWidth()">
-        <ul>
-          <li class="hidden-phone"><a href="#">About</a></li>
-          <li class="hidden-phone"><a href="#/people">People</a></li>
-          <li class="hidden-phone"><a href="#/press">Press</a></li>
-          <li class="hidden-phone"><a href="#/jobs">Jobs</a></li>
-          <li class="hidden-phone"><a href="#/content-providers">Content Providers</a></li>
-          <li class="hidden-phone"><a href="http://help.rockpack.com/">Help</a></li>
-        </ul>
-        <div class="rights">All rights reserved Rockpack® ltd 2013 - By using Rockpack, you agree to our  <a href="/tos">Terms & Conditions</a> and <a href="/privacy">Privacy Policy</a>.</div>
-        <div class="rights">Apple, the Apple logo, iPhone and iPad are trademarks of Apple Inc., registered in the U.S and other countries.<br>App Store is a service mark of Apple Inc.</div>
-      </div>
-    </footer>
-
-    {% include 'web/ga_ajax.html' %}
+  {% include 'web/footer.html' %}
+  {% include 'web/ga_ajax.html' %}
 
   </body>
 </html>
