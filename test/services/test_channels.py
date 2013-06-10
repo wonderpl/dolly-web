@@ -342,10 +342,7 @@ class ChannelCreateTestCase(base.RockPackTestCase):
                 r = client.get('/ws/{}/'.format(user.id), headers=[get_auth_header(user_id)])
                 self.assertEquals(200, r.status_code)
                 channels = json.loads(r.data)['channels']
-                titles = ['updated', '2', '0']
-                if user_id == user.id:
-                    # include private
-                    titles.insert(0, app.config['FAVOURITE_CHANNEL'][0])
+                titles = ['Favorites', 'updated', '2', '0']
                 self.assertEquals([c['title'] for c in channels['items']], titles)
 
         # restore date_updated onupdate default
