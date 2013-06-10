@@ -1,10 +1,11 @@
 from flask import request, json, Response
+from rockpack.mainsite import app
 from rockpack.mainsite.core.webservice import WebService, expose_ajax
 from rockpack.mainsite.core import youtube
 from rockpack.mainsite.helpers.db import gen_videoid
 from rockpack.mainsite.services.video.api import get_local_channel
 from rockpack.mainsite.services.video.models import Channel
-from rockpack.mainsite.core.es.api import ChannelSearch
+from rockpack.mainsite.core.es.api import ChannelSearch, VideoSearch
 from rockpack.mainsite.core.es import use_elasticsearch, filters
 
 
@@ -45,6 +46,22 @@ class SearchWS(WebService):
                     )
                 )
             )
+
+        if not items and app.config.get('ELASTICSEARCH_URL'):
+            vs = VideoSearch(self.get_locale())
+            vs.add_term('title', request.args.get('q', ''))
+            start, size = self.get_page()
+            vs.set_paging(offset=start, limit=size)
+            for video in vs.videos():
+                del video['video']['star_count']
+                del video['public']
+                del video['category']
+                video['video']['source_view_count'] = video['video']['view_count']
+                del video['video']['view_count']
+                video['video']['source_date_uploaded'] = video['date_added']
+                del video['date_added']
+                items.append(video)
+
         return {'videos': {'items': items, 'total': result.video_count}}
 
     @expose_ajax('/channels/', cache_age=300)
