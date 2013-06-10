@@ -46,8 +46,8 @@
     {% endassets %}
 
     {% assets filters="fronttemplate", output="gen/front-templates.%(version)s.js",
-    "front/views/people.html", "front/views/jobs.html", "front/views/press.html", "front/views/contentproviders.html", "front/views/bookmarklet.html",
-    "front/views/home.html"
+    "front/views/people.html", "front/views/jobs.html", "front/views/channelplaybook.html", "front/views/contentproviders.html", "front/views/bookmarklet.html",
+    "front/views/home.html", "front/views/press.html"
     %}
     <script type="text/javascript" src="{{ ASSET_URL }}"></script>
     {% endassets %}
@@ -61,7 +61,7 @@
   <body >
     <div id="header">
       <div class="wrapper">
-        <img src="{{config.ASSETS_URL}}/assets/weblight/images/logo.png">
+        <a href="/#"><img src="{{config.ASSETS_URL}}/assets/weblight/images/logo.png"></a>
       </div>
     </div>
 
@@ -167,7 +167,7 @@
           <li class="hidden-phone"><a href="#/press">Press</a></li>
           <li class="hidden-phone"><a href="#/jobs">Jobs</a></li>
           <li class="hidden-phone"><a href="#/content-providers">Content Providers</a></li>
-          <li class="hidden-phone"><a href="#/help">Help</a></li>
+          <li class="hidden-phone"><a href="http://help.rockpack.com/">Help</a></li>
         </ul>
         <div class="rights">All rights reserved Rockpack® ltd 2013 - By using Rockpack, you agree to our  <a href="/tos">Terms & Conditions</a> and <a href="/privacy">Privacy Policy</a>.</div>
         <div class="rights">Apple, the Apple logo, iPhone and iPad are trademarks of Apple Inc., registered in the U.S and other countries.<br>App Store is a service mark of Apple Inc.</div>

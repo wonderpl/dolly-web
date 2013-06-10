@@ -1,0 +1,75 @@
+<div ng-controller="ChannelPlaybookCtrl">
+  <div id="channel-playbook">
+    <div class="wrapper">
+      <h1>Channel Playbook</h1>
+      <p>
+        Your Rockpack channel can be optimized in several straightforward
+        ways to ensure that it becomes and stays a regular and exciting
+        destination for both first-timers and subscribers.
+      </p>
+    </div>
+  </div>
+  <div class="wrapper" id="playbookcontainer">
+    <div id="playbookcontent" >
+      <div ng-switch on="selectedChapter" id="playbookcontentcontainer">
+        <div ng-switch-when="CREATE A CHANNEL">
+          <h3>CHOOSE THE RIGHT CHANNEL NAME</h3>
+          <p>Your channel name should accurately describe what your channel is about. Think about what people might type into a search if you want to maximize your initial discoverability.</p>
+          <h3>USE YOUR CHANNEL COVER</h3>
+          <p>Your channel cover is the first thing that visitors and potential subscribers are going to see. Make sure it grabs people’s attention and starts to communicate your content even before they have clicked to view.</p>
+          <p>We find that the best looking images are</p>
+          <ul>
+            <li>Over ***** pixels wide, to ensure that the resolution of your image is clear on any monitor</li>
+            <li>Pinpointed to make sure that they fold well for mobile viewing [to be returned to]</li>
+          </ul>
+          <p>Take advantage of this great space as your brand’s very own, free customizable billboard:</p>
+          <ul>
+            <li>Use it to alert people of upcoming news, or new channels you might launch.</li>
+            <li>Humanize your company by using photographs of your team, or your best influencers.</li>
+            <li>Change it as often as you like to keep things fresh.</li>
+          </ul>
+          <h3>CHECK YOUR SETTINGS</h3>
+          <p>Make sure your channel is on the right settings. If you want the world to see it, ensure that you have chosen ‘public.’</p>
+        </div>
+        <div ng-switch-when="CURATE A CHANNEL">
+          <p>Curation is the best way to connect with your communities.</p>
+          <h3>GET ACTIVE ON-THE-GO</h3>
+          <p>Remember that Rockpack is fully mobile. Users will be checking their feeds everywhere and anywhere, so make sure that you are updating your channel often enough to keep things busy.</p>
+          <h3>CELEBRATE THE CLASSICS</h3>
+          <p>If your content has a longer shelf life, you might want to refresh some of your older videos for the benefit of new visitors or subscribers. Music, food recipes and other great videos can be watched over and over again.  Delete and re-pack classic videos to refresh them in your subscribers’ feeds.</p>
+          <h3>CROSS CURATE</h3>
+          <p>Think about your brand or persona laterally.  Curators leverage their personas across a wide variety of topics.  Just because you are an athlete doesn’t mean you don’t have time to get creative in the kitchen. Have different channels in different subcategories to reach new audiences.</p>
+        </div>
+        <div ng-switch-when="GROW YOUR SUBSCRIBERS">
+          <h3>KEEP VIEWERS COMING BACK FOR MORE</h3>
+          <p>Keep things dynamic and updating, and you will make your channel a <b>destination</b> for new video. </p>
+          <ul>
+            <li>Create event driven channels to generate excitement (movie, book, record launches etc.)</li>
+            <li>Time your uploads strategically around people’s daily routines. Make sure there’s something new when a subscriber wakes up in the morning, or when they get home from work.</li>
+            <li>Set an expectation when it comes to releasing your content that’s ‘coming soon,’ and get people waiting for your latest video.</li>
+          </ul>
+          <h3>SPREAD THE WORD</h3>
+          <p>You’ve created your channel. Now tell the world where they can find it. Post your channel’s URL on Facebook, Twitter and your official sites to direct your fans straight to your best content and get people talking.</p>
+          <h3>COMPETITIONS</h3>
+          <p>Competitions are a great way to get users to engage more effectively with your content.  <a href="">Contact us</a> if you want us to help you host a competition for your brand on Rockpack.</p>
+          <h3>COMMUNITY</h3>
+          <p>Get social. Utilize Rockpack’s social integration to reach out to the community surrounding your channel, and invite them to experience your content.</p>
+          <ul>
+            <li>Subscribe to other, relevant channels to connect with networks that might be interested in your content.</li>
+            <li>Follow your best fans and influencers. Thank them for their support by supporting them back.</li>
+            <li>Get interactive. Feature fans and influencers in your videos and playlists. Ask them to come up with ideas for new or existing channels, so they too can become a part of your curation process.</li>
+            <li>Get your influencers to connect with consumers on a more immediate level by curating their own personal channels using your content.</li>
+          </ul>
+        </div>
+        <div ng-switch-when="EXPAND YOUR BRAND">
+          <h3>MULTI-CHANNEL NETWORKS</h3>
+          <p>If you’ve got a lot of stories to tell, you can create a interlinked network of channels on your profile, so subscribers can follow your content in a more streamlined format, and you can reach a higher number of consumers by spanning different categories.</p>
+          <p>For example if you are the cutting-edge media conglomerate ‘World News,’ you may want to set up a ‘World News Politics’ channel to run alongside your ‘World News Arts and Culture’ and ‘World News Business’ channels, so that your viewers can experience your content in the most intuitive way possible. *link to example.*</p>
+        </div>
+      </div>
+    </div>
+    <div id="playbookmenu">
+      <div ng-repeat="chapter in playbook" ng-click="updateChapter(chapter)" ng-class="{selected: selectedChapter==chapter}">((chapter))</div>
+    </div>
+  </div>
+</div>
