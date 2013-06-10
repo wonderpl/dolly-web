@@ -18,6 +18,7 @@ from rockpack.mainsite.services.oauth.models import ExternalToken
 from rockpack.mainsite.services.oauth import exceptions
 from test import base
 from test.test_helpers import get_client_auth_header
+from test.test_helpers import get_auth_header
 
 
 ACCESS_CREDENTIALS = {
@@ -281,6 +282,9 @@ class RegisterTestCase(base.RockPackTestCase):
     def test_successful_registration(self):
 
         with self.app.test_client() as client:
+            self.app.test_request_context().push()
+            viewing_user = self.create_test_user().id
+
             r = client.post('/ws/register/',
                     headers=[get_client_auth_header()],
                     data=dict(
@@ -298,6 +302,12 @@ class RegisterTestCase(base.RockPackTestCase):
             self.assertEquals(1,
                     Channel.query.filter_by(owner=creds['user_id']).count(),
                     'default user channel should be created')
+
+            r = client.get(
+                '/ws/{}/'.format(creds['user_id']),
+                headers=[get_auth_header(viewing_user)]
+            )
+            self.assertEquals(json.loads(r.data)['channels']['total'], 1)
 
             creds = json.loads(r.data)
 

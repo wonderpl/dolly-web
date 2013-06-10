@@ -310,7 +310,11 @@ class Channel(db.Model):
 
     @classmethod
     def should_be_public(self, channel, public):
-        """Return False if conditions for visibility are not met"""
+        """Return False if conditions for visibility are not met (except for fav channel)"""
+
+        if channel.favourite:
+            return True
+
         if not (channel.cover and
                 (channel.title and not channel.title.startswith(app.config['UNTITLED_CHANNEL'])) and
                 channel.video_instances):

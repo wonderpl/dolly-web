@@ -93,7 +93,7 @@ WELCOME_EMAIL_SUBJECT = 'Welcome to Rockpack'
 
 
 def create_registration_emails(date_from=None, date_to=None):
-    registration_window = User.query.filter(User.email != None)
+    registration_window = User.query.filter(User.email != '')
     if date_from:
         registration_window = registration_window.filter(User.date_joined >= date_from)
     if date_to:

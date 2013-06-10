@@ -170,10 +170,12 @@ class UserCoverArt(AdminView):
     model_name = coverart_models.UserCoverArt.__tablename__
 
     form_overrides = dict(owner_rel=wtf.TextField)
-    column_list = ('owner_rel', 'cover.url')
+    column_list = ('owner_rel', 'cover.url', 'date_created')
     column_filters = ('owner_rel',)
+    form_columns = ('owner_rel', 'cover', 'cover_aoi')
 
     edit_template = 'admin/cover_art_edit.html'
+    create_template = 'admin/cover_art_create.html'
 
 
 class ChannelLocaleMeta(AdminView):

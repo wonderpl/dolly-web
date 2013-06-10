@@ -159,7 +159,7 @@ class User(db.Model):
             description=description,
             cover=cover,
             owner=user.id,
-            public=False,
+            public=True,
         )
         channel.save()
 
