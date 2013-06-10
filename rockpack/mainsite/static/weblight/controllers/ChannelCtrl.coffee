@@ -49,6 +49,5 @@ window.Weblight.controller('ChannelCtrl', ['$scope', 'Videos', '$routeParams', '
   if selected_video_id != ''
     $location.search( 'video',selected_video_id)
 
-
   return
 ])
