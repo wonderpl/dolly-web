@@ -66,17 +66,17 @@ def injector():
 
 @expose_web('/tos', 'web/terms.html')
 def terms():
-    return dict(ga_tracking=app.config.get('GOOGLE_ANALYTICS_ACCOUNT')), 200, {}
+    return dict(ga_tracking=app.config.get('GOOGLE_ANALYTICS_ACCOUNT'), full_site=postlaunch_path), 200, {}
 
 
 @expose_web('/cookies', 'web/cookies.html')
 def terms():
-    return dict(ga_tracking=app.config.get('GOOGLE_ANALYTICS_ACCOUNT')), 200, {}
+    return dict(ga_tracking=app.config.get('GOOGLE_ANALYTICS_ACCOUNT'), full_site=postlaunch_path), 200, {}
 
 
 @expose_web('/privacy', 'web/privacy.html')
 def privacy():
-    return dict(ga_tracking=app.config.get('GOOGLE_ANALYTICS_ACCOUNT')), 200, {}
+    return dict(ga_tracking=app.config.get('GOOGLE_ANALYTICS_ACCOUNT'), full_site=postlaunch_path), 200, {}
 
 
 @expose_web('/channel/<slug>/<channelid>/', 'web/channel.html', cache_age=3600)
