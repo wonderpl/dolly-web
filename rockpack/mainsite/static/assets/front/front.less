@@ -60,10 +60,23 @@ body {
   #pressheader {
     height: 550px;
     background: url(/static/assets/front/images/press.jpg) no-repeat 50% 50%;
-    padding-top: 100px;
+  }
+
+  #playbookcontainer {
+    padding-top: 70px;
+    background: url(/static/assets/front/images/verticleborder.png) repeat-y left top;
+  }
+
+  #playbookmenu {
+    border-right: none;
+    width: 220px;
   }
 
   #playbookcontent {
+
+    #playbookcontentcontainer {
+      margin-left: 250px;
+    }
 
     h3 {
       font-size: 37px;
@@ -1200,6 +1213,25 @@ footer {
 @media (min-width: 768px) and (max-width: 979px) {
   .wrapper {
     width: 725px;
+  }
+  
+  #press {
+
+
+    #playbookcontainer {
+      background: none;
+    }
+
+    #playbookcontent {
+
+      #playbookcontentcontainer {
+        margin-left: 0;
+      }
+    }
+
+    #playbookmenu {
+      width: auto;
+    }
   }
 
   #share {
