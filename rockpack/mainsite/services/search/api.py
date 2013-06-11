@@ -31,21 +31,25 @@ class SearchWS(WebService):
         try:
             result = youtube.search(request.args.get('q', ''), order, start, size,
                     region, request.remote_addr)
-        except urllib2.HTTPError:
-            if app.config.get('ELASTICSEARCH_URL'):
-                vs = VideoSearch(self.get_locale())
-                vs.add_term('title', request.args.get('q', ''))
-                start, size = self.get_page()
-                vs.set_paging(offset=start, limit=size)
-                for video in vs.videos():
-                    video['video']['source_view_count'] = video['video']['view_count']
-                    video['video']['source_date_uploaded'] = video['date_added']
-                    del video['video']['star_count']
-                    del video['public']
-                    del video['category']
-                    del video['video']['view_count']
-                    del video['date_added']
-                    items.append(video)
+        except urllib2.HTTPError as e:
+            app.logger.error('Error contacting YouTube: {}'.format(e))
+
+            if not app.config.get('ELASTICSEARCH_URL'):
+                raise Exception('Elasticsearch not configured')
+
+            vs = VideoSearch(self.get_locale())
+            vs.add_term('title', request.args.get('q', ''))
+            start, size = self.get_page()
+            vs.set_paging(offset=start, limit=size)
+            for video in vs.videos():
+                video['video']['source_view_count'] = video['video']['view_count']
+                video['video']['source_date_uploaded'] = video['date_added']
+                del video['video']['star_count']
+                del video['public']
+                del video['category']
+                del video['video']['view_count']
+                del video['date_added']
+                items.append(video)
         else:
             for position, video in enumerate(result.videos, start):
                 items.append(
