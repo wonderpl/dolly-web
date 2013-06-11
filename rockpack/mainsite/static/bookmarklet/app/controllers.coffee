@@ -73,10 +73,14 @@ window.Bookmarklet.controller('AddtoChannelCtrl', ['$scope','$http', '$location'
     return
 
   $scope.addtoChannel = () ->
-    User.addVideo($scope.access_token, $scope.videoID,$scope.selectedChannel)
-    .then((data) ->
-      $location.path('/done')
-    )
+    if $scope.selectedChannel != null
+      User.addVideo($scope.access_token, $scope.videoID,$scope.selectedChannel)
+      .then((data) ->
+        if data.status == 400
+          alert ('Unable to add video, please try again')
+        else
+          $location.path('/done')
+      )
 
   $scope.createChannel = ->
     $location.path('/createchannel')
