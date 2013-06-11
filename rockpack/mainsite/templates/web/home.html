@@ -29,23 +29,23 @@
     <link rel="stylesheet" href="{{ ASSET_URL }}"/>
     {% endassets %}
 
-    {% assets filters="less", output="gen/front_css.%(version)s.css", "assets/front/front.less" %}
+    {% assets filters="less,cssmin", output="gen/front_css.%(version)s.css", "assets/front/front.less" %}
     <link rel="stylesheet" href="{{ ASSET_URL }}"/>
     {% endassets %}
 
-  {% assets output="gen/front-lib.%(version)s.js",
+  {% assets filters="rjsmin", output="gen/front-lib.%(version)s.js",
     "assets/vendor/js/jquery-1.9.1.js", "assets/vendor/js/lodash.js", "assets/vendor/js/angular.js", "assets/vendor/js/angular-resource.js", "assets/vendor/js/ng-infinite-scroll.js",
     "assets/vendor/js/ui-bootstrap-tpls-0.2.0.js" %}
     <script type="text/javascript" src="{{ ASSET_URL }}"></script>
     {% endassets %}
 
-    {% assets filters="coffeescript", output="gen/front.%(version)s.js", "front/app.coffee", "front/services/GATrackingService.coffee", "front/controllers/PageCtrl.coffee",
+    {% assets filters="coffeescript, rjsmin", output="gen/front.%(version)s.js", "front/app.coffee", "front/services/GATrackingService.coffee", "front/controllers/PageCtrl.coffee",
     "front/controllers/ChannelPlaybookCtrl.coffee", "front/services/browserServices.coffee", "front/controllers/PressCtrl.coffee"
     %}
     <script type="text/javascript" src="{{ ASSET_URL }}"></script>
     {% endassets %}
 
-    {% assets filters="fronttemplate", output="gen/front-templates.%(version)s.js",
+    {% assets filters="fronttemplate, rjsmin", output="gen/front-templates.%(version)s.js",
     "front/views/people.html", "front/views/jobs.html", "front/views/channelplaybook.html", "front/views/contentproviders.html", "front/views/bookmarklet.html",
     "front/views/home.html", "front/views/press.html"
     %}
