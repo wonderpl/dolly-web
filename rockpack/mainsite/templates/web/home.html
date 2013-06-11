@@ -40,7 +40,7 @@
     {% endassets %}
 
     {% assets filters="coffeescript", output="gen/front.%(version)s.js", "front/app.coffee", "front/services/GATrackingService.coffee", "front/controllers/PageCtrl.coffee",
-    "front/controllers/ChannelPlaybookCtrl.coffee", "front/services/browserServices.coffee"
+    "front/controllers/ChannelPlaybookCtrl.coffee", "front/services/browserServices.coffee", "front/controllers/PressCtrl.coffee"
     %}
     <script type="text/javascript" src="{{ ASSET_URL }}"></script>
     {% endassets %}
@@ -161,7 +161,7 @@
       <div class="wrapper" ng-style="wrapperWidth()">
         <ul>
           <li class="hidden-phone"><a href="#">About</a></li>
-          <li class="hidden-phone"><a href="#/people">People</a></li>
+          <li class="hidden-phone"><a href="#/our-company">Our Company</a></li>
           <li class="hidden-phone"><a href="#/press">Press</a></li>
           <li class="hidden-phone"><a href="#/jobs">Jobs</a></li>
           <li class="hidden-phone"><a href="#/content-providers">Content Providers</a></li>

@@ -1,3 +1,84 @@
-<div>
-  Press
+<div ng-controller="PressCtrl" id="press">
+  <div id="pressheader"></div>
+  <div class="wrapper" id="playbookcontainer">
+    <div id="playbookcontent" >
+      <div ng-switch on="selectedChapter" id="playbookcontentcontainer">
+        <div ng-switch-when="PRESS COVERAGE">
+          <h3>PRESS COVERAGE</h3>
+          <div class="press-release">
+            <p class="date"><span class="publisher">TechCrunch</span> 27th June, 2013</p>
+            <p>Rockpack Launches, With An Estimated 100,000 First Day Downloads.</p>
+            <p><a hred="#">Continue Reading.</a></p>
+          </div>
+          <div class="press-release">
+            <p class="date"><span class="publisher">TechCrunch</span> 27th June, 2013</p>
+            <p>Rockpack Launches, With An Estimated 100,000 First Day Downloads.</p>
+            <p><a hred="#">Continue Reading.</a></p>
+          </div>
+          <div class="press-release">
+            <p class="date"><span class="publisher">TechCrunch</span> 27th June, 2013</p>
+            <p>Rockpack Launches, With An Estimated 100,000 First Day Downloads.</p>
+            <p><a hred="#">Continue Reading.</a></p>
+          </div>
+          <div class="press-release">
+            <p class="date"><span class="publisher">TechCrunch</span> 27th June, 2013</p>
+            <p>Rockpack Launches, With An Estimated 100,000 First Day Downloads.</p>
+            <p><a hred="#">Continue Reading.</a></p>
+          </div>
+          <div class="press-release">
+            <p class="date"><span class="publisher">TechCrunch</span> 27th June, 2013</p>
+            <p>Rockpack Launches, With An Estimated 100,000 First Day Downloads.</p>
+            <p><a hred="#">Continue Reading.</a></p>
+          </div>
+          <div class="press-release">
+            <p class="date"><span class="publisher">TechCrunch</span> 27th June, 2013</p>
+            <p>Rockpack Launches, With An Estimated 100,000 First Day Downloads.</p>
+            <p><a hred="#">Continue Reading.</a></p>
+          </div>
+        </div>
+        <div ng-switch-when="PRESS RELEASES">
+          <h3>PRESS RELEASES</h3>
+          <div class="press-release">
+            <p class="date">27th June, 2013</p>
+            <p>Rockpack Launches!</p>
+            <p><a hred="#">Continue Reading.</a></p>
+          </div>
+          <div class="press-release">
+            <p class="date">27th June, 2013</p>
+            <p>Rockpack Launches!</p>
+            <p><a hred="#">Continue Reading.</a></p>
+          </div>
+          <div class="press-release">
+            <p class="date">27th June, 2013</p>
+            <p>Rockpack Launches!</p>
+            <p><a hred="#">Continue Reading.</a></p>
+          </div>
+          <div class="press-release">
+            <p class="date">27th June, 2013</p>
+            <p>Rockpack Launches!</p>
+            <p><a hred="#">Continue Reading.</a></p>
+          </div>
+          <div class="press-release">
+            <p class="date">27th June, 2013</p>
+            <p>Rockpack Launches!</p>
+            <p><a hred="#">Continue Reading.</a></p>
+          </div>
+        </div>
+        <div ng-switch-when="LOGOS & BRAND" class="press_logos">
+          <a href="((assets_url))/assets/front/images/icon_large.png" target="_blank"><img ng-src="((assets_url))/assets/front/images/press_logo.jpg"></a>
+          <a href="((assets_url))/assets/front/images/rockpack_teal.png" target="_blank"><img ng-src="((assets_url))/assets/front/images/press_logo2.png"></a>
+          <a href="((assets_url))/assets/front/images/rockpack_white.png" target="_blank"><img ng-src="((assets_url))/assets/front/images/rockpack_white_small.png"></a>
+          <a href="((assets_url))/assets/front/images/rockpack_black.png" target="_blank"><img ng-src="((assets_url))/assets/front/images/rockpack_black_small.png"></a>
+        </div>
+        <div ng-switch-when="CONTACT">
+          <h3>PRESS CONTACT</h3>
+          <p>Email here for press inquiries</p>
+          <p>This is for press inquiries, for all other inquiries please use our contact page</p>
+        </div>
+      </div>
+    </div>
+    <div id="playbookmenu">
+      <div ng-repeat="chapter in categories" ng-click="updateChapter(chapter)" ng-class="{selected: selectedChapter==chapter}">((chapter))</div>
+    </div>
+  </div>
 </div>

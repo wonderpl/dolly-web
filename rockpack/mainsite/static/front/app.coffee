@@ -21,7 +21,7 @@ window.contentApp = angular.module('contentApp', [])
     # Router
     $routeProvider.when('/', {templateUrl: 'home.html', resolve:{trackingCode: (GATrackingService) -> return GATrackingService.push()}})
     $routeProvider.when('/jobs', {templateUrl: 'jobs.html', resolve:{trackingCode: (GATrackingService) -> return GATrackingService.push()}})
-    $routeProvider.when('/people', {templateUrl: 'people.html', resolve:{trackingCode: (GATrackingService) -> return GATrackingService.push()}})
+    $routeProvider.when('/our-company', {templateUrl: 'people.html', resolve:{trackingCode: (GATrackingService) -> return GATrackingService.push()}})
     $routeProvider.when('/channel-playbook', {templateUrl: 'channelplaybook.html', resolve:{trackingCode: (GATrackingService) -> return GATrackingService.push()}})
     $routeProvider.when('/content-providers', {templateUrl: 'contentproviders.html', resolve:{trackingCode: (GATrackingService) -> return GATrackingService.push()}})
     $routeProvider.when('/bookmarklet', {templateUrl: 'bookmarklet.html', resolve:{trackingCode: (GATrackingService) -> return GATrackingService.push()}})
