@@ -1,4 +1,5 @@
 from flask import request, json, Response
+import urllib2
 from rockpack.mainsite import app
 from rockpack.mainsite.core.webservice import WebService, expose_ajax
 from rockpack.mainsite.core import youtube
@@ -25,42 +26,45 @@ class SearchWS(WebService):
         order = 'published' if request.args.get('order') == 'latest' else None
         start, size = self.get_page()
         region = self.get_locale().split('-')[1]
-        result = youtube.search(request.args.get('q', ''), order, start, size,
-                                region, request.remote_addr)
+
         items = []
-        for position, video in enumerate(result.videos, start):
-            items.append(
-                dict(
-                    position=position,
-                    id='%s-%02d-%s' % (VIDEO_INSTANCE_PREFIX, 1, video.source_videoid),
-                    title=video.title,
-                    video=dict(
-                        id=gen_videoid(None, 1, video.source_videoid),
-                        source='youtube',
-                        source_id=video.source_videoid,
-                        source_date_uploaded=video.source_date_uploaded,
-                        source_view_count=video.source_view_count,
-                        source_username=video.source_username,
-                        duration=video.duration,
-                        thumbnail_url=video.default_thumbnail,
+        try:
+            result = youtube.search(request.args.get('q', ''), order, start, size,
+                    region, request.remote_addr)
+        except urllib2.HTTPError:
+            if app.config.get('ELASTICSEARCH_URL'):
+                vs = VideoSearch(self.get_locale())
+                vs.add_term('title', request.args.get('q', ''))
+                start, size = self.get_page()
+                vs.set_paging(offset=start, limit=size)
+                for video in vs.videos():
+                    video['video']['source_view_count'] = video['video']['view_count']
+                    video['video']['source_date_uploaded'] = video['date_added']
+                    del video['video']['star_count']
+                    del video['public']
+                    del video['category']
+                    del video['video']['view_count']
+                    del video['date_added']
+                    items.append(video)
+        else:
+            for position, video in enumerate(result.videos, start):
+                items.append(
+                    dict(
+                        position=position,
+                        id='%s-%02d-%s' % (VIDEO_INSTANCE_PREFIX, 1, video.source_videoid),
+                        title=video.title,
+                        video=dict(
+                            id=gen_videoid(None, 1, video.source_videoid),
+                            source='youtube',
+                            source_id=video.source_videoid,
+                            source_date_uploaded=video.source_date_uploaded,
+                            source_view_count=video.source_view_count,
+                            source_username=video.source_username,
+                            duration=video.duration,
+                            thumbnail_url=video.default_thumbnail,
+                        )
                     )
                 )
-            )
-
-        if not items and app.config.get('ELASTICSEARCH_URL'):
-            vs = VideoSearch(self.get_locale())
-            vs.add_term('title', request.args.get('q', ''))
-            start, size = self.get_page()
-            vs.set_paging(offset=start, limit=size)
-            for video in vs.videos():
-                del video['video']['star_count']
-                del video['public']
-                del video['category']
-                video['video']['source_view_count'] = video['video']['view_count']
-                del video['video']['view_count']
-                video['video']['source_date_uploaded'] = video['date_added']
-                del video['date_added']
-                items.append(video)
 
         return {'videos': {'items': items, 'total': result.video_count}}
 
