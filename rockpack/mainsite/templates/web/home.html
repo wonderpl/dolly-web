@@ -25,9 +25,35 @@
   <link rel="stylesheet" href="{{ ASSET_URL }}"/>
   {% endassets %}
 
+  {% assets "fullwebCss" %}
+  <link rel="stylesheet" href="{{ ASSET_URL }}"/>
+  {% endassets %}
+
+  {% assets "fullwebVendorJS" %}
+  <script type="text/javascript" src="{{ ASSET_URL }}"></script>
+  {% endassets %}
+
+  <script type="text/javascript">
+    window.apiUrls = jQuery.parseJSON('{{api_urls|safe}}')
+  </script>
+
+  {% assets "fullwebJS" %}
+  <script type="text/javascript" src="{{ ASSET_URL }}"></script>
+  {% endassets %}
+
+  {% assets "fullwebTemplates" %}
+  <script type="text/javascript" src="{{ ASSET_URL }}"></script>
+  {% endassets %}
+
+  <script>
+    var tag = document.createElement('script');
+    tag.src = "//www.youtube.com/iframe_api";
+    var firstScriptTag = document.getElementsByTagName('script')[0];
+    firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+  </script>
 
 </head>
-  <body ng-controller="AppCtrl">
+  <body ng-controller="AppCtrl" id="WebApp">
     <div ng-include src="'header.html'"></div>
     <div class="ng-view"></div>
     <div ng-include src="'footer.html'" ></div>
