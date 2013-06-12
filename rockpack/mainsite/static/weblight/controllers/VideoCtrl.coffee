@@ -1,50 +1,48 @@
 window.Weblight.controller('VideoCtrl', ['$scope', '$rootScope', '$routeParams', '$location', 'isMobile', ($scope, $rootScope, $routeParams, $location, isMobile) ->
 
-
-  $rootScope.currentVideo = {}
-
-  console.log $(window).width()
   @getPlayerWidth = ->
     if $(window).width() < 979 && $(window).width() > 500
       @playerWidth = $(window).width()
       @playerHeight = $(window).width()*9/16
     else if $(window).width() < 500
-      console.log 'in'
       @playerWidth = Math.floor($(window).width()*0.9)
       @playerHeight = Math.floor($(window).width()*0.9)*9/16
-      console.log $(window).width()
-      console.log @playerWidth
     else
       @playerWidth = 840
       @playerHeight = 473
 
+  $scope.videoNum = -10
+
+
   $scope.PlayVideo = =>
-    if $rootScope.playerReady && typeof $routeParams.video != "undefined"
+    if $scope.player?
+      $scope.player.loadVideoById($scope.videos[$scope.videoNum].video.source_id)
+      $scope.videodata = $rootScope.videos[$scope.videoNum]
+    else
+      if $rootScope.playerReady && typeof $routeParams.video != "undefined"
 
-      @getPlayerWidth()
+        @getPlayerWidth()
 
-      # need to trigger a hide, otherwise show did not fire on load
-      $("#lightbox").hide()
-      $("#lightbox").show()
-      $scope.videodata = _.find($scope.videos, (video) -> 
-        video.id == $routeParams.video
-      )
+        # need to trigger a hide, otherwise show did not fire on load
+        $("#lightbox").hide()
+        $("#lightbox").show()
+        for video in [0..$scope.videos.length-1]
+          if $rootScope.videos[video].id == $routeParams.video
+            $scope.videodata = $rootScope.videos[video]
+            $scope.videoNum = video
 
-      if typeof $scope.videodata == "undefined"
-        $scope.videodata = window.selected_video
-
-      $scope.player = new YT.Player('player', {
-        height: @playerHeight,
-        width: @playerWidth,
-        videoId: $scope.videodata.video.source_id,
-        playerVars: {
-          autoplay: 1,
-          showinfo: 1,
-          modestbranding: 1,
-          wmode: "opaque",
-          controls: 1
-        }
-      })
+        $scope.player = new YT.Player('player', {
+          height: @playerHeight,
+          width: @playerWidth,
+          videoId: $scope.videodata.video.source_id,
+          playerVars: {
+            autoplay: 1,
+            showinfo: 1,
+            modestbranding: 1,
+            wmode: "opaque",
+            controls: 1
+          }
+        })
 
   onPlayerReady = (event) ->
     event.target.playVideo()
@@ -56,8 +54,20 @@ window.Weblight.controller('VideoCtrl', ['$scope', '$rootScope', '$routeParams',
 
   )
 
+  $scope.playNextVid = (videoNumber) ->
+    if videoNumber < -5 or  videoNumber > $scope.videos.length-1
+      $scope.videoNum = 0
+    else
+      if videoNumber < 0
+        $scope.videoNum = $scope.videos.length-1
+      else
+        $scope.videoNum = videoNumber
+
+    $location.search( 'video',$scope.videos[$scope.videoNum].id)
+
+
+
   $scope.$watch((-> $routeParams.video), (newValue) ->
-    console.log 'got player id'
     if newValue
       $scope.PlayVideo()
     return

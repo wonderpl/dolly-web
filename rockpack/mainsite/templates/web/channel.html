@@ -65,7 +65,7 @@
       <script type="text/javascript" src="{{ ASSET_URL }}"></script>
     {% endassets %}
 
-    {% assets filters="coffeescript, rjsmin", output="gen/channel.%(version)s.js", "weblight/app.coffee", "weblight/controllers/AppCtrl.coffee", "weblight/controllers/ChannelCtrl.coffee", "weblight/controllers/PageCtrl.coffee", "weblight/controllers/PageCtrl.coffee",
+    {% assets filters="coffeescript", output="gen/channel.%(version)s.js", "weblight/app.coffee", "weblight/controllers/AppCtrl.coffee", "weblight/controllers/ChannelCtrl.coffee", "weblight/controllers/PageCtrl.coffee", "weblight/controllers/PageCtrl.coffee",
         "weblight/controllers/ChannelPlaybookCtrl.coffee", "weblight/services/browserServices.coffee", "weblight/controllers/VideoCtrl.coffee", "weblight/services/channelServices.coffee"
     %}
       <script type="text/javascript" src="{{ ASSET_URL }}"></script>
