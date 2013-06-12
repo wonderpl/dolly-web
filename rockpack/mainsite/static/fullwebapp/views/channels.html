@@ -12,7 +12,7 @@
   </ul>
   <div class="content" infinite-scroll="load_channels()" infinite-scroll-distance="1">
     <div  ng-repeat="channel in channels">
-      <a href="/#channel?{{channel.id}}"><img ng-src="{{channel.cover.thumbnail_url}}"></a>
+      <a href="/#channel/{{channel.owner.id}}/{{channel.id}}"><img ng-src="{{channel.cover.thumbnail_url}}"></a>
     </div>
   </div>
 </div>

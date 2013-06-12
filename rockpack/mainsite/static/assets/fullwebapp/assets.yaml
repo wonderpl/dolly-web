@@ -30,6 +30,7 @@ fullwebJS:
         - fullwebapp/services/*.coffee
         - fullwebapp/controllers/*.coffee
         - fullwebapp/directives/*.coffee
+        - fullwebapp/filters/*.coffee
 
 fullwebTemplates:
     filters: fullweb

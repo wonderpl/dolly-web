@@ -57,7 +57,7 @@ angular.module('WebApp').factory('ContentService', ($http, locale, apiUrl) ->
         console.log data
       )
 
-    getChannel: (start, size, categoryID) ->
+    getChannels: (start, size, categoryID) ->
       if typeof start == "undefined"
         start = 0
       if typeof size == "undefined"
@@ -80,7 +80,8 @@ angular.module('WebApp').factory('ContentService', ($http, locale, apiUrl) ->
           console.log data
         )
 
-    getVideos: (category, start, size) ->
+    #TODO: Implement call, currently copy/paste
+    getChannelVideos: (categoryID, start, size) ->
       if typeof start == "undefined"
         start = 0
       if typeof size == "undefined"
@@ -88,23 +89,20 @@ angular.module('WebApp').factory('ContentService', ($http, locale, apiUrl) ->
 
       dataObj = {'start': start, 'size': size}
 
-      if typeof category != undefined
-        dataObj.category = category
-
-      dataObj.locale = locale
+      if typeof categoryID != "undefined"
+        dataObj.category = categoryID
 
       $http({
         method: 'GET',
-        url: apiUrl + 'ws/videos/',
-        data: $.param(dataObj)
+        url: apiUrl.popular_channels,
+        params: dataObj,
       })
-      .then(((data) ->
-        console.log data.data.videos
-        return data.data.videos
-      ),
-      (data) ->
-        console.log data
-      )
+        .then(((data) ->
+        return data.data.channels
+        ),
+        (data) ->
+          console.log data
+        )
 
   }
 

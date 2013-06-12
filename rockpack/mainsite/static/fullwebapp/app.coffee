@@ -2,6 +2,7 @@ window.WebApp = angular.module('WebApp', ['infinite-scroll','ui.bootstrap'])
   .config(['$routeProvider', ($routeProvider) ->
     $routeProvider.when('/login', {templateUrl: 'login.html'})
     $routeProvider.when('/search', {templateUrl: 'search.html'})
+    $routeProvider.when('/channel/:userid/:channelid', {templateUrl: 'channel.html'})
     $routeProvider.when('/feed', {
       templateUrl: 'feed.html',
       controller: 'FeedCtrl',
@@ -24,7 +25,7 @@ window.WebApp = angular.module('WebApp', ['infinite-scroll','ui.bootstrap'])
     })
     $routeProvider.when('/channels', {
       templateUrl: 'channels.html',
-      controller: 'ChannelCtrl',
+      controller: 'ChannelsCtrl',
       reloadOnSearch: false
     })
   ])

@@ -1,4 +1,4 @@
-window.WebApp.controller('ChannelCtrl', ['$scope', 'cookies', 'ContentService', '$location', ($scope, cookies, ContentService, $location) ->
+window.WebApp.controller('ChannelsCtrl', ['$scope', 'cookies', 'ContentService', '$location', ($scope, cookies, ContentService, $location) ->
 
 
   # TODO: Load channels based on get variable (catid) currently being set but not read
@@ -10,7 +10,7 @@ window.WebApp.controller('ChannelCtrl', ['$scope', 'cookies', 'ContentService', 
 
   $scope.load_channels = () ->
     if $scope.totalChannels > $scope.pagination || $scope.pagination  == 0
-      ContentService.getChannel($scope.pagination, 100, $location.search().catid)
+      ContentService.getChannels($scope.pagination, 100, $location.search().catid)
         .then((data)->
           if $scope.pagination == 0
             $scope.channels = data.items
