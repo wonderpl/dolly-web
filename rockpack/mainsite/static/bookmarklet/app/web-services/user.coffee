@@ -14,7 +14,6 @@ angular.module('Bookmarklet').factory('User', ($http) ->
         return data.data
       ),
       (data) ->
-        console.log data
       )
 
     createChannel: (bearerToken, channelName) ->
@@ -28,7 +27,6 @@ angular.module('Bookmarklet').factory('User', ($http) ->
           return data.data
         ),
         (data) ->
-          console.log data
           return data.data
         )
 
@@ -40,11 +38,10 @@ angular.module('Bookmarklet').factory('User', ($http) ->
       headers: {"authorization": "Bearer #{bearerToken}", "Content-Type": "application/json; charset=UTF-8"},
       })
         .then(((data) ->
-          console.log data
           return data.data
         ),
         (data) ->
-          console.log data
+          return data
         )
   }
 

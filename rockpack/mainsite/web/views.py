@@ -3,6 +3,7 @@ from urlparse import urljoin
 import pyes
 from flask import request, json, render_template, abort
 from flask.ext import wtf
+from werkzeug.exceptions import NotFound
 from rockpack.mainsite import app, requests
 from rockpack.mainsite.core.token import parse_access_token
 from rockpack.mainsite.core.webservice import JsonReponse
@@ -25,6 +26,8 @@ def ws_request(url, **kwargs):
         env = request.environ.copy()
         env['PATH_INFO'] = url
         env['QUERY_STRING'] = urlencode(kwargs)
+        if 'API_SUBDOMAIN' in app.config:
+            env['HTTP_HOST'] = '.'.join((app.config['API_SUBDOMAIN'], app.config['SERVER_NAME']))
         meta = {}
         response = u''.join(app.wsgi_app(env, start_response))
         if meta['status'] == '404 NOT FOUND':
@@ -32,37 +35,56 @@ def ws_request(url, **kwargs):
     return json.loads(response)
 
 
-@expose_web('/', 'web/home.html', cache_age=3600)
+if app.config.get('PRE_LAUNCH'):
+    prelaunch_path = '/'
+    postlaunch_path = '/earlyaccess'
+else:
+    prelaunch_path = '/prelaunch'
+    postlaunch_path = '/'
+
+
+@expose_web(prelaunch_path, 'web/temp_landing.html', cache_age=3600)
+def prelaunch_homepage():
+    injectorUrl = url_for('injector')
+    return dict(injectorUrl=injectorUrl)
+
+
+@expose_web(postlaunch_path, 'web/home.html', cache_age=3600)
 def homepage():
     api_urls = json.dumps(ws_request('/ws/'))
     return dict(api_urls=api_urls)
 
 
-@expose_web('/bookmarklet', 'web/bookmarklet.html', secure=True)
+@expose_web('/bookmarklet', 'web/bookmarklet.html', cache_age=3600, secure=True)
 def bookmarklet():
     api_urls = ws_request('/ws/')
     return dict(api_urls=api_urls), 200, {'P3P': 'CP="CAO PSA OUR"'}
 
 
-@expose_web('/injectorjs', 'web/injector.js', secure=True)
+@expose_web('/injectorjs', 'web/injector.js', cache_age=3600, secure=True)
 def injector():
     return dict(iframe_url=url_for('bookmarklet')), 200, {'Content-Type': 'application/javascript'}
 
 
-@expose_web('/tos', 'web/terms.html')
+@expose_web('/tos', 'web/terms.html', cache_age=3600)
 def terms():
-    return None, 200, {}
+    return dict(full_site=postlaunch_path)
 
 
-@expose_web('/privacy', 'web/privacy.html')
+@expose_web('/cookies', 'web/cookies.html', cache_age=3600)
+def cookies():
+    return dict(full_site=postlaunch_path)
+
+
+@expose_web('/privacy', 'web/privacy.html', cache_age=3600)
 def privacy():
-    api_urls = ws_request('/ws/')
-    return None, 200, {}
+    return dict(full_site=postlaunch_path)
 
 
 @expose_web('/channel/<slug>/<channelid>/', 'web/channel.html', cache_age=3600)
 def channel(slug, channelid):
-    channel_data = ws_request('/ws/-/channels/%s/' % channelid, size=40)
+    #Temporary fix to pagination bug, fetching 1000 videos.
+    channel_data = ws_request('/ws/-/channels/%s/' % channelid, size=1000)
     selected_video = None
     if 'video' in request.args:
         for instance in channel_data['videos']['items']:
@@ -70,15 +92,19 @@ def channel(slug, channelid):
                 selected_video = instance
         # Not in the first 40 - try fetching separately:
         if not selected_video:
-            video_data = ws_request(
-                '/ws/-/channels/%s/videos/%s/' % (channelid, request.args['video']))
-            if 'error' not in video_data:
-                selected_video = video_data
+            try:
+                video_data = ws_request(
+                    '/ws/-/channels/%s/videos/%s/' % (channelid, request.args['video']))
+            except NotFound:
+                pass
+            else:
+                if 'error' not in video_data:
+                    selected_video = video_data
     channel_data['canonical_url'] = url_for(
         'channel', slug=slugify(channel_data['title']) or '-', channelid=channelid)
     if selected_video:
         channel_data['canonical_url'] += '?video=' + selected_video['id']
-    return dict(channel_data=channel_data, selected_video=selected_video)
+    return dict(channel_data=channel_data, selected_video=selected_video, full_site=postlaunch_path)
 
 
 @expose_web('/s/<linkid>', cache_age=60, cache_private=True)

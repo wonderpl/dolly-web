@@ -2,7 +2,7 @@ import hmac
 import hashlib
 import uuid
 from mock import patch
-from rockpack.mainsite.services.video.models import Channel
+from rockpack.mainsite.services.video.models import Channel, Video
 from rockpack.mainsite.services.pubsubhubbub.api import subscribe
 from rockpack.mainsite.services.pubsubhubbub.models import Subscription
 from ..base import RockPackTestCase
@@ -153,7 +153,7 @@ class PubSubHubbubTestCase(RockPackTestCase):
         # Double-check that subsequent updates and repeated videos
         # are handled correctly.
         ids = map(str, range(3))
-        entry = ''
+        entry = PUSH_ENTRY_XML % dict(videoid=ids[0])
         for id in ids:
             entry += PUSH_ENTRY_XML % dict(videoid=id)
             data = PUSH_ATOM_XML % dict(entry=entry)

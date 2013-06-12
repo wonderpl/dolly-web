@@ -109,7 +109,10 @@ class ImportView(BaseView):
             self.record_action('imported', channel, '%d videos' % count)
             push_config = form.import_data.push_config
             if push_config and channel.id:
-                subscribe(push_config.hub, push_config.topic, channel.id)
+                try:
+                    subscribe(push_config.hub, push_config.topic, channel.id)
+                except Exception, e:
+                    flash('Unable to subscribe to channel: %s' % e.message, 'error')
         else:
             channel = None
 

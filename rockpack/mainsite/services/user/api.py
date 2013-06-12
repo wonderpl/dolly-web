@@ -142,7 +142,8 @@ def save_video_activity(userid, action, instance_id, locale):
             if action == 'unstar':
                 channel.remove_videos([video_id])
             else:
-                channel.add_videos([video_id])
+                # Return new instance here so that it can be shared
+                return channel.add_videos([video_id])[0]
 
 
 @commit_on_success
@@ -577,7 +578,9 @@ class UserWS(WebService):
         if use_elasticsearch():
             ch = api.ChannelSearch(self.get_locale())
             ch.add_id(channelid)
-            if not ch.channels(with_videos=self.get_page(), with_owners=True):
+            ch.set_paging()
+            size, limit = self.get_page()
+            if not ch.channels(with_videos=True, with_owners=True, video_paging=(size, limit)):
                 abort(404)
             return ch.channels()[0]
 
@@ -717,9 +720,13 @@ class UserWS(WebService):
     def get_subscriptions(self, userid):
         subscriptions = user_subscriptions(userid)
         if subscriptions.count():
-            channels = [s[0] for s in subscriptions.values('channel')]
+            subs = {s[0]: s[1] for s in subscriptions.values('channel', 'date_created')}
+
             items, total = video_api.get_local_channel(
-                self.get_locale(), self.get_page(), channels=channels)
+                self.get_locale(), self.get_page(), channels=subs.keys())
+
+            x = sorted([(subs[i['id']], i) for i in items], reverse=True)
+            items = [item for date, item in x]
         else:
             items, total = [], 0
         for item in items:
@@ -759,10 +766,10 @@ class UserWS(WebService):
     @expose_ajax('/<userid>/subscriptions/recent_videos/', cache_age=60, cache_private=True)
     @check_authorization(self_auth=True)
     def recent_videos(self, userid):
-        subscriptions = user_subscriptions(userid).\
-            join(Channel).filter_by(public=True, deleted=False)
-        if subscriptions.count():
-            channels = [s[0] for s in subscriptions.values('channel')]
+        channels = [
+            s[0] for s in user_subscriptions(userid).join(Channel).
+            filter_by(public=True, deleted=False).values('channel')]
+        if channels:
             items, total = video_api.get_local_videos(self.get_locale(), self.get_page(),
                                                       date_order=True, channels=channels)
         else:

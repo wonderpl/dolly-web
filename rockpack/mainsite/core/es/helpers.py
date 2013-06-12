@@ -66,26 +66,23 @@ class DBImport(object):
         with app.test_request_context():
             owners = models.User.query
             total = owners.count()
-            step = 2000
             print 'importing {} owners'.format(total)
             start = time.time()
-            for i in xrange(0, total, step):
-                for owner in owners.offset(i).limit(step):
-                    api.add_owner_to_index(owner, bulk=True, refresh=False, no_check=True)
+            for owner in owners.yield_per(6000):
+                api.add_owner_to_index(owner, bulk=True, refresh=False, no_check=True)
+            self.conn.flush_bulk(forced=True)
             print 'finished in', time.time() - start, 'seconds'
 
     def import_channels(self):
         from rockpack.mainsite.services.video.models import Channel
         from sqlalchemy.orm import joinedload
         with app.test_request_context():
-            channels = Channel.query.filter(Channel.public == True, Channel.deleted == False).options(joinedload(Channel.category_rel), joinedload(Channel.metas))
-            total = channels.count()
-            step = 2000
+            channels = Channel.query.filter(Channel.public == True, Channel.deleted == False).options(joinedload(Channel.category_rel), joinedload(Channel.metas), joinedload(Channel.owner_rel))
             print 'importing {} PUBLIC channels\r'.format(channels.count())
             start = time.time()
-            for i in xrange(0, total, step):
-                for channel in channels.offset(i).limit(step):
-                    api.add_channel_to_index(channel, bulk=True, refresh=False, no_check=True)
+            for channel in channels.yield_per(6000):
+                api.add_channel_to_index(channel, bulk=True, refresh=False, no_check=True)
+            self.conn.flush_bulk(forced=True)
             print 'finished in', time.time() - start, 'seconds'
 
     def import_videos(self):
@@ -99,10 +96,9 @@ class DBImport(object):
                                             joinedload(VideoInstance.video_channel)).filter(
                             Video.visible == True, Channel.public == True)
             total = query.count()
-            step = 4000
-            print 'importing videos: stepping in {}s of {}'.format(step, total)
+            print 'importing {} videos'.format(total)
             start = time.time()
-            for i in xrange(0, total, step):
-                for v in query.offset(i).limit(step):
-                    api.add_video_to_index(v, bulk=True, refresh=False, no_check=True)
+            for v in query.yield_per(6000):
+                api.add_video_to_index(v, bulk=True, refresh=False, no_check=True)
+            self.conn.flush_bulk(forced=True)
             print 'finished in', time.time() - start, 'seconds'

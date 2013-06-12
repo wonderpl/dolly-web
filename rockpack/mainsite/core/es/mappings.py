@@ -62,6 +62,7 @@ video_mapping = {
                     "index": "not_analyzed"},
                 "source_id": {"type": "string"},
                 "source_username": {"type": "string"},
+                "date_published": {"type": "date"},
                 "duration": {"type": "integer"}
             }
         }
@@ -78,15 +79,13 @@ user_mapping = {
             "type": "string",
             "index": "not_analyzed"},
         "display_name": {
-            "type": "string",
-            "index": "not_analyzed"},
+            "type": "string"},
         "username": {
-            "type": "string",
-            "index": "not_analyzed"},
+            "type": "string"},
         "id": {
             "type": "string",
             "index": "not_analyzed"
-        }
+        },
     }
 }
 
@@ -105,6 +104,10 @@ channel_mapping = {
         "editorial_boost": {"type": "float", "null_value": 1.0},
         "favourite": {"type": "boolean"},
         "verified": {"type": "boolean"},
+        "keywords": {
+            "type": "string",
+            "index": "not_analyzed"
+        },
         "ecommerce_url": {
             "type": "string",
             "index": "not_analyzed"
@@ -123,14 +126,13 @@ channel_mapping = {
             "analyzer": "snowball"
         },
         "cover": {
-            "type": "object",
             "properties": {
                 "thumbnail_url": {
                     "type": "string",
                     "index": "not_analyzed"
                 },
                 "aoi": {
-                    "type": "integer",
+                    "type": "float",
                 }
             },
         },

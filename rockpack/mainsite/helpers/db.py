@@ -88,6 +88,9 @@ class ImagePath(object):
     def __str__(self):
         return self.path
 
+    def __nonzero__(self):
+        return bool(self.path)
+
     def __getattr__(self, name):
         if name == 'original':
             path = self.path

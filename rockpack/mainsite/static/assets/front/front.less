@@ -6,29 +6,32 @@
 }
 
 @import url("http://fast.fonts.com/t/1.css?apiType=css&projectid=e8c15b58-fc59-463c-be33-77dba4bf5031");
-
 @font-face{
   font-family:"dn-bold";
   src:url("/static/assets/fonts/b32ab78b-6c51-4bd3-bc37-4edcec0331f8.eot?#iefix");
-  src:url("/static/assets/fonts/b32ab78b-6c51-4bd3-bc37-4edcec0331f8.eot?#iefix") format("eot"),
-    url("/static/assets/fonts/6241bd09-15c2-485e-9796-9db8d0aa6974.ttf") format("truetype"),
-    url("/static/assets/fonts/9949035f-6226-4080-a14a-bf7d94ffb1e1.woff") format("woff"),
-    url("/static/assets/fonts/af94da3e-4232-416a-b6bc-f39f85dd5db6.svg#af94da3e-4232-416a-b6bc-f39f85dd5db6") format("svg");
+  src:url("/static/assets/fonts/b32ab78b-6c51-4bd3-bc37-4edcec0331f8.eot?#iefix") format("eot"),url("/static/assets/fonts/9949035f-6226-4080-a14a-bf7d94ffb1e1.woff") format("woff"),url("/static/assets/fonts/6241bd09-15c2-485e-9796-9db8d0aa6974.ttf") format("truetype"),url("/static/assets/fonts/af94da3e-4232-416a-b6bc-f39f85dd5db6.svg#af94da3e-4232-416a-b6bc-f39f85dd5db6") format("svg");
 }
-
 @font-face{
   font-family:"dn-regular";
   src:url("/static/assets/fonts/da088ecc-a53c-4831-a95b-6fd81b5b338a.eot?#iefix");
-  src:url("/static/assets/fonts/da088ecc-a53c-4831-a95b-6fd81b5b338a.eot?#iefix") format("eot"),
-    url("/static/assets/fonts/868c94b5-ca49-46b7-b62b-297f8d861125.ttf") format("truetype"),
-    url("/static/assets/fonts/c5a7f89e-15b6-49a9-8259-5ea665e72191.woff") format("woff"),
-    url("/static/assets/fonts/e3145f65-29b5-4f7f-8c6e-2dc135021b6a.svg#e3145f65-29b5-4f7f-8c6e-2dc135021b6a") format("svg");
+  src:url("/static/assets/fonts/da088ecc-a53c-4831-a95b-6fd81b5b338a.eot?#iefix") format("eot"),url("/static/assets/fonts/c5a7f89e-15b6-49a9-8259-5ea665e72191.woff") format("woff"),url("/static/assets/fonts/868c94b5-ca49-46b7-b62b-297f8d861125.ttf") format("truetype"),url("/static/assets/fonts/e3145f65-29b5-4f7f-8c6e-2dc135021b6a.svg#e3145f65-29b5-4f7f-8c6e-2dc135021b6a") format("svg");
 }
+
+
+a {
+  color: #0ba6ab;
+}
+
+a:hover, a:visited, a:active {
+  color: #0ba6ab;
+  text-decoration: underline;
+}
+
 
 .wrapper {
   margin: 0 auto;
   position: relative;
-  width: 860px;
+  width: 960px;
   .clearfix();
 }
 
@@ -53,32 +56,96 @@ body {
   }
 }
 
+#press {
+  #pressheader {
+    height: 550px;
+    background: url(/static/assets/front/images/press.jpg) no-repeat 50% 50%;
+  }
+
+  #playbookcontainer {
+    padding-top: 70px;
+    background: url(/static/assets/front/images/verticleborder.png) repeat-y left top;
+  }
+
+  #playbookmenu {
+    border-right: none;
+    width: 200px;
+    color: #858a8e;
+    line-height: 47px;
+
+    .selected{
+      color: #1c1f21;
+      text-decoration: none;
+    }
+  }
+
+  #playbookcontent {
+
+    #playbookcontentcontainer {
+      margin-left: 250px;
+    }
+
+    h3 {
+      font-size: 37px;
+      font-family: "dn-regular", sans-serif;
+      border-bottom: 2px solid #dee1e2;
+      padding-bottom: 30px;
+      color: #1c1f21;
+    }
+
+    p {
+      color: #b9b9b9;
+    }
+
+    .press-release {
+      color: #b9b9b9;
+      font-size: 17px;
+      line-height: 17px;
+      font-family: "dn-regular", sans-serif;
+      padding: 30px 0;
+      border-bottom: 2px solid #dee1e2;
+
+      .date {
+        margin-bottom: 20px;
+
+        .publisher {
+          font-family: "dn-bold", sans-serif;
+        }
+      }
+
+      &:last-child {
+        border-bottom: none;
+      }
+    }
+
+    .press_logos {
+      img {
+        display: block;
+        margin: 40px 0;
+      }
+    }
+  }
+}
+
 #whatson {
 
   position: relative;
 
-  .ipadscontainer {
-    height: 467px;
-    width: 392px;
+  .ipadsimgs {
+    width: 587px;
+    height: 360px;
     position: absolute;
-    right: 0;
+    right: 15px;
     text-align: right;
-    top: 150px;
-    overflow: hidden;
-
-    .ipadsimgs {
-      height: 467px;
-      width: 392px;
-      background: url(/static/assets/front/images/ipads.png) no-repeat;
-      display: inline-block;
-    }
+    bottom: 15px;
+    background: url(/static/assets/front/images/ipads.png) no-repeat;
   }
 
   .abs-wrapper {
     width: 960px;
     height: 397px;
     position: absolute;
-    top: 150px;
+    top: 130px;
     margin-left: -480px;
     left: 50%;
 
@@ -87,7 +154,7 @@ body {
       color: #fff;
 
       img {
-        margin-top: 45px;
+        margin-top: 176px;
       }
     }
 
@@ -96,17 +163,18 @@ body {
   h1 {
     font-size: 55px;
     line-height: 55px;
-    font-family: "dn-bold";
-    text-shadow: 0px 3px 5px rgba(0,0,0,0.6);
-
+    font-family: "dn-bold", sans-serif;
+    text-shadow: 0 1px 5px rgba(0,0,0,0.45);
+    font-weight: normal;
   }
 
   h2 {
-    font-family: "dn-regular";
-    font-size: 20px;
-    line-height: 20px;
+    font-family: "dn-regular", sans-serif;
+    font-size: 24px;
+    line-height: 34px;
     margin-top: 30px;
-    text-shadow: 0px 3px 5px rgba(0,0,0,0.6);
+    text-shadow: 0 1px 5px rgba(0,0,0,0.45);
+    font-weight: normal;
   }
 
   #logo {
@@ -124,56 +192,65 @@ body {
   }
 }
 
-#video {
+.video-container {
   margin-top: 30px;
+}
+
+#video {
   position: relative;
   color: #fff;
-  background: url(/static/assets/front/images/video.jpg) no-repeat;
-  background-size: cover;
-  height: 374px;
+  background: url(/static/assets/front/images/video.jpg?v=1) no-repeat 50% 50%;
+  height: 450px;
+  width: 100$;
 
   &>div {
     text-align: center;
-    padding-top: 127px;
   }
 
   h2 {
-    margin-top: 55px;
+    padding-top: 70px;
     font-size: 30px;
-    font-family: "dn-regular";
+    font-family: "dn-regular", sans-serif;
     text-transform: uppercase;
     text-shadow: 0px 3px 5px rgba(0,0,0,0.6);
+  }
+
+  #play {
+    margin-top: 70px;
   }
 
 }
 
 #iphones {
   margin-top: 60px;
+  width: 800px;
+  margin: 0 auto;
 
   #iphone1 {
     background: url(/static/assets/front/images/iphone1.jpg) no-repeat;
-    width: 436px;
-    height: 381px;
+    width: 210px;
+    height: 442px;
     display: inline-block;
   }
 
   #iphone2 {
     background: url(/static/assets/front/images/iphone2.jpg) no-repeat;
-    width: 396px;
-    height: 390px;
+    width: 212px;
+    height: 446px;
     display: inline-block;
   }
 
   #iphone3 {
     background: url(/static/assets/front/images/iphone3.jpg) no-repeat;
-    width: 420px;
-    height: 357px;
+    width: 214px;
+    height: 451px;
     display: inline-block;
+    margin-bottom: 66px;
   }
 
   p {
     font-size: 19px;
-    font-family: "dn-regular";
+    font-family: "dn-regular", sans-serif;
     line-height: 19px;
   }
 
@@ -182,9 +259,9 @@ body {
     color: #858a8e;
     font-size: 35px;
     text-shadow: 1px 1px #fff;
-    font-family: "dn-regular";
+    font-family: "dn-regular", sans-serif;
     margin: 0 auto;
-    margin-bottom: 65px;
+    margin: 65px 0;
   }
 
   h3 {
@@ -200,14 +277,14 @@ body {
     }
 
     .plus {
-      margin: 100px 0 0 30px;
+      margin: 100px 0 0 140px;
       display: inline-block;
       vertical-align: top;
 
       img {
         width: 35px;
         height: 35px;
-        margin-bottom: 10px;
+        margin-bottom: 20px;
       }
     }
   }
@@ -218,7 +295,8 @@ body {
 
     .text {
       display: inline-block;
-      margin: 120px 30px 0 0;
+      margin: 120px 156px 0 0;
+      width: 325px;
       vertical-align: top;
     }
 
@@ -232,7 +310,8 @@ body {
 
     .text {
       display: inline-block;
-      margin: 120px 0 0 30px;
+      margin: 120px 0 0 136px;
+      width: 340px;
       vertical-align: top;
     }
 
@@ -283,7 +362,6 @@ body {
 
     & > li {
       float: left;
-      width: 33%;
       border-right: 1px solid #ddd;
 
       &:first-child {
@@ -297,8 +375,9 @@ body {
       h3 {
         text-align: center;
         font-size: 20px;
-        font-family: "dn-regular";
+        font-family: "dn-regular", sans-serif;
         text-transform: uppercase;
+        margin-bottom: 30px;
       }
     }
   }
@@ -316,7 +395,7 @@ body {
   }}
 
 footer {
-  font-family: "dn-regular";
+  font-family: "dn-regular", sans-serif;
   color: #aaa;
   background: #fff;
   padding: 60px 0;
@@ -324,7 +403,7 @@ footer {
   ul {
     list-style: none;
     .clearfix();
-    margin: 0 0 0 35px;
+    margin: 0 0 30px 35px;
     display: inline-block;
 
     li {
@@ -335,24 +414,18 @@ footer {
     }
   }
 
-  .wrapper {
-    ul {
-      margin: 0;
-    }
-  }
-
   .rights {
-    text-align: center;
-    margin-top: 30px;
+    text-align: right;
+    margin-top: 10px;
   }
 
   a, a:visited, a:active {
-    color: #1cb9be;
+    color: #0ba6ab;
     text-decoration: none;
   }
 
   a:hover {
-    color: #1cb9be;
+    color: #0ba6ab;
     text-decoration: underline;
   }
 
@@ -394,7 +467,7 @@ footer {
 
 #cover {
   overflow: hidden;
-  height: 621px;
+  height: 671px;
   background: url(/static/assets/front/images/cover.jpg) no-repeat 50% 50%;
   background-size: cover;
 
@@ -416,20 +489,20 @@ footer {
 
   header {
     min-height: 210px;
-    color: #fff;
-    background: #282d33;
+    color: #858a8e;
+    background: #dde0e1;
 
     h1 {
       font-size: 35px;
       text-transform: uppercase;
-      font-family: "dn-bold" !important;
+      font-family: "dn-bold", sans-serif !important;
       padding-top:150px;
     }
 
     h2 {
       font-size: 32px;
       text-transform: uppercase;
-      font-family: "dn-regular";
+      font-family: "dn-regular", sans-serif;
       padding-top:150px;
     }
   }
@@ -441,27 +514,11 @@ footer {
     }
 
     .readmorebtn {
-      -webkit-backface-visibility: hidden;
-      display: inline-block;
-      border-top: 1px solid #8ad7d9;
-      background: rgb(60,189,192);
-      background: url(data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiA/Pgo8c3ZnIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgdmlld0JveD0iMCAwIDEgMSIgcHJlc2VydmVBc3BlY3RSYXRpbz0ibm9uZSI+CiAgPGxpbmVhckdyYWRpZW50IGlkPSJncmFkLXVjZ2ctZ2VuZXJhdGVkIiBncmFkaWVudFVuaXRzPSJ1c2VyU3BhY2VPblVzZSIgeDE9IjAlIiB5MT0iMCUiIHgyPSIwJSIgeTI9IjEwMCUiPgogICAgPHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iIzNjYmRjMCIgc3RvcC1vcGFjaXR5PSIxIi8+CiAgICA8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiMyY2FkYjAiIHN0b3Atb3BhY2l0eT0iMSIvPgogIDwvbGluZWFyR3JhZGllbnQ+CiAgPHJlY3QgeD0iMCIgeT0iMCIgd2lkdGg9IjEiIGhlaWdodD0iMSIgZmlsbD0idXJsKCNncmFkLXVjZ2ctZ2VuZXJhdGVkKSIgLz4KPC9zdmc+);
-      background: -moz-linear-gradient(top,  rgba(60,189,192,1) 0%, rgba(44,173,176,1) 100%);
-      background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,rgba(60,189,192,1)), color-stop(100%,rgba(44,173,176,1)));
-      background: -webkit-linear-gradient(top,  rgba(60,189,192,1) 0%,rgba(44,173,176,1) 100%);
-      background: -o-linear-gradient(top,  rgba(60,189,192,1) 0%,rgba(44,173,176,1) 100%);
-      background: -ms-linear-gradient(top,  rgba(60,189,192,1) 0%,rgba(44,173,176,1) 100%);
-      background: linear-gradient(to bottom,  rgba(60,189,192,1) 0%,rgba(44,173,176,1) 100%);
-      filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#3cbdc0', endColorstr='#2cadb0',GradientType=0 );
+      background: #0ba6ab;
+      padding: 10px 15px;
       color: #fff;
-      font-size: 14px;
-      font-weight: bold;
-      padding: 6px 10px 5px 10px;
-      cursor: pointer;
-      text-decoration: none !important;
-      letter-spacing: -1px;
-      // Webkit background gradient transition support is currently broken : http://stackoverflow.com/questions/6542212/use-css3-transitions-with-gradient-backgrounds
-
+      border-radius: 6px;
+      display: inline-block;
 
       .arrow {
         width: 16px;
@@ -504,7 +561,7 @@ footer {
     margin-right: 25px;
     text-transform: uppercase;
     vertical-align: top;
-    font-family: "dn-regular";
+    font-family: "dn-regular", sans-serif;
     padding-left: 10px;
     float: left;
   }
@@ -581,7 +638,7 @@ footer {
           display: inline-block;
 
           .name {
-            font-family: 'dn-bold';
+            font-family: 'dn-bold', sans-serif;
             font-size: 18px;
             text-transform: uppercase;
             margin: 12px 0 0 20px;
@@ -591,7 +648,7 @@ footer {
             font-weight: 400;
             font-size: 11px;
             line-height: 11px;
-            color: #20c3e2;
+            color: #0ba6ab;
             margin: 0 0 0 20px;
           }
 
@@ -617,11 +674,11 @@ footer {
         }
 
         blockquote {
-          background: #1cb9be;
+          background: #0ba6ab;
           display: block;
           border: none;
           color: #fff;
-          font-family: 'dn-bold';
+          font-family: 'dn-bold', sans-serif;
           text-transform: uppercase;
           padding: 5%;
           margin: 0 0 20px 0;
@@ -644,7 +701,7 @@ footer {
 
     h2 {
       color: #fff;
-      font-family: "dn-bold";
+      font-family: "dn-bold", sans-serif;
       font-size: 35px;
       text-transform: uppercase;
       margin-top: 30px;
@@ -657,8 +714,9 @@ footer {
 
     p {
       font-size: 18px;
-      font-family: "dn-regular";
+      font-family: "dn-regular", sans-serif;
       text-transform: uppercase;
+      color: #858a8e;
     }
   }
 }
@@ -674,7 +732,7 @@ footer {
   }
 
   p {
-    font-family: "dn-regular";
+    font-family: "dn-regular", sans-serif;
     font-size: 23px;
   }
 }
@@ -688,7 +746,7 @@ footer {
   float: left;
   color: #0ba6ab;
   font-size: 23px;
-  font-family: "dn-regular";
+  font-family: "dn-regular", sans-serif;
   line-height: 30px;
   cursor: pointer;
   width:320px;
@@ -704,12 +762,18 @@ footer {
 #playbookcontent {
   float: left;
   width: 100%;
-  font-size: 23px;
+  font-size: 16px;
   line-height: 28px;
 
   h3 {
-    font-family: "dn-bold";
-    margin-top: 0;
+    font-family: "dn-bold", sans-serif;
+    margin-top: 30px;
+    font-size: 20px;
+    line-height: 20px;
+  }
+
+  p {
+    margin: 10px 0;
   }
 
   #playbookcontentcontainer {
@@ -723,27 +787,28 @@ footer {
   margin-bottom: 32px;
 
   h1 {
-    font-family: "dn-bold";
+    font-family: "dn-bold", sans-serif;
     font-size: 43px;
-    color: #686868;
+    color: #858a8e;
   }
 
   h2 {
-    font-family: "dn-regular";
+    font-family: "dn-regular", sans-serif;
     font-size: 33px;
     color: #a9a9a9;
   }
 
   p {
-    font-family: "dn-regular";
+    font-family: "dn-regular", sans-serif;
     color: #1c1f21;
     font-size: 18px;
     width: 700px;
+    line-height: 30px;
   }
 }
 
 #chalkboard {
-  background: url(/static/assets/weblight/images/tileblackboard.jpg) repeat-x;
+  background: url(/static/assets/front/images/tileblackboard.jpg) repeat-x;
   height: 655px;
 
   #leverageyourcommunity {
@@ -762,8 +827,12 @@ footer {
   }
 
   #bottomtext {
-    width: 710px;
+    width: 850px;
     margin: 30px auto 0;
+
+    img {
+      margin: 0 20px;
+    }
   }
 }
 
@@ -793,12 +862,12 @@ footer {
 
     h3 {
       color: #1c1f21;
-      font-family: "dn-bold";
+      font-family: "dn-bold", sans-serif;
       font-size: 20px;
     }
 
     p {
-      font-family: "dn-regular";
+      font-family: "dn-regular", sans-serif;
       font-size: 18px;
       color: #5b6267;
     }
@@ -826,7 +895,7 @@ footer {
   p {
     color: #1c1f21;
     font-size: 19px;
-    font-family: "dn-regular";
+    font-family: "dn-regular", sans-serif;
   }
 
   .container {
@@ -836,7 +905,7 @@ footer {
     h3 {
       color: #1c1f21;
       font-size: 20px;
-      font-family: "dn-bold";
+      font-family: "dn-bold", sans-serif;
       line-height: 22px;
       margin-top: 45px;
       text-transform: uppercase;
@@ -865,18 +934,18 @@ footer {
 #share {
   background: #f0f0f0;
   text-align: center;
-  padding: 60px 0;
+  padding: 70px 0 55px 0;
 
 
   .wrapper > ul {
     list-style-type: none;
-    margin: 60px 0 15px 0;
+    margin: 0;
     .clearfix();
 
     & > li {
       float: left;
-      width: 33%;
       border-right: 1px solid #ddd;
+      padding: 20px;
 
       &:first-child {
         border-left: 0;
@@ -890,7 +959,7 @@ footer {
         text-align: center;
         font-size: 20px;
         line-height: 22px;
-        font-family: "dn-regular";
+        font-family: "dn-regular", sans-serif;
       }
     }
   }
@@ -900,6 +969,7 @@ footer {
 #bookmarklet-content {
 
   min-height: 510px;
+  background: #f7f7f7;
 
   h1 {
     font-size: 40px;
@@ -909,7 +979,7 @@ footer {
   h2 {
     font-size: 21px;
     padding-top: 0;
-    font-family: "dn-regular";
+    font-family: "dn-regular", sans-serif;
     line-height: 22px;
   }
 
@@ -974,7 +1044,7 @@ footer {
     }
 
     .title {
-      font-family: "dn-bold";
+      font-family: "dn-bold", sans-serif;
       font-size: 37px;
       color: #262b30;
       text-align: center;
@@ -992,12 +1062,21 @@ footer {
     width: 1100px;
   }
 
+  #whatson {
+
+    .abs-wrapper {
+      margin-left: -557px;
+    }
+  }
+
   #iphones {
+
+    width: 1100px;
 
     #iphone2 {
       background: url(/static/assets/front/images/iphone2_wide.jpg);
-      width: 291px;
-      height: 386px;
+      width: 282px;
+      height: 595px;
       display: block;
       margin: 0 auto;
     }
@@ -1005,7 +1084,7 @@ footer {
     #iphone1 {
       background: url(/static/assets/front/images/iphone1_wide.jpg);
       width: 282px;
-      height: 386px;
+      height: 595px;
       display: block;
       margin: 0 auto;
     }
@@ -1013,7 +1092,7 @@ footer {
     #iphone3 {
       background: url(/static/assets/front/images/iphone3_wide.jpg);
       width: 282px;
-      height: 386px;
+      height: 595px;
       display: block;
       margin: 0 auto;
     }
@@ -1031,12 +1110,18 @@ footer {
 
       .text {
         display: block;
+        text-align: center;
       }
     }
 
     #addvideo {
       .plus {
         margin: 60px 0 0 45px;
+        text-align: center;
+
+        img {
+          margin: 0 auto 20px;
+        }
       }
     }
 
@@ -1044,8 +1129,9 @@ footer {
 
       .text {
         position: absolute;
-        top: 310px;
-        text-align: left;
+        top: 525px;
+        text-align: text;
+        margin: 120px 20px 0 0;
         left: 38px;
       }
     }
@@ -1081,6 +1167,15 @@ footer {
     #social {
       width: auto;
     }
+
+    .wrapper {
+      &>ul {
+
+        &>li {
+          width: 28%;
+        }
+      }
+    }
   }
 
   #chalkboard {
@@ -1114,13 +1209,36 @@ footer {
 
 }
 
+#video {
+  position: relative;
+  color: #fff;
+}
 /**************************************/
 /********** MEDIA QUERIES *************/
 /**************************************/
 
 @media (min-width: 768px) and (max-width: 979px) {
   .wrapper {
-    width: 668px;
+    width: 725px;
+  }
+  
+  #press {
+
+
+    #playbookcontainer {
+      background: none;
+    }
+
+    #playbookcontent {
+
+      #playbookcontentcontainer {
+        margin-left: 0;
+      }
+    }
+
+    #playbookmenu {
+      width: auto;
+    }
   }
 
   #share {
@@ -1155,22 +1273,24 @@ footer {
 
   #iphones {
 
+    width: 763px;
+
     #iphone2 {
-      background: url(/static/assets/front/images/iphone2_wide.jpg);
-      width: 291px;
-      height: 386px;
+      background: url(/static/assets/front/images/iphone2.jpg);
+      width: 214px;
+      height: 445px;
     }
 
     #iphone1 {
-      background: url(/static/assets/front/images/iphone1_wide.jpg);
-      width: 282px;
-      height: 386px;
+      background: url(/static/assets/front/images/iphone1.jpg);
+      width: 210px;
+      height: 445px;
     }
 
     #iphone3 {
-      background: url(/static/assets/front/images/iphone3_wide.jpg);
-      width: 282px;
-      height: 357px;
+      background: url(/static/assets/front/images/iphone3.jpg);
+      width: 214px;
+      height: 445px;
     }
 
     #subscribe {
@@ -1186,12 +1306,32 @@ footer {
       text-shadow: 0px 3px 5px rgb(0,0,0);
     }
 
+    h2 {
+      font-size: 20px;
+      line-height: 25px;
+    }
+
+    .ipadsimgs {
+      width: 524px;
+      height: 322px;
+      position: absolute;
+      right: 15px;
+      text-align: right;
+      bottom: 15px;
+      background: url(/static/assets/front/images/ipads_small.png) no-repeat;
+    }
+
     .abs-wrapper {
-      width: 350px;
+      width: 500px;
       margin-left: -335px;
+      top: 85px;
 
       .headline {
         width: auto;
+
+        img {
+          margin-top: 285px;
+        }
       }
     }
 
@@ -1267,6 +1407,21 @@ footer {
     }
   }
 
+  #chalkboard {
+
+    #bottomtext {
+      width: 760px;
+    }
+
+    #bottomtext { 
+
+      img {
+        margin: 0 5px;
+      }
+
+    }
+  }
+
 }
 
 @media (max-width: 767px) {
@@ -1288,6 +1443,14 @@ footer {
   #iphone-instructions {
 
     text-align: center;
+
+
+    h3 {
+      color: #484d51;
+      font-size: 18px;
+      line-height: 20px;
+      margin-bottom: 20px;
+    }
 
     .imgcontainer {
       width: 40%;
@@ -1320,7 +1483,7 @@ footer {
       }
 
       p {
-        font-size: 11px;
+        font-size: 13px;
       }
     }
   }
@@ -1338,8 +1501,10 @@ footer {
       text-align: center;
       font-size: 18px;
       line-height: 18px;
-      font-family: "dn-bold";
+      font-family: "dn-bold", sans-serif;
       margin-top: 55px;
+      color: #484d51;
+      text-transform: uppercase;
     }
 
     .download {
@@ -1352,6 +1517,7 @@ footer {
 
       background: none;
       margin: 10px 0 0 0;
+      padding: 10px;
 
       #social {
         margin: 30px 0 0 0;
@@ -1377,6 +1543,7 @@ footer {
           color: #484d51;
           text-shadow: none;
           font-size: 18px;
+          line-height: 20px;
         }
 
         h2 {
@@ -1384,7 +1551,12 @@ footer {
           text-shadow: none;
           font-size: 13px;
           width: 60%;
+          line-height: 18px;
           margin: 0 auto;
+        }
+
+        img {
+          margin-top: 25px;
         }
       }
     }
@@ -1397,6 +1569,7 @@ footer {
     .rights {
       margin: 0;
       padding: 0;
+      text-align: center;
     }
   }
 
@@ -1413,7 +1586,7 @@ footer {
     h2 {
       font-size: 15px;
       padding-top: 0;
-      font-family: "dn-regular";
+      font-family: "dn-regular", sans-serif;
       line-height: 17px;
       margin-bottom: 40px;
     }

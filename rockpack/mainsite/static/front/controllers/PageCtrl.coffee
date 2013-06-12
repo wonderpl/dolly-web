@@ -1,5 +1,8 @@
 window.contentApp.controller('PageCtrl', ['isMobile', '$scope', '$location', 'browserServices', (isMobile, $scope, $location, browserServices) ->
 
+  $scope.triggerEvent = (action, label) ->
+    ga('send', 'event', 'uiAction', action, label)
+
   $scope.browser = browserServices
 
   $scope.toggle = (e, hiddenelement) ->
@@ -15,6 +18,7 @@ window.contentApp.controller('PageCtrl', ['isMobile', '$scope', '$location', 'br
       $(e.currentTarget).children(".btntext").html('Read More')
 
 
+  $scope.assets_url = window.assets_url
   $scope.injectorUrl = window.injectorUrl
-  console.log $scope.injectorUrl
+
 ])

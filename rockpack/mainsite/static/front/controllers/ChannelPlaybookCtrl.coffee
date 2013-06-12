@@ -5,5 +5,5 @@ window.contentApp.controller('ChannelPlaybookCtrl', ['$scope', ($scope) ->
 
   $scope.updateChapter = (chapter) ->
     $scope.selectedChapter = chapter
-  return
+
 ])

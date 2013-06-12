@@ -28,8 +28,8 @@ def locale_filter(entity):
 
 def negatively_boost_favourites():
     return pyes.CustomFiltersScoreQuery.Filter(
-            pyes.TermFilter(field='favourite', value=True),
-            boost=-20)
+        pyes.TermFilter(field='favourite', value=True),
+        boost=app.config.get('FAVOURITES_NEGATIVE_BOOST', -40))
 
 
 def verified_channel_boost():

@@ -21,7 +21,7 @@ def cover_art_response(covers, paging, own=False):
     total = covers.count()
     offset, limit = paging
     items = [dict(position=position, **cover_art_dict(cover_art, own))
-             for position, cover_art in enumerate(covers.offset(offset).limit(limit))]
+             for position, cover_art in enumerate(covers.offset(offset).limit(limit), offset)]
     return dict(cover_art=dict(items=items, total=total))
 
 
@@ -35,7 +35,7 @@ class CoverArtWS(WebService):
         query = RockpackCoverArt.query.\
             filter(RockpackCoverArt.locale.in_(('', self.get_locale()))).\
             filter(RockpackCoverArt.priority != -1).\
-            order_by(desc('priority'))
+            order_by(desc('priority'), 'id')
         if request.args.get('category'):
             query = query.filter_by(category=request.args.get('category'))
         return cover_art_response(query, self.get_page())

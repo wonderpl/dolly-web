@@ -8,6 +8,8 @@ from .models import Subscription
 
 
 def subscribe(hub, topic, channel_id):
+    if Subscription.query.filter_by(topic=topic).count():
+        raise Exception('Subscription to topic already exists: %s' % topic)
     subs = Subscription(hub=hub, topic=topic, channel_id=channel_id)
     subs.subscribe()
     return subs

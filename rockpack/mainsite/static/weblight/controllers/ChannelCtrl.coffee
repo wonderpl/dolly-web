@@ -8,7 +8,7 @@ window.Weblight.controller('ChannelCtrl', ['$scope', 'Videos', '$routeParams', '
   $scope.videos = channelData.videos.items
 
 
-  $scope.channel.owner.avatar = channelData.owner.avatar_thumbnail_url.replace('thumbnail_small', 'thumbnail_large')
+  $scope.channel.owner.avatar = channelData.owner.avatar_thumbnail_url.replace('thumbnail_medium', 'thumbnail_large')
   $scope.coverRegex = new RegExp("channel/.*/")
 
 
@@ -38,14 +38,15 @@ window.Weblight.controller('ChannelCtrl', ['$scope', 'Videos', '$routeParams', '
     return
 
   $scope.setCurrentVideo = (video) ->
+    ga('send', 'event', 'uiAction', 'videoPlayClick')
     $location.search( 'video', video.id );
     return
 
   # Catch share of specific video url
   url = $location.absUrl()
-  if url.indexOf('?video=') > 0 and not $routeParams.video?
-    $location.search( 'video',url.substring(url.indexOf('?video=')+7, url.length-2))
 
+  if selected_video != null
+    $location.search( 'video',selected_video.id)
 
   return
 ])

@@ -1,3 +1,4 @@
+<div ng-controller="PageCtrl">
   <div id="contentproviders">
     <div class="wrapper">
       <h1>CONTENT PROVIDERS</h1>
@@ -12,30 +13,30 @@
     </div>
   </div>
   <div id="chalkboard">
-    <img src="/static/assets/weblight/images/leverageyourcommunity.png" id="leverageyourcommunity">
+    <img ng-src="((assets_url))/assets/front/images/leverageyourcommunity.png" id="leverageyourcommunity">
     <div id="drawings">
-      <img src="/static/assets/weblight/images/redpeople.png">
-      <img src="/static/assets/weblight/images/arrows.png" class="arrows">
-      <img src="/static/assets/weblight/images/whitepeople.png">
-      <img src="/static/assets/weblight/images/doublearrows.png" class="arrows">
-      <img src="/static/assets/weblight/images/bluepeople.png">
+      <img ng-src="((assets_url))/assets/front/images/redpeople.png">
+      <img ng-src="((assets_url))/assets/front/images/arrows.png" class="arrows">
+      <img ng-src="((assets_url))/assets/front/images/whitepeople.png">
+      <img ng-src="((assets_url))/assets/front/images/doublearrows.png" class="arrows">
+      <img ng-src="((assets_url))/assets/front/images/bluepeople.png">
     </div>
     <div id="bottomtext">
-      <img src="/static/assets/weblight/images/yourcommunities.png">
-      <img src="/static/assets/weblight/images/whoengage.png">
-      <img src="/static/assets/weblight/images/theyinturn.png">
+      <img ng-src="((assets_url))/assets/front/images/yourcommunities.png">
+      <img ng-src="((assets_url))/assets/front/images/whoengage.png">
+      <img ng-src="((assets_url))/assets/front/images/theyinturn.png">
     </div>
   </div>
   <div id="iphonescontainer">
     <div id="threeiphones" class="wrapper">
       <div>
-        <img src="/static/assets/weblight/images/leftIphone.png">
+        <img ng-src="((assets_url))/assets/front/images/leftIphone.png">
       </div>
       <div>
-        <img src="/static/assets/weblight/images/middleIphone.png">
+        <img ng-src="((assets_url))/assets/front/images/middleIphone.png">
       </div>
       <div>
-        <img src="/static/assets/weblight/images/rightIphone.png">
+        <img ng-src="((assets_url))/assets/front/images/rightIphone.png">
       </div>
     </div>
     <div id="iphonesinfo" class="wrapper">
@@ -48,7 +49,7 @@
       <div>
         <h3>DRIVE MOBILE VIEWS</h3>
         <p>Our platform is mobile first.<br>
-          Have a look at our Channel Playbook<br>for help on how to increase views<br>from consumers on-the-go.</p>
+          Have a look at our <a href="#/channel-playbook">Channel Playbook</a><br>for help on how to increase views<br>from consumers on-the-go.</p>
       </div>
       <div>
         <h3>STAND OUT</h3>
@@ -60,7 +61,7 @@
   </div>
   <div id="faq" class="wrapper">
     <h2>FAQ</h2>
-    <p>If your question isn’t answered below, please email us directly at<br>contentproviders@rockpack.com</p>
+    <p>If your question isn’t answered below, please email us directly at<br><a href="mailto:contentproviders@rockpack.com">contentproviders@rockpack.com</a></p>
     <div class="container">
       <div class="left">
         <div>
@@ -150,22 +151,23 @@
         <ul>
           <li>
             <h3>Get the app</h3>
-            <a href="#"><img src="/static/assets/front/images/downloadbig.png"></a>
+            <img ng-src="((assets_url))/assets/front/images/downloadbig.png" ng-click="triggerEvent('appStoreButtonClick')">
           </li>
-          <li>
+          <li class="visible-desktop">
             <h3>INSTALL THE BOOKMARKLET</h3>
             <a href="#/bookmarklet"><button class="btn btn-blue">+ PACK IT</button></a>
           </li>
           <li>
             <h3>FOLLOW US</h3>
             <ul id="social">
-              <li><a href="http://blog.rockpack.com/" id="blog" target="_blank"></a></li>
-              <li><a href="https://twitter.com/Rockpack" id="twitter" target="_blank"></a></li>
-              <li><a href="http://www.facebook.com/rockpack" id="facebook" target="_blank"></a></li>
-              <li><a href="http://instagram.com/officialrockpack" id="instagram" target="_blank"></a></li>
+              <li ng-click="triggerEvent('followUsButtonClick', 'Blog')"><a href="http://blog.rockpack.com/" id="blog" target="_blank" ></a></li>
+              <li ng-click="triggerEvent('followUsButtonClick', 'Twitter')"><a href="https://twitter.com/Rockpack" id="twitter" target="_blank"></a></li>
+              <li ng-click="triggerEvent('followUsButtonClick', 'Facebook')"><a href="http://www.facebook.com/rockpack" id="facebook" target="_blank"></a></li>
+              <li ng-click="triggerEvent('followUsButtonClick', 'Instagram')"><a href="http://instagram.com/officialrockpack" id="instagram" target="_blank"></a></li>
             </ul>
           </li>
         </ul>
       </div>
     </div>
   </div>
+</div>

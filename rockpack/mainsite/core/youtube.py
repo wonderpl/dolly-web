@@ -1,4 +1,5 @@
 import logging
+from datetime import datetime
 from collections import namedtuple
 import gdata.youtube
 import gdata.data
@@ -13,6 +14,10 @@ GDATA_URL = 'http://gdata.youtube.com/feeds/api/%s/%s'
 PushConfig = namedtuple('PushConfig', 'hub topic')
 Playlist = namedtuple('Playlist', 'title video_count videos push_config')
 Videolist = namedtuple('Videolist', 'video_count videos')
+
+
+def _parse_datetime(dt):
+    return datetime.strptime(dt[:19], '%Y-%m-%dT%H:%M:%S')
 
 
 def _youtube_feed_requests(feed, id, params=None, content=None):
@@ -103,6 +108,7 @@ def _get_atom_video_data(youtube_data, playlist=None):
         source_videoid=media.FindExtensions('videoid')[0].text,
         source_listid=playlist,
         source_username=youtube_data.author[0].name.text,
+        date_published=_parse_datetime(youtube_data.published.text),
         title=youtube_data.title.text,
         duration=int(media.duration.seconds) if media.duration else 0,
     )
@@ -129,7 +135,13 @@ def parse_atom_playlist_data(xml):
     type, id = feed.id.text.split(':', 3)[2:]
     if type == 'user':
         id = id.replace(':', '/')
-    videos = [_get_atom_video_data(e, id) for e in feed.entry]
+    seen = []
+    videos = []
+    for entry in feed.entry:
+        video = _get_atom_video_data(entry, id)
+        if video.source_videoid not in seen:
+            videos.append(video)
+            seen.append(video.source_videoid)
     return Playlist(feed.title.text, len(videos), videos, None)
 
 
@@ -144,6 +156,7 @@ def _get_video_data(youtube_data, playlist=None):
         source_videoid=media['yt$videoid']['$t'],
         source_listid=playlist,
         source_username=youtube_data['author'][0]['name']['$t'],
+        date_published=_parse_datetime(youtube_data['published']['$t']),
         title=youtube_data['title']['$t'],
         duration=int(media['yt$duration']['seconds']) if 'yt$duration' in media else -1,
     )
@@ -242,7 +255,7 @@ def get_user_data(id, fetch_all_videos=False):
     return get_playlist_data('%s/uploads' % id, fetch_all_videos, 'users')
 
 
-def search_v2(query, order=None, start=0, size=10, region=None, client_address=None, safe_search='strict'):
+def search_v2(query, order=None, start=0, size=10, region=None, client_address=None):
     params = {
         'q': query,
         'orderby': order,
@@ -250,7 +263,7 @@ def search_v2(query, order=None, start=0, size=10, region=None, client_address=N
         'max-results': size,
         'region': region,
         'restriction': client_address,
-        'safeSearch': safe_search,
+        'safeSearch': app.config.get('YOUTUBE_SAFESEARCH'),
     }
     data = _youtube_feed('videos', '', params)['feed']
     total = data['openSearch$totalResults']['$t']
@@ -258,7 +271,7 @@ def search_v2(query, order=None, start=0, size=10, region=None, client_address=N
     return Videolist(total, [v for v in videos if not v.restricted])
 
 
-def search_v3(query, order=None, start=0, size=10, region=None, client_address=None, safe_search='strict'):
+def search_v3(query, order=None, start=0, size=10, region=None, client_address=None):
     # new http instance required for thread-safety
     if not hasattr(_youtube_search_http, 'value'):
         _youtube_search_http.value = httplib2.Http()
@@ -271,7 +284,7 @@ def search_v3(query, order=None, start=0, size=10, region=None, client_address=N
         maxResults=size,
         regionCode=region,
         userIp=client_address,
-        safeSearch=safe_search,
+        safeSearch=app.config.get('YOUTUBE_SAFESEARCH'),
         videoEmbeddable='true',
     ).execute(http=_youtube_search_http.value)
     total = data['pageInfo']['totalResults']

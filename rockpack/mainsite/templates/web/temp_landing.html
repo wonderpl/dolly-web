@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>rockpack</title>
+
+  {% assets filters="cssmin", output="gen/front.%(version)s.css", "assets/vendor/css/bootstrap.css", "assets/vendor/css/bootstrap-responsive.css" %}
+  <link rel="stylesheet" href="{{ ASSET_URL }}"/>
+  {% endassets %}
+
+  {% assets filters="less", output="gen/prelunch.%(version)s.css", "assets/general/css/prelunch.less" %}
+  <link rel="stylesheet" href="{{ ASSET_URL }}"/>
+  {% endassets %}
+
+</head>
+
+<body >
+  <div id="cover">
+    <img src="{{config.ASSETS_URL}}/assets/general/images/comingsoon2.jpg">
+  </div>
+  <div id="title">
+    <h1>Coming to your iPad & iPhone<br>
+      June 26th 2013</h1>
+  </div>
+  <ul id="social">
+    <li><a href="https://twitter.com/Rockpack" id="twitter" target="_blank"></a></li>
+    <li><a href="http://www.facebook.com/rockpack" id="facebook" target="_blank"></a></li>
+    <li><a href="http://instagram.com/officialrockpack" id="instagram" target="_blank"></a></li>
+  </ul>
+  <div id="footer">iPhone and iPad are trademarks of Apple Inc., registered in the U.S and other countries. </div>
+  {% include 'web/ga.html' %}
+</body>
+</html>

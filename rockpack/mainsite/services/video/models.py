@@ -120,6 +120,7 @@ class Video(db.Model):
     source_videoid = Column(String(128), nullable=False)
     source_listid = Column(String(128), nullable=True)
     source_username = Column(String(128), nullable=True)
+    date_published = Column(DateTime(), nullable=False)
     date_added = Column(DateTime(), nullable=False, default=func.now())
     date_updated = Column(DateTime(), nullable=False, default=func.now(), onupdate=func.now())
     duration = Column(Integer, nullable=False, server_default='0')
@@ -136,8 +137,11 @@ class Video(db.Model):
     restrictions = relationship('VideoRestriction', backref='videos',
                                 cascade="all, delete-orphan", passive_deletes=True)
 
-    def __str__(self):
+    def __unicode__(self):
         return self.title
+
+    def __repr__(self):
+        return 'Video(id={v.id!r}, source_videoid={v.source_videoid!r})'.format(v=self)
 
     @property
     def default_thumbnail(self):
@@ -221,6 +225,12 @@ class VideoInstance(db.Model):
     metas = relationship('VideoInstanceLocaleMeta', backref='video_instance_rel', cascade='all,delete')
     category_rel = relationship('Category', backref='video_instance_rel')
 
+    def __unicode__(self):
+        return self.video
+
+    def __repr__(self):
+        return 'VideoInstance(id={v.id!r}, video={v.video!r})'.format(v=self)
+
     @property
     def default_thumbnail(self):
         return self.video_rel.default_thumbnail
@@ -231,9 +241,6 @@ class VideoInstance(db.Model):
 
     def add_meta(self, locale):
         return VideoInstanceLocaleMeta(video_instance=self.id, locale=locale).save()
-
-    def __unicode__(self):
-        return self.video
 
 
 class VideoThumbnail(db.Model):
@@ -287,6 +294,9 @@ class Channel(db.Model):
     def __unicode__(self):
         return self.title
 
+    def __repr__(self):
+        return 'Channel(id={c.id!r}, owner={c.owner!r})'.format(c=self)
+
     @classmethod
     def get_form_choices(cls, owner):
         return cls.query.filter_by(owner=owner).values(cls.id, cls.title)
@@ -300,7 +310,11 @@ class Channel(db.Model):
 
     @classmethod
     def should_be_public(self, channel, public):
-        """Return False if conditions for visibility are not met"""
+        """Return False if conditions for visibility are not met (except for fav channel)"""
+
+        if channel.favourite:
+            return True
+
         if not (channel.cover and
                 (channel.title and not channel.title.startswith(app.config['UNTITLED_CHANNEL'])) and
                 channel.video_instances):
@@ -333,6 +347,11 @@ class Channel(db.Model):
         if not existing and instances and not self.public and self.should_be_public(self, True):
             self.public = True
             self.save()
+
+        # Get list of instance ids for requested videos
+        # XXX: Returning instance here too because id won't be set until after commit
+        return [existing[v] for v in videos if v in existing] +\
+            [j for j in instances if j.video not in existing]
 
     def remove_videos(self, video_ids):
         VideoInstance.query.filter_by(channel=self.id).filter(VideoInstance.video.in_(video_ids)).delete(synchronize_session=False)
@@ -457,7 +476,8 @@ def _es_channel_insert_from_channel(mapper, connection, target):
 def _es_channel_update_from_channel(mapper, connection, target):
     if not target.public or target.deleted:
         _remove_es_channel(target)
-    _add_es_channel(Channel.query.get(target.id))
+    else:
+        _add_es_channel(Channel.query.get(target.id))
 
 
 event.listen(Video, 'before_insert', add_video_pk)

@@ -222,15 +222,16 @@ class ChannelSearch(EntitySearch, CategoryMixin, MediaSortMixin):
             channel['owner'] = owners[channel['owner']]
 
     @classmethod
-    def add_videos_to_channels(cls, channels, videos):
-        for channel in channels:
-            channel.setdefault('videos', {}).setdefault('items', videos.get(channel['id'], []))
-            channel['videos']['total'] = len(channel['videos']['items'])
+    def add_videos_to_channel(cls, channel, videos, total):
+        channel.setdefault('videos', {}).setdefault('items', videos.get(channel['id'], []))
+        channel['videos']['total'] = total
 
-    def _format_results(self, channels, with_owners=False, with_videos=False):
+    def _format_results(self, channels, with_owners=False, with_videos=False, video_paging=(0,100,)):
         channel_list = []
         channel_id_list = []
         owner_list = []
+        IMAGE_CDN = app.config.get('IMAGE_CDN', '')
+        BASE_URL = url_for('basews.discover')
         for pos, channel in enumerate(channels, self.paging[0]):
             ch = dict(
                 id=channel.id,
@@ -242,7 +243,7 @@ class ChannelSearch(EntitySearch, CategoryMixin, MediaSortMixin):
                 public=channel.public,
                 position=pos,
                 cover=dict(
-                    thumbnail_url=urljoin(app.config.get('IMAGE_CDN', ''), channel.cover.thumbnail_url) if channel.cover.thumbnail_url else '',
+                    thumbnail_url=urljoin(IMAGE_CDN, channel.cover.thumbnail_url) if channel.cover.thumbnail_url else '',
                     aoi=channel.cover.aoi
                 )
             )
@@ -254,9 +255,9 @@ class ChannelSearch(EntitySearch, CategoryMixin, MediaSortMixin):
                     url = v
                     if url:
                         if k == 'resource_url':
-                            url = urljoin(url_for('basews.discover'), v)
+                            url = urljoin(BASE_URL, v)
                         elif k != 'ecommerce_url':
-                            url = urljoin(app.config.get('IMAGE_CDN', ''), v)
+                            url = urljoin(IMAGE_CDN, v)
                     ch[k] = url
                 # XXX: tis a bit dangerous to assume max(cat)
                 # is the child category. review this
@@ -287,24 +288,20 @@ class ChannelSearch(EntitySearch, CategoryMixin, MediaSortMixin):
         if with_videos and channel_id_list:
             vs = VideoSearch(self.locale)
             vs.add_term('channel', channel_id_list)
-            vs.set_paging(*with_videos)
+            vs.add_sort('position', 'asc')
+            vs.date_sort('desc')
+            vs.add_sort('video.date_published', 'desc')
+            vs.set_paging(offset=video_paging[0], limit=video_paging[1])
             video_map = {}
             for v in vs.videos():
                 video_map.setdefault(channel_id_list[0], []).append(v) # HACK: see above
-            self.add_videos_to_channels(channel_list, video_map)
+            self.add_videos_to_channel(channel_list[0], video_map, vs.total)
         return channel_list
 
-    def add_owner_search(self, name):
-        os = OwnerSearch()
-        os.add_term('display_name', name.lower())
-        owner_ids = [o['id'] for o in os.owners()]
-        if owner_ids:
-            self.add_term('owner', owner_ids, occurs=SHOULD)
-
-    def channels(self, with_owners=False, with_videos=False):
+    def channels(self, with_owners=False, with_videos=False, video_paging=(0, 100,)):
         if not self._channel_results:
             r = self.results()
-            self._channel_results = self._format_results(r, with_owners=with_owners, with_videos=with_videos)
+            self._channel_results = self._format_results(r, with_owners=with_owners, with_videos=with_videos, video_paging=video_paging)
         return self._channel_results
 
 
@@ -340,6 +337,7 @@ class VideoSearch(EntitySearch, CategoryMixin, MediaSortMixin):
                     star_count=v['locales'][self.locale]['star_count'],
                     source=['rockpack', 'youtube'][v.video.source],
                     source_id=v.video.source_id,
+                    source_username=v.video.source_username,
                     duration=v.video.duration,
                     thumbnail_url=urljoin(app.config.get('IMAGE_CDN', ''), v.video.thumbnail_url) if v.video.thumbnail_url else '',
                 ),
@@ -374,14 +372,16 @@ class OwnerSearch(EntitySearch):
 
     def _format_results(self, owners):
         owner_list = []
+        IMAGE_CDN = app.config.get('IMAGE_CDN', '')
+        BASE_URL = url_for('basews.discover')
         for owner in owners:
             owner_list.append(
                 dict(
                     id=owner.id,
                     username=owner.username,
                     display_name=owner.display_name,
-                    resource_url=urljoin(url_for('basews.discover'), owner.resource_url),
-                    avatar_thumbnail_url=urljoin(app.config.get('IMAGE_CDN', ''), owner.avatar_thumbnail_url) if owner.avatar_thumbnail_url else ''
+                    resource_url=urljoin(BASE_URL, owner.resource_url),
+                    avatar_thumbnail_url=urljoin(IMAGE_CDN, owner.avatar_thumbnail_url) if owner.avatar_thumbnail_url else ''
                 )
             )
         return owner_list
@@ -434,7 +434,7 @@ def add_owner_to_index(owner, bulk=False, refresh=False, no_check=False):
 
     data = dict(
         id=owner.id,
-        avatar_thumbnail_url=urlparse(convert(owner, 'avatar', 'AVATAR').thumbnail_small).path,
+        avatar_thumbnail_url=urlparse(convert(owner, 'avatar', 'AVATAR').thumbnail_medium).path,
         resource_url=urlparse(owner.resource_url).path,
         display_name=owner.display_name,
         username=owner.username
@@ -475,7 +475,8 @@ def add_channel_to_index(channel, bulk=False, refresh=False, boost=None, no_chec
         cover=dict(
             thumbnail_url=urlparse(convert(channel, 'cover', 'CHANNEL').url).path,
             aoi=channel.cover_aoi
-        )
+        ),
+        keywords=[channel.owner_rel.display_name.lower(), channel.owner_rel.username.lower()]
     )
 
     if app.config.get('SHOW_OLD_CHANNEL_COVER_URLS', True):
@@ -498,6 +499,7 @@ def add_video_to_index(video_instance, bulk=False, refresh=False, no_check=False
             source=video_instance.video_rel.source,
             source_id=video_instance.video_rel.source_videoid,
             source_username=video_instance.video_rel.source_username,
+            date_published=video_instance.video_rel.date_published,
             duration=video_instance.video_rel.duration),
         title=video_instance.video_rel.title,
         channel=video_instance.channel,

@@ -1,0 +1,117 @@
+/* Micro ClearFix Mixin */
+.clearfix{
+  zoom:1;
+  &:before, &:after{ content:""; display:table; }
+  &:after{ clear: both; }
+}
+
+@import url("http://fast.fonts.com/t/1.css?apiType=css&projectid=e8c15b58-fc59-463c-be33-77dba4bf5031");
+
+@font-face{
+  font-family:"dn-bold";
+  src:url("/static/assets/fonts/b32ab78b-6c51-4bd3-bc37-4edcec0331f8.eot?#iefix");
+  src:url("/static/assets/fonts/b32ab78b-6c51-4bd3-bc37-4edcec0331f8.eot?#iefix") format("eot"),
+  url("/static/assets/fonts/6241bd09-15c2-485e-9796-9db8d0aa6974.ttf") format("truetype"),
+  url("/static/assets/fonts/9949035f-6226-4080-a14a-bf7d94ffb1e1.woff") format("woff"),
+  url("/static/assets/fonts/af94da3e-4232-416a-b6bc-f39f85dd5db6.svg#af94da3e-4232-416a-b6bc-f39f85dd5db6") format("svg");
+}
+
+@font-face{
+  font-family:"dn-regular";
+  src:url("/static/assets/fonts/da088ecc-a53c-4831-a95b-6fd81b5b338a.eot?#iefix");
+  src:url("/static/assets/fonts/da088ecc-a53c-4831-a95b-6fd81b5b338a.eot?#iefix") format("eot"),
+  url("/static/assets/fonts/868c94b5-ca49-46b7-b62b-297f8d861125.ttf") format("truetype"),
+  url("/static/assets/fonts/c5a7f89e-15b6-49a9-8259-5ea665e72191.woff") format("woff"),
+  url("/static/assets/fonts/e3145f65-29b5-4f7f-8c6e-2dc135021b6a.svg#e3145f65-29b5-4f7f-8c6e-2dc135021b6a") format("svg");
+}
+
+footer {
+  font-family: "dn-regular";
+  color: #aaa;
+  background: #fff;
+  padding: 60px 0;
+  margin-top: 60px;
+
+  ul {
+    list-style: none;
+    .clearfix();
+    margin: 0 0 30px 35px;
+    display: inline-block;
+
+    li {
+      line-height: 17px;
+      margin: 7px 0;
+      font-size: 17px;
+      text-transform: uppercase;
+    }
+  }
+
+  .rights {
+    text-align: right;
+    margin-top: 10px;
+  }
+}
+
+a, a:visited, a:active {
+  color: #0ba6ab;
+  text-decoration: none;
+}
+
+a:hover {
+  color: #0ba6ab;
+  text-decoration: underline;
+}
+
+
+#header {
+  background: #fff;
+  top: 0;
+  height: 50px;
+  line-height: 46px;
+  position: fixed;
+  width: 100%;
+  z-index: 1000;
+
+  img {
+    width: 125px;
+    height: 22px;
+    vertical-align: middle;
+  }
+}
+
+.wrapper {
+  width: 70%;
+  margin: 0 auto;
+}
+
+.content {
+  margin-top: 100px;
+}
+
+body {
+  background: #f7f7f7;
+  color: #494949;
+  font-size: 14px;
+}
+
+h1,h2,h3 {
+  font-family: "dn-bold";
+  text-transform: uppercase;
+  font-size: 14px;
+  line-height: 18px;
+}
+
+h1 {
+  font-size: 18px;
+  line-height: 22px;
+}
+
+td {
+  border: 1px solid #000;
+  margin: 10px;
+  padding: 10px;
+}
+
+table {
+  margin: 20px 0;
+}

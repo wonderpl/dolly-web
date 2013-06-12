@@ -33,7 +33,7 @@
     <![endif]-->
 
     <!--[if lte IE 8]>
-      <script>
+      <script type="text/javascript">
         document.createElement('ng-include');
         document.createElement('ng-pluralize');
         document.createElement('ng-view');
@@ -44,25 +44,28 @@
       <script src="vendor/js-no-compile/json2.js"></script>
     <![endif]-->
 
-    <script>
-      var channel_data = {{ channel_data|tojson|safe }};
+    <script type="text/javascript">
+      var channel_data = {{ channel_data|tojson|safe }},
+          assets_url = '{{config.ASSETS_URL}}',
+          selected_video = {{selected_video|tojson|safe}},
+          full_path = '{{full_site}}';
     </script>
 
-    {% assets output="gen/lib.%(version)s.js",
+    {% assets filters="rjsmin", output="gen/lib.%(version)s.js",
               "assets/vendor/js/jquery-1.9.1.js", "assets/vendor/js/lodash.js", "assets/vendor/js/angular.js", "assets/vendor/js/angular-resource.js", "assets/vendor/js/ng-infinite-scroll.js",
               "assets/vendor/js/ui-bootstrap-tpls-0.2.0.js" %}
       <script type="text/javascript" src="{{ ASSET_URL }}"></script>
     {% endassets %}
 
-    {% assets filters="coffeescript", output="gen/channel.%(version)s.js", "weblight/app.coffee", "weblight/controllers/AppCtrl.coffee", "weblight/controllers/ChannelCtrl.coffee", "weblight/controllers/PageCtrl.coffee", "weblight/controllers/PageCtrl.coffee",
+    {% assets filters="coffeescript, rjsmin", output="gen/channel.%(version)s.js", "weblight/app.coffee", "weblight/controllers/AppCtrl.coffee", "weblight/controllers/ChannelCtrl.coffee", "weblight/controllers/PageCtrl.coffee", "weblight/controllers/PageCtrl.coffee",
         "weblight/controllers/ChannelPlaybookCtrl.coffee", "weblight/services/browserServices.coffee", "weblight/controllers/VideoCtrl.coffee", "weblight/services/channelServices.coffee"
     %}
       <script type="text/javascript" src="{{ ASSET_URL }}"></script>
     {% endassets %}
 
-    {% assets filters="weblighttemplates", output="gen/templates.%(version)s.js", 
-      "weblight/views/people.html", "weblight/views/channel.html", "weblight/views/footer.html", "weblight/views/header.html", "weblight/views/jobs.html", "weblight/views/Videocell.html", "weblight/views/videoplayer.html", "weblight/views/headermobile.html",
-      "weblight/views/channelplaybook.html", "weblight/views/contentproviders.html", "weblight/views/bookmarklet.html" %}
+    {% assets filters="weblighttemplates, rjsmin", output="gen/templates.%(version)s.js",
+      "weblight/views/channel.html", "weblight/views/footer.html", "weblight/views/header.html", "weblight/views/Videocell.html", "weblight/views/videoplayer.html", "weblight/views/headermobile.html"
+       %}
       <script type="text/javascript" src="{{ ASSET_URL }}"></script>
     {% endassets %}
 
@@ -90,5 +93,7 @@
     </div>
     <div class="ng-view"></div>
     <div ng-include src="'footer.html'" ></div>
+
+    {% include 'web/ga_ajax.html' %}
   </body>
 </html>

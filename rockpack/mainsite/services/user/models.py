@@ -46,6 +46,9 @@ class User(db.Model):
     def __unicode__(self):
         return self.username
 
+    def __repr__(self):
+        return 'User(id={u.id!r}, username={u.username!r})'.format(u=self)
+
     @classmethod
     def get_form_choices(cls, prefix=None):
         q = cls.query
@@ -156,7 +159,7 @@ class User(db.Model):
             description=description,
             cover=cover,
             owner=user.id,
-            public=False,
+            public=True,
         )
         channel.save()
 
