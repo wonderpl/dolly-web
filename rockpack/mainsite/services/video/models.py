@@ -1,6 +1,6 @@
 from sqlalchemy import (
     Text, String, Column, Boolean, Integer, Float, ForeignKey, DateTime, CHAR,
-    UniqueConstraint, event, func)
+    UniqueConstraint, event, func, orm)
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import relationship, aliased
 from rockpack.mainsite.core.dbapi import db
@@ -287,6 +287,7 @@ class Channel(db.Model):
     owner_rel = relationship(User, primaryjoin=(owner == User.id), lazy='joined', innerjoin=True)
 
     deleted = Column(Boolean(), nullable=False, server_default='false', default=False)
+    visible  = Column(Boolean(), nullable=False, server_default='false', default=False)
 
     video_instances = relationship('VideoInstance', backref='video_channel')
     metas = relationship('ChannelLocaleMeta', backref=db.backref('channel_rel', lazy='joined', innerjoin=True))
@@ -474,8 +475,11 @@ def _es_channel_insert_from_channel(mapper, connection, target):
 
 @event.listens_for(Channel, 'after_update')
 def _es_channel_update_from_channel(mapper, connection, target):
-    if not target.public or target.deleted:
-        _remove_es_channel(target)
+    if not target.public or target.deleted or target.visible:
+        if False in orm.attributes.get_history(target, 'public').unchanged or\
+            False in orm.attributes.get_history(target, 'deleted').unchanged or\
+            False in orm.attributes.get_history(target, 'visible').unchanged:
+            _remove_es_channel(target)
     else:
         _add_es_channel(Channel.query.get(target.id))
 
