@@ -37,21 +37,21 @@
 
   <link type="text/css" rel="stylesheet" href="http://fast.fonts.com/cssapi/e8c15b58-fc59-463c-be33-77dba4bf5031.css"/>
 
-  {% assets output="gen/bookmarklet_lib.%(version)s.js",
+  {% assets filters="jsmin", output="gen/bookmarklet_lib.%(version)s.js",
             "assets/vendor/js/angular.js", "assets/vendor/js/jquery-1.10.1.min.js" %}
     <script type="text/javascript" src="{{ ASSET_URL }}"></script>
   {% endassets %}
 
-  {% assets filters="coffeescript", output="gen/bookmarklet_home.%(version)s.js", "bookmarklet/app/app.coffee", "bookmarklet/app/controllers.coffee", "bookmarklet/app/services.coffee", "bookmarklet/app/web-services/oauth.coffee", "bookmarklet/app/web-services/user.coffee" %}
+  {% assets filters="coffeescript, jsmin", output="gen/bookmarklet_home.%(version)s.js", "bookmarklet/app/app.coffee", "bookmarklet/app/controllers.coffee", "bookmarklet/app/services.coffee", "bookmarklet/app/web-services/oauth.coffee", "bookmarklet/app/web-services/user.coffee" %}
     <script type="text/javascript" src="{{ ASSET_URL }}"></script>
   {% endassets %}
 
-  {% assets filters="bmtemplates", output="gen/bookmarklet_templates.%(version)s.js", 
+  {% assets filters="bmtemplates, jsmin", output="gen/bookmarklet_templates.%(version)s.js",
     "bookmarklet/app/views/addtochannels.html", "bookmarklet/app/views/createchannel.html", "bookmarklet/app/views/login.html", "bookmarklet/app/views/resetpassword.html", "bookmarklet/app/views/done.html" %}
     <script type="text/javascript" src="{{ ASSET_URL }}"></script>
   {% endassets %}
 
-    {% assets filters="less", output="gen/bookmarklet.%(version)s.css", "bookmarklet/app/less/app.less" %}
+    {% assets filters="less, cssmin", output="gen/bookmarklet.%(version)s.css", "bookmarklet/app/less/app.less" %}
       <link rel="stylesheet" href="{{ ASSET_URL }}"/>
     {% endassets %}
 
