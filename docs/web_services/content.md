@@ -196,3 +196,63 @@ Cache-Control: public, max-age=3600
 ```
 
 Also see `/ws/USERID/cover_art/`.
+
+Player Services
+===============
+
+### Player Detail
+
+Get a mapping from player identifier to html/javascript content that defines the player.
+
+```http
+GET /ws/videos/players/ HTTP/1.1
+```
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+Cache-Control: public, max-age=7200
+
+{
+ "rockpack": "",
+ "youtube": "<html><script>player def</script></html>"
+}
+```
+
+### Player Errors
+
+Record an error when playing a specific video.
+
+```http
+POST /ws/videos/player_error/ HTTP/1.1
+Authorization: Bearer TOKEN
+Content-Type: application/json
+
+{
+ "video_instance": "VIDEOINSTANCEID",
+ "error": "some error code or description"
+}
+```
+
+A `form_errors` mapping will be returned if there's an error with the request.
+
+```http
+HTTP/1.1 400 BAD REQUEST
+Content-Type: application/json
+
+{
+ "error": "invalid_request",
+ "form_errors": {
+  "error": [
+   "This field is required."
+  ]
+ }
+}
+```
+
+No content returned on success.
+
+
+```http
+HTTP/1.1 204 NO CONTENT
+```

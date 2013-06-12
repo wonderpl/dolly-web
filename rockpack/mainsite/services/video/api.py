@@ -1,12 +1,14 @@
-from flask import request
+from flask import request, abort
+from flask.ext import wtf
 from collections import defaultdict
 from sqlalchemy.orm import contains_eager, lazyload, joinedload
 from sqlalchemy.sql.expression import desc
 from rockpack.mainsite import app
 from rockpack.mainsite.core.webservice import WebService, expose_ajax
-from rockpack.mainsite.services.video import models
+from rockpack.mainsite.core.oauth.decorators import check_authorization
 from rockpack.mainsite.core.es import use_elasticsearch, filters
 from rockpack.mainsite.core.es.api import VideoSearch, ChannelSearch
+from rockpack.mainsite.services.video import models
 
 
 def _filter_by_category(query, type, category_id):
@@ -144,6 +146,11 @@ def get_local_videos(loc, paging, with_channel=True, **filters):
     return data, total
 
 
+class PlayerErrorForm(wtf.Form):
+    error = wtf.StringField(validators=[wtf.Required()])
+    video_instance = wtf.StringField(validators=[wtf.Required()])
+
+
 class VideoWS(WebService):
 
     endpoint = '/videos'
@@ -170,6 +177,14 @@ class VideoWS(WebService):
     @expose_ajax('/players/', cache_age=7200)
     def players(self):
         return dict(models.Source.query.values(models.Source.label, models.Source.player_template))
+
+    @expose_ajax('/player_error/', methods=['POST'])
+    @check_authorization()
+    def player_error(self):
+        form = PlayerErrorForm(csrf_enabled=False)
+        if not form.validate():
+            abort(400, form_errors=form.errors)
+        # TODO: check if video is still OK
 
 
 class ChannelWS(WebService):
