@@ -56,17 +56,17 @@ def setup_admin(app):
                     ).filter(models.Category.parent!=1, models.Video.visible==True
                     ).filter_by(
                     ).group_by(models.Category.parent_category, models.Category.name, parent.name, models.VideoInstanceLocaleMeta.locale
-                    ).order_by(models.VideoInstanceLocaleMeta.locale.desc(), parent.name.desc())
+                    ).order_by(parent.name.desc())
             cat_count = cat_group.count()
 
             channel_group = g.session.query(
                     models.ChannelLocaleMeta.locale, parent.name, models.Category.name, func.count(models.ChannelLocaleMeta.id)
                     ).filter(models.Category.parent==parent.id, models.Channel.category==models.Category.id
-                    ).filter(models.Category.parent!=1, models.ChannelLocaleMeta.visible==True
+                    ).filter(models.Category.parent!=1
                     ).join(models.Channel, models.Channel.id==models.ChannelLocaleMeta.channel
                     ).filter(models.Channel.public==True
                     ).group_by(models.Category.parent_category, models.Category.name, parent.name, models.ChannelLocaleMeta.locale
-                    ).order_by(models.ChannelLocaleMeta.locale.desc(), parent.name.desc())
+                    ).order_by(parent.name.desc())
             channel_count = channel_group.count()
 
             return self.render('admin/stats.html',

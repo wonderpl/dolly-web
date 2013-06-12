@@ -55,7 +55,6 @@ def get_local_channel(locale, paging, **filters):
         outerjoin(
             models.ChannelLocaleMeta,
             ((models.ChannelLocaleMeta.channel == models.Channel.id) &
-            (models.ChannelLocaleMeta.visible == True) &
             (models.ChannelLocaleMeta.locale == locale))).\
         options(lazyload('category_rel'))
 
