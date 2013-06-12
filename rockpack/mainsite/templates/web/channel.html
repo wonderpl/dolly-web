@@ -12,13 +12,13 @@
     <meta property="og:image" content="{{ channel_data.cover_background_url }}" />
     <meta property="og:description" content="{% if channel_data.description %}{{ channel_data.description }}{% else %}{{ title }}, a channel on rockpack.{% endif %}" />
     {% if selected_video %}
-    <meta property="og:type" content="{{ config.FACEBOOK_APP_NAMESPACE }}.video" />
+    <meta property="og:type" content="{{ config.FACEBOOK_APP_NAMESPACE }}:video" />
     <meta property="{{ config.FACEBOOK_APP_NAMESPACE }}:video_title" content="{{ selected_video.title }}" />
     {% else %}
-    <meta property="og:type" content="{{ config.FACEBOOK_APP_NAMESPACE }}.channel" />
+    <meta property="og:type" content="{{ config.FACEBOOK_APP_NAMESPACE }}:channel" />
     {% endif %}
     <meta property="{{ config.FACEBOOK_APP_NAMESPACE }}:channel_title" content="{{ channel_data.title }}" />
-    <meta property="{{ config.FACEBOOK_APP_NAMESPACE }}:owner" content="{{ channel_data.owner.display_name }}" />
+    <meta property="{{ config.FACEBOOK_APP_NAMESPACE }}:owner_name" content="{{ channel_data.owner.display_name }}" />
     {% endwith %}
     <meta name="HandheldFriendly" content="True">
     <meta name="MobileOptimized" content="320">
