@@ -1,4 +1,4 @@
-window.Bookmarklet.controller('LoginCtrl', ['$scope','$http', '$location', 'cookies', 'OAuth', ($scope, $http, $location, cookies, OAuth) ->
+window.Bookmarklet.controller('LoginCtrl', ['$scope','$http', '$location', 'cookies', 'OAuth', '$rootScope', ($scope, $http, $location, cookies, OAuth, $rootScope) ->
 
   @refresh_token = cookies.get('refresh_token')
   @user_id = cookies.get('user_id')
@@ -14,6 +14,8 @@ window.Bookmarklet.controller('LoginCtrl', ['$scope','$http', '$location', 'cook
         # Saving refresh Token for 1 Month
         cookies.set('refresh_token', data.refresh_token, 2678400)
         cookies.set('user_id', data.user_id, 2678400)
+        $rootScope.refresh_token = data.refresh_token
+        $rootScope.user_id = data.user_id
         ga('send', 'event', 'bookmarklet', 'login', 'rockpack')
         $location.path('/addtochannel')
         return
@@ -31,6 +33,8 @@ window.Bookmarklet.controller('LoginCtrl', ['$scope','$http', '$location', 'cook
           .then((data) ->
             cookies.set('refresh_token', data.data.refresh_token, 2678400)
             cookies.set('user_id', data.data.user_id, 2678400)
+            $rootScope.refresh_token = data.refresh_token
+            $rootScope.user_id = data.user_id
             ga('send', 'event', 'bookmarklet', 'login', 'facebook')
             $location.path('/addtochannel')
             return
@@ -44,16 +48,16 @@ window.Bookmarklet.controller('LoginCtrl', ['$scope','$http', '$location', 'cook
   return
 ])
 
-window.Bookmarklet.controller('AddtoChannelCtrl', ['$scope','$http', '$location', 'cookies', 'OAuth', 'User', '$routeParams', ($scope, $http, $location, cookies, OAuth, User, $routeParams) ->
+window.Bookmarklet.controller('AddtoChannelCtrl', ['$scope','$http', '$location', 'cookies', 'OAuth', 'User', '$routeParams', '$rootScope', ($scope, $http, $location, cookies, OAuth, User, $routeParams, $rootScope) ->
 
   $scope.videoID = $routeParams.id
   $scope.selectedChannel = null
 
-  $scope.refresh_token = cookies.get('refresh_token')
-  $scope.user_id = cookies.get('user_id')
+  $scope.refresh_token = cookies.get('refresh_token') or $rootScope.refresh_token
+  $scope.user_id = cookies.get('user_id') or $rootScope.user_id
 
   # redirect user to login if he got here by chance
-  if (@refresh_token == null or @user_id == null)
+  if ($scope.refresh_token == null or $scope.user_id == null)
     $location.path('/')
 
   # Access token is alway refreshed.
