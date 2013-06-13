@@ -1,4 +1,4 @@
-window.WebApp.factory('UserManager', ['cookies', '$http', '$q', '$location', (cookies, $http, $q, $location) ->
+window.WebApp.factory('UserManager', ['cookies', '$http', '$q', '$location','apiUrl', (cookies, $http, $q, $location, apiUrl) ->
 
   headers = {"authorization": 'basic b3JvY2tncVJTY1NsV0tqc2ZWdXhyUTo=', "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"}
 
@@ -20,7 +20,7 @@ window.WebApp.factory('UserManager', ['cookies', '$http', '$q', '$location', (co
       $http({
         method: 'POST',
         data: $.param({refresh_token: User.credentials.refresh_token, grant_type: 'refresh_token'}),
-        url: window.apiUrls['refresh_token'],
+        url: apiUrl.refresh_token,
         headers: headers
       })
       .success((data) =>
@@ -40,7 +40,7 @@ window.WebApp.factory('UserManager', ['cookies', '$http', '$q', '$location', (co
       $http({
         method: 'POST',
         data: $.param({username: username, password: password, grant_type: 'password'}),
-        url: window.apiUrls['login'],
+        url: apiUrl.login,
         headers: headers
       })
       .success((data) =>
@@ -50,11 +50,28 @@ window.WebApp.factory('UserManager', ['cookies', '$http', '$q', '$location', (co
         cookies.set("access_token", data.access_token, data.expires)
         cookies.set("refresh_token", data.refresh_token, 2678400)
         cookies.set("user_id", data.user_id, 2678400)
-
       )
       .error((data) =>
         console.log data
       )
+
+    ExternalLogin: (provider, external_token) ->
+      $http({
+        method: 'POST',
+        data: $.param({'external_system': provider, 'external_token': external_token}),
+        url: apiUrl.login_register_external,
+        headers: headers
+      }).success((data) ->
+        User.loggedIn = true
+        User.TriggerRefresh(data.expires_in*0.9*1000, data.refresh_token)
+        User.credentials = data
+        cookies.set("access_token", data.access_token, data.expires)
+        cookies.set("refresh_token", data.refresh_token, 2678400)
+        cookies.set("user_id", data.user_id, 2678400)
+      ).error((data)->
+        console.log data
+      )
+
 
     FetchUserData: (resourceUrl) ->
       $http({
@@ -130,7 +147,7 @@ window.WebApp.factory('UserManager', ['cookies', '$http', '$q', '$location', (co
       User.loggedIn = false
 
 
-  getTimeToNextRefresh: () ->
+    getTimeToNextRefresh: () ->
       if @timeOfLastRefresh?
         return @credentials.expiers_in*0.9*1000 - ( (new Date()).getTime() - @timeOfLastRefresh )
       else

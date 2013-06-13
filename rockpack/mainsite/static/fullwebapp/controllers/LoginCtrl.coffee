@@ -17,5 +17,13 @@ window.WebApp.controller('LoginCtrl', ['$scope', '$location', 'cookies', 'UserMa
       )
     return
 
+  $scope.facebook = ->
+    FB.login((response) ->
+      if (response.authResponse)
+        # connected
+        $scope.User.ExternalLogin('facebook', response.authResponse.accessToken)
+      else
+        console.log 'canceled'
+    )
   return
 ])
