@@ -1,6 +1,7 @@
 import base64
 import json
 import uuid
+from time import sleep
 from datetime import date
 from mock import patch
 
@@ -302,6 +303,10 @@ class RegisterTestCase(base.RockPackTestCase):
             self.assertEquals(1,
                     Channel.query.filter_by(owner=creds['user_id']).count(),
                     'default user channel should be created')
+
+            # XXX: Sleep long enough for the favourites channel to hit ES
+            if app.config.get('ELASTICSEARCH_URL'):
+                sleep(0.8)
 
             r = client.get(
                 '/ws/{}/'.format(creds['user_id']),
