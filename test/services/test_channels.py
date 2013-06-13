@@ -29,6 +29,7 @@ class ChannelCreateTestCase(base.RockPackTestCase):
 
     def test_new_channel(self):
         with self.app.test_client() as client:
+            self.app.test_request_context().push()
             user = self.create_test_user()
             user2_id = self.create_test_user().id
 
@@ -209,6 +210,33 @@ class ChannelCreateTestCase(base.RockPackTestCase):
                 models.Channel.query.get(new_ch.id).public,
                 False,
                 'channel should not be public if privacy is toggled false')
+
+            # Test (editorial) visible flag on channel object
+
+            r = client.put(
+                resource + 'public/',
+                data=json.dumps(True),
+                content_type='application/json',
+                headers=[get_auth_header(user.id)]
+            )
+            data = json.loads(r.data)
+            self.assertEquals(
+                models.Channel.query.get(new_ch.id).public,
+                True,
+                'channel should be public if privacy is toggled true')
+
+            ch = models.Channel.query.get(new_ch.id)
+            ch.visible = False
+            ch.save()
+            self.assertEquals(models.Channel.query.get(new_ch.id).visible, False)
+
+            time.sleep(2)
+            r = client.get(resource, headers=[get_auth_header(user.id)])
+            self.assertEquals(r.status_code, 200)
+
+            rr = client.get(resource, headers=[get_auth_header(user2_id)])
+            self.assertEquals(rr.status_code, 404)
+
 
     def test_dupe_channel_untitled(self):
         with self.app.test_client() as client:
