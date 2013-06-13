@@ -258,7 +258,6 @@ class ChannelCreateTestCase(base.RockPackTestCase):
                 content_type='application/json',
                 headers=[get_auth_header(user.id)]
             )
-            print r.data
             self.assertEquals(201, r.status_code)
 
             resource = urlsplit(r.headers['Location']).path
