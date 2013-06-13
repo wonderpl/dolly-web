@@ -2,7 +2,8 @@ window.WebApp = angular.module('WebApp', ['infinite-scroll','ui.bootstrap'])
   .config(['$routeProvider', ($routeProvider) ->
     $routeProvider.when('/login', {templateUrl: 'login.html'})
     $routeProvider.when('/search', {templateUrl: 'search.html'})
-    $routeProvider.when('/channel/:userid/:channelid', {templateUrl: 'channel.html'})
+    $routeProvider.when('/channel/:userid/:channelid', {templateUrl: 'channel.html', reloadOnSearch: false})
+    $routeProvider.when('/reset-password', {templateUrl: 'resetPassword.html'})
     $routeProvider.when('/feed', {
       templateUrl: 'feed.html',
       controller: 'FeedCtrl',
@@ -37,7 +38,7 @@ window.onYouTubeIframeAPIReady = ->
   return
 
 updateScope = ->
-  injector = angular.element(document.getElementById('app')).injector()
+  injector = angular.element(document.getElementById('WebApp')).injector()
   if typeof injector == "undefined"
     setTimeout(updateScope, 300)
   else

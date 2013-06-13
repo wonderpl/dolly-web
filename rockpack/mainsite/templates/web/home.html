@@ -34,7 +34,7 @@
   {% endassets %}
 
   <script type="text/javascript">
-    window.apiUrls = jQuery.parseJSON('{{api_urls|safe}}')
+    window.apiUrls = jQuery.parseJSON('{{api_urls|safe}}');
   </script>
 
   {% assets "fullwebJS" %}
@@ -44,6 +44,8 @@
   {% assets "fullwebTemplates" %}
   <script type="text/javascript" src="{{ ASSET_URL }}"></script>
   {% endassets %}
+
+
 
   <script>
     var tag = document.createElement('script');

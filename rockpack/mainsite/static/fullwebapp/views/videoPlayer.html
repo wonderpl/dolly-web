@@ -1,0 +1,20 @@
+<div ng-controller="VideoPlayerCtrl" id="lightbox">
+  <div id="playercontainer">
+    <div id="playerheader" class="hidden-phone">
+      <div id="videotitle">{{videodata.title | truncate: 45}}</div>
+    </div>
+    <div id="player"></div>
+    <div id="playerinfo">
+      <ul>
+        <li id="channelthumb" class="hidden-phone"><img ng-src="{{channel.owner.avatar}}"></li>
+        <li>
+          <div id="channeltitle">{{channel.title}}</div>
+          <div id="username" class="hidden-phone">{{channel.owner.name}}</div>
+        </li>
+        <li class="right hidden-phone" style="margin-right:25px">
+          <a href="#" class="btn btn-blue getappbtn">Get the app</a>
+        </li>
+      </ul>
+    </div>
+  </div>
+</div>

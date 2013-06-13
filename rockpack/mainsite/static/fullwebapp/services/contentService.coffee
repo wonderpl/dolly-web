@@ -1,4 +1,6 @@
-angular.module('WebApp').factory('ContentService', ($http, locale, apiUrl) ->
+angular.module('WebApp').factory('ContentService', ($http, locale, apiUrl, UserManager) ->
+
+  baseApiUrl = apiUrl.cover_art.substr(0,apiUrl.cover_art.search('/ws/')+4)
 
   compareDecending = (a, b) ->
     a = a.priority
@@ -37,9 +39,6 @@ angular.module('WebApp').factory('ContentService', ($http, locale, apiUrl) ->
         url: apiUrl.categories,
       })
       .then(((data) ->
-
-
-        #
         data.data.categories.items.sort(compareDecending)
         _.each(data.data.categories.items, (category) ->
           tempcategory = []
@@ -80,25 +79,27 @@ angular.module('WebApp').factory('ContentService', ($http, locale, apiUrl) ->
           console.log data
         )
 
-    #TODO: Implement call, currently copy/paste
-    getChannelVideos: (categoryID, start, size) ->
-      if typeof start == "undefined"
-        start = 0
-      if typeof size == "undefined"
-        size = 20
+    #TODO: Check if this is your channel, if so move to https and attach cradentials
+    getChannelVideos: (userID, categoryID, size, start) ->
 
       dataObj = {'start': start, 'size': size}
+      url = "#{baseApiUrl}#{userID}/channels/#{categoryID}/"
+      headers = {"Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"}
 
-      if typeof categoryID != "undefined"
-        dataObj.category = categoryID
+      if UserManager.credentials.user_id == userID
+        headers = {"authorization": "Bearer #{UserManager.credentials.access_token}", "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"}
+#        url = "#{baseApiUrl}#{userID}/channels/#{categoryID}".replace("http://", "https://secure.")
+
+      console.log '******'
 
       $http({
         method: 'GET',
-        url: apiUrl.popular_channels,
+        url: url,
         params: dataObj,
+        headers: headers,
       })
         .then(((data) ->
-        return data.data.channels
+          return data.data
         ),
         (data) ->
           console.log data

@@ -7,7 +7,5 @@ window.WebApp.controller('FeedCtrl', ['$scope', 'cookies', 'userObj', ($scope, c
     $scope.User.FetchRecentSubscriptions($scope.User.feed.position, 50)
     $scope.User.feed.position += 50
 
-#  $scope.load_feed()
-
   return
 ])

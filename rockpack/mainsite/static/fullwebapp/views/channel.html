@@ -1,9 +1,9 @@
 <div ng-controller="ChannelCtrl" id="ChannelCtrl">
-  <img ng-src="{{channel.cover.thumbnail_url}}" id="bgimage">
+  <img ng-src="{{channel.cover.thumbnail_url}}" id="bgimage" ng-click="testfunction()">
   <div class="channelheader" ng-style="windowWidth">
     <div>
-      <h1>{{channel.title| truncate: channelTitleLength}}</h1>
-      <div id="details">{{channel.subscriber_count}} Subscribers</div>
+      <h1>{{channel.title}}</h1>
+      <div id="subscriberCount">{{channel.subscriber_count}} Subscribers</div>
       <ul id="userdetails">
         <li><img class="user-profile" ng-src="{{channel.owner.avatar}}"></li>
         <li id="curatedby"><span id="username">{{channel.owner.display_name}}</span></li>
@@ -15,11 +15,13 @@
       <button class="btn btn-blue">Get The App</button>
     </div>
   </div>
-  <div id="channeloverlay" when-scrolled="load_videos()">
+  <div id="channeloverlay">
     <div ng-style="windowWidth" id="channelcontainer">
       <h1 id="videoheader" class="hidden-phone">Videos</h1>
       <div id="videoslist" infinite-scroll='load_videos()' infinite-scroll-distance='1'>
-        <div ng-click="setCurrentVideo(video)" ng-repeat="video in channel.videos.items" video-cell></div>
+        <div ng-click="setCurrentVideo(video)" ng-repeat="video in channel.videos.items">
+          <div ng-include src="'videoCell.html'" ></div>
+        </div>
       </div>
     </div>
   </div>

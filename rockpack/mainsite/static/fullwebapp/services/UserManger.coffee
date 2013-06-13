@@ -6,12 +6,15 @@ window.WebApp.factory('UserManager', ['cookies', '$http', '$q', '$location', (co
     credentials: {
       refresh_token: cookies.get('refresh_token'),
       user_id: cookies.get('user_id'),
-      access_token: cookies.get('access_token')
+      access_token: cookies.get('access_token'),
     }
+
+    loggedIn: false
 
     timeOfLastRefresh: null
 
-    feed: [],
+    feed: []
+    feedLength : null
 
     refreshToken: () ->
       $http({
@@ -21,6 +24,7 @@ window.WebApp.factory('UserManager', ['cookies', '$http', '$q', '$location', (co
         headers: headers
       })
       .success((data) =>
+          @loggedIn = true
           cookies.set("access_token", data.access_token, data.expires)
           @credentials = data
 
@@ -40,12 +44,13 @@ window.WebApp.factory('UserManager', ['cookies', '$http', '$q', '$location', (co
         headers: headers
       })
       .success((data) =>
+        @loggedIn = true
         @TriggerRefresh(data.expires_in*0.9*1000, data.refresh_token)
         @credentials = data
-        console.log 'login'
         cookies.set("access_token", data.access_token, data.expires)
         cookies.set("refresh_token", data.refresh_token, 2678400)
         cookies.set("user_id", data.user_id, 2678400)
+
       )
       .error((data) =>
         console.log data
@@ -121,6 +126,8 @@ window.WebApp.factory('UserManager', ['cookies', '$http', '$q', '$location', (co
       cookies.set('user_id', '')
       User.details = {}
       User.credentials = {}
+      User.feed = []
+      User.loggedIn = false
 
 
   getTimeToNextRefresh: () ->
