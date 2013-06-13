@@ -368,7 +368,8 @@ class RegisterTestCase(base.RockPackTestCase):
                 headers=[get_client_auth_header()],
                 data=dict(username=UserData.test_user_a.username),
             )
-            self.assertEquals(r.status_code, 400)
+            self.assertEquals(r.status_code, 200)
+            self.assertEquals(json.loads(r.data)['available'], False)
 
             r = client.post(
                 '/ws/register/availability/',

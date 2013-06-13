@@ -10,6 +10,46 @@ See OAuth 2.0 Bearer Token Usage [Access Token Response]
 (http://self-issued.info/docs/draft-ietf-oauth-v2-bearer.html#ExAccTokResp).
 
 
+Check Username Availability
+===========================
+
+Check if the username supplied is availavble to register
+
+
+```http
+POST /ws/login/ HTTP/1.1
+Authorization: Basic CLIENT_APP_CREDENTIALS
+
+username=tonystark
+```
+
+Parameter  | Required | Value      | Description
+:--------- | :------- | :--------- | :----------
+username   | Yes      | String
+
+
+Responds with whether the username supplied is available.
+
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{"available": true}
+```
+
+or
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{"available": false}
+```
+
+Invalid_request errors are also returned where appropriate. See below.
+
+
 Log-in User
 ===========
 
