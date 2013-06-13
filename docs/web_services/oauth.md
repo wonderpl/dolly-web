@@ -17,7 +17,7 @@ Check if the username supplied is availavble to register
 
 
 ```http
-POST /ws/login/ HTTP/1.1
+POST /ws/register/availability/ HTTP/1.1
 Authorization: Basic CLIENT_APP_CREDENTIALS
 
 username=tonystark
