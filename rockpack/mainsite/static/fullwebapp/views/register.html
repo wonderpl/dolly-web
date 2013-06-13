@@ -1,0 +1,14 @@
+<div ng-controller="RegisterCtrl" class="wrapper">
+  <h2>Register</h2>
+  <form id="registrationForm" name="registrationForm">
+    <div><input type="text" id="username" placeholder="User Name" ng-model="user.username" required></div>
+    <div><input type="email" id="email" placeholder="Email" ng-model="user.email" required></div>
+    <div><input type="password" id="password" placeholder="Password" ng-model="user.password" required></div>
+    <div>
+      <input type="text" id="day" placeholder="DD" ng-model="user.day" required>
+      <input type="text" id="month" placeholder="MM" ng-model="user.month" required>
+      <input type="text" id="year" placeholder="YYYY" ng-model="user.year" required>
+    </div>
+    <button ng-click="register(user)">SAVE</button>
+  </form>
+</div>
