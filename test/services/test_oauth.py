@@ -20,6 +20,7 @@ from rockpack.mainsite.services.oauth import exceptions
 from test import base
 from test.test_helpers import get_client_auth_header
 from test.test_helpers import get_auth_header
+from test.fixtures import UserData
 
 
 ACCESS_CREDENTIALS = {
@@ -363,3 +364,22 @@ class RegisterTestCase(base.RockPackTestCase):
                     )
                 )
                 self.assertEquals(status, r.status_code, r.data)
+
+    def test_username_availability(self):
+        with self.app.test_client() as client:
+            self.app.test_request_context().push()
+            r = client.post(
+                '/ws/register/availability/',
+                headers=[get_client_auth_header()],
+                data=dict(username=UserData.test_user_a.username),
+            )
+            self.assertEquals(r.status_code, 200)
+            self.assertEquals(json.loads(r.data)['available'], False)
+
+            r = client.post(
+                '/ws/register/availability/',
+                headers=[get_client_auth_header()],
+                data=dict(username='noonehasthisusername'),
+            )
+            self.assertEquals(r.status_code, 200)
+            self.assertEquals(json.loads(r.data)['available'], True)
