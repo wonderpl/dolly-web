@@ -1,10 +1,13 @@
 <div ng-controller="PressCtrl" id="press">
-  <div id="pressheader"></div>
+  <div id="pressheader">
+    <div class="wrapper">
+      <h1>Press</h1>
+    </div>
+  </div>
   <div class="wrapper" id="playbookcontainer">
     <div id="playbookcontent" >
       <div ng-switch on="selectedChapter" id="playbookcontentcontainer">
         <div ng-switch-when="PRESS">
-          <h3>PRESS</h3>
           <div class="press-release">
             <p class="date">27th June, 2013</p>
             <p>Rockpack Launches!</p>

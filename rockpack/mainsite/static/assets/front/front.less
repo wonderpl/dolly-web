@@ -58,8 +58,16 @@ body {
 
 #press {
   #pressheader {
-    height: 550px;
-    background: url(/static/assets/front/images/press1.jpg) no-repeat 50% 50%;
+    height: 280px;
+    background: url(/static/assets/front/images/press1.jpg) no-repeat 50% 100%;
+    padding-top: 50px;
+
+    h1 {
+      color: #fff;
+      margin-top: 120px;
+      font-size: 43px;
+      text-transform: uppercase;
+    }
   }
 
   #playbookcontainer {
@@ -467,19 +475,17 @@ footer {
 // Jobs
 
 .content-page {
-  min-height: 100%;
   color: #1c1f21;
 
   header {
     min-height: 210px;
-    color: #858a8e;
-    background: #dde0e1;
 
     h1 {
-      font-size: 35px;
+      font-size: 43px;
+      color: #858a8e;
       text-transform: uppercase;
       font-family: "dn-bold", sans-serif !important;
-      padding-top:150px;
+      padding-top:113px;
     }
 
     h2 {
@@ -545,14 +551,16 @@ footer {
     text-transform: uppercase;
     vertical-align: top;
     font-family: "dn-regular", sans-serif;
-    padding-left: 10px;
     float: left;
   }
 
   .main-content {
-    background: #fff;
-    margin-bottom: 4px;
-    padding: 30px 0 30px 0;
+
+    .wrapper {
+      padding: 30px 0 30px 0;
+      background: url(/static/assets/front/images/verticleborder.png) repeat-y left top;
+    }
+
 
     h1 {
       font-size: 35px;
@@ -593,7 +601,6 @@ footer {
     margin-top: 30px;
 
     .images_container {
-      width: 650px;
       margin: 0 auto;
 
       .image_cont {
@@ -705,24 +712,36 @@ footer {
 }
 
 #channel-playbook {
-  background: #f7f7f7;
-  height: 275px;
   padding-top: 50px;
-  text-align: center;
+  text-align: left;
 
   h1 {
-    margin: 50px 0;
+    margin: 80px 0 20px 0;
+    text-transform: uppercase;
+    font-size: 43px;
+    color: #858a8e;
+    font-family: "dn-bold";
   }
 
   p {
     font-family: "dn-regular", sans-serif;
-    font-size: 23px;
+    font-size: 18px;
+    line-height: 30px;
+    width: 700px;
   }
 }
 
 #playbookcontainer {
   min-height: 600px;
   padding-top: 70px;
+
+  .notopmargin {
+    margin-top: 11px;
+  }
+
+  .notopmarginp {
+    margin-top: 3px;
+  }
 }
 
 #playbookmenu {
@@ -735,7 +754,7 @@ footer {
   width:320px;
   margin-left: -100%;
   height: 300px;
-  border-right: #717171 1px solid;
+  border-right: 2px solid #dee1e2;
 
   .selected {
     text-decoration: underline;
@@ -765,7 +784,6 @@ footer {
 }
 
 #contentproviders {
-  background: #eaeced;
   padding: 117px 0 67px 0;
   margin-bottom: 32px;
 
@@ -1197,7 +1215,6 @@ footer {
   #about {
     .people {
       .images_container {
-        width: 1000px;
       }
     }
   }
