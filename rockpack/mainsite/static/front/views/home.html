@@ -32,7 +32,7 @@
   </div>
 
   <div class="hidden-phone video-container">
-    <div id="video">
+    <div id="video" ng-click="playVideo()">
       <div>
         <h2>Life is everyday curation.</h2>
         <img ng-src="((assets_url))/assets/front/images/play.png" id="play">
@@ -70,7 +70,7 @@
 
   <div id="iphoneShare" class="visible-phone">
     <h2>Life is everyday curation</h2>
-    <div class="watchvideo"></div>
+    <div class="watchvideo" id="mobilevideo" ng-click="playMobileVideo()"></div>
     <a href="http://downloadapp.rockpack" target="_blank" class="download"><img ng-src="((assets_url))/assets/front/images/downloadbig.png" ng-click="triggerEvent('appStoreButtonClick')"></a>
     <div id="share">
       <ul id="social">

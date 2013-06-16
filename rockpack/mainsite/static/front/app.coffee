@@ -27,3 +27,19 @@ window.contentApp = angular.module('contentApp', [])
     $routeProvider.when('/bookmarklet', {templateUrl: 'bookmarklet.html', resolve:{trackingCode: (GATrackingService) -> return GATrackingService.push()}})
     $routeProvider.when('/press', {templateUrl: 'press.html', resolve:{trackingCode: (GATrackingService) -> return GATrackingService.push()}})
   ])
+
+window.onYouTubeIframeAPIReady = ->
+  updateScope()
+  return
+
+updateScope = ->
+  injector = angular.element(document.getElementById('app')).injector()
+  if typeof injector == "undefined" 
+    setTimeout(updateScope, 300)
+  else
+    injector.invoke(($rootScope, $compile, $document) ->
+      $rootScope.playerReady = true
+      $rootScope.$apply()
+      return
+    )
+  return

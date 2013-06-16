@@ -21,4 +21,30 @@ window.contentApp.controller('PageCtrl', ['isMobile', '$scope', '$location', 'br
   $scope.assets_url = window.assets_url
   $scope.injectorUrl = window.injectorUrl
 
+  $scope.playVideo = () ->
+    $scope.player = new YT.Player('video', {
+      videoId: 'lBFBbm1Nudc',
+      playerVars: {
+        autoplay: 1,
+        showinfo: 1,
+        modestbranding: 1,
+        wmode: "opaque",
+        controls: 1
+      }
+    })
+
+  $scope.playMobileVideo = () ->
+    $scope.player = new YT.Player('mobilevideo', {
+      height: 450,
+      width: $(window).width(),
+      videoId: 'lBFBbm1Nudc',
+      playerVars: {
+        autoplay: 1,
+        showinfo: 1,
+        modestbranding: 1,
+        wmode: "opaque",
+        controls: 1
+      }
+    })
+
 ])

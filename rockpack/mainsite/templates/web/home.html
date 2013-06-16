@@ -25,6 +25,13 @@
       <script src="vendor/js-no-compile/json2.js"></script>
     <![endif]-->
 
+    <script>
+      var tag = document.createElement('script');
+      tag.src = "//www.youtube.com/iframe_api";
+      var firstScriptTag = document.getElementsByTagName('script')[0];
+      firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+    </script>
+
     {% assets filters="cssmin", output="gen/front.%(version)s.css", "assets/vendor/css/bootstrap.css", "assets/vendor/css/bootstrap-responsive.css" %}
     <link rel="stylesheet" href="{{ ASSET_URL }}"/>
     {% endassets %}
