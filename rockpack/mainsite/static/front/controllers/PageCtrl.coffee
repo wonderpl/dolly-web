@@ -24,6 +24,8 @@ window.contentApp.controller('PageCtrl', ['isMobile', '$scope', '$location', 'br
   $scope.playVideo = () ->
     $scope.player = new YT.Player('video', {
       videoId: 'lBFBbm1Nudc',
+      width: $(window).width(),
+      videoId: 'lBFBbm1Nudc',
       playerVars: {
         autoplay: 1,
         showinfo: 1,
@@ -36,8 +38,6 @@ window.contentApp.controller('PageCtrl', ['isMobile', '$scope', '$location', 'br
   $scope.playMobileVideo = () ->
     $scope.player = new YT.Player('mobilevideo', {
       height: 450,
-      width: $(window).width(),
-      videoId: 'lBFBbm1Nudc',
       playerVars: {
         autoplay: 1,
         showinfo: 1,
