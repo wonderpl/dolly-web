@@ -670,7 +670,7 @@ class UserWS(WebService):
         channel = Channel.query.filter_by(id=channelid, deleted=False).first_or_404()
         if g.authorized.userid != userid and not channel.public:
             abort(404)
-        items, total = _channel_videos(channelid, self.get_locale(), self.page())
+        items, total = _channel_videos(channelid, self.get_locale(), self.get_page())
         return dict(videos=dict(items=items, total=total))
 
     @expose_ajax('/<userid>/channels/<channelid>/videos/', methods=('PUT', 'POST'))

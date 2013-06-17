@@ -1,3 +1,7 @@
+# Hack to prevent import lock issue
+# http://code.google.com/p/modwsgi/issues/detail?id=177
+import _strptime
+
 from werkzeug.contrib.fixers import ProxyFix
 from flask import request
 from rockpack.mainsite import app, init_app
