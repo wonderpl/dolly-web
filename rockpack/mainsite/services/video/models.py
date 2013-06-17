@@ -398,11 +398,26 @@ class ContentReport(db.Model):
 
     id = Column(Integer, primary_key=True)
     date_created = Column(DateTime(), nullable=False, default=func.now())
+    date_updated = Column(DateTime(), nullable=False, default=func.now(), onupdate=func.now())
     object_type = Column(String(16), nullable=False)
     object_id = Column(String(64), nullable=False)
     reason = Column(String(256), nullable=False)
     count = Column(Integer, nullable=False, default=1)
     reviewed = Column(Boolean, nullable=False, default=False)
+
+
+class PlayerErrorReport(db.Model):
+    __tablename__ = 'player_error'
+    __table_args__ = (
+        UniqueConstraint('video_instance', 'reason'),
+    )
+
+    id = Column(Integer, primary_key=True)
+    date_created = Column(DateTime(), nullable=False, default=func.now())
+    date_updated = Column(DateTime(), nullable=False, default=func.now(), onupdate=func.now())
+    video_instance = Column(ForeignKey('video_instance.id'), nullable=False)
+    reason = Column(String(256), nullable=False)
+    count = Column(Integer, nullable=False, default=1)
 
 
 ParentCategory = aliased(Category)
