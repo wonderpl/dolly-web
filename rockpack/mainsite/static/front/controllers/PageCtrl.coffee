@@ -21,6 +21,8 @@ window.contentApp.controller('PageCtrl', ['isMobile', '$scope', '$location', 'br
   $scope.assets_url = window.assets_url
   $scope.injectorUrl = window.injectorUrl
 
+  console.log 'fff'
+
   $scope.playVideo = () ->
 
     width = $(window).width()

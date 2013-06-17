@@ -45,7 +45,7 @@
     <script type="text/javascript" src="{{ ASSET_URL }}"></script>
     {% endassets %}
 
-    {% assets filters="coffeescript, rjsmin", output="gen/front.%(version)s.js", "front/app.coffee", "front/services/GATrackingService.coffee", "front/controllers/PageCtrl.coffee",
+    {% assets filters="coffeescript", output="gen/front.%(version)s.js", "front/app.coffee", "front/services/GATrackingService.coffee", "front/controllers/PageCtrl.coffee",
     "front/controllers/ChannelPlaybookCtrl.coffee", "front/services/browserServices.coffee", "front/controllers/PressCtrl.coffee"
     %}
     <script type="text/javascript" src="{{ ASSET_URL }}"></script>
