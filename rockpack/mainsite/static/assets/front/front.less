@@ -406,7 +406,7 @@ footer {
   ul {
     list-style: none;
     .clearfix();
-    margin: 0 0 30px 35px;
+    margin: 0 0 30px 0;
     display: inline-block;
 
     li {
@@ -1074,10 +1074,15 @@ footer {
 
       text-align: left;
       width: 500px;
+      margin-left: 50px;
 
       img {
         margin-top: 206px;
       }
+    }
+
+    .ipadsimgs {
+      margin-right: 50px;
     }
   }
 
@@ -1111,10 +1116,15 @@ footer {
 
     #addvideo, #create, #subscribe {
       display: inline-block;
-      width: 33%;
+      width: 285px;
       vertical-align: top;
       margin-top: 0;
+      margin-right: 118px;
       position: relative;
+
+      &:last-child {
+        margin-right: 0;
+      }
 
       img {
         display: block;
@@ -1128,7 +1138,7 @@ footer {
 
     #addvideo {
       .plus {
-        margin: 60px 0 0 45px;
+        margin: 60px 0 0 0;
         text-align: center;
 
         img {
@@ -1141,17 +1151,18 @@ footer {
 
       .text {
         position: absolute;
-        top: 525px;
+        top: 645px;
         text-align: text;
-        margin: 120px 20px 0 0;
-        left: 38px;
+        margin: 0;
+        left: 0;
       }
     }
 
     #subscribe {
 
       .text {
-        margin: 60px 0 0 45px;
+        margin: 60px 0 0 0;
+        width: 285px;
       }
 
     }
