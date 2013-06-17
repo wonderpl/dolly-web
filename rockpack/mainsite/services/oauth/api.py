@@ -246,7 +246,7 @@ class RegistrationWS(WebService):
             abort(400, message='No data given.')
         if not form.username.validate(form.username.data):
             for error in form.username.errors:
-                if '"{}" already taken'.format(value) in error:
+                if u'"{}" already taken'.format(value) in error:
                     return {"available": False}
 
             response = {'message': form.username.errors}
