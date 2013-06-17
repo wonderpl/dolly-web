@@ -22,28 +22,36 @@ window.contentApp.controller('PageCtrl', ['isMobile', '$scope', '$location', 'br
   $scope.injectorUrl = window.injectorUrl
 
   $scope.playVideo = () ->
+
+    width = $(window).width()
+
+    if  width > 1200
+      width = 1200
+
     $scope.player = new YT.Player('video', {
       videoId: 'lBFBbm1Nudc',
-      width: $(window).width(),
+      width: width,
       videoId: 'lBFBbm1Nudc',
       playerVars: {
         autoplay: 1,
-        showinfo: 1,
-        modestbranding: 1,
-        wmode: "opaque",
-        controls: 1
+        showinfo: 0,
+        modestbranding: 0,
+        controls: 1,
+        rel: 0
       }
     })
 
   $scope.playMobileVideo = () ->
+    $(".watchvideo").removeClass('watchvideo');
     $scope.player = new YT.Player('mobilevideo', {
-      height: 450,
+      videoId: 'lBFBbm1Nudc',
+      width: $(window).width()
+      height: $(window).width()*9/16
       playerVars: {
-        autoplay: 1,
-        showinfo: 1,
-        modestbranding: 1,
-        wmode: "opaque",
-        controls: 1
+        showinfo: 0,
+        modestbranding: 0,
+        controls: 1,
+        rel: 0
       }
     })
 
