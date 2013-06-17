@@ -206,6 +206,13 @@ body {
   background: url(/static/assets/front/images/video.jpg?v=1) no-repeat 50% 50%;
   height: 450px;
 
+  &:hover {
+    #play {
+      opacity: 1;
+    }
+  }
+
+
   &>div {
     text-align: center;
   }
@@ -220,6 +227,11 @@ body {
 
   #play {
     margin-top: 70px;
+    opacity: .7;
+    -webkit-transition: opacity .5s;
+    -moz-transition: opacity .5s;
+    transition: opacity .5s;
+
   }
 
 }
