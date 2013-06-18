@@ -432,3 +432,47 @@ class ChannelCreateTestCase(base.RockPackTestCase):
                     headers=[get_auth_header(user_id)]
                 )
                 self.assertEquals(status, r.status_code, r.data)
+
+    def test_public_private(self):
+        user_id = self.create_test_user().id
+        with self.app.test_client() as client:
+            # create channel
+            r = client.post(
+                '/ws/{}/channels/'.format(user_id),
+                data=json.dumps(dict(title='', category='', description='', public='', cover='')),
+                content_type='application/json',
+                headers=[get_auth_header(user_id)]
+            )
+            self.assertEquals(r.status_code, 201)
+            resource = urlsplit(r.headers['Location']).path
+
+            # add videos
+            r = client.post(
+                resource + 'videos/',
+                data=json.dumps([VideoInstanceData.video_instance1.id]),
+                content_type='application/json',
+                headers=[get_auth_header(user_id)]
+            )
+            self.assertEquals(r.status_code, 204)
+
+            for title, category, cover, public in (
+                    ('test', '', '', False),
+                    ('test', '1', '', False),
+                    ('test', '1', RockpackCoverArtData.comic_cover.cover, False),
+                    ('test', '1', RockpackCoverArtData.comic_cover.cover, True)):
+                r = client.put(
+                    resource,
+                    data=json.dumps(dict(
+                        title=title,
+                        category=category,
+                        cover=cover,
+                        description='',
+                        public=public,
+                    )),
+                    content_type='application/json',
+                    headers=[get_auth_header(user_id)]
+                )
+                self.assertEquals(r.status_code, 200)
+
+                r = client.get(resource, headers=[get_auth_header(user_id)])
+                self.assertEquals(json.loads(r.data)['public'], public)
