@@ -1,6 +1,6 @@
 import json
-import time
 import cgi
+from datetime import datetime
 from test import base
 from mock import patch
 from test.fixtures import ChannelData, VideoInstanceData
@@ -196,10 +196,8 @@ class TestProfileEdit(base.RockPackTestCase):
 
             from rockpack.mainsite.services.user import commands
             with patch('rockpack.mainsite.core.email.send_email') as send_email:
-                commands.send_registration_emails()
-                time.sleep(1)
-                user = self.create_test_user()
-                commands.send_registration_emails()
+                user = self.create_test_user(date_joined=datetime(2100, 1, 2))
+                commands.create_registration_emails(datetime(2100, 1, 1), datetime(2100, 1, 10))
                 self.assertEquals(send_email.call_count, 1)
                 assert user.email == send_email.call_args[0][0]
                 assert 'Welcome to Rockpack' == send_email.call_args[0][1]
@@ -208,18 +206,15 @@ class TestProfileEdit(base.RockPackTestCase):
                 assert 'To ensure our emails reach your inbox please make sure to add {}'.format(
                     cgi.escape(app.config['DEFAULT_EMAIL_SOURCE'])) in send_email.call_args[0][2]
 
-                time.sleep(1)
-                user2 = self.create_test_user()
-                commands.send_registration_emails()
+                user2 = self.create_test_user(date_joined=datetime(2100, 2, 2))
+                commands.create_registration_emails(datetime(2100, 2, 1), datetime(2100, 2, 10))
                 self.assertEquals(send_email.call_count, 2)
                 assert 'Hi {}'.format(user2.username) in send_email.call_args[0][2]
 
-                time.sleep(1)
-                user1 = self.create_test_user()
-                user2 = self.create_test_user()
+                # Check that invalid email doesn't break
+                self.create_test_user(date_joined=datetime(2100, 3, 2), email='xxx')
+                # No email should be sent to user2 (with blank address)
+                self.create_test_user(date_joined=datetime(2100, 3, 3), email='')
 
-                user1.email = 'sadsadsadasdsadas'
-                user1.save()
-
-                commands.send_registration_emails()
-                self.assertEquals(send_email.call_count, 4)
+                commands.create_registration_emails(datetime(2100, 3, 1), datetime(2100, 3, 10))
+                self.assertEquals(send_email.call_count, 3)
