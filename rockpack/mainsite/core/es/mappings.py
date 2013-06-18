@@ -101,6 +101,7 @@ channel_mapping = {
         "video_frequency": {"type": "integer"},
         "video_last_added": {"type": "date"},
         "update_frequency": {"type": "float", "null_value": 0.0},
+        "subscriber_frequency": {"type": "float", "null_value": 0.0},
         "editorial_boost": {"type": "float", "null_value": 1.0},
         "favourite": {"type": "boolean"},
         "verified": {"type": "boolean"},

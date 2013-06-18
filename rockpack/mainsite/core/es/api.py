@@ -1,3 +1,4 @@
+from ast import literal_eval
 from urlparse import urlparse, urljoin
 import pyes
 from . import mappings
@@ -100,7 +101,7 @@ class EntitySearch(object):
     def _construct_filters(self, query):
         """ Wraps a query to apply score filters to """
         if self._filters:
-            return pyes.CustomFiltersScoreQuery(query, self._filters, score_mode='total')
+            return pyes.CustomFiltersScoreQuery(query, self._filters, score_mode='multiply')
         return query
 
     def _construct_query(self):
@@ -133,6 +134,16 @@ class EntitySearch(object):
             except:
                 pass
             pp(result.__dict__['query'])
+            """
+            try:
+                result.next()
+                pp(result.__dict__['hits'][0])
+                pp(result.__dict__['hits'][1])
+                pp(result.__dict__['hits'][2])
+                pp(result.__dict__['hits'][3])
+            except (KeyError, IndexError):
+                pass
+            """
         return result
 
     def get_index_name(self):
@@ -226,7 +237,7 @@ class ChannelSearch(EntitySearch, CategoryMixin, MediaSortMixin):
         channel.setdefault('videos', {}).setdefault('items', videos.get(channel['id'], []))
         channel['videos']['total'] = total
 
-    def _format_results(self, channels, with_owners=False, with_videos=False, video_paging=(0,100,)):
+    def _format_results(self, channels, with_owners=False, with_videos=False, video_paging=(0, 100, )):
         channel_list = []
         channel_id_list = []
         owner_list = []
@@ -455,6 +466,12 @@ def add_channel_to_index(channel, bulk=False, refresh=False, boost=None, no_chec
         else:
             category = [channel.category_rel.id, channel.category_rel.parent]
 
+    aoi = None
+    # aoi may come in as a string which needs to be eval'd
+    # eg. from cms entry
+    if channel.cover_aoi and isinstance(channel.cover_aoi, basestring):
+        aoi = literal_eval(channel.cover_aoi)
+
     data = dict(
         id=channel.id,
         public=channel.public,
@@ -471,10 +488,11 @@ def add_channel_to_index(channel, bulk=False, refresh=False, boost=None, no_chec
         favourite=channel.favourite,
         verified=channel.verified,
         update_frequency=channel.update_frequency,
+        subscriber_frequency=channel.subscriber_frequency,
         editorial_boost=channel.editorial_boost,
         cover=dict(
             thumbnail_url=urlparse(convert(channel, 'cover', 'CHANNEL').url).path,
-            aoi=channel.cover_aoi
+            aoi=aoi
         ),
         keywords=[channel.owner_rel.display_name.lower(), channel.owner_rel.username.lower()]
     )
