@@ -276,6 +276,7 @@ class Channel(db.Model):
     date_added = Column(DateTime(), nullable=False, default=func.now())
     date_updated = Column(DateTime(), nullable=False, default=func.now(), onupdate=func.now())
     update_frequency = Column(Float, nullable=True)
+    subscriber_frequency = Column(Float, nullable=True)
     ecommerce_url = Column(String(1024), nullable=False, server_default='')
     editorial_boost = Column(Float(precision=1), nullable=True, server_default='1.0', default=1.0)
     favourite = Column(Boolean(), nullable=False, server_default='false', default=False)

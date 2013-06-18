@@ -213,14 +213,15 @@ class ChannelWS(WebService):
         cs = ChannelSearch(self.get_locale())
         offset, limit = self.get_page()
         cs.set_paging(offset, limit)
+
         # Boost popular channels based on ...
         cs.add_filter(filters.boost_from_field_value('editorial_boost'))
-        cs.add_filter(filters.boost_from_field_value('subscriber_count'))
-        cs.add_filter(filters.boost_from_field_value('update_frequency'))
-        view_count_field = '.'.join(['locales', self.get_locale(), 'view_count'])
-        star_count_field = '.'.join(['locales', self.get_locale(), 'star_count'])
-        cs.add_filter(filters.boost_from_field_value(view_count_field))
-        cs.add_filter(filters.boost_from_field_value(star_count_field))
+        cs.add_filter(filters.boost_from_field_value('subscriber_frequency'))
+        cs.add_filter(filters.boost_from_field_value('update_frequency', reduction_factor=4))
+        cs.add_filter(filters.negatively_boost_favourites())
+        cs.add_filter(filters.verified_channel_boost())
+        cs.add_filter(filters.boost_by_time())
+
         cs.filter_category(request.args.get('category'))
         cs.date_sort(request.args.get('date_order'))
         if request.args.get('user_id'):
