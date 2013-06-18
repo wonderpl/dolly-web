@@ -15,7 +15,7 @@ fullwebVendorJS:
 #    filters: rjsmin
     output: gen/fullweb_vendor.%(version)s.js
     contents:
-        - assets/vendor/js/jquery-1.9.1.js
+        - assets/vendor/js/jquery-1.10.1.min.js
         - assets/vendor/js/angular.js
         - assets/vendor/js/ui-bootstrap-tpls-0.3.0.js
         - assets/vendor/js/ng-infinite-scroll.js
