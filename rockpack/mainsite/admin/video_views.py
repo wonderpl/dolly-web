@@ -109,6 +109,9 @@ class CategoryTranslation(AdminView):
     model_name = models.CategoryTranslation.__tablename__
     model = models.CategoryTranslation
 
+    column_searchable_list = ('name',)
+    column_filters = ('locale',)
+
 
 class Locale(AdminView):
     model_name = 'locale'

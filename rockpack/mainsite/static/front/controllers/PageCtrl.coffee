@@ -21,6 +21,8 @@ window.contentApp.controller('PageCtrl', ['isMobile', '$scope', '$location', 'br
   $scope.assets_url = window.assets_url
   $scope.injectorUrl = window.injectorUrl
 
+  console.log 'fff'
+
   $scope.playVideo = () ->
 
     width = $(window).width()
@@ -30,7 +32,7 @@ window.contentApp.controller('PageCtrl', ['isMobile', '$scope', '$location', 'br
 
     $scope.player = new YT.Player('video', {
       videoId: 'lBFBbm1Nudc',
-      width: width,
+      width: 1200,
       videoId: 'lBFBbm1Nudc',
       playerVars: {
         autoplay: 1,

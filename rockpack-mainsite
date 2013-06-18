@@ -18,9 +18,13 @@ PID=/var/run/$NAME.pid
 LOCK=/var/lock/subsys/$NAME
 RETVAL=0
 
+ROCKPACK_SETTINGS=/etc/rockpack/mainsite/config.py
+
+[ -r /etc/sysconfig/$NAME ] && . /etc/sysconfig/$NAME
+
 DAEMON_OPTS="--ini $CFG --daemonize $LOG --pidfile $PID --uid $USER"
 
-export ROCKPACK_SETTINGS=/etc/rockpack/mainsite/config.py
+export ROCKPACK_SETTINGS
 
 
 start() {

@@ -4,6 +4,7 @@ from collections import defaultdict
 from sqlalchemy.orm import contains_eager, lazyload, joinedload
 from sqlalchemy.sql.expression import desc
 from rockpack.mainsite import app
+from rockpack.mainsite.core.dbapi import commit_on_success
 from rockpack.mainsite.core.webservice import WebService, expose_ajax
 from rockpack.mainsite.core.oauth.decorators import check_authorization
 from rockpack.mainsite.core.es import use_elasticsearch, filters
@@ -146,6 +147,15 @@ def get_local_videos(loc, paging, with_channel=True, **filters):
     return data, total
 
 
+@commit_on_success
+def save_player_error(video_instance, reason):
+    report = dict(video_instance=video_instance, reason=reason)
+    updated = models.PlayerErrorReport.query.filter_by(**report).update(
+        {models.PlayerErrorReport.count: models.PlayerErrorReport.count + 1})
+    if not updated:
+        report = models.PlayerErrorReport(**report).save()
+
+
 class PlayerErrorForm(wtf.Form):
     error = wtf.StringField(validators=[wtf.Required()])
     video_instance = wtf.StringField(validators=[wtf.Required()])
@@ -184,7 +194,7 @@ class VideoWS(WebService):
         form = PlayerErrorForm(csrf_enabled=False)
         if not form.validate():
             abort(400, form_errors=form.errors)
-        # TODO: check if video is still OK
+        save_player_error(form.video_instance.data, form.error.data)
 
 
 class ChannelWS(WebService):
