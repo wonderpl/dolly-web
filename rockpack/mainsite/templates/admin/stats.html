@@ -26,9 +26,9 @@
         <li>{{ cat_count }} sub categories with visible videos</li>
     </ul>
     <table>
-    <tr><th align="left">Locale</th><th align="left">Category</th><th align="left">Sub-Category</th><th>Video Count</th><tr>
+    <tr><th align="left">Category</th><th align="left">Sub-Category</th><th>Video Count</th><tr>
         {% for v in cat_group %}
-    <tr><td style="padding-right:20px">{{ v[0] }}</td><td style="padding-right:20px">{{ v[1] }}</td><td style="padding-right:20px">{{ v[2] }}</td><td align="right">{{ v[3] }}</td></tr>
+    <tr><td style="padding-right:20px">{{ v[1] }}</td><td style="padding-right:20px">{{ v[2] }}</td><td style="padding-right:20px">{{ v[3] }}</td></tr>
     {% endfor %}
     </table>
 
@@ -37,9 +37,9 @@
         <li>{{ channel_count }} sub categories with visible/public channels</li>
     </ul>
     <table>
-    <tr><th align="left">Locale</th><th align="left">Category</th><th align="left">Sub-Category</th><th>Channel Count</th><tr>
+    <tr><th align="left">Category</th><th align="left">Sub-Category</th><th>Channel Count</th><tr>
         {% for v in channel_group %}
-    <tr><td style="padding-right:20px">{{ v[0] }}</td><td style="padding-right:20px">{{ v[1] }}</td><td style="padding-right:20px">{{ v[2] }}</td><td align="right">{{ v[3] }}</td></tr>
+    <tr><td style="padding-right:20px">{{ v[1] }}</td><td style="padding-right:20px">{{ v[2] }}</td><td align="right">{{ v[3] }}</td></tr>
     {% endfor %}
     </table>
 

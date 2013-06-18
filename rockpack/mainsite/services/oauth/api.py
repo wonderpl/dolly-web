@@ -1,3 +1,4 @@
+from werkzeug.datastructures import MultiDict
 from datetime import datetime, timedelta
 from cStringIO import StringIO
 from flask import request, abort, g
@@ -235,6 +236,23 @@ class RegistrationWS(WebService):
             locale=form.locale.data)
         record_user_event(user.username, 'registration succeeded', user.id)
         return user.get_credentials()
+
+    @expose_ajax('/availability/', methods=['POST'])
+    @check_client_authorization
+    def check_availability(self):
+        value = request.form.get('username', '')
+        form = RockRegistrationForm(formdata=MultiDict([('username', value)]), csrf_enabled=False)
+        if not form.username:
+            abort(400, message='No data given.')
+        if not form.username.validate(form.username.data):
+            for error in form.username.errors:
+                if u'"{}" already taken'.format(value) in error:
+                    return {"available": False}
+
+            response = {'message': form.username.errors}
+            abort(400, **response)
+
+        return {"available": True}
 
 
 class TokenWS(WebService):

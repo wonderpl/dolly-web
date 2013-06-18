@@ -311,12 +311,12 @@ class Channel(db.Model):
     @classmethod
     def should_be_public(self, channel, public):
         """Return False if conditions for visibility are not met (except for fav channel)"""
-
         if channel.favourite:
             return True
 
-        if not (channel.cover and
-                (channel.title and not channel.title.startswith(app.config['UNTITLED_CHANNEL'])) and
+        if not (channel.cover and channel.category and
+                (channel.title and not
+                    channel.title.upper().startswith(app.config['UNTITLED_CHANNEL'].upper())) and
                 channel.video_instances):
             return False
 
@@ -398,11 +398,26 @@ class ContentReport(db.Model):
 
     id = Column(Integer, primary_key=True)
     date_created = Column(DateTime(), nullable=False, default=func.now())
+    date_updated = Column(DateTime(), nullable=False, default=func.now(), onupdate=func.now())
     object_type = Column(String(16), nullable=False)
     object_id = Column(String(64), nullable=False)
     reason = Column(String(256), nullable=False)
     count = Column(Integer, nullable=False, default=1)
     reviewed = Column(Boolean, nullable=False, default=False)
+
+
+class PlayerErrorReport(db.Model):
+    __tablename__ = 'player_error'
+    __table_args__ = (
+        UniqueConstraint('video_instance', 'reason'),
+    )
+
+    id = Column(Integer, primary_key=True)
+    date_created = Column(DateTime(), nullable=False, default=func.now())
+    date_updated = Column(DateTime(), nullable=False, default=func.now(), onupdate=func.now())
+    video_instance = Column(ForeignKey('video_instance.id'), nullable=False)
+    reason = Column(String(256), nullable=False)
+    count = Column(Integer, nullable=False, default=1)
 
 
 ParentCategory = aliased(Category)

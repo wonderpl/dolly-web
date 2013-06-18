@@ -24,6 +24,12 @@
   {% assets "fullwebVendorCss" %}
   <link rel="stylesheet" href="{{ ASSET_URL }}"/>
   {% endassets %}
+    <script>
+      var tag = document.createElement('script');
+      tag.src = "//www.youtube.com/iframe_api";
+      var firstScriptTag = document.getElementsByTagName('script')[0];
+      firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+    </script>
 
   {% assets "fullwebCss" %}
   <link rel="stylesheet" href="{{ ASSET_URL }}"/>
@@ -45,17 +51,9 @@
   <script type="text/javascript" src="{{ ASSET_URL }}"></script>
   {% endassets %}
 
-
-
-  <script>
-    var tag = document.createElement('script');
-    tag.src = "//www.youtube.com/iframe_api";
-    var firstScriptTag = document.getElementsByTagName('script')[0];
-    firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
-  </script>
-
 </head>
-<div id="fb-root"></div>
+<body >
+  <div id="fb-root"></div>
   <script>
     window.fbAsyncInit = function() {
       // init the FB JS SDK

@@ -265,6 +265,11 @@ def check_present(form, field):
         raise ValidationError(_('This field is required, but can be an empty string.'))
 
 
+# XXX: Monkey patch BooleanField process_formdata so that passed in values
+# are checked, not just a check for the presence of the field.
+wtf.BooleanField.process_formdata = wtf.Field.process_formdata
+
+
 class ChannelForm(form.BaseForm):
     title = wtf.TextField(
         validators=[check_present, naughty_word_validator] +
@@ -342,11 +347,15 @@ class ContentReportForm(wtf.Form):
             raise ValidationError(_('Invalid id.'))
 
 
+def _channel_videos(channelid, locale, paging):
+    return video_api.get_local_videos(
+        locale, paging, channel=channelid, with_channel=False,
+        position_order=True, date_order=True)
+
+
 def _channel_info_response(channel, locale, paging, owner_url):
     data = video_api.channel_dict(channel, owner_url=owner_url)
-    items, total = video_api.get_local_videos(
-        locale, paging, channel=channel.id, with_channel=False,
-        position_order=True, date_order=True)
+    items, total = _channel_videos(channel.id, locale, paging)
     data['ecommerce_url'] = channel.ecommerce_url
     data['category'] = channel.category
     data['videos'] = dict(items=items, total=total)
@@ -648,13 +657,29 @@ class UserWS(WebService):
             channel = channel.save()
         return channel.public
 
-    @expose_ajax('/<userid>/channels/<channelid>/videos/')
-    @check_authorization()
+    @expose_ajax('/<userid>/channels/<channelid>/videos/', cache_age=60, secure=False)
     def channel_videos(self, userid, channelid):
+        if use_elasticsearch():
+            vs = api.VideoSearch(self.get_locale())
+            vs.add_term('channel', [channelid])
+            vs.add_sort('position', 'asc')
+            vs.date_sort('desc')
+            vs.add_sort('video.date_published', 'desc')
+            vs.set_paging(*self.get_page())
+            items = vs.videos()
+            total = vs.total
+        else:
+            items, total = _channel_videos(channelid, self.get_locale(), self.get_page())
+        return dict(videos=dict(items=items, total=total))
+
+    @expose_ajax('/<userid>/channels/<channelid>/videos/', cache_age=0)
+    @check_authorization()
+    def owner_channel_videos(self, userid, channelid):
         channel = Channel.query.filter_by(id=channelid, deleted=False).first_or_404()
-        if not channel.owner == userid:
-            abort(403)
-        return [v[0] for v in VideoInstance.query.filter_by(channel=channelid).order_by('position').values('video')]
+        if g.authorized.userid != userid and not channel.public:
+            abort(404)
+        items, total = _channel_videos(channelid, self.get_locale(), self.get_page())
+        return dict(videos=dict(items=items, total=total))
 
     @expose_ajax('/<userid>/channels/<channelid>/videos/', methods=('PUT', 'POST'))
     @check_authorization(self_auth=True)

@@ -1,6 +1,7 @@
 import base64
 import json
 import uuid
+from time import sleep
 from datetime import date
 from mock import patch
 
@@ -19,6 +20,7 @@ from rockpack.mainsite.services.oauth import exceptions
 from test import base
 from test.test_helpers import get_client_auth_header
 from test.test_helpers import get_auth_header
+from test.fixtures import UserData
 
 
 ACCESS_CREDENTIALS = {
@@ -303,6 +305,10 @@ class RegisterTestCase(base.RockPackTestCase):
                     Channel.query.filter_by(owner=creds['user_id']).count(),
                     'default user channel should be created')
 
+            # XXX: Sleep long enough for the favourites channel to hit ES
+            if app.config.get('ELASTICSEARCH_URL'):
+                sleep(0.8)
+
             r = client.get(
                 '/ws/{}/'.format(creds['user_id']),
                 headers=[get_auth_header(viewing_user)]
@@ -358,3 +364,22 @@ class RegisterTestCase(base.RockPackTestCase):
                     )
                 )
                 self.assertEquals(status, r.status_code, r.data)
+
+    def test_username_availability(self):
+        with self.app.test_client() as client:
+            self.app.test_request_context().push()
+            r = client.post(
+                '/ws/register/availability/',
+                headers=[get_client_auth_header()],
+                data=dict(username=UserData.test_user_a.username),
+            )
+            self.assertEquals(r.status_code, 200)
+            self.assertEquals(json.loads(r.data)['available'], False)
+
+            r = client.post(
+                '/ws/register/availability/',
+                headers=[get_client_auth_header()],
+                data=dict(username='noonehasthisusername'),
+            )
+            self.assertEquals(r.status_code, 200)
+            self.assertEquals(json.loads(r.data)['available'], True)
