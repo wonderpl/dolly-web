@@ -48,6 +48,10 @@ def prelaunch_homepage():
     injectorUrl = url_for('injector')
     return dict(injectorUrl=injectorUrl)
 
+@expose_web('/welcome_email', 'web/welcome_email.html', cache_age=3600)
+def welcome_email():
+    return None
+
 
 @expose_web(postlaunch_path, 'web/home.html', cache_age=3600)
 def homepage():

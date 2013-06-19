@@ -304,6 +304,7 @@ a:link, a:visited, div a {
 </style>
 </head>
 <body leftmargin="0" marginwidth="0" topmargin="0" marginheight="0" offset="0">
+{{injectorUrl}}
 <center>
   <table border="0" cellpadding="0" cellspacing="0" height="100%" width="100%" id="backgroundTable">
     <tr>
@@ -316,17 +317,8 @@ a:link, a:visited, div a {
               <!-- // Begin Module: Standard Preheader \ -->
               <table border="0" cellpadding="10" cellspacing="0" width="100%">
                 <tr>
-                  <!-- *|IFNOT:ARCHIVE_PAGE|* -->
-                  <td valign="top" width="190">
-                    <div>
-                      <center>Is this email not displaying correctly? <a href="http://rockpack.com/welcome_email" target="_blank">View it in your browser</a>.</center>
-                    </div>
-                  </td>
-                  <!-- *|END:IF|* -->
-                </tr>
-                <tr>
                   <td>
-                      <center><img src="{{ assets }}/assets/emails/images/logo.png"></center>
+                    <center><img src="{{ config.ASSETS_URL }}/assets/emails/images/logo.png"></center>
                   </td>
                 </tr>
               </table>
@@ -335,7 +327,6 @@ a:link, a:visited, div a {
             </td>
           </tr>
         </table>
-        <!-- // End Template Preheader \\ -->
         <table border="0" cellpadding="0" cellspacing="0" width="600" id="templateContainer">
           <tr>
             <td align="center" valign="top">
@@ -343,7 +334,7 @@ a:link, a:visited, div a {
               <table border="0" cellpadding="0" cellspacing="20" width="600" id="templateHeader">
                 <tr>
                   <td class="headerContent">
-                    Hi {{ username }},<br />                     
+                    Hi,<br />                     
                     <p>Welcome to Rockpack, a place to create your own video channels with your favorite videos from across the web. We’re excited to have you on board.</p>                     
                     <p class="grey">A few tips to get the most out of Rockpack:</p>
                   </td>
@@ -363,7 +354,7 @@ a:link, a:visited, div a {
                     <table border="0" cellpadding="20" cellspacing="0" align="center">
                       <tr>
                         <td valign="top">
-                            <img src="{{ assets }}/assets/emails/images/iphone.jpg" />
+                          <img src="{{config.ASSETS_URL}}/assets/emails/images/iphone.jpg" />
                         </td>
                       </tr>
                     </table>
@@ -377,7 +368,7 @@ a:link, a:visited, div a {
                       <tr>
                         <td valign="top" class="grey"><br /><br />
                           <p>Subscribe to 5 or more channels. Discovering great new videos helps you<br>
-                          create the best channels of your own.</p><br /><br />
+                            create the best channels of your own.</p><br /><br />
                           <p>Add great covers. Choose a good quality and personal picture – your channel cover is also its thumbnail so make it unique.</p><br /><br />
                           <p>We want to keep our community as happy as possible. Now that you’re part of it, keep your titles, channel covers and videos clean (no swearing or naked people!)</p>
                         </td>
@@ -420,9 +411,6 @@ a:link, a:visited, div a {
         <table border="0" cellpadding="10" cellspacing="0" width="600" id="footer">
           <tr>
             <td>
-              <p>To ensure our emails reach your inbox please make sure to add {{ email_sender|e }}</p>
-              <p>to your address book or safe list.</p>
-              <p>You are subscribed as {{ email }}.</p>
               <p>Your privacy is important to us, have a read to our <a href="http://rockpack.com/privacy">privacy policy</a>.</p>
             </td>
           </tr>
