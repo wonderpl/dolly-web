@@ -37,4 +37,5 @@ fullwebTemplates:
     output: gen/fullweb_templates.%(version)s.js
     contents:
         - fullwebapp/views/*.html
+        - fullwebapp/views/directives/*.html
 #

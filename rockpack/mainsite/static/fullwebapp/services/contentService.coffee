@@ -90,8 +90,6 @@ angular.module('WebApp').factory('ContentService', ($http, locale, apiUrl, UserM
         headers = {"authorization": "Bearer #{UserManager.credentials.access_token}", "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"}
 #        url = "#{baseApiUrl}#{userID}/channels/#{categoryID}".replace("http://", "https://secure.")
 
-      console.log '******'
-
       $http({
         method: 'GET',
         url: url,

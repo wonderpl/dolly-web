@@ -31,6 +31,10 @@ window.WebApp = angular.module('WebApp', ['infinite-scroll','ui.bootstrap'])
       reloadOnSearch: false
     })
   ])
+  .run(['UserManager', 'cookies', (UserManager, cookies) ->
+    if UserManager.credentials?
+
+  ])
   .value('locale', window.navigator.userLanguage || window.navigator.language)
   .constant('apiUrl', window.apiUrls)
 
