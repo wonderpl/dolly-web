@@ -3,6 +3,7 @@ from urlparse import urljoin
 import pyes
 from flask import request, json, render_template, abort
 from flask.ext import wtf
+from werkzeug.http import HTTP_STATUS_CODES
 from werkzeug.exceptions import NotFound
 from rockpack.mainsite import app, requests
 from rockpack.mainsite.core.token import parse_access_token
@@ -47,6 +48,7 @@ else:
 def prelaunch_homepage():
     injectorUrl = url_for('injector')
     return dict(injectorUrl=injectorUrl)
+
 
 @expose_web('/welcome_email', 'web/welcome_email.html', cache_age=3600)
 def welcome_email():
@@ -151,10 +153,19 @@ def status(sub):
     return 'OK', 200, [('Content-Type', 'text/plain')]
 
 
+@app.errorhandler(404)
+def not_found(error):
+    return handle_error(404, error, '400_error.html')
+
+
 @app.errorhandler(500)
 def server_error(error):
+    return handle_error(500, error, '500_error.html')
+
+
+def handle_error(code, error, template):
     message = getattr(error, 'message', str(error))
     if request.path.startswith('/ws/'):
-        return JsonReponse(dict(error='internal_error', message=message), 500)
+        return JsonReponse(dict(error=HTTP_STATUS_CODES[code], message=message), code)
     else:
-        return render_template('server_error.html', message=message), 500
+        return render_template(template, message=message), code
