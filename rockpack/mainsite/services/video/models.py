@@ -315,7 +315,7 @@ class Channel(db.Model):
         if channel.favourite:
             return True
 
-        if not (channel.cover and channel.category and
+        if not (channel.cover and channel.category is not None and
                 (channel.title and not
                     channel.title.upper().startswith(app.config['UNTITLED_CHANNEL'].upper())) and
                 channel.video_instances):

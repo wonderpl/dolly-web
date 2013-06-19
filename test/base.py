@@ -1,7 +1,8 @@
+import time
+import uuid
 import unittest
 import rockpack
 import pytest
-import uuid
 from datetime import date
 from rockpack.mainsite.core.dbapi import db
 from rockpack.mainsite.services.user.models import User
@@ -31,3 +32,7 @@ class RockPackTestCase(unittest.TestCase):
         )
         user.update(kwargs)
         return User.create_with_channel(**user)
+
+    def wait_for_es(self):
+        if self.app.config.get('ELASTICSEARCH_URL'):
+            time.sleep(2)
