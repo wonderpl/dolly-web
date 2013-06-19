@@ -87,7 +87,7 @@ def update_subscriber_stats():
 def update_video_data():
     """Query youtube for updated video data."""
     start = '2013-06-08'    # datetime.now()
-    fields = 'atom:entry(batch:status,atom:id,atom:author(name),atom:published)'
+    fields = 'atom:entry(batch:status,atom:id,atom:author(name),atom:published,yt:noembed)'
     while True:
         videos = dict((v.source_videoid, v) for v in
                       Video.query.filter(Video.date_updated < start).limit(50))
@@ -100,6 +100,11 @@ def update_video_data():
             if entry.batch_status.code == '200':
                 videos[id].source_username = entry.author[0].name.text
                 videos[id].date_published = _parse_datetime(entry.published.text)
+                if 'noembed' in [e.tag for e in entry.extension_elements]:
+                    logging.warning('%s: marked not visible: noembed', id)
+                    videos[id].visible = False
+                #group = [e for e in entry.extension_elements if e.tag == 'group'][0]
+                #print id, [(c.attributes, c.text) for c in group.children if c.tag == 'restriction']
             elif entry.batch_status.code == '404':
                 logging.error('Failed to update %s: %s', id, entry.batch_status.reason)
                 if not videos[id].source_username:
