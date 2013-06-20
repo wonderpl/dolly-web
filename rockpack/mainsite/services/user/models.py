@@ -199,6 +199,7 @@ class UserActivity(db.Model):
     date_actioned = Column(DateTime(), nullable=False, default=func.now())
     object_type = Column(String(16), nullable=False)
     object_id = Column(String(64), nullable=False)
+    locale = Column(ForeignKey('locale.id'), nullable=False, server_default='')
 
 
 class UserNotification(db.Model):

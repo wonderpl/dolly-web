@@ -407,7 +407,7 @@ def add_to_index(data, index, _type, id, bulk=False, refresh=False):
     try:
         return es_connection.index(data, index, _type, id=id, bulk=bulk)
     except Exception as e:
-        app.logger.critical("Failed to insert record to index '{}' with id '{}' with: {}".format(index, id, str(e)))
+        app.logger.error("Failed to insert record to index '{}' with id '{}' with: {}".format(index, id, str(e)))
     else:
         if refresh or app.config.get('FORCE_INDEX_INSERT_REFRESH', False):
             es_connection.indices.refresh(index)
