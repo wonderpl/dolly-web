@@ -4,21 +4,29 @@
     <meta charset="utf-8">
     {%- with %}
     {% set title_prefix = '"%s" on ' % selected_video.title if selected_video else '' %}
-    {% set title = '%s"%s" by %s' % (title_prefix, channel_data.title, channel_data.owner.display_name) -%}
+    {% set title = '%s"%s" a Rockpack channel by %s' % (title_prefix, channel_data.title, channel_data.owner.display_name) -%}
     <title>{{ title }}</title>
     <meta property="fb:app_id" content="{{ config.FACEBOOK_APP_ID }}" />
+    <meta property="og:site_name" content="Rockpack" />
     <meta property="og:url" content="{{ channel_data.canonical_url }}" />
-    <meta property="og:title" content="{{ title }}" />
-    <meta property="og:image" content="{{ channel_data.cover_background_url }}" />
-    <meta property="og:description" content="{% if channel_data.description %}{{ channel_data.description }}{% else %}{{ title }}, a channel on rockpack.{% endif %}" />
     {% if selected_video %}
-    <meta property="og:type" content="{{ config.FACEBOOK_APP_NAMESPACE }}.video" />
-    <meta property="{{ config.FACEBOOK_APP_NAMESPACE }}:video_title" content="{{ selected_video.title }}" />
+      <meta property="og:type" content="video.other" />
+      <meta property="og:title" content="{{ selected_video.title }}" />
+      <meta property="og:image" content="{{ selected_video.video.thumbnail_url }}" />
+      <meta property="og:description" content="{{ title }}" />
+      {% if selected_video.video.source == 'youtube' %}
+        <meta property="og:video" content="http://www.youtube.com/v/{{ selected_video.video.source_id }}?version=3&amp;autohide=1" />
+        <meta property="og:video:type" content="application/x-shockwave-flash" />
+        <meta property="og:video:width" content="1280" />
+        <meta property="og:video:height" content="720" />
+      {% endif %}
     {% else %}
-    <meta property="og:type" content="{{ config.FACEBOOK_APP_NAMESPACE }}.channel" />
+      <meta property="og:type" content="{{ config.FACEBOOK_APP_NAMESPACE }}:channel" />
+      <meta property="og:title" content="{{ channel_data.title }}" />
+      <meta property="og:image" content="{{ channel_data.cover_background_url }}" />
+      <meta property="og:description" content="{% if channel_data.description %}{{ channel_data.description }}{% else %}{{ title }}.{% endif %}" />
+      <meta property="{{ config.FACEBOOK_APP_NAMESPACE }}:owner_name" content="{{ channel_data.owner.display_name }}" />
     {% endif %}
-    <meta property="{{ config.FACEBOOK_APP_NAMESPACE }}:channel_title" content="{{ channel_data.title }}" />
-    <meta property="{{ config.FACEBOOK_APP_NAMESPACE }}:owner" content="{{ channel_data.owner.display_name }}" />
     {% endwith %}
     <meta name="HandheldFriendly" content="True">
     <meta name="MobileOptimized" content="320">
@@ -65,7 +73,7 @@
       <script type="text/javascript" src="{{ ASSET_URL }}"></script>
     {% endassets %}
 
-    {% assets filters="coffeescript, rjsmin", output="gen/channel.%(version)s.js", "weblight/app.coffee", "weblight/controllers/AppCtrl.coffee", "weblight/controllers/ChannelCtrl.coffee", "weblight/controllers/PageCtrl.coffee", "weblight/controllers/PageCtrl.coffee",
+    {% assets filters="coffeescript", output="gen/channel.%(version)s.js", "weblight/app.coffee", "weblight/controllers/AppCtrl.coffee", "weblight/controllers/ChannelCtrl.coffee", "weblight/controllers/PageCtrl.coffee", "weblight/controllers/PageCtrl.coffee",
         "weblight/controllers/ChannelPlaybookCtrl.coffee", "weblight/services/browserServices.coffee", "weblight/controllers/VideoCtrl.coffee", "weblight/services/channelServices.coffee"
     %}
       <script type="text/javascript" src="{{ ASSET_URL }}"></script>

@@ -32,6 +32,7 @@ table td{border-collapse:collapse;}
 body, #backgroundTable{
   /*@editable*/ background-color:#f7f7f7;
   font-family: Helvetica;
+  font-size: 14px;
 }
 
   /**
@@ -49,80 +50,6 @@ body, #backgroundTable{
   * @tip Set the styling for all first-level headings in your emails. These should be the largest of your headings.
   * @style heading 1
   */
-h1, .h1{
-  /*@editable*/ color:#202020;
-  display:block;
-  /*@editable*/ font-family:Arial;
-  /*@editable*/ font-size:34px;
-  /*@editable*/ font-weight:bold;
-  /*@editable*/ line-height:100%;
-  margin-top:0;
-  margin-right:0;
-  margin-bottom:10px;
-  margin-left:0;
-  /*@editable*/ text-align:left;
-}
-
-  /**
-  * @tab Page
-  * @section heading 2
-  * @tip Set the styling for all second-level headings in your emails.
-  * @style heading 2
-  */
-h2, .h2{
-  /*@editable*/ color:#202020;
-  display:block;
-  /*@editable*/ font-family:Arial;
-  /*@editable*/ font-size:30px;
-  /*@editable*/ font-weight:bold;
-  /*@editable*/ line-height:100%;
-  margin-top:0;
-  margin-right:0;
-  margin-bottom:10px;
-  margin-left:0;
-  /*@editable*/ text-align:left;
-}
-
-  /**
-  * @tab Page
-  * @section heading 3
-  * @tip Set the styling for all third-level headings in your emails.
-  * @style heading 3
-  */
-h3, .h3{
-  /*@editable*/ color:#202020;
-  display:block;
-  /*@editable*/ font-family:Arial;
-  /*@editable*/ font-size:26px;
-  /*@editable*/ font-weight:bold;
-  /*@editable*/ line-height:100%;
-  margin-top:0;
-  margin-right:0;
-  margin-bottom:10px;
-  margin-left:0;
-  /*@editable*/ text-align:left;
-}
-
-  /**
-  * @tab Page
-  * @section heading 4
-  * @tip Set the styling for all fourth-level headings in your emails. These should be the smallest of your headings.
-  * @style heading 4
-  */
-h4, .h4{
-  /*@editable*/ color:#202020;
-  display:block;
-  /*@editable*/ font-family:Arial;
-  /*@editable*/ font-size:22px;
-  /*@editable*/ font-weight:bold;
-  /*@editable*/ line-height:100%;
-  margin-top:0;
-  margin-right:0;
-  margin-bottom:10px;
-  margin-left:0;
-  /*@editable*/ text-align:left;
-}
-
   /* /\/\/\/\/\/\/\/\/\/\ STANDARD STYLING: PREHEADER /\/\/\/\/\/\/\/\/\/\ */
 
   /**
@@ -143,7 +70,6 @@ h4, .h4{
 .preheaderContent div{
   /*@editable*/ color:#1c1f21;
   /*@editable*/ font-family:Helvetica;
-  /*@editable*/ font-size:10px;
   /*@editable*/ line-height:100%;
   /*@editable*/ text-align:left;
 }
@@ -182,7 +108,6 @@ a:link, a:visited, div a {
 .headerContent{
   /*@editable*/ color:#1c1f21;
   /*@editable*/ font-family:Helvetica;
-  /*@editable*/ font-size:15px;
   /*@editable*/ line-height:100%;
   /*@editable*/ padding:0;
 }
@@ -222,7 +147,6 @@ a:link, a:visited, div a {
 .leftColumnContent div{
   /*@editable*/ color:#505050;
   /*@editable*/ font-family:Helvetica;
-  /*@editable*/ font-size:14px;
   /*@editable*/ line-height:150%;
   /*@editable*/ text-align:left;
 }
@@ -260,7 +184,6 @@ a:link, a:visited, div a {
 .rightColumnContent div{
   /*@editable*/ color:#505050;
   /*@editable*/ font-family:Helvetica;
-  /*@editable*/ font-size:14px;
   /*@editable*/ line-height:150%;
   /*@editable*/ text-align:left;
 }
@@ -312,7 +235,6 @@ a:link, a:visited, div a {
 .footerContent div{
   /*@editable*/ color:#707070;
   /*@editable*/ font-family:Helvetica;
-  /*@editable*/ font-size:12px;
   /*@editable*/ line-height:125%;
   /*@editable*/ text-align:left;
 }
@@ -404,7 +326,7 @@ a:link, a:visited, div a {
                 </tr>
                 <tr>
                   <td>
-                      <center><img src="{{ assets }}assets/emails/images/logo.png"></center>
+                      <center><img src="{{ assets }}/assets/emails/images/logo.png"></center>
                   </td>
                 </tr>
               </table>
@@ -421,7 +343,7 @@ a:link, a:visited, div a {
               <table border="0" cellpadding="0" cellspacing="20" width="600" id="templateHeader">
                 <tr>
                   <td class="headerContent">
-                    Hi {{ username }},<br>                     
+                    Hi {{ username }},<br />                     
                     <p>Welcome to Rockpack, a place to create your own video channels with your favorite videos from across the web. We’re excited to have you on board.</p>                     
                     <p class="grey">A few tips to get the most out of Rockpack:</p>
                   </td>
@@ -438,10 +360,10 @@ a:link, a:visited, div a {
                   <td valign="top" width="280" class="leftColumnContent">
 
                     <!-- // Begin Module: Top Image with Content \\ -->
-                    <table border="0" cellpadding="20" cellspacing="0" width="100%">
+                    <table border="0" cellpadding="20" cellspacing="0" align="center">
                       <tr>
                         <td valign="top">
-                            <img src="{{ assets }}assets/emails/images/iphone.jpg" />
+                            <img src="{{ assets }}/assets/emails/images/iphone.jpg" />
                         </td>
                       </tr>
                     </table>
@@ -453,11 +375,10 @@ a:link, a:visited, div a {
                     <!-- // Begin Module: Top Image with Content \\ -->
                     <table border="0" cellpadding="20" cellspacing="0" width="100%">
                       <tr>
-                        <td valign="top" class="grey">
-                          <p>Subscribe to 5 or more channels.
-                          Discovering great new videos helps you
-                          create the best channels of your own.</p>
-                          <p>Add great covers. Choose a good quality and personal picture – your channel cover is also its thumbnail so make it unique.</p>
+                        <td valign="top" class="grey"><br /><br />
+                          <p>Subscribe to 5 or more channels. Discovering great new videos helps you<br>
+                          create the best channels of your own.</p><br /><br />
+                          <p>Add great covers. Choose a good quality and personal picture – your channel cover is also its thumbnail so make it unique.</p><br /><br />
                           <p>We want to keep our community as happy as possible. Now that you’re part of it, keep your titles, channel covers and videos clean (no swearing or naked people!)</p>
                         </td>
                       </tr>
@@ -481,7 +402,7 @@ a:link, a:visited, div a {
                     <table border="0" cellpadding="10" cellspacing="0" width="100%">
                       <tr>
                         <td colspan="2" valign="middle">
-                          <p>Thanks for joining; we can’t wait to see what’s on your channel!</p>
+                          <p>Thanks for joining, we can’t wait to see what’s on your channel!</p>
                           <p>The Rockpack Team </p>
                         </td>
                       </tr>

@@ -1,3 +1,4 @@
+from werkzeug.datastructures import MultiDict
 from datetime import datetime, timedelta
 from cStringIO import StringIO
 from flask import request, abort, g
@@ -112,13 +113,26 @@ def gender_validator():
     return _valid
 
 
+def date_of_birth_validator():
+    def _valid(form, value):
+        if value.data:
+            delta = (datetime.today().date() - value.data).days / 365.0
+            if delta > 150:
+                raise wtf.ValidationError(_("Looks like you're unreasonably old!"))
+            elif delta < 0:
+                raise wtf.ValidationError(_("Looks like you're born in the future!"))
+            elif delta < 13:
+                raise wtf.ValidationError(_("Rockpack is not available for under 13's yet."))
+    return _valid
+
+
 class RockRegistrationForm(wtf.Form):
     username = wtf.TextField(validators=[wtf.Length(min=3), username_validator()] + get_column_validators(User, 'username'))
     password = wtf.PasswordField(validators=[wtf.Required(), wtf.Length(min=6)])
     first_name = wtf.TextField(validators=[wtf.Optional()] + get_column_validators(User, 'first_name'))
     last_name = wtf.TextField(validators=[wtf.Optional()] + get_column_validators(User, 'last_name'))
     gender = wtf.TextField(validators=[wtf.Optional(), gender_validator()] + get_column_validators(User, 'gender'))
-    date_of_birth = wtf.DateField(validators=get_column_validators(User, 'date_of_birth'))
+    date_of_birth = wtf.DateField(validators=[date_of_birth_validator()] + get_column_validators(User, 'date_of_birth'))
     locale = wtf.TextField(validators=get_column_validators(User, 'locale'))
     email = wtf.TextField(validators=[wtf.Email(), email_registered_validator()] + get_column_validators(User, 'email'))
 
@@ -235,6 +249,23 @@ class RegistrationWS(WebService):
             locale=form.locale.data)
         record_user_event(user.username, 'registration succeeded', user.id)
         return user.get_credentials()
+
+    @expose_ajax('/availability/', methods=['POST'])
+    @check_client_authorization
+    def check_availability(self):
+        value = request.form.get('username', '')
+        form = RockRegistrationForm(formdata=MultiDict([('username', value)]), csrf_enabled=False)
+        if not form.username:
+            abort(400, message='No data given.')
+        if not form.username.validate(form.username.data):
+            for error in form.username.errors:
+                if u'"{}" already taken'.format(value) in error:
+                    return {"available": False}
+
+            response = {'message': form.username.errors}
+            abort(400, **response)
+
+        return {"available": True}
 
 
 class TokenWS(WebService):

@@ -5,7 +5,7 @@ window.Weblight.controller('ChannelCtrl', ['$scope', 'Videos', '$routeParams', '
 
   $scope.isMobile = isMobile
   $scope.channel = channelData
-  $scope.videos = channelData.videos.items
+  $rootScope.videos = channelData.videos.items
 
 
   $scope.channel.owner.avatar = channelData.owner.avatar_thumbnail_url.replace('thumbnail_medium', 'thumbnail_large')
@@ -24,15 +24,15 @@ window.Weblight.controller('ChannelCtrl', ['$scope', 'Videos', '$routeParams', '
   $scope.videoCellTitleLength = if $scope.isMobile then 40 else 50
   $scope.channelTitleLength = if $scope.isMobile then 15 else 25
 
-  @totalvideos = channelData.videos.total
+  $rootScope.totalvideos = channelData.videos.total
 
   $scope.load_videos = => 
 
     #only try to fech videos if there are hidden videos in the channel
-    if @page*40 <= @totalvideos
+    if @page*40 <= $rootScope.totalvideos
       Videos.get(40, @page*40).then (data) =>
         _.each(data, (video) =>
-          $scope.videos.push(video)
+          $rootScope.videos.push(video)
         )
       @page += 1
     return

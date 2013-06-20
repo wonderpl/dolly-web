@@ -21,9 +21,25 @@ window.contentApp = angular.module('contentApp', [])
     # Router
     $routeProvider.when('/', {templateUrl: 'home.html', resolve:{trackingCode: (GATrackingService) -> return GATrackingService.push()}})
     $routeProvider.when('/jobs', {templateUrl: 'jobs.html', resolve:{trackingCode: (GATrackingService) -> return GATrackingService.push()}})
-    $routeProvider.when('/our-company', {templateUrl: 'people.html', resolve:{trackingCode: (GATrackingService) -> return GATrackingService.push()}})
+    $routeProvider.when('/people', {templateUrl: 'people.html', resolve:{trackingCode: (GATrackingService) -> return GATrackingService.push()}})
     $routeProvider.when('/channel-playbook', {templateUrl: 'channelplaybook.html', resolve:{trackingCode: (GATrackingService) -> return GATrackingService.push()}})
     $routeProvider.when('/content-providers', {templateUrl: 'contentproviders.html', resolve:{trackingCode: (GATrackingService) -> return GATrackingService.push()}})
     $routeProvider.when('/bookmarklet', {templateUrl: 'bookmarklet.html', resolve:{trackingCode: (GATrackingService) -> return GATrackingService.push()}})
     $routeProvider.when('/press', {templateUrl: 'press.html', resolve:{trackingCode: (GATrackingService) -> return GATrackingService.push()}})
   ])
+
+window.onYouTubeIframeAPIReady = ->
+  updateScope()
+  return
+
+updateScope = ->
+  injector = angular.element(document.getElementById('app')).injector()
+  if typeof injector == "undefined" 
+    setTimeout(updateScope, 300)
+  else
+    injector.invoke(($rootScope, $compile, $document) ->
+      $rootScope.playerReady = true
+      $rootScope.$apply()
+      return
+    )
+  return

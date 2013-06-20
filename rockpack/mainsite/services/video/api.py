@@ -1,12 +1,15 @@
-from flask import request
+from flask import request, abort
+from flask.ext import wtf
 from collections import defaultdict
 from sqlalchemy.orm import contains_eager, lazyload, joinedload
 from sqlalchemy.sql.expression import desc
 from rockpack.mainsite import app
+from rockpack.mainsite.core.dbapi import commit_on_success
 from rockpack.mainsite.core.webservice import WebService, expose_ajax
-from rockpack.mainsite.services.video import models
+from rockpack.mainsite.core.oauth.decorators import check_authorization
 from rockpack.mainsite.core.es import use_elasticsearch, filters
 from rockpack.mainsite.core.es.api import VideoSearch, ChannelSearch
+from rockpack.mainsite.services.video import models
 
 
 def _filter_by_category(query, type, category_id):
@@ -99,12 +102,12 @@ def video_dict(instance):
     )
 
 
-def get_local_videos(loc, paging, with_channel=True, **filters):
+def get_local_videos(loc, paging, with_channel=True, include_invisible=False, **filters):
     videos = models.VideoInstance.query.join(
-        models.Video,
-        (models.Video.id == models.VideoInstance.video) &
-        (models.Video.visible == True)).\
+        models.Video, models.Video.id == models.VideoInstance.video).\
         options(contains_eager(models.VideoInstance.video_rel))
+    if include_invisible is False:
+        videos = videos.filter(models.Video.visible == True)
     if with_channel:
         videos = videos.options(joinedload(models.VideoInstance.video_channel))
 
@@ -144,6 +147,20 @@ def get_local_videos(loc, paging, with_channel=True, **filters):
     return data, total
 
 
+@commit_on_success
+def save_player_error(video_instance, reason):
+    report = dict(video_instance=video_instance, reason=reason)
+    updated = models.PlayerErrorReport.query.filter_by(**report).update(
+        {models.PlayerErrorReport.count: models.PlayerErrorReport.count + 1})
+    if not updated:
+        report = models.PlayerErrorReport(**report).save()
+
+
+class PlayerErrorForm(wtf.Form):
+    error = wtf.StringField(validators=[wtf.Required()])
+    video_instance = wtf.StringField(validators=[wtf.Required()])
+
+
 class VideoWS(WebService):
 
     endpoint = '/videos'
@@ -171,6 +188,14 @@ class VideoWS(WebService):
     def players(self):
         return dict(models.Source.query.values(models.Source.label, models.Source.player_template))
 
+    @expose_ajax('/player_error/', methods=['POST'])
+    @check_authorization()
+    def player_error(self):
+        form = PlayerErrorForm(csrf_enabled=False)
+        if not form.validate():
+            abort(400, form_errors=form.errors)
+        save_player_error(form.video_instance.data, form.error.data)
+
 
 class ChannelWS(WebService):
 
@@ -188,14 +213,15 @@ class ChannelWS(WebService):
         cs = ChannelSearch(self.get_locale())
         offset, limit = self.get_page()
         cs.set_paging(offset, limit)
+
         # Boost popular channels based on ...
         cs.add_filter(filters.boost_from_field_value('editorial_boost'))
-        cs.add_filter(filters.boost_from_field_value('subscriber_count'))
-        cs.add_filter(filters.boost_from_field_value('update_frequency'))
-        view_count_field = '.'.join(['locales', self.get_locale(), 'view_count'])
-        star_count_field = '.'.join(['locales', self.get_locale(), 'star_count'])
-        cs.add_filter(filters.boost_from_field_value(view_count_field))
-        cs.add_filter(filters.boost_from_field_value(star_count_field))
+        cs.add_filter(filters.boost_from_field_value('subscriber_frequency'))
+        cs.add_filter(filters.boost_from_field_value('update_frequency', reduction_factor=4))
+        cs.add_filter(filters.negatively_boost_favourites())
+        cs.add_filter(filters.verified_channel_boost())
+        cs.add_filter(filters.boost_by_time())
+
         cs.filter_category(request.args.get('category'))
         cs.date_sort(request.args.get('date_order'))
         if request.args.get('user_id'):

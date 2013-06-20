@@ -1,15 +1,15 @@
 window.contentApp.factory('browserServices', () ->
 
   @searchString = (data) ->
-    for i in [0..data.length]
-      dataString = data[i].string
-      dataProp = data[i].prop
-      @versionSearchString = data[i].versionSearch || data[i].identity
+    for i in data
+      dataString = i.string
+      dataProp = i.prop
+      @versionSearchString = i.versionSearch || i.identity
       if (dataString)
-        if (dataString.indexOf(data[i].subString) != -1)
-          return data[i].identity
+        if (dataString.indexOf(i.subString) != -1)
+          return i.identity
       else if (dataProp)
-        return data[i].identity
+        return i.identity
 
   @searchVersion = (dataString) ->
     index = dataString.indexOf(@versionSearchString)
