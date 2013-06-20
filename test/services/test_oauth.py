@@ -91,7 +91,8 @@ class HeadersTestCase(base.RockPackTestCase):
     @check_authorization()
     def access_token_view():
         user_id = request.args.get('user_id')
-        assert g.authorized.user.id == user_id
+        if app.config.get('CHECK_AUTH_ABORT_ON_FAIL', True):
+            assert g.authorized.user.id == user_id
         return Response()
 
     def test_access_token_authentication(self):
@@ -113,7 +114,8 @@ class HeadersTestCase(base.RockPackTestCase):
                 '/test/oauth2/access_token_header/',
                 headers={'Authorization': 'Bearer {}'.format('foo')}
             )
-            self.assertEquals(401, r.status_code)
+            if app.config.get('CHECK_AUTH_ABORT_ON_FAIL', True):
+                self.assertEquals(401, r.status_code)
 
 
 class LoginTestCase(base.RockPackTestCase):
