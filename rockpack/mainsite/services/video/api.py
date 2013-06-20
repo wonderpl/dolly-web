@@ -102,12 +102,12 @@ def video_dict(instance):
     )
 
 
-def get_local_videos(loc, paging, with_channel=True, **filters):
+def get_local_videos(loc, paging, with_channel=True, include_invisible=False, **filters):
     videos = models.VideoInstance.query.join(
-        models.Video,
-        (models.Video.id == models.VideoInstance.video) &
-        (models.Video.visible == True)).\
+        models.Video, models.Video.id == models.VideoInstance.video).\
         options(contains_eager(models.VideoInstance.video_rel))
+    if include_invisible is False:
+        videos = videos.filter(models.Video.visible == True)
     if with_channel:
         videos = videos.options(joinedload(models.VideoInstance.video_channel))
 

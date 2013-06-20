@@ -347,15 +347,15 @@ class ContentReportForm(wtf.Form):
             raise ValidationError(_('Invalid id.'))
 
 
-def _channel_videos(channelid, locale, paging):
+def _channel_videos(channelid, locale, paging, own=False):
     return video_api.get_local_videos(
         locale, paging, channel=channelid, with_channel=False,
-        position_order=True, date_order=True)
+        include_invisible=own, position_order=True, date_order=True)
 
 
 def _channel_info_response(channel, locale, paging, owner_url):
     data = video_api.channel_dict(channel, owner_url=owner_url)
-    items, total = _channel_videos(channel.id, locale, paging)
+    items, total = _channel_videos(channel.id, locale, paging, own=owner_url)
     data['ecommerce_url'] = channel.ecommerce_url
     data['category'] = channel.category
     data['videos'] = dict(items=items, total=total)
@@ -675,7 +675,7 @@ class UserWS(WebService):
         channel = Channel.query.filter_by(id=channelid, deleted=False).first_or_404()
         if g.authorized.userid != userid and not channel.public:
             abort(404)
-        items, total = _channel_videos(channelid, self.get_locale(), self.get_page())
+        items, total = _channel_videos(channelid, self.get_locale(), self.get_page(), own=True)
         return dict(videos=dict(items=items, total=total))
 
     @expose_ajax('/<userid>/channels/<channelid>/videos/', methods=('PUT', 'POST'))

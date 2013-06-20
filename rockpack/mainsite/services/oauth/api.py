@@ -123,6 +123,16 @@ class RockRegistrationForm(wtf.Form):
     locale = wtf.TextField(validators=get_column_validators(User, 'locale'))
     email = wtf.TextField(validators=[wtf.Email(), email_registered_validator()] + get_column_validators(User, 'email'))
 
+    def validate_date_of_birth(form, value):
+        if value.data:
+            delta = (datetime.today().date() - value.data).days / 365.0
+            if delta > 150:
+                raise wtf.ValidationError(_("Looks like you're unreasonably old!"))
+            elif delta < 0:
+                raise wtf.ValidationError(_("Looks like you're born in the future!"))
+            elif delta < 13:
+                raise wtf.ValidationError(_("Rockpack is not available for under 13's yet."))
+
 
 class ExternalRegistrationForm(wtf.Form):
     external_system = wtf.TextField(validators=[wtf.Required()])
