@@ -1,11 +1,11 @@
-window.WebApp.controller('FeedCtrl', ['$scope', 'cookies', 'userObj', ($scope, cookies, userObj) ->
+window.WebApp.controller('FeedCtrl', ['$scope', 'cookies', 'UserManager', ($scope, cookies, UserManager) ->
 
-  $scope.User = userObj
-  $scope.User.feed.position = 0
+  $scope.User = UserManager
 
   $scope.load_feed = () ->
-    $scope.User.FetchRecentSubscriptions($scope.User.feed.position, 50)
-    $scope.User.feed.position += 50
+    if ($scope.User.feed.total == null or $scope.User.feed.total > $scope.User.feed.position)
+      $scope.User.FetchRecentSubscriptions($scope.User.feed.position, 50)
+      $scope.User.feed.position += 50
 
   return
 ])

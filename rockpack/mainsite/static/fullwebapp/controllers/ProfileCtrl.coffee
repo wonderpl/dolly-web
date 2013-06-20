@@ -1,6 +1,6 @@
-window.WebApp.controller('ProfileCtrl', ['$scope', 'userObj', ($scope, userObj) ->
+window.WebApp.controller('ProfileCtrl', ['$scope', 'UserManager', ($scope, UserManager) ->
 
-  $scope.User = userObj
+  $scope.User = UserManager
 
   $scope.User.FetchSubscriptions()
 

@@ -1,6 +1,6 @@
 <div ng-controller="HeaderCtrl" id="header" class="wrapper">
   <h1>Rockpack</h1>
-  <div ng-switch on="LoggedIn">
+  <div ng-switch on="isLoggedIn">
     <div ng-switch-when="false"><a href="#/login/">Log In</a></div>
     <div ng-switch-when="true"><button ng-click="logout()">Log Out</button></div>
   </div>

@@ -9,12 +9,16 @@ window.WebApp.factory('UserManager', ['cookies', '$http', '$q', '$location','api
       access_token: cookies.get('access_token'),
     }
 
-    loggedIn: false
+    isLoggedIn: false
 
     timeOfLastRefresh: null
 
-    feed: []
-    feedLength : null
+    feed: {
+      etags: []
+      items: []
+      position: 0
+      total: null
+    }
 
     refreshToken: () ->
       $http({
@@ -24,7 +28,7 @@ window.WebApp.factory('UserManager', ['cookies', '$http', '$q', '$location','api
         headers: headers
       })
       .success((data) =>
-          @loggedIn = true
+          @isLoggedIn = true
           cookies.set("access_token", data.access_token, data.expires)
           @credentials = data
 
@@ -43,17 +47,17 @@ window.WebApp.factory('UserManager', ['cookies', '$http', '$q', '$location','api
         url: apiUrl.login,
         headers: headers
       })
-      .success((data) =>
-        @loggedIn = true
-        @TriggerRefresh(data.expires_in*0.9*1000, data.refresh_token)
-        @credentials = data
-        cookies.set("access_token", data.access_token, data.expires)
-        cookies.set("refresh_token", data.refresh_token, 2678400)
-        cookies.set("user_id", data.user_id, 2678400)
-      )
-      .error((data) =>
-        console.log data
-      )
+        .success((data) =>
+          @isLoggedIn = true
+          @credentials = data
+          @TriggerRefresh(data.expires_in*0.9*1000, data.refresh_token)
+          cookies.set("access_token", data.access_token, data.expires)
+          cookies.set("refresh_token", data.refresh_token, 2678400)
+          cookies.set("user_id", data.user_id, 2678400)
+        )
+        .error((data) =>
+          console.log data
+        )
 
     ExternalLogin: (provider, external_token) ->
       $http({
@@ -106,18 +110,23 @@ window.WebApp.factory('UserManager', ['cookies', '$http', '$q', '$location','api
       params: {start: start, size: size}
       headers: {"authorization": "Bearer #{@credentials.access_token}", "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"}
       })
-        .success((data) ->
+        .success((data, status, headers, config) ->
+
+          if User.feed.total == null
+            User.feed.total = data.videos.total
+
           currentPos = 0
+
           _.each(data.videos.items, (video) ->
             datestring  = video.date_added.substr(0, 10)
 
-            while User.feed[currentPos]? and  User.feed[currentPos].date != datestring
+            while User.feed.items[currentPos]? and  User.feed.items[currentPos].date != datestring
               currentPos++
 
-            if not (User.feed[currentPos]?)
-              User.feed[currentPos] = {date: datestring, videos: []}
+            if not (User.feed.items[currentPos]?)
+              User.feed.items[currentPos] = {date: datestring, videos: []}
 
-            User.feed[currentPos].videos.push(video)
+            User.feed.items[currentPos].videos.push(video)
           )
         )
         .error((data) =>
@@ -143,15 +152,20 @@ window.WebApp.factory('UserManager', ['cookies', '$http', '$q', '$location','api
       cookies.set('user_id', '')
       User.details = {}
       User.credentials = {}
-      User.feed = []
-      User.loggedIn = false
+      feed: {
+        etags: []
+        items: []
+        position: 0
+        total: null
+      }
+      User.isLoggedIn = false
 
 
-    getTimeToNextRefresh: () ->
-      if @timeOfLastRefresh?
-        return @credentials.expiers_in*0.9*1000 - ( (new Date()).getTime() - @timeOfLastRefresh )
-      else
-        return null
+#    getTimeToNextRefresh: () ->
+#      if @timeOfLastRefresh?
+#        return @credentials.expiers_in*0.9*1000 - ( (new Date()).getTime() - @timeOfLastRefresh )
+#      else
+#        return null
 
     TriggerRefresh: (timeToRefresh, token) ->
       window.setTimeout((() => @refreshToken(token)) ,timeToRefresh)

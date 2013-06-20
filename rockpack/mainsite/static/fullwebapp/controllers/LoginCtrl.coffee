@@ -11,11 +11,12 @@ window.WebApp.controller('LoginCtrl', ['$scope', '$location', 'cookies', 'UserMa
   $scope.submit = ->
     if $scope.username? and $scope.password?
       $scope.User.Login($scope.username, $scope.password)
-      .then((data) ->
-
-        return
+      .success((data) ->
+          UserManager.FetchUserData(UserManager.credentials.resource_url)
+            .success((data) ->
+              $location.path('/feed')
+            )
       )
-    return
 
   $scope.facebook = ->
     FB.login((response) ->

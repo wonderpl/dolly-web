@@ -1,7 +1,7 @@
 <div class="wrapper">
   <h2>Feed View</h2>
   <div id="feed" infinite-scroll='load_feed()' infinite-scroll-distance='1'>
-    <div ng-repeat="section in User.feed">
+    <div ng-repeat="section in User.feed.items">
       <h3>{{section.date}}</h3>
       <div ng-repeat="video in section.videos" class="video">
         <img ng-src="{{video.video.thumbnail_url}}">
