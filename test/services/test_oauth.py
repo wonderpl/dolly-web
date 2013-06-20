@@ -397,6 +397,31 @@ class RegisterTestCase(base.RockPackTestCase):
                 )
                 self.assertEquals(status, r.status_code, r.data)
 
+    def test_birthdates(self):
+        with self.app.test_client() as client:
+            for dob, status in [
+                    ('1980-01-01', 200),
+                    ('1980-31-01', 400),
+                    ('1800-01-01', 400),
+                    ('2010-01-01', 400),
+                    ('2100-01-01', 400)]:
+                username = uuid.uuid4().hex
+                r = client.post(
+                    '/ws/register/',
+                    headers=[get_client_auth_header()],
+                    data=dict(
+                        username=username,
+                        password='xxxxxx',
+                        first_name='foo',
+                        last_name='bar',
+                        date_of_birth=dob,
+                        locale='en-us',
+                        email='%s@spam.com' % username,
+                    )
+                )
+                self.assertEquals(r.status_code, status,
+                                  '%s: %d, %s' % (dob, r.status_code, r.data))
+
     def test_username_availability(self):
         with self.app.test_client() as client:
             self.app.test_request_context().push()
