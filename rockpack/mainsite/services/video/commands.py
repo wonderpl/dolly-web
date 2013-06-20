@@ -8,7 +8,7 @@ from rockpack.mainsite.core.dbapi import commit_on_success
 from rockpack.mainsite.core.youtube import batch_query, _parse_datetime
 from rockpack.mainsite.services.base.models import JobControl
 from rockpack.mainsite.services.user.models import Subscription
-from rockpack.mainsite.services.video.models import Channel, Video, VideoInstance
+from rockpack.mainsite.services.video.models import Channel, Video, VideoInstance, PlayerErrorReport
 
 
 @commit_on_success
@@ -84,13 +84,40 @@ def update_subscriber_stats():
 
 
 @manager.command
-def update_video_data():
+def check_video_player_errors():
+    """Scan player error records and check that videos are still available."""
+    JOB_NAME = 'check_video_player_errors'
+    job_control = JobControl.query.get(JOB_NAME)
+    now = datetime.now()
+    if not job_control:
+        job_control = JobControl(job=JOB_NAME)
+        job_control.last_run = now
+    logging.info('%s: from %s to %s', JOB_NAME, job_control.last_run, now)
+
+    error_videos = set(v[0] for v in PlayerErrorReport.query.filter(
+        PlayerErrorReport.date_updated.between(job_control.last_run, now)).
+        join(VideoInstance, VideoInstance.id == PlayerErrorReport.video_instance).
+        values('video'))
+    if error_videos:
+        video_qs = Video.query.filter(Video.id.in_(error_videos))
+        get_youtube_video_data(video_qs, now)
+
+    job_control.last_run = now
+    job_control.save()
+
+
+@manager.command
+def update_video_data(start):
     """Query youtube for updated video data."""
-    start = '2013-06-08'    # datetime.now()
+    #start = '2013-06-08'
+    get_youtube_video_data(Video.query, start)
+
+
+def get_youtube_video_data(video_qs, start):
     fields = 'atom:entry(batch:status,atom:id,atom:author(name),atom:published,yt:noembed)'
     while True:
         videos = dict((v.source_videoid, v) for v in
-                      Video.query.filter(Video.date_updated < start).limit(50))
+                      video_qs.filter(Video.date_updated < start).limit(50))
         if not videos:
             break
         feed_ids = [('videos', id) for id in videos.keys()]
@@ -114,4 +141,5 @@ def update_video_data():
                 logging.warning('%s: %s', id, entry.batch_status.reason)
                 time.sleep(1)
         Video.query.session.commit()
-        time.sleep(60)
+        if len(videos) == 50:
+            time.sleep(60)
