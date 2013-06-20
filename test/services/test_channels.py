@@ -1,11 +1,14 @@
 import uuid
 import time
 import json
+import urlparse, urllib
 from datetime import datetime
 from urlparse import urlsplit
+from flask import Flask
 from test import base
 from test.fixtures import RockpackCoverArtData, VideoInstanceData
 from test.test_helpers import get_auth_header
+import rockpack
 from rockpack.mainsite import app
 from rockpack.mainsite.core.es import use_elasticsearch
 from rockpack.mainsite.services.video import models
@@ -24,6 +27,65 @@ class ChannelPopularity(base.RockPackTestCase):
 
             data = json.loads(r.data)
             #self.assertEquals(data['channels']['items'][0]['title'], 'channel #6')
+
+
+from test.services.test_user_flows import BaseUserTestCase
+
+class ChannelVisibleFlag(BaseUserTestCase):
+
+    def test_visible_flag(self):
+        with self.app.test_client() as client:
+            self.app.test_request_context().push()
+            user = self.register_user()
+            user_token = self.token
+
+            if use_elasticsearch():
+                new_title = 'a new channel title'
+                new_description = 'this is a new description!'
+                r = self.post(
+                    self.urls['channels'],
+                    dict(
+                        title=new_title,
+                        description=new_description,
+                        category=3,
+                        cover=RockpackCoverArtData.comic_cover.cover,
+                        public=True
+                    ),
+                    token=self.token
+                )
+                owned_resource = r['resource_url']
+                params = dict(q='music', size=1)
+                videos = self.get(self.urls['video_search'], params=params)['videos']['items']
+
+                self.put(owned_resource + 'videos/', [videos[0]['id']], token=self.token)
+                time.sleep(2)
+
+                resource = '{}/ws/{}/channels/{}/'.format(self.default_base_url, user['id'], r['id'])
+
+                new_ch = models.Channel.query.filter_by(owner=user['id']).filter(
+                    models.Channel.title == new_title).one()
+
+                self.register_user()
+                user2_token = self.token
+
+                # Check user2 can see channel
+                channel = self.get(resource, token=user2_token)
+                self.assertEquals(channel['id'], r['id'])
+
+                # Hide channel from user2
+                ch = models.Channel.query.get(new_ch.id)
+                ch.visible = False
+                ch.save()
+                self.assertEquals(models.Channel.query.get(new_ch.id).visible, False)
+
+                time.sleep(2)
+                # Owner should still be able to see channel
+                r = self.get(owned_resource, token=user_token)
+                self.assertEquals(channel['id'], r['id'])
+
+                # Channel should be hidden from user2
+                with self.assertRaises(Exception): # Why doesn't this catch AssertionError???
+                    self.get(resource, token=user2_token)
 
 
 class ChannelCreateTestCase(base.RockPackTestCase):
@@ -212,31 +274,6 @@ class ChannelCreateTestCase(base.RockPackTestCase):
                 False,
                 'channel should not be public if privacy is toggled false')
 
-            # Test (editorial) visible flag on channel object
-            if use_elasticsearch():
-                r = client.put(
-                    resource + 'public/',
-                    data=json.dumps(True),
-                    content_type='application/json',
-                    headers=[get_auth_header(user.id)]
-                )
-                data = json.loads(r.data)
-                self.assertEquals(
-                    models.Channel.query.get(new_ch.id).public,
-                    True,
-                    'channel should be public if privacy is toggled true')
-
-                ch = models.Channel.query.get(new_ch.id)
-                ch.visible = False
-                ch.save()
-                self.assertEquals(models.Channel.query.get(new_ch.id).visible, False)
-
-                time.sleep(2)
-                r = client.get(resource, headers=[get_auth_header(user.id)])
-                self.assertEquals(r.status_code, 200)
-
-                rr = client.get(resource, headers=[get_auth_header(user2_id)])
-                self.assertEquals(rr.status_code, 404)
 
     def test_dupe_channel_untitled(self):
         with self.app.test_client() as client:
