@@ -50,6 +50,8 @@ window.WebApp.factory('UserManager', ['cookies', '$http', '$q', '$location','api
         .success((data) =>
           @isLoggedIn = true
           @credentials = data
+          User.FetchUserData()
+          User.FetchSubscriptions()
           @TriggerRefresh(data.expires_in*0.9*1000, data.refresh_token)
           cookies.set("access_token", data.access_token, data.expires)
           cookies.set("refresh_token", data.refresh_token, 2678400)
@@ -77,10 +79,10 @@ window.WebApp.factory('UserManager', ['cookies', '$http', '$q', '$location','api
       )
 
 
-    FetchUserData: (resourceUrl) ->
+    FetchUserData: () ->
       $http({
         method: 'GET',
-        url: resourceUrl,
+        url: User.credentials.resource_url,
         headers: {"authorization": "Bearer #{@credentials.access_token}", "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"}
       })
       .success((data) ->
@@ -146,6 +148,34 @@ window.WebApp.factory('UserManager', ['cookies', '$http', '$q', '$location','api
           console.log data
         )
 
+    Subscribe: (channelResource) ->
+      $http({
+        method: 'POST',
+        url: User.details.subscriptions.resource_url,
+        headers: {"authorization": "Bearer #{@credentials.access_token}", "Content-Type": "application/json"}
+        data: '"' + channelResource + '"'
+      })
+        .success((data) ->
+
+        )
+        .error((data) =>
+          console.log data
+        )
+
+    Unsubscribe: (channelResource) ->
+      $http({
+        method: 'DELETE',
+        url: channelResource,
+        headers: {"authorization": "Bearer #{@credentials.access_token}", "Content-Type": "application/json"}
+      })
+        .success((data) ->
+
+        )
+        .error((data) =>
+          console.log data
+        )
+
+
     logOut: () ->
       cookies.set('access_token', '')
       cookies.set('refresh_token', '')
@@ -159,7 +189,6 @@ window.WebApp.factory('UserManager', ['cookies', '$http', '$q', '$location','api
         total: null
       }
       User.isLoggedIn = false
-
 
 #    getTimeToNextRefresh: () ->
 #      if @timeOfLastRefresh?

@@ -13,20 +13,10 @@ window.WebApp.controller('ChannelCtrl', ['$scope', '$routeParams', '$rootScope',
           $scope.totalvideos = data.videos.total
         else
           $scope.channel.videos.items = $scope.channel.videos.items.concat(data.videos.items)
-      $scope.page += 1
+        console.log $scope.channel
+        $scope.page += 1
     return
 
-  $scope.testfunction = () ->
-    console.log 'tests'
-
-  t = '<div class="modal-header">'+
-    '<h1>This is the title</h1>'+
-    '</div>'+
-    '<div class="modal-body">'+
-    '<p>Enter a value to pass to <code>close</code> as the result: <input ng-model="result" /></p>'+
-    '</div>'+
-    '<div class="modal-footer">'+
-    '</div>'
 
   $scope.setCurrentVideo = (video) ->
     $location.search( 'video', video.id )

@@ -10,9 +10,12 @@ window.WebApp.controller('AppCtrl', ['$rootScope', '$location', 'UserManager', '
         event.preventDefault()
         UserManager.refreshToken()
           .success((data) ->
-            UserManager.FetchUserData(UserManager.credentials.resource_url)
+            UserManager.FetchUserData()
               .success((data) ->
-                $route.reload()
+                UserManager.FetchSubscriptions()
+                  .success((data) ->
+                    $route.reload()
+                  )
               )
         )
       else
