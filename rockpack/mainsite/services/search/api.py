@@ -1,4 +1,4 @@
-from flask import request, json, Response
+from flask import request, json, abort, Response
 import urllib2
 from rockpack.mainsite import app
 from rockpack.mainsite.core.webservice import WebService, expose_ajax
@@ -30,7 +30,7 @@ class SearchWS(WebService):
         items = []
         try:
             result = youtube.search(request.args.get('q', ''), order, start, size,
-                    region, request.remote_addr)
+                                    region, request.remote_addr)
         except urllib2.HTTPError as e:
             app.logger.error('Error contacting YouTube: {}'.format(e))
 
@@ -104,7 +104,10 @@ class CompleteWS(WebService):
     def complete_video_terms(self):
         # Client should hit youtube service directly because this service
         # is likely to be throttled by IP address
-        result = youtube.complete(request.args.get('q', ''))
+        query = request.args.get('q', '')
+        if not query:
+            abort(400)
+        result = youtube.complete(query)
         return Response(result, mimetype='text/javascript')
 
     @expose_ajax('/channels/', cache_age=3600)

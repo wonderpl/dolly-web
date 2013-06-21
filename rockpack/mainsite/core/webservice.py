@@ -1,4 +1,5 @@
 import types
+from urlparse import urlparse
 from cStringIO import StringIO
 from functools import wraps
 from collections import namedtuple
@@ -206,3 +207,14 @@ def setup_abort_mapping(app):
         401: Unauthorized_,
         403: Forbidden_,
     })
+
+
+def add_cors_headers(response):
+    origin = request.args.get('_origin')
+    if origin and urlparse(origin).hostname.endswith('rockpack.com'):
+        response.headers.add('Access-Control-Allow-Origin', origin)
+    return response
+
+
+def setup_cors_handling(app):
+    app.after_request(add_cors_headers)
