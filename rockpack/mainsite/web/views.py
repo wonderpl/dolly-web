@@ -89,8 +89,7 @@ def privacy():
 
 @expose_web('/channel/<slug>/<channelid>/', 'web/channel.html', cache_age=3600)
 def channel(slug, channelid):
-    #Temporary fix to pagination bug, fetching 1000 videos.
-    channel_data = ws_request('/ws/-/channels/%s/' % channelid, size=1000)
+    channel_data = ws_request('/ws/-/channels/%s/' % channelid, size=50)
     selected_video = None
     if 'video' in request.args:
         for instance in channel_data['videos']['items']:
