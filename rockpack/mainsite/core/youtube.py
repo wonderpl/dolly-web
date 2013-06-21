@@ -310,5 +310,11 @@ def complete(query, **params):
     url = 'http://www.google.com/complete/search'
     params = dict(client='youtube', ds='yt', q=query, **params)
     response = requests.get(url, params=params)
-    response.raise_for_status()
+    try:
+        response.raise_for_status()
+    except Exception, e:
+        if hasattr(e, 'response'):
+            log.error('complete request failed (%d): %s',
+                      e.response.status_code, e.response.text)
+        raise
     return response.content
