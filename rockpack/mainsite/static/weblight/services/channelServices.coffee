@@ -5,7 +5,7 @@ angular.module('channelServices', ['ngResource'])
   .factory('Videos', ['$http', ($http) ->
     return {
       get: (size, start, locale) ->
-        parms = "?size=#{size}&start=#{start}&locale=#{locale}"
+        parms = "?size=#{size}&start=#{start}&locale=#{locale}&_origin=" + location.origin
         return $http.get( channel_data.resource_url + parms ).then( (data) ->
           return data.data.videos.items
         )
