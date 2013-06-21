@@ -107,7 +107,7 @@ class CompleteWS(WebService):
         query = request.args.get('q', '')
         if not query:
             abort(400)
-        result = youtube.complete()
+        result = youtube.complete(query)
         return Response(result, mimetype='text/javascript')
 
     @expose_ajax('/channels/', cache_age=3600)
