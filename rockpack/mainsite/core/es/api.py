@@ -1,3 +1,4 @@
+import logging
 from ast import literal_eval
 from urlparse import urlparse, urljoin
 import pyes
@@ -9,6 +10,7 @@ from rockpack.mainsite import app
 from rockpack.mainsite.helpers.db import ImageType
 from rockpack.mainsite.helpers.urls import url_for
 
+logger = logging.getLogger(__name__)
 
 DEFAULT_FILTERS = [filters.locale_filter]
 
@@ -328,7 +330,7 @@ class VideoSearch(EntitySearch, CategoryMixin, MediaSortMixin):
             try:
                 video['channel'] = channels[video['channel']]
             except KeyError:
-                app.logger.warning("Missing channel '{}' during mapping".format(video['channel']))
+                logger.warning("Missing channel '{}' during mapping".format(video['channel']))
 
     def _format_results(self, videos, with_channels=True):
         vlist = []
@@ -407,7 +409,7 @@ def add_to_index(data, index, _type, id, bulk=False, refresh=False):
     try:
         return es_connection.index(data, index, _type, id=id, bulk=bulk)
     except Exception as e:
-        app.logger.critical("Failed to insert record to index '{}' with id '{}' with: {}".format(index, id, str(e)))
+        logger.warning("Failed to insert record to index '{}' with id '{}' with: {}".format(index, id, str(e)))
     else:
         if refresh or app.config.get('FORCE_INDEX_INSERT_REFRESH', False):
             es_connection.indices.refresh(index)
@@ -535,7 +537,7 @@ def remove_channel_from_index(channel_id):
     try:
         es_connection.delete(mappings.CHANNEL_INDEX, mappings.CHANNEL_TYPE, channel_id)
     except pyes.exceptions.NotFoundException:
-        app.logger.warning("Failed to remove channel '{}' from index".format(channel_id))
+        logger.warning("NotFoundException: Failed to remove channel '{}' from index".format(channel_id))
 
 
 def remove_video_from_index(video_id):
@@ -545,4 +547,4 @@ def remove_video_from_index(video_id):
     try:
         es_connection.delete(mappings.VIDEO_INDEX, mappings.VIDEO_TYPE, video_id)
     except pyes.exceptions.NotFoundException:
-        app.logger.warning("Failed to remove video '{}' from index".format(video_id))
+        logger.warning("NotFoundException: Failed to remove video '{}' from index".format(video_id))
