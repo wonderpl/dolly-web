@@ -211,8 +211,10 @@ def setup_abort_mapping(app):
 
 def add_cors_headers(response):
     origin = request.args.get('_origin')
-    if origin and urlparse(origin).hostname.endswith('rockpack.com'):
-        response.headers.add('Access-Control-Allow-Origin', origin)
+    if origin:
+        hostname = urlparse(origin).hostname
+        if hostname and hostname.endswith('rockpack.com'):
+            response.headers.add('Access-Control-Allow-Origin', origin)
     return response
 
 
