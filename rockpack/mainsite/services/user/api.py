@@ -265,9 +265,10 @@ def check_present(form, field):
         raise ValidationError(_('This field is required, but can be an empty string.'))
 
 
-# XXX: Monkey patch BooleanField process_formdata so that passed in values
+# Patch BooleanField process_formdata so that passed in values
 # are checked, not just a check for the presence of the field.
-wtf.BooleanField.process_formdata = wtf.Field.process_formdata
+class JsonBooleanField(wtf.BooleanField):
+    process_formdata = wtf.Field.process_formdata
 
 
 class ChannelForm(form.BaseForm):
@@ -280,7 +281,7 @@ class ChannelForm(form.BaseForm):
     category = wtf.TextField(validators=[check_present])
     cover = wtf.TextField(validators=[check_present])
     cover_aoi = wtf.Field()  # set from cover reference
-    public = wtf.BooleanField(validators=[check_present])
+    public = JsonBooleanField(validators=[check_present])
 
     def __init__(self, *args, **kwargs):
         self._channelid = kwargs.pop('channelid', None)
