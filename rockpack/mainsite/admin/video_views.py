@@ -145,8 +145,8 @@ class Channel(AdminView):
     column_auto_select_related = True
     column_display_all_relations = True
 
-    column_list = ('title', 'owner_rel', 'public', 'cover.url', 'category_rel', 'video_count', 'date_added', 'editorial_boost')
-    column_filters = ('owner', 'title', 'public', 'category_rel', 'description', 'owner_rel', 'deleted', 'date_added', 'editorial_boost')
+    column_list = ('title', 'owner_rel', 'public', 'cover.url', 'category_rel', 'video_count', 'date_added', 'editorial_boost', 'subscriber_count')
+    column_filters = ('owner', 'title', 'public', 'category_rel', 'description', 'owner_rel', 'deleted', 'date_added', 'editorial_boost', 'subscriber_count')
     column_searchable_list = ('title',)
     column_formatters = dict(video_count=_format_channel_video_count)
 
