@@ -2,7 +2,6 @@ import time
 import logging
 from datetime import datetime, timedelta
 from sqlalchemy import func, text, TIME, distinct
-from sqlalchemy.sql.expression import case
 from rockpack.mainsite import app
 from rockpack.mainsite.manager import manager
 from rockpack.mainsite.core.dbapi import commit_on_success
@@ -57,39 +56,44 @@ def set_subscription_update_frequency(time_from=None, time_to=None):
 @commit_on_success
 def set_channel_view_count(time_from=None, time_to=None):
     # For each channel, select the total number of users
-    # who've made 1 or more actions on a channel per day
-    counts = UserActivity.query.session.query(
-                case([(func.count(distinct(UserActivity.user)) == None, 0)], else_ = func.count(distinct(UserActivity.user)))
-            ).filter(
-                    UserActivity.date_actioned > time_from,
-                    UserActivity.date_actioned <= time_to
-            ).group_by(
-                    UserActivity.object_id
-            )
-
+    # who've made 1 or more actions on a channel per hour
     session = ChannelLocaleMeta.query.session
     for locale in app.config['ENABLED_LOCALES']:
         for object_type in ('video', 'channel', ):
-            c = counts.filter(UserActivity.object_type == object_type, UserActivity.locale == locale)
-            channel_metas = ChannelLocaleMeta.query.filter(ChannelLocaleMeta.locale == locale)
+            ua = None
+            ids = {}
+
+            if object_type == 'video':
+
+                ua = UserActivity.query.session.query(
+                    VideoInstance.channel,
+                    func.count(distinct(UserActivity.user)),
+                    UserActivity.object_id
+                ).filter(
+                    VideoInstance.id == UserActivity.object_id
+                )
+
+            else:
+                ua = UserActivity.query.session.query(
+                    UserActivity.object_id,
+                    func.count(distinct(UserActivity.user)))
+
+            ua = ua.filter(
+                UserActivity.date_actioned > time_from
+            ).group_by(
+                UserActivity.object_id
+            )
+
+            if not ua.count():
+                continue
+
+            for u in ua:
+                if u[1]:
+                    ids[u[0]] = u[1]
+
+            channel_metas = ChannelLocaleMeta.query.filter(ChannelLocaleMeta.locale == locale, ChannelLocaleMeta.channel.in_(ids.keys()))
             for meta in channel_metas:
-                if object_type == 'video':
-                    count = c.join(
-                            VideoInstance,
-                            VideoInstance.id == UserActivity.object_id
-                        ).filter(
-                            VideoInstance.channel == meta.channel)
-                else:
-                    count = c.filter(UserActivity.object_id == meta.channel)
-
-                if count.count() > 1:
-                    app.logger.warning("Meta for channel '{}' return more than 1 metric")
-                    continue
-                if not count.count():
-                    continue
-                count = count.first()
-
-                meta.view_count += count[0]
+                meta.view_count += ids[meta.channel]
                 session.add(meta)
 
 
@@ -101,13 +105,12 @@ def update_channel_view_counts():
     now = datetime.now()
     if not job_control:
         job_control = JobControl(job=JOB_NAME)
-        job_control.last_run = now
+        job_control.last_run = now - timedelta(hours=1)
     logging.info('%s: from %s to %s', JOB_NAME, job_control.last_run, now)
 
-    if now > job_control.last_run + timedelta(hours=1):
-        set_channel_view_count(job_control.last_run.time(), now.time())
-        job_control.last_run = now
-        job_control.save()
+    set_channel_view_count(job_control.last_run)
+    job_control.last_run = now
+    job_control.save()
 
 
 @manager.cron_command
