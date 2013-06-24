@@ -1,15 +1,14 @@
 import uuid
+import time
 import json
-import urlparse, urllib
 from datetime import datetime
 from urlparse import urlsplit
-from flask import Flask
 from test import base
 from test.fixtures import RockpackCoverArtData, VideoInstanceData
 from test.test_helpers import get_auth_header
-import rockpack
 from rockpack.mainsite import app
 from rockpack.mainsite.core.es import use_elasticsearch
+from rockpack.mainsite.core.es.api import ChannelSearch
 from rockpack.mainsite.services.video import models
 
 
@@ -30,10 +29,55 @@ class ChannelPopularity(base.RockPackTestCase):
 
 from test.services.test_user_flows import BaseUserTestCase
 
+
+class ESChannelTest(base.RockPackTestCase):
+
+    def test_toggle(self):
+        with self.app.test_client():
+            self.app.test_request_context().push()
+            if use_elasticsearch():
+
+                def es_channel(id):
+                    esc = ChannelSearch('en-us')
+                    esc.add_id(channel.id)
+                    return esc.channels()
+
+                user = self.create_test_user()
+                channel = models.Channel(
+                    owner=user.id,
+                    title='a title',
+                    description='',
+                    cover='',
+                ).save()
+
+                time.sleep(2)
+                self.assertEquals(es_channel(channel.id)[0]['id'], channel.id)
+
+                channel.deleted = True
+                channel = channel.save()
+                time.sleep(2)
+                self.assertEquals(es_channel(channel.id), [])
+
+                channel.deleted = False
+                channel = channel.save()
+                time.sleep(2)
+                self.assertEquals(es_channel(channel.id)[0]['id'], channel.id)
+
+                channel.public = False
+                channel = channel.save()
+                time.sleep(2)
+                self.assertEquals(es_channel(channel.id), [])
+
+                channel.deleted = True
+                channel = channel.save()
+                time.sleep(2)
+                self.assertEquals(es_channel(channel.id), [])
+
+
 class ChannelVisibleFlag(BaseUserTestCase):
 
     def test_visible_flag(self):
-        with self.app.test_client() as client:
+        with self.app.test_client():
             self.app.test_request_context().push()
             user = self.register_user()
             user_token = self.token
@@ -83,7 +127,7 @@ class ChannelVisibleFlag(BaseUserTestCase):
                 self.assertEquals(channel['id'], r['id'])
 
                 # Channel should be hidden from user2
-                with self.assertRaises(Exception): # Why doesn't this catch AssertionError???
+                with self.assertRaises(Exception):  # Why doesn't this catch AssertionError???
                     self.get(resource, token=user2_token)
 
 
@@ -273,9 +317,9 @@ class ChannelCreateTestCase(base.RockPackTestCase):
                 False,
                 'channel should not be public if privacy is toggled false')
 
-
     def test_dupe_channel_untitled(self):
         with self.app.test_client() as client:
+            self.app.test_request_context().push()
             user = self.create_test_user()
 
             r = client.post(
