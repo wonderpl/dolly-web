@@ -313,6 +313,8 @@ class Channel(db.Model):
     @classmethod
     def should_be_public(self, channel, public):
         """Return False if conditions for visibility are not met (except for fav channel)"""
+        if app.config.get('OVERRIDE_CHANNEL_PUBLIC'):
+            return True
         if channel.favourite:
             return True
 
