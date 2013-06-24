@@ -113,17 +113,8 @@ def gender_validator():
     return _valid
 
 
-class RockRegistrationForm(wtf.Form):
-    username = wtf.TextField(validators=[wtf.Length(min=3), username_validator()] + get_column_validators(User, 'username'))
-    password = wtf.PasswordField(validators=[wtf.Required(), wtf.Length(min=6)])
-    first_name = wtf.TextField(validators=[wtf.Optional()] + get_column_validators(User, 'first_name'))
-    last_name = wtf.TextField(validators=[wtf.Optional()] + get_column_validators(User, 'last_name'))
-    gender = wtf.TextField(validators=[wtf.Optional(), gender_validator()] + get_column_validators(User, 'gender'))
-    date_of_birth = wtf.DateField(validators=get_column_validators(User, 'date_of_birth'))
-    locale = wtf.TextField(validators=get_column_validators(User, 'locale'))
-    email = wtf.TextField(validators=[wtf.Email(), email_registered_validator()] + get_column_validators(User, 'email'))
-
-    def validate_date_of_birth(form, value):
+def date_of_birth_validator():
+    def _valid(form, value):
         if value.data:
             delta = (datetime.today().date() - value.data).days / 365.0
             if delta > 150:
@@ -132,6 +123,18 @@ class RockRegistrationForm(wtf.Form):
                 raise wtf.ValidationError(_("Looks like you're born in the future!"))
             elif delta < 13:
                 raise wtf.ValidationError(_("Rockpack is not available for under 13's yet."))
+    return _valid
+
+
+class RockRegistrationForm(wtf.Form):
+    username = wtf.TextField(validators=[wtf.Length(min=3), username_validator()] + get_column_validators(User, 'username'))
+    password = wtf.PasswordField(validators=[wtf.Required(), wtf.Length(min=6)])
+    first_name = wtf.TextField(validators=[wtf.Optional()] + get_column_validators(User, 'first_name'))
+    last_name = wtf.TextField(validators=[wtf.Optional()] + get_column_validators(User, 'last_name'))
+    gender = wtf.TextField(validators=[wtf.Optional(), gender_validator()] + get_column_validators(User, 'gender'))
+    date_of_birth = wtf.DateField(validators=[date_of_birth_validator()] + get_column_validators(User, 'date_of_birth'))
+    locale = wtf.TextField(validators=get_column_validators(User, 'locale'))
+    email = wtf.TextField(validators=[wtf.Email(), email_registered_validator()] + get_column_validators(User, 'email'))
 
 
 class ExternalRegistrationForm(wtf.Form):

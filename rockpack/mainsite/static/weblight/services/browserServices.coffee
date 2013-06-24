@@ -2,8 +2,6 @@ angular.module('Weblight').factory('browserServices', () ->
 
   @searchString = (data) ->
     for i in [0..data.length]
-      console.log i
-      console.log data
       dataString = data[i].string
       dataProp = data[i].prop
       @versionSearchString = data[i].versionSearch || data[i].identity

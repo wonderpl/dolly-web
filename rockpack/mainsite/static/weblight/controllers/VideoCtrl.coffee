@@ -1,13 +1,9 @@
 window.Weblight.controller('VideoCtrl', ['$scope', '$rootScope', '$routeParams', '$location', 'isMobile', ($scope, $rootScope, $routeParams, $location, isMobile) ->
 
   @getPlayerWidth = ->
-    if $(window).width() < 979 && $(window).width() > 500
-      console.log 'aaa'
-      @playerWidth = $(window).width()
-      @playerHeight = $(window).width()*9/16
-    else if $(window).width() < 500
-      @playerWidth = Math.floor($(window).width()*0.9)
-      @playerHeight = Math.floor($(window).width()*0.9)*9/16
+    if $(window).width() <= 979
+      @playerWidth = Math.floor($(window).width()*0.8)
+      @playerHeight = Math.floor($(window).width()*0.8)*9/16
     else
       @playerWidth = 840
       @playerHeight = 473
@@ -27,10 +23,17 @@ window.Weblight.controller('VideoCtrl', ['$scope', '$rootScope', '$routeParams',
         # need to trigger a hide, otherwise show did not fire on load
         $("#lightbox").hide()
         $("#lightbox").show()
+
+        $scope.videodata = window.selected_video
+
+        console.log window.selected_video
+
         for video in [0..$scope.videos.length-1]
           if $rootScope.videos[video].id == $routeParams.video
             $scope.videodata = $rootScope.videos[video]
             $scope.videoNum = video
+
+        console.log $scope.videodata
 
         $scope.player = new YT.Player('player', {
           height: @playerHeight,

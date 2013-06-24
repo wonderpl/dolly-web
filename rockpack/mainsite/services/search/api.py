@@ -1,10 +1,12 @@
-from flask import request, json, Response
+from flask import request, json, abort, Response
+import urllib2
+from rockpack.mainsite import app
 from rockpack.mainsite.core.webservice import WebService, expose_ajax
 from rockpack.mainsite.core import youtube
 from rockpack.mainsite.helpers.db import gen_videoid
 from rockpack.mainsite.services.video.api import get_local_channel
 from rockpack.mainsite.services.video.models import Channel
-from rockpack.mainsite.core.es.api import ChannelSearch
+from rockpack.mainsite.core.es.api import ChannelSearch, VideoSearch
 from rockpack.mainsite.core.es import use_elasticsearch, filters
 
 
@@ -24,27 +26,50 @@ class SearchWS(WebService):
         order = 'published' if request.args.get('order') == 'latest' else None
         start, size = self.get_page()
         region = self.get_locale().split('-')[1]
-        result = youtube.search(request.args.get('q', ''), order, start, size,
-                                region, request.remote_addr)
+
         items = []
-        for position, video in enumerate(result.videos, start):
-            items.append(
-                dict(
-                    position=position,
-                    id='%s-%02d-%s' % (VIDEO_INSTANCE_PREFIX, 1, video.source_videoid),
-                    title=video.title,
-                    video=dict(
-                        id=gen_videoid(None, 1, video.source_videoid),
-                        source='youtube',
-                        source_id=video.source_videoid,
-                        source_date_uploaded=video.source_date_uploaded,
-                        source_view_count=video.source_view_count,
-                        source_username=video.source_username,
-                        duration=video.duration,
-                        thumbnail_url=video.default_thumbnail,
+        try:
+            result = youtube.search(request.args.get('q', ''), order, start, size,
+                                    region, request.remote_addr)
+        except urllib2.HTTPError as e:
+            app.logger.error('Error contacting YouTube: {}'.format(e))
+
+            if not app.config.get('ELASTICSEARCH_URL'):
+                raise Exception('Elasticsearch not configured')
+
+            vs = VideoSearch(self.get_locale())
+            vs.add_term('title', request.args.get('q', ''))
+            start, size = self.get_page()
+            vs.set_paging(offset=start, limit=size)
+            for video in vs.videos():
+                video['video']['source_view_count'] = video['video']['view_count']
+                video['video']['source_date_uploaded'] = video['date_added']
+                del video['video']['star_count']
+                del video['public']
+                del video['category']
+                del video['video']['view_count']
+                del video['date_added']
+                items.append(video)
+        else:
+            for position, video in enumerate(result.videos, start):
+                items.append(
+                    dict(
+                        position=position,
+                        id='%s-%02d-%s' % (VIDEO_INSTANCE_PREFIX, 1, video.source_videoid),
+                        title=video.title,
+                        video=dict(
+                            id=gen_videoid(None, 1, video.source_videoid),
+                            source='youtube',
+                            source_id=video.source_videoid,
+                            source_date_uploaded=video.source_date_uploaded,
+                            source_view_count=video.source_view_count,
+                            source_username=video.source_username,
+                            duration=video.duration,
+                            thumbnail_url=video.default_thumbnail,
+                        )
                     )
                 )
-            )
+
         return {'videos': {'items': items, 'total': result.video_count}}
 
     @expose_ajax('/channels/', cache_age=300)
@@ -79,7 +104,10 @@ class CompleteWS(WebService):
     def complete_video_terms(self):
         # Client should hit youtube service directly because this service
         # is likely to be throttled by IP address
-        result = youtube.complete(request.args.get('q', ''))
+        query = request.args.get('q', '')
+        if not query:
+            abort(400)
+        result = youtube.complete(query)
         return Response(result, mimetype='text/javascript')
 
     @expose_ajax('/channels/', cache_age=3600)

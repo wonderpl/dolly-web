@@ -16,5 +16,4 @@ window.Weblight.controller('PageCtrl', ['isMobile', '$scope', '$location', 'brow
 
 
   $scope.injectorUrl = window.injectorUrl
-  console.log $scope.injectorUrl
 ])

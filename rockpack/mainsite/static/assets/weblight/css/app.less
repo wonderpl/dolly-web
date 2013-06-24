@@ -1074,9 +1074,11 @@ footer {
   }
 
   #playercontainer {
-    width: 100%;
+    width: 80%;
     margin-left: 0;
     left: 0;
+    margin: -284px auto 0 auto;
+    position: relative;
 
     #leftarrow {
       left: 0;
@@ -1212,7 +1214,7 @@ footer {
 
     margin: 0 auto;
     position: relative;
-    width: 100%;
+    width: 80%;
     top: 30%;
     left: 0;
 
@@ -1246,50 +1248,16 @@ footer {
       padding: 5px 13px;
     }
   }
-
-  #videoslist {
-    padding: 0;
-
-    div {
-      margin: 0 25px 25px 25px;
-      width: 265px;
-
-      .videocelltitle {
-        margin: 0;
-        padding: 10px;
-        width: 245px;
-      }
-    }
-  }
 }
   /* Landscape */
 @media (max-width: 767px) and (orientation:landscape) {
-
-  #videoslist
-  {
-
-   padding: 0;
-
-   &>div {
-
-     margin: 0 0 40px 0;
-
-     .overlay, .videocell {
-       width: 315px;
-       height: 177px;
-     }
-     .videocelltitle {
-       width: 305px;
-     }
-   }
-  }
 
   #playercontainer {
 
     margin: 0 auto;
     position: relative;
-    width: 90%;
-    top: 0;
+    width: 80%;
+    top: 2%;
     left: 0;
 
     #closeplayermobile {
@@ -1313,6 +1281,29 @@ footer {
 }
 
 @media (max-width: 767px) {
+
+  #videoslist
+  {
+
+    padding: 0 10px;
+
+    &>div {
+
+      margin: 10px 0 80px 10px;
+      width: 260px;
+      height: 146px;
+
+      .overlay, .videocell {
+        width: 260px;
+        height: 146px;
+      }
+
+      .videocelltitle {
+        width: 250px;
+      }
+    }
+  }
+
 
   #topnav {
     height: 50px;

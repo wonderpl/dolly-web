@@ -158,3 +158,14 @@ def send_registration_emails():
 
     job_control.last_run = now
     job_control.save()
+
+
+@manager.command
+def delete_user(username):
+    """Mark a user as inactive and delete their channels."""
+    user = User.query.filter_by(username=username).one()
+    for channel in user.channels:
+        channel.deleted = True
+        channel.save()
+    user.is_active = False
+    user.save()
