@@ -69,18 +69,19 @@
     <div class="wrapper">
       <a href="#/"><img src="{{config.ASSETS_URL}}/assets/weblight/images/logo.png"></a>
     </div>
-  </div>  <div id="maincontainer" class="ng-view">
-      <div id="whatson">
-        <div id="cover" class="hidden-phone"></div>
-        <div class="abs-wrapper">
-          <div class="headline">
-            <h1>WHAT’S ON YOUR CHANNEL?</h1>
-            <h2>The app that makes it easy to create, share and subscribe to personalized video channels. Add your favorite videos from across the web with just one tap.</h2>
-            <img src="{{config.ASSETS_URL}}/assets/front/images/downloadbig.png">
-          </div>
+  </div>
+
+  <div id="maincontainer" class="ng-view">
+    <div id="whatson">
+      <div class="wrapper">
+        <div class="headline">
+          <h1>WHAT’S ON YOUR CHANNEL?</h1>
+          <h2>The app that makes it easy to create, share and subscribe to personalized video channels. Add your favorite videos from across the web with just one tap.</h2>
+          <a href="http://itunes.apple.com/app/rockpack/id660697542?mt=8&ls=1" target="_blank"><img ng-src="{{config.ASSETS_URL}}/assets/front/images/downloadbig.png" ng-click="triggerEvent('appStoreButtonClick')"></a>
         </div>
         <div class="ipadsimgs hidden-phone"></div>
       </div>
+    </div>
 
       <div id="iphone-instructions" class="wrapper visible-phone">
         <div class="imgcontainer">
@@ -163,7 +164,7 @@
       </div>
     </div>
 
-    <footer>
+    <footer id="#footer">
       <div class="wrapper" ng-style="wrapperWidth()">
         <ul>
           <li class="hidden-phone"><a href="#">About</a></li>

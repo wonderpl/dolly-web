@@ -24,8 +24,6 @@ window.Weblight.controller('AppCtrl', ['$routeParams', 'isMobile', '$scope', '$l
 
   $scope.$watch($scope.getWidth, (newValue, oldValue) ->
     $scope.windowWidth = { width: (Math.floor(($(window).width() - $scope.containerPadding) / $scope.videoWidth) * $scope.videoWidth + $scope.containerPadding) + 'px', margin: '0 auto'}
-    console.log $(window).width()
-    console.log (Math.floor(($(window).width() - $scope.containerPadding) / $scope.videoWidth) * $scope.videoWidth + $scope.containerPadding) + 'px'
     if newValue < 768
       $scope.isVertical = true
     else
