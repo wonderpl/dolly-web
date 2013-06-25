@@ -58,42 +58,49 @@ def set_channel_view_count(time_from=None, time_to=None):
     # For each channel, select the total number of users
     # who've made 1 or more actions on a channel per hour
     session = ChannelLocaleMeta.query.session
-    for locale in app.config['ENABLED_LOCALES']:
-        for object_type in ('video', 'channel', ):
-            ua = None
-            ids = {}
+    for object_type in ('video', 'channel', ):
+        ua = None
+        ids = {}
 
-            if object_type == 'video':
+        if object_type == 'video':
 
-                ua = UserActivity.query.session.query(
-                    VideoInstance.channel,
-                    func.count(distinct(UserActivity.user)),
-                    UserActivity.object_id
-                ).filter(
-                    VideoInstance.id == UserActivity.object_id
-                )
-
-            else:
-                ua = UserActivity.query.session.query(
-                    UserActivity.object_id,
-                    func.count(distinct(UserActivity.user)))
-
-            ua = ua.filter(
-                UserActivity.date_actioned > time_from
+            ua = UserActivity.query.session.query(
+                UserActivity.locale,
+                VideoInstance.channel,
+                func.count(distinct(UserActivity.user))
+            ).filter(
+                VideoInstance.id == UserActivity.object_id
             ).group_by(
+                UserActivity.locale,
+                VideoInstance.channel
+            )
+
+        else:
+            ua = UserActivity.query.session.query(
+                UserActivity.locale,
+                UserActivity.object_id,
+                func.count(distinct(UserActivity.user))
+            ).group_by(
+                UserActivity.locale,
                 UserActivity.object_id
             )
 
-            if not ua.count():
-                continue
+        ua = ua.filter(
+            UserActivity.date_actioned > time_from
+        )
 
-            for u in ua:
-                if u[1]:
-                    ids[u[0]] = u[1]
+        if not ua.count():
+            continue
 
-            channel_metas = ChannelLocaleMeta.query.filter(ChannelLocaleMeta.locale == locale, ChannelLocaleMeta.channel.in_(ids.keys()))
+        for u in ua:
+            loc, channel, val = u
+            ids.setdefault(loc, {}).setdefault(channel, 0)
+            ids[loc][channel] += val
+
+        for locale in ids.keys():
+            channel_metas = ChannelLocaleMeta.query.filter(ChannelLocaleMeta.locale == locale, ChannelLocaleMeta.channel.in_(ids[locale].keys()))
             for meta in channel_metas:
-                meta.view_count += ids[meta.channel]
+                meta.view_count += ids[locale][meta.channel]
                 session.add(meta)
 
 
