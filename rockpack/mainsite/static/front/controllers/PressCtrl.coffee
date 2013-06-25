@@ -1,7 +1,7 @@
 window.contentApp.controller('PressCtrl', ['$scope', ($scope) ->
 
-  $scope.categories = ["PRESS", "LOGOS & BRAND", "CONTACT"]
-  $scope.selectedChapter = "PRESS"
+  $scope.categories = ["PARTNERS", "PRESS", "LOGOS & BRAND", "CONTACT"]
+  $scope.selectedChapter = "PARTNERS"
 
   $scope.updateChapter = (chapter) ->
     $scope.selectedChapter = chapter
