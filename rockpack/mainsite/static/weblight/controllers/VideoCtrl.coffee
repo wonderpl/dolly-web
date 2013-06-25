@@ -41,11 +41,13 @@ window.Weblight.controller('VideoCtrl', ['$scope', '$rootScope', '$routeParams',
           videoId: $scope.videodata.video.source_id,
           playerVars: {
             autoplay: 1,
-            showinfo: 1,
+            showinfo: 0,
             modestbranding: 1,
             wmode: "opaque",
             controls: 1,
-
+            color: 'white',
+            rel: 0,
+            iv_load_policy: 3
           }
         })
 
