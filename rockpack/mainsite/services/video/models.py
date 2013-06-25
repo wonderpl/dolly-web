@@ -469,7 +469,7 @@ def _add_or_remove_channel(channel):
     previously_deleted = not previous_state('public', channel) or previous_state('deleted', channel) or not previous_state('visible', channel)
     now_deleted = not channel.public or not channel.visible or channel.deleted
     if not previously_deleted and now_deleted:
-        app.logger.info("Deleting channel '%s'.\nStacktrace\n%s" % (channel.id, ''.join(traceback.format_stack())))
+        app.logger.info("Deleting channel '%s'.\nStacktrace\n%s", channel.id, ''.join(traceback.format_stack()))
         _remove_es_channel(channel)
     elif channel_not_deleted(channel):
         _add_es_channel(channel)
