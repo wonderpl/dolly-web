@@ -1,14 +1,14 @@
 import time
 import logging
-from datetime import datetime
-from sqlalchemy import func, text, TIME
+from datetime import datetime, timedelta
+from sqlalchemy import func, text, TIME, distinct
 from rockpack.mainsite import app
 from rockpack.mainsite.manager import manager
 from rockpack.mainsite.core.dbapi import commit_on_success
 from rockpack.mainsite.core.youtube import batch_query, _parse_datetime
 from rockpack.mainsite.services.base.models import JobControl
-from rockpack.mainsite.services.user.models import Subscription
-from rockpack.mainsite.services.video.models import Channel, Video, VideoInstance, PlayerErrorReport
+from rockpack.mainsite.services.user.models import Subscription, UserActivity
+from rockpack.mainsite.services.video.models import Channel, ChannelLocaleMeta, Video, VideoInstance, PlayerErrorReport
 
 
 @commit_on_success
@@ -51,6 +51,73 @@ def set_subscription_update_frequency(time_from=None, time_to=None):
             Channel.subscriber_frequency: freq.as_scalar(),
             Channel.date_updated: Channel.date_updated,     # override column onupdate
         }, False)
+
+
+@commit_on_success
+def set_channel_view_count(time_from=None, time_to=None):
+    # For each channel, select the total number of users
+    # who've made 1 or more actions on a channel per hour
+    session = ChannelLocaleMeta.query.session
+    for object_type in ('video', 'channel', ):
+        ua = None
+        ids = {}
+
+        if object_type == 'video':
+
+            ua = UserActivity.query.session.query(
+                UserActivity.locale,
+                VideoInstance.channel,
+                func.count(distinct(UserActivity.user))
+            ).filter(
+                VideoInstance.id == UserActivity.object_id
+            ).group_by(
+                UserActivity.locale,
+                VideoInstance.channel
+            )
+
+        else:
+            ua = UserActivity.query.session.query(
+                UserActivity.locale,
+                UserActivity.object_id,
+                func.count(distinct(UserActivity.user))
+            ).group_by(
+                UserActivity.locale,
+                UserActivity.object_id
+            )
+
+        ua = ua.filter(
+            UserActivity.date_actioned > time_from
+        )
+
+        if not ua.count():
+            continue
+
+        for u in ua:
+            loc, channel, val = u
+            ids.setdefault(loc, {}).setdefault(channel, 0)
+            ids[loc][channel] += val
+
+        for locale in ids.keys():
+            channel_metas = ChannelLocaleMeta.query.filter(ChannelLocaleMeta.locale == locale, ChannelLocaleMeta.channel.in_(ids[locale].keys()))
+            for meta in channel_metas:
+                meta.view_count += ids[locale][meta.channel]
+                session.add(meta)
+
+
+@manager.cron_command
+def update_channel_view_counts():
+    """Update view counts for channel."""
+    JOB_NAME = 'update_channel_view_stats'
+    job_control = JobControl.query.get(JOB_NAME)
+    now = datetime.now()
+    if not job_control:
+        job_control = JobControl(job=JOB_NAME)
+        job_control.last_run = now - timedelta(hours=1)
+    logging.info('%s: from %s to %s', JOB_NAME, job_control.last_run, now)
+
+    set_channel_view_count(job_control.last_run)
+    job_control.last_run = now
+    job_control.save()
 
 
 @manager.cron_command

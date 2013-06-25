@@ -1,30 +1,96 @@
 import uuid
 import time
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 from urlparse import urlsplit
 from test import base
-from test.fixtures import RockpackCoverArtData, VideoInstanceData
+from test.fixtures import RockpackCoverArtData, VideoInstanceData, VideoData
 from test.test_helpers import get_auth_header
 from rockpack.mainsite import app
+from rockpack.mainsite.services.video.commands import set_channel_view_count
 from rockpack.mainsite.core.es import use_elasticsearch
 from rockpack.mainsite.core.es.api import ChannelSearch
 from rockpack.mainsite.services.video import models
+from rockpack.mainsite.services.user.models import UserActivity
 
 
-class ChannelPopularity(base.RockPackTestCase):
-    def test_channel_order(self):
+class ChannelViewCountPopulation(base.RockPackTestCase):
+
+    def test_populate(self):
+        """ Populate the view count on channel locale meta """
         with self.app.test_client() as client:
+            self.app.test_request_context().push()
             user = self.create_test_user()
+            user2_id = self.create_test_user().id
+            user3_id = self.create_test_user().id
+            user4_id = self.create_test_user().id
 
-            r = client.get(
-                '/ws/channels/',
+            begin = datetime.now() - timedelta(hours=2)
+
+            # test duplicate title
+            r = client.post(
+                '/ws/{}/channels/'.format(user.id),
+                data=json.dumps(dict(
+                    title='new title',
+                    description='test channel for user {}'.format(user.id),
+                    category=1,
+                    cover=RockpackCoverArtData.comic_cover.cover,
+                    public=True)
+                ),
                 content_type='application/json',
                 headers=[get_auth_header(user.id)]
             )
+            channel_id = json.loads(r.data)['id']
+            this_locale = 'en-us'
 
-            data = json.loads(r.data)
-            #self.assertEquals(data['channels']['items'][0]['title'], 'channel #6')
+            models.ChannelLocaleMeta(
+                    channel=channel_id,
+                    locale=this_locale,
+                    date_added=datetime.now()).save()
+
+            video_instance = models.VideoInstance(
+                    channel=channel_id,
+                    video=VideoData.video1.id).save()
+
+            UserActivity(
+                user=user2_id,
+                action='view',
+                date_actioned=datetime.now(),
+                object_type='channel',
+                object_id=channel_id,
+                locale=this_locale).save()
+
+
+            UserActivity(
+                user=user3_id,
+                action='view',
+                date_actioned=datetime.now(),
+                object_type='video',
+                object_id=video_instance.id,
+                locale=this_locale).save()
+
+            end = datetime.now()
+            set_channel_view_count(begin, end)
+
+            meta = models.ChannelLocaleMeta.query.filter(
+                    models.ChannelLocaleMeta.locale == this_locale,
+                    models.ChannelLocaleMeta.channel == channel_id).first()
+
+            self.assertEquals(meta.view_count, 2)
+            begin = datetime.now()
+
+            UserActivity(
+                user=user4_id,
+                action='view',
+                date_actioned=datetime.now(),
+                object_type='channel',
+                object_id=channel_id,
+                locale=this_locale).save()
+
+            end = datetime.now()
+            set_channel_view_count(begin, end)
+
+            self.assertEquals(meta.view_count, 3)
 
 
 from test.services.test_user_flows import BaseUserTestCase
