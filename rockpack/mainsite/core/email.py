@@ -1,5 +1,8 @@
 import boto
+from jinja2 import Environment, PackageLoader
 from rockpack.mainsite import app
+
+env = Environment(loader=PackageLoader('rockpack.mainsite', 'static/assets/emails'))
 
 
 def send_email(recipient, subject, body, format="text"):
