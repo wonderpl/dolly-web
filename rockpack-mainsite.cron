@@ -2,5 +2,6 @@ ROCKPACK_SETTINGS=/etc/rockpack/mainsite/config.py
 */5  * * * * rockpack-mainsite rockpack-mainsite-manage send_registration_emails
 */5  * * * * rockpack-mainsite rockpack-mainsite-manage update_user_notifications
 */15 * * * * rockpack-mainsite rockpack-mainsite-manage update_channel_stats
+*/15 * * * * rockpack-mainsite rockpack-mainsite-manage update_subscriber_stats
 */15 * * * * rockpack-mainsite rockpack-mainsite-manage refresh_pubsubhubbub_subscriptions
 */30 * * * * rockpack-mainsite rockpack-mainsite-manage check_video_player_errors
