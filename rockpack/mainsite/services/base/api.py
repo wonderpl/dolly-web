@@ -28,11 +28,11 @@ class BaseWS(WebService):
 
     endpoint = '/'
 
-    @expose_ajax('/', cache_age=60, secure=False)
+    @expose_ajax('/', cache_age=3600, secure=False)
     def discover(self):
         return _discover_response()
 
-    @expose_ajax('/', cache_age=60, cache_private=True, secure=True)
+    @expose_ajax('/', cache_age=3600, cache_private=True, secure=True)
     @check_authorization(abort_on_fail=False)
     def secure_discover(self):
         result = _discover_response()
