@@ -165,7 +165,7 @@ class VideoWS(WebService):
 
     endpoint = '/videos'
 
-    @expose_ajax('/', cache_age=300)
+    @expose_ajax('/', cache_age=3600)
     def video_list(self):
         if not use_elasticsearch():
             data, total = get_local_videos(self.get_locale(), self.get_page(), star_order=True, **request.args)
@@ -201,7 +201,7 @@ class ChannelWS(WebService):
 
     endpoint = '/channels'
 
-    @expose_ajax('/', cache_age=300)
+    @expose_ajax('/', cache_age=3600)
     def channel_list(self):
         if not use_elasticsearch():
             data, total = get_local_channel(

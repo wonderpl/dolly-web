@@ -1,5 +1,6 @@
 from flask import request, json, abort, Response
-import urllib2
+from urllib2 import HTTPError
+from requests.exceptions import RequestException
 from rockpack.mainsite import app
 from rockpack.mainsite.core.webservice import WebService, expose_ajax
 from rockpack.mainsite.core import youtube
@@ -20,7 +21,7 @@ class SearchWS(WebService):
     default_page_size = 10
     max_page_size = 50
 
-    @expose_ajax('/videos/', cache_age=300)
+    @expose_ajax('/videos/', cache_age=3600)
     def search_videos(self):
         """Search youtube videos."""
         order = 'published' if request.args.get('order') == 'latest' else None
@@ -28,17 +29,18 @@ class SearchWS(WebService):
         region = self.get_locale().split('-')[1]
 
         items = []
+        query = request.args.get('q', '')
         try:
-            result = youtube.search(request.args.get('q', ''), order, start, size,
+            result = youtube.search(query, order, start, size,
                                     region, request.remote_addr)
-        except urllib2.HTTPError as e:
-            app.logger.error('Error contacting YouTube: %s', str(e))
-
+        except (HTTPError, RequestException):
             if not app.config.get('ELASTICSEARCH_URL'):
-                raise Exception('Elasticsearch not configured')
+                raise
+
+            app.logger.exception('Error contacting YouTube: %s', query)
 
             vs = VideoSearch(self.get_locale())
-            vs.add_term('title', request.args.get('q', ''))
+            vs.add_term('title', query)
             start, size = self.get_page()
             vs.set_paging(offset=start, limit=size)
             for video in vs.videos():
@@ -50,6 +52,7 @@ class SearchWS(WebService):
                 del video['video']['view_count']
                 del video['date_added']
                 items.append(video)
+            total = vs.total
         else:
             for position, video in enumerate(result.videos, start):
                 items.append(
@@ -69,10 +72,11 @@ class SearchWS(WebService):
                         )
                     )
                 )
+            total = result.video_count
 
-        return {'videos': {'items': items, 'total': result.video_count}}
+        return {'videos': {'items': items, 'total': total}}
 
-    @expose_ajax('/channels/', cache_age=300)
+    @expose_ajax('/channels/', cache_age=900)
     def search_channels(self):
         if use_elasticsearch():
             ch = ChannelSearch(self.get_locale())
@@ -100,7 +104,7 @@ class CompleteWS(WebService):
 
     endpoint = '/complete'
 
-    @expose_ajax('/videos/', cache_age=3600)
+    @expose_ajax('/videos/', cache_age=86400)
     def complete_video_terms(self):
         # Client should hit youtube service directly because this service
         # is likely to be throttled by IP address
@@ -110,7 +114,7 @@ class CompleteWS(WebService):
         result = youtube.complete(query)
         return Response(result, mimetype='text/javascript')
 
-    @expose_ajax('/channels/', cache_age=3600)
+    @expose_ajax('/channels/', cache_age=86400)
     def complete_channel_terms(self):
         # Use same javascript format as google complete for the sake of
         # consistency with /complete/videos

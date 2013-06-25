@@ -367,7 +367,7 @@ class UserWS(WebService):
 
     endpoint = '/'
 
-    @expose_ajax('/<userid>/', cache_age=60, secure=False)
+    @expose_ajax('/<userid>/', cache_age=600, secure=False)
     def user_info(self, userid):
         if use_elasticsearch():
             ows = api.OwnerSearch()
@@ -580,7 +580,7 @@ class UserWS(WebService):
             public=form.public.data)
         return ajax_create_response(channel)
 
-    @expose_ajax('/<userid>/channels/<channelid>/', cache_age=60, secure=False)
+    @expose_ajax('/<userid>/channels/<channelid>/', cache_age=600, secure=False)
     def channel_info(self, userid, channelid):
         if use_elasticsearch():
             ch = api.ChannelSearch(self.get_locale())
@@ -655,7 +655,7 @@ class UserWS(WebService):
             channel = channel.save()
         return channel.public
 
-    @expose_ajax('/<userid>/channels/<channelid>/videos/', cache_age=60, secure=False)
+    @expose_ajax('/<userid>/channels/<channelid>/videos/', cache_age=600, secure=False)
     def channel_videos(self, userid, channelid):
         if use_elasticsearch():
             vs = api.VideoSearch(self.get_locale())
@@ -703,7 +703,7 @@ class UserWS(WebService):
         instance = VideoInstance.query.filter_by(id=videoid, channel=channelid).first_or_404()
         return video_api.video_dict(instance)
 
-    @expose_ajax('/<userid>/channels/<channelid>/subscribers/', cache_age=60)
+    @expose_ajax('/<userid>/channels/<channelid>/subscribers/', cache_age=600)
     def channel_subscribers(self, userid, channelid):
         items, total = _user_list(self.get_page(), subscribed_to=channelid)
         return dict(users=dict(items=items, total=total))
