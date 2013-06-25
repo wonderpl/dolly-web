@@ -51,6 +51,8 @@ class BaseTransaction(object):
         headers.append(('Host', parsed_url.netloc))
         if token:
             headers.append(('Authorization', 'Bearer %s' % token))
+        if 'secure' in parsed_url.hostname:
+            headers.append(('X-Forwarded-Proto', 'https'))
         start = time.time()
         response = requests.request(method, url, params=params, data=data, headers=headers)
         service_name = method.upper() + '-' +\
