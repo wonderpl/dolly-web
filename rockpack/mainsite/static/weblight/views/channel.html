@@ -18,7 +18,6 @@
   <div id="channeloverlay" when-scrolled="load_videos()">
     <div ng-include src="'videoplayer.html'"></div>
     <div ng-style="windowWidth" id="channelcontainer">
-      <h1 id="videoheader" class="hidden-phone">Videos</h1>
       <div id="videoslist" infinite-scroll='load_videos()' infinite-scroll-distance='1'>
         <div ng-click="setCurrentVideo(video)" ng-repeat="video in channel.videos.items" video-cell></div>
       </div>

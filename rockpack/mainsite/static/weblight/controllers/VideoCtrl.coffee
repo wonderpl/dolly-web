@@ -44,7 +44,8 @@ window.Weblight.controller('VideoCtrl', ['$scope', '$rootScope', '$routeParams',
             showinfo: 1,
             modestbranding: 1,
             wmode: "opaque",
-            controls: 1
+            controls: 1,
+
           }
         })
 

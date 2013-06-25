@@ -11,11 +11,10 @@
       <ul>
         <li id="channelthumb" class="hidden-phone"><img ng-src="((channel.owner.avatar))"></li>
         <li>
-          <div id="channeltitle">((channel.title))</div>
-          <div id="username" class="hidden-phone">((channel.owner.name))</div>
+          <div id="channeltitle">((channel.owner.display_name))</div>
         </li>
-        <li class="right hidden-phone" style="margin-right:25px">
-          <a href="((full_path))#" class="btn btn-blue getappbtn">Get the app</a>
+        <li class="right hidden-phone">
+          <span class="curatedwith">Curated With</span><a href="((full_path))" class="smallogo"><img ng-src="((assets_url))/assets/weblight/images/logo.png"></a><a href="((full_path))#" class="btn btn-blue getappbtn">Get the app</a>
         </li>
       </ul>
       <div id="closeplayermobile" class="visible-phone">
