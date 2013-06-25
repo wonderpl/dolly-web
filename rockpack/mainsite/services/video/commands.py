@@ -1,9 +1,12 @@
 import time
 import logging
 from datetime import datetime, timedelta
-from sqlalchemy import func, text, TIME, distinct
+import pyes
+from sqlalchemy import func, text, TIME, distinct, or_
 from rockpack.mainsite import app
 from rockpack.mainsite.manager import manager
+from rockpack.mainsite.core.es import mappings
+from rockpack.mainsite.core.es import es_connection
 from rockpack.mainsite.core.dbapi import commit_on_success
 from rockpack.mainsite.core.youtube import batch_query, _parse_datetime
 from rockpack.mainsite.services.base.models import JobControl
@@ -210,3 +213,26 @@ def get_youtube_video_data(video_qs, start):
         Video.query.session.commit()
         if len(videos) == 50:
             time.sleep(60)
+
+
+@manager.command
+def sanitise_es():
+    """ Delete channels from ES that shouldn't be present """
+    channels = Channel.query.filter(
+        or_(
+            Channel.public == False,
+            Channel.visible == False,
+            Channel.deleted == True)
+        )
+
+    print 'Checking {} DELETED channels ...'.format(channels.count())
+    count = 0
+    for channel in channels.yield_per(6000).values('id'):
+        try:
+         es_connection.delete(mappings.CHANNEL_INDEX, mappings.CHANNEL_TYPE, channel[0])
+        except pyes.exceptions.NotFoundException:
+            pass
+        else:
+            count += 1
+
+    print 'Finished. {} channels had to be deleted'.format(count)

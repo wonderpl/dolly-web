@@ -21,7 +21,7 @@ class SearchWS(WebService):
     default_page_size = 10
     max_page_size = 50
 
-    @expose_ajax('/videos/', cache_age=300)
+    @expose_ajax('/videos/', cache_age=3600)
     def search_videos(self):
         """Search youtube videos."""
         order = 'published' if request.args.get('order') == 'latest' else None
@@ -76,7 +76,7 @@ class SearchWS(WebService):
 
         return {'videos': {'items': items, 'total': total}}
 
-    @expose_ajax('/channels/', cache_age=300)
+    @expose_ajax('/channels/', cache_age=900)
     def search_channels(self):
         if use_elasticsearch():
             ch = ChannelSearch(self.get_locale())
@@ -104,7 +104,7 @@ class CompleteWS(WebService):
 
     endpoint = '/complete'
 
-    @expose_ajax('/videos/', cache_age=3600)
+    @expose_ajax('/videos/', cache_age=86400)
     def complete_video_terms(self):
         # Client should hit youtube service directly because this service
         # is likely to be throttled by IP address
@@ -114,7 +114,7 @@ class CompleteWS(WebService):
         result = youtube.complete(query)
         return Response(result, mimetype='text/javascript')
 
-    @expose_ajax('/channels/', cache_age=3600)
+    @expose_ajax('/channels/', cache_age=86400)
     def complete_channel_terms(self):
         # Use same javascript format as google complete for the sake of
         # consistency with /complete/videos
