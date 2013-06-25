@@ -311,15 +311,6 @@ a:link, a:visited, div a {
               <!-- // Begin Module: Standard Preheader \ -->
               <table border="0" cellpadding="10" cellspacing="0" width="100%">
                 <tr>
-                  <!-- *|IFNOT:ARCHIVE_PAGE|* -->
-                  <td valign="top" width="190">
-                    <div>
-                      <center>Is this email not displaying correctly? <a href="http://rockpack.com/welcome_email" target="_blank">View it in your browser</a>.</center>
-                    </div>
-                  </td>
-                  <!-- *|END:IF|* -->
-                </tr>
-                <tr>
                   <td>
                     <center><img src="{{ assets }}/assets/emails/images/logo.png"></center>
                   </td>
@@ -340,7 +331,7 @@ a:link, a:visited, div a {
                   <td class="headerContent">
                     <br /><br />
                     Hi {{ username }},<br />                     
-                    <p><a href="{{reset_link}}">Click</a> here to reset your password. This link will expire in 24 hours. </p>
+                    <p><a href="{{ reset_link }}">Click here</a> to reset your password. This link will expire in 24 hours. </p>
                     <p>Thanks!</p>
 
                     <p>The Rockpack Team</p>

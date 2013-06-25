@@ -9,7 +9,7 @@ from rockpack.mainsite.helpers.forms import naughty_word_validator
 from rockpack.mainsite.helpers.db import get_column_property, get_column_validators
 from rockpack.mainsite.helpers.urls import url_for
 from rockpack.mainsite.core.token import create_access_token
-from rockpack.mainsite.core.email import send_email
+from rockpack.mainsite.core.email import send_email, env as email_env
 from rockpack.mainsite.core.oauth.decorators import check_client_authorization
 from rockpack.mainsite.core.webservice import WebService, expose_ajax
 from rockpack.mainsite.services.user.models import User, UserAccountEvent, username_exists, GENDERS
@@ -286,16 +286,19 @@ class TokenWS(WebService):
 
 
 def send_password_reset(user):
-    token = create_access_token(user.id, '', 3600)
+    token = create_access_token(user.id, '', 86400)
     url = url_for('reset_password') + '?token=' + token
-    message = '''
-        Click here to reset your password:
-        %s
-
-        This link will expire in 1 hour
-    ''' % (url,)
-    subject = 'rockpack password reset'
-    send_email(user.email, subject, message)
+    template = email_env.get_template('reset.html')
+    subject = 'Rockpack password reset'
+    body = template.render(
+        reset_link=url,
+        subject=subject,
+        username=user.username,
+        email=user.email,
+        email_sender=app.config['DEFAULT_EMAIL_SOURCE'],
+        assets=app.config.get('ASSETS_URL', '')
+    )
+    send_email(user.email, subject, body, format='html')
 
 
 class ResetWS(WebService):

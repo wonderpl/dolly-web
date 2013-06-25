@@ -3,7 +3,6 @@ from datetime import datetime, timedelta
 from flask import json
 from sqlalchemy import func
 from sqlalchemy.orm import joinedload
-from jinja2 import Environment, PackageLoader
 from rockpack.mainsite import app
 from rockpack.mainsite.manager import manager
 from rockpack.mainsite.core.dbapi import commit_on_success
@@ -87,11 +86,6 @@ def create_new_notifications(date_from=None, date_to=None):
                     ))
 
 
-env = Environment(loader=PackageLoader('rockpack.mainsite', 'static/assets/emails'))
-
-WELCOME_EMAIL_SUBJECT = 'Welcome to Rockpack'
-
-
 def create_registration_emails(date_from=None, date_to=None):
     registration_window = User.query.filter(User.email != '')
     if date_from:
@@ -99,17 +93,18 @@ def create_registration_emails(date_from=None, date_to=None):
     if date_to:
         registration_window = registration_window.filter(User.date_joined < date_to)
 
-    template = env.get_template('welcome.html')
+    subject = 'Welcome to Rockpack'
+    template = email.env.get_template('welcome.html')
     for user in registration_window:
         try:
             body = template.render(
-                subject=WELCOME_EMAIL_SUBJECT,
+                subject=subject,
                 username=user.username,
                 email=user.email,
                 email_sender=app.config['DEFAULT_EMAIL_SOURCE'],
                 assets=app.config.get('ASSETS_URL', '')
             )
-            email.send_email(user.email, WELCOME_EMAIL_SUBJECT, body, format='html')
+            email.send_email(user.email, subject, body, format='html')
         except Exception as e:
             app.logger.error("Problem sending registration email for user.id '%s': %s", user.id, str(e))
 
