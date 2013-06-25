@@ -38,7 +38,7 @@ class S3Uploader(object):
 
     def put_from_file(self, fp, key_name,
                       acl='public-read', replace=False, headers=None):
-        app.logger.debug('putting key {}'.format(key_name))
+        app.logger.debug('putting key %s', key_name)
         fp.seek(0)
         new_file = self.bucket.new_key(key_name)
         new_file.set_contents_from_file(fp, policy=acl, replace=replace, headers=headers)
