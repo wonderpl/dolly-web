@@ -4,8 +4,16 @@
     <meta charset="utf-8">
     {%- with %}
     {% set title_prefix = '"%s" on ' % selected_video.title if selected_video else '' %}
-    {% set title = '%s"%s" a Rockpack channel by %s' % (title_prefix, channel_data.title, channel_data.owner.display_name) -%}
+    {% set title = '%s"%s" channel on Rockpack' % (title_prefix, channel_data.title) -%}
     <title>{{ title }}</title>
+
+    {% if selected_video %}
+      {% set description = 'Video curated by %s in channel %s using Rockpack iOS app' % (channel_data.owner.display_name, channel_data.title) %}
+    {% else %}
+      {% set description = 'Watch %s videos curated by %s using Rockpack iOS app' % (channel_data.owner.display_name, channel_data.title) %}
+    {% endif %}
+    <meta name="description" content="{{description}}">
+
     <meta property="fb:app_id" content="{{ config.FACEBOOK_APP_ID }}" />
     <meta property="og:site_name" content="Rockpack" />
     <meta property="og:url" content="{{ channel_data.canonical_url }}" />
