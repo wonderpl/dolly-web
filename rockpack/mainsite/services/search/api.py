@@ -32,7 +32,7 @@ class SearchWS(WebService):
             result = youtube.search(request.args.get('q', ''), order, start, size,
                                     region, request.remote_addr)
         except urllib2.HTTPError as e:
-            app.logger.error('Error contacting YouTube: {}'.format(e))
+            app.logger.error('Error contacting YouTube: %s', str(e))
 
             if not app.config.get('ELASTICSEARCH_URL'):
                 raise Exception('Elasticsearch not configured')

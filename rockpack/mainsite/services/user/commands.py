@@ -111,7 +111,7 @@ def create_registration_emails(date_from=None, date_to=None):
             )
             email.send_email(user.email, WELCOME_EMAIL_SUBJECT, body, format='html')
         except Exception as e:
-            app.logger.error("Problem sending registration email for user.id '{}': {}".format(user.id, str(e)))
+            app.logger.error("Problem sending registration email for user.id '%s': %s", user.id, str(e))
 
 
 @commit_on_success

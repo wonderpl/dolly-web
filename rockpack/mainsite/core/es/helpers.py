@@ -31,13 +31,13 @@ class Indexing(object):
         }
 
     def delete_index(self, index):
-        app.logger.debug('deleting {} index {}'.format(index, self.indexes[index]['index']))
+        app.logger.debug('deleting %s index %s', index, self.indexes[index]['index'])
         self.conn.indices.delete_index_if_exists(self.indexes[index]['index'])
 
     def create_index(self, index, rebuild=False):
         if rebuild:
             self.delete_index(index)
-        app.logger.debug('creating {} index {}'.format(index, self.indexes[index]['index']))
+        app.logger.debug('creating %s index %s', index, self.indexes[index]['index'])
         self.conn.indices.create_index(self.indexes[index]['index'])
 
     def create_all_indexes(self, rebuild=False):
