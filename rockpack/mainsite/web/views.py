@@ -146,9 +146,9 @@ def reset_password():
 
 @app.route('/status/', subdomain='<sub>')
 def status(sub):
-    # TODO: some internal checks
-    es = pyes.ES(app.config.get('ELASTICSEARCH_URL'))
-    assert es.status()['ok']
+    es_url = app.config.get('ELASTICSEARCH_URL')
+    if es_url:
+        assert pyes.ES(es_url).status()['ok']
     return 'OK', 200, [('Content-Type', 'text/plain')]
 
 
