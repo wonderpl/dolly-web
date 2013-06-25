@@ -163,7 +163,7 @@ def server_error(error):
 
 
 def handle_error(code, error, template):
-    message = getattr(error, 'message', str(error))
+    message = str(getattr(error, 'message', error))
     if request.path.startswith('/ws/'):
         return JsonReponse(dict(error=HTTP_STATUS_CODES[code], message=message), code)
     else:
