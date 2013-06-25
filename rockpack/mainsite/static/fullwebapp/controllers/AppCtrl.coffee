@@ -5,8 +5,10 @@ window.WebApp.controller('AppCtrl', ['$rootScope', '$location', 'UserManager', '
   routesThatRequireAuth = ['/profile', '/feed']
 
   $rootScope.$on("$locationChangeStart", (event, NewUrl, OldUrl) ->
+
     if (UserManager.isLoggedIn == false)
       if (UserManager.credentials.refresh_token?)
+        console.log 'in'
         event.preventDefault()
         UserManager.refreshToken()
           .success((data) ->

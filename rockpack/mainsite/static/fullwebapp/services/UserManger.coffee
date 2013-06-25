@@ -48,14 +48,13 @@ window.WebApp.factory('UserManager', ['cookies', '$http', '$q', '$location','api
         headers: headers
       })
         .success((data) =>
-          @isLoggedIn = true
-          @credentials = data
-          User.FetchUserData()
-          User.FetchSubscriptions()
-          @TriggerRefresh(data.expires_in*0.9*1000, data.refresh_token)
           cookies.set("access_token", data.access_token, data.expires)
           cookies.set("refresh_token", data.refresh_token, 2678400)
           cookies.set("user_id", data.user_id, 2678400)
+          @isLoggedIn = true
+          @credentials = data
+          User.FetchUserData()
+          @TriggerRefresh(data.expires_in*0.9*1000, data.refresh_token)
         )
         .error((data) =>
           console.log data
@@ -87,6 +86,7 @@ window.WebApp.factory('UserManager', ['cookies', '$http', '$q', '$location','api
       })
       .success((data) ->
         User.details = data
+        User.FetchSubscriptions()
       )
       .error((data) =>
         console.log data

@@ -1,4 +1,5 @@
-<img class="videocell" ng-src="{{video.video.thumbnail_url}}">
+<img ng-src="{{video.video.thumbnail_url}}">
 <div class="videocelltitle">
   {{video.title | truncate: videoCellTitleLength}}
 </div>
+<div class="addToChannel" ng-click="addToChannel(video.video.id)" ng-hide="User.isLoggedIn == false"></div>

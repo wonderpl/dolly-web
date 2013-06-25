@@ -1,7 +1,7 @@
-window.WebApp.controller('ChannelCtrl', ['$scope', '$routeParams', '$rootScope', '$location', 'ContentService', '$dialog', ($scope, $routeParams, $rootScope, $location, ContentService, $dialog) ->
+window.WebApp.controller('ChannelCtrl', ['$scope', '$routeParams', '$rootScope', '$location', 'ContentService', '$dialog', 'UserManager', ($scope, $routeParams, $rootScope, $location, ContentService, $dialog, UserManager) ->
 
   $scope.page = 0
-
+  $scope.User = UserManager
   $scope.channel = null
 
   $scope.load_videos = =>
@@ -30,5 +30,8 @@ window.WebApp.controller('ChannelCtrl', ['$scope', '$routeParams', '$rootScope',
         $location.search( 'video', null )
       )
   )
+
+  $addToChannel = () ->
+
 
 ])

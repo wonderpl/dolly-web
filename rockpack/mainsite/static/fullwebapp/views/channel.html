@@ -20,7 +20,7 @@
     <div ng-style="windowWidth" id="channelcontainer">
       <h1 id="videoheader" class="hidden-phone">Videos</h1>
       <div id="videoslist" infinite-scroll='load_videos()' infinite-scroll-distance='1'>
-        <div ng-click="setCurrentVideo(video)" ng-repeat="video in channel.videos.items">
+        <div ng-click="setCurrentVideo(video)" ng-repeat="video in channel.videos.items" class="video">
           <div ng-include src="'videoCell.html'" ></div>
         </div>
       </div>
