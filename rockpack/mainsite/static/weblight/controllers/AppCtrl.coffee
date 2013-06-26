@@ -39,6 +39,4 @@ window.Weblight.controller('AppCtrl', ['$routeParams', 'isMobile', '$scope', '$l
     ga('send', 'pageview')
 
   $scope.assets_url = assets_url
-  $scope.full_path = window.full_path
-
 ])
