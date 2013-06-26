@@ -31,7 +31,9 @@ window.WebApp.controller('ChannelCtrl', ['$scope', '$routeParams', '$rootScope',
       )
   )
 
-  $addToChannel = () ->
-
-
+  $scope.addToChannel = (videoId) ->
+    d = $dialog.dialog({resolve: () ->
+      return videoId
+    })
+    d.open('addtochannel.html')
 ])

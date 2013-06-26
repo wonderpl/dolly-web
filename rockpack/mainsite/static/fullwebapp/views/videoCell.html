@@ -1,4 +1,4 @@
-<img ng-src="{{video.video.thumbnail_url}}">
+<img ng-src="{{video.video.thumbnail_url}}" ng-click="setCurrentVideo(video)" >
 <div class="videocelltitle">
   {{video.title | truncate: videoCellTitleLength}}
 </div>

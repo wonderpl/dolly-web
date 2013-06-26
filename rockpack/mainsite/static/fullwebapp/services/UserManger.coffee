@@ -175,6 +175,20 @@ window.WebApp.factory('UserManager', ['cookies', '$http', '$q', '$location','api
           console.log data
         )
 
+#    addVideo: (videoID) ->
+#      $http({
+#        method: 'POST',
+#        data: [["youtube", videoID]],
+#        url: "#{resourceUrl}videos/",
+#        headers: {"authorization": "Bearer #{bearerToken}", "Content-Type": "application/json; charset=UTF-8"},
+#      })
+#        .then(((data) ->
+#        return data.data
+#        ),
+#        (data) ->
+#        return data
+#        )
+
 
     logOut: () ->
       cookies.set('access_token', '')
