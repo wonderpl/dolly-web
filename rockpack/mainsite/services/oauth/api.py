@@ -201,8 +201,13 @@ class ExternalUser:
     @property
     def gender(self):
         if 'gender' in self._user_data:
-            return self._user_data['gender'][0]
-        return ''
+            try:
+                g = self._user_data['gender'].strip()[0]
+            except IndexError:
+                pass
+            else:
+                if g.lower() in ('m', 'f'):
+                    return g
 
     @property
     def dob(self):

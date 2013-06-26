@@ -272,6 +272,31 @@ class RegisterTestCase(base.RockPackTestCase):
             self.assertEquals(400, r.status_code)
             self.assertEquals('unauthorized_client', error['error'])
 
+    @patch('rockpack.mainsite.services.oauth.api.ExternalUser.get_new_token')
+    @patch('rockpack.mainsite.services.oauth.api.ExternalUser._get_external_data')
+    def test_registration_gender(self, _get_external_data, get_new_token):
+        data = FACEBOOK_GRAPH_DATA.copy()
+        data['gender'] = ''
+        _get_external_data.return_value = data
+
+        from rockpack.mainsite.services.oauth.api import ExternalUser
+        long_lived_fb_token = 'fdsuioncf3w8ryl38yb7yfsfsdfsd4eius'
+        get_new_token.return_value = ExternalUser('facebook', token=long_lived_fb_token, expires_in=3600)
+
+        with self.app.test_client() as client:
+            facebook_token = uuid.uuid4().hex
+            r = client.post(
+                '/ws/login/external/',
+                headers=[get_client_auth_header()],
+                data=dict(
+                    external_system='facebook',
+                    external_token=facebook_token
+                )
+            )
+            creds = json.loads(r.data)
+            self.assertEquals(200, r.status_code)
+            self.assertNotEquals(None, creds['refresh_token'])
+
     @patch('rockpack.mainsite.services.oauth.api.ExternalUser._get_external_data')
     def test_invalid_external_system(self, _get_external_data):
         _get_external_data.return_value = FACEBOOK_GRAPH_DATA
