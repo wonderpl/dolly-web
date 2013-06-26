@@ -26,6 +26,7 @@ def ws_request(url, **kwargs):
         # Make local in-process request at top of WSGI stack
         env = request.environ.copy()
         env['PATH_INFO'] = url
+        env['REQUEST_METHOD'] = 'GET'
         env['QUERY_STRING'] = urlencode(kwargs)
         if 'API_SUBDOMAIN' in app.config:
             env['HTTP_HOST'] = '.'.join((app.config['API_SUBDOMAIN'], app.config['SERVER_NAME']))
