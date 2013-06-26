@@ -537,7 +537,7 @@ def remove_channel_from_index(channel_id):
     try:
         es_connection.delete(mappings.CHANNEL_INDEX, mappings.CHANNEL_TYPE, channel_id)
     except pyes.exceptions.NotFoundException:
-        logger.warning("NotFoundException: Failed to remove channel '{}' from index", channel_id)
+        logger.warning("NotFoundException: Failed to remove channel '%s' from index", channel_id)
 
 
 def remove_video_from_index(video_id):
