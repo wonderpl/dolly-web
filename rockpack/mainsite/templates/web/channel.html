@@ -72,7 +72,7 @@
       var channel_data = {{ channel_data|tojson|safe }},
           assets_url = '{{config.ASSETS_URL}}',
           selected_video = {{selected_video|tojson|safe}},
-          full_path = '{{full_site}}';
+          full_path = '/';
     </script>
 
     {% assets filters="rjsmin", output="gen/lib.%(version)s.js",

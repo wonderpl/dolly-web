@@ -36,26 +36,12 @@ def ws_request(url, **kwargs):
     return json.loads(response)
 
 
-if app.config.get('PRE_LAUNCH'):
-    prelaunch_path = '/'
-    postlaunch_path = '/earlyaccess'
-else:
-    prelaunch_path = '/prelaunch'
-    postlaunch_path = '/'
-
-
-@expose_web(prelaunch_path, 'web/temp_landing.html', cache_age=3600)
-def prelaunch_homepage():
-    injectorUrl = url_for('injector')
-    return dict(injectorUrl=injectorUrl)
-
-
 @expose_web('/welcome_email', 'web/welcome_email.html', cache_age=3600)
 def welcome_email():
     return None
 
 
-@expose_web(postlaunch_path, 'web/home.html', cache_age=3600)
+@expose_web('/', 'web/home.html', cache_age=3600)
 def homepage():
     injectorUrl = url_for('injector')
     return dict(injectorUrl=injectorUrl)
@@ -74,17 +60,17 @@ def injector():
 
 @expose_web('/tos', 'web/terms.html', cache_age=3600)
 def terms():
-    return dict(full_site=postlaunch_path)
+    return {}
 
 
 @expose_web('/cookies', 'web/cookies.html', cache_age=3600)
 def cookies():
-    return dict(full_site=postlaunch_path)
+    return {}
 
 
 @expose_web('/privacy', 'web/privacy.html', cache_age=3600)
 def privacy():
-    return dict(full_site=postlaunch_path)
+    return {}
 
 
 @expose_web('/channel/<slug>/<channelid>/', 'web/channel.html', cache_age=3600)
@@ -109,7 +95,7 @@ def channel(slug, channelid):
         'channel', slug=slugify(channel_data['title']) or '-', channelid=channelid)
     if selected_video:
         channel_data['canonical_url'] += '?video=' + selected_video['id']
-    return dict(channel_data=channel_data, selected_video=selected_video, full_site=postlaunch_path)
+    return dict(channel_data=channel_data, selected_video=selected_video)
 
 
 @expose_web('/s/<linkid>', cache_age=60, cache_private=True)
