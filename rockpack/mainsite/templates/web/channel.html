@@ -45,11 +45,7 @@
     <link rel="canonical" href="{{ channel_data.canonical_url }}" />
 
     <!--[if lt IE 9]>
-      <link rel="stylesheet" type="text/css" href="ie.css" />
-    <![endif]-->
-
-    <!--[if lt IE 9]>
-      <script src="vendor/js-no-compile/html5.js"></script>
+      <script src="{{config.ASSETS_URL}}/assets/vendor/js-no-compile/html5.js"></script>
       <style type="text/css">
         .gradient {
           filter: none;
@@ -66,7 +62,7 @@
         document.createElement('ng:pluralize');
         document.createElement('ng:view');
       </script>
-      <script src="vendor/js-no-compile/json2.js"></script>
+      <script src="{{config.ASSETS_URL}}/assets/vendor/js-no-compile/json2.js"></script>
     <![endif]-->
 
     <script type="text/javascript">
