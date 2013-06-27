@@ -1,10 +1,62 @@
 @import "mixins.less";
 
+body {
+  background: #f1f1f1;
+}
+
 #header {
 
-  div {
-    display: inline-block;
+  height: 60px;
+  line-height: 60px;
+  border-bottom: 2px solid #dfdfdf;
+
+
+  #topmenu {
+
+    &>div {
+      float: left;
+      font-family: "dn-bold", helvetica;
+      font-size: 17px;
+      border-right: 2px solid #dfdfdf;
+      text-align: center;
+      min-width: 120px;
+      margin: 0;
+      padding: 0;
+
+      &:hover, &:active {
+        background: #ededed;
+      }
+
+      &:first-child {
+        border-right: none;
+      }
+    }
+
+    .login {
+      float: right;
+      border-right: none;
+
+      &:hover {
+        background: none;
+      }
+
+      a {
+        color : #0ba6ab;
+      }
+
+    }
   }
+
+  a {
+    color: #282d33;
+
+    &:hover, &:active {
+      text-decoration: none;
+    }
+
+  }
+
+
 }
 
 .wrapper {
