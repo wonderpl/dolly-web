@@ -153,7 +153,7 @@ def update_subscriber_stats():
     job_control.save()
 
 
-@manager.command
+@manager.cron_command
 def check_video_player_errors():
     """Scan player error records and check that videos are still available."""
     JOB_NAME = 'check_video_player_errors'
