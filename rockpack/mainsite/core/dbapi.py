@@ -96,18 +96,24 @@ class _Model(sqlalchemy.Model):
         return merged
 
 
-
 sqlalchemy.Model = _Model
+
 db = get_sessionmanager()
 
 
 def get_slave_session():
     url = app.config.get('SLAVE_DATABASE_URL', None)
     if url:
-        return scoped_session(sessionmaker(bind=create_engine(url), autoflush=True))
+        return scoped_session(sessionmaker(bind=create_engine(url), autoflush=False))
 
 
 readonly_session = get_slave_session() or db.session
+
+
+@app.teardown_appcontext
+def remove_readonly(response):
+    readonly_session.remove()
+    return response
 
 
 @app.before_request
