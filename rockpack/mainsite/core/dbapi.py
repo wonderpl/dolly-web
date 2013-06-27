@@ -3,6 +3,7 @@ import psycopg2
 from functools import wraps
 
 from sqlalchemy import create_engine, schema
+from sqlalchemy.orm import sessionmaker, scoped_session
 from sqlalchemy.exc import StatementError
 from werkzeug.exceptions import HTTPException
 from flask.ext import sqlalchemy
@@ -95,8 +96,18 @@ class _Model(sqlalchemy.Model):
         return merged
 
 
+
 sqlalchemy.Model = _Model
 db = get_sessionmanager()
+
+
+def get_slave_session():
+    url = app.config.get('SLAVE_DATABASE_URL', None)
+    if url:
+        return scoped_session(sessionmaker(bind=create_engine(url), autoflush=True))
+
+
+readonly_session = get_slave_session() or db.session
 
 
 @app.before_request

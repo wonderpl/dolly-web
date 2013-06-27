@@ -796,7 +796,7 @@ class UserWS(WebService):
             filter_by(public=True, deleted=False).values('channel')]
         if channels:
             items, total = video_api.get_local_videos(self.get_locale(), self.get_page(),
-                                                      date_order=True, channels=channels)
+                                                      date_order=True, channels=channels, readonly_db=True)
         else:
             items, total = [], 0
         return dict(videos=dict(items=items, total=total))

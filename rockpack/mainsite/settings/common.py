@@ -12,6 +12,7 @@ except pkg_resources.DistributionNotFound:
 FORCE_INDEX_INSERT_REFRESH = False  # used by elasticsearch
 
 DATABASE_URL = ''  # e.g. postgresql://foo:bar@localhost:5432/rockpack
+SLAVE_DATABASE_URL = ''
 
 AWS_ACCESS_KEY = None
 AWS_SECRET_KEY = None

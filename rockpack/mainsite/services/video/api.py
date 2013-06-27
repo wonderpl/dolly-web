@@ -4,7 +4,7 @@ from collections import defaultdict
 from sqlalchemy.orm import contains_eager, lazyload, joinedload
 from sqlalchemy.sql.expression import desc
 from rockpack.mainsite import app
-from rockpack.mainsite.core.dbapi import commit_on_success
+from rockpack.mainsite.core.dbapi import readonly_session, db, commit_on_success
 from rockpack.mainsite.core.webservice import WebService, expose_ajax
 from rockpack.mainsite.core.oauth.decorators import check_authorization
 from rockpack.mainsite.core.es import use_elasticsearch, filters
@@ -102,8 +102,13 @@ def video_dict(instance):
     )
 
 
-def get_local_videos(loc, paging, with_channel=True, include_invisible=False, **filters):
-    videos = models.VideoInstance.query.join(
+def get_local_videos(loc, paging, with_channel=True, include_invisible=False, readonly_db=False, **filters):
+    if readonly_db:
+        videos = readonly_session.query(models.VideoInstance)
+    else:
+        videos = db.session.query(models.VideoInstance)
+
+    videos = videos.join(
         models.Video, models.Video.id == models.VideoInstance.video).\
         options(contains_eager(models.VideoInstance.video_rel))
     if include_invisible is False:
