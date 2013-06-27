@@ -521,9 +521,11 @@ class UserWS(WebService):
                             form.action.data,
                             form.video_instance.data,
                             self.get_locale())
-        channelid = VideoInstance.query.filter_by(id=form.video_instance.data).value('channel')
-        if channelid:
-            save_channel_activity(userid, form.action.data, channelid, self.get_locale())
+        # XXX: For now don't propogate activity to channel.
+        # Saves db load and also there's the new set_channel_view_count cron command
+        #channelid = VideoInstance.query.filter_by(id=form.video_instance.data).value('channel')
+        #if channelid:
+        #    save_channel_activity(userid, form.action.data, channelid, self.get_locale())
 
     @expose_ajax('/<userid>/notifications/', cache_age=60, cache_private=True)
     @check_authorization(self_auth=True)
