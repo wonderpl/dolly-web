@@ -10,9 +10,13 @@
       </ul>
     </li>
   </ul>
-  <div class="content" infinite-scroll="load_channels()" infinite-scroll-distance="1">
-    <div  ng-repeat="channel in channels">
-      <a href="/#channel/{{channel.owner.id}}/{{channel.id}}"><img ng-src="{{channel.cover.thumbnail_url}}"></a>
+  <div infinite-scroll="load_channels()" infinite-scroll-distance="1" id="channels">
+    <div  ng-repeat="channel in channels" class="channel">
+      <a href="/#channel/{{channel.owner.id}}/{{channel.id}}">
+        <img ng-src="{{channel.cover.thumbnail_url}}">
+        <div class="channelTitle">{{channel.title | truncate: 25}}</div>
+        <div class="channelOwnerTitle">{{channel.owner.display_name}}</div>
+      </a>
     </div>
   </div>
 </div>

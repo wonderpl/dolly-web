@@ -9,16 +9,17 @@ window.WebApp.controller('ChannelsCtrl', ['$scope', 'cookies', 'ContentService',
   }
 
   $scope.load_channels = () ->
+
     if $scope.totalChannels > $scope.pagination || $scope.pagination  == 0
       ContentService.getChannels($scope.pagination, 100, $location.search().catid)
-        .then((data)->
-          if $scope.pagination == 0
-            $scope.channels = data.items
-            $scope.totalChannels = data.total
-          else
-            $scope.channels = $scope.channels.concat(data.items)
-          $scope.pagination += 100
-        )
+      .success( (data) ->
+        if $scope.pagination == 0
+          $scope.channels = data.channels.items
+          $scope.totalChannels = data.channels.total
+        else
+          $scope.channels = $scope.channels.concat(data.channels.items)
+        $scope.pagination += 100
+      )
 
   $scope.pagination = 0
   $scope.totalChannels = 0

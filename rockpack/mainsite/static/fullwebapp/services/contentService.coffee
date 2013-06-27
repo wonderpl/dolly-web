@@ -68,16 +68,19 @@ angular.module('WebApp').factory('ContentService', ($http, locale, apiUrl, UserM
         dataObj.category = categoryID
 
       $http({
-      method: 'GET',
-      url: apiUrl.popular_channels,
-      params: dataObj,
+        method: 'GET',
+        url: apiUrl.popular_channels,
+        params: dataObj,
       })
-        .then(((data) ->
-          return data.data.channels
-        ),
-        (data) ->
-          console.log data
+      .success((data) ->
+        _.each(data.channels.items, (channel)->
+          channel.cover.thumbnail_url = channel.cover.thumbnail_url.replace('thumbnail_medium', 'thumbnail_large')
         )
+        return data
+      )
+      .error((data) ->
+        console.log data
+      )
 
     #TODO: Check if this is your channel, if so move to https and attach cradentials
     getChannelVideos: (userID, categoryID, size, start) ->
