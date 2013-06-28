@@ -1,6 +1,7 @@
 <div class="wrapper">
   <h2>Channel View</h2>
   <ul class="menu">
+    <li><div ng-click="header('')">All</div></li>
     <li ng-repeat="category in categories">
       <div ng-click="header(category.id)">{{category.name}}</div>
       <ul ng-show="category.id == menu.main">

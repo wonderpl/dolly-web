@@ -1,4 +1,4 @@
-angular.module('WebApp').factory('OAuth', ($http, apiUrl) ->
+angular.module('WebApp').factory('OAuth', ($http, apiUrl, UserManager) ->
 
   headers = {"authorization": 'basic b3JvY2tncVJTY1NsV0tqc2ZWdXhyUTo=', "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"}
 
@@ -33,21 +33,21 @@ angular.module('WebApp').factory('OAuth', ($http, apiUrl) ->
     }
     ###
 
-    register: (userParms) ->
-      ServiceUrls.then( (data)->
-        $http({
-          method: 'POST',
-          data: $.param(userParms),
-          url: apiUrl.register,
-          headers: headers
-        })
-        .then(((data) ->
-          return data.data
-        ),
-        (data) ->
-          return data.data
-        )
+    register: (user) ->
+      $http({
+        method: 'POST',
+        data: $.param(user),
+        url: apiUrl.register,
+        headers: headers
+      })
+      .success((data) ->
+        UserManager._ApplyLogin(data)
+        return data
       )
+      .error((data) ->
+        return data
+      )
+
     refreshToken: (refreshToken) ->
       $http({
         method: 'POST',

@@ -1,10 +1,13 @@
 <div ng-controller="HeaderCtrl" id="header" >
   <div id="topmenu" class="wrapper">
-    <div><a href="#/"><img ng-src="/static/assets/fullwebapp/images/logo.png"></a></div>
+    <div><a href="#/channels"><img ng-src="/static/assets/fullwebapp/images/logo.png"></a></div>
     <div ng-hide="!isLoggedIn"><a href="#/feed">Feed</a></div>
     <div ng-hide="!isLoggedIn"><a href="#/profile">Profile</a></div>
     <div><a href="#/channels">Channels</a></div>
-    <div ng-hide="isLoggedIn" class="login"><a href="#/login/">Log In</a></div>
     <div><a href="#/search">Search</a></div>
+    <div ng-switch on="isLoggedIn">
+      <div ng-switch-when="false"><a href="#/login/">Log In</a></div>
+      <div ng-switch-when="true"><a ng-click="logout()">Log Out</a></div>
+    </div>
   </div>
 </div>

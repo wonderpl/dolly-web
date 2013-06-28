@@ -1,5 +1,5 @@
 <div ng-controller="ChannelCtrl" id="ChannelCtrl" class="wrapper">
-  <img ng-src="{{channel.cover.thumbnail_url}}" id="bgimage" ng-click="testfunction()">
+  <img ng-src="{{background}}" id="bgimage">
   <div class="channelheader" ng-style="windowWidth">
     <div>
       <h1>{{channel.title}}</h1>
@@ -10,7 +10,6 @@
       </ul>
       <div subscribe-button></div>
     </div>
-    <div subscribe-button channel></div>
     <div class="gettheapp">
       <p>CHANNEL CREATED<br>
         WITH ROCKPACK</p>

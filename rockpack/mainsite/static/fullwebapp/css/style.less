@@ -4,6 +4,14 @@ body {
   background: #f1f1f1;
 }
 
+#bgimage {
+  position: absolute;
+  top: 60px;
+  left: 0;
+  width: 100%;
+  z-index: -100;
+}
+
 #header {
 
   height: 60px;
@@ -29,6 +37,11 @@ body {
 
       &:first-child {
         border-right: none;
+      }
+
+      a {
+        min-width: 120px;
+        display: inline-block;
       }
     }
 
@@ -56,6 +69,10 @@ body {
 
   }
 
+}
+
+#facebooklogin {
+  cursor: pointer;
 }
 
 #channels {

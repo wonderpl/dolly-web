@@ -1,9 +1,13 @@
-window.WebApp.controller('RegisterCtrl', ['$scope', 'UserManager', ($scope, UserManager) ->
+window.WebApp.controller('RegisterCtrl', ['$scope', 'OAuth', 'locale', '$location', ($scope, OAuth, locale, $location) ->
 
-  console.log 'aaa'
-  $scope.User = UserManager
+  #TODO: Handle subscription fetching on registration
 
   $scope.register = (user) ->
-    console.log user
+    user.date_of_birth = "#{user.year}-#{user.month}-#{user.day}"
+    user.locale = locale
+    OAuth.register(user)
+    .success((data) ->
+        $location.path('/channels')
+    )
 
 ])

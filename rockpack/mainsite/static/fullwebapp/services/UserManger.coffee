@@ -47,18 +47,23 @@ window.WebApp.factory('UserManager', ['cookies', '$http', '$q', '$location','api
         url: apiUrl.login,
         headers: headers
       })
-        .success((data) =>
-          cookies.set("access_token", data.access_token, data.expires)
-          cookies.set("refresh_token", data.refresh_token, 2678400)
-          cookies.set("user_id", data.user_id, 2678400)
-          @isLoggedIn = true
-          @credentials = data
-          User.FetchUserData()
-          @TriggerRefresh(data.expires_in*0.9*1000, data.refresh_token)
-        )
-        .error((data) =>
-          console.log data
-        )
+      .success((data) =>
+        User._ApplyLogin(data)
+        User.FetchUserData()
+      )
+      .error((data) =>
+        console.log data
+      )
+
+    _ApplyLogin: (data) ->
+      console.log 'set cookies'
+      cookies.set("access_token", data.access_token, data.expires)
+      cookies.set("refresh_token", data.refresh_token, 2678400)
+      cookies.set("user_id", data.user_id, 2678400)
+      @isLoggedIn = true
+      @credentials = data
+      @TriggerRefresh(data.expires_in*0.9*1000, data.refresh_token)
+
 
     ExternalLogin: (provider, external_token) ->
       $http({
@@ -66,14 +71,12 @@ window.WebApp.factory('UserManager', ['cookies', '$http', '$q', '$location','api
         data: $.param({'external_system': provider, 'external_token': external_token}),
         url: apiUrl.login_register_external,
         headers: headers
-      }).success((data) ->
-        User.loggedIn = true
+      })
+      .success((data) ->
+        User._ApplyLogin(data)
         User.TriggerRefresh(data.expires_in*0.9*1000, data.refresh_token)
-        User.credentials = data
-        cookies.set("access_token", data.access_token, data.expires)
-        cookies.set("refresh_token", data.refresh_token, 2678400)
-        cookies.set("user_id", data.user_id, 2678400)
-      ).error((data)->
+      )
+      .error((data)->
         console.log data
       )
 
