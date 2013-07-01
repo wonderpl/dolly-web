@@ -1,15 +1,15 @@
-window.WebApp.controller('VideoPlayerCtrl', ['$scope', '$rootScope', '$routeParams', '$location', ($scope, $rootScope, $routeParams, $location) ->
+window.WebApp.controller('VideoPlayerCtrl', ['$scope', '$rootScope', '$routeParams', '$location', 'ChannelData', ($scope, $rootScope, $routeParams, $location, ChannelData) ->
 
-  console.log $scope
+  $scope.channel = ChannelData
+
+  console.log $scope.channel
+
   $scope.PlayVideo = =>
     if $rootScope.playerReady && typeof $routeParams.video != "undefined"
 
-      $scope.videodata = _.find($scope.videos, (video) ->
+      $scope.videodata = _.find($scope.channel.videos.items, (video) ->
         video.id == $routeParams.video
       )
-
-      if typeof $scope.videodata == "undefined"
-        $scope.videodata = window.selected_video
 
       $scope.player = new YT.Player('player', {
         height: @playerHeight,

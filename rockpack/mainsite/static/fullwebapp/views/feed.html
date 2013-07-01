@@ -4,7 +4,7 @@
     <div ng-repeat="section in User.feed.items">
       <h3>{{section.date}}</h3>
       <div ng-repeat="video in section.videos" class="video">
-        <img ng-src="{{video.video.thumbnail_url}}">
+        <div ng-include src="'videoCell.html'" ></div>
       </div>
     </div>
   </div>

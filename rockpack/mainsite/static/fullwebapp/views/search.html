@@ -8,17 +8,17 @@
 
 
   <div class="wrapper">
-    <tabs>
-      <pane heading="Videos">
+    <tabset>
+      <tab heading="Videos">
         <div ng-repeat="video in videos.videos.items">
-          <img ng-src="{{video.video.thumbnail_url}}">
+          <div ng-include src="'videoCell.html'" ></div>
         </div>
-      </pane>
-      <pane heading="Channels">
+      </tab>
+      <tab heading="Channels">
         <div ng-repeat="channel in channels.channels.items">
           <a href="/#channel/{{channel.owner.id}}/{{channel.id}}"><img ng-src="{{channel.cover.thumbnail_url}}"></a>
         </div>
-      </pane>
-    </tabs>
+      </tab>
+    </tabset>
   </div>
 </div>

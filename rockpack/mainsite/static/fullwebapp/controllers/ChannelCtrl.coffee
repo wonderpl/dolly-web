@@ -23,10 +23,16 @@ window.WebApp.controller('ChannelCtrl', ['$scope', '$routeParams', '$rootScope',
 
   $scope.$watch((() -> return $location.search().video), (newValue, oldValue) ->
     if newValue?
-      d = $dialog.dialog({resolve: () ->
-        return $scope.channel
-      })
-      d.open('videoPlayer.html').then(() ->
+
+      dialog = $dialog.dialog(
+        controller: 'VideoPlayerCtrl',
+        resolve: {
+          ChannelData: () ->
+            return $scope.channel
+        }
+      )
+
+      dialog.open('videoPlayer.html').then(() ->
         $location.search( 'video', null )
       )
   )

@@ -1,5 +1,7 @@
-<img ng-src="{{video.video.thumbnail_url}}" ng-click="setCurrentVideo(video)" >
-<div class="videocelltitle">
-  {{video.title | truncate: videoCellTitleLength}}
+<div class="videocell">
+  <img ng-src="{{video.video.thumbnail_url}}" ng-click="setCurrentVideo(video)" >
+  <div class="videocelltitle">
+    {{video.title | truncate: videoCellTitleLength}}
+  </div>
+  <div class="addToChannel" ng-click="addToChannel(video.video.id)" ng-hide="User.isLoggedIn == false"></div>
 </div>
-<div class="addToChannel" ng-click="addToChannel(video.video.id)" ng-hide="User.isLoggedIn == false"></div>
