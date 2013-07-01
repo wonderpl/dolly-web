@@ -1,5 +1,8 @@
 window.Weblight.controller('VideoCtrl', ['$scope', '$rootScope', '$routeParams', '$location', 'isMobile', ($scope, $rootScope, $routeParams, $location, isMobile) ->
 
+  $scope.triggerEvent = (action, label) ->
+    ga('send', 'event', 'uiAction', action, label)
+
   @getPlayerWidth = ->
     if $(window).width() <= 979
       @playerWidth = Math.floor($(window).width()*0.8)
