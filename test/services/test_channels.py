@@ -60,7 +60,6 @@ class ChannelViewCountPopulation(base.RockPackTestCase):
                 object_id=channel_id,
                 locale=this_locale).save()
 
-
             UserActivity(
                 user=user3_id,
                 action='view',
@@ -195,6 +194,64 @@ class ChannelVisibleFlag(BaseUserTestCase):
                 # Channel should be hidden from user2
                 with self.assertRaises(Exception):  # Why doesn't this catch AssertionError???
                     self.get(resource, token=user2_token)
+
+    def test_channel_order(self):
+        # Hack to ensure channels have ordered date_updated values
+        updated_default = models.Channel.__table__.columns['date_updated'].onupdate
+        updated_default_bak = updated_default.arg, updated_default.is_clause_element
+        updated_default.is_clause_element = False
+
+        user = self.register_user()
+
+        c1 = None
+        for i in range(3):
+            updated_default.arg = datetime(2013, 1, i + 1)
+            r = self.post(
+                self.urls['channels'],
+                data=dict(
+                    title=str(i),
+                    description='',
+                    category='1',
+                    cover=RockpackCoverArtData.comic_cover.cover,
+                    public=True,
+                ),
+                token=self.token,
+            )
+            if i == 1:
+                c1 = r['resource_url']
+            r = self.post(
+                r['resource_url'] + 'videos/',
+                data=[VideoInstanceData.video_instance1.id],
+                token=self.token,
+            )
+
+        updated_default.arg = datetime(2013, 2, 1)
+        r = self.put(
+            c1,
+            data=dict(
+                title='updated',
+                description='x',
+                category='1',
+                cover=RockpackCoverArtData.comic_cover.cover,
+                public=True,
+            ),
+            token=self.token,
+        )
+
+        self.wait_for_es()
+
+        # Check own channels are ordered by date_created
+        r = self.get(self.urls['user'], token=self.token)
+        self.assertEquals([c['title'] for c in r['channels']['items']],
+                          ['Favorites', '0', 'updated', '2'])
+
+        # Check public channels are order by date_updated
+        r = self.get('{}/ws/{}/'.format(self.default_base_url, user['id']))
+        self.assertEquals([c['title'] for c in r['channels']['items']],
+                          ['Favorites', 'updated', '2', '0'])
+
+        # restore date_updated onupdate default
+        updated_default.arg, updated_default.is_clause_element = updated_default_bak
 
 
 class ChannelCreateTestCase(base.RockPackTestCase):
@@ -458,68 +515,6 @@ class ChannelCreateTestCase(base.RockPackTestCase):
                 "description": ["This field is required, but can be an empty string."],
                 "cover": ["This field is required, but can be an empty string."]},
                 errors)
-
-    def test_channel_order(self):
-        # Hack to ensure channels have ordered date_updated values
-        updated_default = models.Channel.__table__.columns['date_updated'].onupdate
-        updated_default_bak = updated_default.arg, updated_default.is_clause_element
-        updated_default.is_clause_element = False
-
-        with self.app.test_client() as client:
-            user = self.create_test_user()
-            user2_id = self.create_test_user().id
-
-            c1 = None
-            for i in range(3):
-                updated_default.arg = datetime(2013, 1, i + 1)
-                r = client.post(
-                    '/ws/{}/channels/'.format(user.id),
-                    data=json.dumps(dict(
-                        title=str(i),
-                        description='',
-                        category='1',
-                        cover=RockpackCoverArtData.comic_cover.cover,
-                        public=True,
-                    )),
-                    content_type='application/json',
-                    headers=[get_auth_header(user.id)]
-                )
-                self.assertEquals(201, r.status_code, r.data)
-                if i == 1:
-                    c1 = json.loads(r.data)['id']
-                r = client.post(
-                    urlsplit(r.headers['Location']).path + 'videos/',
-                    data=json.dumps([VideoInstanceData.video_instance1.id]),
-                    content_type='application/json',
-                    headers=[get_auth_header(user.id)]
-                )
-                self.assertEquals(r.status_code, 204)
-
-            updated_default.arg = datetime(2013, 2, 1)
-            r = client.put(
-                '/ws/{}/channels/{}/'.format(user.id, c1),
-                data=json.dumps(dict(
-                    title='updated',
-                    description='x',
-                    category='1',
-                    cover=RockpackCoverArtData.comic_cover.cover,
-                    public=True,
-                )),
-                content_type='application/json',
-                headers=[get_auth_header(user.id)]
-            )
-            self.assertEquals(200, r.status_code, r.data)
-
-            self.wait_for_es()
-            for user_id in user.id, user2_id:
-                r = client.get('/ws/{}/'.format(user.id), headers=[get_auth_header(user_id)])
-                self.assertEquals(200, r.status_code)
-                channels = json.loads(r.data)['channels']
-                titles = ['Favorites', 'updated', '2', '0']
-                self.assertEquals([c['title'] for c in channels['items']], titles)
-
-        # restore date_updated onupdate default
-        updated_default.arg, updated_default.is_clause_element = updated_default_bak
 
     def test_channel_editable(self):
         with self.app.test_client() as client:

@@ -260,6 +260,14 @@ def user_subscriptions(userid):
     return Subscription.query.filter_by(user=userid)
 
 
+def user_channels(userid):
+    channels = [video_api.channel_dict(c, with_owner=False, owner_url=True)
+                for c in Channel.query.options(lazyload('owner_rel'), lazyload('category_rel')).
+                filter_by(owner=userid, deleted=False).
+                order_by('favourite desc', 'date_added desc')]
+    return dict(items=channels, total=len(channels))
+
+
 def check_present(form, field):
     if field.name not in (request.json or request.form):
         raise ValidationError(_('This field is required, but can be an empty string.'))
@@ -407,10 +415,6 @@ class UserWS(WebService):
         if not userid == g.authorized.userid:
             return self.user_info(userid)
         user = g.authorized.user
-        channels = [video_api.channel_dict(c, with_owner=False, owner_url=True)
-                    for c in Channel.query.options(lazyload('owner_rel'), lazyload('category_rel')).
-                    filter_by(owner=user.id, deleted=False).
-                    order_by('favourite desc', 'date_updated desc')]
         info = dict(
             id=user.id,
             locale=user.locale,
@@ -426,7 +430,7 @@ class UserWS(WebService):
         )
         for key in 'channels', 'activity', 'notifications', 'cover_art', 'subscriptions':
             info[key] = dict(resource_url=url_for('userws.post_%s' % key, userid=userid))
-        info['channels'].update(items=channels, total=len(channels))
+        info['channels'].update(user_channels(user.id))
         info['notifications'].update(unread_count=_notification_unread_count(userid))
         return info
 
@@ -561,9 +565,7 @@ class UserWS(WebService):
     @expose_ajax('/<userid>/channels/', cache_private=True)
     @check_authorization(self_auth=True)
     def get_channels(self, userid):
-        channels = [video_api.channel_dict(c, with_owner=False, owner_url=True) for c in
-                    Channel.query.filter_by(owner=userid, deleted=False)]
-        return dict(channels=dict(items=channels, total=len(channels)))
+        return dict(channels=user_channels(userid))
 
     @expose_ajax('/<userid>/channels/', methods=('POST',))
     @check_authorization(self_auth=True)
