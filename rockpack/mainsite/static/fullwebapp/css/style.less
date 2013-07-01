@@ -9,6 +9,112 @@ body {
   position: relative;
 }
 
+#addtoChannel {
+  #topmenu {
+
+    li {
+      display: inline-block;
+      list-style: none;
+    }
+  }
+}
+
+#chennellist {
+
+  list-style: none;
+  margin: 0 15px;
+  padding: 0;
+  font-family: "DIN Next W01 Bold";
+  text-transform: uppercase;
+  font-size: 9px;
+  overflow-y: scroll;
+  overflow-x: hidden;
+  height: 300px;
+
+  .channel {
+    width: 152px;
+    height: 152px;
+    float: left;
+    margin: 4px 4px;
+    position: relative;
+
+    img {
+      width: 152px;
+      height: 152px;
+    }
+
+    .reflection {
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 100;
+    }
+
+    .channelname {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      z-index: 110;
+      color: #fff;
+      margin: 0 0 10px 10px;
+    }
+
+    &.selected {
+      .selectedOverlay {
+        background: url(/static/assets/bookmarklet/images/selected.png) 0 0 no-repeat;
+        width: 152px;
+        height: 152px;
+        position: absolute;
+        top: 0;
+        left: 0;
+        z-index: 105;
+      }
+    }
+  }
+
+  .newchannel {
+    background: #f5f5f5;
+    color: #21b7d4;
+
+    .newchanneltext {
+      margin: 60px auto;
+      width: 80px;
+      text-align: center;
+      line-height: 12px;
+      font-size: 10px;
+    }
+  }
+}
+
+.btn-blue {
+  font-family: "dn-bold", sans-serif;
+  text-transform: uppercase;
+  text-shadow: 0;
+  color: #fff;
+  text-shadow: 0 2px rgba(50,50,50,.15);
+  background: #0ba6ab;
+  font-size: 15px;
+  padding: 10px 50px;
+  border-radius: 5px;
+  border: none;
+  -webkit-transition: background-color .5s;
+  -moz-transition: background-color .5s;
+  transition:background-color .5s;
+  -ms-transition:background-color .5s;
+  -o-transition:background-color .5s;
+
+  &:hover {
+    color: #fff;
+    background: #3ed2d7;
+    -webkit-transition: background-color .5s;
+    -moz-transition: background-color .5s;
+    transition:background-color .5s;
+    -ms-transition:background-color .5s;
+    -o-transition:background-color .5s;
+  }
+}
+
+
 #bgimage {
   position: absolute;
   top: 60px;

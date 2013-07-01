@@ -178,19 +178,32 @@ window.WebApp.factory('UserManager', ['cookies', '$http', '$q', '$location','api
           console.log data
         )
 
-#    addVideo: (videoID) ->
+#    CreateChannel: () ->
 #      $http({
 #        method: 'POST',
-#        data: [["youtube", videoID]],
-#        url: "#{resourceUrl}videos/",
-#        headers: {"authorization": "Bearer #{bearerToken}", "Content-Type": "application/json; charset=UTF-8"},
+#        url: User.details.channels.resource_url,
+#        headers: {"authorization": "Bearer #{@credentials.access_token}", "Content-Type": "application/json"}
+#        data: '"' + channelResource + '"'
 #      })
-#        .then(((data) ->
-#        return data.data
-#        ),
-#        (data) ->
-#        return data
+#        .success((data) ->
+#
 #        )
+#        .error((data) =>
+#          console.log data
+#        )
+    addVideo: (channelurl, videoId) ->
+      $http({
+        method: 'POST',
+        data: [videoId],
+        url: "#{channelurl}videos/",
+        headers: {"authorization": "Bearer #{@credentials.access_token}", "Content-Type": "application/json"}
+      })
+        .success((data) ->
+          return data.data
+        )
+        .error((data) ->
+          return data
+        )
 
 
     logOut: () ->

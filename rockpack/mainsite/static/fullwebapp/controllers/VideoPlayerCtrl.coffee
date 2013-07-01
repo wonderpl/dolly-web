@@ -1,14 +1,14 @@
+# TODO: Handle direct links to video (video data has not been loaded yet)
+
 window.WebApp.controller('VideoPlayerCtrl', ['$scope', '$rootScope', '$routeParams', '$location', 'ChannelData', ($scope, $rootScope, $routeParams, $location, ChannelData) ->
 
   $scope.channel = ChannelData
 
-  console.log $scope.channel
-
-  $scope.PlayVideo = =>
-    if $rootScope.playerReady && typeof $routeParams.video != "undefined"
+  $scope.PlayVideo = (videoid) =>
+    if $rootScope.playerReady && typeof videoid != "undefined"
 
       $scope.videodata = _.find($scope.channel.videos.items, (video) ->
-        video.id == $routeParams.video
+        video.id == videoid
       )
 
       $scope.player = new YT.Player('player', {
@@ -24,21 +24,9 @@ window.WebApp.controller('VideoPlayerCtrl', ['$scope', '$rootScope', '$routePara
         }
       })
 
-  onPlayerReady = (event) ->
-    event.target.playVideo()
-
-
-  $scope.$watch((-> $routeParams.video), (newValue) ->
-    console.log 'got player id'
-    if newValue
-      $scope.PlayVideo()
-    return
-  )
-
   $scope.$watch((-> $rootScope.playerReady), (newValue) ->
     if newValue
-      $scope.PlayVideo()
-    return
+      $scope.PlayVideo($routeParams.video)
   )
 
   return

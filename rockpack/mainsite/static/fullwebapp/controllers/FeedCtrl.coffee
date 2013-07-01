@@ -7,9 +7,6 @@ window.WebApp.controller('FeedCtrl', ['$scope', 'cookies', 'UserManager', '$loca
       $scope.User.FetchRecentSubscriptions($scope.User.feed.position, 50)
       $scope.User.feed.position += 50
 
-  $scope.setCurrentVideo = (video) ->
-    $location.search( 'video', video.id )
-
   $scope.$watch((() -> return $location.search().video), (newValue, oldValue) ->
     if newValue?
 

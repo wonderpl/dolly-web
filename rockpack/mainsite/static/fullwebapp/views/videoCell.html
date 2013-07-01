@@ -3,5 +3,5 @@
   <div class="videocelltitle">
     {{video.title | truncate: videoCellTitleLength}}
   </div>
-  <div class="addToChannel" ng-click="addToChannel(video.video.id)" ng-hide="User.isLoggedIn == false"></div>
+  <div class="addToChannel" ng-click="addToChannel(video.id)" ng-hide="User.isLoggedIn == false"></div>
 </div>

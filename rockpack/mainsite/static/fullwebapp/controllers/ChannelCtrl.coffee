@@ -17,10 +17,6 @@ window.WebApp.controller('ChannelCtrl', ['$scope', '$routeParams', '$rootScope',
         $scope.page += 1
     return
 
-
-  $scope.setCurrentVideo = (video) ->
-    $location.search( 'video', video.id )
-
   $scope.$watch((() -> return $location.search().video), (newValue, oldValue) ->
     if newValue?
 
@@ -37,9 +33,5 @@ window.WebApp.controller('ChannelCtrl', ['$scope', '$routeParams', '$rootScope',
       )
   )
 
-  $scope.addToChannel = (videoId) ->
-    d = $dialog.dialog({resolve: () ->
-      return videoId
-    })
-    d.open('addtochannel.html')
+
 ])
