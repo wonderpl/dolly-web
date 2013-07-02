@@ -3,6 +3,7 @@ import time
 import json
 from datetime import datetime, timedelta
 from urlparse import urlsplit
+from mock import patch
 from test import base
 from test.fixtures import RockpackCoverArtData, VideoInstanceData, VideoData
 from test.test_helpers import get_auth_header
@@ -195,17 +196,22 @@ class ChannelVisibleFlag(BaseUserTestCase):
                 with self.assertRaises(Exception):  # Why doesn't this catch AssertionError???
                     self.get(resource, token=user2_token)
 
-    def test_channel_order(self):
-        # Hack to ensure channels have ordered date_updated values
-        updated_default = models.Channel.__table__.columns['date_updated'].onupdate
-        updated_default_bak = updated_default.arg, updated_default.is_clause_element
-        updated_default.is_clause_element = False
+    @patch('sqlalchemy.dialects.sqlite.base.SQLiteCompiler.visit_now_func')
+    def test_channel_order(self, now_func):
+        # Need to clear the compiled statement cache on the table mapper
+        # so that the value for "now" is changed.
+        def set_now(month, day):
+            compiled_cache.clear()
+            now_func.return_value = 'datetime("2013-%02d-%02dT00:00:00")' % (month, day)
+        from sqlalchemy import inspect
+        compiled_cache = inspect(models.Channel)._compiled_cache
 
+        set_now(1, 1)
         user = self.register_user()
 
         c1 = None
         for i in range(3):
-            updated_default.arg = datetime(2013, 1, i + 1)
+            set_now(2, i + 1)
             r = self.post(
                 self.urls['channels'],
                 data=dict(
@@ -225,7 +231,7 @@ class ChannelVisibleFlag(BaseUserTestCase):
                 token=self.token,
             )
 
-        updated_default.arg = datetime(2013, 2, 1)
+        set_now(3, 1)
         r = self.put(
             c1,
             data=dict(
@@ -243,15 +249,12 @@ class ChannelVisibleFlag(BaseUserTestCase):
         # Check own channels are ordered by date_created
         r = self.get(self.urls['user'], token=self.token)
         self.assertEquals([c['title'] for c in r['channels']['items']],
-                          ['Favorites', '0', 'updated', '2'])
+                          ['Favorites', '2', 'updated', '0'])
 
         # Check public channels are order by date_updated
         r = self.get('{}/ws/{}/'.format(self.default_base_url, user['id']))
         self.assertEquals([c['title'] for c in r['channels']['items']],
                           ['Favorites', 'updated', '2', '0'])
-
-        # restore date_updated onupdate default
-        updated_default.arg, updated_default.is_clause_element = updated_default_bak
 
 
 class ChannelCreateTestCase(base.RockPackTestCase):
