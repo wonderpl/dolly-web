@@ -10,9 +10,9 @@
     {% if selected_video %}
       {% set description = 'Video curated by %s in channel %s using Rockpack iOS app' % (channel_data.owner.display_name, channel_data.title) %}
     {% else %}
-      {% set description = 'Watch %s videos curated by %s using Rockpack iOS app' % (channel_data.owner.display_name, channel_data.title) %}
+      {% set description = 'Watch %s videos curated by %s using Rockpack iOS app' % (channel_data.title, channel_data.owner.display_name) %}
     {% endif %}
-    <meta name="description" content="{{description}}">
+    <meta name="description" content="{{ description }}">
     <meta name="apple-itunes-app" content="app-id=660697542">
 
     <meta property="fb:app_id" content="{{ config.FACEBOOK_APP_ID }}" />
