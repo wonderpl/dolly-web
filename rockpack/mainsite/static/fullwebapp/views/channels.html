@@ -1,11 +1,10 @@
 <div class="wrapper">
-  <h2>Channel View</h2>
   <ul class="menu">
-    <li><div ng-click="header('')">All</div></li>
-    <li ng-repeat="category in categories">
+    <li><div ng-click="header('')" ng-class="{active: menu.main == ''}">All</div></li>
+    <li ng-repeat="category in categories" ng-class="{active: category.id == menu.main}">
       <div ng-click="header(category.id)">{{category.name}}</div>
       <ul ng-show="category.id == menu.main">
-        <li ng-repeat="subcategory in category.sub_categories">
+        <li ng-repeat="subcategory in category.sub_categories" ng-class="{active: subcategory.id == menu.sub}">
           <div ng-click="subheader(subcategory.id)">{{subcategory.name}}</div>
         </li>
       </ul>

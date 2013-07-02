@@ -1,17 +1,42 @@
-window.WebApp.controller('ChannelsCtrl', ['$scope', 'cookies', 'ContentService', '$location', ($scope, cookies, ContentService, $location) ->
+window.WebApp.controller('ChannelsCtrl', ['$scope', 'cookies', 'categoryService', 'channelsService', '$location', ($scope, cookies, categoryService, channelsService, $location) ->
 
 
-  # TODO: Load channels based on get variable (catid) currently being set but not read
+  # TODO: Open menu based on URL
 
   $scope.menu = {
-    main: 0,
-    sub: 0
+    main: '',
+    sub: ''
   }
+
+  $scope.pagination = 0
+  $scope.totalChannels = 0
+
+
+  # Select menu categories based on ?catid
+  $scope.categories = categoryService.fetchCategories()
+  .then((data) ->
+    foundCategory = false
+    _.each(data, ((category) ->
+      if foundCategory
+        return
+      else
+        if category.id == $location.search().catid
+          $scope.menu.category.id = category.id
+          return
+      _.each(category.sub_categories, ((subcategory) ->
+        if subcategory.id ==  $location.search().catid
+          $scope.menu = {
+            main: category.id
+            sub: subcategory.id
+          }
+      ))
+    ))
+  )
 
   $scope.load_channels = () ->
 
     if $scope.totalChannels > $scope.pagination || $scope.pagination  == 0
-      ContentService.getChannels($scope.pagination, 100, $location.search().catid)
+      channelsService.fetchChannels($scope.pagination, 100, $location.search().catid)
       .success( (data) ->
         if $scope.pagination == 0
           $scope.channels = data.channels.items
@@ -21,16 +46,12 @@ window.WebApp.controller('ChannelsCtrl', ['$scope', 'cookies', 'ContentService',
         $scope.pagination += 100
       )
 
-  $scope.pagination = 0
-  $scope.totalChannels = 0
 
   $scope.$watch((()-> return $location.search().catid), (newValue, oldValue) ->
     if newValue != oldValue
       $scope.pagination = 0
       $scope.load_channels()
   )
-
-  $scope.categories = ContentService.getCategories()
 
   $scope.header = (id) ->
     $location.search("catid=#{id}")
