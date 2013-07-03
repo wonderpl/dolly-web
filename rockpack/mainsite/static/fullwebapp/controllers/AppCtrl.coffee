@@ -13,7 +13,7 @@ window.WebApp.controller('AppCtrl', ['$rootScope', '$location', 'UserManager', '
           .success((data) ->
             UserManager.isLoggedIn = true
             UserManager.FetchUserData()
-              .success((data) ->
+              .then((data) ->
                 $route.reload()
               )
         )

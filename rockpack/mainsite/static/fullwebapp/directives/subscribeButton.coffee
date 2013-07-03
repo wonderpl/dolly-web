@@ -19,10 +19,10 @@ angular.module('WebApp').directive('subscribeButton', ['UserManager', '$route', 
 
 
       $scope.subscribe = () ->
-        console.log 'subscribe'
         if $scope.state == 'subscribe'
           UserManager.Subscribe($scope.channel.resource_url)
             .success(()->
+              UserManager.recentActivity.subscribed.push($scope.channel.id)
               if $scope.state == 'subscribe'
                 $scope.state = 'unsubscribe'
               else

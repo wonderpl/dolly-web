@@ -52,6 +52,7 @@ window.WebApp.factory('UserManager', ['cookies', '$http', '$q', '$location','api
         )
 
     FetchUserData: () ->
+      deferred = $q.defer()
       $http({
         method: 'GET',
         url: User.oauth.credentials.resource_url,
@@ -59,13 +60,18 @@ window.WebApp.factory('UserManager', ['cookies', '$http', '$q', '$location','api
       })
       .success((data) ->
         User.details = data
-        User.FetchSubscriptions()
         User.recentActivityTimedRetrive()
+        .success((data) ->
+            deferred.resolve(data)
+        )
 
       )
       .error((data) =>
         console.log data
+        deferred.reject ('failed to retreive data')
       )
+
+      return deferred.promise
 
     FetchRecentSubscriptions: (start, size) ->
       $http({
@@ -114,7 +120,7 @@ window.WebApp.factory('UserManager', ['cookies', '$http', '$q', '$location','api
       $http({
         method: 'POST',
         url: User.details.subscriptions.resource_url,
-        headers: {"authorization": "Bearer #{@credentials.access_token}", "Content-Type": "application/json"}
+        headers: {"authorization": "Bearer #{User.oauth.credentials.access_token}", "Content-Type": "application/json"}
         data: '"' + channelResource + '"'
       })
         .success((data) ->
