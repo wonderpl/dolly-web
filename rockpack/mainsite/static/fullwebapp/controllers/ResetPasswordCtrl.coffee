@@ -1,4 +1,4 @@
-window.WebApp.controller('ResetPasswordCtrl', ['$scope','$http', '$location', 'cookies', 'OAuth', 'User', ($scope, $http, $location, cookies, OAuth, User) ->
+window.WebApp.controller('ResetPasswordCtrl', ['$scope','$http', '$location', 'cookies', 'UserManager', 'User', ($scope, $http, $location, cookies, UserManager, User) ->
 
   $scope.message = {}
 
@@ -7,7 +7,7 @@ window.WebApp.controller('ResetPasswordCtrl', ['$scope','$http', '$location', 'c
 
   $scope.resetPassword = ->
     $scope.error = ''
-    OAuth.resetPassword($scope.username)
+    UserManager.resetPassword($scope.username)
       .success((data) ->
         $scope.response = {message: "Check your email and follow the instructions", success: true}
       )

@@ -1,4 +1,4 @@
-window.WebApp.controller('HeaderCtrl', ['$scope', 'cookies', 'OAuth', '$location', 'UserManager', ($scope, cookies, OAuth, $location, UserManager) ->
+window.WebApp.controller('HeaderCtrl', ['$scope', 'cookies', '$location', 'UserManager', ($scope, cookies, $location, UserManager) ->
 
   $scope.user = UserManager
 

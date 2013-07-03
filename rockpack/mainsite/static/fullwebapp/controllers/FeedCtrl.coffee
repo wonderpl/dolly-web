@@ -1,11 +1,15 @@
 window.WebApp.controller('FeedCtrl', ['$scope', 'cookies', 'UserManager', '$location', '$dialog', ($scope, cookies, UserManager, $location, $dialog) ->
 
   $scope.User = UserManager
+  $scope.User.feed.total = null
+  $scope.User.feed.position = 0
+  $scope.User.feed.items = []
 
+  console.log 'Feed Control'
   $scope.load_feed = () ->
-    if ($scope.User.feed.total == null or $scope.User.feed.total > $scope.User.feed.position)
-      $scope.User.FetchRecentSubscriptions($scope.User.feed.position, 50)
-      $scope.User.feed.position += 50
+    if ($scope.User.feed.total == null or $scope.User.feed.total > $scope.User.feed.position*50)
+      $scope.User.FetchRecentSubscriptions($scope.User.feed.position*50, 50)
+      $scope.User.feed.position += 1
 
   $scope.$watch((() -> return $location.search().video), (newValue, oldValue) ->
     if newValue?

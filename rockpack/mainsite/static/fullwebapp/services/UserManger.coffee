@@ -1,119 +1,61 @@
-window.WebApp.factory('UserManager', ['cookies', '$http', '$q', '$location','apiUrl', (cookies, $http, $q, $location, apiUrl) ->
+# TODO: Need refacturing. Break down to seperate services?
+
+window.WebApp.factory('UserManager', ['cookies', '$http', '$q', '$location','apiUrl', 'activityService', 'oauthService', (cookies, $http, $q, $location, apiUrl, activityService, oauthService) ->
 
   headers = {"authorization": 'basic b3JvY2tncVJTY1NsV0tqc2ZWdXhyUTo=', "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"}
 
-  User = {
-    credentials: {
-      refresh_token: cookies.get('refresh_token'),
-      user_id: cookies.get('user_id'),
-      access_token: cookies.get('access_token'),
-    }
 
+  User = {
+
+    feed:
+      items: []
+      total: null
+      position: 0
+
+    activity: activityService
+    oauth: oauthService
     isLoggedIn: false
 
-    timeOfLastRefresh: null
-
-    feed: {
-      etags: []
-      items: []
-      position: 0
-      total: null
-    }
-
-    refreshToken: () ->
-      $http({
-        method: 'POST',
-        data: $.param({refresh_token: User.credentials.refresh_token, grant_type: 'refresh_token'}),
-        url: apiUrl.refresh_token,
-        headers: headers
-      })
-      .success((data) =>
-          @isLoggedIn = true
-          cookies.set("access_token", data.access_token, data.expires)
-          @credentials = data
-
-          # Trigger next refresh
-          @TriggerRefresh(data.expires_in*0.9*1000, data.refresh_token)
-          @timeOfLastRefresh = (new Date()).getTime()
-      )
-      .error((data) =>
-        console.log data
-      )
-
-    Login: (username, password) ->
-      $http({
-        method: 'POST',
-        data: $.param({username: username, password: password, grant_type: 'password'}),
-        url: apiUrl.login,
-        headers: headers
-      })
-      .success((data) =>
-        User._ApplyLogin(data)
-        User.FetchUserData()
-      )
-      .error((data) =>
-        console.log data
-      )
-
-    _ApplyLogin: (data) ->
-      console.log 'set cookies'
-      cookies.set("access_token", data.access_token, data.expires)
-      cookies.set("refresh_token", data.refresh_token, 2678400)
-      cookies.set("user_id", data.user_id, 2678400)
-      @isLoggedIn = true
-      @credentials = data
-      @TriggerRefresh(data.expires_in*0.9*1000, data.refresh_token)
-
-
-    ExternalLogin: (provider, external_token) ->
-      $http({
-        method: 'POST',
-        data: $.param({'external_system': provider, 'external_token': external_token}),
-        url: apiUrl.login_register_external,
-        headers: headers
-      })
-      .success((data) ->
-        User._ApplyLogin(data)
-        User.TriggerRefresh(data.expires_in*0.9*1000, data.refresh_token)
-      )
-      .error((data)->
-        console.log data
-      )
-
+    logOut: () ->
+      cookies.set('access_token', '')
+      cookies.set('refresh_token', '')
+      cookies.set('user_id', '')
+      User.details = {}
+      User.oauth.credentials = {}
+      feed: {
+        etags: []
+        items: []
+        position: 0
+        total: null
+      }
+      User.isLoggedIn = false
+      console.log 'finished logging out'
 
     FetchUserData: () ->
       $http({
         method: 'GET',
-        url: User.credentials.resource_url,
-        headers: {"authorization": "Bearer #{@credentials.access_token}", "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"}
+        url: User.oauth.credentials.resource_url,
+        headers: {"authorization": "Bearer #{User.oauth.credentials.access_token}", "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"}
       })
       .success((data) ->
         User.details = data
         User.FetchSubscriptions()
+        activityService.fetchRecentActivity(User.details.activity.resource_url, User.oauth.credentials.access_token)
+          .success((data) ->
+            User.activity = data
+
+          )
       )
       .error((data) =>
         console.log data
       )
-
-    FetchActivity: () ->
-      $http({
-      method: 'GET',
-      url: User.details.activity.resource_url,
-      headers: {"authorization": "Bearer #{@credentials.access_token}", "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"}
-      })
-        .success((data) ->
-          console.log data
-        )
-        .error((data) =>
-          console.log data
-        )
 
     FetchRecentSubscriptions: (start, size) ->
       $http({
       method: 'GET',
       url: User.details.subscriptions.updates,
       params: {start: start, size: size}
-      headers: {"authorization": "Bearer #{@credentials.access_token}", "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"}
+      headers: {"authorization": "Bearer #{User.oauth.credentials.access_token}", "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"}
       })
         .success((data, status, headers, config) ->
 
@@ -142,7 +84,7 @@ window.WebApp.factory('UserManager', ['cookies', '$http', '$q', '$location','api
       $http({
       method: 'GET',
       url: User.details.subscriptions.resource_url,
-      headers: {"authorization": "Bearer #{@credentials.access_token}", "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"}
+      headers: {"authorization": "Bearer #{User.oauth.credentials.access_token}", "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"}
       })
         .success((data) ->
           User.details.subscriptions.subscribedChannels = data.channels
@@ -205,30 +147,15 @@ window.WebApp.factory('UserManager', ['cookies', '$http', '$q', '$location','api
           return data
         )
 
-
-    logOut: () ->
-      cookies.set('access_token', '')
-      cookies.set('refresh_token', '')
-      cookies.set('user_id', '')
-      User.details = {}
-      User.credentials = {}
-      feed: {
-        etags: []
-        items: []
-        position: 0
-        total: null
-      }
-      User.isLoggedIn = false
-
 #    getTimeToNextRefresh: () ->
 #      if @timeOfLastRefresh?
 #        return @credentials.expiers_in*0.9*1000 - ( (new Date()).getTime() - @timeOfLastRefresh )
 #      else
 #        return null
 
-    TriggerRefresh: (timeToRefresh, token) ->
-      window.setTimeout((() => @refreshToken(token)) ,timeToRefresh)
 
   }
 
+
+  return User
 ])

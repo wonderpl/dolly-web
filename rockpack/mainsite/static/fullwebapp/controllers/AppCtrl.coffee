@@ -7,17 +7,14 @@ window.WebApp.controller('AppCtrl', ['$rootScope', '$location', 'UserManager', '
   $rootScope.$on("$locationChangeStart", (event, NewUrl, OldUrl) ->
 
     if (UserManager.isLoggedIn == false)
-      if (UserManager.credentials.refresh_token?)
-        console.log 'in'
+      if (UserManager.oauth.credentials.refresh_token?)
         event.preventDefault()
-        UserManager.refreshToken()
+        UserManager.oauth.refreshToken()
           .success((data) ->
+            UserManager.isLoggedIn = true
             UserManager.FetchUserData()
               .success((data) ->
-                UserManager.FetchSubscriptions()
-                  .success((data) ->
-                    $route.reload()
-                  )
+                $route.reload()
               )
         )
       else
