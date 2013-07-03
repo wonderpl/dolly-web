@@ -1,5 +1,3 @@
-# TODO: Rejection reason is not captured
-
 window.WebApp.controller('AppCtrl', ['$rootScope', '$location', 'UserManager', '$route', ($rootScope, $location, UserManager, $route) ->
 
   routesThatRequireAuth = ['/profile', '/feed']
@@ -19,6 +17,10 @@ window.WebApp.controller('AppCtrl', ['$rootScope', '$location', 'UserManager', '
         )
       else
         if(_(routesThatRequireAuth).contains($location.path()))
+          $rootScope.message = {
+            message: 'Please register before you proceed'
+            state: 0
+          }
           $location.path('/login')
 
   )

@@ -5,7 +5,7 @@ window.WebApp.controller('VideoPlayerCtrl', ['$scope', '$rootScope', '$routePara
   $scope.channel = ChannelData
 
   $scope.PlayVideo = (videoid) =>
-    if $rootScope.playerReady && typeof videoid != "undefined"
+    if $rootScope.playerReady && $scope.channel.videos.items.length > 0
 
       $scope.videodata = _.find($scope.channel.videos.items, (video) ->
         video.id == videoid

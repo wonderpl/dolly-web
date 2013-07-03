@@ -16,7 +16,7 @@ window.WebApp.controller('LoginCtrl', ['$scope', '$location', 'cookies', 'UserMa
       .success((data) ->
           $scope.User.isLoggedIn = true
           $scope.User.FetchUserData(UserManager.oauth.credentials.resource_url)
-            .success((data) ->
+            .then((data) ->
               $location.path('/feed')
             )
       )

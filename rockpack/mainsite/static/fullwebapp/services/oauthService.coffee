@@ -1,4 +1,4 @@
-angular.module('WebApp').factory('oauthService', [ '$http', 'apiUrl', 'cookies', ($http, apiUrl, cookies) ->
+angular.module('WebApp').factory('oauthService', [ '$http', 'apiUrl', 'cookies', '$rootScope', ($http, apiUrl, cookies, $rootScope) ->
 
   headers = {"authorization": 'basic b3JvY2tncVJTY1NsV0tqc2ZWdXhyUTo=', "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"}
 
@@ -46,6 +46,7 @@ angular.module('WebApp').factory('oauthService', [ '$http', 'apiUrl', 'cookies',
           OAuth._ApplyLogin(data)
         )
         .error((data) =>
+          $rootScope.message.message = 'User Name or Password did not match'
           console.log data
         )
 
