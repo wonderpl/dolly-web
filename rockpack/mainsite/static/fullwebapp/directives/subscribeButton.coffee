@@ -6,10 +6,10 @@ angular.module('WebApp').directive('subscribeButton', ['UserManager', '$route', 
       if UserManager.isLoggedIn
 
         # Is it your channel
-        if $route.current.params.userid == UserManager.credentials.user_id
+        if $route.current.params.userid == UserManager.oauth.credentials.user_id
           $scope.state = 'edit'
         else
-          $scope.currentChannel = _.find(UserManager.details.subscriptions.subscribedChannels.items, (channel) -> return channel.id == $route.current.params.channelid)
+          $scope.currentChannel = _.find(UserManager.recentActivity.subscribed, (channel) -> return channel == $route.current.params.channelid)
           if $scope.currentChannel?
             $scope.state = 'unsubscribe'
           else

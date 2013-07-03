@@ -16,6 +16,13 @@ window.WebApp.factory('UserManager', ['cookies', '$http', '$q', '$location','api
     oauth: oauthService
     isLoggedIn: false
 
+    recentActivity: {
+      cacheTime: 0
+      recently_starred: []
+      recently_viewed: []
+      subscribed: []
+    }
+
     logOut: () ->
       cookies.set('access_token', '')
       cookies.set('refresh_token', '')
@@ -23,13 +30,26 @@ window.WebApp.factory('UserManager', ['cookies', '$http', '$q', '$location','api
       User.details = {}
       User.oauth.credentials = {}
       feed: {
-        etags: []
         items: []
         position: 0
         total: null
       }
       User.isLoggedIn = false
       console.log 'finished logging out'
+
+    recentActivityTimedRetrive: () ->
+      activityService.fetchRecentActivity(User.details.activity.resource_url, User.oauth.credentials.access_token)
+        .success((data) ->
+          User.recentActivity.recently_starred = _.union(User.recentActivity.recently_starred, data.recently_starred)
+          User.recentActivity.recently_viewed = _.union(User.recentActivity.recently_viewed, data.recently_viewed)
+          User.recentActivity.subscribed = _.union(User.recentActivity.subscribed, data.subscribed)
+          User.cacheTime = data.cacheTime
+          setTimeout((
+            () ->
+              User.recentActivityTimedRetrive()
+          ), User.recentActivity.cacheTime*1000
+          )
+        )
 
     FetchUserData: () ->
       $http({
@@ -40,11 +60,8 @@ window.WebApp.factory('UserManager', ['cookies', '$http', '$q', '$location','api
       .success((data) ->
         User.details = data
         User.FetchSubscriptions()
-        activityService.fetchRecentActivity(User.details.activity.resource_url, User.oauth.credentials.access_token)
-          .success((data) ->
-            User.activity = data
+        User.recentActivityTimedRetrive()
 
-          )
       )
       .error((data) =>
         console.log data
