@@ -1,8 +1,5 @@
 window.WebApp.controller('ChannelsCtrl', ['$scope', 'cookies', 'categoryService', 'channelsService', '$location', ($scope, cookies, categoryService, channelsService, $location) ->
 
-
-  # TODO: Open menu based on URL
-
   $scope.menu = {
     main: '',
     sub: ''

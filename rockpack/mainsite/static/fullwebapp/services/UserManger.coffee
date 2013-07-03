@@ -1,4 +1,5 @@
-# TODO: Need refacturing. Break down to seperate services?
+# TODO: Disable timeers on log out
+# TODO: still room for refactoring
 
 window.WebApp.factory('UserManager', ['cookies', '$http', '$q', '$location','apiUrl', 'activityService', 'oauthService', (cookies, $http, $q, $location, apiUrl, activityService, oauthService) ->
 

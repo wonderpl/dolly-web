@@ -21,7 +21,7 @@ window.WebApp.controller('AppCtrl', ['$rootScope', '$location', 'UserManager', '
             message: 'Please register before you proceed'
             state: 0
           }
-          $location.path('/login')
+          $location.path("/login")
 
   )
 ])
