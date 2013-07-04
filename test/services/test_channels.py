@@ -4,10 +4,11 @@ import json
 from datetime import datetime, timedelta
 from urlparse import urlsplit
 from test import base
-from test.fixtures import RockpackCoverArtData, VideoInstanceData, VideoData
+from test.fixtures import RockpackCoverArtData, VideoInstanceData, VideoData, ChannelData
 from test.test_helpers import get_auth_header
+from test.services.test_user_flows import BaseUserTestCase
 from rockpack.mainsite import app
-from rockpack.mainsite.services.video.commands import set_channel_view_count
+from rockpack.mainsite.services.video.commands import set_channel_view_count, update_channel_promo_activity
 from rockpack.mainsite.core.es import use_elasticsearch
 from rockpack.mainsite.core.es.api import ChannelSearch
 from rockpack.mainsite.services.video import models
@@ -93,7 +94,34 @@ class ChannelViewCountPopulation(base.RockPackTestCase):
             self.assertEquals(meta.view_count, 3)
 
 
-from test.services.test_user_flows import BaseUserTestCase
+class ChannelPromotionTest(base.RockPackTestCase):
+
+    def test_insert(self):
+        with self.app.test_client() as client:
+            self.app.test_request_context().push()
+
+            if use_elasticsearch():
+                now = datetime.utcnow()
+                models.ChannelPromotion(
+                    channel = ChannelData.channel1.id,
+                    date_start = now - timedelta(seconds=10),
+                    date_end = now + timedelta(seconds=30),
+                    category = 0,
+                    locale = 'en-us',
+                    position = 1
+                    ).save()
+
+                update_channel_promo_activity()
+                time.sleep(2)
+
+                user = self.create_test_user()
+                r = client.get('/ws/channels/',
+                    content_type='application/json',
+                    headers=[get_auth_header(user.id)]
+                )
+
+                feed = json.loads(r.data)
+                self.assertEquals(feed['channels']['items'][0]['id'], ChannelData.channel1.id)
 
 
 class ESChannelTest(base.RockPackTestCase):

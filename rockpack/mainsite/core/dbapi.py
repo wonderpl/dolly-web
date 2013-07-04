@@ -46,7 +46,9 @@ def sync_database(drop_all=False):
             pass
 
     for module in SERVICES + zip(*REGISTER_SETUPS)[0]:
-        load_modules(module)
+        # HACK: prevent admin from instantiating classess before db is up
+        if module not in ('rockpack.mainsite.admin', 'rockpack.mainsite.admin.auth', ):
+            load_modules(module)
 
     table_list = []
     for model in models:

@@ -5,13 +5,14 @@ import pyes
 from sqlalchemy import func, text, TIME, distinct, or_
 from rockpack.mainsite import app
 from rockpack.mainsite.manager import manager
-from rockpack.mainsite.core.es import mappings
+from rockpack.mainsite.core.es import mappings, api
 from rockpack.mainsite.core.es import es_connection
 from rockpack.mainsite.core.dbapi import commit_on_success
 from rockpack.mainsite.core.youtube import batch_query, _parse_datetime
 from rockpack.mainsite.services.base.models import JobControl
 from rockpack.mainsite.services.user.models import Subscription, UserActivity
-from rockpack.mainsite.services.video.models import Channel, ChannelLocaleMeta, Video, VideoInstance, PlayerErrorReport
+from rockpack.mainsite.services.video.models import (Channel, ChannelLocaleMeta, ChannelPromotion,
+                                                        Video, VideoInstance, PlayerErrorReport)
 
 
 @commit_on_success
@@ -153,6 +154,31 @@ def update_subscriber_stats():
     job_control.save()
 
 
+def update_channel_promo_activity():
+    # Push everything to es. Promotion data
+    # will get updated during insert
+    for p in ChannelPromotion.query.all():
+        api.add_channel_to_index(p.channel_rel)
+
+
+@manager.cron_command
+def update_channel_promotions():
+    """ Update promotion data for channels in ES """
+    JOB_NAME = 'update_subscriber_stats'
+    job_control = JobControl.query.get(JOB_NAME)
+    now = datetime.now()
+    if not job_control:
+        job_control = JobControl(job=JOB_NAME)
+        job_control.last_run = now
+
+    logging.info('%s: from %s to %s', JOB_NAME, job_control.last_run, now)
+
+    update_channel_promo_activity()
+
+    job_control.last_run = now
+    job_control.save()
+
+
 @manager.cron_command
 def check_video_player_errors():
     """Scan player error records and check that videos are still available."""
@@ -222,14 +248,15 @@ def sanitise_es():
         or_(
             Channel.public == False,
             Channel.visible == False,
-            Channel.deleted == True)
+            Channel.deleted == True
         )
+    )
 
     print 'Checking {} DELETED channels ...'.format(channels.count())
     count = 0
     for channel in channels.yield_per(6000).values('id'):
         try:
-         es_connection.delete(mappings.CHANNEL_INDEX, mappings.CHANNEL_TYPE, channel[0])
+            es_connection.delete(mappings.CHANNEL_INDEX, mappings.CHANNEL_TYPE, channel[0])
         except pyes.exceptions.NotFoundException:
             pass
         else:

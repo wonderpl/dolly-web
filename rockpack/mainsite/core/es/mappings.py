@@ -154,6 +154,9 @@ channel_mapping = {
             "index": "not_analyzed"},
         "owner": {
             "type": "string",
+            "index": "not_analyzed"},
+        "promotion": {
+            "type": "string",
             "index": "not_analyzed"}
     }
 }

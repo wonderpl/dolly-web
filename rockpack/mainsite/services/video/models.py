@@ -1,4 +1,3 @@
-import traceback
 from sqlalchemy import (
     Text, String, Column, Boolean, Integer, Float, ForeignKey, DateTime, CHAR,
     UniqueConstraint, event, func, orm)
@@ -369,6 +368,32 @@ class Channel(db.Model):
     def add_meta(self, locale):
         return ChannelLocaleMeta(channel=self.id, locale=locale).save()
 
+    def promotion_map(self):
+        return [es_api.promotion_formatter(p.locale, p.category, p.position) for p in self.channel_promotion]
+
+
+class ChannelPromotion(db.Model):
+    __tablename__ = 'channel_promotion'
+
+    id = Column(Integer, primary_key=True)
+    channel = Column(ForeignKey('channel.id'), nullable=False)
+    locale = Column(ForeignKey('locale.id'), nullable=False)
+    # Not a real fkey (below). Just an int in the db
+    category = Column(ForeignKey('category.id'), nullable=True)
+    date_added = Column(DateTime(), nullable=False, default=func.now())
+    date_updated = Column(DateTime(), nullable=False, default=func.now(), onupdate=func.now())
+    position = Column(Integer, nullable=False)
+
+    date_start = Column(DateTime(), nullable=False, default=func.now())
+    date_end = Column(DateTime(), nullable=False, default=func.now())
+
+    channel_rel = relationship('Channel', backref='channel_promotion')
+    locale_rel = relationship('Locale', backref='channel_promotion')
+
+    category_rel = relationship(Category, backref='channel_promotion_category',
+            primaryjoin='Category.id==ChannelPromotion.category',
+            foreign_keys=[Category.__table__.c.id])
+
 
 class ChannelLocaleMeta(db.Model):
 
@@ -527,6 +552,16 @@ def _es_channel_insert_from_channel(mapper, connection, target):
 @event.listens_for(Channel, 'after_update')
 def _es_channel_update_from_channel(mapper, connection, target):
     _add_or_remove_channel(target)
+
+
+@event.listens_for(ChannelPromotion, 'after_insert')
+def _es_channel_promotion_insert(mapper, connection, target):
+    _add_or_remove_channel(Channel.query.get(target.channel))
+
+
+@event.listens_for(ChannelPromotion, 'after_update')
+def _es_channel_promotion_update(mapper, connection, target):
+    _add_or_remove_channel(Channel.query.get(target.channel))
 
 
 event.listen(Video, 'before_insert', add_video_pk)

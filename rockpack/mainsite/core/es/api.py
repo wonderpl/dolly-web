@@ -173,6 +173,7 @@ class EntitySearch(object):
 
         if not (field and value):
             return
+
         f = pyes.TermsQuery if isinstance(value, list) else pyes.TermQuery
         term_query = f(field=field, value=value)
         self._add_term_occurs(term_query, occurs)
@@ -228,11 +229,15 @@ class ChannelSearch(EntitySearch, CategoryMixin, MediaSortMixin):
     def __init__(self, locale):
         super(ChannelSearch, self).__init__('channel', locale)
         self._channel_results = None
+        self.promoted_category = None
 
     @classmethod
     def add_owner_to_channels(cls, channels, owners):
         for channel in channels:
-            channel['owner'] = owners[channel['owner']]
+            try:
+                channel['owner'] = owners[channel['owner']]
+            except TypeError:
+                import pdb;pdb.set_trace()
 
     @classmethod
     def add_videos_to_channel(cls, channel, videos, total):
@@ -245,7 +250,30 @@ class ChannelSearch(EntitySearch, CategoryMixin, MediaSortMixin):
         owner_list = []
         IMAGE_CDN = app.config.get('IMAGE_CDN', '')
         BASE_URL = url_for('basews.discover')
-        for pos, channel in enumerate(channels, self.paging[0]):
+
+        def _get_sub_cat(category):
+            if not category:
+                return None
+            elif isinstance(channel[k], list):
+                return category[0]  # First item is subcat
+            else:
+                return category
+
+        def _check_position(position):
+            if position in promoted_position_list:
+                position += 1
+                return _check_position(position)
+            return position
+
+        # Any promoted channels should be at the top, so find these
+        # and then set the position of un-promoted to exclude these
+        promoted_channels = {}
+        promoted_position_list = []
+
+        position = 0
+        for channel in channels:
+            position += 1
+
             ch = dict(
                 id=channel.id,
                 owner=channel.owner,
@@ -254,7 +282,7 @@ class ChannelSearch(EntitySearch, CategoryMixin, MediaSortMixin):
                 description=channel.description,
                 title=channel.title,
                 public=channel.public,
-                position=pos,
+                promotion=channel.promotion,
                 cover=dict(
                     thumbnail_url=urljoin(IMAGE_CDN, channel.cover.thumbnail_url) if channel.cover.thumbnail_url else '',
                     aoi=channel.cover.aoi
@@ -282,11 +310,37 @@ class ChannelSearch(EntitySearch, CategoryMixin, MediaSortMixin):
                     else:
                         ch[k] = channel[k]
 
-            channel_list.append(ch)
             if with_owners:
                 owner_list.append(channel.owner)
             if with_videos:
                 channel_id_list.append(channel.id)
+
+            # ASSUMPTION: We should have all the promoted channels at the top, so positions of
+            # the promoted will already be known by the time we're at the regular channels.
+            # (lets also hope this assumption isn't anyones mother)
+            if channel.promotion:
+                promote_pattern = '|'.join([str(self.locale), str(self.promoted_category)])
+                for p in channel.promotion:
+                    if p.startswith(promote_pattern):
+                        locale, category, pos = p.split('|')
+                        pos = int(pos)
+                        ch['position'] = pos
+                        promoted_position_list.append(pos)
+                        promoted_channels[pos] = ch
+                continue
+            else:
+                # We need to reset the position here so that we account for any gaps
+                if not channel_list:
+                    position = 1
+
+            position = _check_position(position)
+            ch['position']  = position
+            channel_list.append(ch)
+
+
+        # Insert the promoted channels into their positions
+        for position, channel in promoted_channels.iteritems():
+            channel_list.insert(position - 1, channel)
 
         if with_owners and owner_list:
             ows = OwnerSearch()
@@ -310,6 +364,25 @@ class ChannelSearch(EntitySearch, CategoryMixin, MediaSortMixin):
                 video_map.setdefault(channel_id_list[0], []).append(v)  # HACK: see above
             self.add_videos_to_channel(channel_list[0], video_map, vs.total)
         return channel_list
+
+    def promotion_settings(self, category):
+        self.promoted_category = category or 0
+        self._add_term_occurs(
+            pyes.PrefixFilter(
+                field='promotion',
+                prefix='|'.join([str(self.locale), str(self.promoted_category)])
+            ),
+            SHOULD
+        )
+        if not category:
+            # The SHOULD condition requires at least one result. Since there is no
+            # category, if no promotions are set for the ALL category, no results
+            # will be returned. Explicity set SHOULD to display at least results
+            # from MatchAll.
+            self._add_term_occurs(
+                pyes.MatchAllFilter(),
+                SHOULD
+            )
 
     def channels(self, with_owners=False, with_videos=False, video_paging=(0, 100,)):
         if not self._channel_results:
@@ -455,6 +528,10 @@ def add_owner_to_index(owner, bulk=False, refresh=False, no_check=False):
     return add_to_index(data, mappings.USER_INDEX, mappings.USER_TYPE, id=owner.id, bulk=bulk, refresh=refresh)
 
 
+def promotion_formatter(locale, category, position):
+    return '|'.join([str(locale), str(category), str(position)])
+
+
 def add_channel_to_index(channel, bulk=False, refresh=False, boost=None, no_check=False):
     if not check_es(no_check):
         return
@@ -496,7 +573,8 @@ def add_channel_to_index(channel, bulk=False, refresh=False, boost=None, no_chec
             thumbnail_url=urlparse(convert(channel, 'cover', 'CHANNEL').url).path,
             aoi=aoi
         ),
-        keywords=[channel.owner_rel.display_name.lower(), channel.owner_rel.username.lower()]
+        keywords=[channel.owner_rel.display_name.lower(), channel.owner_rel.username.lower()],
+        promotion=channel.promotion_map()
     )
 
     if app.config.get('SHOW_OLD_CHANNEL_COVER_URLS', True):
