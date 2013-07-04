@@ -35,7 +35,7 @@ def create_database(db_url, drop_if_exists=False):
     engine.execute(command)
 
 
-def sync_database(drop_all=False):
+def sync_database(drop_all=False, custom_modules=None):
     models = []
 
     def load_modules(module):
@@ -45,10 +45,13 @@ def sync_database(drop_all=False):
             #print >> sys.stderr, 'cannot import', module, ':', e
             pass
 
-    for module in SERVICES + zip(*REGISTER_SETUPS)[0]:
-        # HACK: prevent admin from instantiating classess before db is up
-        if module not in ('rockpack.mainsite.admin', 'rockpack.mainsite.admin.auth', ):
-            load_modules(module)
+    modules = custom_modules or SERVICES + zip(*REGISTER_SETUPS)[0]
+    for module in modules:
+        # HACK: prevent admin modules being loaded unless explicitly passed
+        # Stops CMS class instantiation breaking tests.
+        if not custom_modules and module in ('rockpack.mainsite.admin', 'rockpack.mainsite.admin.auth', ):
+            continue
+        load_modules(module)
 
     table_list = []
     for model in models:

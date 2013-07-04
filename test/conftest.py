@@ -28,6 +28,8 @@ def pytest_configure(config):
     from test.fixtures import install, all_data
     install_mocks()
     init_app()
+    # Explicityly load admin tables after app is loaded.
+    dbapi.sync_database(custom_modules=('rockpack.mainsite.admin', 'rockpack.mainsite.admin.auth', ))
     install(*all_data)
 
 
