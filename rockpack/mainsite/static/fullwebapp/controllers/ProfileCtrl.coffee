@@ -3,4 +3,6 @@ window.WebApp.controller('ProfileCtrl', ['$scope', 'UserManager', ($scope, UserM
   $scope.User = UserManager
   $scope.User.FetchSubscriptions()
 
+  console.log $scope.User
+
 ])

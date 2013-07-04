@@ -14,11 +14,11 @@ angular.module('WebApp').directive('messageHandler', [ '$rootScope', ($rootScope
       )
 
       scope.showMessage = () ->
-        $("#message").show()
+        $("#message").show('fast')
 
       scope.hideMessage = () ->
-        $("#message").hide()
-        $rootScope.message = ''
+        $("#message").hide('fast')
+        $rootScope.message = {}
 
       return
   }

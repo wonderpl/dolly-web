@@ -1,4 +1,4 @@
-window.WebApp.controller('ChannelCtrl', ['$scope', '$routeParams', '$rootScope', '$location', 'ContentService', '$dialog', 'UserManager', ($scope, $routeParams, $rootScope, $location, ContentService, $dialog, UserManager) ->
+window.WebApp.controller('ChannelCtrl', ['$scope', '$routeParams', '$rootScope', '$location', 'ContentService', '$dialog', 'UserManager', 'shareService', ($scope, $routeParams, $rootScope, $location, ContentService, $dialog, UserManager, shareService) ->
 
   $scope.page = 0
   $scope.User = UserManager
@@ -33,5 +33,8 @@ window.WebApp.controller('ChannelCtrl', ['$scope', '$routeParams', '$rootScope',
       )
   )
 
+  $scope.share = (shareid) ->
+    console.log $scope.channel
+    shareService.fetchShareUrl('channel', shareid)
 
 ])

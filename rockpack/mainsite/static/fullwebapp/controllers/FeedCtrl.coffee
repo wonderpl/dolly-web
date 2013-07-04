@@ -1,5 +1,7 @@
 window.WebApp.controller('FeedCtrl', ['$scope', 'cookies', 'UserManager', '$location', '$dialog', ($scope, cookies, UserManager, $location, $dialog) ->
 
+  console.log 'in Feed'
+
   $scope.User = UserManager
   $scope.User.feed.total = null
   $scope.User.feed.position = 0

@@ -21,6 +21,7 @@ def _discover_response():
         login_register_external=url_for('loginws.exeternal'),
         reset_password=url_for('resetws.reset_password'),
         refresh_token=url_for('tokenws.token'),
+        share_url=url_for('sharews.create_share_link' ),
     )
 
 

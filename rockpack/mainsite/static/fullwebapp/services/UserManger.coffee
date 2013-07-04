@@ -1,4 +1,4 @@
-# TODO: Disable timeers on log out
+# TODO: Disable timers on log out
 # TODO: still room for refactoring
 
 window.WebApp.factory('UserManager', ['cookies', '$http', '$q', '$location','apiUrl', 'activityService', 'oauthService', (cookies, $http, $q, $location, apiUrl, activityService, oauthService) ->
@@ -44,12 +44,11 @@ window.WebApp.factory('UserManager', ['cookies', '$http', '$q', '$location','api
           User.recentActivity.recently_starred = _.union(User.recentActivity.recently_starred, data.recently_starred)
           User.recentActivity.recently_viewed = _.union(User.recentActivity.recently_viewed, data.recently_viewed)
           User.recentActivity.subscribed = _.union(User.recentActivity.subscribed, data.subscribed)
-          User.cacheTime = data.cacheTime
+          User.recentActivity.cacheTime = data.cacheTime
           setTimeout((
             () ->
               User.recentActivityTimedRetrive()
-          ), User.recentActivity.cacheTime*1000
-          )
+          ), User.recentActivity.cacheTime*1000)
         )
 
     FetchUserData: () ->

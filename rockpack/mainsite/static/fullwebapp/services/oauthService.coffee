@@ -46,7 +46,10 @@ angular.module('WebApp').factory('oauthService', [ '$http', 'apiUrl', 'cookies',
           OAuth._ApplyLogin(data)
         )
         .error((data) =>
-          $rootScope.message.message = 'User Name or Password did not match'
+          $rootScope.message = {
+            message: 'User Name or Password did not match'
+            state: 1
+          }
           console.log data
         )
 
