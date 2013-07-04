@@ -6,7 +6,7 @@ from rockpack.mainsite.core.webservice import WebService, expose_ajax
 from rockpack.mainsite.core import youtube
 from rockpack.mainsite.helpers.db import gen_videoid
 from rockpack.mainsite.services.video.api import get_local_channel
-from rockpack.mainsite.services.video.models import Channel
+from rockpack.mainsite.services.video.models import Channel, User
 from rockpack.mainsite.core.es.api import ChannelSearch, VideoSearch
 from rockpack.mainsite.core.es import use_elasticsearch, filters
 
@@ -111,6 +111,8 @@ class CompleteWS(WebService):
         query = request.args.get('q', '')
         if not query:
             abort(400)
+        if app.config.get('USE_CHANNEL_TERMS_FOR_VIDEO_COMPLETE'):
+            return self.complete_channel_terms()
         result = youtube.complete(query)
         return Response(result, mimetype='text/javascript')
 
@@ -119,6 +121,16 @@ class CompleteWS(WebService):
         # Use same javascript format as google complete for the sake of
         # consistency with /complete/videos
         query = request.args.get('q', '')
-        channels = Channel.query.filter(Channel.title.ilike('%s%%' % query)).limit(10)
-        result = json.dumps((query, [(c.title, 0, []) for c in channels.values('title')], {}))
+        terms = list(
+            Channel.query.filter(Channel.title.ilike('%s%%' % query)).
+            filter_by(deleted=False, public=True, visible=True).
+            order_by('subscriber_count desc').limit(10).values('title'))
+        remainder = 10 - len(terms)
+        if remainder:
+            terms += list(
+                User.query.filter(User.username.ilike('%s%%' % query)).
+                filter_by(is_active=True).
+                join(Channel).group_by(User.id).
+                order_by('count(*) desc').limit(remainder).values('username'))
+        result = json.dumps((query, [(t[0], 0, []) for t in terms], {}))
         return Response('window.google.ac.h(%s)' % result, mimetype='text/javascript')

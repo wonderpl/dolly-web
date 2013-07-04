@@ -1,5 +1,9 @@
 window.Weblight.controller('ChannelCtrl', ['$scope', 'Videos', '$routeParams', '$rootScope', '$location', 'isMobile', 'channelData', ($scope, Videos, $routeParams, $rootScope, $location, isMobile, channelData) ->
 
+
+  $scope.triggerEvent = (action, label) ->
+    ga('send', 'event', 'uiAction', action, label)
+
   @page = 1 # We prefetch the first page in the index (server side)
   @channelid = channelData.id
 
