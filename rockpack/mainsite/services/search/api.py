@@ -121,12 +121,16 @@ class CompleteWS(WebService):
         # Use same javascript format as google complete for the sake of
         # consistency with /complete/videos
         query = request.args.get('q', '')
-        terms = list(Channel.query.filter(Channel.title.ilike('%s%%' % query)).
-                     order_by('subscriber_count').limit(10).values('title'))
+        terms = list(
+            Channel.query.filter(Channel.title.ilike('%s%%' % query)).
+            filter_by(deleted=False, public=True, visible=True).
+            order_by('subscriber_count desc').limit(10).values('title'))
         remainder = 10 - len(terms)
         if remainder:
-            terms += list(User.query.filter(User.username.ilike('%s%%' % query)).
-                          join(Channel).group_by(User.id).order_by('count(*) desc').
-                          limit(remainder).values('username'))
+            terms += list(
+                User.query.filter(User.username.ilike('%s%%' % query)).
+                filter_by(is_active=True).
+                join(Channel).group_by(User.id).
+                order_by('count(*) desc').limit(remainder).values('username'))
         result = json.dumps((query, [(t[0], 0, []) for t in terms], {}))
         return Response('window.google.ac.h(%s)' % result, mimetype='text/javascript')
