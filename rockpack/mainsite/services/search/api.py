@@ -111,26 +111,38 @@ class CompleteWS(WebService):
         query = request.args.get('q', '')
         if not query:
             abort(400)
-        if app.config.get('USE_CHANNEL_TERMS_FOR_VIDEO_COMPLETE'):
-            return self.complete_channel_terms()
         result = youtube.complete(query)
+        if len(query) >= app.config.get('USE_CHANNEL_TERMS_FOR_VIDEO_COMPLETE', 0):
+            terms = json.loads(result[result.index('(') + 1:result.rindex(')')])
+            return self.complete_channel_terms(terms[1])
         return Response(result, mimetype='text/javascript')
 
     @expose_ajax('/channels/', cache_age=86400)
-    def complete_channel_terms(self):
+    def complete_channel_terms(self, extra_terms=None):
         # Use same javascript format as google complete for the sake of
         # consistency with /complete/videos
         query = request.args.get('q', '')
-        terms = list(
+
+        username_terms = list(
+            User.query.filter(User.username.ilike('%s%%' % query)).
+            filter_by(is_active=True).
+            join(Channel).group_by(User.id).
+            order_by('count(*) desc').limit(10).values('username'))
+
+        channel_terms = list(
             Channel.query.filter(Channel.title.ilike('%s%%' % query)).
             filter_by(deleted=False, public=True, visible=True).
             order_by('subscriber_count desc').limit(10).values('title'))
-        remainder = 10 - len(terms)
-        if remainder:
-            terms += list(
-                User.query.filter(User.username.ilike('%s%%' % query)).
-                filter_by(is_active=True).
-                join(Channel).group_by(User.id).
-                order_by('count(*) desc').limit(remainder).values('username'))
+
+        # For each term source, add up to 3 at the top and then fill with
+        # remaining sources, if any
+        terms = []
+        i = 0
+        for src in username_terms, channel_terms, extra_terms:
+            if src:
+                c = max(i, 10 - len(src))
+                terms = terms[:c] + src[:10 - min(c, len(terms))]
+                i += 3
+
         result = json.dumps((query, [(t[0], 0, []) for t in terms], {}))
         return Response('window.google.ac.h(%s)' % result, mimetype='text/javascript')
