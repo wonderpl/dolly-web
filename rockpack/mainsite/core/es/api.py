@@ -282,7 +282,6 @@ class ChannelSearch(EntitySearch, CategoryMixin, MediaSortMixin):
                 description=channel.description,
                 title=channel.title,
                 public=channel.public,
-                promotion=channel.promotion,
                 cover=dict(
                     thumbnail_url=urljoin(IMAGE_CDN, channel.cover.thumbnail_url) if channel.cover.thumbnail_url else '',
                     aoi=channel.cover.aoi
