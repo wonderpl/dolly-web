@@ -193,7 +193,7 @@ def category_list():
 class ChannelPromotionForm(wtf.Form):
     channel = wtf.TextField()
     category = wtf.SelectField('Category')
-    locale = wtf.SelectField('Locale', choices=[(l.id, l.name) for l in models.Locale.query.all()], validators=[wtf.Required()])
+    locale = wtf.SelectField('Locale', validators=[wtf.Required()])
     position = wtf.IntegerField(validators=[wtf.Required()])
     date_start = wtf.DateTimeField(validators=[wtf.Required()], widget=DateTimePickerWidget())
     date_end = wtf.DateTimeField(validators=[wtf.Required()], widget=DateTimePickerWidget())
@@ -201,6 +201,7 @@ class ChannelPromotionForm(wtf.Form):
     def __init__(self, *args, **kwargs):
         super(ChannelPromotionForm, self).__init__(*args, **kwargs)
         self.category.choices = category_list()
+        self.locale.choices = [(l.id, l.name) for l in models.Locale.query.all()]
 
     def validate(self):
 
