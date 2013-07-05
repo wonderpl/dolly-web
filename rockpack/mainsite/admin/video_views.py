@@ -205,15 +205,16 @@ class ChannelPromotionForm(wtf.Form):
 
     def validate(self):
 
-        # Handle coercion here as we want to make sure
-        # zero value gets converted to None for the db
-        if self.category.data == 0:
-            self.category.data = None
-        else:
+        # stupid hack for wtform's retarded handling of zero values
+        if int(self.category.data):
             self.category.data = int(self.category.data)
 
         if not super(ChannelPromotionForm, self).validate():
             return
+
+        # Handle coercion here
+        self.category.data = int(self.category.data)
+
 
         if self.date_start.data > self.date_end.data:
             self.date_end.errors = ['End date must be after end date']
