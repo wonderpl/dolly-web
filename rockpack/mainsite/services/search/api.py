@@ -7,7 +7,7 @@ from rockpack.mainsite.core import youtube
 from rockpack.mainsite.helpers.db import gen_videoid
 from rockpack.mainsite.services.video.api import get_local_channel
 from rockpack.mainsite.services.video.models import Channel, User
-from rockpack.mainsite.core.es.api import ChannelSearch, VideoSearch
+from rockpack.mainsite.core.es.api import ChannelSearch, VideoSearch, OwnerSearch
 from rockpack.mainsite.core.es import use_elasticsearch, filters
 
 
@@ -98,6 +98,33 @@ class SearchWS(WebService):
                                          query=request.args.get('q', ''),
                                          date_order=date_order)
         return {'channels': {'items': items, 'total': total}}
+
+    @expose_ajax('/owners/', cache_age=300)
+    def search_users(self):
+        search_term = request.args.get('q', '').lower()
+        offset, limit = self.get_page()
+        if use_elasticsearch():
+            ows = OwnerSearch()
+            ows.set_paging(offset, limit)
+            ows.add_text('username', search_term)
+            ows.add_text('display_name', search_term)
+            owners = ows.owners()
+            return dict(owners=dict(items=owners, total=ows.total))
+
+        users = User.query.filter(User.username.ilike(search_term))
+        count = users.count()
+        items = []
+        for user in users.limit(limit).offset(offset):
+            items.append(
+                dict(
+                    id=user.id,
+                    username=user.username,
+                    display_name=user.display_name,
+                    avatar_thumbnail_url=user.avatar.url,
+                    resource_url=user.resource_url
+                )
+            )
+        return dict(owners=dict(items=items, total=count))
 
 
 class CompleteWS(WebService):

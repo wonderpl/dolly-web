@@ -97,6 +97,42 @@ Cache-Control: public, max-age=300
 }
 ```
 
+### Owners
+
+List owner matching or containing a specific search term.
+
+```http
+GET /ws/search/owners/?q=QUERY&start=START&size=SIZE HTTP/1.1
+```
+
+Parameter      | Required? | Value             | Description
+:------------- | :-------- | :---------------- | :----------
+q              | yes       | Unicode string    | The search term string
+start          | no        | 0-based integer   | Used for paging through the result items
+size           | no        | Result page size  | Number of items to return - max 50.
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+Cache-Control: public, max-age=300
+
+{
+  "owners": {
+    "items": [
+      {
+        "id": "ziCAgGxbRpW-HNYTloYkQg",
+        "username": "littlejimmy",
+        "display_name": "Jimmy Wales",
+        "avatar_thumbnail_url": "http://path/to/avatar/small.jpg",
+        "resource_url": "http://dev.rockpack.com/ws/ziCAgGxbRpW-HNYTloYkQg/"
+      }
+    ],
+    "total": 1
+  }
+}
+
+```
+
 Complete
 ========
 
