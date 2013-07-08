@@ -229,6 +229,7 @@ class ChannelWS(WebService):
         cs.filter_category(request.args.get('category'))
         cs.promotion_settings(request.args.get('category'))
         cs.add_sort('promotion', 'desc')
+        cs.add_sort('_score', 'desc')
         cs.date_sort(request.args.get('date_order'))
         if request.args.get('user_id'):
             cs.add_term('owner', request.args.get('user_id'))
