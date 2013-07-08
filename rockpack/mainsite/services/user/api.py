@@ -1,6 +1,6 @@
 from werkzeug.datastructures import MultiDict
 from sqlalchemy import desc, func
-from sqlalchemy.orm import lazyload
+from sqlalchemy.orm import lazyload, contains_eager
 from flask import abort, request, json, g
 from flask.ext import wtf
 from flask.ext.admin import form
@@ -10,6 +10,7 @@ from rockpack.mainsite.core.dbapi import commit_on_success
 from rockpack.mainsite.core.webservice import WebService, expose_ajax, ajax_create_response, process_image
 from rockpack.mainsite.core.oauth.decorators import check_authorization
 from rockpack.mainsite.core.youtube import get_video_data
+from rockpack.mainsite.core.es import use_elasticsearch, api
 from rockpack.mainsite.helpers import lazy_gettext as _
 from rockpack.mainsite.helpers.forms import naughty_word_validator
 from rockpack.mainsite.helpers.urls import url_for, url_to_endpoint
@@ -17,12 +18,12 @@ from rockpack.mainsite.helpers.db import gen_videoid, get_column_validators, get
 from rockpack.mainsite.services.video.models import (
     Channel, ChannelLocaleMeta, Video, VideoInstance, VideoInstanceLocaleMeta, Category, ContentReport)
 from rockpack.mainsite.services.oauth.api import RockRegistrationForm
+from rockpack.mainsite.services.oauth.models import ExternalFriend, ExternalToken
 from rockpack.mainsite.services.cover_art.models import UserCoverArt, RockpackCoverArt
 from rockpack.mainsite.services.cover_art import api as cover_api
 from rockpack.mainsite.services.video import api as video_api
 from rockpack.mainsite.services.search import api as search_api
 from .models import User, UserActivity, UserNotification, Subscription
-from rockpack.mainsite.core.es import use_elasticsearch, api
 
 
 ACTION_COLUMN_VALUE_MAP = dict(
@@ -802,3 +803,42 @@ class UserWS(WebService):
         else:
             items, total = [], 0
         return dict(videos=dict(items=items, total=total))
+
+    @expose_ajax('/<userid>/friends/', cache_age=600, cache_private=True)
+    @check_authorization(self_auth=True)
+    def get_friends(self, userid):
+        ExternalFriend.populate_facebook_friends(userid)
+        friends = ExternalFriend.query.filter_by(user=userid).all()
+        rockpack_friends = dict(
+            (user.external_tokens[0].external_uid, user)
+            for user in User.query.join(ExternalToken, (
+                (ExternalToken.user == User.id) &
+                (ExternalToken.external_system == 'facebook') &
+                (ExternalToken.external_uid.in_(set(f.external_uid for f in friends)))
+            )).options(contains_eager(User.external_tokens)).order_by('date_joined desc')
+        )
+        items = []
+        for friend in friends:
+            item = dict(
+                display_name=friend.name,
+                avatar_thumbnail_url=friend.avatar_url,
+                external_uid=friend.external_uid,
+                external_system=friend.external_system,
+            )
+            if friend.has_ios_device:
+                item['has_ios_device'] = True
+            rockpack_user = rockpack_friends.get(friend.external_uid)
+            if rockpack_user:
+                item.update(
+                    id=rockpack_user.id,
+                    resource_url=rockpack_user.get_resource_url(),
+                    display_name=rockpack_user.display_name,
+                    avatar_thumbnail_url=rockpack_user.avatar.url,
+                )
+            items.append(item)
+        if 'ios' in request.args.get('device_filter', ''):
+            items = [i for i in items if 'resource_url' in i or 'has_ios_device' in i]
+        items.sort(key=lambda i: i['display_name'])
+        for i, item in enumerate(items):
+            item['position'] = i
+        return dict(users=dict(items=items, total=len(items)))

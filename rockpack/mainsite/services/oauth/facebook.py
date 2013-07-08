@@ -46,6 +46,9 @@ from flask import json
 _parse_json = lambda s: json.loads(s)
 
 
+FACEBOOK_PICTURE_URL = 'http://graph.facebook.com/%s/picture/?type=large'
+
+
 class GraphAPI(object):
     """A client for the Facebook Graph API.
 

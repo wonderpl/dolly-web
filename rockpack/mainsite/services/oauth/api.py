@@ -227,7 +227,7 @@ class ExternalUser:
 
     @property
     def avatar(self):
-        r = requests.get('http://graph.facebook.com/{}/picture/?type=large'.format(self.id))
+        r = requests.get(facebook.FACEBOOK_PICTURE_URL % self.id)
         if r.status_code == 200 and r.headers.get('content-type', '').startswith('image/'):
             return StringIO(r.content)
         return ''
