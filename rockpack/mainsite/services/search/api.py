@@ -99,7 +99,7 @@ class SearchWS(WebService):
                                          date_order=date_order)
         return {'channels': {'items': items, 'total': total}}
 
-    @expose_ajax('/owners/', cache_age=300)
+    @expose_ajax('/users/', cache_age=300)
     def search_users(self):
         search_term = request.args.get('q', '').lower()
         offset, limit = self.get_page()
@@ -109,7 +109,7 @@ class SearchWS(WebService):
             ows.add_text('username', search_term)
             ows.add_text('display_name', search_term)
             owners = ows.owners()
-            return dict(owners=dict(items=owners, total=ows.total))
+            return dict(users=dict(items=owners, total=ows.total))
 
         users = User.query.filter(User.username.ilike(search_term))
         count = users.count()
@@ -124,7 +124,7 @@ class SearchWS(WebService):
                     resource_url=user.resource_url
                 )
             )
-        return dict(owners=dict(items=items, total=count))
+        return dict(users=dict(items=items, total=count))
 
 
 class CompleteWS(WebService):

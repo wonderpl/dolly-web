@@ -97,12 +97,12 @@ Cache-Control: public, max-age=300
 }
 ```
 
-### Owners
+### Users
 
-List owner matching or containing a specific search term.
+List users matching or containing a specific search term.
 
 ```http
-GET /ws/search/owners/?q=QUERY&start=START&size=SIZE HTTP/1.1
+GET /ws/search/users/?q=QUERY&start=START&size=SIZE HTTP/1.1
 ```
 
 Parameter      | Required? | Value             | Description
@@ -117,7 +117,7 @@ Content-Type: application/json
 Cache-Control: public, max-age=300
 
 {
-  "owners": {
+  "users": {
     "items": [
       {
         "id": "ziCAgGxbRpW-HNYTloYkQg",
