@@ -1,8 +1,8 @@
 import re
 import logging
 from datetime import datetime
-from rockpack.mainsite import requests
 from rockpack.mainsite.manager import manager
+from rockpack.mainsite.helpers.http import get_external_resource
 from .models import Subscription
 from .api import update_channel_videos
 
@@ -28,6 +28,6 @@ def refresh_pubsubhubbub_subscriptions(id=None):
             logging.info('Subscribed: %d', sub.id)
 
         try:
-            update_channel_videos(sub.channel, requests.get(sub.topic).content)
+            update_channel_videos(sub.channel, get_external_resource(sub.topic).read())
         except Exception:
             logging.exception('Failed to update: %d', sub.id)
