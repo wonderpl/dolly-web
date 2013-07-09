@@ -16,10 +16,11 @@ def subscribe(hub, topic, channel_id):
 
 
 @commit_on_success
-def add_videos_to_channel(channel, videos):
+def update_channel_videos(channel, data):
+    playlist = youtube.parse_atom_playlist_data(data)
     source = 1  # XXX: Get this dynamically?
-    Video.add_videos(videos, source)
-    channel.add_videos(videos)
+    Video.add_videos(playlist.videos, source)
+    channel.add_videos(playlist.videos)
 
 
 class PubSubHubbubWS(WebService):
@@ -42,8 +43,7 @@ class PubSubHubbubWS(WebService):
         elif request.mimetype == 'application/atom+xml':
             sig = request.headers.get('X-Hub-Signature')
             if sig and subs.check_signature(sig, request.data):
-                playlist = youtube.parse_atom_playlist_data(request.data)
-                add_videos_to_channel(subs.channel, playlist.videos)
+                update_channel_videos(subs.channel, request.data)
             else:
                 app.logger.warning('Failed to validate signature %s', sig)
             return '', 204
