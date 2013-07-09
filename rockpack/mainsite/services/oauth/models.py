@@ -2,9 +2,10 @@ from datetime import datetime
 from datetime import timedelta
 from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, Enum, DateTime, func
 from sqlalchemy.orm import relationship, exc
-
+from flask import abort
 from rockpack.mainsite import app
 from rockpack.mainsite.core.dbapi import db, commit_on_success
+from rockpack.mainsite.helpers import lazy_gettext as _
 from rockpack.mainsite.services.user.models import User, EXTERNAL_SYSTEM_NAMES
 from . import exceptions, facebook
 
@@ -36,7 +37,6 @@ class ExternalToken(db.Model):
 
     @classmethod
     def user_from_uid(cls, external_system, uid):
-
         try:
             e = cls.query.filter_by(external_system=external_system,
                                     external_uid=uid).one()
@@ -45,36 +45,28 @@ class ExternalToken(db.Model):
         return e.user_rel
 
     @classmethod
-    def update_token(cls, user, eu):
-        """ Updates an existing token (or creates a new one)
-            and returns the token object """
-
+    def update_token(cls, userid, eu):
+        """Updates an existing token (or creates a new one) and returns the token object"""
         if eu.system not in EXTERNAL_SYSTEM_NAMES:
             raise exceptions.InvalidExternalSystem('{} is not a valid name'.format(eu.system))
 
         try:
             e = cls.query.filter_by(external_uid=eu.id, external_system=eu.system).one()
-            if e.user != user.id:
-                error = 'Token owner <user:{}> does not match id {}'.format(e.user, user.id)
-                app.logger.error(error)
-                raise exceptions.InvalidUserForExternalToken(error)
         except exc.NoResultFound:
-            e = cls(user=user.id,
-                    external_system='facebook',
+            if ExternalToken.query.filter_by(user=userid, external_system=eu.system).count():
+                abort(400, _('User already associated with account'))
+            e = cls(user=userid,
+                    external_system=eu.system,
                     external_token=eu.token,
                     external_uid=eu.id)
+        else:
+            if e.user != userid:
+                app.logger.error('Token owner %s does not match update user: %s', e.user, userid)
+                abort(400, _('External account mismatch'))
 
         # Fetch a long-lived token if we don't have an expiry,
-        # or we haven't go long until it does expire,
-        # or if the tokens differ.
-        def _expired_token(expires):
-            if not expires:
-                return True
-            if datetime.now() + timedelta(days=1) > expires:
-                return True
-            return False
-
-        if _expired_token(e.expires):
+        # or we haven't long to go until it does expire
+        if not e.expires or datetime.now() + timedelta(days=1) > e.expires:
             new_eu = eu.get_new_token()
             e.external_token = new_eu.token
             e.expires = new_eu.expires

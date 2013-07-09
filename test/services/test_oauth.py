@@ -166,7 +166,7 @@ class ExternalTokenTestCase(base.RockPackTestCase):
         token = uuid.uuid4().hex
         eu = ExternalUser('facebook', token=token, expires_in='')
         eu._user_data = FACEBOOK_GRAPH_DATA.copy()
-        ExternalToken.update_token(user, eu)
+        ExternalToken.update_token(user.id, eu)
 
         e = ExternalToken.query.filter_by(external_token=long_lived_fb_token).one()
         self.assertEquals('facebook', e.external_system)
@@ -176,7 +176,7 @@ class ExternalTokenTestCase(base.RockPackTestCase):
         new_token = uuid.uuid4().hex
         eu = ExternalUser('facebook', token=new_token, expires_in=7200)
         eu._user_data = FACEBOOK_GRAPH_DATA.copy()
-        ExternalToken.update_token(user, eu)
+        ExternalToken.update_token(user.id, eu)
 
         e = ExternalToken.query.filter_by(user=user.id)
         self.assertEquals(1, e.count(), 'only one token should exist')

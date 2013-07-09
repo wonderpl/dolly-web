@@ -17,7 +17,8 @@ from rockpack.mainsite.helpers.urls import url_for, url_to_endpoint
 from rockpack.mainsite.helpers.db import gen_videoid, get_column_validators, get_box_value
 from rockpack.mainsite.services.video.models import (
     Channel, ChannelLocaleMeta, Video, VideoInstance, VideoInstanceLocaleMeta, Category, ContentReport)
-from rockpack.mainsite.services.oauth.api import RockRegistrationForm
+from rockpack.mainsite.services.oauth.api import (
+    RockRegistrationForm, external_user_from_token_form, record_user_event)
 from rockpack.mainsite.services.oauth.models import ExternalFriend, ExternalToken
 from rockpack.mainsite.services.cover_art.models import UserCoverArt, RockpackCoverArt
 from rockpack.mainsite.services.cover_art import api as cover_api
@@ -803,6 +804,13 @@ class UserWS(WebService):
         else:
             items, total = [], 0
         return dict(videos=dict(items=items, total=total))
+
+    @expose_ajax('/<userid>/external_accounts/', methods=['POST'])
+    @check_authorization(self_auth=True)
+    def post_external_accounts(self, userid):
+        eu = external_user_from_token_form()
+        ExternalToken.update_token(userid, eu)
+        record_user_event(str(userid), '%s token updated' % eu.system, userid)
 
     @expose_ajax('/<userid>/friends/', cache_age=600, cache_private=True)
     @check_authorization(self_auth=True)

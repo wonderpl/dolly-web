@@ -60,15 +60,8 @@ class LoginWS(WebService):
 
     @expose_ajax('/external/', methods=['POST'])
     @check_client_authorization
-    def exeternal(self):
-
-        form = ExternalRegistrationForm(request.form, csrf_enabled=False)
-        if not form.validate():
-            abort(400, form_errors=form.errors)
-
-        eu = ExternalUser(form.external_system.data, form.external_token.data)
-        if not eu.valid_token:
-            abort(400, error='unauthorized_client')
+    def external(self):
+        eu = external_user_from_token_form()
 
         user = models.ExternalToken.user_from_uid(
             request.form.get('external_system'),
@@ -80,7 +73,7 @@ class LoginWS(WebService):
             record_user_event(user.username, 'registration succeeded', user.id)
 
         # Update the token record if needed
-        models.ExternalToken.update_token(user, eu)
+        models.ExternalToken.update_token(user.id, eu)
 
         record_user_event(user.username, 'login succeeded', user.id)
         return user.get_credentials()
@@ -144,6 +137,18 @@ class ExternalRegistrationForm(wtf.Form):
     def validate_external_system(form, value):
         if value.data not in models.EXTERNAL_SYSTEM_NAMES:
             raise wtf.ValidationError(_('External system invalid.'))
+
+
+def external_user_from_token_form():
+    form = ExternalRegistrationForm(request.form, csrf_enabled=False)
+    if not form.validate():
+        abort(400, form_errors=form.errors)
+
+    eu = ExternalUser(form.external_system.data, form.external_token.data)
+    if not eu.valid_token:
+        abort(400, error='unauthorized_client')
+
+    return eu
 
 
 # TODO: currently only Facebook - change
