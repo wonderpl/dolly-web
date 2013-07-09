@@ -29,6 +29,7 @@ body {
   font-size: 12px;
   color: #282d33;
   font-family: Arial;
+  background: #f7f7f7;
 }
 
 #videoplayer {
@@ -116,6 +117,7 @@ body {
 
 .bold {
   font-family: "dn-bold", Helvetica;
+  color: #0ba6ab;
 }
 
 .uppercase {
@@ -252,11 +254,27 @@ body {
   top: 72px;
   left: 21px;
 }
+#header {
+  background: #fff;
+  height: 50px;
+  line-height: 46px;
+  position: fixed;
+  width: 100%;
+  z-index: 1000;
+
+  img {
+    width: 125px;
+    height: 22px;
+    vertical-align: middle;
+
+  }
+}
+
 
 @media (max-width: 767px) {
 
   .wrapper {
-    width: auto;
+    width: 95%;
   }
 
   #channelwrapper {
@@ -264,6 +282,7 @@ body {
     margin: 0 auto;
     text-align: center;
     width: 300px;
+    margin-top: 80px;
 
     img {
       margin: 0 0 40px 0;

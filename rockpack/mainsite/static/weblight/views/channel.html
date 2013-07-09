@@ -1,13 +1,17 @@
-<div ng-controller="ChannelCtrl" id="ChannelCtrl" ng-style="{'background': 'url(' + channel.cover.thumbnail_url + ')'}" >
-  <div id="bgimage">
+<div ng-controller="ChannelCtrl" id="ChannelCtrl">
+  <div id="header">
+    <div class="wrapper">
+      <a href="/#"><img src="((assets_url))/assets/weblight/images/logo.png"></a>
+    </div>
+  </div>  <div>
     <div ng-include="'videoplayer.html'"></div>
     <div class="wrapper">
       <div id="channelwrapper">
         <p id="introtext"><span class="bold uppercase">((channel.owner.display_name))</span> ((sharetext)) </p>
-        <p>Download Rockpack for <span class="bold">free on iPhone and iPad</span> and search for <span class="bold uppercase">'((channel.title))'</span> to watch this channel.</p>
-        <p class="hidden-phone">Browse thousands of other channels or create your own. </p>
-        <img ng-src="((assets_url))/assets/weblight/images/bluelogo.png" class="hidden-phone">
+        <p>Download Rockpack for <span class="bold">free on iPhone and iPad</span>. Search for <span class="bold uppercase">'((channel.title))'</span> to watch this and thousands of other channels.</p>
+        <p class="hidden-phone">“Rockpack looks pretty impressive. It's very slick." - The Guardian</p>
         <a href="https://itunes.apple.com/app/rockpack/id660697542?mt=8&ls=1" target="_blank" ng-click="triggerEvent('appStoreButtonClick')"><img ng-src="((assets_url))/assets/weblight/images/downloadbig.png" ng-click="triggerEvent('appStoreButtonClick')"></a>
+        <img ng-src="((assets_url))/assets/weblight/images/bluelogo.png" class="hidden-phone">
       </div>
       <div id="screenshot">
         <div id="gloss"></div>
