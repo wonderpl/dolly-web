@@ -1,3 +1,4 @@
+from datetime import datetime
 from sqlalchemy import (
     Text, String, Column, Boolean, Integer, Float, ForeignKey, DateTime, CHAR,
     UniqueConstraint, event, func, orm)
@@ -369,7 +370,12 @@ class Channel(db.Model):
         return ChannelLocaleMeta(channel=self.id, locale=locale).save()
 
     def promotion_map(self):
-        return [es_api.promotion_formatter(p.locale, p.category, p.position) for p in self.channel_promotion]
+        promos = []
+        now = datetime.utcnow()
+        for p in self.channel_promotion:
+            if p.date_start < now and p.date_end > now:
+                promos.append(es_api.promotion_formatter(p.locale, p.category, p.position))
+        return promos
 
 
 class ChannelPromotion(db.Model):

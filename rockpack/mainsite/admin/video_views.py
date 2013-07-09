@@ -176,6 +176,10 @@ def _format_category_names(context, channel_promo, name):
     return models.Category.query.get(channel_promo.category)
 
 
+def _format_channel_from(context, channel_promo, name):
+    return channel_promo.channel_rel.category_rel
+
+
 def category_list():
     cats = {'0': 'All'}
     for c in models.CategoryTranslation.query.filter(models.CategoryTranslation.priority>=0).order_by('category'):
@@ -229,8 +233,8 @@ class ChannelPromotionForm(wtf.Form):
         if request.args.get('id'):
             promos = promos.filter(models.ChannelPromotion.id != request.args.get('id'))
 
-        if int(self.position.data) > 4:
-            self.position.errors = ['Only a maximum of 4 position per category can be set']
+        if int(self.position.data) > 8:
+            self.position.errors = ['Only a maximum of 8 position per category can be set']
 
         if promos.count():
             self.position.errors = ['Conflict with promotions {}'.format(str([_.channel for _ in promos.all()]))]
@@ -245,8 +249,9 @@ class ChannelPromotion(AdminView):
 
     form = ChannelPromotionForm
 
-    column_formatters = dict(promo_state=_format_promo_state, category_rel=_format_category_names)
-    column_list = ('channel_rel', 'locale_rel', 'category_rel', 'promo_state', 'position', 'date_start', 'date_end', 'date_added', 'date_updated')
+    column_formatters = dict(channel_origin=_format_channel_from, promo_state=_format_promo_state, appearing_in=_format_category_names)
+    column_list = ('channel_rel', 'channel_origin', 'locale_rel', 'appearing_in', 'promo_state', 'position', 'date_start', 'date_end', 'date_added', 'date_updated')
+    column_labels = dict(channel_rel='Channel', locale_rel='Target Locale', appearing_in='Target Category')
     column_filters = ('channel_rel', 'category_rel', 'locale_rel', 'position', 'date_added', 'date_updated', 'date_start', 'date_end')
 
 
