@@ -1,0 +1,95 @@
+{% extends 'admin/model/edit.html' %}
+{% import 'admin/lib.html' as lib with context %}
+
+{% block body %}
+<style>
+    @import url(http://fonts.googleapis.com/css?family=Roboto:400,100,100italic,300,300italic,400italic,500,700,500italic,900,700italic,900italic);
+    * { font-family: 'Roboto', sans-serif; line-height:1.2; vertical-align:middle; }
+    body { background:#d5d5d5;  }
+
+    main {
+      display:block;
+      position:relative;
+      width:30rem;
+      margin:3vh auto;
+      padding:1.5rem 0 0;
+      background:#d5d5d5;
+      outline
+      border-radius:.25rem;
+      overflow:hidden;
+      transform:scale(.75);
+      transform-origin:center 3rem;
+      transition:transform .3s;
+    }
+
+    .card {
+      padding:.8rem 1.5rem 1.5rem 1.5rem;
+      box-shadow:0 1px 2px #aaa;
+      background:white;
+      margin:0 1rem 1rem;
+      border-radius:3px;
+    }
+
+    h1 {
+      font-size:2rem;
+      font-weight:300;
+    }
+
+    strong {
+    font-weight:300;
+    color:#539D00;
+    }
+
+    h2 {
+      font-size:.9rem;
+      line-height:1.0;
+      color:gray;
+      font-weight:400;
+    }
+
+    .pic {
+      height:12rem;
+      background:whitesmoke;
+      margin:.5rem 0 0 -1.5rem;
+      width:28rem;
+
+    }
+</style>
+<div>
+    <div style="width:400px; float: left">
+        <form>
+            <select name="category" onchange="javascript:location.href = '/admin/ranking/?category=' + this.value + '&locale={{ locale }}';" />
+                {% for cat in categories %}
+                <option value="{{cat[0]}}" {% if category == cat[0] %} selected="selected" {% endif %}>{{cat[1]}}</option>
+                {% endfor %}
+            </select>
+        </form>
+    </div>
+    <div>
+        <input
+        type="button"
+        value="switch to {% if locale == 'en-us' %}en-gb{% else %}en-us{% endif %}"
+        onclick="location.href='/admin/ranking/?locale={% if locale == 'en-us' %}en-gb{% else %}en-us{% endif %}'"/>
+    </div>
+
+    <div style="clear: both">
+    {% for channel in channels %}
+    <section class="card" style="width:300px; height:390px; float: left; overflow: hidden; position: relative">
+        <div style="height: 130px">
+            <h1>
+            {% if channel.promoted %}(p){% endif %}
+            {{ channel.title }}
+            </h1>
+        </div>
+        <h2>ranking: {{ channel.explanation.value }} </h2>
+        <h2>subscriber frequncy: {{ subscriber_frequncy }}</h2>
+        <h2>subscriber count: {{ subscriber_count }}</h2>
+        <h2>video update frequency: {{ video_update_frequency }}</h2>
+        <h2>video counts: US ({{ channel.gbcount }}) GB ({{ channel.gbcount }})</h2>
+        <h2>editorial boost: {{ channel.editorial_boost }}</h2>
+        <div class="pic"><img style="width:348px" src="{{ image_cdn }}{{ channel.cover_thumbnail_large_url }}"/></div>
+        </section>
+    {% endfor %}
+    </div>
+</div>
+{% endblock %}

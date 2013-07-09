@@ -1,5 +1,5 @@
 from flask.ext.admin import Admin
-from . import video_views, import_views, user_views
+from . import video_views, import_views, user_views, ranking_views
 
 
 def setup_admin(app):
@@ -84,6 +84,7 @@ def setup_admin(app):
     admin.add_view(Stats(name='Stats'))
     admin.add_view(user_views.UserView(name='Users', endpoint='user'))
     admin.add_view(import_views.ImportView(name='Import', endpoint='import'))
+    admin.add_view(ranking_views.RankingView(name='Ranking', endpoint='ranking'))
 
     original_edit_master = (admin.index_view.blueprint.jinja_loader
             .load(app.jinja_env, 'admin/model/edit.html'))
