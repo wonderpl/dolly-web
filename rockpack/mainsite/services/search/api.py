@@ -139,7 +139,11 @@ class CompleteWS(WebService):
         if not query:
             abort(400)
         result = youtube.complete(query)
-        if len(query) >= app.config.get('USE_CHANNEL_TERMS_FOR_VIDEO_COMPLETE', 0):
+        if len(query) >= app.config.get('USE_CHANNEL_TERMS_FOR_VIDEO_COMPLETE', 4):
+            try:
+                result = result.decode('utf8')
+            except UnicodeDecodeError:
+                result = result.decode('latin1')
             terms = json.loads(result[result.index('(') + 1:result.rindex(')')])
             return self.complete_channel_terms(terms[1])
         return Response(result, mimetype='text/javascript')
