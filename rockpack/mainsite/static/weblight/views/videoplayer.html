@@ -1,25 +1,9 @@
 <div ng-controller="VideoCtrl" id="lightbox">
   <div id="playercontainer">
-    <img ng-src="((assets_url))/assets/weblight/images/leftarrow.png" id="leftarrow" ng-click="playNextVid(videoNum-1)" class="hidden-phone">
-    <img ng-src="((assets_url))/assets/weblight/images/rightarrow.png" id="rightarrow" ng-click="playNextVid(videoNum+1)" class="hidden-phone">
-    <div id="playerheader" class="hidden-phone">
-      <img ng-src="((assets_url))/assets/weblight/images/closeplayer.jpg" id="closeplayer" ng-click="hide()">
-      <div id="videotitle">((videodata.title | truncate: 45))</div>
+    <div id="playerheader">
+      <img ng-src="((assets_url))/assets/weblight/images/newx.png" id="closeplayer" ng-click="hide()">
     </div>
     <div id="player"></div>
-    <div id="playerinfo">
-      <ul>
-        <li id="channelthumb" class="hidden-phone"><img ng-src="((channel.owner.avatar))"></li>
-        <li>
-          <div id="channeltitle">((channel.owner.display_name))</div>
-        </li>
-        <li class="right hidden-phone">
-          <span class="curatedwith">Curated With</span><a href="https://itunes.apple.com/app/rockpack/id660697542?mt=8&ls=1" class="smallogo" target="_blank" ng-click="triggerEvent('appStoreButtonClick')"><img ng-src="((assets_url))/assets/weblight/images/logo.png"></a><a href="https://itunes.apple.com/app/rockpack/id660697542?mt=8&ls=1" target="_blank" class="btn btn-blue getappbtn" ng-click="triggerEvent('appStoreButtonClick')">Get the app</a>
-        </li>
-      </ul>
-      <div id="closeplayermobile" class="visible-phone">
-        <img ng-src="((assets_url))/assets/weblight/images/closeplayer_mobile.png" ng-click="hide()">
-      </div>
-    </div>
+    <div id="videotitle">((videodata.title | truncate: 45))</div>
   </div>
 </div>

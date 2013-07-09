@@ -1,4 +1,4 @@
-window.Weblight = angular.module('Weblight', ['channelServices', 'infinite-scroll'])
+window.Weblight = angular.module('Weblight', [])
   
   # Detect if user is browsing using a mobile browser
   .constant('isMobile', ( (a) -> 
@@ -28,13 +28,6 @@ window.Weblight = angular.module('Weblight', ['channelServices', 'infinite-scrol
     $routeProvider.when('/bookmarklet', {templateUrl: 'bookmarklet.html'})
   ])
 
-  .directive('videoCell', ->
-    return {
-      restrict: 'A',
-      templateUrl : 'Videocell.html',
-      transclude : true
-    };
-  )
   .filter('truncate', ->
     return (text, length, end) ->
       if (isNaN(length))

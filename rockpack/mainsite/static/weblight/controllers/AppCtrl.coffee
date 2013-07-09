@@ -16,20 +16,20 @@ window.Weblight.controller('AppCtrl', ['$routeParams', 'isMobile', '$scope', '$l
   if isMobile
     $scope.isFindOutMoreOpen = true
 
-  $scope.getWidth = ->
-    return $(window).width()
-
-  window.onresize = ->
-    $scope.$apply()
-
-  $scope.$watch($scope.getWidth, (newValue, oldValue) ->
-    $scope.windowWidth = { width: (Math.floor(($(window).width() - $scope.containerPadding) / $scope.videoWidth) * $scope.videoWidth + $scope.containerPadding) + 'px', margin: '0 auto'}
-    if newValue < 768
-      $scope.isVertical = true
-    else
-      $scope.isVertical = false
-    return
-  )
+#  $scope.getWidth = ->
+#    return $(window).width()
+#
+#  window.onresize = ->
+#    $scope.$apply()
+#
+#  $scope.$watch($scope.getWidth, (newValue, oldValue) ->
+#    $scope.windowWidth = { width: (Math.floor(($(window).width() - $scope.containerPadding) / $scope.videoWidth) * $scope.videoWidth + $scope.containerPadding) + 'px', margin: '0 auto'}
+#    if newValue < 768
+#      $scope.isVertical = true
+#    else
+#      $scope.isVertical = false
+#    return
+#  )
 
   if typeof channel_data.category != "undefined"
     ga('send', 'pageview', {

@@ -3,56 +3,45 @@ window.Weblight.controller('VideoCtrl', ['$scope', '$rootScope', '$routeParams',
   $scope.triggerEvent = (action, label) ->
     ga('send', 'event', 'uiAction', action, label)
 
-  @getPlayerWidth = ->
+  @getPlayerWidth = () ->
     if $(window).width() <= 979
-      @playerWidth = Math.floor($(window).width()*0.8)
-      @playerHeight = Math.floor($(window).width()*0.8)*9/16
+      @playerWidth = 320
+      @playerHeight = 240
     else
       @playerWidth = 840
       @playerHeight = 473
 
+  console.log $(window).width()
+  console.log @playerWidth
+
   $scope.videoNum = -10
 
-
   $scope.PlayVideo = =>
-    if $scope.player?
-      $scope.player.loadVideoById($scope.videos[$scope.videoNum].video.source_id)
-      $scope.videodata = $rootScope.videos[$scope.videoNum]
-    else
-      if $rootScope.playerReady && typeof $routeParams.video != "undefined"
+    if $rootScope.playerReady && typeof $routeParams.video != "undefined"
 
-        @getPlayerWidth()
+      @getPlayerWidth()
 
-        # need to trigger a hide, otherwise show did not fire on load
-        $("#lightbox").hide()
-        $("#lightbox").show()
+      # need to trigger a hide, otherwise show did not fire on load
+      $("#lightbox").hide()
+      $("#lightbox").show()
 
-        $scope.videodata = window.selected_video
+      $scope.videodata = window.selected_video
 
-        console.log window.selected_video
-
-        for video in [0..$scope.videos.length-1]
-          if $rootScope.videos[video].id == $routeParams.video
-            $scope.videodata = $rootScope.videos[video]
-            $scope.videoNum = video
-
-        console.log $scope.videodata
-
-        $scope.player = new YT.Player('player', {
-          height: @playerHeight,
-          width: @playerWidth,
-          videoId: $scope.videodata.video.source_id,
-          playerVars: {
-            autoplay: 1,
-            showinfo: 0,
-            modestbranding: 1,
-            wmode: "opaque",
-            controls: 1,
-            color: 'white',
-            rel: 0,
-            iv_load_policy: 3
-          }
-        })
+      $scope.player = new YT.Player('player', {
+        height: @playerHeight,
+        width: @playerWidth,
+        videoId: $scope.videodata.video.source_id,
+        playerVars: {
+          autoplay: 1,
+          showinfo: 0,
+          modestbranding: 1,
+          wmode: "opaque",
+          controls: 1,
+          color: 'white',
+          rel: 0,
+          iv_load_policy: 3
+        }
+      })
 
   onPlayerReady = (event) ->
     event.target.playVideo()
