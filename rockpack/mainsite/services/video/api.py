@@ -231,8 +231,6 @@ class ChannelWS(WebService):
         # This needs to be handled better, and in es.api preferably
         if offset <= 8:
             cs.promotion_settings(request.args.get('category'))
-            cs.add_sort('promotion', 'desc')
-            cs.add_sort('_score', 'desc')
         cs.date_sort(request.args.get('date_order'))
         if request.args.get('user_id'):
             cs.add_term('owner', request.args.get('user_id'))

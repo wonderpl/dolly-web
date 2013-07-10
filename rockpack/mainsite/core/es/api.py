@@ -69,7 +69,7 @@ class EntitySearch(object):
         self._should_terms = []
         self._must_not_terms = []
 
-        self._query_params = {}
+        self._query_params = {"track_scores": True}
         self._sorting = []
         self._results = {}  # cache results
 
@@ -237,7 +237,7 @@ class ChannelSearch(EntitySearch, CategoryMixin, MediaSortMixin):
             try:
                 channel['owner'] = owners[channel['owner']]
             except TypeError:
-                import pdb;pdb.set_trace()
+                pass
 
     @classmethod
     def add_videos_to_channel(cls, channel, videos, total):
@@ -319,14 +319,18 @@ class ChannelSearch(EntitySearch, CategoryMixin, MediaSortMixin):
             # (lets also hope this assumption isn't anyones mother)
             if channel.promotion:
                 promote_pattern = '|'.join([str(self.locale), str(self.promoted_category)])
+                # This could be a promoted channel, just not for here
+                promoted_for_category = False
                 for p in channel.promotion:
                     if p.startswith(promote_pattern):
+                        promoted_for_category = True
                         locale, category, pos = p.split('|')
                         pos = int(pos)
                         ch['position'] = pos - 1 + self.paging[0]  # zero indexed
                         promoted_position_list.append(pos)
                         promoted_channels[pos] = ch
-                continue
+                if promoted_for_category:
+                    continue
             else:
                 # We need to reset the position here so that we account for any gaps
                 if not channel_list:
@@ -366,12 +370,14 @@ class ChannelSearch(EntitySearch, CategoryMixin, MediaSortMixin):
 
     def promotion_settings(self, category):
         self.promoted_category = category or 0
-        self._add_term_occurs(
-            pyes.PrefixFilter(
-                field='promotion',
-                prefix='|'.join([str(self.locale), str(self.promoted_category)])
-            ),
-            SHOULD
+        self.add_filter(
+            pyes.CustomFiltersScoreQuery.Filter(
+                pyes.PrefixFilter(
+                    field='promotion',
+                    prefix='|'.join([str(self.locale), str(self.promoted_category)])
+                ),
+                script='1000000000000000000'
+            )
         )
         if not category:
             # The SHOULD condition requires at least one result. Since there is no

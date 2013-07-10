@@ -27,9 +27,8 @@ class RankingView(BaseView):
         if category == 0:
             category = None
 
-        print locale
         cs = ChannelSearch(locale)
-        offset, limit = request.args.get('start', 0), request.args.get('size', 10)
+        offset, limit = request.args.get('start', 0), request.args.get('size', 20)
         cs.set_paging(offset, limit)
         cs.add_filter(filters.boost_from_field_value('editorial_boost'))
         cs.add_filter(filters.boost_from_field_value('subscriber_frequency'))
@@ -39,8 +38,6 @@ class RankingView(BaseView):
         cs.add_filter(filters.boost_by_time())
         cs.filter_category(category)
         cs.promotion_settings(category)
-        cs.add_sort('promotion', 'desc')
-        cs.add_sort('_score', 'desc')
         processed_channels = cs.channels(with_owners=True)
 
         ctx['channels'] = []
@@ -55,7 +52,7 @@ class RankingView(BaseView):
             c['date_added'] = channel.date_added
             c['cover_thumbnail_large_url'] = channel.cover_thumbnail_large_url
             c['explanation'] = channel.__dict__['_meta']['explanation']
-            c['subscriber_frequncy'] = channel.subscriber_frequncy
+            c['subscriber_frequency'] = channel.subscriber_frequency
             c['subscriber_count'] = channel.subscriber_count
             c['video_update_frequency'] = channel.update_frequency
             c['subscriber_count'] = channel.subscriber_count
@@ -69,7 +66,6 @@ class RankingView(BaseView):
             c = raw_channels[channel['id']]
             promo_string = '|'.join([locale, str(category or 0), str(channel['position'] + 1)])
             c['promoted'] = False
-            print promo_string, c['promotion'], c['title']
             if promo_string in c['promotion']:
                 c['promoted'] = True
             ctx['channels'].append(c)

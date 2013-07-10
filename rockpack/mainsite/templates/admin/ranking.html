@@ -82,9 +82,9 @@
             </h1>
         </div>
         <h2>ranking: {{ channel.explanation.value }} </h2>
-        <h2>subscriber frequncy: {{ subscriber_frequncy }}</h2>
-        <h2>subscriber count: {{ subscriber_count }}</h2>
-        <h2>video update frequency: {{ video_update_frequency }}</h2>
+        <h2>subscriber frequncy: {{ channel.subscriber_frequency }}</h2>
+        <h2>subscriber count: {{ channel.subscriber_count }}</h2>
+        <h2>video update frequency: {{ channel.video_update_frequency }}</h2>
         <h2>video counts: US ({{ channel.gbcount }}) GB ({{ channel.gbcount }})</h2>
         <h2>editorial boost: {{ channel.editorial_boost }}</h2>
         <div class="pic"><img style="width:348px" src="{{ image_cdn }}{{ channel.cover_thumbnail_large_url }}"/></div>
