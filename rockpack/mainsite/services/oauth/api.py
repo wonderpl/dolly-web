@@ -140,7 +140,7 @@ class ExternalRegistrationForm(wtf.Form):
 
 
 def external_user_from_token_form():
-    form = ExternalRegistrationForm(request.form, csrf_enabled=False)
+    form = ExternalRegistrationForm(csrf_enabled=False)
     if not form.validate():
         abort(400, form_errors=form.errors)
 
@@ -171,10 +171,9 @@ class ExternalUser:
 
     def _get_external_data(self):
         try:
-            graph = facebook.GraphAPI(self._token)
+            return facebook.GraphAPI(self._token).get_object('me')
         except facebook.GraphAPIError:
             return {}
-        return graph.get_object('me')
 
     def get_new_token(self):
         # abstract this out to not be fb specific

@@ -1089,6 +1089,124 @@ Cache-Control: private, max-age=60
 }
 ```
 
+Friends
+=======
+
+### Get
+
+Retrieve a list of friends (from external systems).
+
+```http
+GET /ws/USERID/friends/?device_filter=DEVICE_TYPE HTTP/1.1
+```
+
+Parameter      | Required? | Value             | Description
+:------------- | :-------- | :---------------- | :----------
+device_filter  | no        | `ios`, `android`  | Exclude any users who don't have the specified device type
+
+The list can contain two user types: rockpack and external.  Rockpack users include a `resource_url` for
+full profile detail.  External users include `external_system` and `external_uid` fields to identify the user.
+
+```http
+HTTP/1.1 200 OK
+Cache-Control: private, max-age=600
+Content-Type: application/json
+
+{
+ "total": 2,
+ "users": {
+  "items": [
+   {
+    "position": 0,
+    "resource_url": "http://user/resource/url/",
+    "id": "0nXumv5EBp8NCCDeDzvxpg",
+    "display_name": "Allan B",
+    "avatar_thumbnail_url": "http://rockpack/avatar/img.jpg",
+   },
+   {
+    "position": 1,
+    "external_system": "facebook",
+    "external_uid": "504775065",
+    "display_name": "Gregory Talon",
+    "avatar_thumbnail_url": "http://facebook/picture.jpg",
+    "has_ios_device": true
+   }
+  ]
+ }
+}
+```
+
+External Accounts
+=================
+
+### Get
+
+Retrieve a list of external accounts connected with a rockpack user.
+
+```http
+GET /ws/USERID/external_accounts/ HTTP/1.1
+Authorization: Bearer TOKEN
+```
+
+```http
+HTTP/1.1 200 OK
+Cache-Control: private, max-age=60
+Content-Type: application/json
+
+{
+ "external_accounts": {
+  "total": 1,
+  "items": [
+   {
+    "resource_url": "http://resource/url/for/connection/",
+    "external_uid": "123",
+    "external_system": "facebook"
+   }
+  ]
+ }
+}
+```
+
+### Connect
+
+Add a new connection to an external account.
+
+```http
+POST /ws/USERID/external_accounts/ HTTP/1.1
+Content-Type: application/json
+
+{
+ "external_system": "facebook",
+ "external_token": "xxx"
+}
+```
+
+A `201` is returned if the connection is created successfully.
+
+```http
+HTTP/1.1 201 CREATED
+Location: http://resource/url/for/connection/
+
+{
+ "resource_url": "http://resource/url/for/connection/",
+ "id": 123
+}
+```
+
+An error is returned if the user is already connected with a different external account
+for the same system, or if another user is connected with the account.
+
+
+```http
+HTTP/1.1 400 BAD REQUEST
+Content-Type: application/json
+
+{
+ "message": "External account mismatch",
+ "error": "invalid_request"
+}
+```
+
 Content Report
 ==============
 

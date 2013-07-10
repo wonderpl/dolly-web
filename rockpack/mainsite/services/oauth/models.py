@@ -6,6 +6,7 @@ from flask import abort
 from rockpack.mainsite import app
 from rockpack.mainsite.core.dbapi import db, commit_on_success
 from rockpack.mainsite.helpers import lazy_gettext as _
+from rockpack.mainsite.helpers.urls import url_for
 from rockpack.mainsite.services.user.models import User, EXTERNAL_SYSTEM_NAMES
 from . import exceptions, facebook
 
@@ -54,7 +55,7 @@ class ExternalToken(db.Model):
             e = cls.query.filter_by(external_uid=eu.id, external_system=eu.system).one()
         except exc.NoResultFound:
             if ExternalToken.query.filter_by(user=userid, external_system=eu.system).count():
-                abort(400, _('User already associated with account'))
+                abort(400, message=_('User already associated with account'))
             e = cls(user=userid,
                     external_system=eu.system,
                     external_token=eu.token,
@@ -62,7 +63,7 @@ class ExternalToken(db.Model):
         else:
             if e.user != userid:
                 app.logger.error('Token owner %s does not match update user: %s', e.user, userid)
-                abort(400, _('External account mismatch'))
+                abort(400, message=_('External account mismatch'))
 
         # Fetch a long-lived token if we don't have an expiry,
         # or we haven't long to go until it does expire
@@ -71,6 +72,10 @@ class ExternalToken(db.Model):
             e.external_token = new_eu.token
             e.expires = new_eu.expires
         return e.save()
+
+    def get_resource_url(self, own=True):
+        return url_for('userws.get_external_account', userid=self.user, id=self.id)
+    resource_url = property(get_resource_url)
 
 
 class ExternalFriend(db.Model):

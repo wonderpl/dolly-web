@@ -805,12 +805,29 @@ class UserWS(WebService):
             items, total = [], 0
         return dict(videos=dict(items=items, total=total))
 
+    @expose_ajax('/<userid>/external_accounts/', cache_age=60, cache_private=True)
+    @check_authorization(self_auth=True)
+    def get_external_accounts(self, userid):
+        items = []
+        for token in ExternalToken.query.filter_by(user=userid):
+            items.append(dict(resource_url=token.resource_url,
+                              external_system=token.external_system,
+                              external_uid=token.external_uid))
+        return dict(external_accounts=dict(items=items, total=len(items)))
+
+    @expose_ajax('/<userid>/external_accounts/<id>/', cache_age=60, cache_private=True)
+    @check_authorization(self_auth=True)
+    def get_external_account(self, userid, id):
+        token = ExternalToken.query.filter_by(user=userid, id=id).first_or_404()
+        return dict(external_system=token.external_system, external_uid=token.external_uid)
+
     @expose_ajax('/<userid>/external_accounts/', methods=['POST'])
     @check_authorization(self_auth=True)
     def post_external_accounts(self, userid):
         eu = external_user_from_token_form()
-        ExternalToken.update_token(userid, eu)
+        token = ExternalToken.update_token(userid, eu)
         record_user_event(str(userid), '%s token updated' % eu.system, userid)
+        return ajax_create_response(token)
 
     @expose_ajax('/<userid>/friends/', cache_age=600, cache_private=True)
     @check_authorization(self_auth=True)
@@ -827,22 +844,23 @@ class UserWS(WebService):
         )
         items = []
         for friend in friends:
-            item = dict(
-                display_name=friend.name,
-                avatar_thumbnail_url=friend.avatar_url,
-                external_uid=friend.external_uid,
-                external_system=friend.external_system,
-            )
-            if friend.has_ios_device:
-                item['has_ios_device'] = True
             rockpack_user = rockpack_friends.get(friend.external_uid)
             if rockpack_user:
-                item.update(
+                item = dict(
                     id=rockpack_user.id,
                     resource_url=rockpack_user.get_resource_url(),
                     display_name=rockpack_user.display_name,
                     avatar_thumbnail_url=rockpack_user.avatar.url,
                 )
+            else:
+                item = dict(
+                    display_name=friend.name,
+                    avatar_thumbnail_url=friend.avatar_url,
+                    external_uid=friend.external_uid,
+                    external_system=friend.external_system,
+                )
+            if friend.has_ios_device:
+                item['has_ios_device'] = True
             items.append(item)
         if 'ios' in request.args.get('device_filter', ''):
             items = [i for i in items if 'resource_url' in i or 'has_ios_device' in i]
