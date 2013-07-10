@@ -323,14 +323,14 @@ class ChannelSearch(EntitySearch, CategoryMixin, MediaSortMixin):
                     if p.startswith(promote_pattern):
                         locale, category, pos = p.split('|')
                         pos = int(pos)
-                        ch['position'] = pos - 1 # zero indexed
+                        ch['position'] = pos - 1 + self.paging[0]  # zero indexed
                         promoted_position_list.append(pos)
                         promoted_channels[pos] = ch
                 continue
             else:
                 # We need to reset the position here so that we account for any gaps
                 if not channel_list:
-                    position = 1 # zero indexed
+                    position = 1 + self.paging[0]  # zero indexed
 
             position = _check_position(position)
             ch['position']  = position - 1
