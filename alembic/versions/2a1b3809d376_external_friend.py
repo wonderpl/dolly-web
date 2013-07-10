@@ -20,7 +20,7 @@ def upgrade():
         'external_friend',
         sa.Column('id', sa.Integer(), nullable=False),
         sa.Column('user', sa.CHAR(length=22), nullable=False),
-        sa.Column('external_system', ENUM(name='external_system_names', create_type=False), nullable=False),
+        sa.Column('external_system', ENUM(name='external_system', create_type=False), nullable=False),
         sa.Column('external_uid', sa.String(length=1024), nullable=False),
         sa.Column('date_updated', sa.DateTime(), nullable=False),
         sa.Column('name', sa.String(length=1024), nullable=False),
