@@ -15,7 +15,6 @@ window.WebApp.factory('UserManager', ['cookies', '$http', '$q', '$location','api
 
     activity: activityService
     oauth: oauthService
-    isLoggedIn: false
 
     recentActivity: {
       cacheTime: 0
@@ -35,7 +34,7 @@ window.WebApp.factory('UserManager', ['cookies', '$http', '$q', '$location','api
         position: 0
         total: null
       }
-      User.isLoggedIn = false
+      User.oauth.isLoggedIn = false
       console.log 'finished logging out'
 
     recentActivityTimedRetrive: () ->
@@ -134,7 +133,7 @@ window.WebApp.factory('UserManager', ['cookies', '$http', '$q', '$location','api
       $http({
         method: 'DELETE',
         url: channelResource,
-        headers: {"authorization": "Bearer #{@credentials.access_token}", "Content-Type": "application/json"}
+        headers: {"authorization": "Bearer #{User.oauth.credentials.access_token}", "Content-Type": "application/json"}
       })
         .success((data) ->
 

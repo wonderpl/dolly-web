@@ -9,7 +9,7 @@ window.WebApp.controller('AppCtrl', ['$rootScope', '$location', 'UserManager', '
   $rootScope.$on("$locationChangeStart", (event, NewUrl, OldUrl) ->
 
     console.log 'testing transition'
-    if (UserManager.isLoggedIn == false)
+    if (UserManager.oauth.isLoggedIn == false)
       console.log 'user is logged off'
       if (UserManager.oauth.credentials.refresh_token?)
         event.preventDefault()

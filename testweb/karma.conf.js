@@ -13,12 +13,12 @@ files = [
   '../rockpack/mainsite/static/assets/vendor/js/angular.js',
   'angular-mocks.js',
   '../rockpack/mainsite/static/assets/vendor/js/ng-infinite-scroll.js',
-  '../rockpack/mainsite/static/assets/vendor/js/ui-bootstrap-tpls-0.3.0.js',
+  '../rockpack/mainsite/static/assets/vendor/js/ui-bootstrap-tpls-0.4.0.js',
   '../rockpack/mainsite/static/assets/vendor/js/jquery-1.10.1.min.js',
   '../rockpack/mainsite/static/fullwebapp/**/*.coffee',
   '../rockpack/mainsite/static/fullwebapp/views/**/*.html',
   'tests/*.js',
-  'mocks//.js'
+  'mocks/*.js'
 ];
 
 

@@ -5,6 +5,7 @@ angular.module('WebApp').factory('oauthService', [ '$http', 'apiUrl', 'cookies',
   OAuth = {
 
     timeOfLastRefresh: null
+    isLoggedIn: false
 
     credentials: {
       refresh_token: cookies.get('refresh_token'),
@@ -13,13 +14,15 @@ angular.module('WebApp').factory('oauthService', [ '$http', 'apiUrl', 'cookies',
     }
 
     TriggerRefresh: (timeToRefresh, token) ->
+      console.log timeToRefresh
       window.setTimeout((() => @refreshToken(token)) ,timeToRefresh)
 
     refreshToken: () ->
+      console.log 'refresh'
       $http({
         method: 'POST',
         data: $.param({refresh_token: OAuth.credentials.refresh_token, grant_type: 'refresh_token'}),
-        url: apiUrl.refresh_token,
+        url: window.apiUrls.refresh_token,
         headers: headers
       })
         .success((data) =>
@@ -39,7 +42,7 @@ angular.module('WebApp').factory('oauthService', [ '$http', 'apiUrl', 'cookies',
       $http({
         method: 'POST',
         data: $.param({username: username, password: password, grant_type: 'password'}),
-        url: apiUrl.login,
+        url: window.apiUrls.login,
         headers: headers
       })
         .success((data) =>
@@ -57,7 +60,7 @@ angular.module('WebApp').factory('oauthService', [ '$http', 'apiUrl', 'cookies',
       $http({
         method: 'POST',
         data: $.param({'external_system': provider, 'external_token': external_token}),
-        url: apiUrl.login_register_external,
+        url: window.apiUrl.login_register_external,
         headers: headers
       })
         .success((data) ->
@@ -71,9 +74,9 @@ angular.module('WebApp').factory('oauthService', [ '$http', 'apiUrl', 'cookies',
       cookies.set("access_token", data.access_token, data.expires)
       cookies.set("refresh_token", data.refresh_token, 2678400)
       cookies.set("user_id", data.user_id, 2678400)
-      @isLoggedIn = true
-      @credentials = data
-      @TriggerRefresh(data.expires_in*0.9*1000, data.refresh_token)
+      OAuth.isLoggedIn = true
+      OAuth.credentials = data
+      OAuth.TriggerRefresh(data.expires_in*0.9*1000, data.refresh_token)
 
 
     ###

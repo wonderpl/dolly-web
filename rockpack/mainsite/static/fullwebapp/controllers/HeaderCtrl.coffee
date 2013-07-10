@@ -2,7 +2,7 @@ window.WebApp.controller('HeaderCtrl', ['$scope', 'cookies', '$location', 'UserM
 
   $scope.user = UserManager
 
-  $scope.$watch('user.isLoggedIn', (newValue, oldValue) ->
+  $scope.$watch('user.oauth.isLoggedIn', (newValue, oldValue) ->
     $scope.isLoggedIn = newValue
   )
 
