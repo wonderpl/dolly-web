@@ -20,8 +20,8 @@
         </div>
       </tab>
       <tab heading="Users">
-        <div ng-repeat="user in users">
-          <a href="/#channel/{{channel.owner.id}}/{{channel.id}}"><img ng-src="{{channel.cover.thumbnail_url}}"></a>
+        <div ng-repeat="user in users.users.items">
+          <a href="/#user/{{user.username}}/{{user.id}}"><img ng-src="{{user.avatar_thumbnail_url}}"></a>
         </div>
       </tab>
     </tabset>

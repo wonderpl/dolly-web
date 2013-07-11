@@ -2,7 +2,7 @@ angular.module('WebApp').factory('SearchService', ($http, locale, apiUrl, $q) ->
 
   Content = {
     suggest: (phrase) ->
-
+      console.log apiUrl
       dfr = $q.defer()
       $http({
       method: 'GET',

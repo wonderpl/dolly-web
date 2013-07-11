@@ -9,7 +9,8 @@ window.WebApp.controller('SearchCtrl', ['$scope', 'SearchService', '$q', '$locat
   $scope.$watch((() -> return $location.search().search), (newValue, oldValue) ->
     if newValue?
       $scope.videos = SearchService.videoSearch(newValue, 0, 5)
-      $scope.channels = SearchService.channelSearch($scope.searchPhrase, 0, 50)
+      $scope.channels = SearchService.channelSearch(newValue, 0, 50)
+      $scope.users = SearchService.userSearch(newValue, 0, 50)
   )
 
   $scope.setCurrentVideo = (video) ->
@@ -18,7 +19,6 @@ window.WebApp.controller('SearchCtrl', ['$scope', 'SearchService', '$q', '$locat
   $scope.$watch((() -> return $location.search().video), (newValue, oldValue) ->
     if newValue?
 
-      console.log newValue
       dialog = $dialog.dialog(
         controller: 'VideoPlayerCtrl',
         resolve: {
