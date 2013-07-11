@@ -21,6 +21,7 @@ def _discover_response():
         login_register_external=url_for('loginws.exeternal'),
         reset_password=url_for('resetws.reset_password'),
         refresh_token=url_for('tokenws.token'),
+        user_search=url_for('searchws.search_users'),
     )
 
 
