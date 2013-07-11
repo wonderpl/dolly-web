@@ -32,7 +32,7 @@ class RankingView(BaseView):
             c = {}
             c['id'] = video.id
             c['title'] = video.title
-            c['date_added'] = video.date_added
+            c['date_added'] = video.date_added[:10]
             c['thumbnail_url'] = video.video.thumbnail_url
             c['explanation'] = video.__dict__['_meta']['explanation']
             c['duration'] = video.video.duration

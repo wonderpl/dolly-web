@@ -72,7 +72,7 @@
 <div>
     <div style="width:400px; float: left">
         {% if videos %}
-            <a href="javascript:history.go(-1)"><h3 style="color:#FCFCFC">&gt;&gt; Back to channels</h3></a>
+            <a href="javascript:history.go(-1)"><h3 style="color:#FCFCFC">&lt;&lt; Back to channels</h3></a>
         {% else %}
         <form>
             <select name="category" onchange="javascript:location.href = '/admin/ranking/?category=' + this.value + '&locale={{ locale }}';" />
@@ -117,10 +117,16 @@
         <div style="height: 64px">
             <h2>{{ video.title|truncate(30, True) }}</h1>
         </div>
-        <h3>duration: {{ video.duration }}s</h3>
-        <h3>view counts: US ({{ video.gbcount }}) GB ({{ video.gbcount }})</h3>
-        <a href="http://www.youtube.com/watch?v={{ video.source_id }}" target="_blank"><h3>source: {{ video.source }}</h3></a>
-        <div class="videopic"><img style="width: 460px" src="{{ image_cdn }}{{ video.thumbnail_url }}"/></div>
+        <div style="float:left; width: 200px">
+            <h3>duration: {{ video.duration }}s</h3>
+            <h3>source: {{ video.source }}</h3>
+            <h3>view counts: US ({{ video.gbcount }}) GB ({{ video.gbcount }})</h3>
+        </div>
+        <div style="width: 200px; float: right">
+            <h3>date added: {{ video.date_added }}</h3>
+            <a href="http://www.youtube.com/watch?v={{ video.source_id }}" target="_blank"><h3>&lt; watch the video &gt;</h3></a>
+        </div>
+        <div style="clear:both" class="videopic"><img style="width: 508px" src="{{ video.thumbnail_url }}"/></div>
     </section>
     {% endfor %}
     </div>
