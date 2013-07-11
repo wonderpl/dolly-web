@@ -38,6 +38,16 @@ angular.module('WebApp').factory('SearchService', ($http, locale, apiUrl, $q) ->
       .then((data) ->
         return data.data
       )
+
+    userSearch: (phrase, start, size) ->
+      $http({
+        method: 'GET',
+        url: apiUrl.user_search,
+        params: {'q': phrase, start: start, size: size},
+      })
+      .then((data) ->
+        return data.data
+      )
   }
   return Content
 )
