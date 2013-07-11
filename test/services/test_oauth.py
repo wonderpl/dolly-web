@@ -422,6 +422,34 @@ class RegisterTestCase(base.RockPackTestCase):
                 )
                 self.assertEquals(status, r.status_code, r.data)
 
+    def test_email_addresses(self):
+        with self.app.test_client() as client:
+            for email, status in [
+                    (None, 400),
+                    ('', 400),
+                    ('foo', 400),
+                    ('foo@com', 400),
+                    ('foo@.bar.com', 400),
+                    ('foo@bar..com', 400),
+                    ('foo@bar.com.', 400),
+                    ('foo@bar.com', 200)]:
+                username = uuid.uuid4().hex
+                r = client.post(
+                    '/ws/register/',
+                    headers=[get_client_auth_header()],
+                    data=dict(
+                        username=username,
+                        password='xxxxxx',
+                        first_name='foo',
+                        last_name='bar',
+                        date_of_birth='1980-01-01',
+                        locale='en-us',
+                        email=email,
+                    )
+                )
+                self.assertEquals(r.status_code, status,
+                                  '%s: %d, %s' % (email, r.status_code, r.data))
+
     def test_birthdates(self):
         with self.app.test_client() as client:
             for dob, status in [

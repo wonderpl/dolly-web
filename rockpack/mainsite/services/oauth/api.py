@@ -92,6 +92,14 @@ def username_validator():
     return _valid
 
 
+def email_validator():
+    # Additional address validation for SES - doesn't like foo@bar.com. or foo@bar..com
+    def _valid(form, field):
+        if field.data.endswith('.') or '..' in field.data.rsplit('@', 1)[-1]:
+            raise wtf.ValidationError(_('Invalid email address.'))
+    return _valid
+
+
 def email_registered_validator():
     def _registered(form, field):
         if User.query.filter_by(email=field.data).count():
@@ -127,7 +135,7 @@ class RockRegistrationForm(wtf.Form):
     gender = wtf.TextField(validators=[wtf.Optional(), gender_validator()] + get_column_validators(User, 'gender'))
     date_of_birth = wtf.DateField(validators=[date_of_birth_validator()] + get_column_validators(User, 'date_of_birth'))
     locale = wtf.TextField(validators=get_column_validators(User, 'locale'))
-    email = wtf.TextField(validators=[wtf.Email(), email_registered_validator()] + get_column_validators(User, 'email'))
+    email = wtf.TextField(validators=[wtf.Email(), email_validator(), email_registered_validator()] + get_column_validators(User, 'email'))
 
 
 class ExternalRegistrationForm(wtf.Form):
