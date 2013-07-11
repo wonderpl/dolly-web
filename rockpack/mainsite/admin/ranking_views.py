@@ -50,6 +50,8 @@ class RankingView(BaseView):
     @expose('/', ('GET',))
     def index(self):
         category = int(request.args.get('category', 0))
+        search  = request.args.get('search')
+
         locale = request.args.get('locale', 'en-us')
 
         ctx = {'categories': category_list(),
@@ -63,14 +65,17 @@ class RankingView(BaseView):
         cs = ChannelSearch(locale)
         offset, limit = request.args.get('start', 0), request.args.get('size', 20)
         cs.set_paging(offset, limit)
-        cs.add_filter(filters.boost_from_field_value('editorial_boost'))
-        cs.add_filter(filters.boost_from_field_value('subscriber_frequency'))
-        cs.add_filter(filters.boost_from_field_value('update_frequency', reduction_factor=4))
-        cs.add_filter(filters.negatively_boost_favourites())
-        cs.add_filter(filters.verified_channel_boost())
-        cs.add_filter(filters.boost_by_time())
-        cs.filter_category(category)
-        cs.promotion_settings(category)
+        if search:
+            cs.add_text('title', search)
+        else:
+            cs.add_filter(filters.boost_from_field_value('editorial_boost'))
+            cs.add_filter(filters.boost_from_field_value('subscriber_frequency'))
+            cs.add_filter(filters.boost_from_field_value('update_frequency', reduction_factor=4))
+            cs.add_filter(filters.negatively_boost_favourites())
+            cs.add_filter(filters.verified_channel_boost())
+            cs.add_filter(filters.boost_by_time())
+            cs.filter_category(category)
+            cs.promotion_settings(category)
         processed_channels = cs.channels(with_owners=True)
 
         ctx['channels'] = []

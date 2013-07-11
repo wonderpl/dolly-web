@@ -70,16 +70,21 @@
 
 </style>
 <div>
-    <div style="width:400px; float: left">
+    <div style="width:480px; float: left">
         {% if videos %}
             <a href="{{ referrer }}"><h3 style="color:#FCFCFC">&lt;&lt; Back to channels</h3></a>
         {% else %}
         <form>
-            <select name="category" onchange="javascript:location.href = '/admin/ranking/?category=' + this.value + '&locale={{ locale }}';" />
-                {% for cat in categories %}
-                <option value="{{cat[0]}}" {% if category == cat[0] %} selected="selected" {% endif %}>{{cat[1]}}</option>
-                {% endfor %}
-            </select>
+            <div style="float: left; width: 240px">
+                <select name="category" onchange="javascript:location.href = '/admin/ranking/?category=' + this.value + '&locale={{ locale }}';" />
+                    {% for cat in categories %}
+                    <option value="{{cat[0]}}" {% if category == cat[0] %} selected="selected" {% endif %}>{{cat[1]}}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div style="float:left;">
+                <input type="text" name="search" placeholder="Search for a channel"/>
+            </div>
         </form>
         {% endif %}
     </div>
