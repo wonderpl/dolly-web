@@ -26,7 +26,8 @@ class RankingView(BaseView):
         vs.set_paging(offset, limit)
 
         ctx = {'videos': [],
-                'image_cdn': app.config['IMAGE_CDN']}
+                'image_cdn': app.config['IMAGE_CDN'],
+                'referrer': request.referrer}
 
         for video in vs.results():
             c = {}

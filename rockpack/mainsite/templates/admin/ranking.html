@@ -72,7 +72,7 @@
 <div>
     <div style="width:400px; float: left">
         {% if videos %}
-            <a href="javascript:history.go(-1)"><h3 style="color:#FCFCFC">&lt;&lt; Back to channels</h3></a>
+            <a href="{{ referrer }}"><h3 style="color:#FCFCFC">&lt;&lt; Back to channels</h3></a>
         {% else %}
         <form>
             <select name="category" onchange="javascript:location.href = '/admin/ranking/?category=' + this.value + '&locale={{ locale }}';" />
@@ -119,16 +119,29 @@
         </div>
         <div style="float:left; width: 200px">
             <h3>duration: {{ video.duration }}s</h3>
-            <h3>source: {{ video.source }}</h3>
             <h3>view counts: US ({{ video.gbcount }}) GB ({{ video.gbcount }})</h3>
+            <h3>source: {{ video.source }}</h3>
         </div>
         <div style="width: 200px; float: right">
             <h3>date added: {{ video.date_added }}</h3>
-            <a href="http://www.youtube.com/watch?v={{ video.source_id }}" target="_blank"><h3>&lt; watch the video &gt;</h3></a>
+            <a rel="prettyPhoto" href="http://www.youtube.com/watch?v={{ video.source_id }}" target="_blank"><img src="/static/assets/admin/images/yt-logo.jpg" alt="YouTube"/></a>
         </div>
         <div style="clear:both" class="videopic"><img style="width: 508px" src="{{ video.thumbnail_url }}"/></div>
     </section>
     {% endfor %}
     </div>
 </div>
+{% endblock %}
+{% block tail %}
+{{ super() }}
+<script src="/admin/static/bootstrap/js/bootstrap.min.js" type="text/javascript"></script>
+    <script src="/admin/static/select2/select2.min.js" type="text/javascript"></script>
+<script src="/admin/static/js/bootstrap-datepicker.js"></script>
+<link rel="stylesheet" href="/static/assets/admin/prettyphoto/css/prettyPhoto.css" type="text/css" media="screen" charset="utf-8" />
+<script type="text/javascript" src="/static/assets/admin/prettyphoto/js/jquery.prettyPhoto.js"></script>
+<script type="text/javascript" charset="utf-8">
+  $(document).ready(function(){
+    $("a[rel^='prettyPhoto']").prettyPhoto();
+  });
+</script>
 {% endblock %}
