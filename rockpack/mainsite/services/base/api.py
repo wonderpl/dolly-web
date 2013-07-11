@@ -22,6 +22,7 @@ def _discover_response():
         reset_password=url_for('resetws.reset_password'),
         refresh_token=url_for('tokenws.token'),
         share_url=url_for('sharews.create_share_link' ),
+        user_search=url_for('searchws.search_users'),
     )
 
 
