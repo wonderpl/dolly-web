@@ -120,13 +120,13 @@
         <div style="float:left; width: 200px">
             <h3>duration: {{ video.duration }}s</h3>
             <h3>view counts: US ({{ video.gbcount }}) GB ({{ video.gbcount }})</h3>
-            <h3>source: {{ video.source }}</h3>
         </div>
         <div style="width: 200px; float: right">
             <h3>date added: {{ video.date_added }}</h3>
-            <a rel="prettyPhoto" href="http://www.youtube.com/watch?v={{ video.source_id }}" target="_blank"><img src="/static/assets/admin/images/yt-logo.jpg" alt="YouTube"/></a>
+            <a rel="voverlay" href="http://www.youtube.com/watch?v={{ video.source_id }}" target="_blank"><img src="/static/assets/admin/images/yt-logo.jpg" alt="YouTube"/></a>
         </div>
-        <div style="clear:both" class="videopic"><img style="width: 508px" src="{{ video.thumbnail_url }}"/></div>
+        <div style="clear:both"></div>
+        <div class="videopic"><img style="width: 508px" src="{{ video.thumbnail_url }}"/></div>
     </section>
     {% endfor %}
     </div>
@@ -141,7 +141,7 @@
 <script type="text/javascript" src="/static/assets/admin/prettyphoto/js/jquery.prettyPhoto.js"></script>
 <script type="text/javascript" charset="utf-8">
   $(document).ready(function(){
-    $("a[rel^='prettyPhoto']").prettyPhoto();
+          $("a[rel^='voverlay']").prettyPhoto({social_tools:'', show_title: false});
   });
 </script>
 {% endblock %}
