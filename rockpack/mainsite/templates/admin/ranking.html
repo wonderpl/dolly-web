@@ -116,7 +116,7 @@
         <h3>subscriber frequncy: {{ channel.subscriber_frequency }}</h3>
         <h3>subscriber count: {{ channel.subscriber_count }}</h3>
         <h3>video update frequency: {{ channel.video_update_frequency }}</h3>
-        <h3>video view counts: US ({{ channel.gbcount }}) GB ({{ channel.gbcount }})</h3>
+        <h3>video view counts: US ({{ channel.uscount }}) GB ({{ channel.gbcount }})</h3>
         <h3>editorial boost: {{ channel.editorial_boost }}</h3>
         <div class="pic"><a href="/admin/ranking/{{ channel.id }}/"><img style="width:348px" src="{{ image_cdn }}{{ channel.cover_thumbnail_large_url }}"/></a></div>
     </section>
@@ -129,7 +129,7 @@
         </div>
         <div style="float:left; width: 200px">
             <h3>duration: {{ video.duration }}s</h3>
-            <h3>view counts: US ({{ video.gbcount }}) GB ({{ video.gbcount }})</h3>
+            <h3>view counts: US ({{ video.uscount }}) GB ({{ video.gbcount }})</h3>
         </div>
         <div style="width: 200px; float: right">
             <h3>date added: {{ video.date_added }}</h3>
