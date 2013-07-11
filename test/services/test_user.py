@@ -1,6 +1,6 @@
 import json
-import time
 import cgi
+from datetime import datetime
 from test import base
 from mock import patch
 from test.fixtures import ChannelData, VideoInstanceData
@@ -23,8 +23,8 @@ class TestProfileEdit(base.RockPackTestCase):
                 '/ws/{}/username/'.format(new_user.id),
                 data=json.dumps(existing_user.username),
                 content_type='application/json',
-                headers=[get_auth_header(new_user.id)])
-
+                headers=[get_auth_header(new_user.id)],
+            )
             data = json.loads(r.data)
             self.assertEquals(r.status_code, 400)
             self.assertEquals(['"{}" already taken.'.format(existing_user.username)], data['message'])
@@ -34,25 +34,28 @@ class TestProfileEdit(base.RockPackTestCase):
                 '/ws/{}/username/'.format(new_user.id),
                 data=json.dumps('lemonademan'),
                 content_type='application/json',
-                headers=[get_auth_header(new_user.id)])
-
+                headers=[get_auth_header(new_user.id)],
+            )
             self.assertEquals(r.status_code, 204)
 
     def test_fullname_toggle(self):
         with self.app.test_client() as client:
             new_user = self.create_test_user()
 
-            r = client.get('/ws/{}/'.format(new_user.id),
+            r = client.get(
+                '/ws/{}/'.format(new_user.id),
                 content_type='application/json',
                 headers=[get_auth_header(new_user.id)])
             old_data = json.loads(r.data)
 
-            client.put('/ws/{}/display_fullname/'.format(new_user.id),
+            client.put(
+                '/ws/{}/display_fullname/'.format(new_user.id),
                 data=json.dumps(False),
                 content_type='application/json',
-                headers=[get_auth_header(new_user.id)])
-
-            r = client.get('/ws/{}/'.format(new_user.id),
+                headers=[get_auth_header(new_user.id)],
+            )
+            r = client.get(
+                '/ws/{}/'.format(new_user.id),
                 content_type='application/json',
                 headers=[get_auth_header(new_user.id)])
             new_data = json.loads(r.data)
@@ -63,56 +66,62 @@ class TestProfileEdit(base.RockPackTestCase):
     def test_password_change(self):
         with self.app.test_client() as client:
             new_user = self.create_test_user()
-            r = client.put('/ws/{}/{}/'.format(new_user.id, 'password'),
-                    data=json.dumps(dict(old='password', new='imbatman')),
-                    content_type='application/json',
-                    headers=[get_auth_header(new_user.id)])
-
+            r = client.put(
+                '/ws/{}/{}/'.format(new_user.id, 'password'),
+                data=json.dumps(dict(old='password', new='imbatman')),
+                content_type='application/json',
+                headers=[get_auth_header(new_user.id)],
+            )
             creds = json.loads(r.data)
 
-            r = client.post('/ws/token/',
-                    headers=[get_client_auth_header()],
-                    data=dict(refresh_token=creds['refresh_token'],
-                        grant_type='refresh_token'))
+            r = client.post(
+                '/ws/token/',
+                headers=[get_client_auth_header()],
+                data=dict(refresh_token=creds['refresh_token'],
+                grant_type='refresh_token'))
 
             new_creds = json.loads(r.data)
 
             self.assertEquals('Bearer', new_creds['token_type'], 'token type should be Bearer')
             self.assertEquals(new_creds['refresh_token'], creds['refresh_token'], 'refresh tokens should be the same')
-            self.assertNotEquals(new_creds['access_token'],
+            self.assertNotEquals(
+                new_creds['access_token'],
                 creds['access_token'],
                 'old access token should not be the same at the new one')
 
     def test_failed_password_length(self):
         with self.app.test_client() as client:
             new_user = self.create_test_user()
-            r = client.put('/ws/{}/{}/'.format(new_user.id, 'password'),
-                    data=json.dumps(dict(old='password', new='4char')),
-                    content_type='application/json',
-                    headers=[get_auth_header(new_user.id)])
-
+            r = client.put(
+                '/ws/{}/{}/'.format(new_user.id, 'password'),
+                data=json.dumps(dict(old='password', new='4char')),
+                content_type='application/json',
+                headers=[get_auth_header(new_user.id)],
+            )
             data = json.loads(r.data)
             self.assertEquals(data['message'], ["Field must be at least 6 characters long."])
 
     def test_failed_old_password(self):
         with self.app.test_client() as client:
             new_user = self.create_test_user()
-            r = client.put('/ws/{}/{}/'.format(new_user.id, 'password'),
-                    data=json.dumps(dict(old='wrong', new='6chars')),
-                    content_type='application/json',
-                    headers=[get_auth_header(new_user.id)])
-
+            r = client.put(
+                '/ws/{}/{}/'.format(new_user.id, 'password'),
+                data=json.dumps(dict(old='wrong', new='6chars')),
+                content_type='application/json',
+                headers=[get_auth_header(new_user.id)],
+            )
             data = json.loads(r.data)
             self.assertEquals(data['message'], ["Old password is incorrect."])
 
     def test_failed_password(self):
         with self.app.test_client() as client:
             new_user = self.create_test_user()
-            r = client.put('/ws/{}/{}/'.format(new_user.id, 'password'),
-                    data=json.dumps({}),
-                    content_type='application/json',
-                    headers=[get_auth_header(new_user.id)])
-
+            r = client.put(
+                '/ws/{}/{}/'.format(new_user.id, 'password'),
+                data=json.dumps({}),
+                content_type='application/json',
+                headers=[get_auth_header(new_user.id)],
+            )
             data = json.loads(r.data)
             self.assertEquals(data['message'], ["Both old and new passwords must be supplied."])
 
@@ -132,8 +141,8 @@ class TestProfileEdit(base.RockPackTestCase):
                     '/ws/{}/{}/'.format(new_user.id, field),
                     data=json.dumps(value),
                     content_type='application/json',
-                    headers=[get_auth_header(new_user.id)])
-
+                    headers=[get_auth_header(new_user.id)],
+                )
                 self.assertEquals(r.status_code, 204, "{} - {}".format(field, r.data))
 
             user = User.query.get(new_user.id)
@@ -196,10 +205,8 @@ class TestProfileEdit(base.RockPackTestCase):
 
             from rockpack.mainsite.services.user import commands
             with patch('rockpack.mainsite.core.email.send_email') as send_email:
-                commands.send_registration_emails()
-                time.sleep(1)
-                user = self.create_test_user()
-                commands.send_registration_emails()
+                user = self.create_test_user(date_joined=datetime(2100, 1, 2))
+                commands.create_registration_emails(datetime(2100, 1, 1), datetime(2100, 1, 10))
                 self.assertEquals(send_email.call_count, 1)
                 assert user.email == send_email.call_args[0][0]
                 assert 'Welcome to Rockpack' == send_email.call_args[0][1]
@@ -208,18 +215,26 @@ class TestProfileEdit(base.RockPackTestCase):
                 assert 'To ensure our emails reach your inbox please make sure to add {}'.format(
                     cgi.escape(app.config['DEFAULT_EMAIL_SOURCE'])) in send_email.call_args[0][2]
 
-                time.sleep(1)
-                user2 = self.create_test_user()
-                commands.send_registration_emails()
+                user2 = self.create_test_user(date_joined=datetime(2100, 2, 2))
+                commands.create_registration_emails(datetime(2100, 2, 1), datetime(2100, 2, 10))
                 self.assertEquals(send_email.call_count, 2)
                 assert 'Hi {}'.format(user2.username) in send_email.call_args[0][2]
 
-                time.sleep(1)
-                user1 = self.create_test_user()
-                user2 = self.create_test_user()
+                # Check that invalid email doesn't break
+                self.create_test_user(date_joined=datetime(2100, 3, 2), email='xxx')
+                # No email should be sent to user2 (with blank address)
+                self.create_test_user(date_joined=datetime(2100, 3, 3), email='')
 
-                user1.email = 'sadsadsadasdsadas'
-                user1.save()
+                commands.create_registration_emails(datetime(2100, 3, 1), datetime(2100, 3, 10))
+                self.assertEquals(send_email.call_count, 3)
 
-                commands.send_registration_emails()
-                self.assertEquals(send_email.call_count, 4)
+    if app.config.get('TEST_WELCOME_EMAIL'):
+        def test_email_registration_wo_patch(self):
+            from rockpack.mainsite.services.user import commands
+            with self.app.test_client():
+                self.app.test_request_context().push()
+                self.create_test_user(
+                    date_joined=datetime(2200, 1, 2),
+                    email=app.config['TEST_WELCOME_EMAIL']
+                )
+                commands.create_registration_emails(datetime(2200, 1, 1), datetime(2200, 1, 10))

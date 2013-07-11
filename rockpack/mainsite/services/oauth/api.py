@@ -9,7 +9,7 @@ from rockpack.mainsite.helpers.forms import naughty_word_validator
 from rockpack.mainsite.helpers.db import get_column_property, get_column_validators
 from rockpack.mainsite.helpers.urls import url_for
 from rockpack.mainsite.core.token import create_access_token
-from rockpack.mainsite.core.email import send_email
+from rockpack.mainsite.core.email import send_email, env as email_env
 from rockpack.mainsite.core.oauth.decorators import check_client_authorization
 from rockpack.mainsite.core.webservice import WebService, expose_ajax
 from rockpack.mainsite.services.user.models import User, UserAccountEvent, username_exists, GENDERS
@@ -113,13 +113,26 @@ def gender_validator():
     return _valid
 
 
+def date_of_birth_validator():
+    def _valid(form, value):
+        if value.data:
+            delta = (datetime.today().date() - value.data).days / 365.0
+            if delta > 150:
+                raise wtf.ValidationError(_("Looks like you're unreasonably old!"))
+            elif delta < 0:
+                raise wtf.ValidationError(_("Looks like you're born in the future!"))
+            elif delta < 13:
+                raise wtf.ValidationError(_("Rockpack is not available for under 13's yet."))
+    return _valid
+
+
 class RockRegistrationForm(wtf.Form):
     username = wtf.TextField(validators=[wtf.Length(min=3), username_validator()] + get_column_validators(User, 'username'))
     password = wtf.PasswordField(validators=[wtf.Required(), wtf.Length(min=6)])
     first_name = wtf.TextField(validators=[wtf.Optional()] + get_column_validators(User, 'first_name'))
     last_name = wtf.TextField(validators=[wtf.Optional()] + get_column_validators(User, 'last_name'))
     gender = wtf.TextField(validators=[wtf.Optional(), gender_validator()] + get_column_validators(User, 'gender'))
-    date_of_birth = wtf.DateField(validators=get_column_validators(User, 'date_of_birth'))
+    date_of_birth = wtf.DateField(validators=[date_of_birth_validator()] + get_column_validators(User, 'date_of_birth'))
     locale = wtf.TextField(validators=get_column_validators(User, 'locale'))
     email = wtf.TextField(validators=[wtf.Email(), email_registered_validator()] + get_column_validators(User, 'email'))
 
@@ -188,8 +201,13 @@ class ExternalUser:
     @property
     def gender(self):
         if 'gender' in self._user_data:
-            return self._user_data['gender'][0]
-        return ''
+            try:
+                g = self._user_data['gender'].strip()[0]
+            except IndexError:
+                pass
+            else:
+                if g.lower() in ('m', 'f'):
+                    return g
 
     @property
     def dob(self):
@@ -273,16 +291,19 @@ class TokenWS(WebService):
 
 
 def send_password_reset(user):
-    token = create_access_token(user.id, '', 3600)
+    token = create_access_token(user.id, '', 86400)
     url = url_for('reset_password') + '?token=' + token
-    message = '''
-        Click here to reset your password:
-        %s
-
-        This link will expire in 1 hour
-    ''' % (url,)
-    subject = 'rockpack password reset'
-    send_email(user.email, subject, message)
+    template = email_env.get_template('reset.html')
+    subject = 'Rockpack password reset'
+    body = template.render(
+        reset_link=url,
+        subject=subject,
+        username=user.username,
+        email=user.email,
+        email_sender=app.config['DEFAULT_EMAIL_SOURCE'],
+        assets=app.config.get('ASSETS_URL', '')
+    )
+    send_email(user.email, subject, body, format='html')
 
 
 class ResetWS(WebService):

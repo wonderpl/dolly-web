@@ -1,4 +1,7 @@
+from datetime import datetime
+from flask import request
 from flask.ext import wtf
+from flask.ext.admin.form import DateTimePickerWidget
 from flask.ext.admin.model.typefmt import Markup
 from flask.ext.admin.model.form import InlineFormAdmin
 from rockpack.mainsite.admin.models import AdminView
@@ -110,7 +113,7 @@ class CategoryTranslation(AdminView):
     model = models.CategoryTranslation
 
     column_searchable_list = ('name',)
-    column_filters = ('locale',)
+    column_filters = ('locale', 'name', 'category_rel')
 
 
 class Locale(AdminView):
@@ -145,8 +148,8 @@ class Channel(AdminView):
     column_auto_select_related = True
     column_display_all_relations = True
 
-    column_list = ('title', 'owner_rel', 'public', 'cover.url', 'category_rel', 'video_count', 'date_added')
-    column_filters = ('owner', 'title', 'public', 'category_rel', 'description', 'owner_rel', 'deleted', 'date_added')
+    column_list = ('title', 'owner_rel', 'public', 'cover.url', 'category_rel', 'video_count', 'date_added', 'editorial_boost', 'subscriber_count')
+    column_filters = ('owner', 'title', 'public', 'category_rel', 'description', 'owner_rel', 'deleted', 'date_added', 'editorial_boost', 'subscriber_count')
     column_searchable_list = ('title',)
     column_formatters = dict(video_count=_format_channel_video_count)
 
@@ -154,6 +157,102 @@ class Channel(AdminView):
 
     edit_template = 'admin/edit_with_child_links.html'
     child_links = (('Videos', 'video_instance', None),)
+
+
+def _format_promo_state(context, channel_promo, name):
+    now = datetime.utcnow()
+    if now < channel_promo.date_start:
+        state = '<div style="background-color:#FFBB33; text-align: center; border: solid 1px #FF8800; color: #FFFFFF">WAITING</div>'
+    elif channel_promo.date_end < now:
+        state = '<div style="background-color:#FF4444; text-align: center; border: solid 1px #CC0000; color: #FFFFFF">ENDED</div>'
+    else:
+        state = '<div style="background-color:#99CC00; text-align: center; border: solid 1px #669900; color: #FFFFFF">ACTIVE</div>'
+    return Markup(state)
+
+
+def _format_category_names(context, channel_promo, name):
+    if channel_promo.category == 0:
+        return 'All'
+    return models.Category.query.get(channel_promo.category)
+
+
+def _format_channel_from(context, channel_promo, name):
+    return channel_promo.channel_rel.category_rel
+
+
+def category_list():
+    cats = {'0': 'All'}
+    for c in models.CategoryTranslation.query.filter(models.CategoryTranslation.priority>=0).order_by('category'):
+        if cats.get(c.category) and not c.locale == 'en-gb':
+            continue
+
+        s = ''
+        if c.category_rel.parent:
+            s = '{} - '.format(c.category_rel.parent_category.name)
+        cats[c.category] = s + c.name
+
+    return cats.items()
+
+
+class ChannelPromotionForm(wtf.Form):
+    channel = wtf.TextField()
+    category = wtf.SelectField('Category')
+    locale = wtf.SelectField('Locale', validators=[wtf.Required()])
+    position = wtf.IntegerField(validators=[wtf.Required()])
+    date_start = wtf.DateTimeField(validators=[wtf.Required()], widget=DateTimePickerWidget())
+    date_end = wtf.DateTimeField(validators=[wtf.Required()], widget=DateTimePickerWidget())
+
+    def __init__(self, *args, **kwargs):
+        super(ChannelPromotionForm, self).__init__(*args, **kwargs)
+        self.category.choices = category_list()
+        self.locale.choices = [(l.id, l.name) for l in models.Locale.query.all()]
+
+    def validate(self):
+
+        # stupid hack for wtform's retarded handling of zero values
+        if int(self.category.data):
+            self.category.data = int(self.category.data)
+
+        if not super(ChannelPromotionForm, self).validate():
+            return
+
+        # Handle coercion here
+        self.category.data = int(self.category.data)
+
+
+        if self.date_start.data > self.date_end.data:
+            self.date_end.errors = ['End date must be after end date']
+
+        promos = models.ChannelPromotion.query.filter(
+                models.ChannelPromotion.date_end > self.date_start.data,
+                models.ChannelPromotion.date_start < self.date_end.data,
+                models.ChannelPromotion.position == self.position.data,
+                models.ChannelPromotion.category == self.category.data,
+                models.ChannelPromotion.locale == self.locale.data)
+
+        if request.args.get('id'):
+            promos = promos.filter(models.ChannelPromotion.id != request.args.get('id'))
+
+        if int(self.position.data) > 8:
+            self.position.errors = ['Only a maximum of 8 position per category can be set']
+
+        if promos.count():
+            self.position.errors = ['Conflict with promotions {}'.format(str([_.channel for _ in promos.all()]))]
+            return
+
+        return True
+
+
+class ChannelPromotion(AdminView):
+    model_name = 'channel_promotion'
+    model = models.ChannelPromotion
+
+    form = ChannelPromotionForm
+
+    column_formatters = dict(channel_origin=_format_channel_from, promo_state=_format_promo_state, appearing_in=_format_category_names)
+    column_list = ('channel_rel', 'channel_origin', 'locale_rel', 'appearing_in', 'promo_state', 'position', 'date_start', 'date_end', 'date_added', 'date_updated')
+    column_labels = dict(channel_rel='Channel', locale_rel='Target Locale', appearing_in='Target Category')
+    column_filters = ('channel_rel', 'category_rel', 'locale_rel', 'position', 'date_added', 'date_updated', 'date_start', 'date_end')
 
 
 class RockpackCoverArt(AdminView):
@@ -219,7 +318,8 @@ class ExternalCategoryMap(AdminView):
 registered = [
     Video, VideoInstanceLocaleMeta, VideoThumbnail, VideoInstance,
     Source, Category, CategoryTranslation, Locale, RockpackCoverArt,
-    UserCoverArt, Channel, ChannelLocaleMeta, ContentReport, ExternalCategoryMap]
+    UserCoverArt, Channel, ChannelLocaleMeta, ChannelPromotion,
+    ContentReport, ExternalCategoryMap]
 
 
 def admin_views():

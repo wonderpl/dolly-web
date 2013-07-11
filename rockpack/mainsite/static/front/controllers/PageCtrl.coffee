@@ -21,14 +21,15 @@ window.contentApp.controller('PageCtrl', ['isMobile', '$scope', '$location', 'br
   $scope.assets_url = window.assets_url
   $scope.injectorUrl = window.injectorUrl
 
-  console.log 'fff'
-
   $scope.playVideo = () ->
 
-    width = $(window).width()
-
-    if  width > 1200
+    if $(window).width() > 1200
       width = 1200
+    else
+      if $(window).width() < 1200 and $(window).width() > 960
+        width = 960
+      else
+        width = 725
 
     $scope.player = new YT.Player('video', {
       videoId: 'lBFBbm1Nudc',

@@ -260,14 +260,23 @@ def user_subscriptions(userid):
     return Subscription.query.filter_by(user=userid)
 
 
+def user_channels(userid):
+    channels = [video_api.channel_dict(c, with_owner=False, owner_url=True)
+                for c in Channel.query.options(lazyload('owner_rel'), lazyload('category_rel')).
+                filter_by(owner=userid, deleted=False).
+                order_by('favourite desc', 'date_added desc')]
+    return dict(items=channels, total=len(channels))
+
+
 def check_present(form, field):
     if field.name not in (request.json or request.form):
         raise ValidationError(_('This field is required, but can be an empty string.'))
 
 
-# XXX: Monkey patch BooleanField process_formdata so that passed in values
+# Patch BooleanField process_formdata so that passed in values
 # are checked, not just a check for the presence of the field.
-wtf.BooleanField.process_formdata = wtf.Field.process_formdata
+class JsonBooleanField(wtf.BooleanField):
+    process_formdata = wtf.Field.process_formdata
 
 
 class ChannelForm(form.BaseForm):
@@ -280,7 +289,7 @@ class ChannelForm(form.BaseForm):
     category = wtf.TextField(validators=[check_present])
     cover = wtf.TextField(validators=[check_present])
     cover_aoi = wtf.Field()  # set from cover reference
-    public = wtf.BooleanField(validators=[check_present])
+    public = JsonBooleanField(validators=[check_present])
 
     def __init__(self, *args, **kwargs):
         self._channelid = kwargs.pop('channelid', None)
@@ -347,15 +356,15 @@ class ContentReportForm(wtf.Form):
             raise ValidationError(_('Invalid id.'))
 
 
-def _channel_videos(channelid, locale, paging):
+def _channel_videos(channelid, locale, paging, own=False):
     return video_api.get_local_videos(
         locale, paging, channel=channelid, with_channel=False,
-        position_order=True, date_order=True)
+        include_invisible=own, position_order=True, date_order=True)
 
 
 def _channel_info_response(channel, locale, paging, owner_url):
     data = video_api.channel_dict(channel, owner_url=owner_url)
-    items, total = _channel_videos(channel.id, locale, paging)
+    items, total = _channel_videos(channel.id, locale, paging, own=owner_url)
     data['ecommerce_url'] = channel.ecommerce_url
     data['category'] = channel.category
     data['videos'] = dict(items=items, total=total)
@@ -366,7 +375,7 @@ class UserWS(WebService):
 
     endpoint = '/'
 
-    @expose_ajax('/<userid>/', cache_age=60, secure=False)
+    @expose_ajax('/<userid>/', cache_age=600, secure=False)
     def user_info(self, userid):
         if use_elasticsearch():
             ows = api.OwnerSearch()
@@ -406,10 +415,6 @@ class UserWS(WebService):
         if not userid == g.authorized.userid:
             return self.user_info(userid)
         user = g.authorized.user
-        channels = [video_api.channel_dict(c, with_owner=False, owner_url=True)
-                    for c in Channel.query.options(lazyload('owner_rel'), lazyload('category_rel')).
-                    filter_by(owner=user.id, deleted=False).
-                    order_by('favourite desc', 'date_updated desc')]
         info = dict(
             id=user.id,
             locale=user.locale,
@@ -427,8 +432,7 @@ class UserWS(WebService):
             info[key] = dict(resource_url=url_for('userws.post_%s' % key, userid=userid))
 
         info['subscriptions'][ 'updates'] = url_for('userws.recent_videos', userid=userid)
-
-        info['channels'].update(items=channels, total=len(channels))
+        info['channels'].update(user_channels(user.id))
         info['notifications'].update(unread_count=_notification_unread_count(userid))
         return info
 
@@ -523,9 +527,11 @@ class UserWS(WebService):
                             form.action.data,
                             form.video_instance.data,
                             self.get_locale())
-        channelid = VideoInstance.query.filter_by(id=form.video_instance.data).value('channel')
-        if channelid:
-            save_channel_activity(userid, form.action.data, channelid, self.get_locale())
+        # XXX: For now don't propogate activity to channel.
+        # Saves db load and also there's the new set_channel_view_count cron command
+        #channelid = VideoInstance.query.filter_by(id=form.video_instance.data).value('channel')
+        #if channelid:
+        #    save_channel_activity(userid, form.action.data, channelid, self.get_locale())
 
     @expose_ajax('/<userid>/notifications/', cache_age=60, cache_private=True)
     @check_authorization(self_auth=True)
@@ -561,9 +567,7 @@ class UserWS(WebService):
     @expose_ajax('/<userid>/channels/', cache_private=True)
     @check_authorization(self_auth=True)
     def get_channels(self, userid):
-        channels = [video_api.channel_dict(c, with_owner=False, owner_url=True) for c in
-                    Channel.query.filter_by(owner=userid, deleted=False)]
-        return dict(channels=dict(items=channels, total=len(channels)))
+        return dict(channels=user_channels(userid))
 
     @expose_ajax('/<userid>/channels/', methods=('POST',))
     @check_authorization(self_auth=True)
@@ -582,7 +586,7 @@ class UserWS(WebService):
             public=form.public.data)
         return ajax_create_response(channel)
 
-    @expose_ajax('/<userid>/channels/<channelid>/', cache_age=60, secure=False)
+    @expose_ajax('/<userid>/channels/<channelid>/', cache_age=600, secure=False)
     def channel_info(self, userid, channelid):
         if use_elasticsearch():
             ch = api.ChannelSearch(self.get_locale())
@@ -657,7 +661,7 @@ class UserWS(WebService):
             channel = channel.save()
         return channel.public
 
-    @expose_ajax('/<userid>/channels/<channelid>/videos/', cache_age=60, secure=False)
+    @expose_ajax('/<userid>/channels/<channelid>/videos/', cache_age=600, secure=False)
     def channel_videos(self, userid, channelid):
         if use_elasticsearch():
             vs = api.VideoSearch(self.get_locale())
@@ -678,7 +682,7 @@ class UserWS(WebService):
         channel = Channel.query.filter_by(id=channelid, deleted=False).first_or_404()
         if g.authorized.userid != userid and not channel.public:
             abort(404)
-        items, total = _channel_videos(channelid, self.get_locale(), self.get_page())
+        items, total = _channel_videos(channelid, self.get_locale(), self.get_page(), own=True)
         return dict(videos=dict(items=items, total=total))
 
     @expose_ajax('/<userid>/channels/<channelid>/videos/', methods=('PUT', 'POST'))
@@ -705,7 +709,7 @@ class UserWS(WebService):
         instance = VideoInstance.query.filter_by(id=videoid, channel=channelid).first_or_404()
         return video_api.video_dict(instance)
 
-    @expose_ajax('/<userid>/channels/<channelid>/subscribers/', cache_age=60)
+    @expose_ajax('/<userid>/channels/<channelid>/subscribers/', cache_age=600)
     def channel_subscribers(self, userid, channelid):
         items, total = _user_list(self.get_page(), subscribed_to=channelid)
         return dict(users=dict(items=items, total=total))
@@ -796,7 +800,7 @@ class UserWS(WebService):
             filter_by(public=True, deleted=False).values('channel')]
         if channels:
             items, total = video_api.get_local_videos(self.get_locale(), self.get_page(),
-                                                      date_order=True, channels=channels)
+                                                      date_order=True, channels=channels, readonly_db=True)
         else:
             items, total = [], 0
         return dict(videos=dict(items=items, total=total))

@@ -8490,7 +8490,10 @@ function $HttpProvider() {
     headers: {
       common: {
         'Accept': 'application/json, text/plain, */*',
-        'X-Requested-With': 'XMLHttpRequest'
+		// XXX: Don't set custom header - avoids cross-domain pre-flight OPTIONS requests
+		// which aren't supported by CloudFront (responds with a 403). See:
+		// https://developer.mozilla.org/en-US/docs/HTTP/Access_control_CORS?#Preflighted_requests
+        //'X-Requested-With': 'XMLHttpRequest'
       },
       post: {'Content-Type': 'application/json;charset=utf-8'},
       put:  {'Content-Type': 'application/json;charset=utf-8'}

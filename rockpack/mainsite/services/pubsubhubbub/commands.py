@@ -2,7 +2,10 @@ import re
 import logging
 from datetime import datetime
 from rockpack.mainsite.manager import manager
+from rockpack.mainsite.helpers.http import get_external_resource
 from .models import Subscription
+from .api import update_channel_videos
+
 
 @manager.cron_command
 def refresh_pubsubhubbub_subscriptions(id=None):
@@ -23,3 +26,8 @@ def refresh_pubsubhubbub_subscriptions(id=None):
                 logging.exception('Failed to subscribe: %d', sub.id)
         else:
             logging.info('Subscribed: %d', sub.id)
+
+        try:
+            update_channel_videos(sub.channel, get_external_resource(sub.topic).read())
+        except Exception:
+            logging.exception('Failed to update: %d', sub.id)

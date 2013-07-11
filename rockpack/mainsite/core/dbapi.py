@@ -3,6 +3,7 @@ import psycopg2
 from functools import wraps
 
 from sqlalchemy import create_engine, schema
+from sqlalchemy.orm import sessionmaker, scoped_session
 from sqlalchemy.exc import StatementError
 from werkzeug.exceptions import HTTPException
 from flask.ext import sqlalchemy
@@ -34,7 +35,7 @@ def create_database(db_url, drop_if_exists=False):
     engine.execute(command)
 
 
-def sync_database(drop_all=False):
+def sync_database(drop_all=False, custom_modules=None):
     models = []
 
     def load_modules(module):
@@ -44,7 +45,12 @@ def sync_database(drop_all=False):
             #print >> sys.stderr, 'cannot import', module, ':', e
             pass
 
-    for module in SERVICES + zip(*REGISTER_SETUPS)[0]:
+    modules = custom_modules or SERVICES + zip(*REGISTER_SETUPS)[0]
+    for module in modules:
+        # HACK: prevent admin modules being loaded unless explicitly passed
+        # Stops CMS class instantiation breaking tests.
+        if not custom_modules and module in ('rockpack.mainsite.admin', 'rockpack.mainsite.admin.auth', ):
+            continue
         load_modules(module)
 
     table_list = []
@@ -96,7 +102,23 @@ class _Model(sqlalchemy.Model):
 
 
 sqlalchemy.Model = _Model
+
 db = get_sessionmanager()
+
+
+def get_slave_session():
+    url = app.config.get('SLAVE_DATABASE_URL', None)
+    if url:
+        return scoped_session(sessionmaker(bind=create_engine(url), autoflush=False))
+
+
+readonly_session = get_slave_session() or db.session
+
+
+@app.teardown_appcontext
+def remove_readonly(response):
+    readonly_session.remove()
+    return response
 
 
 @app.before_request

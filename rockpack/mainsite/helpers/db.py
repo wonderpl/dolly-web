@@ -5,7 +5,6 @@ import cStringIO
 from ast import literal_eval
 from sqlalchemy import types
 from sqlalchemy.dialects import postgres
-from flask import g
 from flask.ext import wtf
 from rockpack.mainsite import app
 from rockpack.mainsite.core import imaging
@@ -60,11 +59,12 @@ def get_column_validators(model, columnname, required=True):
 
 def insert_new_only(model, instances):
     """Check db for existing instances and insert new records only"""
+    from rockpack.mainsite.core.dbapi import db
     all_ids = set(i.id for i in instances)
-    query = g.session.query(model.id).filter(model.id.in_(all_ids))
+    query = db.session.query(model.id).filter(model.id.in_(all_ids))
     existing_ids = set(i.id for i in query)
     new_ids = all_ids - existing_ids
-    g.session.add_all(i for i in instances if i.id in new_ids)
+    db.session.add_all(i for i in instances if i.id in new_ids)
     return new_ids, existing_ids
 
 

@@ -1,0 +1,362 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+
+<!-- Facebook sharing information tags -->
+<meta property="og:title" content="{{ subject }}" />
+
+<title>{{ subject }}</title>
+<style type="text/css">
+  /* Client-specific Styles */
+#outlook a{padding:0;} /* Force Outlook to provide a "view in browser" button. */
+body{width:100% !important;} .ReadMsgBody{width:100%;} .ExternalClass{width:100%;} /* Force Hotmail to display emails at full width */
+body{-webkit-text-size-adjust:none;} /* Prevent Webkit platforms from changing default text sizes. */
+
+  /* Reset Styles */
+body{margin:0; padding:0;}
+img{border:0; height:auto; line-height:100%; outline:none; text-decoration:none;}
+table td{border-collapse:collapse;}
+#backgroundTable{height:100% !important; margin:0; padding:0; width:100% !important;}
+
+  /* Template Styles */
+
+  /* /\/\/\/\/\/\/\/\/\/\ STANDARD STYLING: COMMON PAGE ELEMENTS /\/\/\/\/\/\/\/\/\/\ */
+
+  /**
+  * @tab Page
+  * @section background color
+  * @tip Set the background color for your email. You may want to choose one that matches your company's branding.
+  * @theme page
+  */
+body, #backgroundTable{
+  /*@editable*/ background-color:#f7f7f7;
+  font-family: Helvetica;
+  font-size: 13px;
+}
+
+  /**
+  * @tab Page
+  * @section email border
+  * @tip Set the border for your email.
+  */
+#templateContainer{
+  /*@editable*/ border: 1px solid #DDDDDD;
+}
+
+  /**
+  * @tab Page
+  * @section heading 1
+  * @tip Set the styling for all first-level headings in your emails. These should be the largest of your headings.
+  * @style heading 1
+  */
+  /* /\/\/\/\/\/\/\/\/\/\ STANDARD STYLING: PREHEADER /\/\/\/\/\/\/\/\/\/\ */
+
+  /**
+  * @tab Header
+  * @section preheader style
+  * @tip Set the background color for your email's preheader area.
+  * @theme page
+  */
+#templatePreheader{
+  /*@editable*/ background-color:#f7f7f7;
+}
+
+  /**
+  * @tab Header
+  * @section preheader text
+  * @tip Set the styling for your email's preheader text. Choose a size and color that is easy to read.
+  */
+.preheaderContent div{
+  /*@editable*/ color:#1c1f21;
+  /*@editable*/ font-family:Helvetica;
+  /*@editable*/ line-height:100%;
+  /*@editable*/ text-align:left;
+}
+
+  /**
+  * @tab Header
+  * @section preheader link
+  * @tip Set the styling for your email's preheader links. Choose a color that helps them stand out from your text.
+  */
+a:link, a:visited, div a {
+  /*@editable*/ color:#0ba6ab;
+  /*@editable*/ font-weight:normal;
+  /*@editable*/ text-decoration:none;
+}
+
+
+
+  /* /\/\/\/\/\/\/\/\/\/\ STANDARD STYLING: HEADER /\/\/\/\/\/\/\/\/\/\ */
+
+  /**
+  * @tab Header
+  * @section header style
+  * @tip Set the background color and border for your email's header area.
+  * @theme header
+  */
+#templateHeader{
+  /*@editable*/ background-color:#FFFFFF;
+  /*@editable*/ border-bottom:0;
+}
+
+  /**
+  * @tab Header
+  * @section header text
+  * @tip Set the styling for your email's header text. Choose a size and color that is easy to read.
+  */
+.headerContent{
+  /*@editable*/ color:#1c1f21;
+  /*@editable*/ font-family:Helvetica;
+  /*@editable*/ line-height:100%;
+  /*@editable*/ padding:0;
+}
+
+  /**
+  * @tab Header
+  * @section header link
+  * @tip Set the styling for your email's header links. Choose a color that helps them stand out from your text.
+  */
+
+#headerImage{
+  height:auto;
+  max-width:600px;
+}
+
+  /* /\/\/\/\/\/\/\/\/\/\ STANDARD STYLING: COLUMNS; LEFT, RIGHT /\/\/\/\/\/\/\/\/\/\ */
+
+  /**
+  * @tab Columns
+  * @section left column text
+  * @tip Set the styling for your email's left column text. Choose a size and color that is easy to read.
+  */
+.leftColumnContent{
+  /*@editable*/ background-color:#FFFFFF;
+}
+
+  /**
+  * @tab Columns
+  * @section left column text
+  * @tip Set the styling for your email's left column text. Choose a size and color that is easy to read.
+  */
+.leftColumnContent div{
+  /*@editable*/ color:#505050;
+  /*@editable*/ font-family:Helvetica;
+  /*@editable*/ line-height:150%;
+  /*@editable*/ text-align:left;
+}
+
+  /**
+  * @tab Columns
+  * @section left column link
+  * @tip Set the styling for your email's left column links. Choose a color that helps them stand out from your text.
+  */
+.leftColumnContent div a:link, .leftColumnContent div a:visited, /* Yahoo! Mail Override */ .leftColumnContent div a .yshortcuts /* Yahoo! Mail Override */{
+  /*@editable*/ color:#336699;
+  /*@editable*/ font-weight:normal;
+  /*@editable*/ text-decoration:underline;
+}
+
+.leftColumnContent img{
+  display:inline;
+  height:auto;
+}
+
+  /**
+  * @tab Columns
+  * @section right column text
+  * @tip Set the styling for your email's right column text. Choose a size and color that is easy to read.
+  */
+.rightColumnContent{
+  /*@editable*/ background-color:#FFFFFF;
+}
+
+  /**
+  * @tab Columns
+  * @section right column text
+  * @tip Set the styling for your email's right column text. Choose a size and color that is easy to read.
+  */
+.rightColumnContent div{
+  /*@editable*/ color:#505050;
+  /*@editable*/ font-family:Helvetica;
+  /*@editable*/ line-height:150%;
+  /*@editable*/ text-align:left;
+}
+
+  /**
+  * @tab Columns
+  * @section right column link
+  * @tip Set the styling for your email's right column links. Choose a color that helps them stand out from your text.
+  */
+.rightColumnContent div a:link, .rightColumnContent div a:visited, /* Yahoo! Mail Override */ .rightColumnContent div a .yshortcuts /* Yahoo! Mail Override */{
+  /*@editable*/ color:#336699;
+  /*@editable*/ font-weight:normal;
+  /*@editable*/ text-decoration:underline;
+}
+
+.rightColumnContent img{
+  display:inline;
+  height:auto;
+}
+
+#footer{
+  font-size: 11px;
+  color: #aaaaaa;
+  text-align: center;
+  line-height: 11px;
+  font-family: Helvetica;
+}
+
+
+  /* /\/\/\/\/\/\/\/\/\/\ STANDARD STYLING: FOOTER /\/\/\/\/\/\/\/\/\/\ */
+
+  /**
+  * @tab Footer
+  * @section footer style
+  * @tip Set the background color and top border for your email's footer area.
+  * @theme footer
+  */
+#templateFooter{
+  /*@editable*/ background-color:#FFFFFF;
+  /*@editable*/ border-top:0;
+}
+
+  /**
+  * @tab Footer
+  * @section footer text
+  * @tip Set the styling for your email's footer text. Choose a size and color that is easy to read.
+  * @theme footer
+  */
+.footerContent div{
+  /*@editable*/ color:#707070;
+  /*@editable*/ font-family:Helvetica;
+  /*@editable*/ line-height:125%;
+  /*@editable*/ text-align:left;
+}
+
+  /**
+  * @tab Footer
+  * @section footer link
+  * @tip Set the styling for your email's footer links. Choose a color that helps them stand out from your text.
+  */
+.footerContent div a:link, .footerContent div a:visited, /* Yahoo! Mail Override */ .footerContent div a .yshortcuts /* Yahoo! Mail Override */{
+  /*@editable*/ color:#336699;
+  /*@editable*/ font-weight:normal;
+  /*@editable*/ text-decoration:underline;
+}
+
+.footerContent img{
+  display:inline;
+}
+
+  /**
+  * @tab Footer
+  * @section social bar style
+  * @tip Set the background color and border for your email's footer social bar.
+  * @theme footer
+  */
+#social{
+  /*@editable*/ background-color:#FAFAFA;
+  /*@editable*/ border:0;
+}
+
+  /**
+  * @tab Footer
+  * @section social bar style
+  * @tip Set the background color and border for your email's footer social bar.
+  */
+#social div{
+  /*@editable*/ text-align:center;
+}
+
+  /**
+  * @tab Footer
+  * @section utility bar style
+  * @tip Set the background color and border for your email's footer utility bar.
+  * @theme footer
+  */
+#utility{
+  /*@editable*/ background-color:#FFFFFF;
+  /*@editable*/ border:0;
+}
+
+  /**
+  * @tab Footer
+  * @section utility bar style
+  * @tip Set the background color and border for your email's footer utility bar.
+  */
+#utility div{
+  /*@editable*/ text-align:center;
+}
+
+#monkeyRewards img{
+  max-width:190px;
+}
+
+.grey {
+  color: #939393;
+}
+</style>
+</head>
+<body leftmargin="0" marginwidth="0" topmargin="0" marginheight="0" offset="0">
+<center>
+  <table border="0" cellpadding="0" cellspacing="0" height="100%" width="100%" id="backgroundTable">
+    <tr>
+      <td align="center" valign="top">
+        <!-- // Begin Template Preheader \\ -->
+        <table border="0" cellpadding="10" cellspacing="0" width="600" id="templatePreheader">
+          <tr>
+            <td valign="top" class="preheaderContent">
+
+              <!-- // Begin Module: Standard Preheader \ -->
+              <table border="0" cellpadding="10" cellspacing="0" width="100%">
+                <tr>
+                  <td>
+                    <center><img src="{{ assets }}/assets/emails/images/logo.png"></center>
+                  </td>
+                </tr>
+              </table>
+              <!-- // End Module: Standard Preheader \ -->
+
+            </td>
+          </tr>
+        </table>
+        <!-- // End Template Preheader \\ -->
+        <table border="0" cellpadding="0" cellspacing="0" width="600" id="templateContainer">
+          <tr>
+            <td align="center" valign="top">
+              <!-- // Begin Template Header \\ -->
+              <table border="0" cellpadding="0" cellspacing="20" width="600" id="templateHeader">
+                <tr>
+                  <td class="headerContent">
+                    <br /><br />
+                    Hi {{ username }},<br />                     
+                    <p><a href="{{ reset_link }}">Click here</a> to reset your password. This link will expire in 24 hours. </p>
+                    <p>Thanks!</p>
+
+                    <p>The Rockpack Team</p>
+                    <br /><br />
+                 </td>
+                </tr>
+              </table>
+              <!-- // End Template Header \\ -->
+            </td>
+          </tr>
+        </table>
+        <br />
+        <table border="0" cellpadding="10" cellspacing="0" width="600" id="footer">
+          <tr>
+            <td>
+              <p>To ensure our emails reach your inbox please make sure to add {{ email_sender|e }}</p>
+              <p>to your address book or safe list.</p>
+              <p>You are subscribed as {{ email }}.</p>
+              <p>Your privacy is important to us, have a read to our <a href="http://rockpack.com/privacy">privacy policy</a>.</p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</center>
+</body>
+</html>

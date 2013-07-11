@@ -1,14 +1,13 @@
-window.Weblight.controller('ChannelCtrl', ['$scope', 'Videos', '$routeParams', '$rootScope', '$location', 'isMobile', 'channelData', ($scope, Videos, $routeParams, $rootScope, $location, isMobile, channelData) ->
+window.Weblight.controller('ChannelCtrl', ['$scope', '$routeParams', '$location', 'isMobile', 'channelData', ($scope, $routeParams, $location, isMobile, channelData) ->
 
-  @page = 1 # We prefetch the first page in the index (server side)
-  @channelid = channelData.id
+  $scope.triggerEvent = (action, label) ->
+    ga('send', 'event', 'uiAction', action, label)
 
   $scope.isMobile = isMobile
   $scope.channel = channelData
-  $rootScope.videos = channelData.videos.items
-
 
   $scope.channel.owner.avatar = channelData.owner.avatar_thumbnail_url.replace('thumbnail_medium', 'thumbnail_large')
+
   $scope.coverRegex = new RegExp("channel/.*/")
 
 
@@ -19,34 +18,20 @@ window.Weblight.controller('ChannelCtrl', ['$scope', 'Videos', '$routeParams', '
       $scope.channel.cover.thumbnail_url = $scope.channel.cover.thumbnail_url.replace($scope.coverRegex, 'channel/background/')
   )
 
+  $scope.iphonebg = $scope.channel.cover.thumbnail_url.replace($scope.coverRegex, 'channel/background_portrait/')
 
   # Additional defaults
   $scope.videoCellTitleLength = if $scope.isMobile then 40 else 50
   $scope.channelTitleLength = if $scope.isMobile then 15 else 25
 
-  $rootScope.totalvideos = channelData.videos.total
-
-  $scope.load_videos = => 
-
-    #only try to fech videos if there are hidden videos in the channel
-    if @page*40 <= $rootScope.totalvideos
-      Videos.get(40, @page*40).then (data) =>
-        _.each(data, (video) =>
-          $rootScope.videos.push(video)
-        )
-      @page += 1
-    return
-
-  $scope.setCurrentVideo = (video) ->
-    ga('send', 'event', 'uiAction', 'videoPlayClick')
-    $location.search( 'video', video.id );
-    return
-
   # Catch share of specific video url
   url = $location.absUrl()
 
   if selected_video != null
-    $location.search( 'video',selected_video.id)
+#    $location.search( 'video',selected_video.id)
+    $scope.sharetext = "has shared a video with you from a channel on Rockpack."
+  else
+    $scope.sharetext = "has shared a video channel with you on Rockpack."
 
   return
 ])

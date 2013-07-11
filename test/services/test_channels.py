@@ -1,34 +1,295 @@
 import uuid
 import time
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 from urlparse import urlsplit
+from mock import patch
 from test import base
-from test.fixtures import RockpackCoverArtData, VideoInstanceData
+from test.fixtures import RockpackCoverArtData, VideoInstanceData, VideoData, ChannelData
 from test.test_helpers import get_auth_header
+from test.services.test_user_flows import BaseUserTestCase
 from rockpack.mainsite import app
+from rockpack.mainsite.services.video.commands import set_channel_view_count, update_channel_promo_activity
+from rockpack.mainsite.core.es import use_elasticsearch
+from rockpack.mainsite.core.es.api import ChannelSearch
 from rockpack.mainsite.services.video import models
+from rockpack.mainsite.services.user.models import UserActivity
 
 
-class ChannelPopularity(base.RockPackTestCase):
-    def test_channel_order(self):
+class ChannelViewCountPopulation(base.RockPackTestCase):
+
+    def test_populate(self):
+        """ Populate the view count on channel locale meta """
         with self.app.test_client() as client:
+            self.app.test_request_context().push()
             user = self.create_test_user()
+            user2_id = self.create_test_user().id
+            user3_id = self.create_test_user().id
+            user4_id = self.create_test_user().id
 
-            r = client.get(
-                '/ws/channels/',
+            begin = datetime.now() - timedelta(hours=2)
+
+            # test duplicate title
+            r = client.post(
+                '/ws/{}/channels/'.format(user.id),
+                data=json.dumps(dict(
+                    title='new title',
+                    description='test channel for user {}'.format(user.id),
+                    category=1,
+                    cover=RockpackCoverArtData.comic_cover.cover,
+                    public=True)
+                ),
                 content_type='application/json',
                 headers=[get_auth_header(user.id)]
             )
+            channel_id = json.loads(r.data)['id']
+            this_locale = 'en-us'
 
-            data = json.loads(r.data)
-            #self.assertEquals(data['channels']['items'][0]['title'], 'channel #6')
+            models.ChannelLocaleMeta(
+                    channel=channel_id,
+                    locale=this_locale,
+                    date_added=datetime.now()).save()
+
+            video_instance = models.VideoInstance(
+                    channel=channel_id,
+                    video=VideoData.video1.id).save()
+
+            UserActivity(
+                user=user2_id,
+                action='view',
+                date_actioned=datetime.now(),
+                object_type='channel',
+                object_id=channel_id,
+                locale=this_locale).save()
+
+            UserActivity(
+                user=user3_id,
+                action='view',
+                date_actioned=datetime.now(),
+                object_type='video',
+                object_id=video_instance.id,
+                locale=this_locale).save()
+
+            end = datetime.now()
+            set_channel_view_count(begin, end)
+
+            meta = models.ChannelLocaleMeta.query.filter(
+                    models.ChannelLocaleMeta.locale == this_locale,
+                    models.ChannelLocaleMeta.channel == channel_id).first()
+
+            self.assertEquals(meta.view_count, 2)
+            begin = datetime.now()
+
+            UserActivity(
+                user=user4_id,
+                action='view',
+                date_actioned=datetime.now(),
+                object_type='channel',
+                object_id=channel_id,
+                locale=this_locale).save()
+
+            end = datetime.now()
+            set_channel_view_count(begin, end)
+
+            self.assertEquals(meta.view_count, 3)
+
+
+class ChannelPromotionTest(base.RockPackTestCase):
+
+    def test_insert(self):
+        with self.app.test_client() as client:
+            self.app.test_request_context().push()
+
+            if use_elasticsearch():
+                now = datetime.utcnow()
+                models.ChannelPromotion(
+                    channel = ChannelData.channel1.id,
+                    date_start = now - timedelta(seconds=10),
+                    date_end = now + timedelta(seconds=30),
+                    category = 0,
+                    locale = 'en-us',
+                    position = 1
+                    ).save()
+
+                update_channel_promo_activity()
+                time.sleep(2)
+
+                user = self.create_test_user()
+                r = client.get('/ws/channels/',
+                    content_type='application/json',
+                    headers=[get_auth_header(user.id)]
+                )
+
+                feed = json.loads(r.data)
+                self.assertEquals(feed['channels']['items'][0]['id'], ChannelData.channel1.id)
+
+
+class ESChannelTest(base.RockPackTestCase):
+
+    def test_toggle(self):
+        with self.app.test_client():
+            self.app.test_request_context().push()
+            if use_elasticsearch():
+
+                def es_channel(id):
+                    esc = ChannelSearch('en-us')
+                    esc.add_id(channel.id)
+                    return esc.channels()
+
+                user = self.create_test_user()
+                channel = models.Channel(
+                    owner=user.id,
+                    title='a title',
+                    description='',
+                    cover='',
+                ).save()
+
+                time.sleep(2)
+                self.assertEquals(es_channel(channel.id)[0]['id'], channel.id)
+
+                channel.deleted = True
+                channel = channel.save()
+                time.sleep(2)
+                self.assertEquals(es_channel(channel.id), [])
+
+                channel.deleted = False
+                channel = channel.save()
+                time.sleep(2)
+                self.assertEquals(es_channel(channel.id)[0]['id'], channel.id)
+
+                channel.public = False
+                channel = channel.save()
+                time.sleep(2)
+                self.assertEquals(es_channel(channel.id), [])
+
+                channel.deleted = True
+                channel = channel.save()
+                time.sleep(2)
+                self.assertEquals(es_channel(channel.id), [])
+
+
+class ChannelVisibleFlag(BaseUserTestCase):
+
+    def test_visible_flag(self):
+        with self.app.test_client():
+            self.app.test_request_context().push()
+            user = self.register_user()
+            user_token = self.token
+
+            if use_elasticsearch():
+                new_title = 'a new channel title'
+                new_description = 'this is a new description!'
+                r = self.post(
+                    self.urls['channels'],
+                    dict(
+                        title=new_title,
+                        description=new_description,
+                        category=3,
+                        cover=RockpackCoverArtData.comic_cover.cover,
+                        public=True
+                    ),
+                    token=self.token
+                )
+                owned_resource = r['resource_url']
+                params = dict(q='music', size=1)
+                videos = self.get(self.urls['video_search'], params=params)['videos']['items']
+
+                self.put(owned_resource + 'videos/', [videos[0]['id']], token=self.token)
+                time.sleep(2)
+
+                resource = '{}/ws/{}/channels/{}/'.format(self.default_base_url, user['id'], r['id'])
+
+                new_ch = models.Channel.query.filter_by(owner=user['id']).filter(
+                    models.Channel.title == new_title).one()
+
+                self.register_user()
+                user2_token = self.token
+
+                # Check user2 can see channel
+                channel = self.get(resource, token=user2_token)
+                self.assertEquals(channel['id'], r['id'])
+
+                # Hide channel from user2
+                ch = models.Channel.query.get(new_ch.id)
+                ch.visible = False
+                ch.save()
+                self.assertEquals(models.Channel.query.get(new_ch.id).visible, False)
+
+                time.sleep(2)
+                # Owner should still be able to see channel
+                r = self.get(owned_resource, token=user_token)
+                self.assertEquals(channel['id'], r['id'])
+
+                # Channel should be hidden from user2
+                with self.assertRaises(Exception):  # Why doesn't this catch AssertionError???
+                    self.get(resource, token=user2_token)
+
+    @patch('sqlalchemy.dialects.sqlite.base.SQLiteCompiler.visit_now_func')
+    def test_channel_order(self, now_func):
+        # Need to clear the compiled statement cache on the table mapper
+        # so that the value for "now" is changed.
+        def set_now(month, day):
+            compiled_cache.clear()
+            now_func.return_value = 'datetime("2013-%02d-%02dT00:00:00")' % (month, day)
+        from sqlalchemy import inspect
+        compiled_cache = inspect(models.Channel)._compiled_cache
+
+        set_now(1, 1)
+        user = self.register_user()
+
+        c1 = None
+        for i in range(3):
+            set_now(2, i + 1)
+            r = self.post(
+                self.urls['channels'],
+                data=dict(
+                    title=str(i),
+                    description='',
+                    category='1',
+                    cover=RockpackCoverArtData.comic_cover.cover,
+                    public=True,
+                ),
+                token=self.token,
+            )
+            if i == 1:
+                c1 = r['resource_url']
+            r = self.post(
+                r['resource_url'] + 'videos/',
+                data=[VideoInstanceData.video_instance1.id],
+                token=self.token,
+            )
+
+        set_now(3, 1)
+        r = self.put(
+            c1,
+            data=dict(
+                title='updated',
+                description='x',
+                category='1',
+                cover=RockpackCoverArtData.comic_cover.cover,
+                public=True,
+            ),
+            token=self.token,
+        )
+
+        self.wait_for_es()
+
+        # Check own channels are ordered by date_created
+        r = self.get(self.urls['user'], token=self.token)
+        self.assertEquals([c['title'] for c in r['channels']['items']],
+                          ['Favorites', '2', 'updated', '0'])
+
+        # Check public channels are order by date_updated
+        r = self.get('{}/ws/{}/'.format(self.default_base_url, user['id']))
+        self.assertEquals([c['title'] for c in r['channels']['items']],
+                          ['Favorites', 'updated', '2', '0'])
 
 
 class ChannelCreateTestCase(base.RockPackTestCase):
 
     def test_new_channel(self):
         with self.app.test_client() as client:
+            self.app.test_request_context().push()
             user = self.create_test_user()
             user2_id = self.create_test_user().id
 
@@ -212,6 +473,7 @@ class ChannelCreateTestCase(base.RockPackTestCase):
 
     def test_dupe_channel_untitled(self):
         with self.app.test_client() as client:
+            self.app.test_request_context().push()
             user = self.create_test_user()
 
             r = client.post(
@@ -284,68 +546,6 @@ class ChannelCreateTestCase(base.RockPackTestCase):
                 "description": ["This field is required, but can be an empty string."],
                 "cover": ["This field is required, but can be an empty string."]},
                 errors)
-
-    def test_channel_order(self):
-        # Hack to ensure channels have ordered date_updated values
-        updated_default = models.Channel.__table__.columns['date_updated'].onupdate
-        updated_default_bak = updated_default.arg, updated_default.is_clause_element
-        updated_default.is_clause_element = False
-
-        with self.app.test_client() as client:
-            user = self.create_test_user()
-            user2_id = self.create_test_user().id
-
-            c1 = None
-            for i in range(3):
-                updated_default.arg = datetime(2013, 1, i + 1)
-                r = client.post(
-                    '/ws/{}/channels/'.format(user.id),
-                    data=json.dumps(dict(
-                        title=str(i),
-                        description='',
-                        category='1',
-                        cover=RockpackCoverArtData.comic_cover.cover,
-                        public=True,
-                    )),
-                    content_type='application/json',
-                    headers=[get_auth_header(user.id)]
-                )
-                self.assertEquals(201, r.status_code, r.data)
-                if i == 1:
-                    c1 = json.loads(r.data)['id']
-                r = client.post(
-                    urlsplit(r.headers['Location']).path + 'videos/',
-                    data=json.dumps([VideoInstanceData.video_instance1.id]),
-                    content_type='application/json',
-                    headers=[get_auth_header(user.id)]
-                )
-                self.assertEquals(r.status_code, 204)
-
-            updated_default.arg = datetime(2013, 2, 1)
-            r = client.put(
-                '/ws/{}/channels/{}/'.format(user.id, c1),
-                data=json.dumps(dict(
-                    title='updated',
-                    description='x',
-                    category='1',
-                    cover=RockpackCoverArtData.comic_cover.cover,
-                    public=True,
-                )),
-                content_type='application/json',
-                headers=[get_auth_header(user.id)]
-            )
-            self.assertEquals(200, r.status_code, r.data)
-
-            time.sleep(2)
-            for user_id in user.id, user2_id:
-                r = client.get('/ws/{}/'.format(user.id), headers=[get_auth_header(user_id)])
-                self.assertEquals(200, r.status_code)
-                channels = json.loads(r.data)['channels']
-                titles = ['Favorites', 'updated', '2', '0']
-                self.assertEquals([c['title'] for c in channels['items']], titles)
-
-        # restore date_updated onupdate default
-        updated_default.arg, updated_default.is_clause_element = updated_default_bak
 
     def test_channel_editable(self):
         with self.app.test_client() as client:

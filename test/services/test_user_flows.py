@@ -1,5 +1,4 @@
 import uuid
-import time
 import json
 import random
 import urllib
@@ -112,8 +111,7 @@ class BrowsingUserTestCase(BaseUserTestCase):
         viewed_videos = []
         self.register_user()
 
-        # Allow elasticsearch to catch up if necessary
-        time.sleep(2)
+        self.wait_for_es()
 
         for cat_id in self.get_cat_ids():
             popular_channels = self.get(self.urls['popular_channels'], dict(category=cat_id))
@@ -144,7 +142,7 @@ class SubscribingUserTestCase(BaseUserTestCase):
         """
         subscribed_channels = []
         self.register_user()
-        time.sleep(2)  # time for es to index
+        self.wait_for_es()
         for cat_id in self.get_cat_ids():
             popular_channels = self.get(self.urls['popular_channels'], dict(category=cat_id))
             if popular_channels['channels']['total'] == 0:
@@ -210,13 +208,13 @@ class CuratingUserTestCase(BaseUserTestCase):
             public=True,
         )
         channel = self.post(self.urls['channels'], chdata, token=self.token)
-        time.sleep(2)
+        self.wait_for_es()
         self.put(channel['resource_url'] + 'videos/', selected_videos, token=self.token)
-        time.sleep(2)
+        self.wait_for_es()
 
         # Verify results
         channels = self.get(self.urls['channel_search'], dict(q=chdata['title']))['channels']
-        self.assertEquals(channels['total'], 1)
+        self.assertEquals(channels['total'], 1, 'expected total=1, got %r' % channels)
         videos = self.get(channels['items'][0]['resource_url'])['videos']
         source_ids = [v['video']['source_id'] for v in videos['items']]
         self.assertEquals([], list(set(selected_source_ids).difference(source_ids)))

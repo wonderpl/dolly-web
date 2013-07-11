@@ -3,10 +3,13 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>rockpack</title>
+    <title>Rockpack</title>
+    <meta name="description" content="Create, share and subscribe to personalized video channels with Rockpack app. Rockpack is available on iPhone and iPad">
+    <meta name="apple-itunes-app" content="app-id=660697542">
+
 
     <!--[if lt IE 9]>
-      <script src="vendor/js-no-compile/html5.js"></script>
+      <script src="{{config.ASSETS_URL}}/assets/vendor/js-no-compile/html5.js"></script>
     <![endif]-->
 
     <!--[if lte IE 8]>
@@ -18,7 +21,7 @@
         document.createElement('ng:pluralize');
         document.createElement('ng:view');
       </script>
-      <script src="vendor/js-no-compile/json2.js"></script>
+      <script src="{{config.ASSETS_URL}}/assets/vendor/js-no-compile/json2.js"></script>
     <![endif]-->
 
   {% assets "fullwebVendorCss" %}
@@ -44,7 +47,6 @@
     window.apiUrls = jQuery.parseJSON('{{api_urls|safe}}');
   </script>
 
-  {% assets "fullwebJS" %}
   <script type="text/javascript" src="{{ ASSET_URL }}"></script>
   {% endassets %}
 
@@ -53,7 +55,8 @@
   {% endassets %}
 
 </head>
-<body ng-cloak>
+
+<body ng-controller="AppCtrl" id="WebApp">
   <div id="fb-root"></div>
   <script>
     window.fbAsyncInit = function() {
@@ -67,20 +70,10 @@
 
       // Additional initialization code such as adding Event Listeners goes here
     };
-
-    // Load the SDK asynchronously
-    (function(d, s, id){
-      var js, fjs = d.getElementsByTagName(s)[0];
-      if (d.getElementById(id)) {return;}
-      js = d.createElement(s); js.id = id;
-      js.src = "//connect.facebook.net/en_US/all.js";
-      fjs.parentNode.insertBefore(js, fjs);
-    }(document, 'script', 'facebook-jssdk'));
   </script>
-  <body ng-controller="AppCtrl" id="WebApp">
-    <div ng-include src="'header.html'"></div>
-    <div class="ng-view"></div>
-    <message-handler></message-handler>
-    <div ng-include src="'footer.html'" ></div>
-  </body>
+  <div ng-include src="'header.html'"></div>
+  <div class="ng-view"></div>
+  <message-handler></message-handler>
+  <div ng-include src="'footer.html'" ></div>
+</body>
 </html>

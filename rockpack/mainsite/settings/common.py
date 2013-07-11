@@ -12,6 +12,7 @@ except pkg_resources.DistributionNotFound:
 FORCE_INDEX_INSERT_REFRESH = False  # used by elasticsearch
 
 DATABASE_URL = ''  # e.g. postgresql://foo:bar@localhost:5432/rockpack
+SLAVE_DATABASE_URL = ''
 
 AWS_ACCESS_KEY = None
 AWS_SECRET_KEY = None
@@ -19,9 +20,6 @@ S3_BUCKET = 'media.dev.rockpack.com'
 IMAGE_CDN = 'http://media.dev.rockpack.com'
 
 SECRET_KEY = '22a20453891f41148e2251c4b2cef0df3426c4193914409cb0c5994b58fe77c5'
-
-# Pre Lunch Page
-PRE_LAUNCH = True
 
 # For admin OAuth login:
 GOOGLE_CONSUMER_KEY = '902099289100.apps.googleusercontent.com'
@@ -80,8 +78,8 @@ FAVOURITE_CHANNEL = 'Favorites', 'My favorite videos', 'fav2.jpg'
 
 # Mapping from share object type to message (can have formatting)
 SHARE_MESSAGE_MAP = dict(
-    channel='Check out this channel on Rockpack',
-    video_instance='Check out this video on Rockpack',
+    channel='Check out this great channel on @rockpack',
+    video_instance='Check out this great video on @rockpack',
 )
 
 # Path to default avatar image used when creating users

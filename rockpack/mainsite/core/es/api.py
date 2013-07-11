@@ -1,3 +1,5 @@
+import logging
+from ast import literal_eval
 from urlparse import urlparse, urljoin
 import pyes
 from . import mappings
@@ -8,6 +10,7 @@ from rockpack.mainsite import app
 from rockpack.mainsite.helpers.db import ImageType
 from rockpack.mainsite.helpers.urls import url_for
 
+logger = logging.getLogger(__name__)
 
 DEFAULT_FILTERS = [filters.locale_filter]
 
@@ -66,7 +69,7 @@ class EntitySearch(object):
         self._should_terms = []
         self._must_not_terms = []
 
-        self._query_params = {}
+        self._query_params = {"track_scores": True}
         self._sorting = []
         self._results = {}  # cache results
 
@@ -100,7 +103,7 @@ class EntitySearch(object):
     def _construct_filters(self, query):
         """ Wraps a query to apply score filters to """
         if self._filters:
-            return pyes.CustomFiltersScoreQuery(query, self._filters, score_mode='total')
+            return pyes.CustomFiltersScoreQuery(query, self._filters, score_mode='multiply')
         return query
 
     def _construct_query(self):
@@ -133,6 +136,16 @@ class EntitySearch(object):
             except:
                 pass
             pp(result.__dict__['query'])
+            """
+            try:
+                result.next()
+                pp(result.__dict__['hits'][0])
+                pp(result.__dict__['hits'][1])
+                pp(result.__dict__['hits'][2])
+                pp(result.__dict__['hits'][3])
+            except (KeyError, IndexError):
+                pass
+            """
         return result
 
     def get_index_name(self):
@@ -160,6 +173,7 @@ class EntitySearch(object):
 
         if not (field and value):
             return
+
         f = pyes.TermsQuery if isinstance(value, list) else pyes.TermQuery
         term_query = f(field=field, value=value)
         self._add_term_occurs(term_query, occurs)
@@ -215,24 +229,51 @@ class ChannelSearch(EntitySearch, CategoryMixin, MediaSortMixin):
     def __init__(self, locale):
         super(ChannelSearch, self).__init__('channel', locale)
         self._channel_results = None
+        self.promoted_category = None
 
     @classmethod
     def add_owner_to_channels(cls, channels, owners):
         for channel in channels:
-            channel['owner'] = owners[channel['owner']]
+            try:
+                channel['owner'] = owners[channel['owner']]
+            except TypeError:
+                pass
 
     @classmethod
     def add_videos_to_channel(cls, channel, videos, total):
         channel.setdefault('videos', {}).setdefault('items', videos.get(channel['id'], []))
         channel['videos']['total'] = total
 
-    def _format_results(self, channels, with_owners=False, with_videos=False, video_paging=(0,100,)):
+    def _format_results(self, channels, with_owners=False, with_videos=False, video_paging=(0, 100, )):
         channel_list = []
         channel_id_list = []
         owner_list = []
         IMAGE_CDN = app.config.get('IMAGE_CDN', '')
         BASE_URL = url_for('basews.discover')
-        for pos, channel in enumerate(channels, self.paging[0]):
+
+        def _get_sub_cat(category):
+            if not category:
+                return None
+            elif isinstance(channel[k], list):
+                return category[0]  # First item is subcat
+            else:
+                return category
+
+        def _check_position(position):
+            if position in promoted_position_list:
+                position += 1
+                return _check_position(position)
+            return position
+
+        # Any promoted channels should be at the top, so find these
+        # and then set the position of un-promoted to exclude these
+        promoted_channels = {}
+        promoted_position_list = []
+
+        position = 0
+        for channel in channels:
+            position += 1
+
             ch = dict(
                 id=channel.id,
                 owner=channel.owner,
@@ -241,7 +282,6 @@ class ChannelSearch(EntitySearch, CategoryMixin, MediaSortMixin):
                 description=channel.description,
                 title=channel.title,
                 public=channel.public,
-                position=pos,
                 cover=dict(
                     thumbnail_url=urljoin(IMAGE_CDN, channel.cover.thumbnail_url) if channel.cover.thumbnail_url else '',
                     aoi=channel.cover.aoi
@@ -269,11 +309,41 @@ class ChannelSearch(EntitySearch, CategoryMixin, MediaSortMixin):
                     else:
                         ch[k] = channel[k]
 
-            channel_list.append(ch)
             if with_owners:
                 owner_list.append(channel.owner)
             if with_videos:
                 channel_id_list.append(channel.id)
+
+            # ASSUMPTION: We should have all the promoted channels at the top, so positions of
+            # the promoted will already be known by the time we're at the regular channels.
+            # (lets also hope this assumption isn't anyones mother)
+            if channel.promotion:
+                promote_pattern = '|'.join([str(self.locale), str(self.promoted_category)])
+                # This could be a promoted channel, just not for here
+                promoted_for_category = False
+                for p in channel.promotion:
+                    if p.startswith(promote_pattern):
+                        promoted_for_category = True
+                        locale, category, pos = p.split('|')
+                        pos = int(pos)
+                        ch['position'] = pos - 1 + self.paging[0]  # zero indexed
+                        promoted_position_list.append(pos)
+                        promoted_channels[pos] = ch
+                if promoted_for_category:
+                    continue
+            else:
+                # We need to reset the position here so that we account for any gaps
+                if not channel_list:
+                    position = 1 + self.paging[0]  # zero indexed
+
+            position = _check_position(position)
+            ch['position']  = position - 1
+            channel_list.append(ch)
+
+
+        # Insert the promoted channels into their positions
+        for position, channel in promoted_channels.iteritems():
+            channel_list.insert(position - 1, channel)
 
         if with_owners and owner_list:
             ows = OwnerSearch()
@@ -294,9 +364,30 @@ class ChannelSearch(EntitySearch, CategoryMixin, MediaSortMixin):
             vs.set_paging(offset=video_paging[0], limit=video_paging[1])
             video_map = {}
             for v in vs.videos():
-                video_map.setdefault(channel_id_list[0], []).append(v) # HACK: see above
+                video_map.setdefault(channel_id_list[0], []).append(v)  # HACK: see above
             self.add_videos_to_channel(channel_list[0], video_map, vs.total)
         return channel_list
+
+    def promotion_settings(self, category):
+        self.promoted_category = category or 0
+        self.add_filter(
+            pyes.CustomFiltersScoreQuery.Filter(
+                pyes.PrefixFilter(
+                    field='promotion',
+                    prefix='|'.join([str(self.locale), str(self.promoted_category)])
+                ),
+                script='1000000000000000000'
+            )
+        )
+        if not category:
+            # The SHOULD condition requires at least one result. Since there is no
+            # category, if no promotions are set for the ALL category, no results
+            # will be returned. Explicity set SHOULD to display at least results
+            # from MatchAll.
+            self._add_term_occurs(
+                pyes.MatchAllFilter(),
+                SHOULD
+            )
 
     def channels(self, with_owners=False, with_videos=False, video_paging=(0, 100,)):
         if not self._channel_results:
@@ -317,7 +408,7 @@ class VideoSearch(EntitySearch, CategoryMixin, MediaSortMixin):
             try:
                 video['channel'] = channels[video['channel']]
             except KeyError:
-                app.logger.warning("Missing channel '{}' during mapping".format(video['channel']))
+                logger.warning("Missing channel '%s' during mapping", video['channel'])
 
     def _format_results(self, videos, with_channels=True):
         vlist = []
@@ -396,7 +487,7 @@ def add_to_index(data, index, _type, id, bulk=False, refresh=False):
     try:
         return es_connection.index(data, index, _type, id=id, bulk=bulk)
     except Exception as e:
-        app.logger.critical("Failed to insert record to index '{}' with id '{}' with: {}".format(index, id, str(e)))
+        logger.warning("Failed to insert record to index '%s' with id '%s' with: %s", index, id, str(e))
     else:
         if refresh or app.config.get('FORCE_INDEX_INSERT_REFRESH', False):
             es_connection.indices.refresh(index)
@@ -442,6 +533,10 @@ def add_owner_to_index(owner, bulk=False, refresh=False, no_check=False):
     return add_to_index(data, mappings.USER_INDEX, mappings.USER_TYPE, id=owner.id, bulk=bulk, refresh=refresh)
 
 
+def promotion_formatter(locale, category, position):
+    return '|'.join([str(locale), str(category), str(position)])
+
+
 def add_channel_to_index(channel, bulk=False, refresh=False, boost=None, no_check=False):
     if not check_es(no_check):
         return
@@ -454,6 +549,12 @@ def add_channel_to_index(channel, bulk=False, refresh=False, boost=None, no_chec
             category = Category.query.filter_by(id=channel.category).values('id', 'parent').next()
         else:
             category = [channel.category_rel.id, channel.category_rel.parent]
+
+    aoi = None
+    # aoi may come in as a string which needs to be eval'd
+    # eg. from cms entry
+    if channel.cover_aoi and isinstance(channel.cover_aoi, basestring):
+        aoi = literal_eval(channel.cover_aoi)
 
     data = dict(
         id=channel.id,
@@ -471,12 +572,14 @@ def add_channel_to_index(channel, bulk=False, refresh=False, boost=None, no_chec
         favourite=channel.favourite,
         verified=channel.verified,
         update_frequency=channel.update_frequency,
+        subscriber_frequency=channel.subscriber_frequency,
         editorial_boost=channel.editorial_boost,
         cover=dict(
             thumbnail_url=urlparse(convert(channel, 'cover', 'CHANNEL').url).path,
-            aoi=channel.cover_aoi
+            aoi=aoi
         ),
-        keywords=[channel.owner_rel.display_name.lower(), channel.owner_rel.username.lower()]
+        keywords=[channel.owner_rel.display_name.lower(), channel.owner_rel.username.lower()],
+        promotion=channel.promotion_map()
     )
 
     if app.config.get('SHOW_OLD_CHANNEL_COVER_URLS', True):
@@ -517,7 +620,7 @@ def remove_channel_from_index(channel_id):
     try:
         es_connection.delete(mappings.CHANNEL_INDEX, mappings.CHANNEL_TYPE, channel_id)
     except pyes.exceptions.NotFoundException:
-        app.logger.warning("Failed to remove channel '{}' from index".format(channel_id))
+        pass
 
 
 def remove_video_from_index(video_id):
@@ -527,4 +630,4 @@ def remove_video_from_index(video_id):
     try:
         es_connection.delete(mappings.VIDEO_INDEX, mappings.VIDEO_TYPE, video_id)
     except pyes.exceptions.NotFoundException:
-        app.logger.warning("Failed to remove video '{}' from index".format(video_id))
+        pass

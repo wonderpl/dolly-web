@@ -4,7 +4,7 @@ from collections import defaultdict
 from sqlalchemy.orm import contains_eager, lazyload, joinedload
 from sqlalchemy.sql.expression import desc
 from rockpack.mainsite import app
-from rockpack.mainsite.core.dbapi import commit_on_success
+from rockpack.mainsite.core.dbapi import readonly_session, db, commit_on_success
 from rockpack.mainsite.core.webservice import WebService, expose_ajax
 from rockpack.mainsite.core.oauth.decorators import check_authorization
 from rockpack.mainsite.core.es import use_elasticsearch, filters
@@ -102,12 +102,17 @@ def video_dict(instance):
     )
 
 
-def get_local_videos(loc, paging, with_channel=True, **filters):
-    videos = models.VideoInstance.query.join(
-        models.Video,
-        (models.Video.id == models.VideoInstance.video) &
-        (models.Video.visible == True)).\
+def get_local_videos(loc, paging, with_channel=True, include_invisible=False, readonly_db=False, **filters):
+    if readonly_db:
+        videos = readonly_session.query(models.VideoInstance)
+    else:
+        videos = db.session.query(models.VideoInstance)
+
+    videos = videos.join(
+        models.Video, models.Video.id == models.VideoInstance.video).\
         options(contains_eager(models.VideoInstance.video_rel))
+    if include_invisible is False:
+        videos = videos.filter(models.Video.visible == True)
     if with_channel:
         videos = videos.options(joinedload(models.VideoInstance.video_channel))
 
@@ -165,7 +170,7 @@ class VideoWS(WebService):
 
     endpoint = '/videos'
 
-    @expose_ajax('/', cache_age=300)
+    @expose_ajax('/', cache_age=3600)
     def video_list(self):
         if not use_elasticsearch():
             data, total = get_local_videos(self.get_locale(), self.get_page(), star_order=True, **request.args)
@@ -201,7 +206,7 @@ class ChannelWS(WebService):
 
     endpoint = '/channels'
 
-    @expose_ajax('/', cache_age=300)
+    @expose_ajax('/', cache_age=3600)
     def channel_list(self):
         if not use_elasticsearch():
             data, total = get_local_channel(
@@ -213,15 +218,19 @@ class ChannelWS(WebService):
         cs = ChannelSearch(self.get_locale())
         offset, limit = self.get_page()
         cs.set_paging(offset, limit)
+
         # Boost popular channels based on ...
         cs.add_filter(filters.boost_from_field_value('editorial_boost'))
-        cs.add_filter(filters.boost_from_field_value('subscriber_count'))
-        cs.add_filter(filters.boost_from_field_value('update_frequency'))
-        view_count_field = '.'.join(['locales', self.get_locale(), 'view_count'])
-        star_count_field = '.'.join(['locales', self.get_locale(), 'star_count'])
-        cs.add_filter(filters.boost_from_field_value(view_count_field))
-        cs.add_filter(filters.boost_from_field_value(star_count_field))
+        cs.add_filter(filters.boost_from_field_value('subscriber_frequency'))
+        cs.add_filter(filters.boost_from_field_value('update_frequency', reduction_factor=4))
+        cs.add_filter(filters.negatively_boost_favourites())
+        cs.add_filter(filters.verified_channel_boost())
+        cs.add_filter(filters.boost_by_time())
         cs.filter_category(request.args.get('category'))
+        # We dont want to pull promoted channels for paging.
+        # This needs to be handled better, and in es.api preferably
+        if offset <= 8:
+            cs.promotion_settings(request.args.get('category'))
         cs.date_sort(request.args.get('date_order'))
         if request.args.get('user_id'):
             cs.add_term('owner', request.args.get('user_id'))

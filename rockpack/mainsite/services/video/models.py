@@ -1,6 +1,7 @@
+from datetime import datetime
 from sqlalchemy import (
     Text, String, Column, Boolean, Integer, Float, ForeignKey, DateTime, CHAR,
-    UniqueConstraint, event, func)
+    UniqueConstraint, event, func, orm)
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import relationship, aliased
 from rockpack.mainsite.core.dbapi import db
@@ -276,6 +277,7 @@ class Channel(db.Model):
     date_added = Column(DateTime(), nullable=False, default=func.now())
     date_updated = Column(DateTime(), nullable=False, default=func.now(), onupdate=func.now())
     update_frequency = Column(Float, nullable=True)
+    subscriber_frequency = Column(Float, nullable=True)
     ecommerce_url = Column(String(1024), nullable=False, server_default='')
     editorial_boost = Column(Float(precision=1), nullable=True, server_default='1.0', default=1.0)
     favourite = Column(Boolean(), nullable=False, server_default='false', default=False)
@@ -287,6 +289,7 @@ class Channel(db.Model):
     owner_rel = relationship(User, primaryjoin=(owner == User.id), lazy='joined', innerjoin=True)
 
     deleted = Column(Boolean(), nullable=False, server_default='false', default=False)
+    visible = Column(Boolean(), nullable=False, server_default='True', default=True)
 
     video_instances = relationship('VideoInstance', backref='video_channel')
     metas = relationship('ChannelLocaleMeta', backref=db.backref('channel_rel', lazy='joined', innerjoin=True))
@@ -311,10 +314,12 @@ class Channel(db.Model):
     @classmethod
     def should_be_public(self, channel, public):
         """Return False if conditions for visibility are not met (except for fav channel)"""
+        if app.config.get('OVERRIDE_CHANNEL_PUBLIC'):
+            return True
         if channel.favourite:
             return True
 
-        if not (channel.cover and channel.category and
+        if not (channel.cover and channel.category is not None and
                 (channel.title and not
                     channel.title.upper().startswith(app.config['UNTITLED_CHANNEL'].upper())) and
                 channel.video_instances):
@@ -363,6 +368,37 @@ class Channel(db.Model):
 
     def add_meta(self, locale):
         return ChannelLocaleMeta(channel=self.id, locale=locale).save()
+
+    def promotion_map(self):
+        promos = []
+        now = datetime.utcnow()
+        for p in self.channel_promotion:
+            if p.date_start < now and p.date_end > now:
+                promos.append(es_api.promotion_formatter(p.locale, p.category, p.position))
+        return promos
+
+
+class ChannelPromotion(db.Model):
+    __tablename__ = 'channel_promotion'
+
+    id = Column(Integer, primary_key=True)
+    channel = Column(ForeignKey('channel.id'), nullable=False)
+    locale = Column(ForeignKey('locale.id'), nullable=False)
+    # Not a real fkey (below). Just an int in the db
+    category = Column(ForeignKey('category.id'), nullable=True)
+    date_added = Column(DateTime(), nullable=False, default=func.now())
+    date_updated = Column(DateTime(), nullable=False, default=func.now(), onupdate=func.now())
+    position = Column(Integer, nullable=False)
+
+    date_start = Column(DateTime(), nullable=False, default=func.now())
+    date_end = Column(DateTime(), nullable=False, default=func.now())
+
+    channel_rel = relationship('Channel', backref='channel_promotion')
+    locale_rel = relationship('Locale', backref='channel_promotion')
+
+    category_rel = relationship(Category, backref='channel_promotion_category',
+            primaryjoin='Category.id==ChannelPromotion.category',
+            foreign_keys=[Category.__table__.c.id])
 
 
 class ChannelLocaleMeta(db.Model):
@@ -437,6 +473,37 @@ def _remove_es_channel(channel):
     es_api.remove_channel_from_index(channel.id)
 
 
+def previous_state(flag, obj):
+    # Only for boolean flags
+    val = getattr(obj, flag)
+    history = orm.attributes.get_history(obj, flag)
+    if True in history.deleted or True in history.added:
+        # Has changed, so toggle value
+        return not val
+    return val
+
+
+def user_removed(target):
+    return (not target.public and previous_state('public', target)) or\
+        (target.deleted and not previous_state('deleted', target))
+
+
+def editorial_removed(target):
+    return not target.visible and previous_state('visible', target)
+
+
+def channel_not_deleted(channel):
+    return channel.public and not channel.deleted and channel.visible
+
+
+def _add_or_remove_channel(channel):
+    now_deleted = not channel.public or not channel.visible or channel.deleted
+    if now_deleted:
+        _remove_es_channel(channel)
+    elif channel_not_deleted(channel):
+        _add_es_channel(channel)
+
+
 def _remove_es_video_instance(video_instance):
     es_api.remove_video_from_index(video_instance.id)
 
@@ -473,26 +540,34 @@ def _channel_insert(mapper, connection, target):
     # NOTE: owner_rel isn't available on Channel if we pass channel_rel for owner.resource_url.
     # possibly do a lookup for owner in resource_url method instead of having it rely on self.owner_rel here
     channel = Channel.query.get(target.channel)
-    _add_es_channel(channel)
+    if channel_not_deleted:
+        _add_es_channel(channel)
 
 
 @event.listens_for(ChannelLocaleMeta, 'after_update')
 def _es_channel_update_from_clm(mapper, connection, target):
-    _add_es_channel(target.channel_rel)
+    _add_or_remove_channel(target.channel_rel)
 
 
 @event.listens_for(Channel, 'after_insert')
 def _es_channel_insert_from_channel(mapper, connection, target):
-    if target.public:
+    if channel_not_deleted:
         _add_es_channel(Channel.query.get(target.id))
 
 
 @event.listens_for(Channel, 'after_update')
 def _es_channel_update_from_channel(mapper, connection, target):
-    if not target.public or target.deleted:
-        _remove_es_channel(target)
-    else:
-        _add_es_channel(Channel.query.get(target.id))
+    _add_or_remove_channel(target)
+
+
+@event.listens_for(ChannelPromotion, 'after_insert')
+def _es_channel_promotion_insert(mapper, connection, target):
+    _add_or_remove_channel(Channel.query.get(target.channel))
+
+
+@event.listens_for(ChannelPromotion, 'after_update')
+def _es_channel_promotion_update(mapper, connection, target):
+    _add_or_remove_channel(Channel.query.get(target.channel))
 
 
 event.listen(Video, 'before_insert', add_video_pk)

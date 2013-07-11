@@ -163,7 +163,10 @@ def _get_video_data(youtube_data, playlist=None):
     video.source_category = get_category(media.get('media$category', []))
     video.source_view_count = int(youtube_data['yt$statistics']['viewCount']) if 'yt$statistics' in youtube_data else -1
     video.source_date_uploaded = media['yt$uploaded']['$t']
-    video.restricted = False
+    access_control = dict(
+        (i['action'], i['permission'] == 'allowed')
+        for i in youtube_data.get('yt$accessControl', []))
+    video.restricted = access_control.get('embed') is False
     if 'app$control' in youtube_data:
         if 'yt$incomplete' in youtube_data['app$control']:
             video.restricted = True
@@ -307,5 +310,11 @@ def complete(query, **params):
     url = 'http://www.google.com/complete/search'
     params = dict(client='youtube', ds='yt', q=query, **params)
     response = requests.get(url, params=params)
-    response.raise_for_status()
+    try:
+        response.raise_for_status()
+    except Exception, e:
+        if hasattr(e, 'response'):
+            log.error('complete request failed (%d): %s',
+                      e.response.status_code, e.response.text)
+        raise
     return response.content

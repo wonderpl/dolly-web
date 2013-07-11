@@ -101,6 +101,7 @@ channel_mapping = {
         "video_frequency": {"type": "integer"},
         "video_last_added": {"type": "date"},
         "update_frequency": {"type": "float", "null_value": 0.0},
+        "subscriber_frequency": {"type": "float", "null_value": 0.0},
         "editorial_boost": {"type": "float", "null_value": 1.0},
         "favourite": {"type": "boolean"},
         "verified": {"type": "boolean"},
@@ -152,6 +153,9 @@ channel_mapping = {
             "type": "string",
             "index": "not_analyzed"},
         "owner": {
+            "type": "string",
+            "index": "not_analyzed"},
+        "promotion": {
             "type": "string",
             "index": "not_analyzed"}
     }

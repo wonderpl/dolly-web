@@ -3,6 +3,7 @@ from urlparse import urljoin
 import pyes
 from flask import request, json, render_template, abort
 from flask.ext import wtf
+from werkzeug.http import HTTP_STATUS_CODES
 from werkzeug.exceptions import NotFound
 from rockpack.mainsite import app, requests
 from rockpack.mainsite.core.token import parse_access_token
@@ -25,6 +26,7 @@ def ws_request(url, **kwargs):
         # Make local in-process request at top of WSGI stack
         env = request.environ.copy()
         env['PATH_INFO'] = url
+        env['REQUEST_METHOD'] = 'GET'
         env['QUERY_STRING'] = urlencode(kwargs)
         if 'API_SUBDOMAIN' in app.config:
             env['HTTP_HOST'] = '.'.join((app.config['API_SUBDOMAIN'], app.config['SERVER_NAME']))
@@ -34,6 +36,11 @@ def ws_request(url, **kwargs):
             abort(404)
     return json.loads(response)
 
+
+
+@expose_web('/welcome_email', 'web/welcome_email.html', cache_age=3600)
+def welcome_email():
+    return None
 
 @expose_web('/', 'web/home.html', cache_age=3600)
 def homepage():
@@ -54,23 +61,22 @@ def injector():
 
 @expose_web('/tos', 'web/terms.html', cache_age=3600)
 def terms():
-    return dict(full_site=postlaunch_path)
+    return {}
 
 
 @expose_web('/cookies', 'web/cookies.html', cache_age=3600)
 def cookies():
-    return dict(full_site=postlaunch_path)
+    return {}
 
 
 @expose_web('/privacy', 'web/privacy.html', cache_age=3600)
 def privacy():
-    return dict(full_site=postlaunch_path)
+    return {}
 
 
 @expose_web('/channel/<slug>/<channelid>/', 'web/channel.html', cache_age=3600)
 def channel(slug, channelid):
-    #Temporary fix to pagination bug, fetching 1000 videos.
-    channel_data = ws_request('/ws/-/channels/%s/' % channelid, size=1000)
+    channel_data = ws_request('/ws/-/channels/%s/' % channelid, size=1)
     selected_video = None
     if 'video' in request.args:
         for instance in channel_data['videos']['items']:
@@ -90,7 +96,7 @@ def channel(slug, channelid):
         'channel', slug=slugify(channel_data['title']) or '-', channelid=channelid)
     if selected_video:
         channel_data['canonical_url'] += '?video=' + selected_video['id']
-    return dict(channel_data=channel_data, selected_video=selected_video, full_site=postlaunch_path)
+    return dict(channel_data=channel_data, selected_video=selected_video)
 
 
 @expose_web('/s/<linkid>', cache_age=60, cache_private=True)
@@ -127,16 +133,25 @@ def reset_password():
 
 @app.route('/status/', subdomain='<sub>')
 def status(sub):
-    # TODO: some internal checks
-    es = pyes.ES(app.config.get('ELASTICSEARCH_URL'))
-    assert es.status()['ok']
+    es_url = app.config.get('ELASTICSEARCH_URL')
+    if es_url:
+        assert pyes.ES(es_url).status()['ok']
     return 'OK', 200, [('Content-Type', 'text/plain')]
+
+
+@app.errorhandler(404)
+def not_found(error):
+    return handle_error(404, error, '400_error.html')
 
 
 @app.errorhandler(500)
 def server_error(error):
-    message = getattr(error, 'message', str(error))
+    return handle_error(500, error, '500_error.html')
+
+
+def handle_error(code, error, template):
+    message = str(getattr(error, 'message', error))
     if request.path.startswith('/ws/'):
-        return JsonReponse(dict(error='internal_error', message=message), 500)
+        return JsonReponse(dict(error=HTTP_STATUS_CODES[code], message=message), code)
     else:
-        return render_template('server_error.html', message=message), 500
+        return render_template(template, message=message), code

@@ -7,9 +7,9 @@ class UserView(AdminView):
     model = models.User
     model_name = models.User.__tablename__
 
-    column_list = ('username', 'display_name', 'avatar.url')
-    column_filters = ('username', 'email',)
-    column_searchable_list = ('username',)
+    column_list = ('username', 'display_name', 'avatar.url', 'date_joined')
+    column_filters = ('username', 'email', 'date_joined', 'is_active')
+    column_searchable_list = ('username', )
 
     edit_template = 'admin/edit_with_child_links.html'
     child_links = (('Channels', 'channel', None),)

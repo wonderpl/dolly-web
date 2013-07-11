@@ -1,27 +1,42 @@
 <div ng-controller="ChannelCtrl" id="ChannelCtrl">
-  <img ng-src="((channel.cover.thumbnail_url))" id="bgimage">
-  <div class="channelheader" ng-style="windowWidth">
-    <div>
-      <h1>((channel.title| truncate: channelTitleLength))</h1>
-      <div id="details">((channel.subscriber_count)) Subscribers</div>
-      <ul id="userdetails">
-          <li><img class="user-profile" ng-src="((channel.owner.avatar))"></li>
-          <li id="curatedby"><span id="username">((channel.owner.display_name))</span></li>
-      </ul>
+  <div id="header">
+    <div class="wrapper">
+      <a href="/#"><img src="((assets_url))/assets/weblight/images/logo.png"></a>
     </div>
-    <div class="gettheapp">
-      <p>CHANNEL CREATED<br>
-        WITH ROCKPACK</p>
-      <a href="((full_path))#"><button class="btn btn-blue">Get The App</button></a>
-    </div>
-  </div>
-  <div id="channeloverlay" when-scrolled="load_videos()">
-    <div ng-include src="'videoplayer.html'"></div>
-    <div ng-style="windowWidth" id="channelcontainer">
-      <h1 id="videoheader" class="hidden-phone">Videos</h1>
-      <div id="videoslist" infinite-scroll='load_videos()' infinite-scroll-distance='1'>
-        <div ng-click="setCurrentVideo(video)" ng-repeat="video in channel.videos.items" video-cell></div>
+  </div>  <div>
+    <div ng-include="'videoplayer.html'"></div>
+    <div class="wrapper">
+      <div id="channelwrapper">
+        <p id="introtext"><span class="bold uppercase">((channel.owner.display_name))</span> ((sharetext)) </p>
+        <p>Download Rockpack for <span class="bold">free on iPhone and iPad</span>. Search for <span class="bold uppercase">'((channel.title))'</span> to watch this and thousands of other channels.</p>
+        <p class="hidden-phone">“Rockpack looks pretty impressive. It's very slick." - The Guardian</p>
+        <a href="https://itunes.apple.com/app/rockpack/id660697542?mt=8&ls=1" target="_blank" ng-click="triggerEvent('appStoreButtonClick')"><img ng-src="((assets_url))/assets/weblight/images/downloadbig.png" ng-click="triggerEvent('appStoreButtonClick')"></a>
+        <img ng-src="((assets_url))/assets/weblight/images/bluelogo.png" class="hidden-phone">
+      </div>
+      <div id="screenshot">
+        <div id="gloss"></div>
+        <div ng-style="{'background': 'url(' + iphonebg + ')'}" id="bg">
+          <img ng-src="((assets_url))/assets/weblight/images/iosheader.png">
+          <div id="iostitle">((channel.title))</div>
+          <div id="subscribe">SUBSCRIBE</div>
+          <div id="iosuser">
+            <div><img ng-src="((channel.owner.avatar_thumbnail_url))"></div>
+            <div>((channel.owner.display_name))</div>
+          </div>
+          <img ng-src="((assets_url))/assets/weblight/images/iosshare.png" id="iosshare">
+          <img ng-src="((assets_url))/assets/weblight/images/iosplus.png" id="iosplus">
+          <img ng-src="((assets_url))/assets/weblight/images/iosplay.png" id="iosplay">
+          <img ng-src="((channel.videos.items[0].video.thumbnail_url))" id="videothumbnail">
+        </div>
+
+      </div>
+      <div id="whatsonyourchannel">
+        Video and music done right.
+      </div>
+      <div id="footer">
+        <a href="http://rockpack.com">rockpack.com</a>
       </div>
     </div>
   </div>
 </div>
+
