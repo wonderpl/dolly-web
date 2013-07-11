@@ -89,7 +89,12 @@
         {% endif %}
     </div>
     <div>
-        {% if not videos %}
+        {% if videos %}
+        <input
+        type="button"
+        value="toggle user sorted/date sorted"
+        onclick="location.href='{{ path }}?referrer={{ referrer }}&position={% if position == 't' %}f{% elif position == 'f' %}t{% else %}t{% endif %}'"/>
+        {% else %}
         <input
         type="button"
         value="switch to {% if locale == 'en-us' %}en-gb{% else %}en-us{% endif %}"
@@ -131,7 +136,7 @@
             <a rel="voverlay" href="http://www.youtube.com/watch?v={{ video.source_id }}" target="_blank"><img src="/static/assets/admin/images/yt-logo.jpg" alt="YouTube"/></a>
         </div>
         <div style="clear:both"></div>
-        <div class="videopic"><img style="width: 508px" src="{{ video.thumbnail_url }}"/></div>
+        <div class="videopic"><a rel="voverlay" href="http://www.youtube.com/watch?v={{ video.source_id }}" target="_blank"><img style="width: 508px" src="{{ video.thumbnail_url }}"/></a></div>
     </section>
     {% endfor %}
     </div>

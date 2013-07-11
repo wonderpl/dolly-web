@@ -18,16 +18,22 @@ class RankingView(BaseView):
     @expose('/<channelid>/', ('GET',))
     def channel_videos(self, channelid):
         offset, limit = request.args.get('start', 0), request.args.get('size', 20)
+        order_by_position = request.args.get('position', 'f')
+
         vs = VideoSearch('en-us')
         vs.add_term('channel', [channelid])
-        vs.add_sort('position', 'asc')
+        if not order_by_position == 't':
+            vs.add_sort('position', 'asc')
         vs.date_sort('desc')
         vs.add_sort('video.date_published', 'desc')
         vs.set_paging(offset, limit)
 
         ctx = {'videos': [],
                 'image_cdn': app.config['IMAGE_CDN'],
-                'referrer': request.referrer}
+                'referrer': request.args.get('referrer', request.referrer),
+                'url': request.url,
+                'path': request.path,
+                'position': order_by_position}
 
         for video in vs.results():
             c = {}
