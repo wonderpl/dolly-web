@@ -129,10 +129,10 @@ window.WebApp.factory('UserManager', ['cookies', '$http', '$q', '$location','api
           console.log data
         )
 
-    Unsubscribe: (channelResource) ->
+    Unsubscribe: (channelID) ->
       $http({
         method: 'DELETE',
-        url: channelResource,
+        url: "#{User.oauth.credentials.resource_url}subscriptions/#{channelID}/",
         headers: {"authorization": "Bearer #{User.oauth.credentials.access_token}", "Content-Type": "application/json"}
       })
         .success((data) ->

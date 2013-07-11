@@ -23,19 +23,13 @@ angular.module('WebApp').directive('subscribeButton', ['UserManager', '$route', 
           UserManager.Subscribe($scope.channel.resource_url)
             .success(()->
               UserManager.recentActivity.subscribed.push($scope.channel.id)
-              if $scope.state == 'subscribe'
-                $scope.state = 'unsubscribe'
-              else
-                $scope.state = 'subscribe'
+              $scope.state = 'unsubscribe'
             )
         else
-          # TODO: I don't have an unsubscribe resource url in the activity feed. Need to be resolved.
-          UserManager.Unsubscribe($scope.currentChannel.subscription_resource_url)
+          UserManager.Unsubscribe($scope.channel.id)
             .success(()->
-              if $scope.state == 'subscribe'
-                $scope.state = 'unsubscribe'
-              else
-                $scope.state = 'subscribe'
+              UserManager.recentActivity.subscribed.splice(UserManager.recentActivity.subscribed.indexOf($scope.channel.id), 1)
+              $scope.state = 'subscribe'
             )
     link: (scope, elem, attrs) ->
       return
