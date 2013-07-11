@@ -712,6 +712,7 @@ Message Type | Content Record | Description
 :----------- | :------------- | :----------
 `subscribed` | `channel`      | Message contains channel thumbnail and resource url
 `starred`    | `video`        | Message contains video thumbnail and channel resource url
+`joined`     |                | Message contains user record only
 
 ```http
 HTTP/1.1 200 OK
@@ -720,7 +721,7 @@ Cache-Control: private, max-age=60
 
 {
  "notifications": {
-  "total": 2,
+  "total": 3,
   "items": [
    {
     "id": 1,
@@ -755,6 +756,20 @@ Cache-Control: private, max-age=60
       "thumbnail_url": "http://path/to/channel/cover.jpg",
       "id": "CHANNELID"
      },
+     "user": {
+      "id": "USERID",
+      "resource_url": "http://path/to/user/resource/url/",
+      "display_name": "user",
+      "avatar_thumbnail_url": "http://path/to/avatar/img.jpg"
+     }
+    }
+   },
+   {
+    "id": 2,
+    "message_type": "joined",
+    "read": false,
+    "date_created": "2013-07-11T17:48:29.932114",
+    "message": {
      "user": {
       "id": "USERID",
       "resource_url": "http://path/to/user/resource/url/",

@@ -10,7 +10,7 @@ from rockpack.mainsite import app
 from rockpack.mainsite.services.video.models import Channel
 from rockpack.mainsite.services.oauth.api import ExternalUser
 from rockpack.mainsite.services.user.models import User, UserActivity, UserNotification
-from rockpack.mainsite.services.user.commands import create_new_notifications
+from rockpack.mainsite.services.user.commands import create_new_activity_notifications
 
 
 class TestProfileEdit(base.RockPackTestCase):
@@ -207,7 +207,7 @@ class TestProfileEdit(base.RockPackTestCase):
                 ('subscribe', channel.id),
                 UserActivity.query.filter_by(user=user.id).values('action', 'object_id'))
 
-            create_new_notifications()
+            create_new_activity_notifications()
             notification = UserNotification.query.filter_by(
                 user=channel.owner, message_type='subscribed').one()
             message = json.loads(notification.message)
@@ -230,7 +230,7 @@ class TestProfileEdit(base.RockPackTestCase):
                 ('star', video_instance.id),
                 UserActivity.query.filter_by(user=user.id).values('action', 'object_id'))
 
-            create_new_notifications()
+            create_new_activity_notifications()
             notification = UserNotification.query.filter_by(
                 user=owner, message_type='starred').one()
             message = json.loads(notification.message)
