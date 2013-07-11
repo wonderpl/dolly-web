@@ -115,8 +115,8 @@
         <h3>ranking: {{ channel.explanation.value }} </h3>
         <h3>subscriber frequncy: {{ channel.subscriber_frequency }}</h3>
         <h3>subscriber count: {{ channel.subscriber_count }}</h3>
+        <h3>view counts: US ({{ channel.uscount }}) GB ({{ channel.gbcount }})</h3>
         <h3>video update frequency: {{ channel.video_update_frequency }}</h3>
-        <h3>video view counts: US ({{ channel.uscount }}) GB ({{ channel.gbcount }})</h3>
         <h3>editorial boost: {{ channel.editorial_boost }}</h3>
         <div class="pic"><a href="/admin/ranking/{{ channel.id }}/"><img style="width:348px" src="{{ image_cdn }}{{ channel.cover_thumbnail_large_url }}"/></a></div>
     </section>
