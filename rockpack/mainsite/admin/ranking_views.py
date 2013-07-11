@@ -3,7 +3,7 @@ from flask.ext.admin import BaseView, expose
 from flask import request
 from rockpack.mainsite import app
 from rockpack.mainsite.admin.video_views import category_list
-from rockpack.mainsite.core.es.api import ChannelSearch
+from rockpack.mainsite.core.es.api import ChannelSearch, VideoSearch
 from rockpack.mainsite.core.es import filters
 
 
@@ -13,6 +13,38 @@ class RankingView(BaseView):
 
     def is_accessible(self):
         return self.is_authenticated()
+
+
+    @expose('/<channelid>/', ('GET',))
+    def channel_videos(self, channelid):
+        offset, limit = request.args.get('start', 0), request.args.get('size', 20)
+        vs = VideoSearch('en-us')
+        vs.add_term('channel', [channelid])
+        vs.add_sort('position', 'asc')
+        vs.date_sort('desc')
+        vs.add_sort('video.date_published', 'desc')
+        vs.set_paging(offset, limit)
+
+        ctx = {'videos': [],
+                'image_cdn': app.config['IMAGE_CDN']}
+
+        for video in vs.results():
+            c = {}
+            c['id'] = video.id
+            c['title'] = video.title
+            c['date_added'] = video.date_added[:10]
+            c['thumbnail_url'] = video.video.thumbnail_url
+            c['explanation'] = video.__dict__['_meta']['explanation']
+            c['duration'] = video.video.duration
+            c['source'] = ['rockpack', 'youtube'][video.video.source]
+            c['source_id'] = video.video.source_id
+            c['subscriber_count'] = video.subscriber_count
+            c['gbcount'] = video.locales['en-gb']['view_count']
+            c['uscount'] = video.locales['en-us']['view_count']
+            ctx['videos'].append(c)
+
+        return self.render('admin/ranking.html', **ctx)
+
 
     @expose('/', ('GET',))
     def index(self):
@@ -54,6 +86,7 @@ class RankingView(BaseView):
             c['explanation'] = channel.__dict__['_meta']['explanation']
             c['subscriber_frequency'] = channel.subscriber_frequency
             c['subscriber_count'] = channel.subscriber_count
+            c['date_added'] = channel.date_added
             c['video_update_frequency'] = channel.update_frequency
             c['subscriber_count'] = channel.subscriber_count
             c['promotion'] = channel.promotion

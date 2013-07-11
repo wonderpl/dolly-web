@@ -8,11 +8,49 @@ from test.test_helpers import get_auth_header
 from test.test_helpers import get_client_auth_header
 from rockpack.mainsite import app
 from rockpack.mainsite.services.video.models import Channel
+from rockpack.mainsite.services.oauth.api import ExternalUser
 from rockpack.mainsite.services.user.models import User, UserActivity, UserNotification
 from rockpack.mainsite.services.user.commands import create_new_notifications
 
 
 class TestProfileEdit(base.RockPackTestCase):
+
+    @patch('rockpack.mainsite.services.oauth.api.ExternalUser.get_new_token')
+    @patch('rockpack.mainsite.services.oauth.api.ExternalUser._get_external_data')
+    def test_external_accounts(self, get_external_data, get_new_token):
+        get_external_data.return_value = dict(id='1')
+        get_new_token.return_value = ExternalUser('facebook', 'xxx', 86400)
+        with self.app.test_client() as client:
+            def check_connect(userid, status):
+                r = client.post(
+                    '/ws/{}/external_accounts/'.format(userid),
+                    data=json.dumps(dict(external_system='facebook', external_token='xxx')),
+                    content_type='application/json',
+                    headers=[get_auth_header(userid)],
+                )
+                self.assertEquals(r.status_code, status)
+                return r
+
+            user1 = self.create_test_user().id
+            user2 = self.create_test_user().id
+
+            # check initial connect
+            check_connect(user1, 201)
+
+            # confirm that you can't connect the same account to another user
+            check_connect(user2, 400)
+
+            # confirm that you can't connect a different account to an existing user
+            get_external_data.return_value = dict(id='2')
+            check_connect(user1, 400)
+
+            # can connect new account to other user
+            check_connect(user2, 201)
+            r = client.get('/ws/{}/external_accounts/'.format(user2),
+                           headers=[get_auth_header(user2)])
+            ids = [i['external_uid'] for i in json.loads(r.data)['external_accounts']['items']
+                   if i['external_system'] == 'facebook']
+            self.assertEquals(ids, ['2'])
 
     def test_change_username(self):
         with self.app.test_client() as client:
