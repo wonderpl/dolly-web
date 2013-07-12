@@ -100,7 +100,7 @@ class ExternalFriend(db.Model):
         # Don't update if existing data is less than an hour old or if no token available
         delta = ExternalFriend.query.filter_by(user=userid).value(
             func.now() - func.max(ExternalFriend.date_updated))
-        if (delta.days * 86400) + delta.seconds < 3600:
+        if delta and (delta.days * 86400) + delta.seconds < 3600:
             return
         token = ExternalToken.query.filter_by(
             user=userid, external_system='facebook').first()
