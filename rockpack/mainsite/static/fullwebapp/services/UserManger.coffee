@@ -160,7 +160,7 @@ window.WebApp.factory('UserManager', ['cookies', '$http', '$q', '$location','api
         method: 'POST',
         data: [videoId],
         url: "#{channelurl}videos/",
-        headers: {"authorization": "Bearer #{@credentials.access_token}", "Content-Type": "application/json"}
+        headers: {"authorization": "Bearer #{User.oauth.credentials.access_token}", "Content-Type": "application/json"}
       })
         .success((data) ->
           return data.data
