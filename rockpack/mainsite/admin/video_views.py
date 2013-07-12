@@ -231,6 +231,12 @@ class ChannelPromotionForm(wtf.Form):
                 models.ChannelPromotion.locale == self.locale.data)
 
         if request.args.get('id'):
+            promos = promos.filter(models.ChannelPromotion.id == request.args.get('id'))
+            promo = models.ChannelPromotion.query.get(int(request.args.get('id')))
+            if promo.channel != self.channel.data:
+                self.channel.errors = ['Channel cannot be changed once set']
+                return
+
             promos = promos.filter(models.ChannelPromotion.id != request.args.get('id'))
 
         if int(self.position.data) > 8:
