@@ -102,6 +102,37 @@ window.WebApp.factory('UserManager', ['cookies', '$http', '$q', '$location','api
           console.log data
         )
 
+    FetchNotifications: () ->
+      $http({
+      method: 'GET',
+      url: User.details.notifications.resource_url,
+      headers: {"authorization": "Bearer #{User.oauth.credentials.access_token}", "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"}
+      })
+        .success((data) ->
+          User.details.notifications.total = data.notifications.total
+          User.details.notifications.items = data.notifications.items
+        )
+        .error((data) =>
+          console.log data
+        )
+
+    #TODO: Add resource url for unread notifications
+    FetchUnreadNotifications: () ->
+      $http({
+        method: 'GET',
+        url: "#{User.details.notifications.resource_url}unread_count",
+        headers: {"authorization": "Bearer #{User.oauth.credentials.access_token}", "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"}
+      })
+        .success((data) ->
+          if data != 0 and parseInt(data) != User.details.notifications.unread_count
+            User.details.notifications.unread_count = parseInt(data)
+            User.FetchNotifications()
+        )
+        .error((data) =>
+          console.log data
+        )
+
+
     FetchSubscriptions: () ->
       $http({
       method: 'GET',

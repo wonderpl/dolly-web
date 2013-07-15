@@ -21,35 +21,34 @@ angular.module('WebApp').factory('categoryService', [ '$http', 'locale', 'apiUrl
     items: []
     locale: null
     fetchCategories: () ->
-      if locale != Categories.locale
-        Categories.locale = locale
-        $http({
-          method: 'GET',
-          params: locale
-          url: apiUrl.categories,
-        })
-        .then(((data) ->
-          data.data.categories.items.sort(compareDecending)
-          _.each(data.data.categories.items, (category) ->
-            tempcategory = []
-            _.each(category.sub_categories, (subcategory) ->
-              if subcategory.priority > 0
-                tempcategory.push(subcategory)
-            )
-            category.sub_categories = tempcategory
-            category.sub_categories.sort(compareDecending)
+      Categories.locale = locale
+      $http({
+        method: 'GET',
+        params: locale
+        url: apiUrl.categories,
+      })
+      .then(((data) ->
+        console.log 'fetched'
+        tempCategories = []
+        for key, value of data.data.categories.items
+          if data.data.categories.items[key].priority > 0
+            tempCategories.push(data.data.categories.items[key])
 
+        tempCategories.sort(compareDecending)
+        _.each(tempCategories, (category) ->
+          tempcategory = []
+          _.each(category.sub_categories, (subcategory) ->
+            if subcategory.priority > 0
+              tempcategory.push(subcategory)
           )
-          Categories.items = data.data.categories.items
-          return data.data.categories.items
-        ),
-        (data) ->
-          console.log data
+          category.sub_categories = tempcategory
+          category.sub_categories.sort(compareDecending)
         )
-      else
-        deferred = $q.defer()
-        deferred.resolve(Categories.items)
-        return deferred.promise
+        return tempCategories
+      ),
+      (data) ->
+        console.log data
+      )
   }
 
   return Categories

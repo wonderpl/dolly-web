@@ -5,6 +5,7 @@
     <div ng-hide="!isLoggedIn"><a href="#/profile">Profile</a></div>
     <div><a href="#/channels">Channels</a></div>
     <div><a href="#/search">Search</a></div>
+    <div ng-hide="!isLoggedIn" ng-click="showNotifications()">Notifications</div>
     <div ng-switch on="isLoggedIn">
       <div ng-switch-when="false"><a href="#/login/">Log In</a></div>
       <div ng-switch-when="true"><a ng-click="logout()">Log Out</a></div>

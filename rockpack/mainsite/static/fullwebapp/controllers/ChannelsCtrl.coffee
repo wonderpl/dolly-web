@@ -12,6 +12,7 @@ window.WebApp.controller('ChannelsCtrl', ['$scope', 'cookies', 'categoryService'
   # Select menu categories based on ?catid
   $scope.categories = categoryService.fetchCategories()
   .then((data) ->
+    console.log data
     foundCategory = false
     _.each(data, ((category) ->
       if foundCategory

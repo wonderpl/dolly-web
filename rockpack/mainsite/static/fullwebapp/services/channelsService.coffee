@@ -10,6 +10,7 @@ angular.module('WebApp').factory('channelsService', ($http, locale, apiUrl, User
     categoryID: null
     items: []
     etags: []
+
     fetchChannels: (start, size, categoryID) ->
       if typeof start == "undefined"
         start = 0
