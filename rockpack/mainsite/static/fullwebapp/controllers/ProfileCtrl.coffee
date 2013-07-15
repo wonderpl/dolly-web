@@ -1,10 +1,14 @@
-window.WebApp.controller('ProfileCtrl', ['$scope', 'UserManager', '$routeParams', ($scope, UserManager, $routeParams) ->
+window.WebApp.controller('ProfileCtrl', ['$scope', 'UserManager', '$routeParams', 'subscriptionsService', 'loggedoutUserService', ($scope, UserManager, $routeParams, subscriptionsService, loggedoutUserService) ->
 
-  $scope.User = UserManager
-  if $scope.User.isLoggedIn and $routeParams.userid == $scope.User.details.user_id
-    $scope.User.FetchNotifications()
-    $scope.User.FetchSubscriptions()
+  if UserManager.isLoggedIn and $routeParams.userid == UserManager.oauth.credentials.user_id
+    $scope.channels = UserManager.details.channels.items
+    $scope.User = UserManager
+    UserManager.FetchSubscriptions()
+      .success((data) ->
+        $scope.subscriptions = UserManager.details.subscriptions.subscribedChannels.items
+      )
   else
-    # Fetch external user data
-
+    $scope.subscriptions = subscriptionsService.FetchSubscriptions($routeParams.userid)
+    $scope.User = {}
+    $scope.User.details = loggedoutUserService.fetchUser($routeParams.userid)
 ])

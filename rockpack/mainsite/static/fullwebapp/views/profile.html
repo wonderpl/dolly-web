@@ -8,7 +8,7 @@
   </ul>
   <ul id="userSubscriptions">
     <li><h3>User Subscriptions</h3></li>
-    <li ng-repeat="subscribedchannel in User.details.subscriptions.subscribedChannels.items" id="mysubscriptions">
+    <li ng-repeat="subscribedchannel in subscriptions" id="mysubscriptions">
       <a href="/#channel/{{subscribedchannel.owner.id}}/{{subscribedchannel.id}}"><img ng-src="{{subscribedchannel.cover.thumbnail_url}}"></a>
     </li>
   </ul>
