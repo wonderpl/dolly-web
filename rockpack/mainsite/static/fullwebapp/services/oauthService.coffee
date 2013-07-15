@@ -14,7 +14,6 @@ angular.module('WebApp').factory('oauthService', [ '$http', 'apiUrl', 'cookies',
     }
 
     TriggerRefresh: (timeToRefresh, token) ->
-      console.log timeToRefresh
       window.setTimeout((() => @refreshToken(token)) ,timeToRefresh)
 
     refreshToken: () ->

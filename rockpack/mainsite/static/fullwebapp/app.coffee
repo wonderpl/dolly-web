@@ -10,7 +10,7 @@ window.WebApp = angular.module('WebApp', ['infinite-scroll','ui.bootstrap'])
       controller: 'FeedCtrl',
       reloadOnSearch: false
     })
-    $routeProvider.when('/profile', {
+    $routeProvider.when('/profile/:userid', {
       templateUrl: 'profile.html',
       controller: 'ProfileCtrl',
     })

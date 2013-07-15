@@ -4,11 +4,10 @@
 
 window.WebApp.controller('AppCtrl', ['$rootScope', '$location', 'UserManager', '$route', ($rootScope, $location, UserManager, $route) ->
 
-  routesThatRequireAuth = ['/profile', '/feed']
+  routesThatRequireAuth = ['/feed']
 
   $rootScope.$on("$locationChangeStart", (event, NewUrl, OldUrl) ->
 
-    console.log 'testing transition'
     if (UserManager.oauth.isLoggedIn == false)
       console.log 'user is logged off'
       if (UserManager.oauth.credentials.refresh_token?)

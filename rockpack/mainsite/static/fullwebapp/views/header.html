@@ -2,7 +2,7 @@
   <div id="topmenu" class="wrapper">
     <div><a href="#/channels"><img ng-src="/static/assets/fullwebapp/images/logo.png"></a></div>
     <div ng-hide="!isLoggedIn"><a href="#/feed">Feed</a></div>
-    <div ng-hide="!isLoggedIn"><a href="#/profile">Profile</a></div>
+    <div ng-hide="!isLoggedIn"><a href="#/profile/{{user.details.id}}">Profile</a></div>
     <div><a href="#/channels">Channels</a></div>
     <div><a href="#/search">Search</a></div>
     <div ng-hide="!isLoggedIn" ng-click="showNotifications()">Notifications</div>

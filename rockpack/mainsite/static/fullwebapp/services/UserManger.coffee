@@ -132,20 +132,6 @@ window.WebApp.factory('UserManager', ['cookies', '$http', '$q', '$location','api
           console.log data
         )
 
-
-    FetchSubscriptions: () ->
-      $http({
-      method: 'GET',
-      url: User.details.subscriptions.resource_url,
-      headers: {"authorization": "Bearer #{User.oauth.credentials.access_token}", "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"}
-      })
-        .success((data) ->
-          User.details.subscriptions.subscribedChannels = data.channels
-        )
-        .error((data) =>
-          console.log data
-        )
-
     Subscribe: (channelResource) ->
       $http({
         method: 'POST',
