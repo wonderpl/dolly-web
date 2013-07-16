@@ -33,8 +33,17 @@ window.WebApp.controller('ChannelCtrl', ['$scope', '$routeParams', '$rootScope',
       )
   )
 
-  $scope.share = (shareid) ->
-    console.log $scope.channel
+  $scope.share = (method, shareid) ->
     shareService.fetchShareUrl('channel', shareid)
+    .success((data) ->
+      if method == "facebook"
+        FB.ui({
+          method: 'feed',
+          link: data.resource_url,
+          picture: $scope.background,
+          name: 'Rockpack',
+          caption: data.message
+        })
+    )
 
 ])
