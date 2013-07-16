@@ -48,6 +48,12 @@ def homepage():
     return dict(api_urls=api_urls)
 
 
+@expose_web('/fullweb', 'web/fullweb.html', cache_age=3600)
+def homepage():
+    api_urls = json.dumps(ws_request('/ws/'))
+    return dict(api_urls=api_urls)
+
+
 @expose_web('/bookmarklet', 'web/bookmarklet.html', cache_age=3600, secure=True)
 def bookmarklet():
     api_urls = ws_request('/ws/')

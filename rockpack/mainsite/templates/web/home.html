@@ -1,36 +1,28 @@
 <!DOCTYPE html>
-<html lang="en" id="ng-app" ng-app="WebApp" xmlns:ng="http://angularjs.org">
+<html lang="en" id="ng-app" ng-app="contentApp" xmlns:ng="http://angularjs.org">
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>Rockpack</title>
-    <meta name="description" content="Create, share and subscribe to personalized video channels with Rockpack app. Rockpack is available on iPhone and iPad">
-    <meta name="apple-itunes-app" content="app-id=660697542">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Rockpack</title>
+  <meta name="description" content="Create, share and subscribe to personalized video channels with Rockpack app. Rockpack is available on iPhone and iPad">
+  <meta name="apple-itunes-app" content="app-id=660697542">
 
 
-    <!--[if lt IE 9]>
-      <script src="{{config.ASSETS_URL}}/assets/vendor/js-no-compile/html5.js"></script>
-    <![endif]-->
+  <!--[if lt IE 9]>
+  <script src="{{config.ASSETS_URL}}/assets/vendor/js-no-compile/html5.js"></script>
+  <![endif]-->
 
-    <!--[if lte IE 8]>
-      <script>
-        document.createElement('ng-include');
-        document.createElement('ng-pluralize');
-        document.createElement('ng-view');
-        document.createElement('ng:include');
-        document.createElement('ng:pluralize');
-        document.createElement('ng:view');
-      </script>
-      <script src="{{config.ASSETS_URL}}/assets/vendor/js-no-compile/json2.js"></script>
-    <![endif]-->
-
-  {% assets "fullwebVendorCss" %}
-  <link rel="stylesheet" href="{{ ASSET_URL }}"/>
-  {% endassets %}
-
-  {% assets "fullwebCss" %}
-  <link rel="stylesheet" href="{{ ASSET_URL }}"/>
-  {% endassets %}
+  <!--[if lte IE 8]>
+  <script>
+    document.createElement('ng-include');
+    document.createElement('ng-pluralize');
+    document.createElement('ng-view');
+    document.createElement('ng:include');
+    document.createElement('ng:pluralize');
+    document.createElement('ng:view');
+  </script>
+  <script src="{{config.ASSETS_URL}}/assets/vendor/js-no-compile/json2.js"></script>
+  <![endif]-->
 
   <script>
     var tag = document.createElement('script');
@@ -39,51 +31,154 @@
     firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
   </script>
 
-  {% assets "fullwebVendorJS" %}
+  {% assets filters="cssmin", output="gen/front.%(version)s.css", "assets/vendor/css/bootstrap.css", "assets/vendor/css/bootstrap-responsive.css" %}
+  <link rel="stylesheet" href="{{ ASSET_URL }}"/>
+  {% endassets %}
+
+  {% assets filters="less,cssmin", output="gen/front_css.%(version)s.css", "assets/front/front.less" %}
+  <link rel="stylesheet" href="{{ ASSET_URL }}"/>
+  {% endassets %}
+
+  {% assets filters="rjsmin", output="gen/front-lib.%(version)s.js",
+  "assets/vendor/js/jquery-1.10.1.min.js", "assets/vendor/js/angular.js" %}
+  <script type="text/javascript" src="{{ ASSET_URL }}"></script>
+  {% endassets %}
+
+  {% assets filters="coffeescript, rjsmin", output="gen/front.%(version)s.js", "front/app.coffee", "front/services/GATrackingService.coffee", "front/controllers/PageCtrl.coffee",
+  "front/controllers/ChannelPlaybookCtrl.coffee", "front/services/browserServices.coffee", "front/controllers/PressCtrl.coffee"
+  %}
+  <script type="text/javascript" src="{{ ASSET_URL }}"></script>
+  {% endassets %}
+
+  {% assets filters="fronttemplate, rjsmin", output="gen/front-templates.%(version)s.js",
+  "front/views/people.html", "front/views/jobs.html", "front/views/channelplaybook.html", "front/views/contentproviders.html", "front/views/bookmarklet.html",
+  "front/views/home.html", "front/views/press.html"
+  %}
   <script type="text/javascript" src="{{ ASSET_URL }}"></script>
   {% endassets %}
 
   <script type="text/javascript">
-    window.apiUrls = jQuery.parseJSON('{{api_urls|safe}}');
+    var injectorUrl = '{{injectorUrl}}',
+            assets_url = '{{config.ASSETS_URL}}';
   </script>
-
-  {% assets "fullwebJS" %}
-  <script type="text/javascript" src="{{ ASSET_URL }}"></script>
-  {% endassets %}
-
-  {% assets "fullwebTemplates" %}
-  <script type="text/javascript" src="{{ ASSET_URL }}"></script>
-  {% endassets %}
 
 </head>
+<body >
+<div id="header">
+  <div class="wrapper">
+    <a href="#/"><img src="{{config.ASSETS_URL}}/assets/weblight/images/logo.png"></a>
+  </div>
+</div>
 
-<body ng-controller="AppCtrl" id="WebApp">
-<div id="fb-root"></div>
-  <script>
-    window.fbAsyncInit = function() {
-      // init the FB JS SDK
-      FB.init({
-        appId      : '{{config.FACEBOOK_APP_ID}}',                        // App ID from the app dashboard
-        channelUrl : '/static/assets/channel.html', // Channel file for x-domain comms
-        status     : true,                                 // Check Facebook Login status
-        xfbml      : true                                  // Look for social plugins on the page
-      });
+<div id="maincontainer" class="ng-view">
+  <div id="whatson">
+    <div class="wrapper">
+      <div class="headline">
+        <h1>WHAT’S ON YOUR CHANNEL?</h1>
+        <h2>The app that makes it easy to create, share and subscribe to personalized video channels. Add your favorite videos from across the web with just one tap.</h2>
+        <a href="http://itunes.apple.com/app/rockpack/id660697542?mt=8&ls=1" target="_blank"><img ng-src="{{config.ASSETS_URL}}/assets/front/images/downloadbig.png" ng-click="triggerEvent('appStoreButtonClick')"></a>
+      </div>
+      <div class="ipadsimgs hidden-phone"></div>
+    </div>
+  </div>
 
-      // Additional initialization code such as adding Event Listeners goes here
-    };
+  <div id="iphone-instructions" class="wrapper visible-phone">
+    <div class="imgcontainer">
+      <img src="{{config.ASSETS_URL}}/assets/front/images/iphone-mobilev1.png">
+    </div>
+    <div class="container">
+      <div class="plus">
+        <img src="{{config.ASSETS_URL}}/assets/front/images/plus.png">
+        <p>Tap the + to add videos to your channels.</p>
+      </div>
+      <div class="text">
+        <h3>Create</h3>
+        <p>Personalize your channel with a unique cover or your own photos.</p>
+      </div>
+      <div class="text">
+        <h3>SUBSCRIBE</h3>
+        <p>Subscribe to channels curated by family, friends and experts.</p>
+      </div>
+    </div>
+  </div>
 
-    // Load the SDK asynchronously
-    (function(d, s, id){
-      var js, fjs = d.getElementsByTagName(s)[0];
-      if (d.getElementById(id)) {return;}
-      js = d.createElement(s); js.id = id;
-      js.src = "//connect.facebook.net/en_US/all.js";
-      fjs.parentNode.insertBefore(js, fjs);
-    }(document, 'script', 'facebook-jssdk'));
-  </script>
-  <div ng-include src="'header.html'"></div>
-  <div class="ng-view"></div>
-  <message-handler></message-handler>
-  <div ng-include src="'footer.html'" ></div>
+  <div class="hidden-phone">
+    <div id="video">
+      <div>
+        <h2>Life is everyday curation.</h2>
+        <img src="{{config.ASSETS_URL}}/assets/front/images/play.png" id="play">
+      </div>
+    </div>
+  </div>
+  <div class="hidden-phone" id="iphones">
+    <h2>TAP TO ADD, CREATE AND SUBSCRIBE TO CHANNELS</h2>
+
+    <div id="addvideo">
+      <div id="iphone1"></div>
+      <div class="plus">
+        <img src="{{config.ASSETS_URL}}/assets/front/images/plus.png">
+        <p>Tap the + to add videos to your channels.</p>
+      </div>
+    </div>
+
+    <div id="create">
+      <div class="text">
+        <h3>CREATE</h3>
+        <p>Personalise your channel with a unique cover or your own favourite photos.</p>
+      </div>
+      <div id="iphone2"></div>
+    </div>
+
+    <div id="subscribe">
+      <div id="iphone3"></div>
+      <div class="text">
+        <h3>SUBSCRIBE</h3>
+        <p>Subscribe to channels curated by family, friends and experts. </p>
+      </div>
+    </div>
+
+  </div>
+  <div id="share" class="hidden-phone">
+    <div class="wrapper">
+      <ul>
+        <li>
+          <h3>Get the app</h3>
+          <a href="#"><img src="{{config.ASSETS_URL}}/assets/front/images/downloadbig.png" id="gettheapp"></a>
+        </li>
+        <li class="visible-desktop">
+          <h3>INSTALL THE BOOKMARKLET</h3>
+          <a href="#/bookmarklet"><button class="btn btn-blue">+ PACK IT</button></a>
+        </li>
+        <li>
+          <h3>FOLLOW US</h3>
+          <ul id="social">
+            <li><a href="http://blog.rockpack.com/" id="blog" target="_blank"></a></li>
+            <li><a href="https://twitter.com/Rockpack" id="twitter" target="_blank"></a></li>
+            <li><a href="http://www.facebook.com/rockpack" id="facebook" target="_blank"></a></li>
+            <li><a href="http://instagram.com/officialrockpack" id="instagram" target="_blank"></a></li>
+          </ul>
+        </li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<footer id="#footer">
+  <div class="wrapper" ng-style="wrapperWidth()">
+    <ul>
+      <li class="hidden-phone"><a href="#">About</a></li>
+      <li class="hidden-phone"><a href="#/content-providers">Content Providers</a></li>
+      <li class="hidden-phone"><a href="#/people">People</a></li>
+      <li class="hidden-phone"><a href="#/press">Partners & Press</a></li>
+      <li class="hidden-phone"><a href="#/jobs">Jobs</a></li>
+      <li class="hidden-phone"><a href="http://help.rockpack.com/">Help</a></li>
+    </ul>
+    <div class="rights">All rights reserved Rockpack® ltd 2013 - By using Rockpack, you agree to our  <a href="/tos">Terms & Conditions</a> and <a href="/privacy">Privacy Policy</a>.</div>
+    <div class="rights">Apple, the Apple logo, iPhone and iPad are trademarks of Apple Inc., registered in the U.S and other countries.<br>App Store is a service mark of Apple Inc.</div>
+  </div>
+</footer>
+
+{% include 'web/ga_ajax.html' %}
+
 </body>
 </html>
