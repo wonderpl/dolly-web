@@ -59,7 +59,7 @@ angular.module('WebApp').factory('oauthService', [ '$http', 'apiUrl', 'cookies',
       $http({
         method: 'POST',
         data: $.param({'external_system': provider, 'external_token': external_token}),
-        url: window.apiUrl.login_register_external,
+        url: window.apiUrls.login_register_external,
         headers: headers
       })
         .success((data) ->

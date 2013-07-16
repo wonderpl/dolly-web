@@ -18,7 +18,7 @@ window.WebApp.controller('LoginCtrl', ['$scope', '$location', 'cookies', 'UserMa
   $scope.facebook = ->
     FB.login((response) ->
       if (response.authResponse)
-        $scope.User.ExternalLogin('facebook', response.authResponse.accessToken)
+        $scope.User.oauth.ExternalLogin('facebook', response.authResponse.accessToken)
         .success((data) ->
             $scope.User.isLoggedIn = true
             $scope.User.FetchUserData(UserManager.oauth.credentials.resource_url)
