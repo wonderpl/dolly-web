@@ -18,7 +18,7 @@ def _discover_response():
         cover_art=url_for('coverartws.rockpack_cover_art', locale=locale),
         login=url_for('loginws.login'),
         register=url_for('registrationws.register'),
-        login_register_external=url_for('loginws.exeternal'),
+        login_register_external=url_for('loginws.external'),
         reset_password=url_for('resetws.reset_password'),
         refresh_token=url_for('tokenws.token'),
         share_url=url_for('sharews.create_share_link' ),

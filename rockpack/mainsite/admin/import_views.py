@@ -215,12 +215,17 @@ class ImportView(BaseView):
         prefix = request.args.get('prefix', '')
         exact_name = request.args.get('exact_name', '')
         if exact_name:
-            return jsonify(Channel.query.filter(Channel.title == exact_name).values(Channel.id, Channel.title))
+            c = jsonify(Channel.query.filter(Channel.title == exact_name).values(Channel.id, Channel.title))
+            if c != '{}':
+                c = jsonify(Channel.query.filter(Channel.id == exact_name).values(Channel.id, Channel.title))
+            return c
         if prefix:
-            if not re.match('^[\w ]+$', prefix):
+            if not re.match('^[#\w ]+$', prefix):
                 prefix = None
             return jsonify(Channel.query.filter(
-                           Channel.title.ilike(prefix + '%')).values(Channel.id, Channel.title))
+                Channel.deleted == False,
+                Channel.public == True,
+                Channel.title.ilike(prefix + '%')).values(Channel.id, Channel.title))
         return []
 
     @expose('/video.js')

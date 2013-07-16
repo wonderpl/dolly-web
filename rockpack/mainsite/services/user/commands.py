@@ -2,13 +2,14 @@ import logging
 from datetime import datetime, timedelta
 from flask import json
 from sqlalchemy import func
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import joinedload, contains_eager
 from rockpack.mainsite import app
 from rockpack.mainsite.manager import manager
 from rockpack.mainsite.core.dbapi import commit_on_success
 from rockpack.mainsite.core import email
 from rockpack.mainsite.services.base.models import JobControl
 from rockpack.mainsite.services.user.models import UserActivity, UserNotification, User
+from rockpack.mainsite.services.oauth.models import ExternalFriend, ExternalToken
 from rockpack.mainsite.services.video.models import Channel, VideoInstance
 
 
@@ -56,7 +57,7 @@ activity_notification_map = dict(
 
 
 @commit_on_success
-def create_new_notifications(date_from=None, date_to=None):
+def create_new_activity_notifications(date_from=None, date_to=None):
     activity_window = UserActivity.query.options(joinedload('actor'))
     if date_from:
         activity_window = activity_window.filter(UserActivity.date_actioned >= date_from)
@@ -86,6 +87,51 @@ def create_new_notifications(date_from=None, date_to=None):
                     ))
 
 
+@commit_on_success
+def create_new_registration_notifications(date_from=None, date_to=None):
+    new_users = User.query.join(ExternalToken, (
+        (ExternalToken.user == User.id) &
+        (ExternalToken.external_system == 'facebook'))
+    ).options(contains_eager(User.external_tokens))
+    if date_from:
+        new_users = new_users.filter(User.date_joined >= date_from)
+    if date_to:
+        new_users = new_users.filter(User.date_joined < date_to)
+    for user in new_users:
+        token = user.external_tokens[0]
+        friends = ExternalFriend.query.\
+            filter_by(external_system=token.external_system, external_uid=token.external_uid).\
+            values(ExternalFriend.user)
+        for friend, in friends:
+            message = dict(user=dict(
+                id=user.id,
+                resource_url=user.resource_url,
+                avatar_thumbnail_url=user.avatar.url,
+                display_name=user.display_name,
+            ))
+            UserNotification.query.session.add(UserNotification(
+                user=friend,
+                date_created=user.date_joined,
+                message_type='joined',
+                message=json.dumps(message, separators=(',', ':')),
+            ))
+
+
+@commit_on_success
+def remove_old_notifications():
+    """Remove old messages but leave at least N notifications per user."""
+    threshold_days, threshold_count = app.config.get('KEEP_OLD_NOTIFICATIONS', (30, 100))
+    target_users = UserNotification.query.\
+        with_entities(UserNotification.user).\
+        group_by(UserNotification.user).\
+        having(func.count(UserNotification.id) > threshold_count)
+    count = UserNotification.query.\
+        filter(UserNotification.date_created < (datetime.now() - timedelta(threshold_days))).\
+        filter(UserNotification.user.in_(target_users)).\
+        delete(False)
+    logging.info('deleted %d notifications', count)
+
+
 def create_registration_emails(date_from=None, date_to=None):
     registration_window = User.query.filter(User.email != '')
     if date_from:
@@ -109,21 +155,6 @@ def create_registration_emails(date_from=None, date_to=None):
             app.logger.error("Problem sending registration email for user.id '%s': %s", user.id, str(e))
 
 
-@commit_on_success
-def remove_old_notifications():
-    """Remove old messages but leave at least N notifications per user."""
-    threshold_days, threshold_count = app.config.get('KEEP_OLD_NOTIFICATIONS', (30, 100))
-    target_users = UserNotification.query.\
-        with_entities(UserNotification.user).\
-        group_by(UserNotification.user).\
-        having(func.count(UserNotification.id) > threshold_count)
-    count = UserNotification.query.\
-        filter(UserNotification.date_created < (datetime.now() - timedelta(threshold_days))).\
-        filter(UserNotification.user.in_(target_users)).\
-        delete(False)
-    logging.info('deleted %d notifications', count)
-
-
 @manager.cron_command
 def update_user_notifications():
     """Update user notifications based on recent activity."""
@@ -131,7 +162,9 @@ def update_user_notifications():
     now = datetime.now()
     logging.info('update_user_notifications: from %s to %s', job_control.last_run, now)
 
-    create_new_notifications(job_control.last_run, now)
+    create_new_activity_notifications(job_control.last_run, now)
+    if app.config.get('ENABLE_REG_NOTIFICATIONS', False):
+        create_new_registration_notifications(job_control.last_run, now)
     remove_old_notifications()
 
     job_control.last_run = now

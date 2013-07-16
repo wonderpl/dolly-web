@@ -60,15 +60,8 @@ class LoginWS(WebService):
 
     @expose_ajax('/external/', methods=['POST'])
     @check_client_authorization
-    def exeternal(self):
-
-        form = ExternalRegistrationForm(request.form, csrf_enabled=False)
-        if not form.validate():
-            abort(400, form_errors=form.errors)
-
-        eu = ExternalUser(form.external_system.data, form.external_token.data)
-        if not eu.valid_token:
-            abort(400, error='unauthorized_client')
+    def external(self):
+        eu = external_user_from_token_form()
 
         user = models.ExternalToken.user_from_uid(
             request.form.get('external_system'),
@@ -80,7 +73,7 @@ class LoginWS(WebService):
             record_user_event(user.username, 'registration succeeded', user.id)
 
         # Update the token record if needed
-        models.ExternalToken.update_token(user, eu)
+        models.ExternalToken.update_token(user.id, eu)
 
         record_user_event(user.username, 'login succeeded', user.id)
         return user.get_credentials()
@@ -96,6 +89,14 @@ def username_validator():
         elif exists:
             raise wtf.ValidationError(_('"%s" already taken.') % field.data)
         naughty_word_validator(form, field)
+    return _valid
+
+
+def email_validator():
+    # Additional address validation for SES - doesn't like foo@bar.com. or foo@bar..com
+    def _valid(form, field):
+        if field.data.endswith('.') or '..' in field.data.rsplit('@', 1)[-1]:
+            raise wtf.ValidationError(_('Invalid email address.'))
     return _valid
 
 
@@ -134,7 +135,7 @@ class RockRegistrationForm(wtf.Form):
     gender = wtf.TextField(validators=[wtf.Optional(), gender_validator()] + get_column_validators(User, 'gender'))
     date_of_birth = wtf.DateField(validators=[date_of_birth_validator()] + get_column_validators(User, 'date_of_birth'))
     locale = wtf.TextField(validators=get_column_validators(User, 'locale'))
-    email = wtf.TextField(validators=[wtf.Email(), email_registered_validator()] + get_column_validators(User, 'email'))
+    email = wtf.TextField(validators=[wtf.Email(), email_validator(), email_registered_validator()] + get_column_validators(User, 'email'))
 
 
 class ExternalRegistrationForm(wtf.Form):
@@ -144,6 +145,18 @@ class ExternalRegistrationForm(wtf.Form):
     def validate_external_system(form, value):
         if value.data not in models.EXTERNAL_SYSTEM_NAMES:
             raise wtf.ValidationError(_('External system invalid.'))
+
+
+def external_user_from_token_form():
+    form = ExternalRegistrationForm(csrf_enabled=False)
+    if not form.validate():
+        abort(400, form_errors=form.errors)
+
+    eu = ExternalUser(form.external_system.data, form.external_token.data)
+    if not eu.valid_token:
+        abort(400, error='unauthorized_client')
+
+    return eu
 
 
 # TODO: currently only Facebook - change
@@ -166,10 +179,9 @@ class ExternalUser:
 
     def _get_external_data(self):
         try:
-            graph = facebook.GraphAPI(self._token)
+            return facebook.GraphAPI(self._token).get_object('me')
         except facebook.GraphAPIError:
             return {}
-        return graph.get_object('me')
 
     def get_new_token(self):
         # abstract this out to not be fb specific
@@ -227,7 +239,7 @@ class ExternalUser:
 
     @property
     def avatar(self):
-        r = requests.get('http://graph.facebook.com/{}/picture/?type=large'.format(self.id))
+        r = requests.get(facebook.FACEBOOK_PICTURE_URL % self.id)
         if r.status_code == 200 and r.headers.get('content-type', '').startswith('image/'):
             return StringIO(r.content)
         return ''
