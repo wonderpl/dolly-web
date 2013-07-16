@@ -59,6 +59,8 @@ window.WebApp.factory('UserManager', ['cookies', '$http', '$q', '$location','api
       })
       .success((data) ->
         User.details = data
+        User.FetchUnreadNotifications()
+        User.FetchNotifications()
         User.recentActivityTimedRetrive()
         .success((data) ->
             deferred.resolve(data)
@@ -120,7 +122,7 @@ window.WebApp.factory('UserManager', ['cookies', '$http', '$q', '$location','api
     FetchUnreadNotifications: () ->
       $http({
         method: 'GET',
-        url: "#{User.details.notifications.resource_url}unread_count",
+        url: "#{User.details.notifications.resource_url}unread_count/",
         headers: {"authorization": "Bearer #{User.oauth.credentials.access_token}", "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"}
       })
         .success((data) ->
