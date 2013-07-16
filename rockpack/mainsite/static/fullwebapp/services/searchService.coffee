@@ -25,9 +25,6 @@ angular.module('WebApp').factory('SearchService', ($http, locale, apiUrl, $q) ->
         url: apiUrl.channel_search,
         params: {'q': phrase, start: start, size: size},
       })
-      .then((data) ->
-        return data.data
-      )
 
     videoSearch: (phrase, start, size) ->
       $http({
@@ -35,9 +32,6 @@ angular.module('WebApp').factory('SearchService', ($http, locale, apiUrl, $q) ->
         url: apiUrl.video_search,
         params: {'q': phrase, start: start, size: size},
       })
-      .then((data) ->
-        return data.data
-      )
 
     userSearch: (phrase, start, size) ->
       $http({
@@ -45,9 +39,7 @@ angular.module('WebApp').factory('SearchService', ($http, locale, apiUrl, $q) ->
         url: apiUrl.user_search,
         params: {'q': phrase, start: start, size: size},
       })
-      .then((data) ->
-        return data.data
-      )
+
   }
   return Content
 )

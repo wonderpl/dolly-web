@@ -1,6 +1,6 @@
 <div ng-controller="SearchCtrl">
   <div class="wrapper">
-    <input type="text" id="searchfield" ng-model="searchPhrase" typeaheadMinLength="2" typeahead="result for result in searchresults($viewValue)" required ">
+    <input type="text" id="searchfield" ng-model="searchPhrase" typeaheadMinLength="2" typeahead="result for result in searchresults($viewValue)" required typeahead-on-select="fetchresults()">
     <input type="submit" ng-click="fetchresults()">
     </form>
   </div>
@@ -10,18 +10,22 @@
   <div class="wrapper">
     <tabset>
       <tab heading="Videos">
-        <div ng-repeat="video in videos.videos.items">
-          <video-cell></video-cell>
+        <div infinite-scroll="load_videos()" infinite-scroll-distance="1">
+          <video-cell ng-repeat="video in videos.videos.items"></video-cell>
         </div>
       </tab>
       <tab heading="Channels">
-        <div ng-repeat="channel in channels.channels.items">
-          <a href="/#channel/{{channel.owner.id}}/{{channel.id}}"><img ng-src="{{channel.cover.thumbnail_url}}"></a>
+        <div infinite-scroll="load_channels()" infinite-scroll-distance="1">
+          <div ng-repeat="channel in channels.channels.items">
+            <a href="/#channel/{{channel.owner.id}}/{{channel.id}}"><img ng-src="{{channel.cover.thumbnail_url}}"></a>
+          </div>
         </div>
       </tab>
       <tab heading="Users">
-        <div ng-repeat="user in users.users.items">
-          <a href="/#user/{{user.username}}/{{user.id}}"><img ng-src="{{user.avatar_thumbnail_url}}"></a>
+        <div infinite-scroll="load_users()" infinite-scroll-distance="1">
+          <div ng-repeat="user in users.users.items">
+            <a href="/#user/{{user.username}}/{{user.id}}"><img ng-src="{{user.avatar_thumbnail_url}}"></a>
+          </div>
         </div>
       </tab>
     </tabset>
