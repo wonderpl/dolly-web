@@ -50,8 +50,11 @@ def homepage():
 
 @expose_web('/fullweb', 'web/fullweb.html', cache_age=3600)
 def homepage():
-    api_urls = json.dumps(ws_request('/ws/'))
-    return dict(api_urls=api_urls)
+    if app.config.get('ENABLE_FULLWEB', False):
+        api_urls = json.dumps(ws_request('/ws/'))
+        return dict(api_urls=api_urls)
+    else:
+        abort(400)
 
 
 @expose_web('/bookmarklet', 'web/bookmarklet.html', cache_age=3600, secure=True)
