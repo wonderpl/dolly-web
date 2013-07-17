@@ -379,15 +379,6 @@ class ChannelSearch(EntitySearch, CategoryMixin, MediaSortMixin):
                 script='1000000000000000000'
             )
         )
-        if not category:
-            # The SHOULD condition requires at least one result. Since there is no
-            # category, if no promotions are set for the ALL category, no results
-            # will be returned. Explicity set SHOULD to display at least results
-            # from MatchAll.
-            self._add_term_occurs(
-                pyes.MatchAllFilter(),
-                SHOULD
-            )
 
     def channels(self, with_owners=False, with_videos=False, video_paging=(0, 100,)):
         if not self._channel_results:

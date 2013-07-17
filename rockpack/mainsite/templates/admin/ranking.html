@@ -71,12 +71,15 @@
 </style>
 <div>
     <div style="width:480px; float: left">
-        {% if videos %}
+        {% if videos or not channels %}
             <a href="{{ referrer }}"><h3 style="color:#FCFCFC">&lt;&lt; Back to channels</h3></a>
+            {% if not videos %}
+            <h3>No videos for this channel</h3>
+            {% endif %}
         {% else %}
         <form>
             <div style="float: left; width: 240px">
-                <select name="category" onchange="javascript:location.href = '/admin/ranking/?category=' + this.value + '&locale={{ locale }}';" />
+                <select name="category" onchange="javascript:location.href = '{{ locale_base }}?category=' + this.value;" />
                     {% for cat in categories %}
                     <option value="{{cat[0]}}" {% if category == cat[0] %} selected="selected" {% endif %}>{{cat[1]}}</option>
                     {% endfor %}
@@ -94,16 +97,17 @@
         type="button"
         value="toggle user sorted/date sorted"
         onclick="location.href='{{ path }}?referrer={{ referrer }}&position={% if position == 't' %}f{% elif position == 'f' %}t{% else %}t{% endif %}'"/>
-        {% else %}
+        {% elif channels %}
         <input
         type="button"
-        value="switch to {% if locale == 'en-us' %}en-gb{% else %}en-us{% endif %}"
-        onclick="location.href='/admin/ranking/?locale={% if locale == 'en-us' %}en-gb{% else %}en-us{% endif %}'"/>
+        value="switch to {{ locale_toggle_name }}"
+        onclick="location.href='{{ locale_toggle }}?category={{ category }}'"/>
         {% endif %}
     </div>
 
     <div style="clear: both">
-    {% for channel in channels %}
+    {% if channels or not videos %}
+        {% for channel in channels %}
     <section class="card" style="width:300px; height:390px; float: left; overflow: hidden; position: relative">
         <div style="height: 92px">
             <h1>
@@ -118,9 +122,11 @@
         <h3>view counts: US ({{ channel.uscount }}) GB ({{ channel.gbcount }})</h3>
         <h3>video update frequency: {{ channel.video_update_frequency }}</h3>
         <h3>editorial boost: {{ channel.editorial_boost }}</h3>
-        <div class="pic"><a href="/admin/ranking/{{ channel.id }}/"><img style="width:348px" src="{{ image_cdn }}{{ channel.cover_thumbnail_large_url }}"/></a></div>
+        <div class="pic"><a href="{{ locale_base  }}{{ channel.id }}/"><img style="width:348px" src="{{ image_cdn }}{{ channel.cover_thumbnail_large_url }}"/></a></div>
     </section>
-    {% endfor %}
+        {% endfor %}
+    {% endif %}
+
 
     {% for video in videos %}
     <section class="card" style="width:460px; height:220px; float: left; overflow: hidden; position: relative">

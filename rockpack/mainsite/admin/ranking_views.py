@@ -1,6 +1,6 @@
 from flask.ext import login
 from flask.ext.admin import BaseView, expose
-from flask import request
+from flask import request, redirect
 from rockpack.mainsite import app
 from rockpack.mainsite.admin.video_views import category_list
 from rockpack.mainsite.core.es.api import ChannelSearch, VideoSearch
@@ -15,12 +15,12 @@ class RankingView(BaseView):
         return self.is_authenticated()
 
 
-    @expose('/<channelid>/', ('GET',))
-    def channel_videos(self, channelid):
+    @expose('/locale/<locale>/<channelid>/', ('GET',))
+    def channel_videos(self, locale, channelid):
         offset, limit = request.args.get('start', 0), request.args.get('size', 20)
         order_by_position = request.args.get('position', 'f')
 
-        vs = VideoSearch('en-us')
+        vs = VideoSearch(locale)
         vs.add_term('channel', [channelid])
         if not order_by_position == 't':
             vs.add_sort('position', 'asc')
@@ -39,7 +39,10 @@ class RankingView(BaseView):
             c = {}
             c['id'] = video.id
             c['title'] = video.title
-            c['date_added'] = video.date_added[:10]
+            try:
+                c['date_added'] = video.date_added[:10]
+            except TypeError:
+                c['date_added'] = video.date_added.isoformat()[:10]
             c['thumbnail_url'] = video.video.thumbnail_url
             c['explanation'] = video.__dict__['_meta']['explanation']
             c['duration'] = video.video.duration
@@ -55,12 +58,19 @@ class RankingView(BaseView):
 
     @expose('/', ('GET',))
     def index(self):
+        return redirect(request.url + 'locale/en-gb/')
+
+    @expose('/locale/<string:locale>/', ('GET',))
+    def ranking_locale(self, locale):
         category = int(request.args.get('category', 0))
         search  = request.args.get('search')
 
-        locale = request.args.get('locale', 'en-us')
-
-        ctx = {'categories': category_list(),
+        toggle_locale = {'en-us': 'en-gb', 'en-gb': 'en-us'}.get(locale)
+        ctx = {
+                'locale_base': self.url + '/locale/' + locale + '/',
+                'locale_toggle_name': toggle_locale,
+                'locale_toggle': self.url + '/locale/' + toggle_locale + '/',
+                'categories': category_list(),
                 'image_cdn': app.config['IMAGE_CDN'],
                 'category': category,
                 'locale': locale}
