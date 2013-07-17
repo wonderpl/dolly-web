@@ -208,7 +208,7 @@ def _user_list(paging, **filters):
 
     total = users.count()
     offset, limit = paging
-    users = users.order_by(func.lower(func.coalesce(func.nullif(User.first_name, ''), User.username)))
+    users = users.order_by('date_created desc')
     users = users.offset(offset).limit(limit)
     items = []
     for position, user in enumerate(users, offset):
