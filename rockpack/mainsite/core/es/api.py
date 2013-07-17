@@ -465,14 +465,15 @@ class OwnerSearch(EntitySearch):
         owner_list = []
         IMAGE_CDN = app.config.get('IMAGE_CDN', '')
         BASE_URL = url_for('basews.discover')
-        for owner in owners:
+        for position, owner in enumerate(owners):
             owner_list.append(
                 dict(
                     id=owner.id,
                     username=owner.username,
                     display_name=owner.display_name,
                     resource_url=urljoin(BASE_URL, owner.resource_url),
-                    avatar_thumbnail_url=urljoin(IMAGE_CDN, owner.avatar_thumbnail_url) if owner.avatar_thumbnail_url else ''
+                    avatar_thumbnail_url=urljoin(IMAGE_CDN, owner.avatar_thumbnail_url) if owner.avatar_thumbnail_url else '',
+                    position=position
                 )
             )
         return owner_list
