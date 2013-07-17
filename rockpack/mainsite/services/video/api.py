@@ -227,10 +227,7 @@ class ChannelWS(WebService):
         cs.add_filter(filters.verified_channel_boost())
         cs.add_filter(filters.boost_by_time())
         cs.filter_category(request.args.get('category'))
-        # We dont want to pull promoted channels for paging.
-        # This needs to be handled better, and in es.api preferably
-        if offset <= 8:
-            cs.promotion_settings(request.args.get('category'))
+        cs.promotion_settings(request.args.get('category'))
         cs.date_sort(request.args.get('date_order'))
         if request.args.get('user_id'):
             cs.add_term('owner', request.args.get('user_id'))

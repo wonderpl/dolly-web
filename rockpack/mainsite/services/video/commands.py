@@ -11,8 +11,8 @@ from rockpack.mainsite.core.dbapi import commit_on_success
 from rockpack.mainsite.core.youtube import batch_query, _parse_datetime
 from rockpack.mainsite.services.base.models import JobControl
 from rockpack.mainsite.services.user.models import Subscription, UserActivity
-from rockpack.mainsite.services.video.models import (Channel, ChannelLocaleMeta, ChannelPromotion,
-                                                        Video, VideoInstance, PlayerErrorReport)
+from rockpack.mainsite.services.video.models import (
+    Channel, ChannelLocaleMeta, ChannelPromotion, Video, VideoInstance, PlayerErrorReport)
 
 
 @commit_on_success
@@ -243,7 +243,7 @@ def get_youtube_video_data(video_qs, start):
 
 @manager.command
 def sanitise_es():
-    """ Delete channels from ES that shouldn't be present """
+    """ Delete channels and videos from ES that shouldn't be present """
     channels = Channel.query.filter(
         or_(
             Channel.public == False,
@@ -252,7 +252,7 @@ def sanitise_es():
         )
     )
 
-    print 'Checking {} DELETED channels ...'.format(channels.count())
+    logging.info('Checking channels: %s marked as deleted/private/invisible in db', channels.count())
     count = 0
     for channel in channels.yield_per(6000).values('id'):
         try:
@@ -261,5 +261,24 @@ def sanitise_es():
             pass
         else:
             count += 1
+    logging.info('Finished channels: %s removed from ES', count)
 
-    print 'Finished. {} channels had to be deleted'.format(count)
+    es_videos = es_connection.search(
+        pyes.MatchAllQuery(),
+        mappings.VIDEO_INDEX,
+        mappings.VIDEO_TYPE,
+        fields=['_id'],
+        scan=True,
+    )
+    es_instance_ids = set(v.get_id() for v in es_videos)
+    db_instance_ids = set(v[0] for v in VideoInstance.query.values(VideoInstance.id))
+    logging.info('Checking videos: %d in DB, %d in ES', len(db_instance_ids), len(es_instance_ids))
+    count = 0
+    for id in es_instance_ids - db_instance_ids:
+        try:
+            es_connection.delete(mappings.VIDEO_INDEX, mappings.VIDEO_TYPE, id)
+        except pyes.exceptions.NotFoundException:
+            logging.exception('Failed to remove videos: %s', id)
+        else:
+            count += 1
+    logging.info('Finished videos: %s removed from ES', count)

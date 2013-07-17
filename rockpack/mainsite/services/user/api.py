@@ -200,7 +200,7 @@ def add_videos_to_channel(channel, instance_list, locale, delete_existing=False)
 
 
 def _user_list(paging, **filters):
-    users = User.query
+    users = User.query.filter_by(is_active=True)
 
     if filters.get('subscribed_to'):
         users = users.join(Subscription, Subscription.user == User.id).\
@@ -208,6 +208,7 @@ def _user_list(paging, **filters):
 
     total = users.count()
     offset, limit = paging
+    users = users.order_by(func.lower(func.coalesce(func.nullif(User.first_name, ''), User.username)))
     users = users.offset(offset).limit(limit)
     items = []
     for position, user in enumerate(users, offset):

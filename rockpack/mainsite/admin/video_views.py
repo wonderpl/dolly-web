@@ -222,6 +222,7 @@ class ChannelPromotionForm(wtf.Form):
 
         if self.date_start.data > self.date_end.data:
             self.date_end.errors = ['End date must be after end date']
+            return
 
         promos = models.ChannelPromotion.query.filter(
                 models.ChannelPromotion.date_end > self.date_start.data,
@@ -241,6 +242,7 @@ class ChannelPromotionForm(wtf.Form):
 
         if int(self.position.data) > 8:
             self.position.errors = ['Only a maximum of 8 position per category can be set']
+            return
 
         if promos.count():
             self.position.errors = ['Conflict with promotions {}'.format(str([_.channel for _ in promos.all()]))]
