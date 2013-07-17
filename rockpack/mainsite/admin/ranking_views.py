@@ -73,7 +73,8 @@ class RankingView(BaseView):
                 'categories': category_list(),
                 'image_cdn': app.config['IMAGE_CDN'],
                 'category': category,
-                'locale': locale}
+                'locale': locale,
+                'search_term': request.args.get('search', 'Search for a channel')}
 
         if category == 0:
             category = None
