@@ -140,27 +140,120 @@ body {
 
   #topmenu {
 
-    &>div {
+    .leftmenu {
       float: left;
-      font-family: "dn-bold", helvetica;
-      font-size: 17px;
-      border-right: 2px solid #dfdfdf;
-      text-align: center;
-      min-width: 120px;
+    }
+
+    .rightmenu {
+      float: right;
+    }
+
+    .logo {
+      position: absolute;
+      left: 50%;
+      margin-left: -65px;
+    }
+
+    #searchform {
       margin: 0;
-      padding: 0;
 
-      &:hover, &:active {
-        background: #ededed;
+      input {
+        margin: 0;
+        background: #fff;
+      }
+    }
+
+    .userAvatar {
+
+      position: relative;
+    
+      img {
+        border: 1px solid #000;
+        width: 45px;
+        height: 45px;
+        background: #b5bdc8; /* Old browsers */
+        background: -moz-linear-gradient(top, #b5bdc8 0%, #828c95 36%, #28343b 100%); /* FF3.6+ */
+        background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#b5bdc8), color-stop(36%,#828c95), color-stop(100%,#28343b)); /* Chrome,Safari4+ */
+        background: -webkit-linear-gradient(top, #b5bdc8 0%,#828c95 36%,#28343b 100%); /* Chrome10+,Safari5.1+ */
+        background: -o-linear-gradient(top, #b5bdc8 0%,#828c95 36%,#28343b 100%); /* Opera 11.10+ */
+        background: -ms-linear-gradient(top, #b5bdc8 0%,#828c95 36%,#28343b 100%); /* IE10+ */
+        background: linear-gradient(to bottom, #b5bdc8 0%,#828c95 36%,#28343b 100%); /* W3C */
+        filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#b5bdc8', endColorstr='#28343b',GradientType=0 ); /* IE6-9 */
       }
 
-      &:first-child {
-        border-right: none;
-      }
+      #userMenuContainer {
+        position: absolute;
+        left: -100px;
+        width: 200px;
+        top: 80px;
+        background: #666666;
+        color: #fff;
+        padding: 10px;
 
-      a {
-        min-width: 120px;
-        display: inline-block;
+        &:after {
+          bottom: 100%;
+          border: solid transparent;
+          content: " ";
+          height: 0;
+          width: 0;
+          position: absolute;
+          pointer-events: none;
+          border-bottom-color: #666666;
+          border-width: 15px;
+          left: 60%;
+          margin-left: -15px;
+
+        }
+
+        #userMenuHeader {
+          padding: 0;
+
+          img {
+            border: 0;
+          }
+
+          #settings {
+            width: auto;
+            height: auto;
+          }
+
+        }
+
+        #UserMenu {
+          padding: 0;
+
+          div {
+            display: block;
+            height: 40px;
+            background: #999999;
+            margin: 5px 0;
+            line-height: 42px;
+
+            a {
+              color: #fff;
+            }
+
+            &.logout {
+              margin-top: 10px;
+            }
+          }
+        }
+      }
+    }
+
+    div {
+      display: inline-block;
+
+      div {
+        font-family: "dn-bold", helvetica;
+        font-size: 17px;
+        text-align: center;
+        margin: 0;
+        padding: 0 20px;
+
+        a {
+          display: inline-block;
+        }
       }
     }
 

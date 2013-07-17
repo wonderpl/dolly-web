@@ -1,13 +1,5 @@
 <div ng-controller="SearchCtrl">
   <div class="wrapper">
-    <input type="text" id="searchfield" ng-model="searchPhrase" typeaheadMinLength="2" typeahead="result for result in searchresults($viewValue)" required typeahead-on-select="fetchresults()">
-    <input type="submit" ng-click="fetchresults()">
-    </form>
-  </div>
-  <form id=searchform" >
-
-
-  <div class="wrapper">
     <tabset>
       <tab heading="Videos">
         <div infinite-scroll="load_videos()" infinite-scroll-distance="1">

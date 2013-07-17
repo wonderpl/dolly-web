@@ -1,11 +1,5 @@
 window.WebApp.controller('SearchCtrl', ['$scope', 'SearchService', '$q', '$location', '$dialog', ($scope, SearchService, $q, $location, $dialog) ->
 
-  $scope.searchresults = (searchPhrase) ->
-    SearchService.suggest(searchPhrase)
-
-  $scope.fetchresults = () ->
-    $location.search( 'search', $scope.searchPhrase )
-
   $scope.$watch((() -> return $location.search().search), (newValue, oldValue) ->
     if newValue?
       SearchService.videoSearch(newValue, 0, 50)
