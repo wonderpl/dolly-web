@@ -465,7 +465,7 @@ class OwnerSearch(EntitySearch):
         owner_list = []
         IMAGE_CDN = app.config.get('IMAGE_CDN', '')
         BASE_URL = url_for('basews.discover')
-        for position, owner in enumerate(owners):
+        for position, owner in enumerate(owners, self.paging[0]):
             owner_list.append(
                 dict(
                     id=owner.id,
