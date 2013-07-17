@@ -110,9 +110,8 @@
         {% for channel in channels %}
     <section class="card" style="width:300px; height:390px; float: left; overflow: hidden; position: relative">
         <div style="height: 92px">
-            <h1>
-            {% if channel.promoted %}(p){% endif %}
-            {{ channel.title|truncate(30, True) }}
+            <h1 {% if channel.promoted %}style="color:#99CC00; font-weight: bold"{% endif %}>
+                {{ channel.title|truncate(30, True) }}
             </h1>
         </div>
         <h3>date added: {{ channel.date_added }} </h3>
