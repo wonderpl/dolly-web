@@ -49,7 +49,7 @@ def homepage():
 
 
 @expose_web('/fullweb', 'web/fullweb.html', cache_age=3600)
-def homepage():
+def fullweb():
     if app.config.get('ENABLE_FULLWEB', False):
         api_urls = json.dumps(ws_request('/ws/'))
         return dict(api_urls=api_urls)
