@@ -33,7 +33,7 @@
     }
 
     h1 {
-      font-size:2rem;
+      font-size:1.8rem;
       font-weight:300;
     }
 
@@ -122,7 +122,7 @@
     <div style="clear: both">
     {% if channels or not videos %}
         {% for channel in channels %}
-    <section class="card" style="width:300px; height:390px; float: left; overflow: hidden; position: relative">
+    <section class="card" style="width:256px; height:390px; float: left; overflow: hidden; position: relative">
         <div style="height: 92px">
             <h1 {% if channel.promoted %}style="color:#99CC00; font-weight: bold"{% endif %}>
                 {{ channel.title|truncate(30, True) }}
@@ -135,7 +135,7 @@
         <h3>view counts: US ({{ channel.uscount }}) GB ({{ channel.gbcount }})</h3>
         <h3>video update frequency: {{ channel.video_update_frequency }}</h3>
         <h3>editorial boost: {{ channel.editorial_boost }}</h3>
-        <div class="pic"><a href="{{ locale_base  }}{{ channel.id }}/"><img style="width:348px" src="{{ image_cdn }}{{ channel.cover_thumbnail_large_url }}"/></a></div>
+        <div class="pic"><a href="{{ locale_base  }}{{ channel.id }}/"><img style="width:304px" src="{{ image_cdn }}{{ channel.cover_thumbnail_large_url }}"/></a></div>
     </section>
         {% endfor %}
     {% endif %}

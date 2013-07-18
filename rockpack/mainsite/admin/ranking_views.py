@@ -104,12 +104,14 @@ class RankingView(BaseView):
             c['id'] = channel.id
             c['title'] = channel.title
             c['editorial_boost'] = channel.editorial_boost
-            c['date_added'] = channel.date_added
+            try:
+                c['date_added'] = channel.date_added[:10]
+            except TypeError:
+                c['date_added'] = channel.date_added.isoformat()[:10]
             c['cover_thumbnail_large_url'] = channel.cover_thumbnail_large_url
             c['explanation'] = channel.__dict__['_meta']['explanation']
             c['subscriber_frequency'] = channel.subscriber_frequency
             c['subscriber_count'] = channel.subscriber_count
-            c['date_added'] = channel.date_added
             c['video_update_frequency'] = channel.update_frequency
             c['subscriber_count'] = channel.subscriber_count
             c['promotion'] = channel.promotion
