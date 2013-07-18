@@ -38,10 +38,11 @@
       <meta property="{{ config.FACEBOOK_APP_NAMESPACE }}:owner_name" content="{{ channel_data.owner.display_name }}" />
     {% endif %}
     {% endwith %}
-    <meta name="twitter:app:name:iphone" content="Rockpack" />
-    <meta name="twitter:app:id:iphone" content="{{ config.ITUNES_APP_ID }}" />
-    <meta name="twitter:app:name:ipad" content="Rockpack" />
-    <meta name="twitter:app:id:ipad" content="{{ config.ITUNES_APP_ID }}" />
+    {% for device in "iphone", "ipad" %}
+    <meta name="twitter:app:name:{{ device }}" content="Rockpack" />
+    <meta name="twitter:app:id:{{ device }}" content="{{ config.ITUNES_APP_ID }}" />
+    <meta name="twitter:app:url:{{ device }}" content="{{ channel_data.canonical_url }}"/>
+    {% endfor %}
     <link rel="canonical" href="{{ channel_data.canonical_url }}" />
 
     <!--[if lt IE 9]>
