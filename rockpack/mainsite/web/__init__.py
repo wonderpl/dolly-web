@@ -5,7 +5,9 @@ import webassets.loaders
 # Init app routes
 from .views import homepage
 
+
 def setup_web(app):
     env = Environment(app)
-    bundles = webassets.loaders.YAMLLoader('%s/assets/fullwebapp/assets.yaml' % env.directory).load_bundles()
-    [env.register(name, bundle) for name, bundle in bundles.iteritems()]
+    asset_loader = webassets.loaders.YAMLLoader('%s/assets/fullwebapp/assets.yaml' % env.directory)
+    for name, bundle in asset_loader.load_bundles().items():
+        env.register(name, bundle)

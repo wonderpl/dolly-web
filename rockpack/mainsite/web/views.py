@@ -54,7 +54,7 @@ def fullweb():
         api_urls = json.dumps(ws_request('/ws/'))
         return dict(api_urls=api_urls)
     else:
-        abort(400)
+        abort(404)
 
 
 @expose_web('/bookmarklet', 'web/bookmarklet.html', cache_age=3600, secure=True)
