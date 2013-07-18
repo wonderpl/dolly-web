@@ -50,7 +50,7 @@
     {% for device in "iphone", "ipad" %}
     <meta name="twitter:app:name:{{ device }}" content="Rockpack" />
     <meta name="twitter:app:id:{{ device }}" content="{{ config.ITUNES_APP_ID }}" />
-    <meta name="twitter:app:url:{{ device }}" content="{{ channel_data.canonical_url }}"/>
+    <meta name="twitter:app:url:{{ device }}" content="fb{{ config.FACEBOOK_APP_ID }}://channel/{{ channel_data.id }}"/>
     {% endfor %}
     <link rel="canonical" href="{{ channel_data.canonical_url }}" />
 
