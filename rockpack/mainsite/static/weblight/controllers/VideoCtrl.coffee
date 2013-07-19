@@ -85,5 +85,8 @@ window.Weblight.controller('VideoCtrl', ['$scope', '$rootScope', '$routeParams',
     $location.search( 'video', null );
     return
 
+#  if isMobile == false
+#    $("#lightbox").css("background-image", "url(#{$scope.channel.cover.thumbnail_url})").css("background-size", "cover")
+
   return
 ])
