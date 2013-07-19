@@ -209,6 +209,21 @@ def setup_abort_mapping(app):
     })
 
 
+def add_app_request_prop():
+    # Try to parse user-agent for ios app version
+    ua = request.user_agent
+    request.rockpack_ios_version = None
+    if ua.browser == 'rockpack' and ua.platform == 'ios':
+        try:
+            request.rockpack_ios_version = tuple(map(int, ua.version.split('.')))
+        except Exception:
+            pass
+
+
+def setup_app_request_prop(app):
+    app.before_request(add_app_request_prop)
+
+
 def add_cors_headers(response):
     origin = request.args.get('_origin')
     if origin:

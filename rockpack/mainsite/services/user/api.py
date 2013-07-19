@@ -360,9 +360,21 @@ class ContentReportForm(wtf.Form):
 
 
 def _channel_videos(channelid, locale, paging, own=False):
-    return video_api.get_local_videos(
+    # Nasty hack to ensure that old iOS app version get all videos for a users
+    # own channel and doesn't try to request more.
+    # This is to ensure that when changes are PUT back the request should include
+    # all videos, not just the first page (and hance delete the missing pages).
+    paging_ = None
+    if (own and paging == (0, 48) and
+            request.rockpack_ios_version and request.rockpack_ios_version < (1, 3)):
+        paging_ = paging
+        paging = (0, 1000)
+    items, total = video_api.get_local_videos(
         locale, paging, channel=channelid, with_channel=False,
         include_invisible=own, position_order=True, date_order=True)
+    if paging_:
+        total = min(paging_[1], total)
+    return items, total
 
 
 def _channel_info_response(channel, locale, paging, owner_url):
@@ -433,8 +445,7 @@ class UserWS(WebService):
         )
         for key in 'channels', 'activity', 'notifications', 'cover_art', 'subscriptions':
             info[key] = dict(resource_url=url_for('userws.post_%s' % key, userid=userid))
-
-        info['subscriptions'][ 'updates'] = url_for('userws.recent_videos', userid=userid)
+        info['subscriptions']['updates'] = url_for('userws.recent_videos', userid=userid)
         info['channels'].update(user_channels(user.id))
         info['notifications'].update(unread_count=_notification_unread_count(userid))
         return info

@@ -1,6 +1,8 @@
 import os
 import logging
+
 from flask import Flask
+from werkzeug.useragents import UserAgent, UserAgentParser
 
 app = Flask(__name__)
 
@@ -21,8 +23,17 @@ if app.config.get('USE_GEVENT'):
 else:
     import requests
 
+
 # for pyflakes
 requests
+
+
+# Patch werkzeug UserAgentParser to support rockpack app
+class RockpackUserAgentParser(UserAgentParser):
+    browsers = (('rockpack', 'rockpack'),) + UserAgentParser.browsers
+    platforms = (('iPhone|iPad|iPod', 'ios'),) + UserAgentParser.platforms
+UserAgent._parser = RockpackUserAgentParser()
+
 
 # hack to avoid django import issues via pyes
 os.environ['DJANGO_SETTINGS_MODULE'] = 'none'
@@ -41,6 +52,7 @@ REGISTER_SETUPS = (
     ('rockpack.mainsite.core.timing', 'setup_timing'),
     ('rockpack.mainsite.core.webservice', 'setup_cors_handling'),
     ('rockpack.mainsite.core.webservice', 'setup_abort_mapping'),
+    ('rockpack.mainsite.core.webservice', 'setup_app_request_prop'),
     ('rockpack.mainsite.admin.auth', 'setup_auth'),
     ('rockpack.mainsite.admin', 'setup_admin'),
     ('rockpack.mainsite.web', 'setup_web'),
