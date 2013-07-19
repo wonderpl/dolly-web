@@ -14,7 +14,7 @@ from rockpack.mainsite.helpers.urls import url_for
 from rockpack.mainsite.core.es.api import add_owner_to_index
 
 
-EXTERNAL_SYSTEM_NAMES = 'facebook', 'twitter', 'google'
+EXTERNAL_SYSTEM_NAMES = 'facebook', 'twitter', 'google', 'apns'
 GENDERS_MAP = {'m': 'male', 'f': 'female'}
 GENDERS = GENDERS_MAP.keys()
 
