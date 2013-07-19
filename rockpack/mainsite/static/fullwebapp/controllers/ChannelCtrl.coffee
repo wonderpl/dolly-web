@@ -7,7 +7,6 @@ window.WebApp.controller('ChannelCtrl', ['$scope', '$routeParams', '$rootScope',
   $scope.load_videos = =>
     #only try to fech videos if there are hidden videos in the channel
     if typeof $scope.totalvideos == "undefined" or $scope.page*40 <= $scope.totalvideos
-      console.log 'load videos'
       ContentService.getChannelVideos($routeParams.userid, $routeParams.channelid, 40, $scope.page*40).then (data) =>
         if $scope.channel == null
           $scope.channel = data

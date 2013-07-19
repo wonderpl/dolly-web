@@ -116,7 +116,7 @@ body {
 
 
 #bgimage {
-  position: absolute;
+  position: fixed;
   top: 60px;
   left: 0;
   width: 100%;
@@ -125,6 +125,7 @@ body {
 
 .page {
   padding-top: 80px;
+  min-height: 500px;
 }
 
 #header {
@@ -249,7 +250,7 @@ body {
         font-size: 17px;
         text-align: center;
         margin: 0;
-        padding: 0 20px;
+        padding: 0 10px;
 
         a {
           display: inline-block;
@@ -343,6 +344,22 @@ body {
   }
 }
 
+.reportButton {
+  width: 83px;
+  height: 29px;
+  background: url(/static/assets/fullwebapp/images/reportButton.png);
+  background-position: 0 0; width: 83px; height: 29px;
+  cursor: pointer;
+
+  &:hover {
+    background-position: 0 -158px; width: 83px; height: 29px;
+  }
+
+  &.selected {
+    background-position: 0 -79px; width: 83px; height: 29px;
+  }
+}
+
 .menu {
   list-style: none;
   position: relative;
@@ -401,8 +418,6 @@ body {
   height: 25px;
   top: 5px;
   right: 5px;
-  background: #fff;
-  border: 1px solid #000;
 }
 
 .video {

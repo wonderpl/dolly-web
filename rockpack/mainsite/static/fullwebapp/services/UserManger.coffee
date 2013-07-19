@@ -104,17 +104,30 @@ window.WebApp.factory('UserManager', ['cookies', '$http', '$q', '$location','api
           console.log data
         )
 
+    Report: (object_type, object_id) ->
+      $http({
+        method: 'POST',
+        url: "#{apiUrl.oauth.credentials.resource_url}content_reports/"
+        headers: {"authorization": "Bearer #{User.oauth.credentials.access_token}", "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"}
+        data: {object_type: object_type, object_id: object_id}
+      })
+        .then(((data) ->
+
+        ), (data) ->
+          console.log data
+        )
+
+
     FetchNotifications: () ->
       $http({
       method: 'GET',
       url: User.details.notifications.resource_url,
       headers: {"authorization": "Bearer #{User.oauth.credentials.access_token}", "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"}
       })
-        .success((data) ->
-          User.details.notifications.total = data.notifications.total
-          User.details.notifications.items = data.notifications.items
-        )
-        .error((data) =>
+        .then(((data) ->
+          User.details.notifications.total = data.data.notifications.total
+          User.details.notifications.items = data.data.notifications.items
+        ), (data) ->
           console.log data
         )
 

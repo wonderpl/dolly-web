@@ -4,6 +4,10 @@
       <img ng-src="((assets_url))/assets/weblight/images/newx.png" id="closeplayer" ng-click="hide()">
     </div>
     <div id="player"></div>
-    <div id="videotitle">((videodata.title | truncate: 45))</div>
+    <div id="videotitle">((videodata.title| truncate: 30))</div>
+    <div style="color: #fff;text-align: center;">
+      <div style="margin: 10px 0;">Watch it on Rockpack</div>
+      <a href="https://itunes.apple.com/app/rockpack/id660697542?mt=8&ls=1" target="_blank" ng-click="triggerEvent('appStoreButtonClick')"><img ng-src="((assets_url))/assets/weblight/images/downloadbig.png" ng-click="triggerEvent('appStoreButtonClick')"></a>
+    </div>
   </div>
 </div>

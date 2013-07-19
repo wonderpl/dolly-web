@@ -1,5 +1,7 @@
 window.WebApp.controller('ProfileCtrl', ['$scope', 'UserManager', '$routeParams', 'subscriptionsService', 'loggedoutUserService', ($scope, UserManager, $routeParams, subscriptionsService, loggedoutUserService) ->
 
+  console.log UserManager
+
   if UserManager.isLoggedIn and $routeParams.userid == UserManager.oauth.credentials.user_id
     $scope.channels = UserManager.details.channels.items
     $scope.User = UserManager

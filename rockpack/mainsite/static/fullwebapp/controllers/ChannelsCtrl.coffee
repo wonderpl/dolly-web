@@ -31,10 +31,9 @@ window.WebApp.controller('ChannelsCtrl', ['$scope', 'cookies', 'categoryService'
   )
 
   $scope.load_channels = () ->
-
     if $scope.totalChannels > $scope.pagination || $scope.pagination  == 0
       channelsService.fetchChannels($scope.pagination, 100, $location.search().catid)
-      .success( (data) ->
+      .then( (data) ->
         if $scope.pagination == 0
           $scope.channels = data.channels.items
           $scope.totalChannels = data.channels.total

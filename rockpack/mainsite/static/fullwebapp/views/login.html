@@ -10,17 +10,15 @@
     <div class="controls">
       <input type="password" name="Password" ng-model="password" required>
     </div>
+    <div>
+      <a href="/#reset-password">Forgot your password?</a>
+    </div>
+    <div class="control-group">
+      <button ng-click="submit()" class="btn">Submit</button>
+    </div>
   </div>
-  <div id="facebooklogin" ng-click="facebook()">
-    Sign in with Facebook
-  </div>
+  <img src="/static/assets/fullwebapp/images/ButtonFacebookDefault.png" ng-click="facebook()">
   <div>
-    <a href="/#reset-password">Forgot your password?</a>
-  </div>
-  <div>
-    Don't have an account? <a href="/#register">Register now</a>
-  </div>
-  <div class="control-group">
-    <button ng-click="submit()" class="btn">Submit</button>
+    New? <a href="/#register" class="btn">Sign Up</a>
   </div>
 </form>

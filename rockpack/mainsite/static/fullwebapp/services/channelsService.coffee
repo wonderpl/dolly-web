@@ -27,16 +27,14 @@ angular.module('WebApp').factory('channelsService', ($http, locale, apiUrl, User
         url: apiUrl.popular_channels,
         params: dataObj,
       })
-      .success((data) ->
-        _.each(data.channels.items, (channel)->
+      .then(((data) ->
+        _.each(data.data.channels.items, (channel)->
           channel.cover.thumbnail_url = channel.cover.thumbnail_url.replace('thumbnail_medium', 'thumbnail_large')
         )
-
-#        if
-        return data
-      )
-      .error((data) ->
-        console.log data
+        return data.data
+      ),
+        (data) ->
+          console.log data
       )
   }
 
