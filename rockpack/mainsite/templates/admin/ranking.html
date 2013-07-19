@@ -121,8 +121,8 @@
 
     <div style="clear: both">
     {% if channels or not videos %}
-        {% for channel in channels %}
-    <section class="card" style="width:256px; height:390px; float: left; overflow: hidden; position: relative">
+    {% for channel in channels %}
+    <section class="card" style="min-width: 220px; width:36%; max-width:256px; height:390px; float: left; overflow: hidden; position: relative">
         <div style="height: 92px">
             <h1 {% if channel.promoted %}style="color:#99CC00; font-weight: bold"{% endif %}>
                 {{ channel.title|truncate(30, True) }}
@@ -135,14 +135,15 @@
         <h3>view counts: US ({{ channel.uscount }}) GB ({{ channel.gbcount }})</h3>
         <h3>video update frequency: {{ channel.video_update_frequency }}</h3>
         <h3>editorial boost: {{ channel.editorial_boost }}</h3>
-        <div class="pic"><a href="{{ locale_base  }}{{ channel.id }}/"><img style="width:304px" src="{{ image_cdn }}{{ channel.cover_thumbnail_large_url }}"/></a></div>
+        <div class="pic"><a href="{{ locale_base  }}{{ channel.id }}/"><img style="min-width: 268px; width:100%; max-width:304px" src="{{ image_cdn }}{{ channel.cover_thumbnail_large_url }}"/></a></div>
     </section>
         {% endfor %}
     {% endif %}
 
 
     {% for video in videos %}
-    <section class="card" style="width:460px; height:220px; float: left; overflow: hidden; position: relative">
+    <!-- 460 //-->
+    <section class="card" style="min-width: 520px; max-width: 590px; width:90%; height:220px; float: left; overflow: hidden; position: relative">
         <div style="height: 64px">
             <h2>{{ video.title|truncate(30, True) }}</h1>
         </div>
@@ -155,7 +156,7 @@
             <a rel="voverlay" href="http://www.youtube.com/watch?v={{ video.source_id }}" target="_blank"><img src="/static/assets/admin/images/yt-logo.jpg" alt="YouTube"/></a>
         </div>
         <div style="clear:both"></div>
-        <div class="videopic"><a rel="voverlay" href="http://www.youtube.com/watch?v={{ video.source_id }}" target="_blank"><img style="width: 508px" src="{{ video.thumbnail_url }}"/></a></div>
+        <div class="videopic"><a rel="voverlay" href="http://www.youtube.com/watch?v={{ video.source_id }}" target="_blank"><img style="min-width: 568px; width:100%; max-width:638px" src="{{ video.thumbnail_url }}"/></a></div>
     </section>
     {% endfor %}
     </div>
