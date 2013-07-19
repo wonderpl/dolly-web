@@ -219,7 +219,6 @@ class ChannelPromotionForm(wtf.Form):
         # Handle coercion here
         self.category.data = int(self.category.data)
 
-
         if self.date_start.data > self.date_end.data:
             self.date_end.errors = ['End date must be after end date']
             return
@@ -227,25 +226,34 @@ class ChannelPromotionForm(wtf.Form):
         promos = models.ChannelPromotion.query.filter(
                 models.ChannelPromotion.date_end > self.date_start.data,
                 models.ChannelPromotion.date_start < self.date_end.data,
-                models.ChannelPromotion.position == self.position.data,
+                models.ChannelPromotion.date_end > datetime.utcnow(),
                 models.ChannelPromotion.category == self.category.data,
                 models.ChannelPromotion.locale == self.locale.data)
 
+        check_dupe = promos.filter(models.ChannelPromotion.channel == self.channel.data)
         if request.args.get('id'):
-            promos = promos.filter(models.ChannelPromotion.id == request.args.get('id'))
+            check_dupe = check_dupe.filter(models.ChannelPromotion.id != int(request.args.get('id')))
+        if check_dupe.count():
+            self.channel.errors = ['Channel is already promoted in this category']
+            return
+
+        if request.args.get('id'):
             promo = models.ChannelPromotion.query.get(int(request.args.get('id')))
             if promo.channel != self.channel.data:
                 self.channel.errors = ['Channel cannot be changed once set']
                 return
 
-            promos = promos.filter(models.ChannelPromotion.id != request.args.get('id'))
+            promos = promos.filter(
+                    models.ChannelPromotion.id != request.args.get('id'))
 
         if int(self.position.data) > 8:
             self.position.errors = ['Only a maximum of 8 position per category can be set']
             return
 
+        promos = promos.filter(models.ChannelPromotion.position == self.position.data)
+
         if promos.count():
-            self.position.errors = ['Conflict with promotions {}'.format(str([_.channel for _ in promos.all()]))]
+            self.position.errors = ['Conflicts with promotion "{}"'.format(','.join([_.channel_rel.title for _ in promos.all()]))]
             return
 
         return True

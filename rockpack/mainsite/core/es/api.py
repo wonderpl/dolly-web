@@ -197,7 +197,7 @@ class EntitySearch(object):
     def set_paging(self, offset=0, limit=100):
         if limit == -1:
             limit = 1000
-        self.paging = (offset, limit)
+        self.paging = (int(offset), int(limit))
 
     def results(self, force=False):
         if self._results and not force:
@@ -245,7 +245,7 @@ class ChannelSearch(EntitySearch, CategoryMixin, MediaSortMixin):
         channel['videos']['total'] = total
 
     def _format_results(self, channels, with_owners=False, with_videos=False, video_paging=(0, 100, )):
-        channel_list = []
+        channel_list = range(self.paging[1])  # We don't know the channel size so default to paging
         channel_id_list = []
         owner_list = []
         IMAGE_CDN = app.config.get('IMAGE_CDN', '')
@@ -259,20 +259,17 @@ class ChannelSearch(EntitySearch, CategoryMixin, MediaSortMixin):
             else:
                 return category
 
-        def _check_position(position):
-            if position in promoted_position_list:
-                position += 1
-                return _check_position(position)
-            return position
+        def _check_position(position, max_check):
+            if position > max_check:
+                return None
 
-        # Any promoted channels should be at the top, so find these
-        # and then set the position of un-promoted to exclude these
-        promoted_channels = {}
-        promoted_position_list = []
+            if not isinstance(channel_list[position], int):
+                position += 1
+                position = _check_position(position, max_check)
+            return position
 
         position = 0
         for channel in channels:
-            position += 1
 
             ch = dict(
                 id=channel.id,
@@ -299,8 +296,7 @@ class ChannelSearch(EntitySearch, CategoryMixin, MediaSortMixin):
                         elif k != 'ecommerce_url':
                             url = urljoin(IMAGE_CDN, v)
                     ch[k] = url
-                # XXX: tis a bit dangerous to assume max(cat)
-                # is the child category. review this
+
                 if k == 'category':
                     if not channel[k]:
                         ch[k] = None
@@ -318,32 +314,42 @@ class ChannelSearch(EntitySearch, CategoryMixin, MediaSortMixin):
             # the promoted will already be known by the time we're at the regular channels.
             # (lets also hope this assumption isn't anyones mother)
             if channel.promotion:
-                promote_pattern = '|'.join([str(self.locale), str(self.promoted_category)])
-                # This could be a promoted channel, just not for here
+                promote_pattern = '|'.join([str(self.locale), str(self.promoted_category)]) + '|'
+                # Could be a promoted channel
+                # for a different category
                 promoted_for_category = False
+
                 for p in channel.promotion:
                     if p.startswith(promote_pattern):
                         promoted_for_category = True
                         locale, category, pos = p.split('|')
-                        pos = int(pos)
-                        ch['position'] = pos - 1 + self.paging[0]  # zero indexed
-                        promoted_position_list.append(pos)
-                        promoted_channels[pos] = ch
+                        pos = int(pos) - 1  # position isn't zero indexed, so adjust
+                        if pos < self.paging[0]:
+                            # Don't include channels where it's position
+                            # is less than the offset position
+                            continue
+
+                        # Calculate new offseted position and assign
+                        ch['position'] = pos - self.paging[0]
+                        channel_list[ch['position']] = ch
+
                 if promoted_for_category:
                     continue
-            else:
-                # We need to reset the position here so that we account for any gaps
-                if not channel_list:
-                    position = 1 + self.paging[0]  # zero indexed
 
-            position = _check_position(position)
-            ch['position']  = position - 1
-            channel_list.append(ch)
+            position = _check_position(position, self.paging[1] - 1)
+            ch['position'] = position
+            channel_list[position] = ch
 
+            # Start incrementing the counter for
+            # non-promoted channels
+            position += 1
 
-        # Insert the promoted channels into their positions
-        for position, channel in promoted_channels.iteritems():
-            channel_list.insert(position - 1, channel)
+        # A bug in promotions means that
+        # we may have an empty position or so
+        if position == len(channel_list) - 1:
+            for i, channel in enumerate(channel_list):
+                if isinstance(channel, int):
+                    del channel_list[i]
 
         if with_owners and owner_list:
             ows = OwnerSearch()
