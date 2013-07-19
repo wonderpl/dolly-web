@@ -1270,3 +1270,25 @@ On success:
 HTTP/1.1 204 NO CONTENT
 Content-Type: application/json
 ```
+
+Push Notifications
+==================
+
+### APNS
+
+Used to send a device token for receiving of push notifications
+
+```http
+POST /ws/USERID/register_apns/ HTTP/1.1
+Authorization: Bearer TOKEN
+Content-Type: application/json
+
+"v8i7ryq3lkigjmrseiw8ky7546q4a8lbyaueiorsfj7gmwv4io2wfm8oesiz"
+```
+
+Returns 204 on success
+
+```http
+HTTP/1.1 204 NO CONTENT
+Content-Type: application/json
+```
