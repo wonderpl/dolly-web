@@ -325,7 +325,7 @@ class ChannelSearch(EntitySearch, CategoryMixin, MediaSortMixin):
                         locale, category, pos = p.split('|')
                         pos = int(pos) - 1  # position isn't zero indexed, so adjust
                         if pos < self.paging[0]:
-                            # Don't include channels where it's position
+                            # Don't include channels where its position
                             # is less than the offset position
                             continue
 
@@ -345,11 +345,15 @@ class ChannelSearch(EntitySearch, CategoryMixin, MediaSortMixin):
             position += 1
 
         # A bug in promotions means that
-        # we may have an empty position or so
-        if position == len(channel_list) - 1:
-            for i, channel in enumerate(channel_list):
-                if isinstance(channel, int):
-                    del channel_list[i]
+        # we may have an empty position or so.
+        # We usually won't hit this, but it's a
+        # shit hack, so fix it.
+        if position < len(channel_list):
+            new_list = []
+            for channel in channel_list:
+                if not isinstance(channel, int):
+                    new_list.append(channel)
+            channel_list = new_list
 
         if with_owners and owner_list:
             ows = OwnerSearch()
