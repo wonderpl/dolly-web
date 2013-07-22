@@ -46,4 +46,18 @@ window.WebApp.controller('ChannelCtrl', ['$scope', '$routeParams', '$rootScope',
         })
     )
 
+  $scope.videoWidth = 340
+  $scope.containerPadding = 40
+
+  $scope.getWidth = ->
+    return $(window).width()
+
+  window.onresize = ->
+    $scope.$apply()
+
+  $scope.$watch($scope.getWidth, (newValue, oldValue) ->
+    $scope.videwWrapperWidth = { width: (Math.floor(($(window).width() - $scope.containerPadding) / $scope.videoWidth) * $scope.videoWidth + $scope.containerPadding) + 'px', margin: '0 auto'}
+    return
+  )
+
 ])

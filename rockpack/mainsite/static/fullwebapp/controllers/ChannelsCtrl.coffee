@@ -39,6 +39,7 @@ window.WebApp.controller('ChannelsCtrl', ['$scope', 'cookies', 'categoryService'
           $scope.totalChannels = data.channels.total
         else
           $scope.channels = $scope.channels.concat(data.channels.items)
+        console.log $scope.pagination
         $scope.pagination += 100
       )
 

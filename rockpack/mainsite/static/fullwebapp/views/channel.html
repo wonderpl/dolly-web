@@ -1,6 +1,6 @@
-<div ng-controller="ChannelCtrl" id="ChannelCtrl" class="wrapper">
+<div ng-controller="ChannelCtrl" id="ChannelCtrl" ng-style="videwWrapperWidth">
   <img ng-src="{{background}}" id="bgimage">
-  <div class="channelheader" ng-style="windowWidth">
+  <div class="channelheader">
     <div>
       <h1>{{channel.title}}</h1>
       <div id="subscriberCount">{{channel.subscriber_count}} Subscribers</div>
@@ -15,8 +15,7 @@
       <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src="https://platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
     </div>
   </div>
-  <div id="channeloverlay">
-    <div id="test"></div>
+  <div id="channeloverlay" >
     <div ng-style="windowWidth" id="channelcontainer">
       <div id="videoslist" infinite-scroll='load_videos()' infinite-scroll-distance='1'>
         <div ng-repeat="video in channel.videos.items" class="video">

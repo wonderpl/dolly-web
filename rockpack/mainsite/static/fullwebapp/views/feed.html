@@ -1,5 +1,4 @@
-<div class="wrapper">
-  <h2>Feed View</h2>
+<div ng-style="videwWrapperWidth">
   <div id="feed" infinite-scroll='load_feed()' infinite-scroll-distance='1'>
     <div ng-repeat="section in User.feed.items">
       <h3>{{section.date}}</h3>
