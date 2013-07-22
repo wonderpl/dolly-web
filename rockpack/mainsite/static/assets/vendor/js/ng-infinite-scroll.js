@@ -10,7 +10,22 @@ mod.directive('infiniteScroll', [
         var checkWhenEnabled, handler, scrollDistance, scrollEnabled;
         var callPending = false;
         $window = angular.element($window);
+
+        var $scrollParent = elem.parents().filter(function() {
+          return /(auto|scroll)/.test(($.css(this, 'overflow')) + ($.css(this, 'overflow-y')));
+        }).eq(0);
+        if ($scrollParent.length === 0) {
+          $scrollParent = $window;
+        }
+
+        $scrollParent = elem.parents().filter(function() {
+            return /(auto|scroll)/.test(($.css(this, 'overflow')) + ($.css(this, 'overflow-y')));
+        }).eq(0);
+        if ($scrollParent.length === 0) {
+            $scrollParent = $window;
+        }
         scrollDistance = 0;
+
         if (attrs.infiniteScrollDistance != null) {
           scope.$watch(attrs.infiniteScrollDistance, function(value) {
             return scrollDistance = parseInt(value, 10);
@@ -27,12 +42,15 @@ mod.directive('infiniteScroll', [
             }
           });
         }
+
+        elementTop = elem.position().top;
+
         handler = function() {
-          var elementBottom, remaining, shouldScroll, windowBottom;
-          windowBottom = $window.height() + $window.scrollTop();
-          elementBottom = elem.offset().top + elem.height();
-          remaining = elementBottom - windowBottom;
-          shouldScroll = remaining <= $window.height() * scrollDistance;
+          var elementBottom, remaining, scrollBottom, shouldScroll;
+          elementBottom = elementTop + elem.height();
+          scrollBottom = $scrollParent.height() + $scrollParent.scrollTop();
+          remaining = elementBottom - scrollBottom;
+          shouldScroll = remaining <= $scrollParent.height() * scrollDistance;
           if (shouldScroll && scrollEnabled && callPending === false) {
             if ($rootScope.$$phase) {
               callPending = true;
@@ -51,9 +69,9 @@ mod.directive('infiniteScroll', [
             return checkWhenEnabled = true;
           }
         };
-        $window.on('scroll', handler);
+        $scrollParent.on('scroll', handler);
         scope.$on('$destroy', function() {
-          return $window.off('scroll', handler);
+            return $scrollParent.off('scroll', handler);
         });
         return $timeout((function() {
           if (attrs.infiniteScrollImmediateCheck) {

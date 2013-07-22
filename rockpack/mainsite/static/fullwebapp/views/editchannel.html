@@ -1,0 +1,24 @@
+<div ng-controller="EditChannelCtrl" id="EditChannelCtrl" ng-style="videwWrapperWidth">
+  <img ng-src="{{background}}" id="bgimage">
+  <div class="channelheader">
+    <input ng-model="channel.title" placeholder="CHANNEL NAME">
+    <button ng-click="coverSelector()">SELECT A COVER</button>
+    <div id="coverSelector" ui-show="coverArt.visible">
+      <div infinite-scroll='load_covers()' infinite-scroll-distance='10'>
+        <div ng-repeat="cover in coverArt.data.cover_art.items">
+          <img ng-src="{{cover.thumbnail_url}}" ng-click="selectCover(cover)">
+        </div>
+      </div>
+    </div>
+    <button>OTHER</button>
+  </div>
+  <div id="channeloverlay" >
+    <div ng-style="windowWidth" id="channelcontainer">
+      <div id="videoslist" infinite-scroll='load_videos()' infinite-scroll-distance='1'>
+        <div ng-repeat="video in channel.videos.items" class="video">
+          <video-cell></video-cell>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

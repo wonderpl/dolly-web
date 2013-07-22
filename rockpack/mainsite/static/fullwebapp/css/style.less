@@ -15,6 +15,31 @@ body {
   position: relative;
 }
 
+#coverSelector {
+  opacity: 0;
+  width: 560px;
+  height: 0;
+  overflow-y: scroll;
+  overflow-x: hidden;
+  transition: all 0.5s ease;
+  background: #f2f2f2;
+  position: absolute;
+
+  &.ui-show {
+    opacity: 1;
+    height: 400px;
+  }
+
+  &>div {
+    min-height: 8620px;
+  }
+
+  div {
+    display: inline-block;
+    padding: 10px;
+  }
+}
+
 #addtoChannel {
   #topmenu {
 
@@ -119,9 +144,11 @@ body {
 #footer {
   border-top: 2px solid #dfdfdf;
   width: 100%;
-  background: #f1f1f1;
+  background: #f2f2f2;
   margin-top: 40px;
   height: 50px;
+  position: absolute;
+  bottom: 0;
 
   .rights {
     margin: 10px 20px;
@@ -135,7 +162,7 @@ body {
   border-bottom: 2px solid #dfdfdf;
   position: fixed;
   width: 100%;
-  background: #f1f1f1;
+  background: #f2f2f2;
   z-index: 1000;
 
 

@@ -28,6 +28,22 @@ angular.module('WebApp').factory('ContentService', ($http, locale, apiUrl, UserM
           console.log data
         )
 
+    getCoverArt: (position) ->
+
+      $http({
+        method: 'GET',
+        params: {start: position}
+        url: apiUrl.cover_art,
+      })
+        .then(((data) ->
+          return data.data
+        ),
+        (data) ->
+          console.log data
+        )
+
+
+
   }
 
   return Content
