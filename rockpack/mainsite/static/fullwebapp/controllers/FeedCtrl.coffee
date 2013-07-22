@@ -7,6 +7,16 @@ window.WebApp.controller('FeedCtrl', ['$scope', 'cookies', 'UserManager', '$loca
   $scope.User.feed.position = 0
   $scope.User.feed.items = []
 
+  $scope.Weekday = [
+    'Sunday',
+    'Monday',
+    'Tuesday',
+    'Wednsday',
+    'Thursday',
+    'Friday',
+    'Saturday'
+  ]
+
   $scope.load_feed = () ->
     if ($scope.User.feed.total == null or $scope.User.feed.total > $scope.User.feed.position*50)
       $scope.User.FetchRecentSubscriptions($scope.User.feed.position*50, 50)

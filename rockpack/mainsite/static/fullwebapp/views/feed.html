@@ -1,7 +1,7 @@
 <div ng-style="videwWrapperWidth">
   <div id="feed" infinite-scroll='load_feed()' infinite-scroll-distance='1'>
     <div ng-repeat="section in User.feed.items">
-      <h3>{{section.date}}</h3>
+      <h3>{{section.date | weekDay}}</h3>
       <div ng-repeat="video in section.videos" class="video">
         <video-cell></video-cell>
       </div>

@@ -18,7 +18,7 @@ window.WebApp.controller('ChannelsCtrl', ['$scope', 'cookies', 'categoryService'
         return
       else
         if category.id == $location.search().catid
-          $scope.menu.category.id = category.id
+          $scope.menu.main = category.id
           return
       _.each(category.sub_categories, ((subcategory) ->
         if subcategory.id ==  $location.search().catid

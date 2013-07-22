@@ -23,21 +23,6 @@ window.WebApp = angular.module('WebApp', ['infinite-scroll','ui.bootstrap'])
   ])
   .value('locale', window.navigator.userLanguage || window.navigator.language)
   .constant('apiUrl', window.apiUrls)
-  .filter('truncate', ->
-    return (text, length, end) ->
-      if (isNaN(length))
-        length = 10
-
-      if (end == undefined)
-        end = "..."
-
-      if typeof text != "undefined"
-        if (text.length <= length || text.length - end.length <= length)
-          return text
-        else
-          return String(text).substring(0, length-end.length) + end
-  )
-
 window.onYouTubeIframeAPIReady = ->
   updateScope()
   return
