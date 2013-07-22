@@ -15,10 +15,26 @@ angular.module('WebApp').filter('truncate', ($http, locale, apiUrl) ->
 
 angular.module('WebApp').filter('weekDay', ($http, locale, apiUrl) ->
   return (text, length, end) ->
-#    console.log Date.parse(text)
 
-    if (isNaN(text))
-      return
+    # if we can't parse this into a date just return text as it is
+    Today = new Date()
+    feedDate = new Date(text)
 
-    return text
+    Weekdays = [
+      'Sunday',
+      'Monday',
+      'Tuesday',
+      'Wednsday',
+      'Thursday',
+      'Friday',
+      'Saturday'
+    ]
+
+    diff = Today.getDate() - Today.getDay() + (Today.getDay()== 0 ? -6:1)
+    startofWeek = new Date(Today.setDate(diff))
+
+    if feedDate > startofWeek
+      return Weekdays[feedDate.getDay()]
+    else
+      return text
 )
