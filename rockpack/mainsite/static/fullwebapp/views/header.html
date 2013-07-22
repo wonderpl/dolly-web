@@ -13,7 +13,7 @@
 
     <div ng-switch on="isLoggedIn" class="rightmenu">
       <div ng-switch-when=true>
-        <div><a href="#/channel/{{user.details.id}}"><img ng-src="/static/assets/fullwebapp/images/buttonAdd.png"></a></div>
+        <div><a href="#/{{user.details.id}}/channel/"><img ng-src="/static/assets/fullwebapp/images/buttonAdd.png"></a></div>
         <div class="userAvatar">
           <img ng-src="{{user.details.avatar_thumbnail_url}}" ng-click="userMenu = !userMenu" src="/static/assets/fullwebapp/images/AvatarProfile.png">
           <div id="userMenuContainer" ng-show="userMenu" ng-click="userMenu = !userMenu">
@@ -25,8 +25,8 @@
               <img src="/static/assets/fullwebapp/images/settings.png" id="settings">
             </div>
             <div id="UserMenu">
-              <div><a href="#/profile/{{user.details.id}}">My Channels</a></div>
-              <div><a href="#/profile/{{user.details.id}}">My Subscriptions</a></div>
+              <div><a href="#/{{user.details.id}}/profile">My Channels</a></div>
+              <div><a href="#/{{user.details.id}}/profile">My Subscriptions</a></div>
               <div>Friends</div>
               <div class="logout" ng-click="logout()">Logout</div>
             </div>

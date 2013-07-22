@@ -2,8 +2,8 @@ window.WebApp = angular.module('WebApp', ['infinite-scroll','ui.bootstrap'])
   .config(['$routeProvider', ($routeProvider) ->
     $routeProvider.when('/login', {templateUrl: 'login.html'})
     $routeProvider.when('/search', {templateUrl: 'search.html', reloadOnSearch: false})
-    $routeProvider.when('/channel/:userid/:channelid', {templateUrl: 'channel.html', reloadOnSearch: false})
-    $routeProvider.when('/channel/:userid/', {templateUrl: 'channel.html', reloadOnSearch: false})
+    $routeProvider.when('/:userid/channel/:channelid', {templateUrl: 'channel.html', reloadOnSearch: false})
+    $routeProvider.when('/:userid/channel', {templateUrl: 'editchannel.html', reloadOnSearch: false})
     $routeProvider.when('/reset-password', {templateUrl: 'resetPassword.html'})
     $routeProvider.when('/register', {templateUrl: 'register.html'})
     $routeProvider.when('/feed', {
@@ -11,7 +11,7 @@ window.WebApp = angular.module('WebApp', ['infinite-scroll','ui.bootstrap'])
       controller: 'FeedCtrl',
       reloadOnSearch: false
     })
-    $routeProvider.when('/profile/:userid', {
+    $routeProvider.when('/:userid/profile', {
       templateUrl: 'profile.html',
       controller: 'ProfileCtrl',
     })

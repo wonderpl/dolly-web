@@ -5,7 +5,7 @@ window.WebApp.controller('ChannelCtrl', ['$scope', '$routeParams', '$rootScope',
   $scope.channel = null
 
   $scope.load_videos = =>
-    #only try to fech videos if there are hidden videos in the channel
+    # Did we already load all the videos?
     if typeof $scope.totalvideos == "undefined" or $scope.page*40 <= $scope.totalvideos
       ContentService.getChannelVideos($routeParams.userid, $routeParams.channelid, 40, $scope.page*40).then (data) =>
         if $scope.channel == null
@@ -17,6 +17,7 @@ window.WebApp.controller('ChannelCtrl', ['$scope', '$routeParams', '$rootScope',
         $scope.page += 1
     return
 
+  # Video Player
   $scope.$watch((() -> return $location.search().video), (newValue, oldValue) ->
     if newValue?
 
@@ -46,6 +47,7 @@ window.WebApp.controller('ChannelCtrl', ['$scope', '$routeParams', '$rootScope',
         })
     )
 
+  #Variable width manager
   $scope.videoWidth = 340
   $scope.containerPadding = 0
 
