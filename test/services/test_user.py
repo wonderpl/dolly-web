@@ -191,6 +191,43 @@ class TestProfileEdit(base.RockPackTestCase):
             self.assertEquals(field_map['first_name'], user.first_name)
             self.assertEquals(field_map['date_of_birth'], user.date_of_birth.strftime("%Y-%m-%d"))
 
+    def test_content_feed(self):
+        with self.app.test_client() as client:
+            user = self.create_test_user()
+            r = client.get('/ws/{}/content_feed/'.format(user.id),
+                           headers=[get_auth_header(user.id)])
+            data = json.loads(r.data)['content']
+            channel_group = []
+            print 'item count: {}, agg count: {}'.format(data['total'], len(data['aggregations']))
+            for item in data['items']:
+                if 'aggregation' in item:
+                    agg = data['aggregations'][item['aggregation']]
+                    if item['position'] not in agg['covers']:
+                        # Skip over "hidden" items in aggregation
+                        continue
+                else:
+                    agg = None
+
+                if 'video' in item:   # Item is a video instance
+                    if agg:
+                        print '{position:02d} video   {channel[owner][id]}/{channel[id]}'.format(**item),
+                        print 'AGG: +{count} {title}'.format(**agg),
+                        likes = agg.get('likes')
+                    else:
+                        print '{position:02d} video   {channel[owner][id]}/{channel[id]}'.format(**item),
+                        likes = item.get('likes', {})
+                    print '❥{}'.format(likes.get('count', 0))
+
+                elif 'cover' in item:   # Item is a channel
+                    if agg:
+                        channel_group.append(item)
+                        if len(channel_group) == len(agg['covers']):
+                            print '{position:02d} channel {owner[id]}/{id}'.format(**channel_group[0]),
+                            print 'AGG: +{count} {title}'.format(**agg)
+                            channel_group = []
+                    else:
+                        print '{position:02d} channel {owner[id]}/{id}'.format(**item)
+
     def test_subscription_notification(self):
         with self.app.test_client() as client:
             self.app.test_request_context().push()
