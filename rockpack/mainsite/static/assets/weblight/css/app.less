@@ -82,9 +82,51 @@ body {
     display: block;
   }
 
+  #playerfooter {
+    background: #f8f8f8;
+    padding: 15px;
+    font-size: 16px;
+    font-family: "dn-regular";
+    color: #282d33;
+    .clearfix();
+
+    img {
+      float: left;
+    }
+
+    #desc {
+      float: left;
+      margin-top: 10px;
+      margin-left: 10px;
+    }
+
+    #videotitle {
+      text-shadow: 1px 1px #dddddd;
+      font-family: "dn-bold";
+    }
+
+    #logos {
+      float: right;
+
+      .bluelogo {
+        margin-right: 10px;
+      }
+    }
+  }
+
+  #mobilefooter {
+    display: none;
+  }
+
+
   #playerheader {
 
     vertical-align: middle;
+
+    #videosharetext {
+      text-align: center;
+      font-family: "dn-regular";
+    }
 
     #closeplayer {
       margin-bottom: 10px;
@@ -92,17 +134,6 @@ body {
     }
   }
 
-  #videotitle {
-    font-size: 18px;
-    color: #fefefe;
-    font-family: "dn-bold", sans-serif;
-    text-transform: uppercase;
-    display: inline-block;
-    margin-top: 15px;
-    margin-left: 15px;
-    vertical-align: middle;
-    text-shadow: 0px 2px 1px rgba(0, 0, 0, 0.2)
-  }
 
  }
 
@@ -281,8 +312,7 @@ body {
 #videosharetext {
   color: #fff;
   margin-bottom: 30px;
-  font-size: 18px;
-  text-align: center;
+  font-size: 16px;
 
   img {
     margin-bottom: 20px;
@@ -326,6 +356,31 @@ body {
     margin-left: -160px;
     margin-top: 0;
     z-index: 1010;
+
+    #mobilefooter {
+      color: #fff;
+      text-align: center;
+      display: block;
+    }
+
+
   }
+
+  #videotitle {
+    font-size: 18px;
+    color: #fefefe;
+    font-family: "dn-bold", sans-serif;
+    text-transform: uppercase;
+    display: inline-block;
+    margin-top: 15px;
+    margin-left: 15px;
+    vertical-align: middle;
+    text-shadow: 0px 2px 1px rgba(0, 0, 0, 0.2)
+  }
+
+  #playerfooter {
+    display: none;
+  }
+
 }
 

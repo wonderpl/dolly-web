@@ -1,16 +1,22 @@
-angular.module('WebApp').directive('reportButton', ['UserManager', (UserManager) ->
+angular.module('WebApp').directive('reportButton', ['UserManager', '$rootScope', (UserManager, $rootScope) ->
   return {
     restrict: 'A'
     templateUrl: 'reportButton.html'
     scope: {
-      isLoggedin: '@' ,
-      objectId: '@',
-      objectType: '@',
-      test: '@'
+      isLoggedin: '@'
+      objectId: '@'
+      objectType: '@'
     },
     link: (scope, element, attrs) ->
-      console.log scope.test
+      console.log scope
       scope.report = () ->
-        UserManager.report(scope.objectID, scope.objectType)
+        UserManager.Report(scope.objectId, scope.objectType)
+        .then((data) ->
+          if data.status == 204
+            $rootScope.message = {
+              message: "#{scope.objectType} has been reported"
+              state: 0
+            }
+        )
   }
 ])

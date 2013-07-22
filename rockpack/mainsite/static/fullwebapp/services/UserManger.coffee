@@ -104,19 +104,13 @@ window.WebApp.factory('UserManager', ['cookies', '$http', '$q', '$location','api
           console.log data
         )
 
-    Report: (object_type, object_id) ->
+    Report: (object_id, object_type) ->
       $http({
         method: 'POST',
-        url: "#{apiUrl.oauth.credentials.resource_url}content_reports/"
+        url: "#{User.oauth.credentials.resource_url}content_reports/"
         headers: {"authorization": "Bearer #{User.oauth.credentials.access_token}", "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"}
-        data: {object_type: object_type, object_id: object_id}
+        data: $.param({object_type: "#{object_type}", object_id: "#{object_id}", reason: "Web Reoprt"})
       })
-        .then(((data) ->
-
-        ), (data) ->
-          console.log data
-        )
-
 
     FetchNotifications: () ->
       $http({
