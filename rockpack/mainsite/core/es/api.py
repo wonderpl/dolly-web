@@ -20,6 +20,14 @@ MUST_NOT = 'must_not'
 SHOULD = 'shoud'
 
 
+def _format_datetime(datetime):
+    # The datetime argument could be a pre-formatted string or a datetime object
+    if hasattr(datetime, 'isoformat'):
+        return datetime.isoformat()
+    else:
+        return datetime
+
+
 class CategoryMixin(object):
     """ Provides `filter_category` method to restrict
         queries to a specific category
@@ -278,6 +286,7 @@ class ChannelSearch(EntitySearch, CategoryMixin, MediaSortMixin):
                 subscriber_count=channel.subscriber_count,
                 description=channel.description,
                 title=channel.title,
+                date_published=_format_datetime(channel.date_published),
                 public=channel.public,
                 cover=dict(
                     thumbnail_url=urljoin(IMAGE_CDN, channel.cover.thumbnail_url) if channel.cover.thumbnail_url else '',
@@ -419,8 +428,7 @@ class VideoSearch(EntitySearch, CategoryMixin, MediaSortMixin):
             video = dict(
                 id=v.id,
                 title=v.title,
-                # XXX: should return either datetime or isoformat - something is broken
-                date_added=v.date_added.isoformat() if not isinstance(v.date_added, (str, unicode)) else v.date_added,
+                date_added=_format_datetime(v.date_added),
                 public=v.public,
                 category='',
                 video=dict(
@@ -567,6 +575,7 @@ def add_channel_to_index(channel, bulk=False, refresh=False, boost=None, no_chec
         subscriber_count=channel.subscriber_count,
         date_added=channel.date_added,
         date_updated=channel.date_updated,
+        date_published=channel.date_published,
         description=channel.description,
         resource_url=urlparse(channel.get_resource_url()).path,
         title=channel.title,
