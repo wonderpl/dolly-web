@@ -11,7 +11,7 @@ User
 Get data for a specific user.
 
 ```http
-GET /ws/USERID/ HTTP/1.1
+GET /ws/USERID/?data=DATA1&data=DATA2&size=SIZE HTTP/1.1
 Authorization: Bearer TOKEN
 ```
 
@@ -49,7 +49,18 @@ Cache-Control: public, max-age=60
 ```
 
 If `Bearer` token matches requested `USERID` then private channels will be included
-and additional fields and resource url links will be returned.
+and additional fields and resource url links will be returned.  The following parameters are also valid.
+
+Parameter      | Required? | Value               | Description
+:------------- | :-------- | :------------------ | :----------
+data           | no        | Data section names  | The names of data sections to be returned directly in the response. Default: `channels`.
+size           | no        | Data item page size | Number of data items to return - 100 by default
+
+If the `data` parameter is specified then the data associated with each resource given will be included directly in the response.
+The supported resource names are `channels`, `subscriptions`, `external_accounts`, & `activity`.
+The format of the data will be the same as if returned by the corresponding resource url.
+For example if `data=channels&data=subscriptions&size=2` is used then the first 2 items of the `channels` and `subscriptions`
+sub-resources will be included in the user resource response.
 
 ```http
 HTTP/1.1 200 OK
@@ -68,10 +79,17 @@ Cache-Control: private
  "avatar_thumbnail_url": "http://path/to/avatar.img",
  "date_of_birth": "1900-01-21",
  "subscriptions": {
-  "resource_url": "https://path/to/subscriptions/resource/base/url/"
+  "resource_url": "https://path/to/subscriptions/resource/base/url/",
+  "updates": "https://path/to/subscriptions/resource/recent_videos/"
  },
  "activity": {
   "resource_url": "https://path/to/activity/resource/base/url/"
+ },
+ "external_accounts": {
+  "resource_url": "http://path/to/external/accounts/resource/base/url/"
+ },
+ "friends": {
+  "resource_url": "http://path/to/friends/resource/base/url/"
  },
  "notifications": {
   "unread_count": 3,
@@ -81,7 +99,7 @@ Cache-Control: private
   "resource_url": "https://path/to/cover_art/resource/base/url/"
  },
  "channels": {
-  "resource_url": "https://path/to/channels/resource/base/url/"
+  "resource_url": "https://path/to/channels/resource/base/url/",
    "total": 0,
    "items": []
  }

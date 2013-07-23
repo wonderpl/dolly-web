@@ -259,16 +259,52 @@ def action_object_list(user, action, limit):
     return id_list[0] if id_list else []
 
 
-def user_subscriptions(userid):
+def _user_subscriptions_query(userid):
     return Subscription.query.filter_by(user=userid)
 
 
-def user_channels(userid):
-    channels = [video_api.channel_dict(c, with_owner=False, owner_url=True)
-                for c in Channel.query.options(lazyload('owner_rel'), lazyload('category_rel')).
-                filter_by(owner=userid, deleted=False).
-                order_by('favourite desc', 'date_added desc')]
-    return dict(items=channels, total=len(channels))
+def user_subscriptions(userid, locale, paging):
+    subscriptions = _user_subscriptions_query(userid)
+    if not subscriptions.count():
+        return dict(items=[], total=0)
+    subs = {s[0]: s[1] for s in subscriptions.values('channel', 'date_created')}
+    items, total = video_api.get_local_channel(locale, paging, channels=subs.keys())
+    items = [item for date, item in
+             sorted([(subs[i['id']], i) for i in items], reverse=True)]
+    for item in items:
+        item['subscription_resource_url'] =\
+            url_for('userws.delete_subscription_item', userid=userid, channelid=item['id'])
+    return dict(items=items, total=total)
+
+
+def user_channels(userid, locale, paging):
+    channels = Channel.query.options(lazyload('owner_rel'), lazyload('category_rel')).\
+        filter_by(owner=userid, deleted=False)
+    total = channels.count()
+    offset, limit = paging
+    channels = channels.order_by('favourite desc', 'date_added desc').\
+        offset(offset).limit(limit)
+    items = [video_api.channel_dict(c, with_owner=False, owner_url=True) for c in channels]
+    return dict(items=items, total=total)
+
+
+def user_external_accounts(userid, locale, paging):
+    items = []
+    for token in ExternalToken.query.filter_by(user=userid):
+        items.append(dict(resource_url=token.resource_url,
+                          external_system=token.external_system,
+                          external_uid=token.external_uid))
+    return dict(items=items, total=len(items))
+
+
+def user_activity(userid, locale, paging):
+    ids = dict((key, action_object_list(userid, key, UserWS.max_page_size))
+               for key in ACTION_COLUMN_VALUE_MAP)
+    return dict(
+        recently_viewed=ids['view'],
+        recently_starred=list(set(ids['star']) - set(ids['unstar'])),
+        subscribed=list(set(ids['subscribe']) - set(ids['unsubscribe'])),
+    )
 
 
 def check_present(form, field):
@@ -443,10 +479,15 @@ class UserWS(WebService):
             avatar_thumbnail_url=user.avatar.url,
             date_of_birth=user.date_of_birth.isoformat() if user.date_of_birth else None,
         )
-        for key in 'channels', 'activity', 'notifications', 'cover_art', 'subscriptions':
+        data_sections = request.args.getlist('data') or ['channels']
+        for key in ('channels', 'activity', 'notifications', 'cover_art', 'subscriptions',
+                    'friends', 'external_accounts'):
             info[key] = dict(resource_url=url_for('userws.post_%s' % key, userid=userid))
+            if key in data_sections:
+                get_user_data = globals().get('user_%s' % key)
+                if get_user_data:
+                    info[key].update(get_user_data(user.id, self.get_locale(), self.get_page()))
         info['subscriptions']['updates'] = url_for('userws.recent_videos', userid=userid)
-        info['channels'].update(user_channels(user.id))
         info['notifications'].update(unread_count=_notification_unread_count(userid))
         return info
 
@@ -523,13 +564,7 @@ class UserWS(WebService):
     @expose_ajax('/<userid>/activity/', cache_age=60, cache_private=True)
     @check_authorization(self_auth=True)
     def get_activity(self, userid):
-        ids = dict((key, action_object_list(userid, key, self.max_page_size))
-                   for key in ACTION_COLUMN_VALUE_MAP)
-        return dict(
-            recently_viewed=ids['view'],
-            recently_starred=list(set(ids['star']) - set(ids['unstar'])),
-            subscribed=list(set(ids['subscribe']) - set(ids['unsubscribe'])),
-        )
+        return user_activity(userid, self.get_locale(), self.get_page())
 
     @expose_ajax('/<userid>/activity/', methods=['POST'])
     @check_authorization(self_auth=True)
@@ -581,7 +616,7 @@ class UserWS(WebService):
     @expose_ajax('/<userid>/channels/', cache_private=True)
     @check_authorization(self_auth=True)
     def get_channels(self, userid):
-        return dict(channels=user_channels(userid))
+        return dict(channels=user_channels(userid, self.get_locale(), self.get_page()))
 
     @expose_ajax('/<userid>/channels/', methods=('POST',))
     @check_authorization(self_auth=True)
@@ -761,21 +796,7 @@ class UserWS(WebService):
 
     @expose_ajax('/<userid>/subscriptions/')
     def get_subscriptions(self, userid):
-        subscriptions = user_subscriptions(userid)
-        if subscriptions.count():
-            subs = {s[0]: s[1] for s in subscriptions.values('channel', 'date_created')}
-
-            items, total = video_api.get_local_channel(
-                self.get_locale(), self.get_page(), channels=subs.keys())
-
-            x = sorted([(subs[i['id']], i) for i in items], reverse=True)
-            items = [item for date, item in x]
-        else:
-            items, total = [], 0
-        for item in items:
-            item['subscription_resource_url'] =\
-                url_for('userws.delete_subscription_item', userid=userid, channelid=item['id'])
-        return dict(channels=dict(items=items, total=total))
+        return dict(channels=user_subscriptions(userid, self.get_locale(), self.get_page()))
 
     @expose_ajax('/<userid>/subscriptions/', methods=['POST'])
     @check_authorization(self_auth=True)
@@ -802,7 +823,7 @@ class UserWS(WebService):
     @check_authorization(self_auth=True)
     @commit_on_success
     def delete_subscription_item(self, userid, channelid):
-        if not user_subscriptions(userid).filter_by(channel=channelid).delete():
+        if not _user_subscriptions_query(userid).filter_by(channel=channelid).delete():
             abort(404)
         save_channel_activity(userid, 'unsubscribe', channelid, self.get_locale())
 
@@ -810,7 +831,7 @@ class UserWS(WebService):
     @check_authorization(self_auth=True)
     def recent_videos(self, userid):
         channels = [
-            s[0] for s in user_subscriptions(userid).join(Channel).
+            s[0] for s in _user_subscriptions_query(userid).join(Channel).
             filter_by(public=True, deleted=False).values('channel')]
         if channels:
             items, total = video_api.get_local_videos(self.get_locale(), self.get_page(),
@@ -822,12 +843,7 @@ class UserWS(WebService):
     @expose_ajax('/<userid>/external_accounts/', cache_age=60, cache_private=True)
     @check_authorization(self_auth=True)
     def get_external_accounts(self, userid):
-        items = []
-        for token in ExternalToken.query.filter_by(user=userid):
-            items.append(dict(resource_url=token.resource_url,
-                              external_system=token.external_system,
-                              external_uid=token.external_uid))
-        return dict(external_accounts=dict(items=items, total=len(items)))
+        return dict(external_accounts=user_external_accounts(userid, self.get_locale(), self.get_page()))
 
     @expose_ajax('/<userid>/external_accounts/<id>/', cache_age=60, cache_private=True)
     @check_authorization(self_auth=True)
@@ -882,3 +898,9 @@ class UserWS(WebService):
         for i, item in enumerate(items):
             item['position'] = i
         return dict(users=dict(items=items, total=len(items)))
+
+    @expose_ajax('/<userid>/friends/', methods=['POST'])
+    @check_authorization(self_auth=True)
+    def post_friends(self, userid):
+        # placeholder
+        abort(501)
