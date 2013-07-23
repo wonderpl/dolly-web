@@ -337,7 +337,7 @@ class ChannelSearch(EntitySearch, CategoryMixin, MediaSortMixin):
                     continue
 
             position = _check_position(position, self.paging[1] - 1)
-            ch['position'] = position
+            ch['position'] = position + self.paging[0]
             channel_list[position] = ch
 
             # Start incrementing the counter for
