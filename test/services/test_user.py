@@ -1,4 +1,5 @@
 import json
+import uuid
 import cgi
 from datetime import datetime
 from test import base
@@ -9,8 +10,55 @@ from test.test_helpers import get_client_auth_header
 from rockpack.mainsite import app
 from rockpack.mainsite.services.video.models import Channel
 from rockpack.mainsite.services.oauth.api import ExternalUser
+from rockpack.mainsite.services.oauth.models import ExternalToken
 from rockpack.mainsite.services.user.models import User, UserActivity, UserNotification
-from rockpack.mainsite.services.user.commands import create_new_activity_notifications
+from rockpack.mainsite.services.user.commands import create_new_activity_notifications, send_push_notification
+
+
+class TestAPNS(base.RockPackTestCase):
+
+    def test_add_device_token(self):
+        with self.app.test_client() as client:
+            self.app.test_request_context().push()
+            user = self.create_test_user()
+            token = uuid.uuid4().hex
+            system = 'apns'
+            client.post(
+                '/ws/{}/external_accounts/'.format(user.id),
+                data=json.dumps(dict(external_system=system, external_token=token)),
+                content_type='application/json',
+                headers=[get_auth_header(user.id)],
+            )
+            self.assertEquals(
+                ExternalToken.query.filter_by(
+                    external_system=system,
+                    external_token=token).count(),
+                1
+            )
+
+    def test_send_notification(self):
+        with self.app.test_client() as client:
+            self.app.test_request_context().push()
+            user = self.create_test_user()
+            client.post(
+                '/ws/{}/external_accounts/'.format(user.id),
+                data=json.dumps(dict(external_system='apns', external_token=uuid.uuid4().hex)),
+                content_type='application/json',
+                headers=[get_auth_header(user.id)],
+            )
+
+            UserNotification(
+                user=user.id,
+                message_type='foo',
+                message='bar').save()
+
+            def _new_send(self, message):
+                return message.payload
+
+            from rockpack.mainsite.services.user.commands import  APNs
+            with patch.object(APNs, 'send', _new_send):
+                message = send_push_notification(user)
+                self.assertEquals(1, message['aps']['badge'])
 
 
 class TestProfileEdit(base.RockPackTestCase):

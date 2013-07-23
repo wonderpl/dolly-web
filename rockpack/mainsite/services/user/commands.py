@@ -56,6 +56,47 @@ activity_notification_map = dict(
 )
 
 
+from apnsclient import Session as APNSession
+from apnsclient import Message as APNMessage
+from apnsclient import APNs
+
+import os
+from sqlalchemy.orm.exc import NoResultFound
+
+
+def send_push_notification(user):
+    try:
+        device = ExternalToken.query.filter(
+            ExternalToken.external_system == 'apns',
+            ExternalToken.external_token != 'INVALID',
+            ExternalToken.user == user.id).one()
+    except NoResultFound:
+        return
+
+    notifications = UserNotification.query.filter(
+            UserNotification.date_read == None,
+            UserNotification.user == user.id).count()
+
+    if notifications:
+        con = APNSession.new_connection(
+                app.config['APNS_PUSH_TYPE'],
+                cert_file=os.path.dirname(os.path.abspath(__file__)) + "/CertificateAndKey.pem",
+                passphrase=app.config['APNS_PASSPHRASE'])
+
+        message = APNMessage(
+                device.external_token,
+                alert="You have new activity on your channels!",
+                badge=notifications)
+        srv = APNs(con)
+        return srv.send(message)
+
+    """
+    # Retry once
+    if response.needs_retry():
+        response.retry()
+    """
+
+
 @commit_on_success
 def create_new_activity_notifications(date_from=None, date_to=None):
     activity_window = UserActivity.query.options(joinedload('actor'))
@@ -85,6 +126,7 @@ def create_new_activity_notifications(date_from=None, date_to=None):
                         message_type=type,
                         message=json.dumps(body, separators=(',', ':')),
                     ))
+                    send_push_notification(user)
 
 
 @commit_on_success

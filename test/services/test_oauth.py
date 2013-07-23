@@ -157,6 +157,7 @@ class ExternalTokenTestCase(base.RockPackTestCase):
     @patch('rockpack.mainsite.services.oauth.api.ExternalUser.get_new_token')
     @patch('rockpack.mainsite.services.oauth.api.ExternalUser._get_external_data')
     def test_facebook_token(self, _get_external_data, get_new_token):
+        self.app.test_request_context().push()
         _get_external_data.return_value = FACEBOOK_GRAPH_DATA
         from rockpack.mainsite.services.oauth.api import ExternalUser
         long_lived_fb_token = 'fdsuioncf3w8ryl38yb7y4eius'
@@ -186,6 +187,7 @@ class ExternalTokenTestCase(base.RockPackTestCase):
     @patch('rockpack.mainsite.services.oauth.api.ExternalUser.get_new_token')
     @patch('rockpack.mainsite.services.oauth.api.ExternalUser._get_external_data')
     def test_invalid_token(self, _get_external_data, get_new_token):
+        self.app.test_request_context().push()
         _get_external_data.return_value = FACEBOOK_GRAPH_DATA
         from rockpack.mainsite.services.oauth.api import ExternalUser
         eu = ExternalUser('handleaflet', token='')
@@ -214,6 +216,7 @@ class RegisterTestCase(base.RockPackTestCase):
         get_new_token.return_value = ExternalUser('facebook', token=long_lived_fb_token, expires_in=3600)
 
         with self.app.test_client() as client:
+            self.app.test_request_context().push()
             initial_fb_token = uuid.uuid4().hex
             r = client.post(
                 '/ws/login/external/',

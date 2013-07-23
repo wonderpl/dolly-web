@@ -61,7 +61,11 @@ class LoginWS(WebService):
     @expose_ajax('/external/', methods=['POST'])
     @check_client_authorization
     def external(self):
-        eu = external_user_from_token_form()
+        form = ExternalRegistrationForm(csrf_enabled=False)
+        if not form.validate():
+            abort(400, form_errors=form.errors)
+
+        eu = ExternalUser(form.external_system.data, form.external_token.data)
 
         user = models.ExternalToken.user_from_uid(
             request.form.get('external_system'),
@@ -147,59 +151,87 @@ class ExternalRegistrationForm(wtf.Form):
             raise wtf.ValidationError(_('External system invalid.'))
 
 
-def external_user_from_token_form():
-    form = ExternalRegistrationForm(csrf_enabled=False)
-    if not form.validate():
-        abort(400, form_errors=form.errors)
-
-    eu = ExternalUser(form.external_system.data, form.external_token.data)
-    if not eu.valid_token:
-        abort(400, error='unauthorized_client')
-
-    return eu
-
-
-# TODO: currently only Facebook - change
-class ExternalUser:
-
-    def __init__(self, system, token, expires_in=None):
-        self._user_data = {}
-        self._valid_token = False
+class AbstractTokenManager(object):
+    def __init__(self, external_system, token, expires_in=None):
         self._token = token
-        self._system = system
+        self._system = external_system
 
         if expires_in:
             self._expires = datetime.now() + timedelta(seconds=expires_in)
         else:
             self._expires = None
 
+    def _get_external_data(self):
+        raise NotImplementedError
+
+    def _is_token_valid(self):
+        raise NotImplementedError
+
+    def get_new_token(self):
+        raise NotImplementedError
+
+    @staticmethod
+    def is_handler_for(external_system):
+        raise NotImplementedError
+
+    @property
+    def token(self):
+        return self._token
+
+    @property
+    def system(self):
+        return self._system
+
+    @property
+    def expires(self):
+        return self._expires
+
+
+class APNSTokenManager(AbstractTokenManager):
+    @staticmethod
+    def is_handler_for(external_system):
+        return external_system == 'apns'
+
+    def get_new_token(self):
+        return self
+
+    @property
+    def id(self):
+        return self.token
+
+
+# TODO: currently only Facebook - change
+# TODO: subclass this for each social account type
+class ExternalUser(AbstractTokenManager):
+    def __init__(self, external_system, token, expires_in=None):
+        super(ExternalUser, self).__init__(external_system, token, expires_in)
         self._user_data = self._get_external_data()
-        if self._user_data:
-            self._valid_token = True
+        if not self._user_data:
+            abort(400, error='unauthorized_client')
 
     def _get_external_data(self):
         try:
             return facebook.GraphAPI(self._token).get_object('me')
         except facebook.GraphAPIError:
-            return {}
+            pass
+        return {}
+
+    @staticmethod
+    def is_handler_for(external_system):
+        return external_system == 'facebook'
 
     def get_new_token(self):
-        # abstract this out to not be fb specific
         token, expires = facebook.renew_token(
             self._token,
             app.config['FACEBOOK_APP_ID'],
             app.config['FACEBOOK_APP_SECRET'])
-        return self.__class__('facebook', token, expires)
+        return self.__class__(self.system, token, expires)
 
     id = property(lambda x: x._user_data.get('id'))
     username = property(lambda x: x._user_data.get('username'))
     first_name = property(lambda x: x._user_data.get('first_name', ''))
     last_name = property(lambda x: x._user_data.get('last_name', ''))
     display_name = property(lambda x: x._user_data.get('name', ''))
-    valid_token = property(lambda x: x._valid_token)
-    token = property(lambda x: x._token)
-    system = property(lambda x: x._system)
-    expires = property(lambda x: x._expires)
 
     @property
     def email(self):
@@ -243,6 +275,12 @@ class ExternalUser:
         if r.status_code == 200 and r.headers.get('content-type', '').startswith('image/'):
             return StringIO(r.content)
         return ''
+
+
+def ExternalTokenManager(external_system, token, expires_in=None):
+    for cls in AbstractTokenManager.__subclasses__():
+        if cls.is_handler_for(external_system):
+            return cls(external_system, token, expires_in=expires_in)
 
 
 class RegistrationWS(WebService):
