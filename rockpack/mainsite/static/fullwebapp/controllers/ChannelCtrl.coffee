@@ -12,6 +12,7 @@ window.WebApp.controller('ChannelCtrl', ['$scope', '$routeParams', '$rootScope',
           $scope.channel = data
           $scope.totalvideos = data.videos.total
           $scope.background = data.cover.thumbnail_url.replace('thumbnail_medium', 'background')
+          console.log $scope.channel
         else
           $scope.channel.videos.items = $scope.channel.videos.items.concat(data.videos.items)
         $scope.page += 1

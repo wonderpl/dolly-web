@@ -5,7 +5,7 @@
       <div ng-click="header(category.id)">{{category.name}}</div>
       <ul ng-show="category.id == menu.main">
         <li ng-repeat="subcategory in category.sub_categories" ng-class="{active: subcategory.id == menu.sub}">
-          <div ng-click="subheader(subcategory.id)">{{subcategory.name}}</div>
+          <div ng-click="subheader(subcategory.id)" ng-hide="subcategory.default == true">{{subcategory.name}}</div>
         </li>
       </ul>
     </li>

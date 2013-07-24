@@ -1,4 +1,4 @@
-window.WebApp.controller('EditChannelCtrl', ['$scope', '$routeParams', '$rootScope', '$location', 'ContentService', '$dialog', 'UserManager', 'shareService', ($scope, $routeParams, $rootScope, $location, ContentService, $dialog, UserManager, shareService) ->
+window.WebApp.controller('EditChannelCtrl', ['$scope', '$routeParams', '$rootScope', '$location', 'ContentService', '$dialog', 'UserManager', 'shareService', 'categoryService', ($scope, $routeParams, $rootScope, $location, ContentService, $dialog, UserManager, shareService, categoryService) ->
 
   #TODO: Pass video added to channel creation process (can pass id, but won't be playable)
 
@@ -10,6 +10,10 @@ window.WebApp.controller('EditChannelCtrl', ['$scope', '$routeParams', '$rootSco
     data: {}
     position: 0
   }
+
+  $scope.categories = categoryService.fetchCategories()
+
+
 
   $scope.load_videos = =>
     # Did we already load all the videos? Only needed when editing an existing channel
