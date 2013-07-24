@@ -1,5 +1,5 @@
 from werkzeug.datastructures import MultiDict
-from sqlalchemy import desc, func
+from sqlalchemy import desc, func, text
 from sqlalchemy.orm import lazyload, contains_eager
 from flask import abort, request, json, g
 from flask.ext import wtf
@@ -24,7 +24,7 @@ from rockpack.mainsite.services.cover_art.models import UserCoverArt, RockpackCo
 from rockpack.mainsite.services.cover_art import api as cover_api
 from rockpack.mainsite.services.video import api as video_api
 from rockpack.mainsite.services.search import api as search_api
-from .models import User, UserActivity, UserNotification, Subscription
+from .models import User, UserActivity, UserContentFeed, UserNotification, Subscription
 
 
 ACTION_COLUMN_VALUE_MAP = dict(
@@ -896,6 +896,12 @@ class UserWS(WebService):
         if Subscription.query.filter_by(user=userid, channel=channelid).count():
             abort(400, message=_('Already subscribed'))
         subs = Subscription(user=userid, channel=channelid).save()
+        # Add some recent videos from this channel into the users feed
+        UserContentFeed.query.session.add_all(
+            UserContentFeed(user=userid, channel=channelid, video_instance=id, date_added=date_added)
+            for id, date_added in VideoInstance.query.filter_by(channel=channelid).
+            filter(VideoInstance.date_added > func.now() - text("interval '1 day'")).
+            limit(10).values('id', 'date_added'))
         save_channel_activity(userid, 'subscribe', channelid, self.get_locale())
         return ajax_create_response(subs)
 
@@ -911,6 +917,8 @@ class UserWS(WebService):
     def delete_subscription_item(self, userid, channelid):
         if not _user_subscriptions_query(userid).filter_by(channel=channelid).delete():
             abort(404)
+        # Remove any videos from this channel from the users feed
+        UserContentFeed.query.filter_by(user=userid, channel=channelid).delete()
         save_channel_activity(userid, 'unsubscribe', channelid, self.get_locale())
 
     @expose_ajax('/<userid>/subscriptions/recent_videos/', cache_age=60, cache_private=True)

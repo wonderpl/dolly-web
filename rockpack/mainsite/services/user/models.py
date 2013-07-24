@@ -202,6 +202,17 @@ class UserActivity(db.Model):
     locale = Column(ForeignKey('locale.id'), nullable=False, server_default='')
 
 
+class UserContentFeed(db.Model):
+    __tablename__ = 'user_content_feed'
+
+    id = Column(Integer, primary_key=True)
+    user = Column(ForeignKey('user.id'), nullable=False)
+    date_added = Column(DateTime(), nullable=False, default=func.now())
+    channel = Column(ForeignKey('channel.id'), nullable=False)
+    video_instance = Column(ForeignKey('video_instance.id', ondelete='CASCADE'), nullable=True)
+    likes = Column(Text())
+
+
 class UserNotification(db.Model):
     __tablename__ = 'user_notification'
 
