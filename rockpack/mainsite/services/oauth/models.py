@@ -122,7 +122,7 @@ class ExternalFriend(db.Model):
             )
 
         if with_devices:
-            userdata = graph.get_objects(external_friends.keys(), fields='devices,picture')
+            userdata = graph.get_objects(external_friends.keys(), fields='devices,picture.type(large)')
             for id, data in userdata.items():
                 external_friends[id].has_ios_device =\
                     any(d['os'] == 'iOS' for d in data.get('devices', []))
