@@ -405,7 +405,7 @@ class ContentReportForm(wtf.Form):
 def _content_feed(userid, locale, paging):
     new_channels = video_api.get_local_channel(locale, (0, 10), date_order=True)[0]
     paging = paging[0], paging[1] - len(new_channels)
-    subscribed_channels = [s[0] for s in user_subscriptions(userid).join(Channel).
+    subscribed_channels = [s[0] for s in _user_subscriptions_query(userid).join(Channel).
                            filter_by(public=True, deleted=False).values('channel')]
     videos, total = video_api.get_local_videos(locale, paging, date_order=True,
                                                channels=subscribed_channels, readonly_db=True)
