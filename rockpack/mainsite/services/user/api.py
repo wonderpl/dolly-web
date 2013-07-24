@@ -299,6 +299,7 @@ def user_external_accounts(userid, locale, paging):
     for token in ExternalToken.query.filter_by(user=userid):
         items.append(dict(resource_url=token.resource_url,
                           external_system=token.external_system,
+                          external_token=token.external_token,
                           external_uid=token.external_uid))
     return dict(items=items, total=len(items))
 
@@ -856,6 +857,13 @@ class UserWS(WebService):
     def get_external_account(self, userid, id):
         token = ExternalToken.query.filter_by(user=userid, id=id).first_or_404()
         return dict(external_system=token.external_system, external_uid=token.external_uid)
+
+    @expose_ajax('/<userid>/external_accounts/<id>/', methods=['DELETE'])
+    @check_authorization(self_auth=True)
+    @commit_on_success
+    def delete_external_account(self, userid, id):
+        if not ExternalToken.query.filter_by(user=userid, id=id).delete():
+            abort(404)
 
     @expose_ajax('/<userid>/external_accounts/', methods=['POST'])
     @check_authorization(self_auth=True)

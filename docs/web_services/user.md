@@ -1181,6 +1181,11 @@ GET /ws/USERID/external_accounts/ HTTP/1.1
 Authorization: Bearer TOKEN
 ```
 
+Each item in the result list includes the system label, the id of the user on that system,
+and the user's token for that system.
+
+The current supported list of systems is: `facebook`, `twitter`, `google`, & `apns`.
+
 ```http
 HTTP/1.1 200 OK
 Cache-Control: private, max-age=60
@@ -1192,8 +1197,9 @@ Content-Type: application/json
   "items": [
    {
     "resource_url": "http://resource/url/for/connection/",
+    "external_system": "SYSTEM LABEL",
     "external_uid": "123",
-    "external_system": "facebook"
+    "external_token": "xxx"
    }
   ]
  }
@@ -1206,6 +1212,7 @@ Add a new connection to an external account.
 
 ```http
 POST /ws/USERID/external_accounts/ HTTP/1.1
+Authorization: Bearer TOKEN
 Content-Type: application/json
 
 {
@@ -1229,7 +1236,6 @@ Location: http://resource/url/for/connection/
 An error is returned if the user is already connected with a different external account
 for the same system, or if another user is connected with the account.
 
-
 ```http
 HTTP/1.1 400 BAD REQUEST
 Content-Type: application/json
@@ -1237,6 +1243,30 @@ Content-Type: application/json
 {
  "message": "External account mismatch",
  "error": "invalid_request"
+}
+```
+
+### Disconnect
+
+Delete the associated resource to disconnect an external account from a user.
+
+```http
+DELETE /ws/USERID/external_accounts/ID/ HTTP/1.1
+Authorization: Bearer TOKEN
+```
+
+A `204` is returned on success and a `404` is returned if the resource doesn't exist.
+
+```http
+HTTP/1.1 204 NO CONTENT
+```
+
+```http
+HTTP/1.1 404 BAD REQUEST
+Content-Type: application/json
+
+{
+ "error": "Not Found"
 }
 ```
 
