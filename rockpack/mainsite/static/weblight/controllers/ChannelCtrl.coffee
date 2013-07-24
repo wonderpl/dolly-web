@@ -25,7 +25,7 @@ window.Weblight.controller('ChannelCtrl', ['$scope', '$routeParams', '$location'
   $scope.channelTitleLength = if $scope.isMobile then 15 else 25
 
   # Catch share of specific video url
-  url = $location.absUrl()
+  $scope.url = $location.absUrl()
 
   if selected_video != null
 #    $location.search( 'video',selected_video.id)
