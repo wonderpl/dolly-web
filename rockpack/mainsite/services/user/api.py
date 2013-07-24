@@ -223,6 +223,11 @@ def _user_list(paging, **filters):
 
 
 def _notification_list(userid, paging):
+    # Old app versions don't handle new notifications :-(
+    if request.rockpack_ios_version and request.rockpack_ios_version < (1, 3):
+        typefilter = ('subscribed', 'starred')
+    else:
+        typefilter = ()
     notifications = UserNotification.query.filter_by(
         user=userid).order_by(desc('date_created'))
     total = notifications.count()
@@ -237,7 +242,8 @@ def _notification_list(userid, paging):
             # pre-formatted json directly into the response
             message=json.loads(notification.message),
             read=bool(notification.date_read),
-        ) for notification in notifications]
+        ) for notification in notifications
+        if not typefilter or notification.message_type in typefilter]
     return items, total
 
 
@@ -293,6 +299,7 @@ def user_external_accounts(userid, locale, paging):
     for token in ExternalToken.query.filter_by(user=userid):
         items.append(dict(resource_url=token.resource_url,
                           external_system=token.external_system,
+                          external_token=token.external_token,
                           external_uid=token.external_uid))
     return dict(items=items, total=len(items))
 
@@ -850,6 +857,13 @@ class UserWS(WebService):
     def get_external_account(self, userid, id):
         token = ExternalToken.query.filter_by(user=userid, id=id).first_or_404()
         return dict(external_system=token.external_system, external_uid=token.external_uid)
+
+    @expose_ajax('/<userid>/external_accounts/<id>/', methods=['DELETE'])
+    @check_authorization(self_auth=True)
+    @commit_on_success
+    def delete_external_account(self, userid, id):
+        if not ExternalToken.query.filter_by(user=userid, id=id).delete():
+            abort(404)
 
     @expose_ajax('/<userid>/external_accounts/', methods=['POST'])
     @check_authorization(self_auth=True)
