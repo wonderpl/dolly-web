@@ -402,6 +402,82 @@ class ContentReportForm(wtf.Form):
             raise ValidationError(_('Invalid id.'))
 
 
+def _content_feed(userid, locale, paging):
+    new_channels = video_api.get_local_channel(locale, (0, 10), date_order=True)[0]
+    paging = paging[0], paging[1] - len(new_channels)
+    subscribed_channels = [s[0] for s in _user_subscriptions_query(userid).join(Channel).
+                           filter_by(public=True, deleted=False).values('channel')]
+    videos, total = video_api.get_local_videos(locale, paging, date_order=True,
+                                               channels=subscribed_channels, readonly_db=True)
+    total += len(new_channels)
+    items = []
+    position = videos[0]['position']
+    next_channel = new_channels.pop()
+    for video in videos:
+        if next_channel and next_channel['date_published'] > video['date_added']:
+            item = next_channel
+            next_channel = new_channels.pop() if new_channels else None
+        else:
+            item = video
+        item['position'] = position
+        items.append(item)
+        position += 1
+    return items, total
+
+
+def _aggregate_content_feed(items):
+    def _agg_key(item):
+        if 'channel' in item:
+            return item['channel']['id'], item['date_added'][:10]
+        else:
+            return item['owner']['id'], item['date_published'][:8]
+
+    def _summarise(aggregation):
+        if aggregation:
+            items = aggregation.pop('items')
+            coverpos = items[0]
+            coveritem = items_by_position[coverpos]
+            if 'video' in coveritem:
+                aggregation.update(
+                    type='video',
+                    title=None,
+                    covers=[coverpos],
+                    count=len(items),
+                    likes=coveritem.get('likes', {}),
+                )
+            else:
+                aggregation.update(
+                    type='channel',
+                    title='Some channels',
+                    covers=items[:4],
+                    count=len(items),
+                )
+
+    aggregations = []
+    aggregation = {}
+    previous = items[0]
+    prev_key = _agg_key(previous)
+    items_by_position = {previous['position']: previous}
+    for item in items[1:]:
+        items_by_position[item['position']] = item
+        cur_key = _agg_key(item)
+        if (cur_key == prev_key):
+            if aggregation:
+                item['aggregation'] = len(aggregations) - 1
+                aggregation['items'].append(item['position'])
+            else:
+                item['aggregation'] = previous['aggregation'] = len(aggregations)
+                aggregation['items'] = [previous['position'], item['position']]
+                aggregations.append(aggregation)
+        else:
+            _summarise(aggregation)
+            aggregation = {}
+        previous = item
+        prev_key = cur_key
+    _summarise(aggregation)
+    return aggregations
+
+
 def _channel_videos(channelid, locale, paging, own=False):
     # Nasty hack to ensure that old iOS app version get all videos for a users
     # own channel and doesn't try to request more.
@@ -846,6 +922,13 @@ class UserWS(WebService):
         else:
             items, total = [], 0
         return dict(videos=dict(items=items, total=total))
+
+    @expose_ajax('/<userid>/content_feed/', cache_age=60, cache_private=True)
+    @check_authorization(self_auth=True)
+    def content_feed(self, userid):
+        items, total = _content_feed(userid, self.get_locale(), self.get_page())
+        aggregations = _aggregate_content_feed(items)
+        return dict(content=dict(items=items, total=total, aggregations=aggregations))
 
     @expose_ajax('/<userid>/external_accounts/', cache_age=60, cache_private=True)
     @check_authorization(self_auth=True)

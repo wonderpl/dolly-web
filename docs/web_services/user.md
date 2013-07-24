@@ -224,9 +224,9 @@ Content-Type: application/json
 }
 ```
 
-### Toggle display of fullname
+### Toggle display of full name
 
-Set whether a user's fullname or username is displayed in the `User`'s `display_name` field.
+Set whether a user's full name or username is displayed in the User's `display_name` field.
 
 ```http
 PUT /ws/USERID/display_fullname/ HTTP/1.1
@@ -402,7 +402,7 @@ Responds with a channel resource url.
 
 ```http
 HTTP/1.1 201 CREATED
-Location: http://some_doman/ws/USERID/channels/CHANNELID/
+Location: http://some_domain/ws/USERID/channels/CHANNELID/
 
 {
     "id": "CHANNELID",
@@ -452,7 +452,7 @@ Responds '200' with the original channel resource url.
 
 ```http
 HTTP/1.1 200 OK
-Location: http://some_doman/ws/USERID/channels/CHANNELID/
+Location: http://some_domain/ws/USERID/channels/CHANNELID/
 
 {
     "id": "CHANNELID",
@@ -504,6 +504,7 @@ Delete a channel
 
 ```http
 DELETE /ws/USERID/channels/CHANNELID/ HTTP/1.1
+Authorization: Bearer TOKEN
 ```
 
 Responds with  `204` on success
@@ -1065,6 +1066,7 @@ Content-Type: application/json
 
 ```http
 GET /ws/USERID/subscriptions/recent_videos/?locale=LOCALE&start=START&size=SIZE HTTP/1.1
+Authorization: Bearer TOKEN
 ```
 
 Parameter      | Required? | Value             | Description
@@ -1076,7 +1078,7 @@ size           | no        | video page size   | Number of items to return - 100
 List of all video instances recently added to user's subscribed channels.
 
 ```http
-HTTP/1.0 200 OK
+HTTP/1.1 200 OK
 Content-Type: application/json
 Cache-Control: private, max-age=60
 
@@ -1120,6 +1122,153 @@ Cache-Control: private, max-age=60
   ]
  }
 }
+```
+
+Content Feed
+============
+
+Returns a list of new or recommended content for the user based on their subscriptions.
+
+```http
+GET /ws/USERID/content_feed/?locale=LOCALE&start=START&size=SIZE HTTP/1.1
+Authorization: Bearer TOKEN
+```
+
+Parameter      | Required? | Value             | Description
+:------------- | :-------- | :---------------- | :----------
+locale         | yes       | IETF language tag | Some videos may be excluded if not marked as visible for the specified locale
+start          | no        | 0-based integer   | Used for paging through the result items
+size           | no        | item page size    | Number of content items to return - 100 by default
+
+The response lists content items, which may be either a video or a channel.
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+Cache-Control: private, max-age=60
+
+{
+ "content": {
+  "total": 2,
+  "items": [
+   {
+    "position": 0,
+    "aggregation": 0,
+    "id": "VIDEOINSTANCEID",
+    "date_added": "2013-06-04T15:15:11.963565",
+    "title": "Video title",
+    "video": {
+     "id": "RP000001XDPBVMXPADH6X7XA3FHBMJWD75QCIDSX",
+     "source": "youtube",
+     "source_id": "9EVEmZ2c_es",
+     "source_username": "TEDtalksDirector",
+     "thumbnail_url": "http://i.ytimg.com/vi/9EVEmZ2c_es/mqdefault.jpg",
+     "duration": 1408,
+     "star_count": 0,
+     "view_count": 0
+    },
+    "channel": {
+     "id": "CHANNELID",
+     "resource_url": "http://path/to/channel/detail/",
+     "title": "TED Talks",
+     "date_published": "2013-03-13T12:02:55",
+     "category": 217,
+     "subscriber_count": 7,
+     "cover": {
+      "thumbnail_url": "http://path/to/channel/cover.jpg",
+      "aoi": null
+     },
+     "owner": {
+      "id": "USERID",
+      "resource_url": "http://path/to/user/resource/",
+      "display_name": "TED",
+      "avatar_thumbnail_url": "http://path/to/user/avatar/img.jpg"
+     }
+    }
+   },
+   {
+    "position": 1,
+    "id": "CHANNELID",
+    "resource_url": "http://path/to/channel/detail/",
+    "date_published": "2013-07-02T12:32:48.935224",
+    "title": "test",
+    "category": null,
+    "subscriber_count": 0,
+    "cover": {
+     "thumbnail_url": "",
+     "aoi": null
+    },
+    "owner": {
+     "id": "USERID",
+     "resource_url": "http://path/to/user/resource/",
+     "display_name": "user",
+     "avatar_thumbnail_url": "http://path/to/user/avatar/img.jpg"
+    }
+   }
+  ],
+  "aggregations": [
+   {
+    "type": "video",
+    "title": "Some channels",
+    "count": 10,
+    "covers": [4]
+   }
+  ]
+ }
+}
+```
+
+As well as the usual `items` & `total` fields, the `content` response object includes a list
+of `aggregations`. These aggregation objects describe groupings of items which could be
+displayed together on the client UI. Each content item may include an `aggregation` field which
+refers to an aggregation object by array index.
+The aggregation objects contain the following fields:
+
+Field   | Type             | Description
+:------ | :--------------- | :----------
+type    | string           | Can be either `video` or `channel`.
+count   | integer          | The total number of content items in the aggregation.
+covers  | list of integers | A list of items that could be displayed on the cover of the grouping, referred to by their position number.
+title   | string or `null` | An optional title for the group.  If specified, it should override any coded title in the client.
+
+Note: The requested page size specifies the number of content items independent of the aggregations.
+The returned content items could be aggregated into a number of visual groupings much less than the page size.
+To mitigate this the client should request a reasonably large page size and server will try to avoid extreme cases (such as 1 aggregation for 100 result items).
+
+##### Example code for processing the aggregations:
+
+```python
+data = json.load(response)['content']
+channel_group = []
+print 'item count: {}, agg count: {}'.format(data['total'], len(data['aggregations']))
+for item in data['items']:
+    if 'aggregation' in item:
+        aggregation = data['aggregations'][item['aggregation']]
+        if item['position'] not in aggregation['covers']:
+            # Skip over "hidden" items in aggregation
+            continue
+    else:
+        aggregation = None
+
+    if 'video' in item:   # Item is a video instance
+        if aggregation:
+            print '{position:02d} video   {channel[owner][id]}/{channel[id]}'.format(**item),
+            print 'AGG: +{count} {title}'.format(**aggregation),
+            likes = aggregation.get('likes')
+        else:
+            print '{position:02d} video   {channel[owner][id]}/{channel[id]}'.format(**item),
+            likes = item.get('likes', {})
+        print '❥{}'.format(likes.get('count', 0))
+
+    elif 'cover' in item:   # Item is a channel
+        if aggregation:
+            channel_group.append(item)
+            if len(channel_group) == len(aggregation['covers']):
+                print '{position:02d} channel {owner[id]}/{id}'.format(**channel_group[0]),
+                print 'AGG: +{count} {title}'.format(**aggregation)
+                channel_group = []
+        else:
+            print '{position:02d} channel {owner[id]}/{id}'.format(**item)
 ```
 
 Friends
