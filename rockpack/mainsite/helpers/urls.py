@@ -20,7 +20,7 @@ def url_for(*args, **kwargs):
     if secure_subdomain and url.startswith('http://' + secure_subdomain + '.'):
         url = 'https://' + url[7:]
     # Ensure http-only domain don't get https protocol
-    if any(url.startswith('https://' + domain + '/') for domain in http_only_domains):
+    if any(url.startswith('https://' + domain + '/') for domain in http_only_domains if domain):
         url = 'http://' + url[8:]
     return url
 
