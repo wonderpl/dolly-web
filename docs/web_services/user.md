@@ -1206,22 +1206,22 @@ Cache-Control: private, max-age=60
     }
    }
   ],
-  "aggregations": [
-   {
+  "aggregations": {
+   "123": {
     "type": "video",
     "title": "Some channels",
     "count": 10,
     "covers": [4]
    }
-  ]
+  }
  }
 }
 ```
 
-As well as the usual `items` & `total` fields, the `content` response object includes a list
+As well as the usual `items` & `total` fields, the `content` response object includes a dictionary
 of `aggregations`. These aggregation objects describe groupings of items which could be
 displayed together on the client UI. Each content item may include an `aggregation` field which
-refers to an aggregation object by array index.
+refers to an aggregation object by dictionary key.
 The aggregation objects contain the following fields:
 
 Field   | Type             | Description

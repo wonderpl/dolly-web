@@ -433,48 +433,48 @@ def _aggregate_content_feed(items):
             return item['owner']['id'], item['date_published'][:8]
 
     def _summarise(aggregation):
-        if aggregation:
-            items = aggregation.pop('items')
-            coverpos = items[0]
-            coveritem = items_by_position[coverpos]
-            if 'video' in coveritem:
-                aggregation.update(
-                    type='video',
-                    title=None,
-                    covers=[coverpos],
-                    count=len(items),
-                    likes=coveritem.get('likes', {}),
-                )
-            else:
-                aggregation.update(
-                    type='channel',
-                    title='Some channels',
-                    covers=items[:4],
-                    count=len(items),
-                )
+        items = aggregation.pop('items')
+        coverpos = items[0]
+        coveritem = items_by_position[coverpos]
+        if 'video' in coveritem:
+            aggregation.update(
+                type='video',
+                title=None,
+                covers=[coverpos],
+                count=len(items),
+                likes=coveritem.get('likes', {}),
+            )
+        else:
+            aggregation.update(
+                type='channel',
+                title='Some channels',
+                covers=items[:4],
+                count=len(items),
+            )
 
-    aggregations = []
-    aggregation = {}
     previous = items[0]
     prev_key = _agg_key(previous)
     items_by_position = {previous['position']: previous}
+    aggid = None
+    aggregations = {}
     for item in items[1:]:
         items_by_position[item['position']] = item
         cur_key = _agg_key(item)
         if (cur_key == prev_key):
-            if aggregation:
-                item['aggregation'] = len(aggregations) - 1
-                aggregation['items'].append(item['position'])
+            if aggid:
+                aggregations[aggid]['items'].append(item['position'])
             else:
-                item['aggregation'] = previous['aggregation'] = len(aggregations)
-                aggregation['items'] = [previous['position'], item['position']]
-                aggregations.append(aggregation)
+                aggid = str(previous['position'])
+                item['aggregation'] = previous['aggregation'] = aggid
+                aggregations[aggid] = dict(items=[previous['position'], item['position']])
         else:
-            _summarise(aggregation)
-            aggregation = {}
+            if aggid:
+                _summarise(aggregations[aggid])
+                aggid = None
         previous = item
         prev_key = cur_key
-    _summarise(aggregation)
+    if aggid:
+        _summarise(aggregations[aggid])
     return aggregations
 
 
