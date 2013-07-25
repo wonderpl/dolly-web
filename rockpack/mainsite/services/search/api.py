@@ -7,7 +7,7 @@ from rockpack.mainsite.core import youtube
 from rockpack.mainsite.helpers.db import gen_videoid
 from rockpack.mainsite.services.video.api import get_local_channel
 from rockpack.mainsite.services.video.models import Channel, User
-from rockpack.mainsite.core.es.api import ChannelSearch, VideoSearch, OwnerSearch
+from rockpack.mainsite.core.es.api import ChannelSearch, VideoSearch, UserSearch
 from rockpack.mainsite.core.es import use_elasticsearch, filters
 
 
@@ -104,12 +104,11 @@ class SearchWS(WebService):
         search_term = request.args.get('q', '').lower()
         offset, limit = self.get_page()
         if use_elasticsearch():
-            ows = OwnerSearch()
-            ows.set_paging(offset, limit)
-            ows.add_text('username', search_term)
-            ows.add_text('display_name', search_term)
-            owners = ows.owners()
-            return dict(users=dict(items=owners, total=ows.total))
+            us = UserSearch()
+            us.set_paging(offset, limit)
+            us.add_text('username', search_term)
+            us.add_text('display_name', search_term)
+            return dict(users=dict(items=us.users(), total=us.total))
 
         users = User.query.filter(User.username.ilike(search_term))
         count = users.count()

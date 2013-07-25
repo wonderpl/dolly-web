@@ -1142,6 +1142,9 @@ size           | no        | item page size    | Number of content items to retu
 
 The response lists content items, which may be either a video or a channel.
 
+Video items can contain an additional `starring_users` field which will list up to 3 users who
+starred the video.
+
 ```http
 HTTP/1.1 200 OK
 Content-Type: application/json
@@ -1153,7 +1156,7 @@ Cache-Control: private, max-age=60
   "items": [
    {
     "position": 0,
-    "aggregation": 0,
+    "aggregation": "123",
     "id": "VIDEOINSTANCEID",
     "date_added": "2013-06-04T15:15:11.963565",
     "title": "Video title",
@@ -1181,10 +1184,18 @@ Cache-Control: private, max-age=60
      "owner": {
       "id": "USERID",
       "resource_url": "http://path/to/user/resource/",
-      "display_name": "TED",
+      "display_name": "CHANNEL OWNER",
       "avatar_thumbnail_url": "http://path/to/user/avatar/img.jpg"
      }
-    }
+    },
+    "starring_users": [
+     {
+      "id": "USERID",
+      "resource_url": "http://path/to/user/resource/",
+      "display_name": "LIKING USER",
+      "avatar_thumbnail_url": "http://path/to/user/avatar/img.jpg"
+     }
+    ],
    },
    {
     "position": 1,
@@ -1238,27 +1249,25 @@ To mitigate this the client should request a reasonably large page size and serv
 ##### Example code for processing the aggregations:
 
 ```python
-data = json.load(response)['content']
+data = requests.get(feed_url).json()['content']
 channel_group = []
 print 'item count: {}, agg count: {}'.format(data['total'], len(data['aggregations']))
 for item in data['items']:
     if 'aggregation' in item:
         aggregation = data['aggregations'][item['aggregation']]
-        if item['position'] not in aggregation['covers']:
+        if item['id'] not in aggregation['covers']:
             # Skip over "hidden" items in aggregation
             continue
     else:
         aggregation = None
 
     if 'video' in item:   # Item is a video instance
+        print '{position:02d} video   {channel[owner][id]}/{channel[id]}'.format(**item),
         if aggregation:
-            print '{position:02d} video   {channel[owner][id]}/{channel[id]}'.format(**item),
-            print 'AGG: +{count} {title}'.format(**aggregation),
-            likes = aggregation.get('likes')
-        else:
-            print '{position:02d} video   {channel[owner][id]}/{channel[id]}'.format(**item),
-            likes = item.get('likes', {})
-        print '❥{}'.format(likes.get('count', 0))
+            print 'AGG: +{count}'.format(**aggregation),
+        stars = item['video']['star_count'], item.get('starring_users', [])
+        starring_users = ', '.join(u['display_name'] for u in stars[1])
+        print '{} likes{}'.format(stars[0], ' including ' + starring_users if starring_users else '')
 
     elif 'cover' in item:   # Item is a channel
         if aggregation:

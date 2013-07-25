@@ -11,7 +11,7 @@ from rockpack.mainsite.core.token import create_access_token
 from rockpack.mainsite.core.dbapi import db
 from rockpack.mainsite.helpers.db import ImageType, add_base64_pk, resize_and_upload
 from rockpack.mainsite.helpers.urls import url_for
-from rockpack.mainsite.core.es.api import add_owner_to_index
+from rockpack.mainsite.core.es.api import add_user_to_index
 
 
 EXTERNAL_SYSTEM_NAMES = 'facebook', 'twitter', 'google', 'apns'
@@ -210,7 +210,7 @@ class UserContentFeed(db.Model):
     date_added = Column(DateTime(), nullable=False, default=func.now())
     channel = Column(ForeignKey('channel.id'), nullable=False)
     video_instance = Column(ForeignKey('video_instance.id', ondelete='CASCADE'), nullable=True)
-    likes = Column(Text())
+    stars = Column(Text())
 
 
 class UserNotification(db.Model):
@@ -274,10 +274,10 @@ def username_exists(username):
         return 'reserved'
 
 
-def _es_owner_insert(mapper, connection, target):
-    add_owner_to_index(target)
+def _es_user_insert(mapper, connection, target):
+    add_user_to_index(target)
 
 
-event.listen(User, 'after_insert', _es_owner_insert)
-event.listen(User, 'after_update', _es_owner_insert)
+event.listen(User, 'after_insert', _es_user_insert)
+event.listen(User, 'after_update', _es_user_insert)
 event.listen(User, 'before_insert', lambda x, y, z: add_base64_pk(x, y, z))
