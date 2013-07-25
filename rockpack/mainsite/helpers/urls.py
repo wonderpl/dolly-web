@@ -9,7 +9,7 @@ http_only_domains = []
 if 'SERVER_NAME' in app.config:
     http_only_domains.append(app.config['SERVER_NAME'])
 if 'SHARE_SUBDOMAIN' in app.config:
-    http_only_domains.append('.'.join(app.config['SHARE_SUBDOMAIN'], app.config['SERVER_NAME']))
+    http_only_domains.append(['.'.join(app.config['SHARE_SUBDOMAIN'], app.config['SERVER_NAME'])])
 
 
 def url_for(*args, **kwargs):
