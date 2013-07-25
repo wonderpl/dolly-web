@@ -48,7 +48,7 @@ class ShareLink(db.Model):
     def get_resource_url(self, own=False):
         return url_for('share_redirect', linkid=self.id)
 
-    def process_redirect(self):
+    def process_redirect(self, increment_click_count=True):
         """Construct redirect url for link and record the click."""
         channel = Channel.query.with_entities(Channel.id, Channel.title)
         if self.object_type == 'video_instance':
@@ -65,5 +65,8 @@ class ShareLink(db.Model):
         if params:
             # TODO: add utm tracking params for google analytics
             url += '?' + urlencode(params)
-        ShareLink.increment_click_count(self.id)
-        return url
+        if increment_click_count:
+            ShareLink.increment_click_count(self.id)
+        return {'url': url,
+                'channel': channelid,
+                'video': params.get('video', None)}

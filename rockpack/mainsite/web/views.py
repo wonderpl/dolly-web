@@ -1,7 +1,7 @@
 from urllib import urlencode
 from urlparse import urljoin
 import pyes
-from flask import request, json, render_template, abort
+from flask import request, json, render_template, abort, redirect
 from flask.ext import wtf
 from werkzeug.http import HTTP_STATUS_CODES
 from werkzeug.exceptions import NotFound
@@ -9,6 +9,7 @@ from rockpack.mainsite import app, requests
 from rockpack.mainsite.core.token import parse_access_token
 from rockpack.mainsite.core.webservice import JsonReponse
 from rockpack.mainsite.helpers.urls import url_for, slugify
+from rockpack.mainsite.helpers.http import cache_for
 from rockpack.mainsite.services.user.models import User
 from rockpack.mainsite.services.share.models import ShareLink
 from rockpack.mainsite.services.oauth.api import record_user_event
@@ -37,10 +38,10 @@ def ws_request(url, **kwargs):
     return json.loads(response)
 
 
-
 @expose_web('/welcome_email', 'web/welcome_email.html', cache_age=3600)
 def welcome_email():
     return None
+
 
 @expose_web('/', 'web/home.html', cache_age=3600)
 def homepage():
@@ -83,19 +84,18 @@ def privacy():
     return {}
 
 
-@expose_web('/channel/<slug>/<channelid>/', 'web/channel.html', cache_age=3600)
-def channel(slug, channelid):
-    channel_data = ws_request('/ws/-/channels/%s/' % channelid, size=1)
+def web_channel_data(channelid, load_video=None):
+    channel_data = ws_request('/ws/-/channels/%s/' % channelid, size=0)
     selected_video = None
-    if 'video' in request.args:
+    if load_video:
         for instance in channel_data['videos']['items']:
-            if instance['id'] == request.args['video']:
+            if instance['id'] == load_video:
                 selected_video = instance
         # Not in the first 40 - try fetching separately:
         if not selected_video:
             try:
                 video_data = ws_request(
-                    '/ws/-/channels/%s/videos/%s/' % (channelid, request.args['video']))
+                    '/ws/-/channels/%s/videos/%s/' % (channelid, load_video))
             except NotFound:
                 pass
             else:
@@ -108,10 +108,41 @@ def channel(slug, channelid):
     return dict(channel_data=channel_data, selected_video=selected_video)
 
 
-@expose_web('/s/<linkid>', cache_age=60, cache_private=True)
-def share_redirect(linkid):
+def share_link_processing(linkid):
+    not_social_bot = True
+    if filter(lambda x: x in request.user_agent.string.lower(), ('twitter', 'facebookexternalhit',)):
+        not_social_bot = False
+
     link = ShareLink.query.get_or_404(linkid)
-    return None, 302, {'Location': link.process_redirect()}
+    data = link.process_redirect(increment_click_count=not_social_bot)
+
+    if not_social_bot is False:
+        return render_template(
+            'web/social_agents.html',
+            short_url=url_for('share_redirect', linkid=linkid),
+            **web_channel_data(
+                data.get('channel'),
+                load_video=data.get('video')
+            )
+        )
+    return redirect(data.get('url'), 302)
+
+
+@expose_web('/channel/<slug>/<channelid>/', 'web/channel.html', cache_age=3600)
+def channel(slug, channelid):
+    return web_channel_data(channelid, load_video=request.args.get('video', None))
+
+
+if app.config.get('SHARE_SUBDOMAIN'):
+    @app.route('/s/<linkid>')
+    def old_share_redirect(linkid):
+        return redirect(url_for('share_redirect', linkid=linkid), 301)
+
+
+@cache_for(seconds=86400, private=True)
+@app.route('/s/<linkid>', subdomain=app.config.get('SHARE_SUBDOMAIN'))
+def share_redirect(linkid):
+    return share_link_processing(linkid)
 
 
 class ResetPasswordForm(wtf.Form):

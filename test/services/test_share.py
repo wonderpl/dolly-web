@@ -47,6 +47,7 @@ class TestShare(base.RockPackTestCase):
             self.assertIn(expected_path, r.headers['Location'])
 
     def test_share_video_from_search(self):
+        self.app.test_request_context().push()
         userid = self.create_test_user().id
         with self.app.test_client() as client:
             r = client.get('/ws/search/videos/', query_string='size=1')

@@ -1,0 +1,57 @@
+{%- with %}
+{% set title_prefix = '"%s" on ' % selected_video.title if selected_video else '' %}
+{% set title = '%s"%s" channel on Rockpack' % (title_prefix, channel_data.title) -%}
+<title>{{ title }}</title>
+
+{% if selected_video %}
+  {% set description = 'Video curated by %s in channel %s using Rockpack iOS app' % (channel_data.owner.display_name, channel_data.title) %}
+{% else %}
+  {% set description = 'Watch %s videos curated by %s using Rockpack iOS app' % (channel_data.title, channel_data.owner.display_name) %}
+  {% endif %}
+
+{% if short_url %}
+    {% set target_url = short_url %}
+{% else %}
+    {% set target_url = channel_data.canonical_url %}
+{% endif %}
+
+<link rel="canonical" href="{{ target_url }}" />
+<meta name="description" content="{{ description }}" />
+<meta name="apple-itunes-app" content="app-id={{ config.ITUNES_APP_ID }}", app-argument="rockpack://{{ channel_data.owner.id }}/channel/{{ channel_data.id }}{% if selected_video %}/vidoes/{{selected_video.id}}/{% endif %}">
+<meta property="fb:app_id" content="{{ config.FACEBOOK_APP_ID }}" />
+<meta property="og:site_name" content="Rockpack" />
+<meta property="og:url" content="{{ target_url }}" />
+{% if selected_video %}
+<meta property="og:type" content="video.other" />
+<meta property="og:title" content="{{ selected_video.title }}" />
+<meta property="og:image" content="{{ selected_video.video.thumbnail_url }}" />
+<meta property="og:description" content="{{ title }}" />
+{% if selected_video.video.source == 'youtube' %}
+<meta property="og:video" content="http://www.youtube.com/v/{{ selected_video.video.source_id }}?version=3&amp;autohide=1" />
+<meta property="og:video:type" content="application/x-shockwave-flash" />
+<meta property="og:video:width" content="1280" />
+<meta property="og:video:height" content="720" />
+{% endif %}
+{% else %}
+<meta property="og:type" content="{{ config.FACEBOOK_APP_NAMESPACE }}:channel" />
+<meta property="og:title" content="{{ channel_data.title }}" />
+<meta property="og:image" content="{{ channel_data.cover.thumbnail_url|replace('thumbnail_medium', 'thumbnail_large') }}" />
+<meta property="og:description" content="{% if channel_data.description %}{{ channel_data.description }}{% else %}{{ title }}.{% endif %}" />
+<meta property="{{ config.FACEBOOK_APP_NAMESPACE }}:owner_name" content="{{ channel_data.owner.display_name }}" />
+{% endif %}
+{% endwith %}
+
+<meta name="twitter:site" content="@Rockpack" />
+{% if selected_video and selected_video.video.source == 'youtube' %}
+<meta name="twitter:card" content="player" />
+<meta name="twitter:player" content="https://www.youtube.com/embed/{{ selected_video.video.source_id }}" />
+<meta name="twitter:player:width" content="1280" />
+<meta name="twitter:player:height" content="720" />
+{% else %}
+<meta name="twitter:card" content="summary" />
+{% endif %}
+{% for device in "iphone", "ipad" %}
+<meta name="twitter:app:name:{{ device }}" content="Rockpack" />
+<meta name="twitter:app:id:{{ device }}" content="{{ config.ITUNES_APP_ID }}" />
+<meta name="twitter:app:url:{{ device }}" content="rockpack://{{ channel_data.owner.id }}/channel/{{ channel_data.id }}{% if selected_video %}/vidoes/{{selected_video.id}}/{% endif %}"/>
+{% endfor %}
