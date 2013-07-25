@@ -29,8 +29,8 @@ def ws_request(url, **kwargs):
         env['PATH_INFO'] = url
         env['REQUEST_METHOD'] = 'GET'
         env['QUERY_STRING'] = urlencode(kwargs)
-        if 'API_SUBDOMAIN' in app.config:
-            env['HTTP_HOST'] = '.'.join((app.config['API_SUBDOMAIN'], app.config['SERVER_NAME']))
+        if 'SERVER_NAME' in app.config:
+            env['HTTP_HOST'] = app.config['SERVER_NAME']
         meta = {}
         response = u''.join(app.wsgi_app(env, start_response))
         if meta['status'] == '404 NOT FOUND':
@@ -134,7 +134,7 @@ def channel(slug, channelid):
 
 
 if app.config.get('SHARE_SUBDOMAIN'):
-    @app.route('/s/<linkid>')
+    @app.route('/s/<linkid>', subdomain=app.config.get('DEFAULT_SUBDOMAIN'))
     def old_share_redirect(linkid):
         return redirect(url_for('share_redirect', linkid=linkid), 301)
 
