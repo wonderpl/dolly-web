@@ -110,13 +110,15 @@ def web_channel_data(channelid, load_video=None):
 
 def share_link_processing(linkid):
     not_social_bot = True
+    show_meta_only = False
     if filter(lambda x: x in request.user_agent.string.lower(), ('twitter', 'facebookexternalhit',)):
         not_social_bot = False
+        show_meta_only = True
 
     link = ShareLink.query.get_or_404(linkid)
     data = link.process_redirect(increment_click_count=not_social_bot)
 
-    if not_social_bot is False:
+    if show_meta_only:
         return render_template(
             'web/social_agents.html',
             short_url=url_for('share_redirect', linkid=linkid),
