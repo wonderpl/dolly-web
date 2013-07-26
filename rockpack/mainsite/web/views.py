@@ -145,7 +145,7 @@ if app.config.get('SHARE_SUBDOMAIN'):
 @cache_for(seconds=86400, private=True)
 @app.route('/s/<linkid>', subdomain=app.config.get('SHARE_SUBDOMAIN'))
 def share_redirect(linkid):
-    if request.args.get('redirect_url') == 'true':
+    if request.args.get('rockpack_redirect') == 'true':
         link = ShareLink.query.get_or_404(linkid)
         data = link.process_redirect(increment_click_count=False)
 
