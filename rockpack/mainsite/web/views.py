@@ -29,8 +29,9 @@ def ws_request(url, **kwargs):
         env['PATH_INFO'] = url
         env['REQUEST_METHOD'] = 'GET'
         env['QUERY_STRING'] = urlencode(kwargs)
-        if 'SERVER_NAME' in app.config:
-            env['HTTP_HOST'] = app.config['SERVER_NAME']
+        server_name = app.config.get('SERVER_NAME')
+        if server_name:
+            env['HTTP_HOST'] = server_name
         meta = {}
         response = u''.join(app.wsgi_app(env, start_response))
         if meta['status'] == '404 NOT FOUND':
@@ -144,6 +145,20 @@ if app.config.get('SHARE_SUBDOMAIN'):
 @cache_for(seconds=86400, private=True)
 @app.route('/s/<linkid>', subdomain=app.config.get('SHARE_SUBDOMAIN'))
 def share_redirect(linkid):
+    if request.args.get('redirect_url') == 'true':
+        link = ShareLink.query.get_or_404(linkid)
+        data = link.process_redirect(increment_click_count=False)
+
+        web_data = web_channel_data(data['channel'], load_video=data.get('video', None))
+        location = 'rockpack://{userid}/channel/{channelid}/'.format(
+                userid=web_data['channel_data']['owner']['id'],
+                channelid=web_data['channel_data']['id'])
+
+        if web_data.get('selected_video'):
+            location += 'video/{}/'.format(web_data['selected_video']['id'])
+
+        return redirect(location, 302)
+
     return share_link_processing(linkid)
 
 
