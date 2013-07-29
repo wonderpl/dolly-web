@@ -3,18 +3,21 @@
 
 window.WebApp.factory('UserManager', ['cookies', '$http', '$q', '$location','apiUrl', 'activityService', 'oauthService', (cookies, $http, $q, $location, apiUrl, activityService, oauthService) ->
 
-  headers = {"authorization": 'basic b3JvY2tncVJTY1NsV0tqc2ZWdXhyUTo=', "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"}
-
+  ApplyLogin = (data) ->
+    cookies.set("access_token", data.access_token, data.expires)
+    cookies.set("refresh_token", data.refresh_token, 2678400)
+    cookies.set("user_id", data.user_id, 2678400)
+    User.isLoggedIn = true
+    User.credentials = data
+    User.TriggerRefresh(data.expires_in*0.9*1000, data.refresh_token)
 
   User = {
 
-    feed:
+    feed: {
       items: []
       total: null
       position: 0
-
-    activity: activityService
-    oauth: oauthService
+    }
 
     recentActivity: {
       cacheTime: 0
@@ -23,22 +26,41 @@ window.WebApp.factory('UserManager', ['cookies', '$http', '$q', '$location','api
       subscribed: []
     }
 
-    logOut: () ->
+    isLoggedIn: false
+
+    credentials: {
+      refresh_token: cookies.get('refresh_token'),
+      user_id: cookies.get('user_id'),
+      access_token: cookies.get('access_token'),
+    }
+
+
+    TriggerRefresh: (timeToRefresh, token) ->
+      window.setTimeout((() -> User.RefreshToken(token)) ,timeToRefresh)
+
+    LogOut: () ->
       cookies.set('access_token', '')
       cookies.set('refresh_token', '')
       cookies.set('user_id', '')
       User.details = {}
-      User.oauth.credentials = {}
+      User.credentials = {}
       feed: {
         items: []
         position: 0
         total: null
       }
-      User.oauth.isLoggedIn = false
-      console.log 'finished logging out'
+      User.isLoggedIn = false
 
-    recentActivityTimedRetrive: () ->
-      activityService.fetchRecentActivity(User.details.activity.resource_url, User.oauth.credentials.access_token)
+    LogIn: (username, password) ->
+      oauthService.LogIn(username, password)
+        .then((data) ->
+          ApplyLogin(data)
+          return data.data
+
+        )
+
+    RecentActivityTimedRetrive: () ->
+      activityService.fetchRecentActivity(User.details.activity.resource_url, User.credentials.access_token)
         .success((data) ->
           User.recentActivity.recently_starred = _.union(User.recentActivity.recently_starred, data.recently_starred)
           User.recentActivity.recently_viewed = _.union(User.recentActivity.recently_viewed, data.recently_viewed)
@@ -46,24 +68,44 @@ window.WebApp.factory('UserManager', ['cookies', '$http', '$q', '$location','api
           User.recentActivity.cacheTime = data.cacheTime
           setTimeout((
             () ->
-              User.recentActivityTimedRetrive()
+              User.RecentActivityTimedRetrive()
           ), User.recentActivity.cacheTime*1000)
+        )
+
+    Register: (user) ->
+      oauthService.Register(user)
+        .then((data) ->
+          ApplyLogin(data)
+          return data.data
+        )
+
+
+    RefreshToken: () ->
+      oauthService.RefreshToken(User.credentials.refresh_token)
+        .then((data) ->
+          User.isLoggedIn = true
+          cookies.set("access_token", data.access_token, data.expires)
+          User.credentials = data.data
+
+          # Trigger next refresh
+          User.TriggerRefresh(data.expires_in*0.9*1000, data.refresh_token)
+          User.timeOfLastRefresh = (new Date()).getTime()
         )
 
     FetchUserData: () ->
       deferred = $q.defer()
       $http({
         method: 'GET',
-        url: User.oauth.credentials.resource_url,
-        headers: {"authorization": "Bearer #{User.oauth.credentials.access_token}", "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"}
+        url: User.credentials.resource_url,
+        headers: {"authorization": "Bearer #{User.credentials.access_token}", "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"}
       })
       .success((data) ->
         User.details = data
         User.FetchUnreadNotifications()
         User.FetchNotifications()
-        User.recentActivityTimedRetrive()
-        .success((data) ->
-            deferred.resolve(data)
+        User.RecentActivityTimedRetrive()
+        .then((data) ->
+            deferred.resolve(data.data)
         )
 
       )
@@ -79,7 +121,7 @@ window.WebApp.factory('UserManager', ['cookies', '$http', '$q', '$location','api
       method: 'GET',
       url: User.details.subscriptions.updates,
       params: {start: start, size: size}
-      headers: {"authorization": "Bearer #{User.oauth.credentials.access_token}", "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"}
+      headers: {"authorization": "Bearer #{User.credentials.access_token}", "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"}
       })
         .success((data, status, headers, config) ->
 
@@ -107,8 +149,8 @@ window.WebApp.factory('UserManager', ['cookies', '$http', '$q', '$location','api
     Report: (object_id, object_type) ->
       $http({
         method: 'POST',
-        url: "#{User.oauth.credentials.resource_url}content_reports/"
-        headers: {"authorization": "Bearer #{User.oauth.credentials.access_token}", "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"}
+        url: "#{User.credentials.resource_url}content_reports/"
+        headers: {"authorization": "Bearer #{User.credentials.access_token}", "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"}
         data: $.param({object_type: "#{object_type}", object_id: "#{object_id}", reason: "Web Reoprt"})
       })
 
@@ -116,7 +158,7 @@ window.WebApp.factory('UserManager', ['cookies', '$http', '$q', '$location','api
       $http({
       method: 'GET',
       url: User.details.notifications.resource_url,
-      headers: {"authorization": "Bearer #{User.oauth.credentials.access_token}", "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"}
+      headers: {"authorization": "Bearer #{User.credentials.access_token}", "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"}
       })
         .then(((data) ->
           User.details.notifications.total = data.data.notifications.total
@@ -130,7 +172,7 @@ window.WebApp.factory('UserManager', ['cookies', '$http', '$q', '$location','api
       $http({
         method: 'GET',
         url: "#{User.details.notifications.resource_url}unread_count/",
-        headers: {"authorization": "Bearer #{User.oauth.credentials.access_token}", "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"}
+        headers: {"authorization": "Bearer #{User.credentials.access_token}", "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"}
       })
         .success((data) ->
           if data != 0 and parseInt(data) != User.details.notifications.unread_count
@@ -146,7 +188,7 @@ window.WebApp.factory('UserManager', ['cookies', '$http', '$q', '$location','api
       $http({
       method: 'GET',
       url: User.details.subscriptions.resource_url,
-      headers: {"authorization": "Bearer #{User.oauth.credentials.access_token}", "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"}
+      headers: {"authorization": "Bearer #{User.credentials.access_token}", "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"}
       })
         .success((data) ->
           User.details.subscriptions.subscribedChannels = data.channels
@@ -159,7 +201,7 @@ window.WebApp.factory('UserManager', ['cookies', '$http', '$q', '$location','api
       $http({
         method: 'POST',
         url: User.details.subscriptions.resource_url,
-        headers: {"authorization": "Bearer #{User.oauth.credentials.access_token}", "Content-Type": "application/json"}
+        headers: {"authorization": "Bearer #{User.credentials.access_token}", "Content-Type": "application/json"}
         data: '"' + channelResource + '"'
       })
         .success((data) ->
@@ -172,8 +214,8 @@ window.WebApp.factory('UserManager', ['cookies', '$http', '$q', '$location','api
     Unsubscribe: (channelID) ->
       $http({
         method: 'DELETE',
-        url: "#{User.oauth.credentials.resource_url}subscriptions/#{channelID}/",
-        headers: {"authorization": "Bearer #{User.oauth.credentials.access_token}", "Content-Type": "application/json"}
+        url: "#{User.credentials.resource_url}subscriptions/#{channelID}/",
+        headers: {"authorization": "Bearer #{User.credentials.access_token}", "Content-Type": "application/json"}
       })
         .success((data) ->
 
@@ -200,7 +242,7 @@ window.WebApp.factory('UserManager', ['cookies', '$http', '$q', '$location','api
         method: 'POST',
         data: [videoId],
         url: "#{channelurl}videos/",
-        headers: {"authorization": "Bearer #{User.oauth.credentials.access_token}", "Content-Type": "application/json"}
+        headers: {"authorization": "Bearer #{User.credentials.access_token}", "Content-Type": "application/json"}
       })
         .success((data) ->
           return data.data

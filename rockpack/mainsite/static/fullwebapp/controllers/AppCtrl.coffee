@@ -8,12 +8,12 @@ window.WebApp.controller('AppCtrl', ['$rootScope', '$location', 'UserManager', '
 
   $rootScope.$on("$locationChangeStart", (event, NewUrl, OldUrl) ->
 
-    if (UserManager.oauth.isLoggedIn == false)
+    if (UserManager.isLoggedIn == false)
       console.log 'user is logged off'
-      if (UserManager.oauth.credentials.refresh_token?)
+      if (UserManager.credentials.refresh_token?)
         event.preventDefault()
-        UserManager.oauth.refreshToken()
-          .success((data) ->
+        UserManager.RefreshToken()
+          .then((data) ->
             UserManager.isLoggedIn = true
             UserManager.FetchUserData()
               .then((data) ->

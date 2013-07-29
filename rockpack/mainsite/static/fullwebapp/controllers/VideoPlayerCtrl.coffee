@@ -17,10 +17,15 @@ window.WebApp.controller('VideoPlayerCtrl', ['$scope', '$rootScope', '$routePara
         videoId: $scope.videodata.video.source_id,
         playerVars: {
           autoplay: 1,
-          showinfo: 1,
+          showinfo: 0,
           modestbranding: 1,
           wmode: "opaque",
-          controls: 1
+          controls: 1,
+          cc_load_policy: 0,
+          fs: 1,
+          iv_load_policy: 3,
+          rel: 0,
+
         }
       })
 
