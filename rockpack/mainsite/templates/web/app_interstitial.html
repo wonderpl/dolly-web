@@ -1,0 +1,19 @@
+<html>
+    <head>
+    </head>
+    <body>
+        <iframe style="display:none" height="0" width="0" id="loader"></iframe>
+        <script>
+            var isiOS = navigator.userAgent.match('iPad') || navigator.userAgent.match('iPhone') || navigator.userAgent.match('iPod');
+            (function(){
+                var fallbackLink = '{{ canonical_url }}';
+                if (isiOS) {
+                    document.getElementById('loader').src = '{{ protocol_url }}';
+                    window.setTimeout(function (){ window.location.replace({% if config.INTERSTITIAL_ITUNES_LINK %}'http://itunes.apple.com/app/id{{ config.ITUNES_APP_ID }}/'{% else %}fallbackLink{% endif %}); }, 1);
+                } else {
+                    document.location.replace(fallbackLink);
+                }
+            })();
+        </script>
+    </body>
+</html>

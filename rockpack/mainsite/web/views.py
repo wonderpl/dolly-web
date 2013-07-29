@@ -131,9 +131,17 @@ def share_link_processing(linkid):
     return redirect(data.get('url'), 302)
 
 
+def rockpack_protocol_url(userid, channelid, videoid=None):
+    location = 'rockpack://{userid}/channel/{channelid}/'.format(userid=userid, channelid=channelid)
+    if videoid:
+        location += 'video/{}/'.format(videoid)
+    return location
+
+
 @expose_web('/channel/<slug>/<channelid>/', 'web/channel.html', cache_age=3600)
 def channel(slug, channelid):
-    return web_channel_data(channelid, load_video=request.args.get('video', None))
+    videoid = request.args.get('video', None)
+    return web_channel_data(channelid, load_video=videoid)
 
 
 if app.config.get('SHARE_SUBDOMAIN'):
@@ -145,19 +153,39 @@ if app.config.get('SHARE_SUBDOMAIN'):
 @cache_for(seconds=86400, private=True)
 @app.route('/s/<linkid>', subdomain=app.config.get('SHARE_SUBDOMAIN'))
 def share_redirect(linkid):
-    if request.args.get('rockpack_redirect') == 'true':
+
+    def _share_data(linkid):
         link = ShareLink.query.get_or_404(linkid)
         data = link.process_redirect(increment_click_count=False)
+        return web_channel_data(data['channel'], load_video=data.get('video', None))
 
-        web_data = web_channel_data(data['channel'], load_video=data.get('video', None))
-        location = 'rockpack://{userid}/channel/{channelid}/'.format(
-                userid=web_data['channel_data']['owner']['id'],
-                channelid=web_data['channel_data']['id'])
-
-        if web_data.get('selected_video'):
-            location += 'video/{}/'.format(web_data['selected_video']['id'])
-
+    if request.args.get('rockpack_redirect') == 'true':
+        data = _share_data(linkid)
+        video = data.get('selected_video', None)
+        if video:
+            video = video['id']
+        location = rockpack_protocol_url(
+                data['channel_data']['owner']['id'],
+                data['channel_data']['id'],
+                videoid=video
+            )
         return redirect(location, 302)
+
+    if request.args.get('interstitial') == 'true':
+        link = ShareLink.query.get_or_404(linkid)
+        data = link.process_redirect(increment_click_count=False)
+        share_data = web_channel_data(data['channel'], load_video=data.get('video', None))
+        protocol_url = rockpack_protocol_url(
+                share_data['channel_data']['owner']['id'],
+                share_data['channel_data']['id'],
+                videoid=share_data.get('video', None)
+            )
+
+        return render_template(
+            'web/app_interstitial.html',
+            protocol_url=protocol_url,
+            canonical_url=data['url']
+        )
 
     return share_link_processing(linkid)
 
