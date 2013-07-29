@@ -53,6 +53,13 @@ class RankingView(BaseView):
             c['uscount'] = video.locales['en-us']['view_count']
             ctx['videos'].append(c)
 
+        cs = ChannelSearch(locale)
+        cs.add_id(channelid)
+        channel = cs.channels()[0]
+        ctx['channel'] = channel
+        ctx['video_count'] = vs.total
+        print channel
+
         return self.render('admin/ranking.html', **ctx)
 
 

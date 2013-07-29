@@ -141,6 +141,14 @@
     {% endif %}
 
 
+    <section class="card" style="min-width: 520px; width:98%; height:220px; overflow: hidden; position: relative; padding:0px">
+    <div style="position: absolute; padding:10px">
+        <h1 style="font-size: 30pt">{{ channel.title }}</h1>
+        <h3><b>{{ channel.subscriber_count }} subscriber{% if channel.subscriber_count > 1 %}s{% endif %}</b></h3>
+        <h3><b>{{ video_count }} videos</b></h3>
+        </div>
+        <img style="min-width: 268px; width:100%; opacity:0.4" src="{{ channel.cover_thumbnail_large_url }}"/>
+    </section>
     {% for video in videos %}
     <!-- 460 //-->
     <section class="card" style="min-width: 520px; max-width: 590px; width:90%; height:220px; float: left; overflow: hidden; position: relative">
