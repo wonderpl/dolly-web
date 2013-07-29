@@ -6,10 +6,10 @@ window.WebApp.controller('LoginCtrl', ['$scope', '$location', 'cookies', 'UserMa
 
   $scope.submit = ->
     if $scope.username? and $scope.password?
-      $scope.User.oauth.Login($scope.username, $scope.password)
-      .success((data) ->
+      $scope.User.LogIn($scope.username, $scope.password)
+      .then((data) ->
           $scope.User.isLoggedIn = true
-          $scope.User.FetchUserData(UserManager.oauth.credentials.resource_url)
+          $scope.User.FetchUserData(UserManager.credentials.resource_url)
             .then((data) ->
               $location.path('/feed')
             )
@@ -18,10 +18,10 @@ window.WebApp.controller('LoginCtrl', ['$scope', '$location', 'cookies', 'UserMa
   $scope.facebook = ->
     FB.login((response) ->
       if (response.authResponse)
-        $scope.User.oauth.ExternalLogin('facebook', response.authResponse.accessToken)
+        $scope.User.ExternalLogin('facebook', response.authResponse.accessToken)
         .success((data) ->
             $scope.User.isLoggedIn = true
-            $scope.User.FetchUserData(UserManager.oauth.credentials.resource_url)
+            $scope.User.FetchUserData(UserManager.credentials.resource_url)
               .then((data) ->
                 $location.path('/feed')
               )

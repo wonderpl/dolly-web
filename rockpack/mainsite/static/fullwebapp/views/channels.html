@@ -16,7 +16,7 @@
         <img ng-src="{{channel.cover.thumbnail_url}}">
         <div class="channelTitle">{{channel.title | truncate: 25}}</div>
       </a>
-      <a href="#/profile/{{channel.owner.id}}">
+      <a href="#/{{channel.owner.id}}/profile/">
         <div class="channelOwnerTitle">{{channel.owner.display_name}}</div>
       </a>
     </div>

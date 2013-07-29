@@ -8,7 +8,7 @@
         <li><a href="#/profile/{{channel.owner.id}}"><img class="user-profile" ng-src="{{channel.owner.avatar_thumbnail_url}}"></a></li>
         <li id="curatedby"><span id="username"><a href="#/profile/{{channel.owner.id}}">{{channel.owner.display_name}}</a></span></li>
       </ul>
-      <div report-button is-loggedin='{{User.oauth.isLoggedIn}}' object-id='{{channel.id}}' object-type='channel'></div>
+      <div report-button is-loggedin='{{User.isLoggedIn}}' object-id='{{channel.id}}' object-type='channel'></div>
       <div subscribe-button></div>
       <button ng-click="share('facebook', channel.id)">Share FB</button>
       <a href="https://twitter.com/share" class="twitter-share-button" data-lang="en">Tweet</a>

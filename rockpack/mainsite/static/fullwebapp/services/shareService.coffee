@@ -5,7 +5,7 @@ angular.module('WebApp').factory('shareService', ['$http', 'UserManager', 'apiUr
       $http({
         method: 'POST',
         url: apiUrl.share_url,
-        headers: {"authorization": "Bearer #{UserManager.oauth.credentials.access_token}", "Content-Type": "application/json"}
+        headers: {"authorization": "Bearer #{UserManager.credentials.access_token}", "Content-Type": "application/json"}
         data: {object_type: object_type, object_id: object_id},
       })
       .success((data) ->

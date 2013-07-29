@@ -16,7 +16,7 @@
       <tab heading="Users">
         <div infinite-scroll="load_users()" infinite-scroll-distance="1">
           <div ng-repeat="user in users.users.items">
-            <a href="#/profile/{{user.id}}"><img ng-src="{{user.avatar_thumbnail_url}}"></a>
+            <a href="#/{{user.id}}/profile"><img ng-src="{{user.avatar_thumbnail_url}}"></a>
           </div>
         </div>
       </tab>
