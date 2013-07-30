@@ -1,5 +1,5 @@
-import sys
 import time
+from itertools import groupby
 from . import api
 from . import mappings
 
@@ -77,7 +77,11 @@ class DBImport(object):
         from rockpack.mainsite.services.video.models import Channel
         from sqlalchemy.orm import joinedload
         with app.test_request_context():
-            channels = Channel.query.filter(Channel.public == True, Channel.deleted == False).options(joinedload(Channel.category_rel), joinedload(Channel.metas), joinedload(Channel.owner_rel))
+            channels = Channel.query.filter(
+                    Channel.public == True,
+                    Channel.deleted == False).options(
+                            joinedload(Channel.category_rel), joinedload(Channel.metas), joinedload(Channel.owner_rel)
+                            )
             print 'importing {} PUBLIC channels\r'.format(channels.count())
             start = time.time()
             for channel in channels.yield_per(6000):
@@ -88,13 +92,19 @@ class DBImport(object):
     def import_videos(self):
         from rockpack.mainsite.services.video.models import Channel, Video, VideoInstanceLocaleMeta, VideoInstance
         from sqlalchemy.orm import joinedload
+
         with app.test_request_context():
             query = VideoInstance.query.join(
-                    Channel, Video).outerjoin((VideoInstanceLocaleMeta, VideoInstance.id == VideoInstanceLocaleMeta.video_instance)).options(
-                            joinedload(VideoInstance.metas)).options(
-                                    joinedload(VideoInstance.video_rel)).options(
-                                            joinedload(VideoInstance.video_channel)).filter(
-                            Video.visible == True, Channel.public == True)
+                Channel, Video).outerjoin(
+                    VideoInstanceLocaleMeta,
+                    VideoInstance.id == VideoInstanceLocaleMeta.video_instance
+                ).options(
+                    joinedload(VideoInstance.metas)).options(
+                        joinedload(VideoInstance.video_rel)
+                    ).options(
+                        joinedload(VideoInstance.video_channel)
+                    ).filter(Video.visible == True, Channel.public == True)
+
             total = query.count()
             print 'importing {} videos'.format(total)
             start = time.time()
@@ -102,3 +112,20 @@ class DBImport(object):
                 api.add_video_to_index(v, bulk=True, refresh=False, no_check=True)
             self.conn.flush_bulk(forced=True)
             print 'finished in', time.time() - start, 'seconds'
+
+    def import_video_stars(self):
+        from rockpack.mainsite.services.user.models import UserActivity
+        with app.test_request_context():
+            query = UserActivity.query.filter(
+                UserActivity.action == 'star',
+                UserActivity.object_type == 'video_instance'
+                ).order_by(
+                    'object_id', 'date_actioned desc'
+                )
+
+            for instance_id, group in groupby(query.yield_per(200).values(UserActivity.user, UserActivity.object_id), lambda x: x[0]):
+                self.conn.partial_update(
+                        self.indexes['video']['index'],
+                        self.indexes['video']['type'],
+                        instance_id,
+                        "ctx._source.recent_user_stars = %s" % str([u for v, u in group][:5]))

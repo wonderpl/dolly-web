@@ -58,7 +58,6 @@ class RankingView(BaseView):
         channel = cs.channels()[0]
         ctx['channel'] = channel
         ctx['video_count'] = vs.total
-        print channel
 
         return self.render('admin/ranking.html', **ctx)
 

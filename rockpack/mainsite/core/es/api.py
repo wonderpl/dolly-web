@@ -600,6 +600,19 @@ def add_channel_to_index(channel, bulk=False, refresh=False, boost=None, no_chec
     return add_to_index(data, mappings.CHANNEL_INDEX, mappings.CHANNEL_TYPE, id=channel.id, bulk=bulk, refresh=refresh)
 
 
+def video_stars(instance_id):
+    from rockpack.mainsite.services.user.models import UserActivity
+    stars = UserActivity.query.filter(
+            UserActivity.action == 'star',
+            UserActivity.object_type == 'video_instance',
+            UserActivity.object_id == instance_id,
+        ).distinct().with_entities(
+            UserActivity.user,
+            UserActivity.date_actioned
+        ).order_by('date_actioned desc')
+    return [_[0] for _ in stars]
+
+
 def add_video_to_index(video_instance, bulk=False, refresh=False, no_check=False):
     if not check_es(no_check):
         return
@@ -620,7 +633,9 @@ def add_video_to_index(video_instance, bulk=False, refresh=False, no_check=False
         category=video_instance.category,
         date_added=video_instance.date_added,
         position=video_instance.position,
-        locales=locale_dict_from_object(video_instance.metas))
+        locales=locale_dict_from_object(video_instance.metas),
+        recent_user_stars=video_stars(video_instance.id)
+        )
     return add_to_index(data, mappings.VIDEO_INDEX, mappings.VIDEO_TYPE, id=video_instance.id, bulk=bulk, refresh=refresh)
 
 
