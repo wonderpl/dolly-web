@@ -114,6 +114,7 @@ class DBImport(object):
             print 'finished in', time.time() - start, 'seconds'
 
     def import_video_stars(self):
+        from pyes.exceptions import ElasticSearchException
         from rockpack.mainsite.services.user.models import UserActivity
         with app.test_request_context():
             query = UserActivity.query.filter(
@@ -123,9 +124,17 @@ class DBImport(object):
                     'object_id', 'date_actioned desc'
                 )
 
-            for instance_id, group in groupby(query.yield_per(200).values(UserActivity.user, UserActivity.object_id), lambda x: x[0]):
-                self.conn.partial_update(
-                        self.indexes['video']['index'],
-                        self.indexes['video']['type'],
+            indexing = Indexing()
+            total = 0
+            missing = 0
+            start = time.time()
+            for instance_id, group in groupby(query.yield_per(200).values(UserActivity.object_id, UserActivity.user), lambda x: x[0]):
+                try:
+                    self.conn.partial_update(
+                        indexing.indexes['video']['index'],
+                        indexing.indexes['video']['type'],
                         instance_id,
-                        "ctx._source.recent_user_stars = %s" % str([u for v, u in group][:5]))
+                        "ctx._source.recent_user_stars = %s" % str([u.encode('utf8') for v, u in group][:5]))
+                except ElasticSearchException:
+                    missing += 1
+            print '%s finished in' % total, time.time() - start, 'seconds (%s videos not in es)' % missing
