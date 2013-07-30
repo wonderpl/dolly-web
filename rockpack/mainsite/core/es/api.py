@@ -420,7 +420,7 @@ class VideoSearch(EntitySearch, CategoryMixin, MediaSortMixin):
             except KeyError:
                 logger.warning("Missing channel '%s' during mapping", video['channel'])
 
-    def _format_results(self, videos, with_channels=True):
+    def _format_results(self, videos, with_channels=True, with_stars=False):
         vlist = []
         channel_list = []
 
@@ -443,6 +443,8 @@ class VideoSearch(EntitySearch, CategoryMixin, MediaSortMixin):
                 ),
                 position=pos
             )
+            if with_stars:
+                video['stars'] = v['recent_user_stars']
             if v.category:
                 video['category'] = max(v.category) if isinstance(v.category, list) else v.category
             if with_channels:
@@ -458,10 +460,10 @@ class VideoSearch(EntitySearch, CategoryMixin, MediaSortMixin):
 
         return vlist
 
-    def videos(self, with_channels=False):
+    def videos(self, with_channels=False, with_stars=False):
         if not self._video_results:
             r = self.results()
-            self._video_results = self._format_results(r, with_channels=with_channels)
+            self._video_results = self._format_results(r, with_channels=with_channels, with_stars=with_stars)
         return self._video_results
 
 

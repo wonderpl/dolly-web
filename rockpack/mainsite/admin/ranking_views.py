@@ -51,6 +51,8 @@ class RankingView(BaseView):
             c['subscriber_count'] = video.subscriber_count
             c['gbcount'] = video.locales['en-gb']['view_count']
             c['uscount'] = video.locales['en-us']['view_count']
+            c['gbstarcount'] = video.locales['en-gb']['star_count']
+            c['usstarcount'] = video.locales['en-us']['star_count']
             ctx['videos'].append(c)
 
         cs = ChannelSearch(locale)
