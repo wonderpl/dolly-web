@@ -1,9 +1,8 @@
 <div class="wrapper">
-
   <ul id="userChannels">
     <li><h3>User Channels</h3></li>
     <li ng-repeat="userchannel in User.details.channels.items" id="mychannels">
-      <a href="#/{{User.oauth.credentials.user_id}}/channel/{{userchannel.id}}"><img ng-src="{{userchannel.cover.thumbnail_url}}" class="channelThumbail"></a>
+      <a href="#/{{User.credentials.user_id}}/channel/{{userchannel.id}}"><img ng-src="{{userchannel.cover.thumbnail_url}}" class="channelThumbail"></a>
     </li>
   </ul>
   <ul id="userSubscriptions">

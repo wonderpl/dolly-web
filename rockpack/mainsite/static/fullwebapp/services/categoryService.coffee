@@ -38,7 +38,7 @@ angular.module('WebApp').factory('categoryService', [ '$http', 'locale', 'apiUrl
         _.each(tempCategories, (category) ->
           tempcategory = []
           _.each(category.sub_categories, (subcategory) ->
-            if subcategory.priority > 0
+            if subcategory.priority > 0 or subcategory.default == true
               tempcategory.push(subcategory)
           )
           category.sub_categories = tempcategory

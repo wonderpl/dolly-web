@@ -65,6 +65,10 @@ video_mapping = {
                 "date_published": {"type": "date"},
                 "duration": {"type": "integer"}
             }
+        },
+        "recent_user_likes": {
+            "type": "string",
+            "index": "not_analyzed"
         }
     }
 }
@@ -98,6 +102,7 @@ channel_mapping = {
         "locales": locale_count_dict,
         "date_added": {"type": "date"},
         "date_updated": {"type": "date"},
+        "date_published": {"type": "date"},
         "video_frequency": {"type": "integer"},
         "video_last_added": {"type": "date"},
         "update_frequency": {"type": "float", "null_value": 0.0},

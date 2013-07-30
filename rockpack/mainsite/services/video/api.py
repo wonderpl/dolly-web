@@ -29,6 +29,7 @@ def channel_dict(channel, with_owner=True, owner_url=False):
         title=channel.title,
         subscriber_count=channel.subscriber_count,
         category=channel.category,
+        date_published=channel.date_published and channel.date_published.isoformat(),
         cover=dict(
             thumbnail_url=channel.cover.url,
             aoi=channel.cover_aoi,

@@ -11,8 +11,8 @@ angular.module('WebApp').factory('ContentService', ($http, locale, apiUrl, UserM
       url = "#{baseApiUrl}#{userID}/channels/#{categoryID}/"
       headers = {"Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"}
 
-      if UserManager.oauth.credentials.user_id == userID
-        headers = {"authorization": "Bearer #{UserManager.oauth.credentials.access_token}", "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"}
+      if UserManager.credentials.user_id == userID
+        headers = {"authorization": "Bearer #{UserManager.credentials.access_token}", "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"}
 #        url = "#{baseApiUrl}#{userID}/channels/#{categoryID}".replace("http://", "https://secure.")
 
       $http({

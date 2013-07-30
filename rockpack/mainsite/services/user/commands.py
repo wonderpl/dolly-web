@@ -205,8 +205,7 @@ def update_user_notifications():
     logging.info('update_user_notifications: from %s to %s', job_control.last_run, now)
 
     create_new_activity_notifications(job_control.last_run, now)
-    if app.config.get('ENABLE_REG_NOTIFICATIONS', False):
-        create_new_registration_notifications(job_control.last_run, now)
+    create_new_registration_notifications(job_control.last_run, now)
     remove_old_notifications()
 
     job_control.last_run = now

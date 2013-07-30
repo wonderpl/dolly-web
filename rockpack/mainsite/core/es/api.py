@@ -20,6 +20,14 @@ MUST_NOT = 'must_not'
 SHOULD = 'shoud'
 
 
+def _format_datetime(datetime):
+    # The datetime argument could be a pre-formatted string or a datetime object
+    if hasattr(datetime, 'isoformat'):
+        return datetime.isoformat()
+    else:
+        return datetime
+
+
 class CategoryMixin(object):
     """ Provides `filter_category` method to restrict
         queries to a specific category
@@ -278,6 +286,7 @@ class ChannelSearch(EntitySearch, CategoryMixin, MediaSortMixin):
                 subscriber_count=channel.subscriber_count,
                 description=channel.description,
                 title=channel.title,
+                date_published=_format_datetime(channel.date_published),
                 public=channel.public,
                 cover=dict(
                     thumbnail_url=urljoin(IMAGE_CDN, channel.cover.thumbnail_url) if channel.cover.thumbnail_url else '',
@@ -411,7 +420,7 @@ class VideoSearch(EntitySearch, CategoryMixin, MediaSortMixin):
             except KeyError:
                 logger.warning("Missing channel '%s' during mapping", video['channel'])
 
-    def _format_results(self, videos, with_channels=True):
+    def _format_results(self, videos, with_channels=True, with_stars=False):
         vlist = []
         channel_list = []
 
@@ -419,8 +428,7 @@ class VideoSearch(EntitySearch, CategoryMixin, MediaSortMixin):
             video = dict(
                 id=v.id,
                 title=v.title,
-                # XXX: should return either datetime or isoformat - something is broken
-                date_added=v.date_added.isoformat() if not isinstance(v.date_added, (str, unicode)) else v.date_added,
+                date_added=_format_datetime(v.date_added),
                 public=v.public,
                 category='',
                 video=dict(
@@ -435,6 +443,8 @@ class VideoSearch(EntitySearch, CategoryMixin, MediaSortMixin):
                 ),
                 position=pos
             )
+            if with_stars:
+                video['stars'] = v['recent_user_stars']
             if v.category:
                 video['category'] = max(v.category) if isinstance(v.category, list) else v.category
             if with_channels:
@@ -450,10 +460,10 @@ class VideoSearch(EntitySearch, CategoryMixin, MediaSortMixin):
 
         return vlist
 
-    def videos(self, with_channels=False):
+    def videos(self, with_channels=False, with_stars=False):
         if not self._video_results:
             r = self.results()
-            self._video_results = self._format_results(r, with_channels=with_channels)
+            self._video_results = self._format_results(r, with_channels=with_channels, with_stars=with_stars)
         return self._video_results
 
 
@@ -567,6 +577,7 @@ def add_channel_to_index(channel, bulk=False, refresh=False, boost=None, no_chec
         subscriber_count=channel.subscriber_count,
         date_added=channel.date_added,
         date_updated=channel.date_updated,
+        date_published=channel.date_published,
         description=channel.description,
         resource_url=urlparse(channel.get_resource_url()).path,
         title=channel.title,
@@ -591,6 +602,19 @@ def add_channel_to_index(channel, bulk=False, refresh=False, boost=None, no_chec
     return add_to_index(data, mappings.CHANNEL_INDEX, mappings.CHANNEL_TYPE, id=channel.id, bulk=bulk, refresh=refresh)
 
 
+def video_stars(instance_id):
+    from rockpack.mainsite.services.user.models import UserActivity
+    stars = UserActivity.query.filter(
+            UserActivity.action == 'star',
+            UserActivity.object_type == 'video_instance',
+            UserActivity.object_id == instance_id,
+        ).distinct().with_entities(
+            UserActivity.user,
+            UserActivity.date_actioned
+        ).order_by('date_actioned desc')
+    return [_[0] for _ in stars]
+
+
 def add_video_to_index(video_instance, bulk=False, refresh=False, no_check=False):
     if not check_es(no_check):
         return
@@ -611,7 +635,9 @@ def add_video_to_index(video_instance, bulk=False, refresh=False, no_check=False
         category=video_instance.category,
         date_added=video_instance.date_added,
         position=video_instance.position,
-        locales=locale_dict_from_object(video_instance.metas))
+        locales=locale_dict_from_object(video_instance.metas),
+        recent_user_stars=video_stars(video_instance.id)
+        )
     return add_to_index(data, mappings.VIDEO_INDEX, mappings.VIDEO_TYPE, id=video_instance.id, bulk=bulk, refresh=refresh)
 
 

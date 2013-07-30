@@ -312,7 +312,8 @@ class ChannelCreateTestCase(base.RockPackTestCase):
             resp = json.loads(r.data)
             new_ch = models.Channel.query.filter_by(owner=user.id).filter(
                 models.Channel.title.like(app.config['UNTITLED_CHANNEL'] + '%')).one()
-            self.assertEquals(False, resp['public'], 'channel should be private')
+            self.assertFalse(resp['public'], 'channel should be private')
+            self.assertIsNone(resp['date_published'])
 
             # Visible to owner
             r = client.get(
@@ -453,10 +454,10 @@ class ChannelCreateTestCase(base.RockPackTestCase):
                 headers=[get_auth_header(user.id)]
             )
             self.assertEquals(r.status_code, 204)
-            self.assertEquals(
-                models.Channel.query.get(new_ch.id).public,
-                True,
-                'channel should be public if adding a video and detail-complete')
+            channel = models.Channel.query.get(new_ch.id)
+            self.assertTrue(channel.public, 'channel should be public')
+            self.assertIsNotNone(channel.date_published)
+            self.assertGreaterEqual(channel.date_published, channel.date_added)
 
             r = client.put(
                 resource + 'public/',

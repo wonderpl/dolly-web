@@ -3,6 +3,13 @@ import urlparse
 from unicodedata import normalize
 from werkzeug.exceptions import NotFound
 from flask import current_app, url_for as _url_for
+from rockpack.mainsite import app
+
+http_only_domains = []
+if 'SERVER_NAME' in app.config:
+    http_only_domains.append(app.config['SERVER_NAME'])
+if 'SHARE_SUBDOMAIN' in app.config:
+    http_only_domains.append('.'.join([app.config['SHARE_SUBDOMAIN'], app.config['SERVER_NAME']]))
 
 
 def url_for(*args, **kwargs):
@@ -12,9 +19,8 @@ def url_for(*args, **kwargs):
     secure_subdomain = current_app.config.get('SECURE_SUBDOMAIN')
     if secure_subdomain and url.startswith('http://' + secure_subdomain + '.'):
         url = 'https://' + url[7:]
-    # Ensure urls on top-level don't use https:
-    servername = current_app.config.get('SERVER_NAME')
-    if servername and url.startswith('https://' + servername + '/'):
+    # Ensure http-only domain don't get https protocol
+    if any(url.startswith('https://' + domain + '/') for domain in http_only_domains if domain):
         url = 'http://' + url[8:]
     return url
 

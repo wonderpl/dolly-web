@@ -2,7 +2,7 @@ window.WebApp.controller('HeaderCtrl', ['$scope', 'cookies', '$location', 'UserM
 
   $scope.user = UserManager
 
-  $scope.$watch('user.oauth.isLoggedIn', (newValue, oldValue) ->
+  $scope.$watch('user.isLoggedIn', (newValue, oldValue) ->
     console.log newValue
     $scope.isLoggedIn = newValue
   )
@@ -16,10 +16,8 @@ window.WebApp.controller('HeaderCtrl', ['$scope', 'cookies', '$location', 'UserM
   $scope.fetchresults = () ->
     window.location.assign("#/search?search=#{$scope.searchPhrase}")
 
-  console.log $scope.user
-
   $scope.logout = ->
-    $scope.user.logOut()
+    $scope.user.LogOut()
     $location.path("/login").replace()
 
 ])

@@ -276,6 +276,7 @@ class Channel(db.Model):
     subscriber_count = Column(Integer, nullable=False, server_default='0', default=0)
     date_added = Column(DateTime(), nullable=False, default=func.now())
     date_updated = Column(DateTime(), nullable=False, default=func.now(), onupdate=func.now())
+    date_published = Column(DateTime(), nullable=True)
     update_frequency = Column(Float, nullable=True)
     subscriber_frequency = Column(Float, nullable=True)
     ecommerce_url = Column(String(1024), nullable=False, server_default='')
@@ -397,8 +398,8 @@ class ChannelPromotion(db.Model):
     locale_rel = relationship('Locale', backref='channel_promotion')
 
     category_rel = relationship(Category, backref='channel_promotion_category',
-            primaryjoin='Category.id==ChannelPromotion.category',
-            foreign_keys=[Category.__table__.c.id])
+                                primaryjoin='Category.id==ChannelPromotion.category',
+                                foreign_keys=[Category.__table__.c.id])
 
 
 class ChannelLocaleMeta(db.Model):
@@ -568,6 +569,12 @@ def _es_channel_promotion_insert(mapper, connection, target):
 @event.listens_for(ChannelPromotion, 'after_update')
 def _es_channel_promotion_update(mapper, connection, target):
     _add_or_remove_channel(Channel.query.get(target.channel))
+
+
+@event.listens_for(Channel, 'before_update')
+def _set_date_published(mapper, connection, target):
+    if target.public and not target.date_published:
+        target.date_published = func.now()
 
 
 event.listen(Video, 'before_insert', add_video_pk)
