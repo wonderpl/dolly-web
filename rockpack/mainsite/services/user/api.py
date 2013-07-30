@@ -300,7 +300,8 @@ def user_external_accounts(userid, locale, paging):
         items.append(dict(resource_url=token.resource_url,
                           external_system=token.external_system,
                           external_token=token.external_token,
-                          external_uid=token.external_uid))
+                          external_uid=token.external_uid,
+                          token_expires=token.expires and token.expires.isoformat()))
     return dict(items=items, total=len(items))
 
 

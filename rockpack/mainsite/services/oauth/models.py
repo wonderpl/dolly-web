@@ -67,7 +67,8 @@ class ExternalToken(db.Model):
 
         # Fetch a long-lived token if we don't have an expiry,
         # or we haven't long to go until it does expire
-        if not e.expires or datetime.now() + timedelta(days=1) > e.expires:
+        expiry_delta = timedelta(days=app.config.get('EXTERNAL_TOKEN_EXPIRY_THRESHOLD_DAYS', 1))
+        if expiry_delta and (not e.expires or datetime.now() + expiry_delta > e.expires):
             new_eu = eu.get_new_token()
             e.external_token = new_eu.token
             e.expires = new_eu.expires

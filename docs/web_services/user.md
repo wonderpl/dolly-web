@@ -1348,7 +1348,8 @@ Content-Type: application/json
     "resource_url": "http://resource/url/for/connection/",
     "external_system": "SYSTEM LABEL",
     "external_uid": "123",
-    "external_token": "xxx"
+    "external_token": "xxx",
+    "token_expires": "2013-01-01T00:00:00"
    }
   ]
  }
