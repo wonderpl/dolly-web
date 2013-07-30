@@ -78,10 +78,10 @@ class DBImport(object):
         from sqlalchemy.orm import joinedload
         with app.test_request_context():
             channels = Channel.query.filter(
-                    Channel.public == True,
-                    Channel.deleted == False).options(
-                            joinedload(Channel.category_rel), joinedload(Channel.metas), joinedload(Channel.owner_rel)
-                            )
+                Channel.public == True,
+                Channel.deleted == False).options(
+                    joinedload(Channel.category_rel), joinedload(Channel.metas), joinedload(Channel.owner_rel)
+                )
             print 'importing {} PUBLIC channels\r'.format(channels.count())
             start = time.time()
             for channel in channels.yield_per(6000):
@@ -99,11 +99,12 @@ class DBImport(object):
                     VideoInstanceLocaleMeta,
                     VideoInstance.id == VideoInstanceLocaleMeta.video_instance
                 ).options(
-                    joinedload(VideoInstance.metas)).options(
-                        joinedload(VideoInstance.video_rel)
-                    ).options(
-                        joinedload(VideoInstance.video_channel)
-                    ).filter(Video.visible == True, Channel.public == True)
+                    joinedload(VideoInstance.metas)
+                ).options(
+                    joinedload(VideoInstance.video_rel)
+                ).options(
+                    joinedload(VideoInstance.video_channel)
+                ).filter(Video.visible == True, Channel.public == True)
 
             total = query.count()
             print 'importing {} videos'.format(total)
@@ -120,9 +121,9 @@ class DBImport(object):
             query = UserActivity.query.filter(
                 UserActivity.action == 'star',
                 UserActivity.object_type == 'video_instance'
-                ).order_by(
-                    'object_id', 'date_actioned desc'
-                )
+            ).order_by(
+                'object_id', 'date_actioned desc'
+            )
 
             indexing = Indexing()
             total = 0
@@ -134,7 +135,10 @@ class DBImport(object):
                         indexing.indexes['video']['index'],
                         indexing.indexes['video']['type'],
                         instance_id,
-                        "ctx._source.recent_user_stars = %s" % str([u.encode('utf8') for v, u in group][:5]))
+                        "ctx._source.recent_user_stars = %s" % str(
+                            list(set([u.encode('utf8') for v, u in group]))[:5]
+                        )
+                    )
                 except ElasticSearchException:
                     missing += 1
             print '%s finished in' % total, time.time() - start, 'seconds (%s videos not in es)' % missing
