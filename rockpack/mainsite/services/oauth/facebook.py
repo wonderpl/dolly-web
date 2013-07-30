@@ -248,6 +248,20 @@ def renew_token(token, app_id, app_secret):
                 client_secret=app_secret)
 
 
+def validate_token(token, app_id, app_secret):
+    app_token = app_id + '|' + app_secret
+    args = urllib.urlencode(dict(input_token=token, access_token=app_token))
+    file = urllib.urlopen('https://graph.facebook.com/debug_token?' + args)
+    try:
+        token_response = json.load(file)
+    finally:
+        file.close()
+
+    if 'data' in token_response and token_response['data'].get('is_valid'):
+        return token_response['data']
+
+
+
 def get_user_from_oauth_cookie(cookie, app_id, app_secret):
     cookie_data = parse_signed_cookie(cookie, app_secret)
     if not cookie_data:

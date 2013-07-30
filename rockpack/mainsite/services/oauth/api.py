@@ -1,7 +1,7 @@
 from werkzeug.datastructures import MultiDict
 from datetime import datetime, timedelta
 from cStringIO import StringIO
-from flask import request, abort, g
+from flask import request, abort, g, json
 from flask.ext import wtf
 from rockpack.mainsite import app, requests
 from rockpack.mainsite.helpers import lazy_gettext as _
@@ -61,22 +61,23 @@ class LoginWS(WebService):
     @expose_ajax('/external/', methods=['POST'])
     @check_client_authorization
     def external(self):
+        result = {}
         eu = external_user_from_token_form()
 
-        user = models.ExternalToken.user_from_uid(
-            request.form.get('external_system'),
-            eu.id)
-
-        if not user:
+        user = models.ExternalToken.user_from_uid(eu.system, eu.id)
+        if user:
+            record_user_event(user.username, 'login succeeded', user.id)
+        else:
             # New user
             user = User.create_from_external_system(eu, self.get_locale())
             record_user_event(user.username, 'registration succeeded', user.id)
+            result['registered'] = True
 
         # Update the token record if needed
         models.ExternalToken.update_token(user.id, eu)
 
-        record_user_event(user.username, 'login succeeded', user.id)
-        return user.get_credentials()
+        result.update(user.get_credentials())
+        return result
 
 
 def username_validator():
@@ -141,10 +142,29 @@ class RockRegistrationForm(wtf.Form):
 class ExternalRegistrationForm(wtf.Form):
     external_system = wtf.TextField(validators=[wtf.Required()])
     external_token = wtf.TextField(validators=[wtf.Required()])
+    token_expires = wtf.TextField()
+    token_permissions = wtf.TextField()
+    meta = wtf.TextField()
 
     def validate_external_system(form, value):
         if value.data not in models.EXTERNAL_SYSTEM_NAMES:
             raise wtf.ValidationError(_('External system invalid.'))
+
+    def validate_token_expires(form, value):
+        if value.data:
+            try:
+                value.data = datetime.strptime(value.data[:19], '%Y-%m-%dT%H:%M:%S')
+            except ValueError:
+                raise wtf.ValidationError(_('Invalid expiry date.'))
+
+    def validate_meta(form, value):
+        if value.data:
+            try:
+                if isinstance(value.data, basestring):
+                    value.data = json.loads(value.data)
+                assert type(value.data) is dict
+            except:
+                raise wtf.ValidationError(_('Invalid account metadata.'))
 
 
 def external_user_from_token_form():
@@ -152,7 +172,7 @@ def external_user_from_token_form():
     if not form.validate():
         abort(400, form_errors=form.errors)
 
-    eu = ExternalUser(form.external_system.data, form.external_token.data)
+    eu = ExternalUser(**form.data)
     if not eu.valid_token:
         abort(400, error='unauthorized_client')
 
@@ -162,20 +182,40 @@ def external_user_from_token_form():
 # TODO: currently only Facebook - change
 class ExternalUser:
 
-    def __init__(self, system, token, expires_in=None):
+    def __init__(self, external_system, external_token, token_expires, token_permissions=None, meta=None):
         self._user_data = {}
         self._valid_token = False
-        self._token = token
-        self._system = system
+        self._system = external_system
+        self._token = external_token
 
-        if expires_in:
-            self._expires = datetime.now() + timedelta(seconds=expires_in)
+        if not token_expires and not token_permissions:
+            data = self._validate_token()
+            if not data:
+                return  # invalid token
+            token_expires = datetime.fromtimestamp(data['expires_at'])
+            token_permissions = ','.join(data['scopes'])
+            meta = data.get('metadata')
+
+        if type(token_expires) is int:
+            self._expires = datetime.now() + timedelta(seconds=token_expires)
         else:
-            self._expires = None
+            self._expires = token_expires
+
+        self.permissions = token_permissions
+        self.meta = json.dumps(meta) if meta else None
 
         self._user_data = self._get_external_data()
         if self._user_data:
             self._valid_token = True
+
+    def _validate_token(self):
+        try:
+            return facebook.validate_token(
+                self._token,
+                app.config['FACEBOOK_APP_ID'],
+                app.config['FACEBOOK_APP_SECRET'])
+        except:
+            app.logger.exception('Failed to validate Facebook token')
 
     def _get_external_data(self):
         try:
