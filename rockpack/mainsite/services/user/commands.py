@@ -127,10 +127,10 @@ def send_push_notification(user):
 
         if first.message_type == 'subscribed':
             key = 'channel'
-            push_message = "%@ has subscribed to your channel",
+            push_message = "%@ has subscribed to your channel"
         else:
             key = 'video'
-            push_message = "%@ has liked your video",
+            push_message = "%@ has liked your video"
 
         data = json.loads(first.message)
         name = data['user']['display_name']
@@ -141,7 +141,6 @@ def send_push_notification(user):
         if app.config.get('ENABLE_APNS_DEEPLINKS'):
             extra_kwargs.update(
                 dict(
-                    id=first.id,
                     url=data[key]['resource_url']
                 )
             )
@@ -153,6 +152,7 @@ def send_push_notification(user):
                 "loc-args": push_message_args,
             },
             badge=count,
+            id=first.id,
             **extra_kwargs)
 
         srv = apnsclient.APNs(con)

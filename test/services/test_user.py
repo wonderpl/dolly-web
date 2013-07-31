@@ -62,7 +62,7 @@ class TestAPNS(base.RockPackTestCase):
                 headers=[get_auth_header(user.id)],
             )
 
-            UserNotification(
+            un = UserNotification(
                 user=user.id,
                 message_type='subscribed',
                 message=json.dumps(_notification_data(user))
@@ -77,6 +77,7 @@ class TestAPNS(base.RockPackTestCase):
                 message = send_push_notification(user)
                 self.assertEquals(user.display_name, message['aps']['alert']['loc-args'][0])
                 self.assertEquals(1, message['aps']['badge'])
+                self.assertEquals(un.id, message['id'])
 
 
 class TestProfileEdit(base.RockPackTestCase):
