@@ -103,7 +103,7 @@
         </form>
         {% endif %}
     </div>
-    <div>
+    <div style="float: right;">
         {% if videos %}
         <input
         type="button"
@@ -118,6 +118,18 @@
         onclick="location.href='{{ locale_toggle }}?category={{ category }}'"/>
         {% endif %}
     </div>
+
+
+    {% if videos %}
+    <section class="card" style="min-width: 520px; width:100%; height:220px; overflow: hidden; position: relative; padding:0px; border:0px; margin: 0px 0px 20px 0px">
+    <div style="position: absolute; padding:10px">
+        <h1 style="font-size: 30pt">{{ channel.title }}</h1>
+        <h3><b>{{ channel.subscriber_count }} subscriber{% if channel.subscriber_count > 1 %}s{% endif %}</b></h3>
+        <h3><b>{{ video_count }} videos</b></h3>
+        </div>
+        <img style="min-width: 268px; width:100%; opacity:0.4" src="{{ channel.cover_thumbnail_large_url }}"/>
+        </section>
+    {% endif %}
 
     <div style="clear: both">
     {% if channels or not videos %}
@@ -140,7 +152,6 @@
         {% endfor %}
     {% endif %}
 
-
     {% for video in videos %}
     <!-- 460 //-->
     <section class="card" style="min-width: 520px; max-width: 590px; width:90%; height:220px; float: left; overflow: hidden; position: relative">
@@ -150,6 +161,7 @@
         <div style="float:left; width: 200px">
             <h3>duration: {{ video.duration }}s</h3>
             <h3>view counts: US ({{ video.uscount }}) GB ({{ video.gbcount }})</h3>
+            <h3>likes: US ({{ video.usstarcount }}) GB ({{ video.gbstarcount }})</h3>
         </div>
         <div style="width: 200px; float: right">
             <h3>date added: {{ video.date_added }}</h3>

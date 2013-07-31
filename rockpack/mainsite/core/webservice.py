@@ -225,11 +225,21 @@ def setup_app_request_prop(app):
 
 
 def add_cors_headers(response):
-    origin = request.args.get('_origin')
+    origin = request.args.get('_origin') or request.headers.get('Origin')
     if origin:
         hostname = urlparse(origin).hostname
         if hostname and hostname.endswith('rockpack.com'):
             response.headers.add('Access-Control-Allow-Origin', origin)
+            response.headers.add('Access-Control-Max-Age', current_app.config.get('CORS_MAX_AGE', 86400))
+            if 'Allow' in response.headers:
+                response.headers.add('Access-Control-Allow-Methods', response.headers['Allow'])
+            req_headers = request.headers.get('Access-Control-Request-Headers')
+            if req_headers:
+                response.headers.add('Access-Control-Allow-Headers', req_headers)
+    # NOTE: CloudFront strips this header so we can't really rely on it's use.
+    # http://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/RequestAndResponseBehaviorCustomOrigin.html#ResponseCustomContentNegotiation
+    # https://forums.aws.amazon.com/thread.jspa?messageID=388132
+    response.vary.add('Origin')
     return response
 
 

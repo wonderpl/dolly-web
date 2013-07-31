@@ -220,7 +220,7 @@ class ImportView(BaseView):
                 c = jsonify(Channel.query.filter(Channel.id == exact_name).values(Channel.id, Channel.title))
             return c
         if prefix:
-            if not re.match('^[#\w ]+$', prefix):
+            if not re.match('^[!&#\w ]+$', prefix):
                 prefix = None
             return jsonify(Channel.query.filter(
                 Channel.deleted == False,

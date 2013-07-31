@@ -17,7 +17,7 @@
 
 <link rel="canonical" href="{{ target_url }}" />
 <meta name="description" content="{{ description }}" />
-<meta name="apple-itunes-app" content="app-id={{ config.ITUNES_APP_ID }}", app-argument="rockpack://{{ channel_data.owner.id }}/channel/{{ channel_data.id }}{% if selected_video %}/vidoes/{{selected_video.id}}/{% endif %}">
+<meta name="apple-itunes-app" content="app-id={{ config.ITUNES_APP_ID }}", app-argument="{{ config.ROCKPACK_APP_PROTOCOL }}{{ channel_data.owner.id }}/channel/{{ channel_data.id }}{% if selected_video %}/videos/{{selected_video.id}}/{% endif %}">
 <meta property="fb:app_id" content="{{ config.FACEBOOK_APP_ID }}" />
 <meta property="og:site_name" content="Rockpack" />
 <meta property="og:url" content="{{ target_url }}" />
@@ -53,5 +53,5 @@
 {% for device in "iphone", "ipad" %}
 <meta name="twitter:app:name:{{ device }}" content="Rockpack" />
 <meta name="twitter:app:id:{{ device }}" content="{{ config.ITUNES_APP_ID }}" />
-<meta name="twitter:app:url:{{ device }}" content="rockpack://{{ channel_data.owner.id }}/channel/{{ channel_data.id }}{% if selected_video %}/vidoes/{{selected_video.id}}/{% endif %}"/>
+<meta name="twitter:app:url:{{ device }}" content="{{ config.ROCKPACK_APP_PROTOCOL }}{{ channel_data.owner.id }}/channel/{{ channel_data.id }}{% if selected_video %}/videos/{{selected_video.id}}/{% endif %}"/>
 {% endfor %}

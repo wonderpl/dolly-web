@@ -21,6 +21,8 @@ class ExternalToken(db.Model):
     external_token = Column(String(1024), nullable=False)
     external_uid = Column(String(1024), nullable=False)
     expires = Column(DateTime(), nullable=True)
+    permissions = Column(String(1024), nullable=True)
+    meta = Column(String(1024), nullable=True)
 
     user_rel = relationship('User', remote_side=[User.id], backref='external_tokens')
 
@@ -52,26 +54,33 @@ class ExternalToken(db.Model):
             raise exceptions.InvalidExternalSystem('{} is not a valid name'.format(eu.system))
 
         try:
-            e = cls.query.filter_by(external_uid=eu.id, external_system=eu.system).one()
+            token = cls.query.filter_by(external_uid=eu.id, external_system=eu.system).one()
+            token._existing = True
         except exc.NoResultFound:
             if ExternalToken.query.filter_by(user=userid, external_system=eu.system).count():
                 abort(400, message=_('User already associated with account'))
-            e = cls(user=userid,
-                    external_system=eu.system,
-                    external_token=eu.token,
-                    external_uid=eu.id)
+            token = cls(user=userid,
+                        external_system=eu.system,
+                        external_uid=eu.id)
         else:
-            if e.user != userid:
-                app.logger.error('Token owner %s does not match update user: %s', e.user, userid)
+            if token.user != userid:
+                app.logger.error('Token owner %s does not match update user: %s', token.user, userid)
                 abort(400, message=_('External account mismatch'))
+
+        token.external_token = eu.token
+        token.expires = eu.expires
+        token.permissions = eu.permissions
+        token.meta = eu.meta
 
         # Fetch a long-lived token if we don't have an expiry,
         # or we haven't long to go until it does expire
-        if not e.expires or datetime.now() + timedelta(days=1) > e.expires:
+        expiry_delta = timedelta(days=app.config.get('EXTERNAL_TOKEN_EXPIRY_THRESHOLD_DAYS', 1))
+        if expiry_delta and (not token.expires or datetime.now() + expiry_delta > token.expires):
             new_eu = eu.get_new_token()
-            e.external_token = new_eu.token
-            e.expires = new_eu.expires
-        return e.save()
+            token.external_token = new_eu.token
+            token.expires = new_eu.expires
+
+        return token.save()
 
     def get_resource_url(self, own=True):
         return url_for('userws.get_external_account', userid=self.user, id=self.id)

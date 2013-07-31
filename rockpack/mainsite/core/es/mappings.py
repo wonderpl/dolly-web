@@ -65,6 +65,10 @@ video_mapping = {
                 "date_published": {"type": "date"},
                 "duration": {"type": "integer"}
             }
+        },
+        "recent_user_likes": {
+            "type": "string",
+            "index": "not_analyzed"
         }
     }
 }

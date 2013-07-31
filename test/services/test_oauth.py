@@ -1,7 +1,7 @@
 import base64
 import json
 import uuid
-from datetime import date
+from datetime import datetime, date
 from mock import patch
 
 from flask import Response
@@ -160,11 +160,11 @@ class ExternalTokenTestCase(base.RockPackTestCase):
         _get_external_data.return_value = FACEBOOK_GRAPH_DATA
         from rockpack.mainsite.services.oauth.api import ExternalUser
         long_lived_fb_token = 'fdsuioncf3w8ryl38yb7y4eius'
-        get_new_token.return_value = ExternalUser('facebook', token=long_lived_fb_token, expires_in=3600)
+        get_new_token.return_value = ExternalUser('facebook', long_lived_fb_token, 3600)
 
         user = self._new_user()
         token = uuid.uuid4().hex
-        eu = ExternalUser('facebook', token=token, expires_in='')
+        eu = ExternalUser('facebook', token, 3600)
         eu._user_data = FACEBOOK_GRAPH_DATA.copy()
         ExternalToken.update_token(user.id, eu)
 
@@ -174,23 +174,35 @@ class ExternalTokenTestCase(base.RockPackTestCase):
 
         # test we can overwrite token
         new_token = uuid.uuid4().hex
-        eu = ExternalUser('facebook', token=new_token, expires_in=7200)
+        eu = ExternalUser('facebook', new_token, 172800)
         eu._user_data = FACEBOOK_GRAPH_DATA.copy()
         ExternalToken.update_token(user.id, eu)
 
         e = ExternalToken.query.filter_by(user=user.id)
         self.assertEquals(1, e.count(), 'only one token should exist')
         e = e.one()
-        self.assertEquals(long_lived_fb_token, e.external_token, 'saved token should match new token')
+        self.assertEquals(new_token, e.external_token, 'saved token should match new token')
 
-    @patch('rockpack.mainsite.services.oauth.api.ExternalUser.get_new_token')
     @patch('rockpack.mainsite.services.oauth.api.ExternalUser._get_external_data')
-    def test_invalid_token(self, _get_external_data, get_new_token):
+    def test_token_data(self, _get_external_data):
+        data = FACEBOOK_GRAPH_DATA.copy()
+        data['id'] = uuid.uuid4().hex
+        _get_external_data.return_value = data
+        from rockpack.mainsite.services.oauth.api import ExternalUser
+        expires = datetime(2020, 1, 1, 0, 0, 0)
+        eu = ExternalUser('facebook', 'xxx123', expires, 'read,write', {'meta':'data'})
+        user = self._new_user()
+        ExternalToken.update_token(user.id, eu)
+        e = ExternalToken.query.filter_by(user=user.id).one()
+        self.assertEquals(e.expires, expires)
+        self.assertEquals(e.permissions, 'read,write')
+        self.assertEquals(e.meta, '{"meta": "data"}')
+
+    @patch('rockpack.mainsite.services.oauth.api.ExternalUser._get_external_data')
+    def test_invalid_token(self, _get_external_data):
         _get_external_data.return_value = FACEBOOK_GRAPH_DATA
         from rockpack.mainsite.services.oauth.api import ExternalUser
-        eu = ExternalUser('handleaflet', token='')
-        long_lived_fb_token = 'fdsuioncf3w8ryl38yb7y4eius'
-        get_new_token.return_value = ExternalUser('facebook', token=long_lived_fb_token, expires_in=3600)
+        eu = ExternalUser('handleaflet', '', 3600)
         with self.assertRaises(exceptions.InvalidExternalSystem):
             ExternalToken.update_token(None, eu)
 
@@ -211,7 +223,7 @@ class RegisterTestCase(base.RockPackTestCase):
         _get_external_data.return_value = data
         from rockpack.mainsite.services.oauth.api import ExternalUser
         long_lived_fb_token = 'fdsuioncf3w8ryl38yb7yfsfsdfsd4eius'
-        get_new_token.return_value = ExternalUser('facebook', token=long_lived_fb_token, expires_in=3600)
+        get_new_token.return_value = ExternalUser('facebook', long_lived_fb_token, 3600)
 
         with self.app.test_client() as client:
             initial_fb_token = uuid.uuid4().hex
@@ -220,7 +232,8 @@ class RegisterTestCase(base.RockPackTestCase):
                 headers=[get_client_auth_header()],
                 data=dict(
                     external_system='facebook',
-                    external_token=initial_fb_token
+                    external_token=initial_fb_token,
+                    token_expires=datetime.now().isoformat(),
                 )
             )
             creds = json.loads(r.data)
@@ -243,7 +256,8 @@ class RegisterTestCase(base.RockPackTestCase):
                 headers=[get_client_auth_header()],
                 data=dict(
                     external_system='facebook',
-                    external_token=new_facebook_token
+                    external_token=new_facebook_token,
+                    token_expires=datetime.now().isoformat(),
                 )
             )
             self.assertEquals(200, r.status_code)
@@ -272,16 +286,12 @@ class RegisterTestCase(base.RockPackTestCase):
             self.assertEquals(400, r.status_code)
             self.assertEquals('unauthorized_client', error['error'])
 
-    @patch('rockpack.mainsite.services.oauth.api.ExternalUser.get_new_token')
     @patch('rockpack.mainsite.services.oauth.api.ExternalUser._get_external_data')
-    def test_registration_gender(self, _get_external_data, get_new_token):
+    def test_registration_gender(self, _get_external_data):
         data = FACEBOOK_GRAPH_DATA.copy()
-        data['gender'] = ''
+        data['id'] = uuid.uuid4().hex
+        data['gender'] = 'm'
         _get_external_data.return_value = data
-
-        from rockpack.mainsite.services.oauth.api import ExternalUser
-        long_lived_fb_token = 'fdsuioncf3w8ryl38yb7yfsfsdfsd4eius'
-        get_new_token.return_value = ExternalUser('facebook', token=long_lived_fb_token, expires_in=3600)
 
         with self.app.test_client() as client:
             facebook_token = uuid.uuid4().hex
@@ -290,12 +300,15 @@ class RegisterTestCase(base.RockPackTestCase):
                 headers=[get_client_auth_header()],
                 data=dict(
                     external_system='facebook',
-                    external_token=facebook_token
+                    external_token=facebook_token,
+                    token_expires='2020-01-01T00:00:00',
                 )
             )
             creds = json.loads(r.data)
             self.assertEquals(200, r.status_code)
-            self.assertNotEquals(None, creds['refresh_token'])
+            self.assertIsNotNone(creds['refresh_token'])
+            user_gender = User.query.filter_by(id=creds['user_id']).value('gender')
+            self.assertEquals(user_gender, data['gender'])
 
     @patch('rockpack.mainsite.services.oauth.api.ExternalUser._get_external_data')
     def test_invalid_external_system(self, _get_external_data):

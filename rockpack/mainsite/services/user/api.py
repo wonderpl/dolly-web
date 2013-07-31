@@ -300,7 +300,10 @@ def user_external_accounts(userid, locale, paging):
         items.append(dict(resource_url=token.resource_url,
                           external_system=token.external_system,
                           external_token=token.external_token,
-                          external_uid=token.external_uid))
+                          external_uid=token.external_uid,
+                          token_expires=token.expires and token.expires.isoformat(),
+                          token_permissions=token.permissions,
+                          meta=token.meta))
     return dict(items=items, total=len(items))
 
 
@@ -954,7 +957,7 @@ class UserWS(WebService):
         eu = external_user_from_token_form()
         token = ExternalToken.update_token(userid, eu)
         record_user_event(str(userid), '%s token updated' % eu.system, userid)
-        return ajax_create_response(token)
+        return None if hasattr(token, '_existing') else ajax_create_response(token)
 
     @expose_ajax('/<userid>/friends/', cache_age=600, cache_private=True)
     @check_authorization(self_auth=True)
