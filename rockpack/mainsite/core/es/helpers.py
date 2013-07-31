@@ -61,15 +61,15 @@ class DBImport(object):
     def __init__(self):
         self.conn = es_connection
 
-    def import_owners(self):
+    def import_users(self):
         from rockpack.mainsite.services.user import models
         with app.test_request_context():
-            owners = models.User.query
-            total = owners.count()
-            print 'importing {} owners'.format(total)
+            users = models.User.query
+            total = users.count()
+            print 'importing {} users'.format(total)
             start = time.time()
-            for owner in owners.yield_per(6000):
-                api.add_owner_to_index(owner, bulk=True, refresh=False, no_check=True)
+            for users in users.yield_per(6000):
+                api.add_user_to_index(users, bulk=True, refresh=False, no_check=True)
             self.conn.flush_bulk(forced=True)
             print 'finished in', time.time() - start, 'seconds'
 

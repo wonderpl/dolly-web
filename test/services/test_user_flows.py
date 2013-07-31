@@ -41,7 +41,7 @@ class BaseUserTestCase(RockPackTestCase):
             i = helpers.DBImport()
             i.import_channels()
             i.import_videos()
-            i.import_owners()
+            i.import_users()
 
     def tearDown(self):
         rockpack.mainsite.app = self.old_app

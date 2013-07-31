@@ -1,5 +1,5 @@
 from werkzeug.datastructures import MultiDict
-from sqlalchemy import desc, func
+from sqlalchemy import desc, func, text
 from sqlalchemy.orm import lazyload, contains_eager
 from flask import abort, request, json, g
 from flask.ext import wtf
@@ -24,7 +24,7 @@ from rockpack.mainsite.services.cover_art.models import UserCoverArt, RockpackCo
 from rockpack.mainsite.services.cover_art import api as cover_api
 from rockpack.mainsite.services.video import api as video_api
 from rockpack.mainsite.services.search import api as search_api
-from .models import User, UserActivity, UserNotification, Subscription
+from .models import User, UserActivity, UserContentFeed, UserNotification, Subscription
 
 
 ACTION_COLUMN_VALUE_MAP = dict(
@@ -43,6 +43,8 @@ ACTIVITY_OBJECT_TYPE_MAP = dict(
     video=Video,
     video_instance=VideoInstance,
 )
+
+SUBSCRIPTION_VIDEO_FEED_THRESHOLD = func.now() - text("interval '1 day'")
 
 
 @commit_on_success
@@ -406,26 +408,82 @@ class ContentReportForm(wtf.Form):
 
 
 def _content_feed(userid, locale, paging):
-    new_channels = video_api.get_local_channel(locale, (0, 10), date_order=True)[0]
-    paging = paging[0], paging[1] - len(new_channels)
-    subscribed_channels = [s[0] for s in _user_subscriptions_query(userid).join(Channel).
-                           filter_by(public=True, deleted=False).values('channel')]
-    videos, total = video_api.get_local_videos(locale, paging, date_order=True,
-                                               channels=subscribed_channels, readonly_db=True)
-    total += len(new_channels)
-    items = []
-    position = videos[0]['position']
-    next_channel = new_channels.pop()
-    for video in videos:
-        if next_channel and next_channel['date_published'] > video['date_added']:
-            item = next_channel
-            next_channel = new_channels.pop() if new_channels else None
+    feed = UserContentFeed.query.filter_by(user=userid)
+    total = feed.count()
+    offset, limit = paging
+    feed = feed.order_by('date_added desc').offset(offset).limit(limit)
+    itemmap, videomap, channelmap = dict(), dict(), dict()
+    for i, item in enumerate(feed):
+        if item.video_instance:
+            videomap[item.video_instance] = None
+            itemmap[item.video_instance] = i, item
         else:
-            item = video
-        item['position'] = position
-        items.append(item)
-        position += 1
-    return items, total
+            channelmap[item.channel] = None
+            itemmap[item.channel] = i, item
+    items = [None] * len(itemmap)
+    usermap = dict()
+
+    # Get video data
+    vs = api.VideoSearch(locale)
+    vs.set_paging(0, -1)
+    vs.add_id(videomap.keys())
+    for video in vs.videos(with_stars=True):
+        i, item = itemmap[video['id']]
+        # Compose list of liking users from feed item and global video stars
+        item._starring_users = json.loads(item.stars) if item.stars else []
+        for user in video.pop('recent_user_stars'):
+            if user not in item._starring_users:
+                item._starring_users.append(user)
+        usermap.update((u, None) for u in item._starring_users)
+        channelmap[item.channel] = None
+        video['position'] = i + offset
+        items[i] = video
+
+    # Get channel data - for both feed channel items and video items
+    cs = api.ChannelSearch(locale)
+    cs.set_paging(0, -1)
+    cs.add_id(channelmap.keys())
+    for channel in cs.channels():
+        usermap[channel['owner']] = None
+        channelmap[channel['id']] = channel
+        if channel['id'] in itemmap:
+            i, item = itemmap[channel['id']]
+            channel['position'] = i + offset
+            items[i] = channel
+        else:
+            channel.pop('position')
+
+    # Get user data for channel owners and stars list
+    us = api.UserSearch()
+    us.set_paging(0, -1)
+    us.add_id(usermap.keys())
+    for user in us.users():
+        user.pop('position')
+        usermap[user['id']] = user
+
+    # Add owner data to channels
+    for channel in channelmap.values():
+        if channel:
+            channel['owner'] = usermap[channel['owner']]
+
+    # Add channel & user star data to videos
+    star_limit = app.config.get('FEED_STARS_LIMIT', 3)
+    for videoid in videomap.keys():
+        i, item = itemmap[videoid]
+        channel = channelmap.get(item.channel)
+        if items[i] and channel:
+            items[i]['channel'] = channel
+            if item._starring_users:
+                # star_count could possibly be out of sync so ensure it's value isn't too surprising
+                items[i]['video']['star_count'] = max(
+                    items[i]['video']['star_count'], len(item._starring_users))
+                items[i]['starring_users'] =\
+                    [usermap[u] for u in item._starring_users if usermap[u]][:star_limit]
+        else:
+            # Perhaps channel is no longer public?
+            items[i] = None
+
+    return filter(None, items), total
 
 
 def _aggregate_content_feed(items):
@@ -437,39 +495,33 @@ def _aggregate_content_feed(items):
 
     def _summarise(aggregation):
         items = aggregation.pop('items')
-        coverpos = items[0]
-        coveritem = items_by_position[coverpos]
-        if 'video' in coveritem:
-            aggregation.update(
-                type='video',
-                title=None,
-                covers=[coverpos],
-                count=len(items),
-                likes=coveritem.get('likes', {}),
-            )
+        firstitem = items_by_id[items[0]]
+        aggregation['count'] = len(items)
+        aggregation['type'] = 'video' if 'video' in firstitem else 'channel'
+        if aggregation['type'] == 'video':
+            # Use video with most stars as cover
+            items.sort(key=lambda i: items_by_id[i]['video']['star_count'], reverse=True)
+            coverlimit = 1
         else:
-            aggregation.update(
-                type='channel',
-                title='Some channels',
-                covers=items[:4],
-                count=len(items),
-            )
+            coverlimit = 4
+        aggregation['covers'] = items[:coverlimit]
 
     previous = items[0]
     prev_key = _agg_key(previous)
-    items_by_position = {previous['position']: previous}
+    items_by_id = {previous['id']: previous}
     aggid = None
     aggregations = {}
     for item in items[1:]:
-        items_by_position[item['position']] = item
+        items_by_id[item['id']] = item
         cur_key = _agg_key(item)
         if (cur_key == prev_key):
             if aggid:
-                aggregations[aggid]['items'].append(item['position'])
+                aggregations[aggid]['items'].append(item['id'])
             else:
                 aggid = str(previous['position'])
-                item['aggregation'] = previous['aggregation'] = aggid
-                aggregations[aggid] = dict(items=[previous['position'], item['position']])
+                previous['aggregation'] = aggid
+                aggregations[aggid] = dict(items=[previous['id'], item['id']])
+            item['aggregation'] = aggid
         else:
             if aggid:
                 _summarise(aggregations[aggid])
@@ -515,9 +567,9 @@ class UserWS(WebService):
     @expose_ajax('/<userid>/', cache_age=600, secure=False)
     def user_info(self, userid):
         if use_elasticsearch():
-            ows = api.OwnerSearch()
-            ows.add_id(userid)
-            owners = ows.owners()
+            us = api.UserSearch()
+            us.add_id(userid)
+            owners = us.users()
             if not owners:
                 abort(404)
             owner = owners[0]
@@ -896,6 +948,12 @@ class UserWS(WebService):
         if Subscription.query.filter_by(user=userid, channel=channelid).count():
             abort(400, message=_('Already subscribed'))
         subs = Subscription(user=userid, channel=channelid).save()
+        # Add some recent videos from this channel into the users feed
+        UserContentFeed.query.session.add_all(
+            UserContentFeed(user=userid, channel=channelid, video_instance=id, date_added=date_added)
+            for id, date_added in VideoInstance.query.filter_by(channel=channelid).
+            filter(VideoInstance.date_added > SUBSCRIPTION_VIDEO_FEED_THRESHOLD).
+            limit(10).values('id', 'date_added'))
         save_channel_activity(userid, 'subscribe', channelid, self.get_locale())
         return ajax_create_response(subs)
 
@@ -911,6 +969,8 @@ class UserWS(WebService):
     def delete_subscription_item(self, userid, channelid):
         if not _user_subscriptions_query(userid).filter_by(channel=channelid).delete():
             abort(404)
+        # Remove any videos from this channel from the users feed
+        UserContentFeed.query.filter_by(user=userid, channel=channelid).delete()
         save_channel_activity(userid, 'unsubscribe', channelid, self.get_locale())
 
     @expose_ajax('/<userid>/subscriptions/recent_videos/', cache_age=60, cache_private=True)
@@ -930,7 +990,7 @@ class UserWS(WebService):
     @check_authorization(self_auth=True)
     def content_feed(self, userid):
         items, total = _content_feed(userid, self.get_locale(), self.get_page())
-        aggregations = _aggregate_content_feed(items)
+        aggregations = _aggregate_content_feed(items) if items else {}
         return dict(content=dict(items=items, total=total, aggregations=aggregations))
 
     @expose_ajax('/<userid>/external_accounts/', cache_age=60, cache_private=True)
@@ -960,7 +1020,7 @@ class UserWS(WebService):
 
         eu = ExternalTokenManager(**form.data)
         if not eu.token_is_valid:
-             abort(400, error='unauthorized_client')
+            abort(400, error='unauthorized_client')
 
         token = ExternalToken.update_token(userid, eu)
         record_user_event(str(userid), '%s token updated' % eu.system, userid)

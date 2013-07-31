@@ -1,16 +1,19 @@
-import logging
+import os
+from functools import wraps
 from datetime import datetime, timedelta
 from flask import json
 from sqlalchemy import func
-from sqlalchemy.orm import joinedload, contains_eager
+from sqlalchemy.orm import joinedload, contains_eager, aliased
+from sqlalchemy.orm.exc import NoResultFound
+import apnsclient
 from rockpack.mainsite import app
 from rockpack.mainsite.manager import manager
 from rockpack.mainsite.core.dbapi import commit_on_success
 from rockpack.mainsite.core import email
 from rockpack.mainsite.services.base.models import JobControl
-from rockpack.mainsite.services.user.models import UserActivity, UserNotification, User
 from rockpack.mainsite.services.oauth.models import ExternalFriend, ExternalToken
 from rockpack.mainsite.services.video.models import Channel, VideoInstance
+from .models import User, UserActivity, UserNotification, UserContentFeed, Subscription
 
 
 def activity_user(activity):
@@ -63,6 +66,43 @@ from apnsclient import APNs
 import os
 from sqlalchemy.orm.exc import NoResultFound
 
+import time
+import socket
+import OpenSSL
+from OpenSSL.SSL import WantReadError
+
+def _refresh(self):
+    """ Ensure socket is still alive. Reopen if needed. """
+    if self._socket is None:
+        try:
+            self._socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self.configure_socket()
+
+            self._connection = OpenSSL.SSL.Connection(self._certificate.get_context(), self._socket)
+            self.configure_connection()
+            self._connection.connect(self._address)
+            tries = 0
+            while True:
+                try:
+                    self._connection.do_handshake()
+                    break
+                except WantReadError:
+                    tries += 1
+                    if tries >= 10:
+                        raise
+                    time.sleep(0.1)
+        except Exception:
+            self.close()
+            raise
+
+    self._readbuf = ""
+    self._feedbackbuf = ""
+    self._last_refresh = datetime.now()
+
+
+from apnsclient import Connection
+Connection.refresh = _refresh
+
 
 def send_push_notification(user):
     try:
@@ -86,7 +126,7 @@ def send_push_notification(user):
     count = notifications.count()
 
     if count:
-        con = APNSession.new_connection(
+        con = apnsclient.Session.new_connection(
             app.config['APNS_PUSH_TYPE'],
             cert_file=os.path.dirname(os.path.abspath(__file__)) + "/CertificateAndKey.pem",
             passphrase=app.config['APNS_PASSPHRASE']
@@ -106,14 +146,14 @@ def send_push_notification(user):
         push_message_args = [name]
 
         message = APNMessage(
-                device.external_token,
-                alert={
-                    "loc-key": push_message,
-                    "loc-args": push_message_args,
-                },
-                badge=count)
+            device.external_token,
+            alert={
+                "loc-key": push_message,
+                "loc-args": push_message_args,
+            },
+            badge=count)
 
-        srv = APNs(con)
+        srv = apnsclient.APNs(con)
         return srv.send(message)
 
     """
@@ -123,7 +163,6 @@ def send_push_notification(user):
     """
 
 
-@commit_on_success
 def create_new_activity_notifications(date_from=None, date_to=None):
     activity_window = UserActivity.query.options(joinedload('actor'))
     if date_from:
@@ -140,7 +179,8 @@ def create_new_activity_notifications(date_from=None, date_to=None):
             objects = dict((o.id, o) for o in model.query.filter(model.id.in_(object_ids)))
             for activity in activity_list:
                 object = objects.get(activity.object_id)
-                logging.info('read activity %d: %s: %s', activity.id, action, getattr(object, 'id', None))
+                app.logger.info('read activity %d: %s: %s',
+                                activity.id, action, getattr(object, 'id', None))
                 if object:
                     user, type, body = get_message(activity, object)
                     if user == activity.user:
@@ -155,7 +195,6 @@ def create_new_activity_notifications(date_from=None, date_to=None):
                     send_push_notification(user)
 
 
-@commit_on_success
 def create_new_registration_notifications(date_from=None, date_to=None):
     new_users = User.query.join(ExternalToken, (
         (ExternalToken.user == User.id) &
@@ -185,7 +224,6 @@ def create_new_registration_notifications(date_from=None, date_to=None):
             ))
 
 
-@commit_on_success
 def remove_old_notifications():
     """Remove old messages but leave at least N notifications per user."""
     threshold_days, threshold_count = app.config.get('KEEP_OLD_NOTIFICATIONS', (30, 100))
@@ -197,7 +235,82 @@ def remove_old_notifications():
         filter(UserNotification.date_created < (datetime.now() - timedelta(threshold_days))).\
         filter(UserNotification.user.in_(target_users)).\
         delete(False)
-    logging.info('deleted %d notifications', count)
+    app.logger.info('deleted %d notifications', count)
+
+
+def update_video_feed_item_stars(date_from, date_to):
+    # Find all star actions in this interval for which a friend of the star'ing user
+    # has the video in their feed and update the stars list with these new stars at
+    # the top.
+    feed_items = UserContentFeed.query.\
+        join(UserActivity,
+            (UserActivity.action == 'star') &
+            (UserActivity.date_actioned.between(date_from, date_to))).\
+        join(ExternalToken, ExternalToken.user == UserActivity.user).\
+        join(ExternalFriend, (ExternalFriend.external_system == ExternalToken.external_system) &
+                             (ExternalFriend.external_uid == ExternalToken.external_uid)).\
+        join(VideoInstance, UserActivity.object_id == VideoInstance.id).\
+        filter((UserContentFeed.user == ExternalFriend.user) &
+               (UserContentFeed.channel == VideoInstance.channel) &
+               (UserContentFeed.video_instance == VideoInstance.id)).\
+        with_entities(UserContentFeed, func.string_agg(UserActivity.user, ' ')).\
+        group_by(UserContentFeed.id)
+    star_limit = app.config.get('FEED_STARS_LIMIT', 3)
+    for feed_item, new_stars in feed_items:
+        old_stars = json.loads(feed_item.stars) if feed_item.stars else []
+        new_stars = [l for l in new_stars.split() if l not in old_stars]
+        stars = (new_stars + old_stars)[:star_limit]
+        feed_item.stars = json.dumps(stars)
+
+
+def create_new_video_feed_items(date_from, date_to):
+    # Create a new feed record for every user that's subscribed to the channels of new videos
+    UserContentFeed.query.session.add_all(
+        UserContentFeed(user=user, channel=channel, video_instance=video, date_added=date_added)
+        for user, channel, video, date_added in
+        VideoInstance.query.filter(
+            VideoInstance.date_added.between(date_from, date_to)).
+        join(Subscription, Subscription.channel == VideoInstance.channel).
+        values(Subscription.user, VideoInstance.channel, VideoInstance.id, VideoInstance.date_added)
+    )
+
+
+def create_new_channel_feed_items(date_from, date_to):
+    # Create new feed record for every user that's
+    # subscribed to a channel owned by
+    # or
+    # a friend of
+    # the publisher of new channels in this interval
+    SubChannel = aliased(Channel, name='subchannel')
+    new_channels = Channel.query.filter(
+        Channel.date_published.between(date_from, date_to))
+    sub_channels = new_channels.\
+        join(SubChannel, Channel.owner == SubChannel.owner).\
+        join(Subscription, Subscription.channel == SubChannel.id)
+    friend_channels = new_channels.\
+        join(ExternalToken, ExternalToken.user == Channel.owner).\
+        join(ExternalFriend, (ExternalFriend.external_system == ExternalToken.external_system) &
+                             (ExternalFriend.external_uid == ExternalToken.external_uid))
+    for query, U in (sub_channels, Subscription), (friend_channels, ExternalFriend):
+        UserContentFeed.query.session.add_all(
+            UserContentFeed(user=user, channel=channel, date_added=date_published)
+            for user, channel, date_published in
+            query.distinct().values(U.user, Channel.id, Channel.date_published)
+        )
+
+
+def remove_old_feed_items():
+    """Remove old records but leave at least N records per user."""
+    threshold_days, threshold_count = app.config.get('KEEP_OLD_FEED_ITEMS', (30, 1000))
+    target_users = UserContentFeed.query.\
+        with_entities(UserContentFeed.user).\
+        group_by(UserContentFeed.user).\
+        having(func.count(UserContentFeed.id) > threshold_count)
+    count = UserContentFeed.query.\
+        filter(UserContentFeed.date_added < (datetime.now() - timedelta(threshold_days))).\
+        filter(UserContentFeed.user.in_(target_users)).\
+        delete(False)
+    app.logger.info('deleted %d feed items', count)
 
 
 def create_registration_emails(date_from=None, date_to=None):
@@ -223,36 +336,51 @@ def create_registration_emails(date_from=None, date_to=None):
             app.logger.error("Problem sending registration email for user.id '%s': %s", user.id, str(e))
 
 
-@manager.cron_command
-def update_user_notifications():
-    """Update user notifications based on recent activity."""
-    job_control = JobControl.query.get('update_user_notifications')
-    now = datetime.now()
-    logging.info('update_user_notifications: from %s to %s', job_control.last_run, now)
+def job_control(f):
+    """Wrap the given function to ensure the input data is limited to a specific interval."""
+    @wraps(f)
+    @commit_on_success
+    def wrapper():
+        now = datetime.utcnow()
+        job_name = f.__name__
+        job_control = JobControl.query.get(job_name)
+        if not job_control:
+            job_control = JobControl(job=job_name, last_run=now)
+        app.logger.info('%s: from %s to %s', job_name, job_control.last_run, now)
 
-    create_new_activity_notifications(job_control.last_run, now)
-    create_new_registration_notifications(job_control.last_run, now)
+        f(job_control.last_run, now)
+
+        # XXX: If the cron function throws an exception then last_run is not saved
+        # and the job will be retried next time, including the same interval.
+        job_control.last_run = now
+        job_control.save()
+    return wrapper
+
+
+@manager.cron_command
+@job_control
+def update_user_notifications(date_from, date_to):
+    """Update user notifications based on recent activity."""
+    create_new_activity_notifications(date_from, date_to)
+    create_new_registration_notifications(date_from, date_to)
     remove_old_notifications()
 
-    job_control.last_run = now
-    job_control.save()
+
+@manager.cron_command
+@job_control
+def update_user_content_feed(date_from, date_to):
+    """Update users content feed based on recent content changes."""
+    create_new_video_feed_items(date_from, date_to)
+    create_new_channel_feed_items(date_from, date_to)
+    update_video_feed_item_stars(date_from, date_to)
+    remove_old_feed_items()
 
 
 @manager.cron_command
-def send_registration_emails():
-    """ Send an email based on a template """
-    JOB_NAME = 'send_registration_emails'
-    job_control = JobControl.query.get(JOB_NAME)
-    now = datetime.utcnow()
-    if not job_control:
-        job_control = JobControl(job=JOB_NAME)
-        job_control.last_run = now
-    logging.info('{}: from {} to {}'.format(JOB_NAME, job_control.last_run, now))
-
-    create_registration_emails(job_control.last_run, now)
-
-    job_control.last_run = now
-    job_control.save()
+@job_control
+def send_registration_emails(date_from, date_to):
+    """Send an email based on a template."""
+    create_registration_emails(date_from, date_to)
 
 
 @manager.command

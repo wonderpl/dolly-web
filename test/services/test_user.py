@@ -4,15 +4,15 @@ import cgi
 from datetime import datetime
 from test import base
 from mock import patch
-from test.fixtures import ChannelData, VideoInstanceData
+from test.fixtures import ChannelData, VideoData, VideoInstanceData
 from test.test_helpers import get_auth_header
 from test.test_helpers import get_client_auth_header
 from rockpack.mainsite import app
 from rockpack.mainsite.services.video.models import Channel
 from rockpack.mainsite.services.oauth.api import ExternalUser
-from rockpack.mainsite.services.oauth.models import ExternalToken
-from rockpack.mainsite.services.user.models import User, UserActivity, UserNotification
-from rockpack.mainsite.services.user.commands import create_new_activity_notifications
+from rockpack.mainsite.services.oauth.models import ExternalToken, ExternalFriend
+from rockpack.mainsite.services.user.models import User, UserActivity, UserNotification, Subscription
+from rockpack.mainsite.services.user import commands as cron_cmds
 
 
 class TestAPNS(base.RockPackTestCase):
@@ -37,7 +37,19 @@ class TestAPNS(base.RockPackTestCase):
             )
 
     def test_send_notification(self):
-        notification_data = {"user":{"avatar_thumbnail_url":"http://media.us.rockpack.com/images/avatar/thumbnail_medium/2UQj6d1FKhUP_5Im60zErg.jpg","resource_url":"http://api.rockpack.com/ws/ygBxz1S-FDoz8xv0udPPZQ/","display_name":"Jason Ball","id":"ygBxz1S-FDoz8xv0udPPZQ"},"channel":{"resource_url":"https://secure.rockpack.com/ws/sEL2DlUxRPaeLTwaOS3e2A/channels/chz_vBOu-fTgWiT15kuGV4Pw/","thumbnail_url":"http://media.us.rockpack.com/images/channel/thumbnail_medium/fav2.jpg","id":"chz_vBOu-fTgWiT15kuGV4Pw"}}
+        notification_data = {
+            "user": {
+                "avatar_thumbnail_url": "http://media.us.rockpack.com/images/avatar/thumbnail_medium/2UQj6d1FKhUP_5Im60zErg.jpg",
+                "resource_url": "http://api.rockpack.com/ws/ygBxz1S-FDoz8xv0udPPZQ/",
+                "display_name": "Jason Ball",
+                "id": "ygBxz1S-FDoz8xv0udPPZQ"
+            },
+            "channel": {
+                "resource_url": "https://secure.rockpack.com/ws/sEL2DlUxRPaeLTwaOS3e2A/channels/chz_vBOu-fTgWiT15kuGV4Pw/",
+                "thumbnail_url": "http://media.us.rockpack.com/images/channel/thumbnail_medium/fav2.jpg",
+                "id": "chz_vBOu-fTgWiT15kuGV4Pw"
+            }
+        }
 
         with self.app.test_client() as client:
             self.app.test_request_context().push()
@@ -58,9 +70,9 @@ class TestAPNS(base.RockPackTestCase):
             def _new_send(obj, message):
                 return message.payload
 
-            import rockpack
+            import apnsclient
             from rockpack.mainsite.services.user.commands import send_push_notification
-            with patch.object(rockpack.mainsite.services.user.commands.APNs, 'send', _new_send):
+            with patch.object(apnsclient.APNs, 'send', _new_send):
                 message = send_push_notification(user)
                 self.assertEquals(notification_data['user']['display_name'], message['aps']['alert']['loc-args'][0])
                 self.assertEquals(1, message['aps']['badge'])
@@ -249,41 +261,72 @@ class TestProfileEdit(base.RockPackTestCase):
             self.assertEquals(field_map['date_of_birth'], user.date_of_birth.strftime("%Y-%m-%d"))
 
     def test_content_feed(self):
+        if not self.app.config.get('ELASTICSEARCH_URL'):
+            return
         with self.app.test_client() as client:
-            user = self.create_test_user()
-            r = client.get('/ws/{}/content_feed/'.format(user.id),
-                           headers=[get_auth_header(user.id)])
+            self.app.test_request_context().push()
+            user1 = self.create_test_user().id
+            user2 = self.create_test_user().id
+            user3 = self.create_test_user().id
+
+            # Create new channel with a few videos and subscribe user
+            channel1 = Channel.query.filter_by(owner=user1).one()
+            c1instances = channel1.add_videos(
+                v.id for v in VideoData.__dict__.values() if hasattr(v, 'id'))
+            Subscription(user=user1, channel=channel1.id).save()
+
+            # Add some stars to the second video
+            c1starred = c1instances[1]
+            for user in user1, user2, user3:
+                UserActivity(user=user, action='star', object_type='video_instance',
+                             object_id=c1starred.id).save()
+            c1starred.star_count = 3
+            c1starred.save()
+
+            # Create a new channel owned by the owner of a subscription
+            u2old = Channel.query.filter_by(owner=user2).limit(1).value('id')
+            u2new = Channel(owner=user2, title='u2new', description='', cover='',
+                            public=True, date_published=datetime.now()).save().id
+            Subscription(user=user1, channel=u2old).save()
+
+            # Create a new channel owner by a friend
+            ExternalFriend(user=user1, external_system='facebook', external_uid='u3',
+                           name='u3', avatar_url='').save()
+            ExternalToken(user=user3, external_system='facebook', external_uid='u3',
+                          external_token='u3u3').save()
+            u3new = Channel(owner=user3, title='u3new', description='', cover='',
+                            public=True, date_published=datetime.now()).save().id
+
+            # Run cron commands
+            date_from, date_to = datetime(2012, 1, 1), datetime(2020, 1, 1)
+            cron_cmds.create_new_video_feed_items(date_from, date_to)
+            cron_cmds.create_new_channel_feed_items(date_from, date_to)
+            #cron_cmds.update_video_feed_item_stars(date_from, date_to)
+            User.query.session.commit()
+
+            # Fetch feed
+            self.wait_for_es()
+            r = client.get('/ws/{}/content_feed/'.format(user1),
+                           headers=[get_auth_header(user1)])
+            self.assertEquals(r.status_code, 200)
             data = json.loads(r.data)['content']
-            channel_group = []
-            print 'item count: {}, agg count: {}'.format(data['total'], len(data['aggregations']))
-            for item in data['items']:
-                if 'aggregation' in item:
-                    agg = data['aggregations'][item['aggregation']]
-                    if item['position'] not in agg['covers']:
-                        # Skip over "hidden" items in aggregation
-                        continue
-                else:
-                    agg = None
+            self.assertEquals(data['total'], len(c1instances) + 2)
+            itemids = [i['id'] for i in data['items']]
 
-                if 'video' in item:   # Item is a video instance
-                    if agg:
-                        print '{position:02d} video   {channel[owner][id]}/{channel[id]}'.format(**item),
-                        print 'AGG: +{count} {title}'.format(**agg),
-                        likes = agg.get('likes')
-                    else:
-                        print '{position:02d} video   {channel[owner][id]}/{channel[id]}'.format(**item),
-                        likes = item.get('likes', {})
-                    print '❥{}'.format(likes.get('count', 0))
+            # Check videos from channel1 are present and aggregated
+            self.assertIn(c1instances[0].id, itemids)
+            agg = [a for a in data['aggregations'].values() if a['type'] == 'video'][0]
+            self.assertEquals(agg['count'], len(c1instances))
 
-                elif 'cover' in item:   # Item is a channel
-                    if agg:
-                        channel_group.append(item)
-                        if len(channel_group) == len(agg['covers']):
-                            print '{position:02d} channel {owner[id]}/{id}'.format(**channel_group[0]),
-                            print 'AGG: +{count} {title}'.format(**agg)
-                            channel_group = []
-                    else:
-                        print '{position:02d} channel {owner[id]}/{id}'.format(**item)
+            # Check stars on cover video
+            cover = [i for i in data['items'] if i['id'] == agg['covers'][0]][0]
+            self.assertEquals(cover['video']['star_count'], 3)
+            self.assertItemsEqual([u['id'] for u in cover['starring_users']], [user1, user2, user3])
+
+            # Check that new channels from friend and from subscription owner are present
+            self.assertNotIn(u2old, itemids)
+            self.assertIn(u2new, itemids)
+            self.assertIn(u3new, itemids)
 
     def test_subscription_notification(self):
         with self.app.test_client() as client:
@@ -301,7 +344,8 @@ class TestProfileEdit(base.RockPackTestCase):
                 ('subscribe', channel.id),
                 UserActivity.query.filter_by(user=user.id).values('action', 'object_id'))
 
-            create_new_activity_notifications()
+            cron_cmds.create_new_activity_notifications()
+            UserNotification.query.session.commit()
             notification = UserNotification.query.filter_by(
                 user=channel.owner, message_type='subscribed').one()
             message = json.loads(notification.message)
@@ -324,7 +368,8 @@ class TestProfileEdit(base.RockPackTestCase):
                 ('star', video_instance.id),
                 UserActivity.query.filter_by(user=user.id).values('action', 'object_id'))
 
-            create_new_activity_notifications()
+            cron_cmds.create_new_activity_notifications()
+            UserNotification.query.session.commit()
             notification = UserNotification.query.filter_by(
                 user=owner, message_type='starred').one()
             message = json.loads(notification.message)

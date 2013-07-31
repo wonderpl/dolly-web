@@ -213,12 +213,6 @@ class EntitySearch(object):
         self._results = self._es_search()
         return self._results
 
-    def add_ids(self, ids):
-        if isinstance(ids, (list, set)):
-            self._ids += list(ids)
-        else:
-            self._ids.append(list(ids))
-
     @property
     def sorting(self):
         if not self._sorting:
@@ -255,7 +249,7 @@ class ChannelSearch(EntitySearch, CategoryMixin, MediaSortMixin):
     def _format_results(self, channels, with_owners=False, with_videos=False, video_paging=(0, 100, )):
         channel_list = range(self.paging[1])  # We don't know the channel size so default to paging
         channel_id_list = []
-        owner_list = []
+        owner_list = set()
         IMAGE_CDN = app.config.get('IMAGE_CDN', '')
         BASE_URL = url_for('basews.discover')
 
@@ -315,7 +309,7 @@ class ChannelSearch(EntitySearch, CategoryMixin, MediaSortMixin):
                         ch[k] = channel[k]
 
             if with_owners:
-                owner_list.append(channel.owner)
+                owner_list.add(channel.owner)
             if with_videos:
                 channel_id_list.append(channel.id)
 
@@ -365,10 +359,10 @@ class ChannelSearch(EntitySearch, CategoryMixin, MediaSortMixin):
             channel_list = new_list
 
         if with_owners and owner_list:
-            ows = OwnerSearch()
-            ows.add_id(owner_list)
-            ows.set_paging(0, -1)
-            owner_map = {owner['id']: owner for owner in ows.owners()}
+            us = UserSearch()
+            us.add_id(list(owner_list))
+            us.set_paging(0, -1)
+            owner_map = {owner['id']: owner for owner in us.users()}
             self.add_owner_to_channels(channel_list, owner_map)
 
         # XXX: this assumes only 1 channel for now
@@ -467,32 +461,32 @@ class VideoSearch(EntitySearch, CategoryMixin, MediaSortMixin):
         return self._video_results
 
 
-class OwnerSearch(EntitySearch):
+class UserSearch(EntitySearch):
     def __init__(self):
-        super(OwnerSearch, self).__init__('user')
-        self._owner_results = None
+        super(UserSearch, self).__init__('user')
+        self._user_results = None
 
-    def _format_results(self, owners):
-        owner_list = []
+    def _format_results(self, users):
+        user_list = []
         IMAGE_CDN = app.config.get('IMAGE_CDN', '')
         BASE_URL = url_for('basews.discover')
-        for position, owner in enumerate(owners, self.paging[0]):
-            owner_list.append(
+        for position, user in enumerate(users, self.paging[0]):
+            user_list.append(
                 dict(
-                    id=owner.id,
-                    username=owner.username,
-                    display_name=owner.display_name,
-                    resource_url=urljoin(BASE_URL, owner.resource_url),
-                    avatar_thumbnail_url=urljoin(IMAGE_CDN, owner.avatar_thumbnail_url) if owner.avatar_thumbnail_url else '',
+                    id=user.id,
+                    username=user.username,
+                    display_name=user.display_name,
+                    resource_url=urljoin(BASE_URL, user.resource_url),
+                    avatar_thumbnail_url=urljoin(IMAGE_CDN, user.avatar_thumbnail_url) if user.avatar_thumbnail_url else '',
                     position=position
                 )
             )
-        return owner_list
+        return user_list
 
-    def owners(self):
-        if not self._owner_results:
-            self._owner_results = self._format_results(self.results())
-        return self._owner_results
+    def users(self):
+        if not self._user_results:
+            self._user_results = self._format_results(self.results())
+        return self._user_results
 
 
 def add_to_index(data, index, _type, id, bulk=False, refresh=False):
@@ -531,18 +525,18 @@ def check_es(no_check=False):
     return True
 
 
-def add_owner_to_index(owner, bulk=False, refresh=False, no_check=False):
+def add_user_to_index(user, bulk=False, refresh=False, no_check=False):
     if not check_es(no_check):
         return
 
     data = dict(
-        id=owner.id,
-        avatar_thumbnail_url=urlparse(convert(owner, 'avatar', 'AVATAR').thumbnail_medium).path,
-        resource_url=urlparse(owner.resource_url).path,
-        display_name=owner.display_name,
-        username=owner.username
+        id=user.id,
+        avatar_thumbnail_url=urlparse(convert(user, 'avatar', 'AVATAR').thumbnail_medium).path,
+        resource_url=urlparse(user.resource_url).path,
+        display_name=user.display_name,
+        username=user.username
     )
-    return add_to_index(data, mappings.USER_INDEX, mappings.USER_TYPE, id=owner.id, bulk=bulk, refresh=refresh)
+    return add_to_index(data, mappings.USER_INDEX, mappings.USER_TYPE, id=user.id, bulk=bulk, refresh=refresh)
 
 
 def promotion_formatter(locale, category, position):
@@ -605,13 +599,13 @@ def add_channel_to_index(channel, bulk=False, refresh=False, boost=None, no_chec
 def video_stars(instance_id):
     from rockpack.mainsite.services.user.models import UserActivity
     stars = UserActivity.query.filter(
-            UserActivity.action == 'star',
-            UserActivity.object_type == 'video_instance',
-            UserActivity.object_id == instance_id,
-        ).distinct().with_entities(
-            UserActivity.user,
-            UserActivity.date_actioned
-        ).order_by('date_actioned desc')
+        UserActivity.action == 'star',
+        UserActivity.object_type == 'video_instance',
+        UserActivity.object_id == instance_id,
+    ).distinct().with_entities(
+        UserActivity.user,
+        UserActivity.date_actioned
+    ).order_by('date_actioned desc')
     return [_[0] for _ in stars]
 
 
@@ -637,7 +631,7 @@ def add_video_to_index(video_instance, bulk=False, refresh=False, no_check=False
         position=video_instance.position,
         locales=locale_dict_from_object(video_instance.metas),
         recent_user_stars=video_stars(video_instance.id)
-        )
+    )
     return add_to_index(data, mappings.VIDEO_INDEX, mappings.VIDEO_TYPE, id=video_instance.id, bulk=bulk, refresh=refresh)
 
 
