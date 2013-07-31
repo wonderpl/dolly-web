@@ -17,6 +17,7 @@ raven==3.1.17
 blinker==1.2
 requests==1.1.0
 pyes==0.19.1
+apns-client
 gdata==2.0.17
 #Needed for testing & deployment only:
 #pytest==2.3.4
