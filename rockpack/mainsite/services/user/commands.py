@@ -1,4 +1,5 @@
 import os
+import urlparse
 from functools import wraps
 from datetime import datetime, timedelta
 from flask import json
@@ -141,7 +142,7 @@ def send_push_notification(user):
         if app.config.get('ENABLE_APNS_DEEPLINKS'):
             extra_kwargs.update(
                 dict(
-                    url=data[key]['resource_url']
+                    url=urlparse.urlparse(data[key]['resource_url']).path.lstrip('/ws/')
                 )
             )
 

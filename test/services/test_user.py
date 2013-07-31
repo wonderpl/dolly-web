@@ -1,6 +1,7 @@
 import json
 import uuid
 import cgi
+import urlparse
 from datetime import datetime
 from test import base
 from mock import patch
@@ -62,14 +63,18 @@ class TestAPNS(base.RockPackTestCase):
                 headers=[get_auth_header(user.id)],
             )
 
+            ndata = _notification_data(user)
+
             un = UserNotification(
                 user=user.id,
                 message_type='subscribed',
-                message=json.dumps(_notification_data(user))
+                message=json.dumps(ndata)
             ).save()
 
             def _new_send(obj, message):
                 return message.payload
+
+            app.config['ENABLE_APNS_DEEPLINKS'] = True
 
             import apnsclient
             from rockpack.mainsite.services.user.commands import send_push_notification
@@ -78,6 +83,10 @@ class TestAPNS(base.RockPackTestCase):
                 self.assertEquals(user.display_name, message['aps']['alert']['loc-args'][0])
                 self.assertEquals(1, message['aps']['badge'])
                 self.assertEquals(un.id, message['id'])
+                self.assertEquals(
+                    urlparse.urlparse(ndata['channel']['resource_url']).path.lstrip('/ws/'),
+                    message['url']
+                )
 
 
 class TestProfileEdit(base.RockPackTestCase):
