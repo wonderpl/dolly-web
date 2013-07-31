@@ -63,6 +63,43 @@ from apnsclient import APNs
 import os
 from sqlalchemy.orm.exc import NoResultFound
 
+import time
+import socket
+import OpenSSL
+from OpenSSL.SSL import WantReadError
+
+def _refresh(self):
+    """ Ensure socket is still alive. Reopen if needed. """
+    if self._socket is None:
+        try:
+            self._socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self.configure_socket()
+
+            self._connection = OpenSSL.SSL.Connection(self._certificate.get_context(), self._socket)
+            self.configure_connection()
+            self._connection.connect(self._address)
+            tries = 0
+            while True:
+                try:
+                    self._connection.do_handshake()
+                    break
+                except WantReadError:
+                    tries += 1
+                    if tries >= 10:
+                        raise
+                    time.sleep(0.1)
+        except Exception:
+            self.close()
+            raise
+
+    self._readbuf = ""
+    self._feedbackbuf = ""
+    self._last_refresh = datetime.now()
+
+
+from apnsclient import Connection
+Connection.refresh = _refresh
+
 
 def send_push_notification(user):
     try:
@@ -80,7 +117,7 @@ def send_push_notification(user):
     notifications = UserNotification.query.filter(
         UserNotification.message_type.in_(['starred', 'subscribed']),
         UserNotification.date_read == None,
-        UserNotification.user == user.id
+        UserNotification.user == user_id
     ).order_by('date_created desc')
 
     count = notifications.count()
