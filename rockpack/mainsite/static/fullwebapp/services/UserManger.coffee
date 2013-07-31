@@ -88,7 +88,7 @@ window.WebApp.factory('UserManager', ['cookies', '$http', '$q', '$location','api
           User.credentials = data.data
 
           # Trigger next refresh
-          User.TriggerRefresh(data.expires_in*0.9*1000, data.refresh_token)
+          User.TriggerRefresh(data.data.expires_in*0.9*1000, data.refresh_token)
           User.timeOfLastRefresh = (new Date()).getTime()
         )
 
