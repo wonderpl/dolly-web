@@ -1020,7 +1020,7 @@ class UserWS(WebService):
 
         eu = ExternalTokenManager(**form.data)
         if not eu.token_is_valid:
-             abort(400, error='unauthorized_client')
+            abort(400, error='unauthorized_client')
 
         token = ExternalToken.update_token(userid, eu)
         record_user_event(str(userid), '%s token updated' % eu.system, userid)

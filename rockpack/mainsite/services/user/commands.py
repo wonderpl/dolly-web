@@ -1,8 +1,11 @@
+import os
 from functools import wraps
 from datetime import datetime, timedelta
 from flask import json
 from sqlalchemy import func
 from sqlalchemy.orm import joinedload, contains_eager, aliased
+from sqlalchemy.orm.exc import NoResultFound
+import apnsclient
 from rockpack.mainsite import app
 from rockpack.mainsite.manager import manager
 from rockpack.mainsite.core.dbapi import commit_on_success
@@ -56,14 +59,6 @@ activity_notification_map = dict(
 )
 
 
-from apnsclient import Session as APNSession
-from apnsclient import Message as APNMessage
-from apnsclient import APNs
-
-import os
-from sqlalchemy.orm.exc import NoResultFound
-
-
 def send_push_notification(user):
     try:
         try:
@@ -86,14 +81,14 @@ def send_push_notification(user):
     count = notifications.count()
 
     if count:
-        con = APNSession.new_connection(
+        con = apnsclient.Session.new_connection(
             app.config['APNS_PUSH_TYPE'],
             cert_file=os.path.dirname(os.path.abspath(__file__)) + "/CertificateAndKey.pem",
             passphrase=app.config['APNS_PASSPHRASE']
         )
         first = notifications.first()
 
-        key = 'user' # defaulting for message_type == subscribed
+        key = 'user'    # defaulting for message_type == subscribed
         notification_for = 'channel'
         action = 'subscribed to'
 
@@ -106,12 +101,13 @@ def send_push_notification(user):
 
         name = data[key]['display_name']
 
-        message = APNMessage(
-                device.external_token,
-                alert="%s just %s your %s" % (name, action, notification_for),
-                badge=count)
+        message = apnsclient.Message(
+            device.external_token,
+            alert="%s just %s your %s" % (name, action, notification_for),
+            badge=count
+        )
 
-        srv = APNs(con)
+        srv = apnsclient.APNs(con)
         return srv.send(message)
 
     """

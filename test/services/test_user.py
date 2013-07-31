@@ -2,7 +2,6 @@ import json
 import uuid
 import cgi
 from datetime import datetime
-from sqlalchemy import text
 from test import base
 from mock import patch
 from test.fixtures import ChannelData, VideoData, VideoInstanceData
@@ -51,14 +50,29 @@ class TestAPNS(base.RockPackTestCase):
             UserNotification(
                 user=user.id,
                 message_type='subscribed',
-                message=json.dumps({"user":{"avatar_thumbnail_url":"http://media.us.rockpack.com/images/avatar/thumbnail_medium/2UQj6d1FKhUP_5Im60zErg.jpg","resource_url":"http://api.rockpack.com/ws/ygBxz1S-FDoz8xv0udPPZQ/","display_name":"Jason Ball","id":"ygBxz1S-FDoz8xv0udPPZQ"},"channel":{"resource_url":"https://secure.rockpack.com/ws/sEL2DlUxRPaeLTwaOS3e2A/channels/chz_vBOu-fTgWiT15kuGV4Pw/","thumbnail_url":"http://media.us.rockpack.com/images/channel/thumbnail_medium/fav2.jpg","id":"chz_vBOu-fTgWiT15kuGV4Pw"}})).save()
+                message=json.dumps(
+                    {
+                        "user": {
+                            "avatar_thumbnail_url": "http://media.us.rockpack.com/images/avatar/thumbnail_medium/2UQj6d1FKhUP_5Im60zErg.jpg",
+                            "resource_url": "http://api.rockpack.com/ws/ygBxz1S-FDoz8xv0udPPZQ/",
+                            "display_name": "Jason Ball",
+                            "id": "ygBxz1S-FDoz8xv0udPPZQ"
+                        },
+                        "channel": {
+                            "resource_url": "https://secure.rockpack.com/ws/sEL2DlUxRPaeLTwaOS3e2A/channels/chz_vBOu-fTgWiT15kuGV4Pw/",
+                            "thumbnail_url": "http://media.us.rockpack.com/images/channel/thumbnail_medium/fav2.jpg",
+                            "id": "chz_vBOu-fTgWiT15kuGV4Pw"
+                        }
+                    }
+                )
+            ).save()
 
             def _new_send(obj, message):
                 return message.payload
 
-            import rockpack
+            import apnsclient
             from rockpack.mainsite.services.user.commands import send_push_notification
-            with patch.object(rockpack.mainsite.services.user.commands.APNs, 'send', _new_send):
+            with patch.object(apnsclient.APNs, 'send', _new_send):
                 message = send_push_notification(user)
                 self.assertEquals(1, message['aps']['badge'])
 
@@ -338,10 +352,6 @@ class TestProfileEdit(base.RockPackTestCase):
             self.assertEquals(message['channel']['id'], channel.id)
 
     def test_star_notification(self):
-        # Hack for sqlite
-        from rockpack.mainsite.services.user import api
-        api.SUBSCRIPTION_VIDEO_FEED_THRESHOLD = text("datetime('now')")
-
         with self.app.test_client() as client:
             user = self.create_test_user()
             video_instance = VideoInstanceData.video_instance1
