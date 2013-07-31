@@ -59,13 +59,6 @@ activity_notification_map = dict(
 )
 
 
-from apnsclient import Session as APNSession
-from apnsclient import Message as APNMessage
-from apnsclient import APNs
-
-import os
-from sqlalchemy.orm.exc import NoResultFound
-
 import time
 import socket
 import OpenSSL
@@ -100,8 +93,7 @@ def _refresh(self):
     self._last_refresh = datetime.now()
 
 
-from apnsclient import Connection
-Connection.refresh = _refresh
+apnsclient.Connection.refresh = _refresh
 
 
 def send_push_notification(user):
@@ -133,25 +125,35 @@ def send_push_notification(user):
         )
         first = notifications.first()
 
-        key = 'user' # defaulting for message_type == subscribed
-        push_message = "%@ has subscribed to your channel",
-
-        if first.message_type == 'starred':
+        if first.message_type == 'subscribed':
+            key = 'channel'
+            push_message = "%@ has subscribed to your channel",
+        else:
             key = 'video'
             push_message = "%@ has liked your video",
 
         data = json.loads(first.message)
-        name = data[key]['display_name']
+        name = data['user']['display_name']
 
         push_message_args = [name]
 
-        message = APNMessage(
+        extra_kwargs = {}
+        if app.config.get('ENABLE_APNS_DEEPLINKS'):
+            extra_kwargs.update(
+                dict(
+                    id=first.id,
+                    url=data[key]['resource_url']
+                )
+            )
+
+        message = apnsclient.Message(
             device.external_token,
             alert={
                 "loc-key": push_message,
                 "loc-args": push_message_args,
             },
-            badge=count)
+            badge=count,
+            **extra_kwargs)
 
         srv = apnsclient.APNs(con)
         return srv.send(message)
