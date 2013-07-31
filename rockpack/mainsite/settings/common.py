@@ -115,4 +115,4 @@ TWITTER_ACCESS_TOKEN_SECRET = 'qmd88AaAfta2HOaBqyaLQOJHAK1jkeLugfsziBGMjk'
 
 # APNS settings
 APNS_PUSH_TYPE = 'push_sandbox'
-APNS_PASSPHRASE = 'rockpackrockpack'
+APNS_PASSPHRASE = 'rockpack'

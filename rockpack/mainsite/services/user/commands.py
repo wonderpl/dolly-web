@@ -66,27 +66,51 @@ from sqlalchemy.orm.exc import NoResultFound
 
 def send_push_notification(user):
     try:
+        try:
+            user_id = user.id
+        except:
+            user_id = user
         device = ExternalToken.query.filter(
             ExternalToken.external_system == 'apns',
             ExternalToken.external_token != 'INVALID',
-            ExternalToken.user == user.id).one()
+            ExternalToken.user == user_id).one()
     except NoResultFound:
         return
 
     notifications = UserNotification.query.filter(
-            UserNotification.date_read == None,
-            UserNotification.user == user.id).count()
+        UserNotification.message_type.in_(['starred', 'subscribed']),
+        UserNotification.date_read == None,
+        UserNotification.user == user.id
+    ).order_by('date_created desc')
 
-    if notifications:
+    count = notifications.count()
+
+    if count:
         con = APNSession.new_connection(
-                app.config['APNS_PUSH_TYPE'],
-                cert_file=os.path.dirname(os.path.abspath(__file__)) + "/CertificateAndKey.pem",
-                passphrase=app.config['APNS_PASSPHRASE'])
+            app.config['APNS_PUSH_TYPE'],
+            cert_file=os.path.dirname(os.path.abspath(__file__)) + "/CertificateAndKey.pem",
+            passphrase=app.config['APNS_PASSPHRASE']
+        )
+        first = notifications.first()
+
+        key = 'user' # defaulting for message_type == subscribed
+        notification_for = 'channel'
+        action = 'subscribed to'
+
+        if first.message_type == 'starred':
+            key = 'video'
+            notification_for = 'video'
+            action = 'liked'
+
+        data = json.loads(first.message)
+
+        name = data[key]['display_name']
 
         message = APNMessage(
                 device.external_token,
-                alert="You have new activity on your channels!",
-                badge=notifications)
+                alert="%s just %s your %s" % (name, action, notification_for),
+                badge=count)
+
         srv = APNs(con)
         return srv.send(message)
 
