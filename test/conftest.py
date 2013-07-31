@@ -18,9 +18,13 @@ def pytest_configure(config):
         i.create_all_indexes(rebuild=True)
         i.create_all_mappings()
 
-    # Seems to be required for sub-transaction support:
     if 'sqlite:' in app.config['DATABASE_URL']:
+        # Seems to be required for sub-transaction support:
         dbapi.db.engine.raw_connection().connection.isolation_level = None
+        # substitute postgres-specific "interval" expression
+        from rockpack.mainsite.services.user import api
+        from sqlalchemy import text
+        api.SUBSCRIPTION_VIDEO_FEED_THRESHOLD = text("datetime('now')")
 
     dbapi.sync_database(drop_all=True)
 
