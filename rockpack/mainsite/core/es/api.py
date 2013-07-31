@@ -433,8 +433,8 @@ class VideoSearch(EntitySearch, CategoryMixin, MediaSortMixin):
                 category='',
                 video=dict(
                     id=v.video.id,
-                    view_count=v['locales'][self.locale]['view_count'],
-                    star_count=v['locales'][self.locale]['star_count'],
+                    view_count=sum(l['view_count'] for l in v['locales'].values()),
+                    star_count=sum(l['star_count'] for l in v['locales'].values()),
                     source=['rockpack', 'youtube'][v.video.source],
                     source_id=v.video.source_id,
                     source_username=v.video.source_username,
@@ -444,7 +444,7 @@ class VideoSearch(EntitySearch, CategoryMixin, MediaSortMixin):
                 position=pos
             )
             if with_stars:
-                video['stars'] = v['recent_user_stars']
+                video['recent_user_stars'] = v.get('recent_user_stars', [])
             if v.category:
                 video['category'] = max(v.category) if isinstance(v.category, list) else v.category
             if with_channels:
