@@ -188,12 +188,10 @@ Content-Type: application/json
 }
 ```
 
-Register/Login Facebook User
+Login/Register User With External Credentials
 ======================
 
-Both registrationa and login for external systems use the same resource.
-
-Registrering a Facebook user.
+Log in or register a user with an external token, e.g. a Facebook access token.
 
 ```http
 POST /ws/login/external/ HTTP/1.1
@@ -201,17 +199,25 @@ Authorization: Basic CLIENT_APP_CREDENTIALS
 Content-Type: application/json
 
 {
-    "external_system": "facebook",
-    "external_token": "some_fb_access_token"
+ "external_system": "facebook",
+ "external_token": "xxx",
+ "token_expires": "2013-03-28T19:16:13",
+ "token_permissions": "read,write",
+ "meta": {
+  "key": "value"
+ }
 }
 ```
 
-Parameter       | Required | Value     | Description
-:-------------- | :------- | :-------- | :----------
-external_system | Yes      | `facebook`| Identifier for external service
-external_token  | Yes      | String    | Access token provided by service
+Parameter         | Required | Value     | Description
+:---------------- | :------- | :-------- | :----------
+external_system   | Yes      | `facebook`| Identifier for external service
+external_token    | Yes      | String    | Access token provided by service
+token_expires     | No       | String    | ISO format datetime string, as provided by external service
+token_permissions | No       | String    | Comma-separated list of external permissions (e.g. Facebook scope)
+meta              | No       | Object    | Any additional metadata, as a JSON object or dictionary
 
-Responds with an access token information.
+Responds with access token information on success.
 
 ```http
 HTTP/1.1 200 OK
@@ -227,7 +233,8 @@ Content-Type: application/json
 }
 ```
 
-If no user is found for the Facebook token provided, a user record (using information like fb username etc) will be used to generate a Rockpack account, before returning a Rockpack token/
+If the token is valid but the external system id determined from the provided token does not match an existing record
+then a new user record is created.  In this case the response will include a `registered` field.
 
 Possible errors.
 

@@ -73,11 +73,15 @@ class TestProfileEdit(base.RockPackTestCase):
             def check_connect(userid, status):
                 r = client.post(
                     '/ws/{}/external_accounts/'.format(userid),
-                    data=json.dumps(dict(external_system='facebook', external_token='xxx')),
+                    data=json.dumps(dict(
+                        external_system='facebook',
+                        external_token='xxx',
+                        token_expires='2020-01-01T00:00:00',
+                    )),
                     content_type='application/json',
                     headers=[get_auth_header(userid)],
                 )
-                self.assertEquals(r.status_code, status)
+                self.assertEquals(r.status_code, status, r.data)
                 return r
 
             user1 = self.create_test_user().id

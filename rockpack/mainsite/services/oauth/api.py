@@ -1,7 +1,7 @@
 from werkzeug.datastructures import MultiDict
 from datetime import datetime, timedelta
 from cStringIO import StringIO
-from flask import request, abort, g
+from flask import request, abort, g, json
 from flask.ext import wtf
 from rockpack.mainsite import app, requests
 from rockpack.mainsite.helpers import lazy_gettext as _
@@ -65,22 +65,27 @@ class LoginWS(WebService):
         if not form.validate():
             abort(400, form_errors=form.errors)
 
-        eu = ExternalUser(form.external_system.data, form.external_token.data)
+        result = {}
 
-        user = models.ExternalToken.user_from_uid(
-            request.form.get('external_system'),
-            eu.id)
+        eu = ExternalUser(**form.data)
+        if not eu.token_is_valid:
+            abort(400, error='unauthorized_client')
 
-        if not user:
+        user = models.ExternalToken.user_from_uid(eu.system, eu.id)
+
+        if user:
+            record_user_event(user.username, 'login succeeded', user.id)
+        else:
             # New user
             user = User.create_from_external_system(eu, self.get_locale())
             record_user_event(user.username, 'registration succeeded', user.id)
+            result['registered'] = True
 
         # Update the token record if needed
         models.ExternalToken.update_token(user.id, eu)
 
-        record_user_event(user.username, 'login succeeded', user.id)
-        return user.get_credentials()
+        result.update(user.get_credentials())
+        return result
 
 
 def username_validator():
@@ -145,26 +150,45 @@ class RockRegistrationForm(wtf.Form):
 class ExternalRegistrationForm(wtf.Form):
     external_system = wtf.TextField(validators=[wtf.Required()])
     external_token = wtf.TextField(validators=[wtf.Required()])
+    token_expires = wtf.TextField()
+    token_permissions = wtf.TextField()
+    meta = wtf.TextField()
 
     def validate_external_system(form, value):
         if value.data not in models.EXTERNAL_SYSTEM_NAMES:
             raise wtf.ValidationError(_('External system invalid.'))
 
+    def validate_token_expires(form, value):
+        if value.data:
+            try:
+                value.data = datetime.strptime(value.data[:19], '%Y-%m-%dT%H:%M:%S')
+            except ValueError:
+                raise wtf.ValidationError(_('Invalid expiry date.'))
+
+    def validate_meta(form, value):
+        if value.data:
+            try:
+                if isinstance(value.data, basestring):
+                    value.data = json.loads(value.data)
+                assert type(value.data) is dict
+            except:
+                raise wtf.ValidationError(_('Invalid account metadata.'))
+
 
 class AbstractTokenManager(object):
-    def __init__(self, external_system, token, expires_in=None):
-        self._token = token
+    def __init__(self, external_system, external_token, token_expires=None, **kwargs):
+        self._token = external_token
         self._system = external_system
 
-        if expires_in:
-            self._expires = datetime.now() + timedelta(seconds=expires_in)
+        if type(token_expires) is int:
+            self._expires = datetime.now() + timedelta(seconds=token_expires)
         else:
-            self._expires = None
+            if not token_expires and isinstance(token_expires, (str, unicode)):
+                self._expires = None
+            else:
+                self._expires = token_expires
 
-    def _get_external_data(self):
-        raise NotImplementedError
-
-    def _is_token_valid(self):
+    def token_is_valid(self):
         raise NotImplementedError
 
     def get_new_token(self):
@@ -172,6 +196,14 @@ class AbstractTokenManager(object):
 
     @staticmethod
     def is_handler_for(external_system):
+        raise NotImplementedError
+
+    @property
+    def permissions(self):
+        raise NotImplementedError
+
+    @property
+    def meta(self):
         raise NotImplementedError
 
     @property
@@ -199,15 +231,49 @@ class APNSTokenManager(AbstractTokenManager):
     def id(self):
         return self.token
 
+    @property
+    def permissions(self):
+        return ''
 
-# TODO: currently only Facebook - change
+    @property
+    def meta(self):
+        return ''
+
+
+# TODO: currently only Facebook
 # TODO: subclass this for each social account type
 class ExternalUser(AbstractTokenManager):
-    def __init__(self, external_system, token, expires_in=None):
-        super(ExternalUser, self).__init__(external_system, token, expires_in)
+    def __init__(self, external_system, external_token, token_expires, token_permissions=None, meta=None):
+        super(ExternalUser, self).__init__(external_system, external_token, token_expires)
+
+        self._valid_token = False
+
+        if not token_expires and not token_permissions:
+            data = self._validate_token()
+            if not data:
+                return  # invalid token
+
+            token_expires = datetime.fromtimestamp(data['expires_at'])
+            token_permissions = ','.join(data['scopes'])
+            meta = data.get('metadata')
+
+        self._permissions = token_permissions
+        self._meta = json.dumps(meta) if meta else None
+
         self._user_data = self._get_external_data()
-        if not self._user_data:
+        if self._user_data:
+            self._valid_token = True
+        else:
             abort(400, error='unauthorized_client')
+
+    def _validate_token(self):
+        try:
+            return facebook.validate_token(
+                self._token,
+                app.config['FACEBOOK_APP_ID'],
+                app.config['FACEBOOK_APP_SECRET'])
+        except:
+            app.logger.exception('Failed to validate Facebook token')
 
     def _get_external_data(self):
         try:
@@ -232,6 +298,18 @@ class ExternalUser(AbstractTokenManager):
     first_name = property(lambda x: x._user_data.get('first_name', ''))
     last_name = property(lambda x: x._user_data.get('last_name', ''))
     display_name = property(lambda x: x._user_data.get('name', ''))
+
+    @property
+    def meta(self):
+        return self._meta
+
+    @property
+    def permissions(self):
+        return self._permissions
+
+    @property
+    def token_is_valid(self):
+        return self._valid_token
 
     @property
     def email(self):
@@ -277,10 +355,11 @@ class ExternalUser(AbstractTokenManager):
         return ''
 
 
-def ExternalTokenManager(external_system, token, expires_in=None):
+def ExternalTokenManager(external_system, external_token, **kwargs):
+    """ Factory for selecting a Token Manager """
     for cls in AbstractTokenManager.__subclasses__():
         if cls.is_handler_for(external_system):
-            return cls(external_system, token, expires_in=expires_in)
+            return cls(external_system, external_token, **kwargs)
 
 
 class RegistrationWS(WebService):

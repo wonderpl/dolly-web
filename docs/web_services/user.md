@@ -1349,7 +1349,9 @@ Content-Type: application/json
     "external_system": "SYSTEM LABEL",
     "external_uid": "123",
     "external_token": "xxx",
-    "token_expires": "2013-01-01T00:00:00"
+    "token_expires": "2013-01-01T00:00:00",
+    "token_permissions": "read,write",
+    "meta": null
    }
   ]
  }
@@ -1367,11 +1369,24 @@ Content-Type: application/json
 
 {
  "external_system": "facebook",
- "external_token": "xxx"
+ "external_token": "xxx",
+ "token_expires": "2013-03-28T19:16:13",
+ "token_permissions": "read,write",
+ "meta": {
+  "key": "value"
+ }
 }
 ```
 
-A `201` is returned if the connection is created successfully.
+Parameter         | Required | Value      | Description
+:---------------- | :------- | :--------- | :----------
+external_system   | Yes      | `facebook` | Identifier for the external service
+external_token    | Yes      | String     | Access token provided by service
+token_expires     | No       | String     | ISO format datetime string, as provided by external service
+token_permissions | No       | String     | Comma-separated list of external permissions (e.g. Facebook scope)
+meta              | No       | Object     | Any additional metadata, as a JSON object or dictionary
+
+A `201` is returned if the connection is created successfully and a `204` if existing account data is updated.
 
 ```http
 HTTP/1.1 201 CREATED
