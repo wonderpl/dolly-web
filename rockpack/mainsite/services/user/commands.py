@@ -80,7 +80,7 @@ def send_push_notification(user):
     notifications = UserNotification.query.filter(
         UserNotification.message_type.in_(['starred', 'subscribed']),
         UserNotification.date_read == None,
-        UserNotification.user == user.id
+        UserNotification.user == user_id
     ).order_by('date_created desc')
 
     count = notifications.count()
@@ -94,21 +94,23 @@ def send_push_notification(user):
         first = notifications.first()
 
         key = 'user' # defaulting for message_type == subscribed
-        notification_for = 'channel'
-        action = 'subscribed to'
+        push_message = "%@ has subscribed to your channel",
 
         if first.message_type == 'starred':
             key = 'video'
-            notification_for = 'video'
-            action = 'liked'
+            push_message = "%@ has liked your video",
 
         data = json.loads(first.message)
-
         name = data[key]['display_name']
+
+        push_message_args = [name]
 
         message = APNMessage(
                 device.external_token,
-                alert="%s just %s your %s" % (name, action, notification_for),
+                alert={
+                    "loc-key": push_message,
+                    "loc-args": push_message_args,
+                },
                 badge=count)
 
         srv = APNs(con)
