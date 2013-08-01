@@ -229,7 +229,7 @@ class APNSTokenManager(AbstractTokenManager):
 
     @property
     def id(self):
-        return self.token
+        return g.authorized.userid
 
     @property
     def permissions(self):

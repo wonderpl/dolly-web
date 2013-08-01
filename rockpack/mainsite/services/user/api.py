@@ -252,12 +252,61 @@ def _notification_list(userid, paging):
 def _notification_unread_count(userid):
     return UserNotification.query.filter_by(user=userid, date_read=None).count()
 
+import pkg_resources
+from sqlalchemy.orm.exc import NoResultFound
+from rockpack.mainsite.core.apns import push_client
 
 @commit_on_success
 def _mark_read_notifications(userid, id_list):
+    # Check the notification count before we attempt
+    # push a zero badge over apns
+    pre_count = 0
+    try:
+        device = ExternalToken.query.filter(
+            ExternalToken.external_system == 'apns',
+            ExternalToken.external_token != 'INVALID',
+            ExternalToken.user == userid).one()
+    except NoResultFound:
+        pass
+    else:
+        notifications = UserNotification.query.filter(
+            UserNotification.message_type.in_(['starred', 'subscribed']),
+            UserNotification.date_read == None,
+            UserNotification.user == userid
+        ).order_by('date_created desc')
+
+        pre_count = notifications.count()
+
     UserNotification.query.filter_by(user=userid, date_read=None).\
         filter(UserNotification.id.in_(id_list)).update(
             {UserNotification.date_read: func.now()}, False)
+
+    if pre_count > 0:
+        notifications = UserNotification.query.filter(
+            UserNotification.message_type.in_(['starred', 'subscribed']),
+            UserNotification.date_read == None,
+            UserNotification.user == userid
+        ).order_by('date_created desc')
+
+        count = notifications.count()
+
+        if count == 0:
+            try:
+                con = push_client.Session.new_connection(
+                    app.config['APNS_PUSH_TYPE'],
+                    cert_file=pkg_resources.resource_filename(__name__, app.config['APNS_CERT_NAME']),
+                    passphrase=app.config['APNS_PASSPHRASE']
+                )
+
+                message = push_client.Message(
+                    device.external_token,
+                    alert={},
+                    badge=count)
+
+                srv = push_client.APNs(con)
+                srv.send(message)
+            except Exception, e:
+                app.logger.error('Failed to send push notification: %s', str(e))
 
 
 def action_object_list(user, action, limit):

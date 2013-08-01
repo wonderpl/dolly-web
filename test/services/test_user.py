@@ -37,6 +37,21 @@ class TestAPNS(base.RockPackTestCase):
                 1
             )
 
+            new_token = uuid.uuid4().hex
+
+            client.post(
+                '/ws/{}/external_accounts/'.format(user.id),
+                data=json.dumps(dict(external_system=system, external_token=new_token)),
+                content_type='application/json',
+                headers=[get_auth_header(user.id)],
+            )
+
+            etoken = ExternalToken.query.filter_by(
+                    external_system=system,
+                    external_token=new_token).one()
+            self.assertEquals(new_token, etoken.external_token)
+            self.assertEquals(user.id, etoken.external_uid)
+
     def test_send_notification(self):
         def _notification_data(user):
             return {

@@ -1,4 +1,3 @@
-import os
 import urlparse
 import pkg_resources
 from functools import wraps
@@ -7,11 +6,11 @@ from flask import json
 from sqlalchemy import func
 from sqlalchemy.orm import joinedload, contains_eager, aliased
 from sqlalchemy.orm.exc import NoResultFound
-import apnsclient
 from rockpack.mainsite import app
 from rockpack.mainsite.manager import manager
 from rockpack.mainsite.core.dbapi import commit_on_success
 from rockpack.mainsite.core import email
+from rockpack.mainsite.core.apns import push_client
 from rockpack.mainsite.services.base.models import JobControl
 from rockpack.mainsite.services.oauth.models import ExternalFriend, ExternalToken
 from rockpack.mainsite.services.video.models import Channel, VideoInstance
@@ -61,43 +60,6 @@ activity_notification_map = dict(
 )
 
 
-import time
-import socket
-import OpenSSL
-from OpenSSL.SSL import WantReadError
-
-def _refresh(self):
-    """ Ensure socket is still alive. Reopen if needed. """
-    if self._socket is None:
-        try:
-            self._socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            self.configure_socket()
-
-            self._connection = OpenSSL.SSL.Connection(self._certificate.get_context(), self._socket)
-            self.configure_connection()
-            self._connection.connect(self._address)
-            tries = 0
-            while True:
-                try:
-                    self._connection.do_handshake()
-                    break
-                except WantReadError:
-                    tries += 1
-                    if tries >= 10:
-                        raise
-                    time.sleep(0.1)
-        except Exception:
-            self.close()
-            raise
-
-    self._readbuf = ""
-    self._feedbackbuf = ""
-    self._last_refresh = datetime.now()
-
-
-apnsclient.Connection.refresh = _refresh
-
-
 def send_push_notification(user):
     try:
         try:
@@ -120,45 +82,48 @@ def send_push_notification(user):
     count = notifications.count()
 
     if count:
-        con = apnsclient.Session.new_connection(
-            app.config['APNS_PUSH_TYPE'],
-            cert_file=pkg_resources.resource_filename(__name__, app.config['APNS_CERT_NAME']),
-            passphrase=app.config['APNS_PASSPHRASE']
-        )
-        first = notifications.first()
-
-        if first.message_type == 'subscribed':
-            key = 'channel'
-            push_message = "%@ has subscribed to your channel"
-        else:
-            key = 'video'
-            push_message = "%@ has liked your video"
-
-        data = json.loads(first.message)
-        name = data['user']['display_name']
-
-        push_message_args = [name]
-
-        extra_kwargs = {}
-        if app.config.get('ENABLE_APNS_DEEPLINKS'):
-            extra_kwargs.update(
-                dict(
-                    url=urlparse.urlparse(data[key]['resource_url']).path.lstrip('/ws/')
-                )
+        try:
+            con = push_client.Session.new_connection(
+                app.config['APNS_PUSH_TYPE'],
+                cert_file=pkg_resources.resource_filename(__name__, app.config['APNS_CERT_NAME']),
+                passphrase=app.config['APNS_PASSPHRASE']
             )
+            first = notifications.first()
 
-        message = apnsclient.Message(
-            device.external_token,
-            alert={
-                "loc-key": push_message,
-                "loc-args": push_message_args,
-            },
-            badge=count,
-            id=first.id,
-            **extra_kwargs)
+            if first.message_type == 'subscribed':
+                key = 'channel'
+                push_message = "%@ has subscribed to your channel"
+            else:
+                key = 'video'
+                push_message = "%@ has liked your video"
 
-        srv = apnsclient.APNs(con)
-        return srv.send(message)
+            data = json.loads(first.message)
+            name = data['user']['display_name']
+
+            push_message_args = [name]
+
+            extra_kwargs = {}
+            if app.config.get('ENABLE_APNS_DEEPLINKS'):
+                extra_kwargs.update(
+                    dict(
+                        url=urlparse.urlparse(data[key]['resource_url']).path.lstrip('/ws/')
+                    )
+                )
+
+            message = push_client.Message(
+                device.external_token,
+                alert={
+                    "loc-key": push_message,
+                    "loc-args": push_message_args,
+                },
+                badge=count,
+                id=first.id,
+                **extra_kwargs)
+
+            srv = push_client.APNs(con)
+            return srv.send(message)
+        except Exception, e:
+            app.logger.error('Failed to send push notification: %s', str(e))
 
     """
     # Retry once
