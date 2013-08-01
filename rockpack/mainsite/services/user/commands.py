@@ -160,7 +160,7 @@ def create_new_activity_notifications(date_from=None, date_to=None, user_notific
                         message=json.dumps(body, separators=(',', ':')),
                     )
                     UserNotification.query.session.add(notification)
-                    if user_notifications:
+                    if user_notifications is not None:
                         user_notifications.setdefault(user, []).append(notification)
 
 
@@ -192,8 +192,8 @@ def create_new_registration_notifications(date_from=None, date_to=None, user_not
                 message=json.dumps(message, separators=(',', ':')),
             )
             UserNotification.query.session.add(notification)
-            if user_notifications:
-                user_notifications.setdefault(user, []).append(notification)
+            if user_notifications is not None:
+                user_notifications.setdefault(friend, []).append(notification)
 
 
 def remove_old_notifications():
