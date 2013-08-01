@@ -1,5 +1,6 @@
 import os
 import urlparse
+import pkg_resources
 from functools import wraps
 from datetime import datetime, timedelta
 from flask import json
@@ -121,7 +122,7 @@ def send_push_notification(user):
     if count:
         con = apnsclient.Session.new_connection(
             app.config['APNS_PUSH_TYPE'],
-            cert_file=os.path.dirname(os.path.abspath(__file__)) + "/CertificateAndKey.pem",
+            cert_file=pkg_resources.resource_filename(__name__, app.config['APNS_CERT_NAME']),
             passphrase=app.config['APNS_PASSPHRASE']
         )
         first = notifications.first()
