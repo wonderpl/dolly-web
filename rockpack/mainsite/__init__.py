@@ -11,6 +11,9 @@ def configure():
     app.config.from_pyfile('settings/common.py')
     app.config.from_pyfile('settings/local.py', silent=True)
     app.config.from_envvar('ROCKPACK_SETTINGS', silent=True)
+    env_settings = app.config.get('ROCKPACK_ENV_SETTINGS')  # could be "prod" or "dev"
+    if env_settings:
+        app.config.from_pyfile('settings/%s.py' % env_settings)
 configure()
 
 
