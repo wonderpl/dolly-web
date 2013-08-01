@@ -106,7 +106,7 @@ def send_push_notifications(user, notifications):
         push_message_args = [name]
 
         extra_kwargs = {}
-        if app.config.get('ENABLE_APNS_DEEPLINKS'):
+        if app.config.get('ENABLE_APNS_DEEPLINKS', True):
             extra_kwargs.update(
                 dict(
                     url=urlparse.urlparse(data[key]['resource_url']).path.lstrip('/ws/')
@@ -130,7 +130,7 @@ def send_push_notifications(user, notifications):
         app.logger.exception('Failed to send push notification: %d', notification.id)
 
 
-def create_new_activity_notifications(date_from=None, date_to=None):
+def create_new_activity_notifications(date_from=None, date_to=None, user_notifications=None):
     activity_window = UserActivity.query.options(joinedload('actor'))
     if date_from:
         activity_window = activity_window.filter(UserActivity.date_actioned >= date_from)
@@ -140,8 +140,6 @@ def create_new_activity_notifications(date_from=None, date_to=None):
         if activity.action in activity_notification_map:
             activity_notification_map[activity.action][0].append(activity)
 
-    # Map user to new notifications
-    user_notifications = {}
     for action, (activity_list, model, get_message) in activity_notification_map.items():
         if activity_list:
             object_ids = [a.object_id for a in activity_list]
@@ -162,13 +160,11 @@ def create_new_activity_notifications(date_from=None, date_to=None):
                         message=json.dumps(body, separators=(',', ':')),
                     )
                     UserNotification.query.session.add(notification)
-                    user_notifications.setdefault(user, []).append(notification)
-
-    for user, notifications in user_notifications.iteritems():
-        send_push_notifications(user, notifications)
+                    if user_notifications:
+                        user_notifications.setdefault(user, []).append(notification)
 
 
-def create_new_registration_notifications(date_from=None, date_to=None):
+def create_new_registration_notifications(date_from=None, date_to=None, user_notifications=None):
     new_users = User.query.join(ExternalToken, (
         (ExternalToken.user == User.id) &
         (ExternalToken.external_system == 'facebook'))
@@ -189,12 +185,15 @@ def create_new_registration_notifications(date_from=None, date_to=None):
                 avatar_thumbnail_url=user.avatar.url,
                 display_name=user.display_name,
             ))
-            UserNotification.query.session.add(UserNotification(
+            notification = UserNotification(
                 user=friend,
                 date_created=user.date_joined,
                 message_type='joined',
                 message=json.dumps(message, separators=(',', ':')),
-            ))
+            )
+            UserNotification.query.session.add(notification)
+            if user_notifications:
+                user_notifications.setdefault(user, []).append(notification)
 
 
 def remove_old_notifications():
@@ -334,8 +333,11 @@ def job_control(f):
 @job_control
 def update_user_notifications(date_from, date_to):
     """Update user notifications based on recent activity."""
-    create_new_activity_notifications(date_from, date_to)
-    create_new_registration_notifications(date_from, date_to)
+    user_notifications = {}
+    create_new_activity_notifications(date_from, date_to, user_notifications)
+    create_new_registration_notifications(date_from, date_to, user_notifications)
+    for user, notifications in user_notifications.iteritems():
+        send_push_notifications(user, notifications)
     remove_old_notifications()
 
 
