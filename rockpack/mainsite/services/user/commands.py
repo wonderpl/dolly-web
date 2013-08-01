@@ -93,6 +93,9 @@ def send_push_notification(user):
             if first.message_type == 'subscribed':
                 key = 'channel'
                 push_message = "%@ has subscribed to your channel"
+            elif first.message_type == 'joined':
+                key = 'user'
+                push_message = "Your Facebook friend %@ has joined Rockpack"
             else:
                 key = 'video'
                 push_message = "%@ has liked your video"

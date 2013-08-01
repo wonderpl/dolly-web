@@ -1,9 +1,12 @@
+import pkg_resources
 from werkzeug.datastructures import MultiDict
 from sqlalchemy import desc, func, text
 from sqlalchemy.orm import lazyload, contains_eager
+from sqlalchemy.orm.exc import NoResultFound
 from flask import abort, request, json, g
 from flask.ext import wtf
 from flask.ext.admin import form
+from rockpack.mainsite.core.apns import push_client
 from wtforms.validators import ValidationError
 from rockpack.mainsite import app
 from rockpack.mainsite.core.dbapi import commit_on_success
@@ -252,15 +255,8 @@ def _notification_list(userid, paging):
 def _notification_unread_count(userid):
     return UserNotification.query.filter_by(user=userid, date_read=None).count()
 
-import pkg_resources
-from sqlalchemy.orm.exc import NoResultFound
-from rockpack.mainsite.core.apns import push_client
 
-@commit_on_success
-def _mark_read_notifications(userid, id_list):
-    # Check the notification count before we attempt
-    # push a zero badge over apns
-    pre_count = 0
+def _apns_mark_unread(userid):
     try:
         device = ExternalToken.query.filter(
             ExternalToken.external_system == 'apns',
@@ -269,44 +265,34 @@ def _mark_read_notifications(userid, id_list):
     except NoResultFound:
         pass
     else:
-        notifications = UserNotification.query.filter(
-            UserNotification.message_type.in_(['starred', 'subscribed']),
-            UserNotification.date_read == None,
-            UserNotification.user == userid
-        ).order_by('date_created desc')
+        try:
+            con = push_client.Session.new_connection(
+                app.config['APNS_PUSH_TYPE'],
+                cert_file=pkg_resources.resource_filename(__name__, app.config['APNS_CERT_NAME']),
+                passphrase=app.config['APNS_PASSPHRASE']
+            )
 
-        pre_count = notifications.count()
+            message = push_client.Message(
+                device.external_token,
+                alert={},
+                badge=0)
 
-    UserNotification.query.filter_by(user=userid, date_read=None).\
-        filter(UserNotification.id.in_(id_list)).update(
-            {UserNotification.date_read: func.now()}, False)
+            srv = push_client.APNs(con)
+            srv.send(message)
+        except Exception, e:
+            app.logger.error('Failed to send push notification: %s', str(e))
 
-    if pre_count > 0:
-        notifications = UserNotification.query.filter(
-            UserNotification.message_type.in_(['starred', 'subscribed']),
-            UserNotification.date_read == None,
-            UserNotification.user == userid
-        ).order_by('date_created desc')
 
-        count = notifications.count()
+@commit_on_success
+def _mark_read_notifications(userid, id_list):
+    unread = UserNotification.query.filter_by(user=userid, date_read=None)
+    unread_count = unread.count()
+    marked_read = unread.filter(
+        UserNotification.id.in_(id_list)
+    ).update({UserNotification.date_read: func.now()}, False)
 
-        if count == 0:
-            try:
-                con = push_client.Session.new_connection(
-                    app.config['APNS_PUSH_TYPE'],
-                    cert_file=pkg_resources.resource_filename(__name__, app.config['APNS_CERT_NAME']),
-                    passphrase=app.config['APNS_PASSPHRASE']
-                )
-
-                message = push_client.Message(
-                    device.external_token,
-                    alert={},
-                    badge=count)
-
-                srv = push_client.APNs(con)
-                srv.send(message)
-            except Exception, e:
-                app.logger.error('Failed to send push notification: %s', str(e))
+    if marked_read and marked_read == unread_count:
+        _apns_mark_unread(userid)
 
 
 def action_object_list(user, action, limit):
