@@ -44,6 +44,7 @@ def star_message(activity, video_instance):
         user=activity_user(activity),
         video=dict(
             id=video_instance.id,
+            resource_url=video_instance.resource_url,
             thumbnail_url=video_instance.default_thumbnail,
             channel=dict(
                 id=channel.id,
@@ -60,7 +61,9 @@ activity_notification_map = dict(
 )
 
 
-def send_push_notification(user):
+# XXX: This assumes that the notifications passed in are not yet
+# committed to the db
+def send_push_notifications(user, notifications):
     try:
         try:
             user_id = user.id
@@ -73,66 +76,58 @@ def send_push_notification(user):
     except NoResultFound:
         return
 
-    notifications = UserNotification.query.filter(
-        UserNotification.message_type.in_(['starred', 'subscribed']),
-        UserNotification.date_read == None,
-        UserNotification.user == user_id
-    ).order_by('date_created desc')
+    count = len(notifications) +\
+        UserNotification.query.filter_by(date_read=None, user=user_id).count()
+    app.logger.debug('%s notification count: %d (%d new)', user_id, count, len(notifications))
 
-    count = notifications.count()
+    # Send most recent notification only
+    notification = sorted(notifications, key=lambda n: n.id, reverse=True)[0]
 
-    if count:
-        try:
-            con = push_client.Session.new_connection(
-                app.config['APNS_PUSH_TYPE'],
-                cert_file=pkg_resources.resource_filename(__name__, app.config['APNS_CERT_NAME']),
-                passphrase=app.config['APNS_PASSPHRASE']
-            )
-            first = notifications.first()
+    try:
+        con = push_client.Session.new_connection(
+            app.config['APNS_PUSH_TYPE'],
+            cert_file=pkg_resources.resource_filename(__name__, app.config['APNS_CERT_NAME']),
+            passphrase=app.config['APNS_PASSPHRASE']
+        )
 
-            if first.message_type == 'subscribed':
-                key = 'channel'
-                push_message = "%@ has subscribed to your channel"
-            elif first.message_type == 'joined':
-                key = 'user'
-                push_message = "Your Facebook friend %@ has joined Rockpack"
-            else:
-                key = 'video'
-                push_message = "%@ has liked your video"
+        if notification.message_type == 'subscribed':
+            key = 'channel'
+            push_message = "%@ has subscribed to your channel"
+        elif notification.message_type == 'joined':
+            key = 'user'
+            push_message = "Your Facebook friend %@ has joined Rockpack"
+        else:
+            key = 'video'
+            push_message = "%@ has liked your video"
 
-            data = json.loads(first.message)
-            name = data['user']['display_name']
+        data = json.loads(notification.message)
+        name = data['user']['display_name']
 
-            push_message_args = [name]
+        push_message_args = [name]
 
-            extra_kwargs = {}
-            if app.config.get('ENABLE_APNS_DEEPLINKS'):
-                extra_kwargs.update(
-                    dict(
-                        url=urlparse.urlparse(data[key]['resource_url']).path.lstrip('/ws/')
-                    )
+        extra_kwargs = {}
+        if app.config.get('ENABLE_APNS_DEEPLINKS'):
+            extra_kwargs.update(
+                dict(
+                    url=urlparse.urlparse(data[key]['resource_url']).path.lstrip('/ws/')
                 )
+            )
 
-            message = push_client.Message(
-                device.external_token,
-                alert={
-                    "loc-key": push_message,
-                    "loc-args": push_message_args,
-                },
-                badge=count,
-                id=first.id,
-                **extra_kwargs)
+        message = dict(
+            alert={
+                "loc-key": push_message,
+                "loc-args": push_message_args,
+            },
+            badge=count,
+            id=notification.id,
+            **extra_kwargs)
 
-            srv = push_client.APNs(con)
-            return srv.send(message)
-        except Exception, e:
-            app.logger.error('Failed to send push notification: %s', str(e))
-
-    """
-    # Retry once
-    if response.needs_retry():
-        response.retry()
-    """
+        srv = push_client.APNs(con)
+        result = srv.send(push_client.Message(device.external_token, **message))
+        app.logger.info('Sent message to %s: %r', device.user, message)
+        return result
+    except Exception:
+        app.logger.exception('Failed to send push notification: %d', notification.id)
 
 
 def create_new_activity_notifications(date_from=None, date_to=None):
@@ -145,6 +140,8 @@ def create_new_activity_notifications(date_from=None, date_to=None):
         if activity.action in activity_notification_map:
             activity_notification_map[activity.action][0].append(activity)
 
+    # Map user to new notifications
+    user_notifications = {}
     for action, (activity_list, model, get_message) in activity_notification_map.items():
         if activity_list:
             object_ids = [a.object_id for a in activity_list]
@@ -158,13 +155,17 @@ def create_new_activity_notifications(date_from=None, date_to=None):
                     if user == activity.user:
                         # Don't send notifications to self
                         continue
-                    UserNotification.query.session.add(UserNotification(
+                    notification = UserNotification(
                         user=user,
                         date_created=activity.date_actioned,
                         message_type=type,
                         message=json.dumps(body, separators=(',', ':')),
-                    ))
-                    send_push_notification(user)
+                    )
+                    UserNotification.query.session.add(notification)
+                    user_notifications.setdefault(user, []).append(notification)
+
+    for user, notifications in user_notifications.iteritems():
+        send_push_notifications(user, notifications)
 
 
 def create_new_registration_notifications(date_from=None, date_to=None):

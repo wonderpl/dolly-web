@@ -240,6 +240,10 @@ class VideoInstance(db.Model):
     def player_link(self):
         return self.video_rel.player_link
 
+    def get_resource_url(self, own=False):
+        return url_for('userws.channel_video_instance', userid='-', channelid=self.channel, videoid=self.id)
+    resource_url = property(get_resource_url)
+
     def add_meta(self, locale):
         return VideoInstanceLocaleMeta(video_instance=self.id, locale=locale).save()
 
