@@ -1,5 +1,5 @@
 window.WebApp = angular.module('WebApp', ['infinite-scroll','ui.bootstrap'])
-  .config(['$routeProvider', ($routeProvider) ->
+  .config(['$routeProvider', '$httpProvider', ($routeProvider, $httpProvider) ->
     $routeProvider.when('/login', {templateUrl: 'login.html'})
     $routeProvider.when('/search', {templateUrl: 'search.html', reloadOnSearch: false})
     $routeProvider.when('/:userid/channel', {templateUrl: 'editchannel.html', reloadOnSearch: false})
@@ -20,7 +20,16 @@ window.WebApp = angular.module('WebApp', ['infinite-scroll','ui.bootstrap'])
       controller: 'ChannelsCtrl',
       reloadOnSearch: false
     })
-  ])
+
+#    $httpProvider.defaults.transformRequest = (data, headersGetter) ->
+#      if data?
+#        data += "&_origin=http://demo.rockpack.com"
+#      else
+#        data = "?_origin=http://demo.rockpack.com"
+#      return data
+
+
+])
   .value('locale', window.navigator.userLanguage || window.navigator.language)
   .constant('apiUrl', window.apiUrls)
 window.onYouTubeIframeAPIReady = ->
