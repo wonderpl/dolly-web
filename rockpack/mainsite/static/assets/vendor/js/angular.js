@@ -9056,9 +9056,22 @@ function $HttpProvider() {
           cachedResp,
           url = buildUrl(config.url, config.params);
 
+
+      // ROCKPACK PATCH - fix cross domain limitation
+      // For some reason Angularjs fails to fetch template files if the include a query paramater
+      // Since template files are also fetched from here, I'm only modifying the call if it's not a .html file
+      if (url.indexOf('.html') == -1) {
+        if (url.indexOf('?') != -1) {
+          url += "&_origin=" + window.location.host;
+        } else {
+          url += "?_origin=" + window.location.host;
+        }
+      }
+
+      console.log (url);
+
       $http.pendingRequests.push(config);
       promise.then(removePendingReq, removePendingReq);
-
 
       if (config.cache && config.method == 'GET') {
         cache = isObject(config.cache) ? config.cache : defaultCache;
