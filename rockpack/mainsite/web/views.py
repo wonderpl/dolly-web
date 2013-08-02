@@ -29,9 +29,8 @@ def ws_request(url, **kwargs):
         env['PATH_INFO'] = url
         env['REQUEST_METHOD'] = 'GET'
         env['QUERY_STRING'] = urlencode(kwargs)
-        server_name = app.config.get('SERVER_NAME')
-        if server_name:
-            env['HTTP_HOST'] = server_name
+        if 'API_SUBDOMAIN' in app.config:
+            env['HTTP_HOST'] = '.'.join((app.config['API_SUBDOMAIN'], app.config['SERVER_NAME']))
         meta = {}
         response = u''.join(app.wsgi_app(env, start_response))
         if meta['status'] == '404 NOT FOUND':
