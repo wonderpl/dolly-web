@@ -27,7 +27,8 @@ from rockpack.mainsite.services.cover_art.models import UserCoverArt, RockpackCo
 from rockpack.mainsite.services.cover_art import api as cover_api
 from rockpack.mainsite.services.video import api as video_api
 from rockpack.mainsite.services.search import api as search_api
-from .models import User, UserActivity, UserContentFeed, UserNotification, Subscription
+from .models import (
+    User, UserActivity, UserContentFeed, UserNotification, Subscription, UserFlag, USER_FLAGS)
 
 
 ACTION_COLUMN_VALUE_MAP = dict(
@@ -348,6 +349,21 @@ def user_activity(userid, locale, paging):
     )
 
 
+def user_flags(userid, locale, paging):
+    items = [dict(flag=f.flag, resource_url=f.resource_url)
+             for f in UserFlag.query.filter_by(user=userid)]
+    return dict(items=items, total=len(items))
+
+
+def set_user_flag(userid, flag):
+    if flag not in USER_FLAGS:
+        abort(400, message=_('Invalid user flag.'))
+    user = User.query.get_or_404(userid)
+    userflag = user.set_flag(flag)
+    user.save()
+    return userflag and ajax_create_response(userflag, dict(id=flag))
+
+
 def check_present(form, field):
     if field.name not in (request.json or request.form):
         raise ValidationError(_('This field is required, but can be an empty string.'))
@@ -648,7 +664,7 @@ class UserWS(WebService):
         )
         data_sections = request.args.getlist('data') or ['channels']
         for key in ('channels', 'activity', 'notifications', 'cover_art', 'subscriptions',
-                    'friends', 'external_accounts'):
+                    'friends', 'external_accounts', 'flags'):
             info[key] = dict(resource_url=url_for('userws.post_%s' % key, userid=userid))
             if key in data_sections:
                 get_user_data = globals().get('user_%s' % key)
@@ -713,6 +729,35 @@ class UserWS(WebService):
             if user.username_updated:
                 abort(400, message=_('Limit for changing username has been reached'))
             user.username_updated = True
+        user.save()
+
+    @expose_ajax('/<userid>/flags/', cache_age=60, cache_private=True)
+    @check_authorization(self_auth=True)
+    def get_flags(self, userid):
+        return user_flags(userid, self.get_locale(), self.get_page())
+
+    @expose_ajax('/<userid>/flags/', methods=['POST'])
+    @check_authorization(self_auth=True)
+    def post_flags(self, userid):
+        return set_user_flag(userid, request.form['flag'])
+
+    @expose_ajax('/<userid>/flags/<flag>/', cache_age=60, cache_private=True)
+    @check_authorization(self_auth=True)
+    def get_flag_item(self, userid, flag):
+        if flag not in USER_FLAGS:
+            abort(400, message=_('Invalid user flag.'))
+        return bool(UserFlag.query.filter_by(user=userid, flag=flag).first_or_404())
+
+    @expose_ajax('/<userid>/flags/<flag>/', methods=['PUT'])
+    @check_authorization(self_auth=True)
+    def put_flag_item(self, userid, flag):
+        return set_user_flag(userid, flag)
+
+    @expose_ajax('/<userid>/flags/<flag>/', methods=['DELETE'])
+    @check_authorization(self_auth=True)
+    def delete_flag_item(self, userid, flag):
+        user = User.query.get_or_404(userid)
+        user.unset_flag(flag)
         user.save()
 
     @expose_ajax('/<userid>/avatar/', cache_age=60)

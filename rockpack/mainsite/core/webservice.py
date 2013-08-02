@@ -77,7 +77,7 @@ def expose_ajax(url, methods=['GET'], secure=None, cache_age=None, cache_private
 
 
 def ajax_create_response(instance, extra={}):
-    id = extra.pop('id', instance.id)
+    id = extra.pop('id', None) or instance.id
     resource_url = extra.pop('resource_url', instance.get_resource_url(True))
     return (dict(id=id, resource_url=resource_url, **extra),
             201, [('Location', resource_url)])

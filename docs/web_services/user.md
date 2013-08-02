@@ -57,7 +57,7 @@ data           | no        | Data section names  | The names of data sections to
 size           | no        | Data item page size | Number of data items to return - 100 by default
 
 If the `data` parameter is specified then the data associated with each resource given will be included directly in the response.
-The supported resource names are `channels`, `subscriptions`, `external_accounts`, & `activity`.
+The supported resource names are `channels`, `subscriptions`, `external_accounts`, `flags` & `activity`.
 The format of the data will be the same as if returned by the corresponding resource url.
 For example if `data=channels&data=subscriptions&size=2` is used then the first 2 items of the `channels` and `subscriptions`
 sub-resources will be included in the user resource response.
@@ -102,6 +102,9 @@ Cache-Control: private
   "resource_url": "https://path/to/channels/resource/base/url/",
    "total": 0,
    "items": []
+ },
+ "flags": {
+  "resource_url": "https://path/to/flags/resource/base/url/"
  }
 }
 ```
@@ -257,6 +260,95 @@ Content-Type: application/json
     "error": "invalid request",
     "message": "Value must be a boolean."
 }
+```
+
+Flags
+=====
+
+Boolean flags or switches associated with a user.  Currently supported flags:
+`facebook_autopost_star`, & `facebook_autopost_add`.
+
+### Get
+
+`GET` a list of enabled flags for the user:
+
+```http
+GET /ws/USERID/flags/ HTTP/1.1
+Authorization: Bearer TOKEN
+```
+
+Returns a list where each item contains the `flag` label and a `resource_url` to unset.
+
+```http
+HTTP/1.1 200 OK
+Cache-Control: private, max-age=60
+Content-Type: application/json
+
+{
+ "total": 1,
+ "items": [
+  {
+   "flag": "FLAG",
+   "resource_url": "http://path/to/user/flags/FLAG/"
+  }
+ ]
+}
+```
+
+### Set
+
+`PUT` a `true` value to a new flag resource to set a flag.
+
+```http
+PUT /ws/USERID/flags/FLAG/ HTTP/1.1
+Authorization: Bearer TOKEN
+Content-Type: application/json
+
+true
+```
+
+Returns a `201` if the flag is set.
+
+```http
+HTTP/1.1 201 CREATED
+Location: http://path/to/user/flags/FLAG/
+
+{
+ "resource_url": "http://path/to/user/flags/FLAG/"
+}
+```
+
+Returns a `204` if the flag was already set.
+
+```http
+HTTP/1.1 204 NO CONTENT
+```
+
+Returns a `400` if the flag label is invalid.
+
+```http
+HTTP/1.1 400 BAD REQUEST
+Content-Type: application/json
+
+{
+ "error": "invalid_request",
+ "message": "Invalid user flag."
+}
+```
+
+### Unset
+
+`DELETE` a flag resource to unset/disable a flag.
+
+```http
+DELETE /ws/USERID/flags/FLAG/ HTTP/1.1
+Authorization: Bearer TOKEN
+```
+
+Returns a `204` if unset.
+
+```http
+HTTP/1.1 204 NO CONTENT
 ```
 
 Avatar

@@ -14,6 +14,7 @@ from rockpack.mainsite.helpers.urls import url_for
 from rockpack.mainsite.core.es.api import add_user_to_index
 
 
+USER_FLAGS = 'facebook_autopost_star', 'facebook_autopost_add'
 EXTERNAL_SYSTEM_NAMES = 'facebook', 'twitter', 'google', 'apns'
 GENDERS_MAP = {'m': 'male', 'f': 'female'}
 GENDERS = GENDERS_MAP.keys()
@@ -41,6 +42,7 @@ class User(db.Model):
     locale = Column(ForeignKey('locale.id'), nullable=False, server_default='')
 
     channels = relationship('Channel')
+    flags = relationship('UserFlag')
     activity = relationship('UserActivity', backref='actor')
 
     def __unicode__(self):
@@ -188,6 +190,32 @@ class User(db.Model):
             date_of_birth=eu.dob,
             locale=locale,
         )
+
+    def get_flag(self, flag):
+        return flag in [f.flag for f in self.flags]
+
+    def set_flag(self, flag):
+        if not self.get_flag(flag):
+            userflag = UserFlag(flag=flag)
+            self.flags.append(userflag)
+            return userflag
+
+    def unset_flag(self, flag):
+        UserFlag.query.filter_by(user=self.id, flag=flag).delete()
+
+
+class UserFlag(db.Model):
+    __tablename__ = 'user_flag'
+    __table_args__ = (
+        PrimaryKeyConstraint('user', 'flag'),
+    )
+
+    user = Column(ForeignKey('user.id'), nullable=False)
+    flag = Column(Enum(*USER_FLAGS, name='user_flag_enum'), nullable=False)
+
+    def get_resource_url(self, own=True):
+        return url_for('userws.get_flag_item', userid=self.user, flag=self.flag)
+    resource_url = property(get_resource_url)
 
 
 class UserActivity(db.Model):
