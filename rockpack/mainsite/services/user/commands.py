@@ -332,7 +332,7 @@ def update_user_notifications(date_from, date_to):
     remove_old_notifications()
     # apns needs the notification ids, so we need to
     # commit first before we continue
-    db.commit()
+    db.session.commit()
     for user in user_notifications.keys():
         send_push_notifications(user)
 
