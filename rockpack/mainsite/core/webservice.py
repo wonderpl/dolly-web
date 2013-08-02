@@ -151,6 +151,12 @@ class WebService(object):
 
         app.register_blueprint(bp)
 
+        # Nasty hack to ensure own_user_info comes before public user_info view
+        if not secure_subdomain and bp.name == 'userws':
+            rules = app.url_map._rules_by_endpoint.get('userws.own_user_info', [])
+            for rule in rules:
+                rule._weights.append((1, 1))
+
     def get_locale(self):
         # XXX: Perhaps we should read these from db?
         locales = current_app.config.get('ENABLED_LOCALES')
