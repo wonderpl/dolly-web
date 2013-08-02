@@ -39,11 +39,11 @@ def _refresh(self):
 
 apnsclient.Connection.refresh = _refresh
 
-
 push_client = apnsclient
 
+session = push_client.Session()
 
-_con = push_client.Session.new_connection(
+_con = session.get_connection(
     app.config['APNS_PUSH_TYPE'],
     cert_file=pkg_resources.resource_filename(__name__, app.config['APNS_CERT_NAME']),
     passphrase=app.config['APNS_PASSPHRASE']
