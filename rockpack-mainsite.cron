@@ -3,6 +3,7 @@ ROCKPACK_SETTINGS=/etc/rockpack/mainsite/config.py
 */5  * * * * rockpack-mainsite rockpack-mainsite-manage send_registration_emails
 */5  * * * * rockpack-mainsite rockpack-mainsite-manage update_user_notifications
 */5  * * * * rockpack-mainsite rockpack-mainsite-manage update_user_content_feed
+*/5  * * * * rockpack-mainsite rockpack-mainsite-manage process_facebook_autosharing
 */15 * * * * rockpack-mainsite rockpack-mainsite-manage update_channel_promotions
 */15 * * * * rockpack-mainsite rockpack-mainsite-manage update_channel_stats
 */15 * * * * rockpack-mainsite rockpack-mainsite-manage update_subscriber_stats

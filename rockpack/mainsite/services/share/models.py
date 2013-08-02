@@ -47,6 +47,7 @@ class ShareLink(db.Model):
 
     def get_resource_url(self, own=False):
         return url_for('share_redirect', linkid=self.id)
+    url = property(get_resource_url)
 
     def process_redirect(self, increment_click_count=True):
         """Construct redirect url for link and record the click."""

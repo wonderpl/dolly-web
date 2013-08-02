@@ -10,10 +10,12 @@ from rockpack.mainsite.manager import manager
 from rockpack.mainsite.core.dbapi import commit_on_success, db
 from rockpack.mainsite.core import email
 from rockpack.mainsite.core.apns import push_client
+from rockpack.mainsite.services.oauth import facebook
 from rockpack.mainsite.services.base.models import JobControl
 from rockpack.mainsite.services.oauth.models import ExternalFriend, ExternalToken
 from rockpack.mainsite.services.video.models import Channel, VideoInstance
-from .models import User, UserActivity, UserNotification, UserContentFeed, Subscription
+from rockpack.mainsite.services.share.models import ShareLink
+from .models import User, UserActivity, UserNotification, UserContentFeed, UserFlag, Subscription
 
 
 def activity_user(activity):
@@ -301,6 +303,70 @@ def create_registration_emails(date_from=None, date_to=None):
             app.logger.error("Problem sending registration email for user.id '%s': %s", user.id, str(e))
 
 
+def _post_facebook_story(user, object_type, object_id, token, action, explicit=False):
+    url = ShareLink.create(user, object_type, object_id).url
+    if action.startswith('og'):
+        post_args = dict(object=url)
+    elif object_type == 'channel':
+        post_args = dict(channel=url)
+    else:
+        post_args = dict(other=url)
+    if explicit:
+        post_args['fb:explicitly_shared'] = 'true'
+    try:
+        facebook.GraphAPI(token).request('me/' + action, post_args=post_args)
+    except:
+        app.logger.exception('Failed to autoshare: %s %s', user, object_id)
+    else:
+        app.logger.info('Autoshare: %s %s', user, object_id)
+
+
+def send_facebook_likes(date_from, date_to):
+    # For all star actions in this activity window, check that the associated user
+    # has a valid Facebook publish_actions token and has facebook_autopost_star enabled.
+    activity = UserActivity.query.filter(
+        UserActivity.action == 'star',
+        UserActivity.date_actioned.between(date_from, date_to)
+    ).join(
+        UserFlag,
+        (UserFlag.flag == 'facebook_autopost_star') &
+        (UserFlag.user == UserActivity.user)
+    ).join(
+        ExternalToken,
+        (ExternalToken.user == UserActivity.user) &
+        (ExternalToken.external_system == 'facebook') &
+        (ExternalToken.expires > func.now()) &
+        (ExternalToken.permissions.like('%publish_actions%'))
+    ).with_entities(UserActivity.user, UserActivity.object_type, UserActivity.object_id,
+                    ExternalToken.external_token)
+    for user, object_type, object_id, token in activity:
+        _post_facebook_story(user, object_type, object_id, token, 'og.likes')
+
+
+def send_facebook_adds(date_from, date_to):
+    # For all videos added in this activity window, check that the channel owner
+    # has a valid Facebook publish_actions token and has facebook_autopost_add enabled.
+    activity = VideoInstance.query.filter(
+        VideoInstance.date_added.between(date_from, date_to)
+    ).join(
+        Channel,
+        Channel.id == VideoInstance.channel
+    ).join(
+        UserFlag,
+        (UserFlag.flag == 'facebook_autopost_add') &
+        (UserFlag.user == Channel.owner)
+    ).join(
+        ExternalToken,
+        (ExternalToken.user == Channel.owner) &
+        (ExternalToken.external_system == 'facebook') &
+        (ExternalToken.expires > func.now()) &
+        (ExternalToken.permissions.like('%publish_actions%'))
+    ).with_entities(Channel.owner, VideoInstance.id, ExternalToken.external_token)
+    action = app.config['FACEBOOK_APP_NAMESPACE'] + ':add'
+    for user, object_id, token in activity:
+        _post_facebook_story(user, 'video_instance', object_id, token, action, explicit=True)
+
+
 def job_control(f):
     """Wrap the given function to ensure the input data is limited to a specific interval."""
     @wraps(f)
@@ -335,7 +401,7 @@ def _invalidate_apns_tokens():
         updated = ExternalToken.query.filter(
             ExternalToken.external_token.in_(device_tokens),
             ExternalToken.external_system == 'apns'
-            ).update({ExternalToken.external_token: 'INVALID'}, synchronize_session=False)
+        ).update({ExternalToken.external_token: 'INVALID'}, synchronize_session=False)
 
         app.logger.info('%d APN device tokens invalidated', updated)
 
@@ -375,6 +441,14 @@ def update_user_content_feed(date_from, date_to):
 def send_registration_emails(date_from, date_to):
     """Send an email based on a template."""
     create_registration_emails(date_from, date_to)
+
+
+@manager.cron_command
+@job_control
+def process_facebook_autosharing(date_from, date_to):
+    """Check for activity by users who have auto-share enabled and post to Facebook."""
+    send_facebook_likes(date_from, date_to)
+    send_facebook_adds(date_from, date_to)
 
 
 @manager.command
