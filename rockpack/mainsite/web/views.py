@@ -112,7 +112,7 @@ def web_channel_data(channelid, load_video=None):
 def share_link_processing(linkid):
     not_social_bot = True
     show_meta_only = False
-    if filter(lambda x: x in request.user_agent.string.lower(), ('twitter', 'facebookexternalhit',)):
+    if filter(lambda x: x in request.user_agent.string.lower(), ('twitterbot', 'facebookexternalhit',)):
         not_social_bot = False
         show_meta_only = True
 
