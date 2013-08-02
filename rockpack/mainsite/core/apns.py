@@ -49,5 +49,12 @@ _con = session.get_connection(
     passphrase=app.config['APNS_PASSPHRASE']
 )
 
+def _feedback_con():
+    return session.new_connection(
+        app.config['APNS_FEEDBACK_TYPE'],
+        cert_file=pkg_resources.resource_filename(__name__, app.config['APNS_CERT_NAME']),
+        passphrase=app.config['APNS_PASSPHRASE']
+    )
 
 push_client.connection = _con
+push_client.get_feedback_connection = _feedback_con

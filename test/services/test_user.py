@@ -2,7 +2,7 @@ import json
 import uuid
 import cgi
 import urlparse
-from datetime import datetime
+from datetime import datetime, timedelta
 from test import base
 from mock import patch
 from test.fixtures import ChannelData, VideoData, VideoInstanceData
@@ -102,6 +102,27 @@ class TestAPNS(base.RockPackTestCase):
                     urlparse.urlparse(ndata['channel']['resource_url']).path.lstrip('/ws/'),
                     message['url']
                 )
+
+    def test_invalidate_tokens(self):
+        with self.app.test_client() as client:
+            self.app.test_request_context().push()
+            user = self.create_test_user()
+            device_token = uuid.uuid4().hex
+            client.post(
+                '/ws/{}/external_accounts/'.format(user.id),
+                data=json.dumps(dict(external_system='apns', external_token=device_token)),
+                content_type='application/json',
+                headers=[get_auth_header(user.id)],
+            )
+
+            def _new_feedback(obj):
+                return [(device_token, datetime.now() - timedelta(days=1))]
+
+            import apnsclient
+            from rockpack.mainsite.services.user.commands import _invalidate_apns_tokens
+            with patch.object(apnsclient.APNs, 'feedback', _new_feedback):
+                _invalidate_apns_tokens()
+                self.assertEquals(0, ExternalToken.query.filter_by(external_token=device_token).count())
 
 
 class TestProfileEdit(base.RockPackTestCase):

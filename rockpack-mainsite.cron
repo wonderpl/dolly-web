@@ -8,3 +8,4 @@ ROCKPACK_SETTINGS=/etc/rockpack/mainsite/config.py
 */15 * * * * rockpack-mainsite rockpack-mainsite-manage refresh_pubsubhubbub_subscriptions
 */30 * * * * rockpack-mainsite rockpack-mainsite-manage check_video_player_errors
 * */1 * * * rockpack-mainsite rockpack-mainsite-manage update_channel_view_counts
+0 9 * * 0 rockpack-mainsite rockpack-mainsite-manage update_apns_tokens

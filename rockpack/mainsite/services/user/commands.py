@@ -322,6 +322,29 @@ def job_control(f):
     return wrapper
 
 
+def _invalidate_apns_tokens():
+    con = push_client.get_feedback_connection()
+    srv = push_client.APNs(con, tail_timeout=10)
+
+    device_tokens = []
+    for token, since in srv.feedback():
+        device_tokens.append(token)
+        app.logger.info("AON device token %s is unavailable since %s", token, since)
+
+    if device_tokens:
+        updated = ExternalToken.query.filter(
+            ExternalToken.external_token.in_(device_tokens),
+            ExternalToken.external_system == 'apns'
+            ).update({ExternalToken.external_token: 'INVALID'}, synchronize_session=False)
+
+        app.logger.info('%d APN device tokens invalidated', updated)
+
+
+@manager.cron_command
+def update_apns_tokens():
+    _invalidate_apns_tokens()
+
+
 @manager.cron_command
 @job_control
 def update_user_notifications(date_from, date_to):
