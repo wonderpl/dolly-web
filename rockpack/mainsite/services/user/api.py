@@ -266,18 +266,12 @@ def _apns_mark_unread(userid):
         pass
     else:
         try:
-            con = push_client.Session.new_connection(
-                app.config['APNS_PUSH_TYPE'],
-                cert_file=pkg_resources.resource_filename(__name__, app.config['APNS_CERT_NAME']),
-                passphrase=app.config['APNS_PASSPHRASE']
-            )
-
             message = push_client.Message(
                 device.external_token,
                 alert={},
                 badge=0)
 
-            srv = push_client.APNs(con)
+            srv = push_client.APNs(push_client.connection)
             srv.send(message)
         except Exception, e:
             app.logger.error('Failed to send push notification: %s', str(e))

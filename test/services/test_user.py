@@ -84,7 +84,7 @@ class TestAPNS(base.RockPackTestCase):
                 user=user.id,
                 message_type='subscribed',
                 message=json.dumps(ndata)
-            )
+            ).save()
 
             def _new_send(obj, message):
                 return message.payload
@@ -94,7 +94,7 @@ class TestAPNS(base.RockPackTestCase):
             import apnsclient
             from rockpack.mainsite.services.user.commands import send_push_notifications
             with patch.object(apnsclient.APNs, 'send', _new_send):
-                message = send_push_notifications(user, [un])
+                message = send_push_notifications(user)
                 self.assertEquals(user.display_name, message['aps']['alert']['loc-args'][0])
                 self.assertEquals(1, message['aps']['badge'])
                 self.assertEquals(un.id, message['id'])

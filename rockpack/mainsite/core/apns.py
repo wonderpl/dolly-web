@@ -1,9 +1,11 @@
 import time
 import datetime
 import socket
+import pkg_resources
 import OpenSSL
 from OpenSSL.SSL import WantReadError
 import apnsclient
+from rockpack.mainsite import app
 
 
 def _refresh(self):
@@ -39,3 +41,13 @@ apnsclient.Connection.refresh = _refresh
 
 
 push_client = apnsclient
+
+
+_con = push_client.Session.new_connection(
+    app.config['APNS_PUSH_TYPE'],
+    cert_file=pkg_resources.resource_filename(__name__, app.config['APNS_CERT_NAME']),
+    passphrase=app.config['APNS_PASSPHRASE']
+)
+
+
+push_client.connection = _con

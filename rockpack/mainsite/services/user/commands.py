@@ -1,5 +1,4 @@
 import urlparse
-import pkg_resources
 from functools import wraps
 from datetime import datetime, timedelta
 from flask import json
@@ -8,7 +7,7 @@ from sqlalchemy.orm import joinedload, contains_eager, aliased
 from sqlalchemy.orm.exc import NoResultFound
 from rockpack.mainsite import app
 from rockpack.mainsite.manager import manager
-from rockpack.mainsite.core.dbapi import commit_on_success
+from rockpack.mainsite.core.dbapi import commit_on_success, db
 from rockpack.mainsite.core import email
 from rockpack.mainsite.core.apns import push_client
 from rockpack.mainsite.services.base.models import JobControl
@@ -63,7 +62,7 @@ activity_notification_map = dict(
 
 # XXX: This assumes that the notifications passed in are not yet
 # committed to the db
-def send_push_notifications(user, notifications):
+def send_push_notifications(user):
     try:
         try:
             user_id = user.id
@@ -76,20 +75,14 @@ def send_push_notifications(user, notifications):
     except NoResultFound:
         return
 
-    count = len(notifications) +\
-        UserNotification.query.filter_by(date_read=None, user=user_id).count()
-    app.logger.debug('%s notification count: %d (%d new)', user_id, count, len(notifications))
+    notifications = UserNotification.query.filter_by(date_read=None, user=user_id).order_by('id desc')
+    count = notifications.count()
+    app.logger.debug('%s notification count: %d', user_id, count)
 
     # Send most recent notification only
     notification = sorted(notifications, key=lambda n: n.id, reverse=True)[0]
 
     try:
-        con = push_client.Session.new_connection(
-            app.config['APNS_PUSH_TYPE'],
-            cert_file=pkg_resources.resource_filename(__name__, app.config['APNS_CERT_NAME']),
-            passphrase=app.config['APNS_PASSPHRASE']
-        )
-
         if notification.message_type == 'subscribed':
             key = 'channel'
             push_message = "%@ has subscribed to your channel"
@@ -122,7 +115,7 @@ def send_push_notifications(user, notifications):
             id=notification.id,
             **extra_kwargs)
 
-        srv = push_client.APNs(con)
+        srv = push_client.APNs(push_client.connection)
         result = srv.send(push_client.Message(device.external_token, **message))
         app.logger.info('Sent message to %s: %r', device.user, message)
         return result
@@ -161,7 +154,7 @@ def create_new_activity_notifications(date_from=None, date_to=None, user_notific
                     )
                     UserNotification.query.session.add(notification)
                     if user_notifications is not None:
-                        user_notifications.setdefault(user, []).append(notification)
+                        user_notifications.setdefault(user, None)
 
 
 def create_new_registration_notifications(date_from=None, date_to=None, user_notifications=None):
@@ -193,7 +186,7 @@ def create_new_registration_notifications(date_from=None, date_to=None, user_not
             )
             UserNotification.query.session.add(notification)
             if user_notifications is not None:
-                user_notifications.setdefault(friend, []).append(notification)
+                user_notifications.setdefault(friend, None)
 
 
 def remove_old_notifications():
@@ -336,9 +329,12 @@ def update_user_notifications(date_from, date_to):
     user_notifications = {}
     create_new_activity_notifications(date_from, date_to, user_notifications)
     create_new_registration_notifications(date_from, date_to, user_notifications)
-    for user, notifications in user_notifications.iteritems():
-        send_push_notifications(user, notifications)
     remove_old_notifications()
+    # apns needs the notification ids, so we need to
+    # commit first before we continue
+    db.commit()
+    for user in user_notifications.keys():
+        send_push_notifications(user)
 
 
 @manager.cron_command
