@@ -46,7 +46,7 @@ def welcome_email():
 @expose_web('/', 'web/home.html', cache_age=3600)
 def homepage():
     api_urls = json.dumps(ws_request('/ws/'))
-    return dict(api_urls=api_urls)
+    return dict(api_urls=api_urls, injectorUrl=url_for('injector'))
 
 
 @expose_web('/fullweb', 'web/fullweb.html', cache_age=3600)
