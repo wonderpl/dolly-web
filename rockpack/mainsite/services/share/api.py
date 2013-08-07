@@ -1,3 +1,4 @@
+from collections import defaultdict
 from flask import abort, g
 from flask.ext import wtf
 from rockpack.mainsite import app
@@ -36,8 +37,21 @@ class ShareForm(wtf.Form):
             object = object_type.query.filter_by(id=field.data).first()
             if not object:
                 raise wtf.ValidationError('invalid id')
-            message_fmt = app.config.get('SHARE_MESSAGE_MAP', {}).get(self.object_type.data)
-            self.message = message_fmt and message_fmt.format(object=object)
+            message_fmt = app.config.get('SHARE_MESSAGE_MAP', {})
+
+            kw = defaultdict(str)
+            if self.object_type.data == 'video_instance':
+                kw['object_type'] = self.object_type.data
+                kw['title'] = object.video.title
+            else:
+                kw['object_type'] = self.object_type.data
+                kw['title'] = object.title
+
+            for key, val in message_fmt.iteritems():
+                try:
+                    setattr(self, key, val.format(kw))
+                except KeyError:
+                    setattr(self, key, '')
 
 
 class ShareWS(WebService):
@@ -52,4 +66,10 @@ class ShareWS(WebService):
             abort(400, form_errors=form.errors)
         link = ShareLink.create(
             g.authorized.userid, form.object_type.data, form.object_id.data)
-        return ajax_create_response(link, dict(message=form.message))
+        msg_dict = dict(
+            message=form.message,
+            message_facebook=form.facebook,
+            message_twitter=form.twitter,
+            message_email=form.email,
+        )
+        return ajax_create_response(link, msg_dict)
