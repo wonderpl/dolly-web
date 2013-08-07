@@ -42,9 +42,8 @@ class TestShare(base.RockPackTestCase):
         # Confirm link redirects to channel
         with self.app.test_client() as client:
             r = client.get(urlparse(data['resource_url']).path)
-            expected_path = '/%s/?video=%s' %\
-                (VideoInstanceData.video_instance2.channel, VideoInstanceData.video_instance2.id)
-            self.assertIn(expected_path, r.headers['Location'])
+            self.assertIn('/%s/' % VideoInstanceData.video_instance2.channel, r.headers['Location'])
+            self.assertIn('video=%s' % VideoInstanceData.video_instance2.id, r.headers['Location'])
 
     def test_share_video_from_search(self):
         self.app.test_request_context().push()
@@ -57,7 +56,7 @@ class TestShare(base.RockPackTestCase):
         with self.app.test_client() as client:
             r = client.get(urlparse(data['resource_url']).path)
             self.assertEquals(r.status_code, 302)
-            channelid, videoid = re.match(r'.*/([^/]+)/\?video=(.+)', r.headers['Location']).groups()
+            channelid, videoid = re.match(r'.*/([^/]+)/\?.*video=(.+)', r.headers['Location']).groups()
 
         # try sharing again
         self._share_content(userid, 'video_instance', video)
