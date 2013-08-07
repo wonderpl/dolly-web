@@ -1,0 +1,26 @@
+{
+  "name": "Rookpack Bookmarklet app",
+  "version": "1.0",
+  "permissions": [
+    "activeTab", "http://*/*"
+  ],
+  "icons": { 
+    "16": "icon16.png",
+    "48": "icon48.png",
+    "128": "icon128.png" 
+  },
+  "background": {
+    "scripts": [
+      "inject.js"
+    ],
+  "persistent": false
+  },
+    "browser_action": {
+      "default_title": "Easily add videos to your Rockpack channels."
+  },
+  "manifest_version": 2,
+  "browser_action": {
+    "default_icon": "icon16.png"
+  }
+
+}
