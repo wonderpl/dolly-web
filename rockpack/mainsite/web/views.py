@@ -1,5 +1,5 @@
 from urllib import urlencode
-from urlparse import urljoin
+from urlparse import urljoin, parse_qs, urlsplit, urlunsplit
 import pyes
 from flask import request, json, render_template, abort, redirect
 from flask.ext import wtf
@@ -127,7 +127,14 @@ def share_link_processing(linkid):
                 load_video=data.get('video')
             )
         )
-    return redirect(data.get('url'), 302)
+
+    scheme, netloc, path, query_string, fragment = urlsplit(data.get('url'))
+    query_params = parse_qs(query_string)
+    query_params.update(app.config['SHARE_REDIRECT_PASSTHROUGH_PARAMS'])
+    query_params['shareuser'] = link.user
+    new_query_string = urlencode(query_params, doseq=True)
+    new_url = urlunsplit((scheme, netloc, path, new_query_string, fragment))
+    return redirect(new_url, 302)
 
 
 def rockpack_protocol_url(userid, channelid, videoid=None):
