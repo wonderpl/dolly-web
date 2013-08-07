@@ -6,6 +6,7 @@
 
 body {
   background: rgba(28,31,33,0.5);
+  font-family: Arial;
 }
 
 #resetPassword {
@@ -21,7 +22,7 @@ body {
     padding: 10px 0;
     border: 0;
     background: #fff;
-    font-family: "DIN Next W01 Bold";
+    font-family: "DIN Next W01 Bold", Arial;
     font-size: 17px;
     color: #000;
     display: inline-block;
@@ -32,7 +33,7 @@ body {
   .text {
     width: 307px;
     color: #6a727a;
-    font-family: "DIN Next W01 Regular";
+    font-family: "DIN Next W01 Regular", Arial;
     font-size: 20px;
     margin: 0 auto;
     text-align: center;
@@ -57,7 +58,7 @@ body {
   #forgotpassword {
     font-size: 11px;
     color: #282d33;
-    font-family: "DIN Next W01 Regular";
+    font-family: "DIN Next W01 Regular", Arial;
     text-decoration: underline;
   }
 
@@ -69,7 +70,7 @@ body {
     color: #fff;
     text-align: center;
     font-size: 17px;
-    font-family: "DIN Next W01 Regular";
+    font-family: "DIN Next W01 Regular", Arial;
     line-height: 59px;
     padding-left: 50px;
   }
@@ -80,18 +81,27 @@ body {
     padding: 10px 0;
     border: 0;
     background: #fff;
-    font-family: "DIN Next W01 Bold";
+    font-family: "DIN Next W01 Bold", Arial;
     font-size: 17px;
-    color: #000;
+    color: #282d33;
+    text-shadow: 1px 1px 0px #eee;
     display: inline-block;
     border-radius: 0;
     text-transform: uppercase;
+    -webkit-transition: background 500ms 0.1s;
+    -moz-transition: background 500ms 0.1s;
+    -o-transition: background 500ms 0.1s;
+    transition: background 500ms 0.1s;
+
+    &:hover {
+      background: #f9f9f9;
+    }
   }
 
 }
 
 #addtoChannel {
-  width: 555px;
+  width: 510px;
   height: 425px;
   margin: 100px auto;
   background: #242729;
@@ -101,7 +111,7 @@ body {
 }
 
 #createChannel {
-  width: 555px;
+  width: 510px;
   height: 425px;
   margin: 100px auto;
   background: #242729;
@@ -120,7 +130,7 @@ body {
   list-style: none;
   margin: 0 15px;
   padding: 0;
-  font-family: "DIN Next W01 Bold";
+  font-family: "DIN Next W01 Bold", Arial;
   text-transform: uppercase;
   font-size: 9px;
   overflow-y: scroll;
@@ -189,7 +199,7 @@ body {
   color: #ffffff;
   font-size: 15px;
   text-align: center;
-  font-family: "DIN Next W01 Regular";
+  font-family: "DIN Next W01 Regular", Arial;
   text-transform: uppercase;
   .clearfix();
 
@@ -211,7 +221,7 @@ body {
 .blue-btn {
   color: #333333;
   font-size: 13px;
-  font-family: "DIN Next W01 Bold";
+  font-family: "DIN Next W01 Bold", Arial;
   background: #20c2e0;
   background: -moz-linear-gradient(top, #11aab4 0%, #10a0a7 100%);
   background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#11aab4), color-stop(100%,#10a0a7));
@@ -224,21 +234,25 @@ body {
   margin: 0;
   border: 0;
   text-transform: uppercase;
-  text-shadow: 1px 1px 0px #37cae6;
+  text-shadow: 1px 1px 0px #23babf;
 }
 
 #footer {
   color: #6a727a;
   font-size: 10px;
-  font-family: "DIN Next W01 Regular";
+  font-family: "DIN Next W01 Regular", Arial;
   position: absolute;
   bottom: 0;
   width: 100%;
   text-align: center;
-  padding-bottom: 10px;
+  padding-bottom: 20px;
 
-  a, a:hover, a:visited {
-    color: #21b8d5;
+  a,a:visited {
+    color: #0ba6ab;
+  }
+
+  a:hover {
+    color: #23babf;
   }
 }
 
@@ -248,7 +262,7 @@ body {
   margin: 100px auto;
   background: #242729;
   color: #fff;
-  font-family: "DIN Next W01 Regular";
+  font-family: "DIN Next W01 Regular", Arial;
   font-size: 13px;
   text-align: center; 
   position: relative; 
@@ -267,14 +281,16 @@ body {
 input[type=text], input[type=password] {
   width: 267px;
   margin: 0;
-  padding: 10px 20px;
+  padding: 8px 18px;
   border: 0;
-  -webkit-box-shadow: inset 2px 2px 2px 2px rgba(245, 245, 245, 0.5);
-  box-shadow: inset 2px 2px 2px 2px rgba(245, 245, 245, 0.5);
+  -webkit-box-shadow: inset 2px 2px 2px 2px rgba(0, 0, 0, 0.1);
+  box-shadow: inset 2px 2px 2px 2px rgba(0, 0, 0, 0.1);
   background: #f9f9f9;
   border-radius: 0;
+  border: 2px solid #fff;
   color: #000;
   font-size: 17px;
+  font-family: Arial;
 }
 
 hr {
@@ -292,14 +308,14 @@ hr {
 }
 
 #logo {
-  margin: 3px 68px 0 0;
+  margin: 3px 88px 0 0;
 }
 
 .message {
   width: 307px;
   margin: 0 auto;
   padding: 10px 0;
-  font-family: "DIN Next W01 Bold";
+  font-family: "DIN Next W01 Bold", Arial;
   font-size: 17px;
   color: #fff;
   display: block;
@@ -315,4 +331,15 @@ hr {
 
 .hide {
   opacity: 0;
+}
+
+.channelbgimg {
+  -webkit-transition: opacity 500ms ease-out 0.1s;
+  -moz-transition: opacity 500ms ease-out 0.1s;
+  -o-transition: opacity 500ms ease-out 0.1s;
+  transition: opacity 500ms ease-out 0.1s;
+}
+
+.highlight + img {
+ opacity: 0.8;
 }

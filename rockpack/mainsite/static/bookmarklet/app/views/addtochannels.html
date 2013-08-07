@@ -12,8 +12,8 @@
       <li class="channel" ng-repeat="channel in User.channels.items" ng-click="selectChannel(channel.resource_url)" ng-class="{selected : isSelected(channel.resource_url)}">
         <div class="channelname">{{channel.title}}</div>
         <div class="selectedOverlay"></div>
-        <img src="/static/assets/bookmarklet/images/reflection.png" class="reflection">
-        <img ng-src="{{channel.cover.thumbnail_url}}" src="/static/assets/bookmarklet/images/nocover.png">
+        <img src="/static/assets/bookmarklet/images/reflection.png" class="reflection" ng-class="overclass" ng-mouseover="overclass = 'highlight'" ng-mouseout="overclass = ''">
+        <img ng-src="{{channel.cover.thumbnail_url}}" src="/static/assets/bookmarklet/images/nocover.png" class="channelbgimg">
       </li>
     </ul>
   </div>
