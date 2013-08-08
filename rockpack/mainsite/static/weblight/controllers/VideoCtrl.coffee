@@ -8,11 +8,8 @@ window.Weblight.controller('VideoCtrl', ['$scope', '$rootScope', '$routeParams',
       @playerWidth = 320
       @playerHeight = 240
     else
-      @playerWidth = 840
-      @playerHeight = 473
-
-  console.log $(window).width()
-  console.log @playerWidth
+      @playerWidth = 620
+      @playerHeight = 349
 
   $scope.videoNum = -10
 
@@ -22,7 +19,7 @@ window.Weblight.controller('VideoCtrl', ['$scope', '$rootScope', '$routeParams',
       @getPlayerWidth()
 
       # need to trigger a hide, otherwise show did not fire on load
-      $("#lightbox").hide()
+#      $("#lightbox").hide()
       $("#lightbox").show()
 
       $scope.videodata = window.selected_video
@@ -36,15 +33,60 @@ window.Weblight.controller('VideoCtrl', ['$scope', '$rootScope', '$routeParams',
           showinfo: 0,
           modestbranding: 1,
           wmode: "opaque",
-          controls: 1,
+          controls: 0,
           color: 'white',
           rel: 0,
-          iv_load_policy: 3
+          iv_load_policy: 3,
+        },
+        events: {
+          'onReady': onPlayerReady,
+          'onStateChange': onPlayerStateChange
         }
+
       })
 
+  $scope.isSkeeping = false
+
+  $scope.seekTo = (event) ->
+    isSkeeping = true
+    seekPosition = event.offsetX / 620
+    $scope.player.seekTo($scope.player.getDuration() * seekPosition )
+    $scope.player.playVideo()
+    $scope.playerState = 1
+
   onPlayerReady = (event) ->
-    event.target.playVideo()
+    $scope.player.mute()
+
+  onPlayerStateChange = (event) ->
+    $scope.playerState = event.data
+    $scope.$apply()
+
+    if event.data == 1
+      setTimeout(trackProgress, 40)
+
+  $scope.currentPosition = 0
+
+  trackProgress = () ->
+    if $scope.playerState == 1
+      $scope.currentPosition = $scope.player.getCurrentTime()/$scope.player.getDuration()
+      $scope.$apply()
+      setTimeout(trackProgress, 40)
+
+
+  $scope.hideOverlay = false
+
+  setTimeout((->
+    $scope.hideOverlay = true
+  ), 100)
+
+  $scope.mouseOver = () ->
+    console.log 'in'
+    $scope.hideOverlay = false
+
+  $scope.mouseOut = () ->
+    console.log 'out'
+    $scope.hideOverlay = true
+
 
   $scope.$watch((-> window.orientation), (newValue, oldValue) =>
     if oldValue != newValue
@@ -64,8 +106,6 @@ window.Weblight.controller('VideoCtrl', ['$scope', '$rootScope', '$routeParams',
 
     $location.search( 'video',$scope.videos[$scope.videoNum].id)
 
-
-
   $scope.$watch((-> $routeParams.video), (newValue) ->
     if newValue
       $scope.PlayVideo()
@@ -78,15 +118,13 @@ window.Weblight.controller('VideoCtrl', ['$scope', '$rootScope', '$routeParams',
     return
   )
 
-  $scope.hide = ->
-    $('#lightbox').hide()
-    $scope.player.destroy()
-    $scope.player = null
-    $location.search( 'video', null );
-    return
+  $scope.pausePlay = () ->
+    if $scope.player.getPlayerState() == 1
+      $scope.player.pauseVideo()
+    else if $scope.player.getPlayerState() == 2
+      $scope.player.playVideo()
 
-#  if isMobile == false
-#    $("#lightbox").css("background-image", "url(#{$scope.channel.cover.thumbnail_url})").css("background-size", "cover")
+  $scope.state = 'test'
 
   return
 ])

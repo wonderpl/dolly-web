@@ -32,7 +32,7 @@ window.Weblight.controller('ChannelCtrl', ['$scope', '$routeParams', '$location'
 
 
   if selected_video != null
-#    $location.search( 'video',selected_video.id)
+    $location.search( 'video',selected_video.id)
     $scope.sharetext = "has shared a video with you from a channel on Rockpack."
   else
     $scope.sharetext = "has shared a video channel with you on Rockpack."

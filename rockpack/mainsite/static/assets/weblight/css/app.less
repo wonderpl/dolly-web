@@ -20,6 +20,55 @@ html,body {
   height: 100%;
 }
 
+#scrubber {
+  width: 100%;
+  height: 20px;
+  background: rgba(241,241,241,0.3);
+  position: absolute;
+  top: 439px;
+  z-index: 12001;
+  opacity: 1;
+
+  #currentPosition {
+    height: 20px;
+    width: 0;
+    background: #0ba6ab;
+    -webkit-transition: all 45ms;
+    -moz-transition: all 45ms;
+    -o-transition: all 45ms;
+    transition: all 45ms;
+  }
+
+  &.hideOverlay {
+    opacity: 0;
+  }
+
+}
+
+#pause {
+  position: absolute;
+  z-index: 12000;
+  top: 110px;
+  left: 0;
+  width: 620px;
+  height: 349px;
+  background: url(/static/assets/weblight/images/pause.png) no-repeat 50% 50%;
+  opacity: 1;
+  -webkit-transition: opacity  0.3s;
+  -moz-transition: opacity 0.3s;
+  -o-transition: opacity  0.3s;
+  transition: opacity 0.3s;
+
+  &.play {
+    background: url(/static/assets/weblight/images/play.png) no-repeat 50% 50%;
+    opacity: 1;
+  }
+
+  &.hideOverlay {
+    opacity: 0;
+  }
+}
+
 h1,h2,h3,h4,h5 {
   -webkit-font-smoothing: antialiased;
   font-smoothing: antialiased;
@@ -37,7 +86,7 @@ body {
   color: #aaa;
   font-size: 16px;
   float: right;
-  margin: 20px 100px 0 0;
+  margin: 20px 0 0 0;
 }
 
 #videoplayer {
@@ -54,10 +103,18 @@ body {
   text-transform: uppercase;
 }
 
+.channelwrapper {
+  position: relative;
+  margin: 0 auto;
+  width: 960px;
+  .clearfix();
+
+}
+
 .wrapper {
   position: relative;
   margin: 0 auto;
-  width: 675px;
+  width: 620px;
   .clearfix();
 }
 
@@ -76,14 +133,14 @@ body {
 // Video Player
 
 #playercontainer {
-  width:840px;
-  height:568px;
+  width:620px;
+  height:646px;
   padding: 0;
   position: absolute;
-  top: 40%;
-  margin-top: -284px;
+  top: 0;
+  margin-top: 100px;
   left: 50%;
-  margin-left: -420px;
+  margin-left: -310px;
   z-index: 1010;
 
   iframe {
@@ -91,21 +148,36 @@ body {
   }
 
   #playerfooter {
-    background: #f8f8f8;
-    padding: 15px;
+
+    width: 580px;
+    background: #fff;
+    margin-top: 20px;
+    padding: 20px;
+  }
+
+  #mobilefooter {
+    display: none;
+  }
+
+
+  #playerheader {
+
     font-size: 16px;
     font-family: "dn-regular";
     color: #282d33;
     .clearfix();
+    margin-bottom: 20px;
 
     img {
       float: left;
+      height: 90px;
     }
 
     #desc {
       float: left;
-      margin-top: 10px;
-      margin-left: 10px;
+      padding: 25px 20px;
+      background: #fff;
+      width: 490px;
     }
 
     #videotitle {
@@ -119,26 +191,6 @@ body {
       .bluelogo {
         margin-right: 10px;
       }
-    }
-  }
-
-  #mobilefooter {
-    display: none;
-  }
-
-
-  #playerheader {
-
-    vertical-align: middle;
-
-    #videosharetext {
-      text-align: center;
-      font-family: "dn-regular";
-    }
-
-    #closeplayer {
-      margin-bottom: 10px;
-      margin-left: 5px;
     }
   }
 
@@ -310,11 +362,30 @@ body {
   }
 }
 
+#overlayheader {
+  background: #fff;
+  height: 50px;
+  line-height: 46px;
+  position: fixed;
+  width: 100%;
+  z-index: 1000;
+  top: 0;
+
+  .logo {
+    width: 125px;
+    height: 22px;
+    vertical-align: middle;
+  }
+
+  .appstore {
+    float: right;
+  }
+}
+
 #greygbg {
-  background: #282d33;
+  background: #f1f1f1;
   height: 100%;
   width: 100%;
-  opacity: 0.6;
 }
 
 #videosharetext {
