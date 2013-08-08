@@ -88,8 +88,10 @@ FAVOURITE_CHANNEL = 'Favorites', 'My favorite videos', 'fav2.jpg'
 
 # Mapping from share object type to message (can have formatting)
 SHARE_MESSAGE_MAP = dict(
-    channel='Check out this great channel on @rockpack',
-    video_instance='Check out this great video on @rockpack',
+    message="Check out this great {0[object_type]} on @rockpack",
+    email="Check out this great {0[object_type]} \"{0[title]}\" on Rockpack",
+    twitter="Check out this great {0[object_type]} on @rockpack",
+    facebook="Check out this great {0[object_type]} on Rockpack",
 )
 
 # Path to default avatar image used when creating users
