@@ -50,7 +50,7 @@
     {% endassets %}
 
     {% assets filters="coffeescript, rjsmin", output="gen/channel.%(version)s.js", "weblight/app.coffee", "weblight/controllers/AppCtrl.coffee", "weblight/controllers/ChannelCtrl.coffee",
-        "weblight/controllers/VideoCtrl.coffee"
+        "weblight/controllers/VideoCtrl.coffee", "weblight/services/userService.coffee"
     %}
       <script type="text/javascript" src="{{ ASSET_URL }}"></script>
     {% endassets %}
@@ -67,6 +67,8 @@
       var firstScriptTag = document.getElementsByTagName('script')[0];
       firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
       MBP.hideUrlBarOnLoad;
+
+      window.apiUrls = jQuery.parseJSON('{{api_urls|safe}}');
     </script>
 
   </head>

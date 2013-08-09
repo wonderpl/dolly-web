@@ -106,7 +106,7 @@ body {
 .channelwrapper {
   position: relative;
   margin: 0 auto;
-  width: 960px;
+  width: 675px;
   .clearfix();
 
 }
@@ -398,10 +398,35 @@ body {
   }
 }
 
+.rockpack-button {
+  display: inline-block;
+  background: #0ba6ab;
+  padding: 20px 35px 18px 35px;
+  color: #fff;
+  text-shadow: 1px 0 1px #000;
+  font-family: "dn-bold";
+  font-size: 24px;
+  line-height: 22px;
+
+  &:hover {
+    color: #fff;
+    text-decoration: none;
+  }
+}
+
+.lowerdownloadbtn {
+  text-align: center;
+}
+
+
 @media (max-width: 767px) {
 
-  .wrapper {
+  .channelwrapper  {
     width: 95%;
+  }
+
+  .wrapper {
+    width: 320px;
   }
 
   #channelwrapper {
@@ -436,30 +461,26 @@ body {
     margin-top: 0;
     z-index: 1010;
 
-    #mobilefooter {
-      color: #fff;
-      text-align: center;
-      display: block;
+    #playerheader {
+
+      margin-top: 80px;
+      font-size: 14px;
+
+      img {
+        height: 60px;
+      }
+
+      #desc {
+        width: 220px;
+        padding: 10px;
+      }
+    }
+
+    #playerfooter {
+      width: 260px;
     }
 
 
   }
-
-  #videotitle {
-    font-size: 18px;
-    color: #fefefe;
-    font-family: "dn-bold", sans-serif;
-    text-transform: uppercase;
-    display: inline-block;
-    margin-top: 15px;
-    margin-left: 15px;
-    vertical-align: middle;
-    text-shadow: 0px 2px 1px rgba(0, 0, 0, 0.2)
-  }
-
-  #playerfooter {
-    display: none;
-  }
-
 }
 

@@ -105,7 +105,7 @@ def web_channel_data(channelid, load_video=None):
         'channel', slug=slugify(channel_data['title']) or '-', channelid=channelid)
     if selected_video:
         channel_data['canonical_url'] += '?video=' + selected_video['id']
-    return dict(channel_data=channel_data, selected_video=selected_video)
+    return dict(channel_data=channel_data, selected_video=selected_video, api_urls = json.dumps(ws_request('/ws/')))
 
 
 def share_link_processing(linkid):

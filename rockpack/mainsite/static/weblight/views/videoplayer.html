@@ -8,26 +8,28 @@
   </div>
   <div id="playercontainer">
     <div id="playerheader">
-      <img ng-src="((channel.owner.avatar_thumbnail_url))">
+      <img ng-src="((user.avatar_thumbnail_url))">
       <div id="desc">
-        <div>((user.display_name)) sum dolor sit amet, consectetur adipiscing elit Rockpack.</div>
-        <div id="videotitle">((videodata.title| truncate: 30))</div>
+        <span>((user.display_name)) sum dolor sit amet, consectetur adipiscing elit Rockpack.</span>
+        <span id="videotitle">((videodata.title| truncate: 30))</span>
       </div>
     </div>
     <div id="player"></div>
-    <div id="pause" ng-class="{play: playerState=='2', 'hideOverlay': hideOverlay && playerState=='1'}" ng-click="pausePlay()" ng-mouseover="mouseOver()" ng-mouseout="mouseOut()"></div>
-    <div id="scrubber" ng-click="seekTo($event)" ng-mouseover="mouseOver()" ng-class="{'hideOverlay': hideOverlay && playerState=='1'}" ng-mouseover="mouseOver()" ng-mouseout="mouseOut()">
+    <div class="hidden-phone" id="pause" ng-class="{play: playerState=='2', 'hideOverlay': hideOverlay && playerState=='1'}" ng-click="pausePlay()" ng-mouseover="mouseOver()" ng-mouseout="mouseOut()"></div>
+    <div class="hidden-phone" id="scrubber" ng-click="seekTo($event)" ng-mouseover="mouseOver()" ng-class="{'hideOverlay': hideOverlay && playerState=='1'}" ng-mouseover="mouseOver()" ng-mouseout="mouseOut()">
       <div id="currentPosition" ng-style="{'width': currentPosition*100 +'%'}"></div>
       <div id="loadedData"></div>
     </div>
-    <div id="playerfooter">((hideOverlay))
+    <div id="playerfooter">
       Maecenas tincidunt nulla non magna?
       Nam accumsan semper magna, sed feugiat magna fringilla eget ac rutrum.
-      <a href="https://itunes.apple.com/app/rockpack/id660697542?mt=8&ls=1" class="rockpack-button">GET THE APP</a>
+      <div class="lowerdownloadbtn"><a href="https://itunes.apple.com/app/rockpack/id660697542?mt=8&ls=1" class="rockpack-button">GET THE APP</a></div>
     </div>
     <div id="weblightshare">
       Share:
-      <a href="http://www.facebook.com/sharer.php?u=((url))" target="_blank"><img ng-src="((assets_url))/assets/weblight/images/fbshare.png"></a>
+      <a onclick="window.open('https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(location.href), 'facebook-share-dialog', 'width=626,height=436'); return false;">
+        <img ng-src="((assets_url))/assets/weblight/images/fbshare.png">
+      </a>
       <a href="http://twitter.com/share?text=Check out this great channel on @rockpack" target="_blank"><img ng-src="((assets_url))/assets/weblight/images/twittershare.png"></a>
     </div>
     <div id="footer">

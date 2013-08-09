@@ -1,25 +1,23 @@
-window.Weblight.controller('VideoCtrl', ['$scope', '$rootScope', '$routeParams', '$location', 'isMobile', ($scope, $rootScope, $routeParams, $location, isMobile) ->
+window.Weblight.controller('VideoCtrl', ['$scope', '$rootScope', '$routeParams', '$location', 'isMobile', 'userService', ($scope, $rootScope, $routeParams, $location, isMobile, userService) ->
 
   $scope.triggerEvent = (action, label) ->
     ga('send', 'event', 'uiAction', action, label)
 
   @getPlayerWidth = () ->
     if $(window).width() <= 979
-      @playerWidth = 320
-      @playerHeight = 240
+      @playerWidth = 300
+      @playerHeight = 169
     else
       @playerWidth = 620
       @playerHeight = 349
 
-  $scope.videoNum = -10
+  $scope.user = userService.fetchUser($scope.userID)
 
   $scope.PlayVideo = =>
     if $rootScope.playerReady && typeof $routeParams.video != "undefined"
 
       @getPlayerWidth()
 
-      # need to trigger a hide, otherwise show did not fire on load
-#      $("#lightbox").hide()
       $("#lightbox").show()
 
       $scope.videodata = window.selected_video
