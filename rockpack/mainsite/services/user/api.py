@@ -465,7 +465,7 @@ def _content_feed(userid, locale, paging):
         else:
             channelmap[item.channel] = None
             itemmap[item.channel] = i, item
-    items = [None] * len(itemmap)
+    items = [None] * (i + 1)
     usermap = dict()
 
     # Get video data
