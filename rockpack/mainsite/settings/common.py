@@ -36,8 +36,8 @@ GOOGLE_ANALYTICS_ACCOUNT = 'UA-39188851-2'
 # For app store links
 ITUNES_APP_ID = '660697542'
 
-# For app deeplinking
-ROCKPACK_APP_PROTOCOL = 'fb://'
+# For iOS app deeplinking
+ROCKPACK_IOS_URL_SCHEME = 'rockpack'
 
 INTERSTITIAL_ITUNES_LINK = True
 
