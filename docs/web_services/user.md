@@ -393,7 +393,7 @@ Channel
 Get data for an individual channel.
 
 ```http
-GET /ws/USERID/channels/CID/?locale=LOCALE&start=START&size=SIZE HTTP/1.1
+GET /ws/USERID/channels/CID/?locale=LOCALE&location=COUNTRYCODE&start=START&size=SIZE HTTP/1.1
 Authorization: Bearer TOKEN
 ```
 
@@ -402,6 +402,7 @@ Authorization: Bearer TOKEN
 Parameter      | Required? | Value             | Description
 :------------- | :-------- | :---------------- | :----------
 locale         | yes       | IETF language tag | Some videos may be excluded if not marked as visible for the specified locale
+location       | no        | ISO-3166 code     | Geographic location is used to filter videos not available in the specified country
 start          | no        | 0-based integer   | Used for paging through the channel's video items
 size           | no        | video page size   | Number of videos to return - 100 by default
 
@@ -614,8 +615,15 @@ Channel Videos
 Get a list of videos for a channel.
 
 ```http
-GET /ws/USERID/channels/CHANNELID/videos/ HTTP/1.1
+GET /ws/USERID/channels/CID/videos/?locale=LOCALE&location=COUNTRYCODE&start=START&size=SIZE HTTP/1.1
 ```
+
+Parameter      | Required? | Value             | Description
+:------------- | :-------- | :---------------- | :----------
+locale         | yes       | IETF language tag | Some videos may be excluded if not marked as visible for the specified locale
+location       | no        | ISO-3166 code     | Geographic location is used to filter videos not available in the specified country
+start          | no        | 0-based integer   | Used for paging through the channel's video items
+size           | no        | video page size   | Number of videos to return - 100 by default
 
 Returns an ordered list of videos for a channel.
 
@@ -1222,13 +1230,14 @@ Content Feed
 Returns a list of new or recommended content for the user based on their subscriptions.
 
 ```http
-GET /ws/USERID/content_feed/?locale=LOCALE&start=START&size=SIZE HTTP/1.1
+GET /ws/USERID/content_feed/?locale=LOCALE&location=COUNTRYCODE&start=START&size=SIZE HTTP/1.1
 Authorization: Bearer TOKEN
 ```
 
 Parameter      | Required? | Value             | Description
 :------------- | :-------- | :---------------- | :----------
 locale         | yes       | IETF language tag | Some videos may be excluded if not marked as visible for the specified locale
+location       | no        | ISO-3166 code     | Geographic location is used to filter videos not available in the specified country
 start          | no        | 0-based integer   | Used for paging through the result items
 size           | no        | item page size    | Number of content items to return - 100 by default
 

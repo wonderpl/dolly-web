@@ -40,6 +40,48 @@ Cache-Control: public, max-age=60
 }
 ```
 
+## Client Location
+
+Some services require the client's geographic location to be passed as a url query parameter
+(for content filtering).  In order to obtain the location country code, as mapped from the client's
+IP address, the client should use the location service.
+
+```http
+GET /ws/location/ HTTP/1.1
+Host: secure.rockpack.com
+```
+
+The response will include a single JSON string with the ISO-3166 code value.  An empty string
+will be returned if the IP address cannot be mapped.
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+"GB"
+```
+
+To avoid additional requests the client may also use the `X-Rockpack-Get-Client-Location` header
+on any web-service request and the location will be returned in the response headers.
+
+```http
+GET /ws/ HTTP/1.1
+Host: api.rockpack.com
+X-Rockpack-Get-Client-Location: true
+```
+
+```http
+HTTP/1.1 200 OK
+X-Rockpack-Client-Location: GB
+Content-Type: application/json
+
+"some content"
+```
+
+Note that there is a very small performance penalty for looking up the location so this header
+should not be used on every request.
+
+
 ## Common Response Codes
 
 Code | Description
