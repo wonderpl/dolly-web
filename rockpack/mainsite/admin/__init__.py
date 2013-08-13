@@ -83,6 +83,7 @@ def setup_admin(app):
 
     admin.add_view(Stats(name='Stats'))
     admin.add_view(user_views.UserView(name='Users', endpoint='user'))
+    admin.add_view(user_views.ExternalTokenView(name='External Accounts', endpoint='external_accounts'))
     admin.add_view(import_views.ImportView(name='Import', endpoint='import'))
     admin.add_view(ranking_views.RankingView(name='Ranking', endpoint='ranking'))
 

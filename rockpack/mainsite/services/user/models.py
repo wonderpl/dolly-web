@@ -42,7 +42,7 @@ class User(db.Model):
     locale = Column(ForeignKey('locale.id'), nullable=False, server_default='')
 
     channels = relationship('Channel')
-    flags = relationship('UserFlag')
+    flags = relationship('UserFlag', backref='users')
     activity = relationship('UserActivity', backref='actor')
 
     def __unicode__(self):
