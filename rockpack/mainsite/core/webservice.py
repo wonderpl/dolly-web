@@ -151,11 +151,19 @@ class WebService(object):
 
         app.register_blueprint(bp)
 
-        # Nasty hack to ensure own_user_info comes before public user_info view
+        # Nasty hack to ensure consistent route ordering when subdomains are not enabled
+        # Usually local testing/development only
         if not secure_subdomain and bp.name == 'userws':
-            rules = app.url_map._rules_by_endpoint.get('userws.own_user_info', [])
-            for rule in rules:
-                rule._weights.append((1, 1))
+            priority_views = (
+                # Move own_user_info before public user_info view for unit tests
+                'own_user_info',
+                # Move owner_channel_info before public channel_info for unit tests
+                'owner_channel_info',
+            )
+            for viewname in priority_views:
+                rules = app.url_map._rules_by_endpoint['.'.join((bp.name, viewname))]
+                for rule in rules:
+                    rule._weights.append((1, 1))
 
     def get_locale(self):
         # XXX: Perhaps we should read these from db?
