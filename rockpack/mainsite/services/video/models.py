@@ -1,4 +1,3 @@
-import eventlet
 from datetime import datetime
 from sqlalchemy import (
     Text, String, Column, Boolean, Integer, Float, ForeignKey, DateTime, CHAR,
@@ -526,25 +525,19 @@ def _video_update(mapper, connection, target):
             _remove_es_video_instance(i)
 
 
-if app.config.get('ENABLE_ASYNC_ES_VIDEO_UPDATE', False):
-    async_update = eventlet.spawn_n
-else:
-    async_update = lambda *args, **kwargs: args[0](*args[1:], **kwargs)
-
-
 @event.listens_for(VideoInstance, 'after_insert')
 def _video_instance_insert(mapper, connection, target):
-    async_update(_add_es_video, target)
+    _add_es_video(target)
 
 
 @event.listens_for(VideoInstance, 'after_update')
 def _video_instance_update(mapper, connection, target):
-    async_update(_add_es_video, target)
+    _add_es_video(target)
 
 
 @event.listens_for(VideoInstance, 'after_delete')
 def _video_instance_delete(mapper, connection, target):
-    async_update(_remove_es_video_instance, target)
+    _remove_es_video_instance(target)
 
 
 @event.listens_for(ChannelLocaleMeta, 'after_insert')
