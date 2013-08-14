@@ -363,7 +363,8 @@ def send_facebook_adds(date_from, date_to):
         VideoInstance.date_added.between(date_from, date_to)
     ).join(
         Channel,
-        Channel.id == VideoInstance.channel
+        (Channel.id == VideoInstance.channel) &
+        (Channel.favourite == False)
     ).join(
         UserFlag,
         (UserFlag.flag == 'facebook_autopost_add') &
