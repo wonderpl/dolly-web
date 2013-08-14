@@ -15,6 +15,11 @@ SHARE_OBJECT_TYPE_MAP = dict(
     video_instance=VideoInstance,
 )
 
+OBJECT_NAME_MAP = dict(
+    video_instance='video',
+    channel='channel'
+)
+
 
 class ShareForm(wtf.Form):
     object_type = wtf.SelectField(choices=SHARE_OBJECT_TYPE_MAP.items())
@@ -24,6 +29,24 @@ class ShareForm(wtf.Form):
         self._user = user
         self._locale = locale
         super(ShareForm, self).__init__(*args, **kwargs)
+
+    def _set_share_message_on_form(self, object):
+        kw = defaultdict(str)
+        kw['object_type'] = OBJECT_NAME_MAP[self.object_type.data]
+
+        if self.object_type.data == 'video_instance':
+            kw['title'] = object.video_rel.title
+        else:
+            kw['title'] = object.title
+
+        message_fmt = app.config.get('SHARE_MESSAGE_MAP', {})
+
+        for key, val in message_fmt.iteritems():
+            try:
+                setattr(self, key, val.format(kw))
+            except KeyError:
+                setattr(self, key, '')
+
 
     def validate_object_id(self, field):
         object_type = SHARE_OBJECT_TYPE_MAP.get(self.object_type.data)
@@ -37,21 +60,8 @@ class ShareForm(wtf.Form):
             object = object_type.query.filter_by(id=field.data).first()
             if not object:
                 raise wtf.ValidationError('invalid id')
-            message_fmt = app.config.get('SHARE_MESSAGE_MAP', {})
 
-            kw = defaultdict(str)
-            if self.object_type.data == 'video_instance':
-                kw['object_type'] = self.object_type.data
-                kw['title'] = object.video.title
-            else:
-                kw['object_type'] = self.object_type.data
-                kw['title'] = object.title
-
-            for key, val in message_fmt.iteritems():
-                try:
-                    setattr(self, key, val.format(kw))
-                except KeyError:
-                    setattr(self, key, '')
+            self._set_share_message_on_form(object)
 
 
 class ShareWS(WebService):

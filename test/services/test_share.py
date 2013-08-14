@@ -39,6 +39,12 @@ class TestShare(base.RockPackTestCase):
     def test_share_video(self):
         data = self._share_content(None, 'video_instance', VideoInstanceData.video_instance2.id)
 
+        self.assertEquals(
+            'Check out this great video "Primer" on Rockpack',
+            data['message_email'],
+            'Video title should be in the email message'
+        )
+
         # Confirm link redirects to channel
         with self.app.test_client() as client:
             r = client.get(urlparse(data['resource_url']).path)
