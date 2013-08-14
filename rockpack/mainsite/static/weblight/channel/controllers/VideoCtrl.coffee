@@ -3,25 +3,25 @@ window.Weblight.controller('VideoCtrl', ['$scope', '$rootScope', '$routeParams',
   $scope.triggerEvent = (action, label) ->
     ga('send', 'event', 'uiAction', action, label)
 
+  $scope.videoVisible = false
+
+  windowWidth = if "innerWidth" in window then window.innerWidth else document.documentElement.offsetWidth
+
   @getPlayerWidth = () ->
-    if $(window).width() <= 979
-      @playerWidth = 300
-      @playerHeight = 169
+    if windowWidth <= 768
+      @playerWidth = windowWidth
+      @playerHeight = windowWidth*(9/16)
     else
       @playerWidth = 620
       @playerHeight = 349
-
-  $scope.user = userService.fetchUser($scope.userID)
 
   $scope.PlayVideo = =>
     if $rootScope.playerReady && typeof $routeParams.video != "undefined"
 
       @getPlayerWidth()
 
-      $("#lightbox").show()
 
-      $scope.videodata = window.selected_video
-
+      $scope.videoVisible = true
       $scope.player = new YT.Player('player', {
         height: @playerHeight,
         width: @playerWidth,
@@ -78,20 +78,18 @@ window.Weblight.controller('VideoCtrl', ['$scope', '$rootScope', '$routeParams',
   ), 100)
 
   $scope.mouseOver = () ->
-    console.log 'in'
     $scope.hideOverlay = false
 
   $scope.mouseOut = () ->
-    console.log 'out'
     $scope.hideOverlay = true
 
 
-  $scope.$watch((-> window.orientation), (newValue, oldValue) =>
-    if oldValue != newValue
-      @getPlayerWidth()
-      $('#player').width(@playerWidth).height(@playerHeight)
+  $scope.closeVideo = () ->
+    $scope.player.destroy()
+    $location.search('video', null)
+    $scope.videoVisible = false
 
-  )
+
 
   $scope.playNextVid = (videoNumber) ->
     if videoNumber < -5 or  videoNumber > $scope.videos.length-1
@@ -105,7 +103,7 @@ window.Weblight.controller('VideoCtrl', ['$scope', '$rootScope', '$routeParams',
     $location.search( 'video',$scope.videos[$scope.videoNum].id)
 
   $scope.$watch((-> $routeParams.video), (newValue) ->
-    if newValue
+    if newValue?
       $scope.PlayVideo()
     return
   )
@@ -121,8 +119,6 @@ window.Weblight.controller('VideoCtrl', ['$scope', '$rootScope', '$routeParams',
       $scope.player.pauseVideo()
     else if $scope.player.getPlayerState() == 2
       $scope.player.playVideo()
-
-  $scope.state = 'test'
 
   return
 ])

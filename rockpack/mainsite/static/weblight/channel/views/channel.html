@@ -1,32 +1,49 @@
-<div ng-controller="ChannelCtrl" id="ChannelCtrl">
+<div ng-controller="ChannelCtrl" id="ChannelCtrl" ng-style="{'background-image' : 'url(' + channel.cover.thumbnail_url + ')'}">
+  <div id="mobilepopup" ng-show="showPopup" class="hidden-desktop">
+    <div id="closepopup" ng-click="showPopup = false"></div>
+    <div class="wrapper">
+      <div id="sharedAvater"><img ng-src="((User.avatar_thumbnail_url))"></div>
+      <div class="shareMessage"><span class="bold">((User.display_name))</span> shared <span class="bold">((channel.title))</span> with you<br>– a pack of videos on Rockpack.</div>
+    </div>
+  </div>
   <div id="header">
-    <div class="channelwrapper">
-      <a href="/#"><img src="((assets_url))/assets/weblight/images/logo.png"></a>
+    <div class="wrapper">
+      <a href="/#"><img ng-src="((assets_url))/assets/weblight/images/whitelogo.png"></a>
+      <div id="topdownload" class="visible-desktop">
+        <a href="http://itunes.apple.com/app/rockpack/id660697542?mt=8&ls=1">For iPhone & iPad <img ng-src="((assets_url))/assets/weblight/images/appleDownload.png"></a>
+      </div>
     </div>
   </div>
   <div>
     <div ng-include="'videoplayer.html'"></div>
   </div>
-  <div class="channelheader">
+  <div id="channelheader" class="wrapper" ng-style="{padding: pagePadding + 'px 0'}">
     <div>
-      <h1>{{channel.title}}</h1>
+      <h1>((channel.title))</h1>
       <div id="subscriberCount">((channel.subscriber_count)) Subscribers</div>
       <ul id="userdetails">
-        <li><img class="user-profile" ng-src="((channel.owner.avatar_thumbnail_url))"></a></li>
+        <li><img class="user-profile" ng-src="((channel.owner.avatar))"></a></li>
         <li id="curatedby"><span id="username">((channel.owner.display_name))</a></span></li>
       </ul>
-      <button ng-click="share('facebook', channel.id)">Share FB</button>
-      <a href="https://twitter.com/share" class="twitter-share-button" data-lang="en">Tweet</a>
-      <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src="https://platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
     </div>
   </div>
-  <div id="channeloverlay" >
+  <div id="channeloverlay" class="wrapper">
     <div ng-style="windowWidth" id="channelcontainer">
       <div id="videoslist" infinite-scroll='load_videos()' infinite-scroll-distance='1'>
-        <div ng-repeat="video in channel.videos.items" class="video">
-          <video-cell></video-cell>
+        <div ng-repeat="video in channel.videos.items" class="videocell" ng-click="showVideo(video)">
+          <div class="play"></div>
+          <div class="videotitle">((video.title | truncate : 30))</div>
+          <img ng-src="((video.video.thumbnail_url))" ng-click="setCurrentVideo(video)" >
         </div>
       </div>
+    </div>
+  </div>
+  <div id="popup" ng-show="showPopup" class="visible-desktop">
+    <div id="closepopup" ng-click="showPopup = false"></div>
+    <div class="wrapper">
+      <div id="sharedAvater"><img ng-src="((User.avatar_thumbnail_url))"></div>
+      <div class="shareMessage"><span class="bold">((User.display_name))</span> shared <span class="bold">((channel.title))</span> with you<br>– a pack of videos on Rockpack.</div>
+      <div class="getbutton"><a href="http://itunes.apple.com/app/rockpack/id660697542?mt=8&ls=1" class="rockpack-button">GET THE APP</a></div>
     </div>
   </div>
 </div>

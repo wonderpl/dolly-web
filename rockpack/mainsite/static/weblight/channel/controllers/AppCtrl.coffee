@@ -15,3 +15,4 @@ window.Weblight.controller('AppCtrl', ['$routeParams', 'isMobile', '$scope', '$l
 
   $scope.assets_url = assets_url
 ])
+
