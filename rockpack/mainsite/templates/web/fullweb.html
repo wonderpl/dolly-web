@@ -57,7 +57,7 @@
 </head>
 
 <body ng-controller="AppCtrl" id="WebApp">
-<div id="fb-root"></div>
+  <div id="fb-root"></div>
   <script>
     window.fbAsyncInit = function() {
       // init the FB JS SDK
@@ -80,9 +80,11 @@
       fjs.parentNode.insertBefore(js, fjs);
     }(document, 'script', 'facebook-jssdk'));
   </script>
-  <div ng-include src="'header.html'"></div>
-  <div class="ng-view page"></div>
+  <div ng-style="{width: contentWidth}">
+    <div ng-include src="'header.html'"></div>
+    <div class="ng-view contentwrapper"></div>
+  </div>
+  <div id="aside"></div>
   <message-handler></message-handler>
-  <div ng-include src="'footer.html'" ></div>
 </body>
 </html>

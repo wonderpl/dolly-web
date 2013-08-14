@@ -48,6 +48,11 @@ window.WebApp.controller('ChannelsCtrl', ['$scope', 'cookies', 'categoryService'
     if newValue != oldValue
       $scope.pagination = 0
       $scope.load_channels()
+
+    if (newValue? and newValue != '')
+      $scope.menuClose = false
+    else
+      $scope.menuClose = true
   )
 
   $scope.header = (id) ->
@@ -58,5 +63,6 @@ window.WebApp.controller('ChannelsCtrl', ['$scope', 'cookies', 'categoryService'
   $scope.subheader = (id) ->
     $scope.menu.sub = id
     $location.search("catid=#{id}")
+
 
 ])

@@ -1,6 +1,6 @@
-<div class="wrapper">
-  <ul class="menu">
-    <li><div ng-click="header('')" ng-class="{active: menu.main == ''}">All</div></li>
+<div id="channemenucontainer" ng-style="{width: contentWidth}">
+  <ul class="channelsmenu wrapper" ng-class="{'close-menu': menuClose == true}">
+    <li ng-class="{active: menuClose == true}"><div ng-click="header('')">Popular</div></li>
     <li ng-repeat="category in categories" ng-class="{active: category.id == menu.main}">
       <div ng-click="header(category.id)">{{category.name}}</div>
       <ul ng-show="category.id == menu.main">
@@ -10,15 +10,15 @@
       </ul>
     </li>
   </ul>
-  <div infinite-scroll="load_channels()" infinite-scroll-distance="1" id="channels">
-    <div  ng-repeat="channel in channels" class="channel">
-      <a href="#/{{channel.owner.id}}/channel/{{channel.id}}">
-        <img ng-src="{{channel.cover.thumbnail_url}}">
-        <div class="channelTitle">{{channel.title | truncate: 25}}</div>
-      </a>
-      <a href="#/{{channel.owner.id}}/profile/">
-        <div class="channelOwnerTitle">{{channel.owner.display_name}}</div>
-      </a>
-    </div>
+</div>
+<div infinite-scroll="load_channels()" infinite-scroll-distance="1" id="channels" class="wrapper" ng-class="{submenuOpen : menu.main != ''}">
+  <div  ng-repeat="channel in channels" class="channel">
+    <a href="#/{{channel.owner.id}}/channel/{{channel.id}}">
+      <img ng-src="{{channel.cover.thumbnail_url}}">
+      <div class="channelTitle">{{channel.title | truncate: 25}}</div>
+    </a>
+    <a href="#/{{channel.owner.id}}/profile/">
+      <div class="channelOwnerTitle">{{channel.owner.display_name}}</div>
+    </a>
   </div>
 </div>
