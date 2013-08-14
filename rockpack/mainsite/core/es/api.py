@@ -72,6 +72,7 @@ class EntitySearch(object):
         self.paging = (0, 100)  # default paging
 
         self._filters = []
+        self._exclusion_filters = []
 
         self._must_terms = []
         self._should_terms = []
@@ -114,10 +115,16 @@ class EntitySearch(object):
             return pyes.CustomFiltersScoreQuery(query, self._filters, score_mode='multiply')
         return query
 
+    def _construct_exclusion_filters(self, query):
+        for f in self._exclusion_filters:
+            query = pyes.FilteredQuery(query, f)
+        return query
+
     def _construct_query(self):
         self._apply_default_filters()
         query = self._construct_terms()
         query = self._construct_filters(query)
+        query = self._construct_exclusion_filters(query)
         return query
 
     def _update_query_params(self, dict_):
@@ -187,7 +194,12 @@ class EntitySearch(object):
         self._add_term_occurs(term_query, occurs)
 
     def add_filter(self, filter_):
+        """ Adds a (score) filter which alter the score of a result """
         self._filters.append(filter_)
+
+    def add_script_filter(self, filter_, occurs):
+        """ Adds a results filter which decides which results to include """
+        self._add_term_occurs(filter_, occurs)
 
     def add_sort(self, sort, order='desc'):
         sort = ':'.join([sort, order])
@@ -230,11 +242,13 @@ class ChannelSearch(EntitySearch, CategoryMixin, MediaSortMixin):
 
     def __init__(self, locale):
         super(ChannelSearch, self).__init__('channel', locale)
+        self._country = None
         self._channel_results = None
         self.promoted_category = None
 
     @classmethod
     def add_owner_to_channels(cls, channels, owners):
+        """ Adds owner information to each channel """
         for channel in channels:
             try:
                 channel['owner'] = owners[channel['owner']]
@@ -243,6 +257,7 @@ class ChannelSearch(EntitySearch, CategoryMixin, MediaSortMixin):
 
     @classmethod
     def add_videos_to_channel(cls, channel, videos, total):
+        """ Adds video information to each channel """
         channel.setdefault('videos', {}).setdefault('items', videos.get(channel['id'], []))
         channel['videos']['total'] = total
 
@@ -374,6 +389,8 @@ class ChannelSearch(EntitySearch, CategoryMixin, MediaSortMixin):
             vs.add_sort('position', 'asc')
             vs.date_sort('desc')
             vs.add_sort('video.date_published', 'desc')
+            if self._country:
+                vs.check_country_allowed(self._country)
             vs.set_paging(offset=video_paging[0], limit=video_paging[1])
             video_map = {}
             for v in vs.videos():
@@ -393,7 +410,14 @@ class ChannelSearch(EntitySearch, CategoryMixin, MediaSortMixin):
             )
         )
 
+    def check_country_allowed(self, country):
+        """ Set filter on videos for restricted content
+            if applicable """
+        if country:
+            self._country = country
+
     def channels(self, with_owners=False, with_videos=False, video_paging=(0, 100,)):
+        """ Fetches the results of the query for channels """
         if not self._channel_results:
             r = self.results()
             self._channel_results = self._format_results(r, with_owners=with_owners, with_videos=with_videos, video_paging=video_paging)
@@ -408,6 +432,7 @@ class VideoSearch(EntitySearch, CategoryMixin, MediaSortMixin):
 
     @classmethod
     def add_channels_to_videos(cls, videos, channels):
+        """ Adds channel information to each video """
         for video in videos:
             try:
                 video['channel'] = channels[video['channel']]
@@ -453,6 +478,12 @@ class VideoSearch(EntitySearch, CategoryMixin, MediaSortMixin):
             self.add_channels_to_videos(vlist, channel_map)
 
         return vlist
+
+    def check_country_allowed(self, country):
+        """ Checks the allow/deny list for country """
+        if country:
+            self._exclusion_filters.append(filters.country_restriction(country))
+            self._exclusion_filters.append(filters.country_restriction(country, 'deny'))
 
     def videos(self, with_channels=False, with_stars=False):
         if not self._video_results:
@@ -609,9 +640,22 @@ def video_stars(instance_id):
     return [_[0] for _ in stars]
 
 
-def add_video_to_index(video_instance, bulk=False, refresh=False, no_check=False):
+def add_video_to_index(video_instance, bulk=False, refresh=False, no_check=False, update_restrictions=True):
     if not check_es(no_check):
         return
+
+    def _get_country_restrictions(restrictions):
+        countries = dict(
+            allow=[],
+            deny=[])
+
+        for r in restrictions:
+            if r.relationship == 'allow':
+                countries['allow'].append(r.country)
+            else:
+                countries['deny'].append(r.country)
+
+        return countries
 
     data = dict(
         id=video_instance.id,
@@ -632,6 +676,10 @@ def add_video_to_index(video_instance, bulk=False, refresh=False, no_check=False
         locales=locale_dict_from_object(video_instance.metas),
         recent_user_stars=video_stars(video_instance.id)
     )
+    if update_restrictions:
+        data['country_restriction'] =_get_country_restrictions(video_instance.video_rel.restrictions)
+    else:
+        data['country_restriction'] = dict(allow=[], deny=[])
     return add_to_index(data, mappings.VIDEO_INDEX, mappings.VIDEO_TYPE, id=video_instance.id, bulk=bulk, refresh=refresh)
 
 

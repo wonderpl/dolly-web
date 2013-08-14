@@ -39,11 +39,29 @@ class TestShare(base.RockPackTestCase):
     def test_share_video(self):
         data = self._share_content(None, 'video_instance', VideoInstanceData.video_instance2.id)
 
+        self.assertEquals(
+            'Check out this great video "Primer" on Rockpack',
+            data['message_email'],
+            'Video title should be in the email message'
+        )
+
         # Confirm link redirects to channel
         with self.app.test_client() as client:
             r = client.get(urlparse(data['resource_url']).path)
             self.assertIn('/%s/' % VideoInstanceData.video_instance2.channel, r.headers['Location'])
             self.assertIn('video=%s' % VideoInstanceData.video_instance2.id, r.headers['Location'])
+
+    def test_passthru_share_params(self):
+        data = self._share_content(None, 'video_instance', VideoInstanceData.video_instance2.id)
+
+        self.app.config['SHARE_REDIRECT_PASSTHROUGH_PARAMS'] = ['umts']
+
+        # Confirm link redirects to channel
+        with self.app.test_client() as client:
+            r = client.get(urlparse(data['resource_url']).path + '?umts=foo')
+            self.assertIn('umts=foo', r.headers['Location'])
+
+        self.app.config['SHARE_REDIRECT_PASSTHROUGH_PARAMS'] = None
 
     def test_share_video_from_search(self):
         self.app.test_request_context().push()

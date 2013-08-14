@@ -110,7 +110,7 @@ class DBImport(object):
             print 'importing {} videos'.format(total)
             start = time.time()
             for v in query.yield_per(6000):
-                api.add_video_to_index(v, bulk=True, refresh=False, no_check=True)
+                api.add_video_to_index(v, bulk=True, refresh=False, no_check=True, update_restrictions=False)
             self.conn.flush_bulk(forced=True)
             print 'finished in', time.time() - start, 'seconds'
 
@@ -141,4 +141,38 @@ class DBImport(object):
                     )
                 except ElasticSearchException:
                     missing += 1
+
+            self.conn.flush_bulk(forced=True)
+            print '%s finished in' % total, time.time() - start, 'seconds (%s videos not in es)' % missing
+
+    def import_video_restrictions(self):
+        from pyes.exceptions import ElasticSearchException
+        from rockpack.mainsite.services.video.models import VideoRestriction, VideoInstance
+        with app.test_request_context():
+            query = VideoRestriction.query.join(
+                VideoInstance,
+                VideoInstance.video == VideoRestriction.video
+            ).order_by(VideoInstance.id)
+
+            indexing = Indexing()
+            total = 0
+            missing = 0
+            start = time.time()
+            for relationship in ('allow', 'deny',):
+                for instance_id, group in groupby(query.filter(VideoRestriction.relationship == relationship).yield_per(200).values(VideoInstance.id, VideoRestriction.country), lambda x: x[0]):
+                    countries = [c.encode('utf8') for i, c in group]
+
+                    try:
+                        print instance_id, 'with relationship', relationship, 'for', countries
+                        self.conn.partial_update(
+                            indexing.indexes['video']['index'],
+                            indexing.indexes['video']['type'],
+                            instance_id,
+                            "ctx._source.country_restriction.%s = %s" % (relationship, str(countries),)
+                        )
+                    except ElasticSearchException, e:
+                        print e
+                        missing += 1
+
+                self.conn.flush_bulk(forced=True)
             print '%s finished in' % total, time.time() - start, 'seconds (%s videos not in es)' % missing

@@ -452,7 +452,7 @@ class ContentReportForm(wtf.Form):
             raise ValidationError(_('Invalid id.'))
 
 
-def _content_feed(userid, locale, paging):
+def _content_feed(userid, locale, paging, country=None):
     feed = UserContentFeed.query.filter_by(user=userid)
     total = feed.count()
     offset, limit = paging
@@ -474,6 +474,7 @@ def _content_feed(userid, locale, paging):
 
     # Get video data
     vs = api.VideoSearch(locale)
+    vs.check_country_allowed(country)
     vs.set_paging(0, -1)
     vs.add_id(videomap.keys())
     for video in vs.videos(with_stars=True):
@@ -856,6 +857,9 @@ class UserWS(WebService):
         if use_elasticsearch():
             ch = api.ChannelSearch(self.get_locale())
             ch.add_id(channelid)
+            location = request.args.get('location')
+            if location:
+                ch.check_country_allowed(location.upper())
             ch.set_paging()
             size, limit = self.get_page()
             if not ch.channels(with_videos=True, with_owners=True, video_paging=(size, limit)):
@@ -929,8 +933,11 @@ class UserWS(WebService):
     @expose_ajax('/<userid>/channels/<channelid>/videos/', cache_age=600, secure=False)
     def channel_videos(self, userid, channelid):
         if use_elasticsearch():
+            location = request.args.get('location')
             vs = api.VideoSearch(self.get_locale())
             vs.add_term('channel', [channelid])
+            if location:
+                vs.check_country_allowed(location.upper())
             vs.add_sort('position', 'asc')
             vs.date_sort('desc')
             vs.add_sort('video.date_published', 'desc')

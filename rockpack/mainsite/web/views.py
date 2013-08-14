@@ -105,7 +105,7 @@ def web_channel_data(channelid, load_video=None):
         'channel', slug=slugify(channel_data['title']) or '-', channelid=channelid)
     if selected_video:
         channel_data['canonical_url'] += '?video=' + selected_video['id']
-    return dict(channel_data=channel_data, selected_video=selected_video, api_urls = json.dumps(ws_request('/ws/')))
+    return dict(channel_data=channel_data, selected_video=selected_video, api_urls=json.dumps(ws_request('/ws/')))
 
 
 def share_link_processing(linkid):
@@ -130,8 +130,12 @@ def share_link_processing(linkid):
 
     scheme, netloc, path, query_string, fragment = urlsplit(data.get('url'))
     query_params = parse_qs(query_string)
-    query_params.update(app.config['SHARE_REDIRECT_PASSTHROUGH_PARAMS'])
     query_params['shareuser'] = link.user
+
+    allow_params = app.config.get('SHARE_REDIRECT_PASSTHROUGH_PARAMS')
+    if allow_params:
+        query_params.update({k: request.args[k] for k in allow_params if k in request.args})
+
     new_query_string = urlencode(query_params, doseq=True)
     new_url = urlunsplit((scheme, netloc, path, new_query_string, fragment))
     return redirect(new_url, 302)
@@ -174,10 +178,10 @@ def share_redirect(linkid):
         if video:
             video = video['id']
         location = rockpack_protocol_url(
-                data['channel_data']['owner']['id'],
-                data['channel_data']['id'],
-                videoid=video
-            )
+            data['channel_data']['owner']['id'],
+            data['channel_data']['id'],
+            videoid=video
+        )
         return redirect(location, 302)
 
     if request.args.get('interstitial') == 'true':
@@ -185,10 +189,10 @@ def share_redirect(linkid):
         data = link.process_redirect(increment_click_count=False)
         share_data = web_channel_data(data['channel'], load_video=data.get('video', None))
         protocol_url = rockpack_protocol_url(
-                share_data['channel_data']['owner']['id'],
-                share_data['channel_data']['id'],
-                videoid=share_data.get('video', None)
-            )
+            share_data['channel_data']['owner']['id'],
+            share_data['channel_data']['id'],
+            videoid=share_data.get('video', None)
+        )
 
         return render_template(
             'web/app_interstitial.html',

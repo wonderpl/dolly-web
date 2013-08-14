@@ -15,6 +15,15 @@ def locale_filter(entity):
     return pyes.CustomFiltersScoreQuery.Filter(pyes.MatchAllFilter(), script=script)
 
 
+def country_restriction(country, relationship='allow'):
+    condition = '=='
+    if relationship != 'allow':
+        condition = '!='
+
+    script = "doc['country_restriction.{rel}'].value == null ? 1 : doc['country_restriction.{rel}'].value.contains('{country}') {condition} 1".format(rel=relationship, country=country, condition=condition)
+    return pyes.ScriptFilter(script)
+
+
 def negatively_boost_favourites():
     return pyes.CustomFiltersScoreQuery.Filter(
         pyes.TermFilter(field='favourite', value=True),
