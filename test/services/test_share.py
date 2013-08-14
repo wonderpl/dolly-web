@@ -51,6 +51,18 @@ class TestShare(base.RockPackTestCase):
             self.assertIn('/%s/' % VideoInstanceData.video_instance2.channel, r.headers['Location'])
             self.assertIn('video=%s' % VideoInstanceData.video_instance2.id, r.headers['Location'])
 
+    def test_passthru_share_params(self):
+        data = self._share_content(None, 'video_instance', VideoInstanceData.video_instance2.id)
+
+        self.app.config['SHARE_REDIRECT_PASSTHROUGH_PARAMS'] = ['umts']
+
+        # Confirm link redirects to channel
+        with self.app.test_client() as client:
+            r = client.get(urlparse(data['resource_url']).path + '?umts=foo')
+            self.assertIn('umts=foo', r.headers['Location'])
+
+        self.app.config['SHARE_REDIRECT_PASSTHROUGH_PARAMS'] = None
+
     def test_share_video_from_search(self):
         self.app.test_request_context().push()
         userid = self.create_test_user().id
