@@ -7,7 +7,7 @@ from .models import Subscription
 from .api import update_channel_videos
 
 
-@manager.cron_command
+@manager.cron_command(interval=900)
 def refresh_pubsubhubbub_subscriptions(id=None):
     """Re-subscribe expired PubSubHubbub subscriptions."""
     if id:

@@ -419,12 +419,12 @@ def _invalidate_apns_tokens():
         app.logger.info('%d APN device tokens invalidated', updated)
 
 
-@manager.cron_command
+@manager.cron_command(interval=604800)  # run weekly
 def update_apns_tokens():
     _invalidate_apns_tokens()
 
 
-@manager.cron_command
+@manager.cron_command(interval=300)
 @job_control
 def update_user_notifications(date_from, date_to):
     """Update user notifications based on recent activity."""
@@ -439,7 +439,7 @@ def update_user_notifications(date_from, date_to):
         send_push_notifications(user)
 
 
-@manager.cron_command
+@manager.cron_command(interval=300)
 @job_control
 def update_user_content_feed(date_from, date_to):
     """Update users content feed based on recent content changes."""
@@ -449,14 +449,14 @@ def update_user_content_feed(date_from, date_to):
     remove_old_feed_items()
 
 
-@manager.cron_command
+@manager.cron_command(interval=300)
 @job_control
 def send_registration_emails(date_from, date_to):
     """Send an email based on a template."""
     create_registration_emails(date_from, date_to)
 
 
-@manager.cron_command
+@manager.cron_command(interval=60)
 @job_control
 def process_facebook_autosharing(date_from, date_to):
     """Check for activity by users who have auto-share enabled and post to Facebook."""

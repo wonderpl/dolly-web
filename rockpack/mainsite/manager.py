@@ -12,17 +12,19 @@ class Manager(BaseManager):
         super(Manager, self).__init__(app)
         self.add_command("assets", ManageAssets())
         self.logger = app.logger.manager.getLogger('command')
-        self._cron_commands = []
+        self._cron_commands = {}
 
-    def cron_command(self, f):
-        self._cron_commands.append(f.__name__)
-        return self.command(f)
+    def cron_command(self, interval=None):
+        def decorator(f):
+            self._cron_commands[f.__name__] = interval
+            return self.command(f)
+        return decorator
+
+    def get_cron_commands(self):
+        return self._cron_commands
 
     def handle(self, prog, name, args=None):
         logging.basicConfig(level=logging.INFO if app.debug else logging.WARN)
-        if name in self._cron_commands and not self.app.config.get('ENABLE_CRON_JOBS'):
-            logging.info('cron jobs not enabled')
-            return
         return super(Manager, self).handle(prog, name, args)
 
 manager = Manager(app)
@@ -109,6 +111,13 @@ def update_image_thumbnails(fieldname):
         image_path = resize_and_upload(data, cfgkey, aoi)
         setattr(instance, fieldname, image_path)
         instance.save()
+
+
+@manager.command
+def seed_cron_queue(commands=None):
+    """Seed the cron SQS queue with a message for the specified jobs."""
+    from rockpack.mainsite.sqs_processor import init_messages
+    init_messages(commands and commands.split(','))
 
 
 def run(*args):

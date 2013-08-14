@@ -99,6 +99,9 @@ DEFAULT_AVATAR = ''
 
 DEFAULT_EMAIL_SOURCE = 'rockpack <noreply@rockpack.com>'
 
+SQS_REGION = 'eu-west-1'
+SQS_CRON_QUEUE = 'mainsite-cron'
+
 ENABLE_TIMINGS = True
 
 # Toggle to enable test url
