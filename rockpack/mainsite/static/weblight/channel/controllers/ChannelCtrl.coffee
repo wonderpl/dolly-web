@@ -1,5 +1,7 @@
 window.Weblight.controller('ChannelCtrl', ['$scope', '$routeParams', '$location', 'isMobile', 'channelData', 'userService', ($scope, $routeParams, $location, isMobile, channelData, userService) ->
 
+  $scope.channel = channelData
+
   $scope.getQueryVariable = (variable) ->
     query = window.location.search.substring(1)
     if (query.indexOf("&") > -1)
@@ -16,11 +18,24 @@ window.Weblight.controller('ChannelCtrl', ['$scope', '$routeParams', '$location'
   $scope.triggerEvent = (action, label) ->
     ga('send', 'event', 'uiAction', action, label)
 
-  $scope.channel = channelData
+  height = if "innerHeight" in window then window.innerHeight else document.documentElement.offsetHeight
+  width = if "innerWidth" in window then window.innerWidth else document.documentElement.offsetWidth
+  calculatedPadding = (height - 32 - 322 - 227) / 2
+  if calculatedPadding > 100
+    $scope.pagePadding = calculatedPadding
+  else
+    $scope.pagePadding = 100
+
+
+  $scope.coverRegex = new RegExp("channel/.*/")
+
+  if width > 768
+    $scope.channel.cover.thumbnail_url = $scope.channel.cover.thumbnail_url.replace($scope.coverRegex, 'channel/background/')
+  else
+    $scope.channel.cover.thumbnail_url = $scope.channel.cover.thumbnail_url.replace($scope.coverRegex, 'channel/background_portrait/')
 
   $scope.channel.owner.avatar = channelData.owner.avatar_thumbnail_url.replace('thumbnail_medium', 'thumbnail_large')
 
-  $scope.coverRegex = new RegExp("channel/.*/")
 
   userID = $scope.getQueryVariable('shareuser')
   if userID?
@@ -30,16 +45,8 @@ window.Weblight.controller('ChannelCtrl', ['$scope', '$routeParams', '$location'
         return data
       )
 
-  $scope.channel.cover.thumbnail_url = $scope.channel.cover.thumbnail_url.replace($scope.coverRegex, 'channel/background/')
+
   $scope.ChannelAvatar = $scope.channel.cover.thumbnail_url.replace($scope.coverRegex, 'channel/thumbnail_small/')
-
-
-  height = if "innerHeight" in window then window.innerHeight else document.documentElement.offsetHeight
-  calculatedPadding = (height - 32 - 322 - 227) / 2
-  if calculatedPadding > 100
-    $scope.pagePadding = calculatedPadding
-  else
-    $scope.pagePadding = 100
 
   $scope.showVideo = (videoObject) ->
     $location.search({'video': videoObject.id})

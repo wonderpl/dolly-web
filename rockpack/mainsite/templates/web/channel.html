@@ -38,7 +38,7 @@
 
     </script>
 
-    {% assets filters="cssmin", output="gen/vendor.%(version)s.css", "assets/vendor/css/bootstrap.css"%}
+    {% assets filters="cssmin", output="gen/vendor.%(version)s.css", "assets/vendor/css/bootstrap.css" %}
       <link rel="stylesheet" href="{{ ASSET_URL }}"/>
     {% endassets %}
 

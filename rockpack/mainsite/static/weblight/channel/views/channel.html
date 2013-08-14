@@ -1,8 +1,15 @@
 <div ng-controller="ChannelCtrl" id="ChannelCtrl" ng-style="{'background-image' : 'url(' + channel.cover.thumbnail_url + ')'}">
+  <div id="mobilepopup" ng-show="showPopup" class="hidden-desktop">
+    <div id="closepopup" ng-click="showPopup = false"></div>
+    <div class="wrapper">
+      <div id="sharedAvater"><img ng-src="((User.avatar_thumbnail_url))"></div>
+      <div class="shareMessage"><span class="bold">((User.display_name))</span> shared <span class="bold">((channel.title))</span> with you<br>– a pack of videos on Rockpack.</div>
+    </div>
+  </div>
   <div id="header">
     <div class="wrapper">
       <a href="/#"><img ng-src="((assets_url))/assets/weblight/images/whitelogo.png"></a>
-      <div id="topdownload">
+      <div id="topdownload" class="visible-desktop">
         <a href="http://itunes.apple.com/app/rockpack/id660697542?mt=8&ls=1">For iPhone & iPad <img ng-src="((assets_url))/assets/weblight/images/appleDownload.png"></a>
       </div>
     </div>
@@ -31,7 +38,7 @@
       </div>
     </div>
   </div>
-  <div id="popup" ng-show="showPopup">
+  <div id="popup" ng-show="showPopup" class="visible-desktop">
     <div id="closepopup" ng-click="showPopup = false"></div>
     <div class="wrapper">
       <div id="sharedAvater"><img ng-src="((User.avatar_thumbnail_url))"></div>

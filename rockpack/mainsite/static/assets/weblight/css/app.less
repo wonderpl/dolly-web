@@ -367,6 +367,7 @@ body {
     .getbutton {
       float: right;
       margin-top: 15px;
+      margin-right: 50px;
     }
 
     &>div {
@@ -379,4 +380,133 @@ body {
 
 .bold {
   font-family: "dn-bold", helvetica;
+}
+
+@media (min-width: 767px) {
+  .hidden-desktop {
+    display: none;
+  }
+}
+
+@media (max-width: 767px) {
+
+  .visible-desktop {
+    display: none;
+  }
+  .wrapper {
+    width: 98%
+  }
+
+  .videocell {
+    width: 300px;
+    height: 168px;
+    margin: 0 6px;
+  }
+
+  #videoslist {
+    text-align: center;
+  }
+
+  #channelheader {
+    padding: 50px 0 !important;
+
+    h1 {
+      font-size: 32px;
+      line-height: 32px;
+    }
+
+    #subscriberCount {
+      font-size: 14px;
+      margin: 20px 0;
+    }
+
+    #userdetails {
+
+      li {
+        font-size: 14px;
+      }
+
+      .user-profile {
+        width: 60px;
+        height: 60px;
+      }
+
+    }
+  }
+
+  #mobilepopup {
+    background: rgba(255,255,255, 0.9);
+    font-size: 12px;
+    font-family: "dn-regular", helvetica;
+    z-index: 1000000;
+    line-height: 12px;
+    height: 60px;
+
+    #closepopup {
+      background: url(/static/assets/weblight/images/blackclose.png);
+      width: 20px;
+      height: 20px;
+      position: absolute;
+      right: 10px;
+      top: 10px;
+      z-index: 1000;
+    }
+
+    .wrapper {
+      margin-top: 5px;
+
+      #sharedAvater {
+        margin-right: 8px;
+
+        img {
+          width: 50px;
+          height: 50px;
+        }
+      }
+
+      .getbutton {
+        float: right;
+        margin-top: 15px;
+      }
+
+      &>div {
+        display: inline-block;
+        vertical-align: middle;
+      }
+
+    }
+  }
+
+  #playercontainer {
+    width: 100%;
+    margin-left: 0;
+    left: 0;
+
+    #closeVideo {
+      top: 10px;
+      right: 10px;
+    }
+
+    #playerheader {
+
+      img {
+        margin-left: 10px;
+      }
+
+      #desc {
+        .name {
+          font-size: 12px;
+        }
+
+        .user {
+          font-size: 10px;
+        }
+      }
+    }
+
+    #playerfooter {
+      font-size: 13px;
+      padding: 10px;
+    }
+  }
 }
