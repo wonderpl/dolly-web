@@ -5,7 +5,7 @@ from functools import wraps
 from collections import namedtuple
 from werkzeug.exceptions import HTTPException, Unauthorized, BadRequest, Forbidden
 from flask import Blueprint, Response, request, current_app, abort, json
-from rockpack.mainsite.helpers import lazy_gettext as _
+from rockpack.mainsite.helpers import get_country_code_from_address, lazy_gettext as _
 from rockpack.mainsite.helpers.http import cache_for
 from rockpack.mainsite.helpers.db import resize_and_upload
 
@@ -151,11 +151,19 @@ class WebService(object):
 
         app.register_blueprint(bp)
 
-        # Nasty hack to ensure own_user_info comes before public user_info view
+        # Nasty hack to ensure consistent route ordering when subdomains are not enabled
+        # Usually local testing/development only
         if not secure_subdomain and bp.name == 'userws':
-            rules = app.url_map._rules_by_endpoint.get('userws.own_user_info', [])
-            for rule in rules:
-                rule._weights.append((1, 1))
+            priority_views = (
+                # Move own_user_info before public user_info view for unit tests
+                'own_user_info',
+                # Move owner_channel_info before public channel_info for unit tests
+                'owner_channel_info',
+            )
+            for viewname in priority_views:
+                rules = app.url_map._rules_by_endpoint['.'.join((bp.name, viewname))]
+                for rule in rules:
+                    rule._weights.append((1, 1))
 
     def get_locale(self):
         # XXX: Perhaps we should read these from db?
@@ -226,10 +234,6 @@ def add_app_request_prop():
             pass
 
 
-def setup_app_request_prop(app):
-    app.before_request(add_app_request_prop)
-
-
 def add_cors_headers(response):
     origin = request.args.get('_origin') or request.headers.get('Origin')
     if origin:
@@ -249,5 +253,14 @@ def add_cors_headers(response):
     return response
 
 
-def setup_cors_handling(app):
+def handle_location_header(response):
+    if 'X-Rockpack-Get-Client-Location' in request.headers:
+        location = get_country_code_from_address(request.remote_addr) or ''
+        response.headers.add('X-Rockpack-Client-Location', location)
+    return response
+
+
+def setup_middleware(app):
+    app.before_request(add_app_request_prop)
     app.after_request(add_cors_headers)
+    app.after_request(handle_location_header)

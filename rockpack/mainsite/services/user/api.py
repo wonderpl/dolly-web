@@ -458,14 +458,18 @@ def _content_feed(userid, locale, paging):
     offset, limit = paging
     feed = feed.order_by('date_added desc').offset(offset).limit(limit)
     itemmap, videomap, channelmap = dict(), dict(), dict()
+    count = 0
     for i, item in enumerate(feed):
+        count += 1
         if item.video_instance:
             videomap[item.video_instance] = None
             itemmap[item.video_instance] = i, item
         else:
             channelmap[item.channel] = None
             itemmap[item.channel] = i, item
-    items = [None] * len(itemmap)
+    items = [None] * count
+    if count == 0:
+        return items, total
     usermap = dict()
 
     # Get video data

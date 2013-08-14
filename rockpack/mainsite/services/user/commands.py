@@ -238,6 +238,12 @@ def create_new_video_feed_items(date_from, date_to):
         VideoInstance.query.filter(
             VideoInstance.date_added.between(date_from, date_to)).
         join(Subscription, Subscription.channel == VideoInstance.channel).
+        outerjoin(
+            UserContentFeed,
+            (UserContentFeed.user == Subscription.user) &
+            (UserContentFeed.channel == VideoInstance.channel) &
+            (UserContentFeed.video_instance == VideoInstance.id)).
+        filter(UserContentFeed.id == None).
         values(Subscription.user, VideoInstance.channel, VideoInstance.id, VideoInstance.date_added)
     )
 
@@ -262,7 +268,14 @@ def create_new_channel_feed_items(date_from, date_to):
         UserContentFeed.query.session.add_all(
             UserContentFeed(user=user, channel=channel, date_added=date_published)
             for user, channel, date_published in
-            query.distinct().values(U.user, Channel.id, Channel.date_published)
+            # use outerjoin to filter existing records
+            query.outerjoin(
+                UserContentFeed,
+                (UserContentFeed.user == U.user) &
+                (UserContentFeed.channel == Channel.id) &
+                (UserContentFeed.video_instance == None)).
+            filter(UserContentFeed.id == None).
+            distinct().values(U.user, Channel.id, Channel.date_published)
         )
 
 

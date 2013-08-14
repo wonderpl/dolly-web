@@ -138,10 +138,10 @@ def share_link_processing(linkid):
 
 
 def rockpack_protocol_url(userid, channelid, videoid=None):
-    location = '{protocol}{userid}/channel/{channelid}/'.format(
-            protocol=app.config['ROCKPACK_APP_PROTOCOL'],
-            userid=userid,
-            channelid=channelid)
+    location = '{scheme}://{userid}/channel/{channelid}/'.format(
+        scheme=app.config['ROCKPACK_IOS_URL_SCHEME'],
+        userid=userid,
+        channelid=channelid)
     if videoid:
         location += 'video/{}/'.format(videoid)
     return location

@@ -53,9 +53,8 @@ SERVICES = (
 )
 REGISTER_SETUPS = (
     ('rockpack.mainsite.core.timing', 'setup_timing'),
-    ('rockpack.mainsite.core.webservice', 'setup_cors_handling'),
     ('rockpack.mainsite.core.webservice', 'setup_abort_mapping'),
-    ('rockpack.mainsite.core.webservice', 'setup_app_request_prop'),
+    ('rockpack.mainsite.core.webservice', 'setup_middleware'),
     ('rockpack.mainsite.admin.auth', 'setup_auth'),
     ('rockpack.mainsite.admin', 'setup_admin'),
     ('rockpack.mainsite.web', 'setup_web'),

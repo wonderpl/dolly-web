@@ -1,5 +1,6 @@
 from flask import request, g
 from rockpack.mainsite import app
+from rockpack.mainsite.helpers import get_country_code_from_address
 from rockpack.mainsite.helpers.urls import url_for
 from rockpack.mainsite.core.webservice import WebService, expose_ajax
 from rockpack.mainsite.core.oauth.decorators import check_authorization
@@ -21,7 +22,7 @@ def _discover_response():
         login_register_external=url_for('loginws.external'),
         reset_password=url_for('resetws.reset_password'),
         refresh_token=url_for('tokenws.token'),
-        share_url=url_for('sharews.create_share_link' ),
+        share_url=url_for('sharews.create_share_link'),
         user_search=url_for('searchws.search_users'),
         base_api=url_for('basews.discover'),
     )
@@ -45,3 +46,7 @@ class BaseWS(WebService):
                 subscription_updates=url_for('userws.recent_videos', userid=g.authorized.userid),
             ))
         return result
+
+    @expose_ajax('/location/', secure=True)
+    def get_location(self):
+        return get_country_code_from_address(request.remote_addr) or ''

@@ -1,6 +1,7 @@
 from flask.ext import wtf
 from rockpack.mainsite.admin.models import AdminView
 from rockpack.mainsite.services.user import models
+from rockpack.mainsite.services.oauth import models as auth_models
 
 
 class UserView(AdminView):
@@ -24,3 +25,16 @@ class UserView(AdminView):
         date_joined=dict(validators=[wtf.Optional()]),
         date_updated=dict(validators=[wtf.Optional()]),
     )
+
+    inline_models = (auth_models.ExternalToken,)
+
+
+class ExternalTokenView(AdminView):
+    model = auth_models.ExternalToken
+    model_name = model.__tablename__
+
+    column_list = ('user_rel', 'external_system', 'external_uid')
+    #column_filters = ('external_system',)
+    column_searchable_list = (models.User.username, 'external_uid')
+
+    form_overrides = dict(user_rel=wtf.TextField)
