@@ -108,6 +108,25 @@ def web_channel_data(channelid, load_video=None):
     return dict(channel_data=channel_data, selected_video=selected_video, api_urls=json.dumps(ws_request('/ws/')))
 
 
+def update_qs(url, dict_):
+    scheme, netloc, path, query_string, fragment = urlsplit(url)
+    query_params = parse_qs(query_string)
+    query_params.update(dict_)
+    new_query_string = urlencode(query_params, doseq=True)
+    return urlunsplit((scheme, netloc, path, new_query_string, fragment))
+
+
+def add_carry_thru_params(url):
+    allow_params = app.config.get('SHARE_REDIRECT_PASSTHROUGH_PARAMS')
+    if allow_params:
+       url =  update_qs(url, {k: request.args[k] for k in allow_params if k in request.args})
+    return url
+
+
+def add_userid_param(url, userid):
+    return update_qs(url, {'shareuser': userid})
+
+
 def share_link_processing(linkid):
     not_social_bot = True
     show_meta_only = False
@@ -128,16 +147,8 @@ def share_link_processing(linkid):
             )
         )
 
-    scheme, netloc, path, query_string, fragment = urlsplit(data.get('url'))
-    query_params = parse_qs(query_string)
-    query_params['shareuser'] = link.user
-
-    allow_params = app.config.get('SHARE_REDIRECT_PASSTHROUGH_PARAMS')
-    if allow_params:
-        query_params.update({k: request.args[k] for k in allow_params if k in request.args})
-
-    new_query_string = urlencode(query_params, doseq=True)
-    new_url = urlunsplit((scheme, netloc, path, new_query_string, fragment))
+    new_url = add_carry_thru_params(data.get('url'))
+    new_url = add_userid_param(new_url, link.user)
     return redirect(new_url, 302)
 
 
@@ -194,10 +205,12 @@ def share_redirect(linkid):
             videoid=share_data.get('video', None)
         )
 
+        url = add_carry_thru_params(data['url'])
+
         return render_template(
             'web/app_interstitial.html',
             protocol_url=protocol_url,
-            canonical_url=data['url']
+            canonical_url=url
         )
 
     return share_link_processing(linkid)
