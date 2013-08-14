@@ -1,3 +1,4 @@
+import sys
 import time
 from itertools import groupby
 from . import api
@@ -89,6 +90,13 @@ class DBImport(object):
             self.conn.flush_bulk(forced=True)
             print 'finished in', time.time() - start, 'seconds'
 
+    def print_percent_complete(self, current, done, total):
+        n = round(done/total*100, 1)
+        if n != current:
+            print n, "percent complete                                                \r",
+            sys.stdout.flush()
+        return n
+
     def import_videos(self):
         from rockpack.mainsite.services.video.models import Channel, Video, VideoInstanceLocaleMeta, VideoInstance
         from sqlalchemy.orm import joinedload
@@ -109,8 +117,32 @@ class DBImport(object):
             total = query.count()
             print 'importing {} videos'.format(total)
             start = time.time()
+            floated = float(total)
+            cur = 0
+            done = 1
+
+            offset = 0
+            bulk_size = 2000
             for v in query.yield_per(6000):
                 api.add_video_to_index(v, bulk=True, refresh=False, no_check=True, update_restrictions=False)
+                cur = self.print_percent_complete(cur, done, floated)
+                done += 1
+            """
+            while True:
+                repeat = False
+                for v in query.offset(offset).limit(bulk_size):#.yield_per(2000):
+                    api.add_video_to_index(v, bulk=True, refresh=False, no_check=True, update_restrictions=False, update_recentstars=False)
+                    cur = self.print_percentage_complete(cur, floated)
+                    repeat = True
+
+                time.sleep(2)
+                offset += bulk_size
+                print 'next batch                       /r',
+                sys.stdout.flush()
+
+                if not repeat:
+                    break
+            """
             self.conn.flush_bulk(forced=True)
             print 'finished in', time.time() - start, 'seconds'
 
@@ -147,23 +179,25 @@ class DBImport(object):
 
     def import_video_restrictions(self):
         from pyes.exceptions import ElasticSearchException
-        from rockpack.mainsite.services.video.models import VideoRestriction, VideoInstance
+        from rockpack.mainsite.services.video.models import VideoRestriction, VideoInstance, Video, Channel
         with app.test_request_context():
             query = VideoRestriction.query.join(
                 VideoInstance,
                 VideoInstance.video == VideoRestriction.video
-            ).order_by(VideoInstance.id)
+            ).join(Channel, VideoInstance.channel == Channel.id).join(Video, Video.id == VideoRestriction.video).filter(Video.visible == True, Channel.public == True).order_by(VideoInstance.id)
+
+            potential = VideoInstance.query.join(Channel, VideoInstance.channel == Channel.id).join(Video, Video.id == VideoInstance.video).filter(Video.visible == True, Channel.public == True).count()
 
             indexing = Indexing()
             total = 0
             missing = 0
             start = time.time()
+            print '2 passes for (approx) %d videos ...' % potential
             for relationship in ('allow', 'deny',):
-                for instance_id, group in groupby(query.filter(VideoRestriction.relationship == relationship).yield_per(200).values(VideoInstance.id, VideoRestriction.country), lambda x: x[0]):
+                for instance_id, group in groupby(query.filter(VideoRestriction.relationship == relationship).yield_per(6000).values(VideoInstance.id, VideoRestriction.country), lambda x: x[0]):
                     countries = [c.encode('utf8') for i, c in group]
 
                     try:
-                        print instance_id, 'with relationship', relationship, 'for', countries
                         self.conn.partial_update(
                             indexing.indexes['video']['index'],
                             indexing.indexes['video']['type'],
@@ -171,8 +205,10 @@ class DBImport(object):
                             "ctx._source.country_restriction.%s = %s" % (relationship, str(countries),)
                         )
                     except ElasticSearchException, e:
-                        print e
                         missing += 1
 
+                    total += 1
+                print total, 'completed in this pass'
+                sys.stdout.flush()
                 self.conn.flush_bulk(forced=True)
-            print '%s finished in' % total, time.time() - start, 'seconds (%s videos not in es)' % missing
+            print 'finished in', time.time() - start, 'seconds (%s videos not in es)' % missing
