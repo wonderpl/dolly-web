@@ -178,6 +178,7 @@ class VideoWS(WebService):
             return dict(videos=dict(items=data, total=total))
 
         category = request.args.get('category')
+        location = request.args.get('location')
 
         vs = VideoSearch(self.get_locale())
         offset, limit = self.get_page()
@@ -185,6 +186,8 @@ class VideoWS(WebService):
         vs.filter_category(category)
         vs.star_order_sort(request.args.get('star_order'))
         vs.date_sort(request.args.get('date_order'))
+        if location:
+            vs.check_country_allowed(location.upper())
         videos = vs.videos(with_channels=True)
         total = vs.total
 

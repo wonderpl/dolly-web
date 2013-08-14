@@ -69,6 +69,20 @@ video_mapping = {
         "recent_user_likes": {
             "type": "string",
             "index": "not_analyzed"
+        },
+        "country_restriction": {
+            "properties": {
+                "allow": {
+                    "type": "string",
+                    "index": "not_analyzed",
+                    "null_value": []
+                },
+                "deny": {
+                    "type": "string",
+                    "index": "not_analyzed",
+                    "null_value": []
+                }
+            }
         }
     }
 }
