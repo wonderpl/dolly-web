@@ -1,7 +1,11 @@
 @import "mixins.less";
 
+html, body {
+  height: 100%;
+}
+
 body {
-  background: #f2f2f2;
+  background: #f1f1f1;
   -webkit-touch-callout: none;
   -webkit-user-select: none;
   -khtml-user-select: none;
@@ -40,13 +44,13 @@ body {
   }
 }
 
-#addtoChannel {
-  #topmenu {
+#topmenu {
 
-    li {
-      display: inline-block;
-      list-style: none;
-    }
+  position: relative;
+
+  li {
+    display: inline-block;
+    list-style: none;
   }
 }
 
@@ -159,11 +163,10 @@ body {
 
   height: 60px;
   line-height: 60px;
-  border-bottom: 2px solid #dfdfdf;
   position: fixed;
-  width: 100%;
-  background: #f2f2f2;
+  background: #fff;
   z-index: 1000;
+  box-shadow: 0 0 9px rgba(172, 172, 172, 0.25);
 
 
   #topmenu {
@@ -317,18 +320,19 @@ body {
 
 #channels {
 
+
   .channel {
     display: inline-block;
-    margin: 12px;
-    width: 190px;
+    margin: 0 7px 30px 7px;
+    width: 230px;
 
     a:hover {
       text-decoration: none;
     }
 
     img {
-      height: 190px;
-      width: 190px;
+      height: 230px;
+      width: 230px;
       background: #b5bdc8; /* Old browsers */
       background: -moz-linear-gradient(top, #b5bdc8 0%, #828c95 36%, #28343b 100%); /* FF3.6+ */
       background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#b5bdc8), color-stop(36%,#828c95), color-stop(100%,#28343b)); /* Chrome,Safari4+ */
@@ -337,12 +341,13 @@ body {
       background: -ms-linear-gradient(top, #b5bdc8 0%,#828c95 36%,#28343b 100%); /* IE10+ */
       background: linear-gradient(to bottom, #b5bdc8 0%,#828c95 36%,#28343b 100%); /* W3C */
       filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#b5bdc8', endColorstr='#28343b',GradientType=0 ); /* IE6-9 */
+      box-shadow: 0 0 5px rgba(0,0,0,0.25);
     }
 
     .channelTitle {
-      font-family: "dn-regular", Helvetica;
-      font-size: 13px;
-      line-height: 13px;
+      font-family: "dn-bold", Helvetica;
+      font-size: 16px;
+      line-height: 16px;
       color: #fff;
       text-transform: uppercase;
       margin: -20px 0 0 10px;
@@ -350,18 +355,29 @@ body {
 
     .channelOwnerTitle {
       font-family: "dn-regular", Helvetica;
-      font-size: 9px;
-      line-height: 9px;
-      color: #282d33;
+      font-size: 14px;
+      line-height: 14px;
+      color: #000000;
       text-transform: uppercase;
       margin: 10px 0 0 0;
     }
   }
 }
 
-.wrapper {
-  margin: 0 auto;
-  width: 960px;
+#aside {
+  position: fixed;
+  right: 0;
+  top: 0;
+  width: 246px;
+  height: 100%;
+  background: #282d33;
+  z-index: 1000;
+
+  .close {
+    width: 14px;
+    height: 14px;
+    background: ;
+  }
 }
 
 #feed {
@@ -406,25 +422,56 @@ body {
   }
 }
 
-.menu {
+#channemenucontainer {
+  position: fixed;
+  top: 60px;
+  background: #f1f1f1;
+}
+
+#channels {
+  padding : 100px 7px 0 7px;
+
+  &.submenuOpen {
+    padding-top: 125px;
+  }
+}
+
+.contentwrapper {
+  padding-top: 90px;
+}
+
+.channelsmenu {
+  -webkit-box-sizing: border-box; /* Safari/Chrome, other WebKit */
+  -moz-box-sizing: border-box;    /* Firefox, other Gecko */
+  box-sizing: border-box;         /* Opera/IE 8+ */
   list-style: none;
   position: relative;
+  margin: 30px auto !important;
+  border: 1px solid #dcdcdc;
+  background: #fff;
+  width: 100%;
+  height: 92px;
+
   .clearfix();
-  margin: 0;
-  height: 105px;
+
+  &.close-menu {
+    height: auto;
+  }
 
   li {
     float: left;
-    border-bottom: 1px solid #d0d0d0;
-    padding: 0 18px;
+    border-right: 1px solid #dcdcdc;
     font-family: "dn-regular";
-    font-size: 17px;
+    padding: 0 11px;
+    font-size: 12px;
     text-align: center;
-    line-height: 40px;
+    line-height: 46px;
     cursor: pointer;
+    text-transform: uppercase;
 
     &.active {
-      color: #0ba6ab;
+      background: #10a9ae;
+      color: #fff;
     }
 
     ul {
@@ -432,12 +479,22 @@ body {
       left: 0;
       margin: 0;
       list-style: none;
+      background: #eaeaea;
+      width: 100%;
+
 
       &>li {
         padding: 0 10px;
         float:left;
         color: #8f9090;
-        border-bottom: 0;
+        border: 0;
+        font-size: 11px;
+
+
+        &.active {
+          background: #10a9ae;
+          color: #fff;
+        }
       }
     }
   }
@@ -482,4 +539,61 @@ body {
   background: -ms-linear-gradient(top, #b5bdc8 0%,#828c95 36%,#28343b 100%); /* IE10+ */
   background: linear-gradient(to bottom, #b5bdc8 0%,#828c95 36%,#28343b 100%); /* W3C */
   filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#b5bdc8', endColorstr='#28343b',GradientType=0 ); /* IE6-9 */
+}
+
+
+.wrapper {
+  width: 732px;
+  margin: 0 auto;
+}
+
+/* Large desktop */
+@media (min-width: 1200px) {
+
+  .wrapper{
+    width: 732px;
+  }
+
+  #aside {
+    width: 360px;
+  }
+
+
+}
+
+/* Really large desktop */
+@media (min-width: 1340px) {
+
+  .wrapper{
+    width: 976px;
+  }
+
+  .channelsmenu {
+
+    li {
+      padding: 0 15px;
+      font-size: 16px;
+
+      ul {
+        position: absolute;
+        left: 0;
+        margin: 0;
+        list-style: none;
+        background: #eaeaea;
+        width: 100%;
+
+
+        &>li {
+          font-size: 12px;
+        }
+      }
+    }
+  }
+
+  #channels {
+
+    .channel {
+
+    }
+  }
 }

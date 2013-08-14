@@ -24,15 +24,27 @@ window.Weblight.controller('ChannelCtrl', ['$scope', '$routeParams', '$location'
   $scope.videoCellTitleLength = if $scope.isMobile then 40 else 50
   $scope.channelTitleLength = if $scope.isMobile then 15 else 25
 
-  # Catch share of specific video url
-  $scope.url = $location.absUrl()
-  if($scope.url.substr(-1) == '/')
-    $scope.url = $scope.url.substr(0, $scope.url.length - 1)
+  getQueryVariable = (variable) ->
+    query = window.location.search.substring(1)
+    if (query.indexOf("&") > -1)
+      vars = query.split("&")
+    else
+      vars = [query]
+    for i in [0..vars.length-1]
+      pair = vars[i].split("=")
+      if(pair[0] == variable)
+        return pair[1]
+    return(false)
 
+  # Catch share of specific video url
+  if(getQueryVariable('video'))
+    $scope.url = getQueryVariable('video')
+
+  $scope.userID = getQueryVariable('shareuser')
 
 
   if selected_video != null
-#    $location.search( 'video',selected_video.id)
+    $location.search( 'video',selected_video.id)
     $scope.sharetext = "has shared a video with you from a channel on Rockpack."
   else
     $scope.sharetext = "has shared a video channel with you on Rockpack."

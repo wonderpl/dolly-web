@@ -105,7 +105,7 @@ def web_channel_data(channelid, load_video=None):
         'channel', slug=slugify(channel_data['title']) or '-', channelid=channelid)
     if selected_video:
         channel_data['canonical_url'] += '?video=' + selected_video['id']
-    return dict(channel_data=channel_data, selected_video=selected_video)
+    return dict(channel_data=channel_data, selected_video=selected_video, api_urls = json.dumps(ws_request('/ws/')))
 
 
 def share_link_processing(linkid):
@@ -138,10 +138,10 @@ def share_link_processing(linkid):
 
 
 def rockpack_protocol_url(userid, channelid, videoid=None):
-    location = '{protocol}{userid}/channel/{channelid}/'.format(
-            protocol=app.config['ROCKPACK_APP_PROTOCOL'],
-            userid=userid,
-            channelid=channelid)
+    location = '{scheme}://{userid}/channel/{channelid}/'.format(
+        scheme=app.config['ROCKPACK_IOS_URL_SCHEME'],
+        userid=userid,
+        channelid=channelid)
     if videoid:
         location += 'video/{}/'.format(videoid)
     return location

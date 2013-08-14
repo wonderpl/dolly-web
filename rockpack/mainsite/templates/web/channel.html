@@ -36,30 +36,57 @@
           full_path = '/';
     </script>
 
-    {% assets filters="cssmin", output="gen/vendor.%(version)s.css", "assets/vendor/css/bootstrap.css", "assets/vendor/css/bootstrap-responsive.css" %}
-    <link rel="stylesheet" href="{{ ASSET_URL }}"/>
-    {% endassets %}
+    {% if selected_video %}
+      {% assets filters="cssmin", output="gen/vendor.%(version)s.css", "assets/vendor/css/bootstrap.css", "assets/vendor/css/bootstrap-responsive.css" %}
+      <link rel="stylesheet" href="{{ ASSET_URL }}"/>
+      {% endassets %}
 
-    {% assets filters="less", output="gen/channel.%(version)s.css", "assets/weblight/css/app.less" %}
-    <link rel="stylesheet" href="{{ ASSET_URL }}"/>
-    {% endassets %}
+      {% assets filters="less", output="gen/videoplayer.%(version)s.css", "assets/weblight/css/videoplayer.less" %}
+      <link rel="stylesheet" href="{{ ASSET_URL }}"/>
+      {% endassets %}
 
-    {% assets filters="rjsmin", output="gen/lib.%(version)s.js",
-              "assets/vendor/js/jquery-1.10.1.min.js", "assets/vendor/js/angular.js", "assets/vendor/js/helper.js" %}
+      {% assets filters="rjsmin", output="gen/lib.%(version)s.js",
+      "assets/vendor/js/jquery-1.10.1.min.js", "assets/vendor/js/angular.js", "assets/vendor/js/helper.js" %}
       <script type="text/javascript" src="{{ ASSET_URL }}"></script>
-    {% endassets %}
+      {% endassets %}
 
-    {% assets filters="coffeescript, rjsmin", output="gen/channel.%(version)s.js", "weblight/app.coffee", "weblight/controllers/AppCtrl.coffee", "weblight/controllers/ChannelCtrl.coffee",
-        "weblight/controllers/VideoCtrl.coffee"
-    %}
+      {% assets filters="coffeescript, rjsmin", output="gen/videoplayer.%(version)s.js", "weblight/webplayer/app.coffee", "weblight/webplayer/controllers/AppCtrl.coffee",
+        "weblight/webplayer/controllers/VideoCtrl.coffee", "weblight/webplayer/controllers/ChannelCtrl.coffee", "weblight/webplayer/services/userService.coffee"
+      %}
       <script type="text/javascript" src="{{ ASSET_URL }}"></script>
-    {% endassets %}
+      {% endassets %}
 
-    {% assets filters="weblighttemplates, rjsmin", output="gen/templates.%(version)s.js",
-      "weblight/views/channel.html", "weblight/views/footer.html", "weblight/views/header.html", "weblight/views/Videocell.html", "weblight/views/videoplayer.html", "weblight/views/headermobile.html"
-       %}
+      {% assets filters="weblighttemplates, rjsmin", output="gen/templates.%(version)s.js",
+        "weblight/webplayer/views/header.html", "weblight/webplayer/views/videoplayer.html", "weblight/webplayer/views/channel.html"
+      %}
       <script type="text/javascript" src="{{ ASSET_URL }}"></script>
-    {% endassets %}
+      {% endassets %}
+    {% else %}
+      {% assets filters="cssmin", output="gen/vendor.%(version)s.css", "assets/vendor/css/bootstrap.css", "assets/vendor/css/bootstrap-responsive.css" %}
+      <link rel="stylesheet" href="{{ ASSET_URL }}"/>
+      {% endassets %}
+
+      {% assets filters="less", output="gen/channel.%(version)s.css", "assets/weblight/css/app.less" %}
+      <link rel="stylesheet" href="{{ ASSET_URL }}"/>
+      {% endassets %}
+
+      {% assets filters="rjsmin", output="gen/lib.%(version)s.js",
+      "assets/vendor/js/jquery-1.10.1.min.js", "assets/vendor/js/angular.js", "assets/vendor/js/helper.js" %}
+      <script type="text/javascript" src="{{ ASSET_URL }}"></script>
+      {% endassets %}
+
+      {% assets filters="coffeescript, rjsmin", output="gen/channel.%(version)s.js", "weblight/channel/app.coffee", "weblight/channel/controllers/AppCtrl.coffee", "weblight/channel/controllers/ChannelCtrl.coffee",
+      "weblight/channel/controllers/VideoCtrl.coffee", "weblight/channel/services/userService.coffee"
+      %}
+      <script type="text/javascript" src="{{ ASSET_URL }}"></script>
+      {% endassets %}
+
+      {% assets filters="weblighttemplates, rjsmin", output="gen/templates.%(version)s.js",
+      "weblight/channel/views/channel.html", "weblight/channel/views/footer.html", "weblight/channel/views/header.html", "weblight/channel/views/Videocell.html", "weblight/channel/views/videoplayer.html", "weblight/channel/views/headermobile.html"
+      %}
+      <script type="text/javascript" src="{{ ASSET_URL }}"></script>
+      {% endassets %}
+    {% endif %}
 
     <script>
       var tag = document.createElement('script');
@@ -67,6 +94,8 @@
       var firstScriptTag = document.getElementsByTagName('script')[0];
       firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
       MBP.hideUrlBarOnLoad;
+
+      window.apiUrls = jQuery.parseJSON('{{api_urls|safe}}');
     </script>
 
   </head>

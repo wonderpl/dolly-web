@@ -1,0 +1,33 @@
+<div ng-controller="ChannelCtrl" id="ChannelCtrl">
+  <div id="header">
+    <div class="channelwrapper">
+      <a href="/#"><img src="((assets_url))/assets/weblight/images/logo.png"></a>
+    </div>
+  </div>
+  <div>
+    <div ng-include="'videoplayer.html'"></div>
+  </div>
+  <div class="channelheader">
+    <div>
+      <h1>{{channel.title}}</h1>
+      <div id="subscriberCount">((channel.subscriber_count)) Subscribers</div>
+      <ul id="userdetails">
+        <li><img class="user-profile" ng-src="((channel.owner.avatar_thumbnail_url))"></a></li>
+        <li id="curatedby"><span id="username">((channel.owner.display_name))</a></span></li>
+      </ul>
+      <button ng-click="share('facebook', channel.id)">Share FB</button>
+      <a href="https://twitter.com/share" class="twitter-share-button" data-lang="en">Tweet</a>
+      <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src="https://platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
+    </div>
+  </div>
+  <div id="channeloverlay" >
+    <div ng-style="windowWidth" id="channelcontainer">
+      <div id="videoslist" infinite-scroll='load_videos()' infinite-scroll-distance='1'>
+        <div ng-repeat="video in channel.videos.items" class="video">
+          <video-cell></video-cell>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+

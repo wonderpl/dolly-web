@@ -19,13 +19,7 @@ window.Weblight = angular.module('Weblight', [])
     $compileProvider.urlSanitizationWhitelist(/^\s*(https?|ftp|mailto|javascript):/)
 
     # Router
-    $routeProvider.when('/', {templateUrl: 'channel.html', reloadOnSearch: false})
-#    $routeProvider.when('/channel/:channelid', {templateUrl: 'channel.html', reloadOnSearch: false})
-    $routeProvider.when('/jobs', {templateUrl: 'jobs.html'})
-    $routeProvider.when('/people', {templateUrl: 'people.html'})
-    $routeProvider.when('/channel-playbook', {templateUrl: 'channelplaybook.html'})
-    $routeProvider.when('/content-providers', {templateUrl: 'contentproviders.html'})
-    $routeProvider.when('/bookmarklet', {templateUrl: 'bookmarklet.html'})
+    $routeProvider.when('/', {templateUrl: 'channel.html'})
   ])
 
   .filter('truncate', ->
