@@ -87,14 +87,17 @@ class TestAPNS(base.RockPackTestCase):
             ).save()
 
             def _new_send(obj, message):
-                return message.payload
+                # simulate success
+                return apnsclient.Result(message)
 
             app.config['ENABLE_APNS_DEEPLINKS'] = True
 
             import apnsclient
             from rockpack.mainsite.services.user.commands import send_push_notifications
             with patch.object(apnsclient.APNs, 'send', _new_send):
-                message = send_push_notifications(user)
+                result = send_push_notifications(user)
+                self.assertFalse(result.failed or result.errors)
+                message = result.message.payload
                 self.assertEquals(user.display_name, message['aps']['alert']['loc-args'][0])
                 self.assertEquals(1, message['aps']['badge'])
                 self.assertEquals(un.id, message['id'])
