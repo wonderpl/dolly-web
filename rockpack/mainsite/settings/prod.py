@@ -27,6 +27,8 @@ STATSD_HOST = 'admin'
 
 ENABLE_TIMINGS = True
 
+SQS_REGION = 'us-east-1'
+
 #USE_GEVENT = True
 
 # Credentials for rockpack prod app on facebook

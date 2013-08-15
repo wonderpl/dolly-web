@@ -27,6 +27,6 @@ STATSD_HOST = 'admin'
 
 ENABLE_TIMINGS = True
 
-USE_GEVENT = True
+#USE_GEVENT = True
 
 ENABLE_FULLWEB = True
