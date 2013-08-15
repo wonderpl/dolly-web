@@ -1,4 +1,4 @@
-/**
+http://www.holesinthenet.co.il/holesinthenet-media-story-4003/**
  * @license AngularJS v1.0.6
  * (c) 2010-2012 Google, Inc. http://angularjs.org
  * License: MIT
@@ -9062,9 +9062,9 @@ function $HttpProvider() {
       // Since template files are also fetched from here, I'm only modifying the call if it's not a .html file
       if (url.indexOf('.html') == -1) {
         if (url.indexOf('?') != -1) {
-          url += "&_origin=" + window.location.host;
+          url += "&_origin=http://" + window.location.host;
         } else {
-          url += "?_origin=" + window.location.host;
+          url += "?_origin=http://" + window.location.host;
         }
       }
 
