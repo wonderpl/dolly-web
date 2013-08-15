@@ -1,29 +1,35 @@
 <div ng-controller="VideoCtrl" id="lightbox">
-  <div id="greygbg"></div>
   <div id="overlayheader">
     <div class="wrapper">
       <a href="/#"><img src="((assets_url))/assets/weblight/images/logo.png" class="logo"></a>
       <a class="appstore" href="https://itunes.apple.com/app/rockpack/id660697542?mt=8&ls=1"><img src="((assets_url))/assets/weblight/images/appstoreheader.png"></a>
     </div>
   </div>
-  <div id="playercontainer">
+  <div id="playercontainer" ng-mouseover="mouseOver()" ng-mouseout="mouseOut()">
     <div id="playerheader">
       <img ng-src="((user.avatar_thumbnail_url))">
       <div id="desc">
-        <span>((user.display_name)) sum dolor sit amet, consectetur adipiscing elit Rockpack.</span>
-        <span id="videotitle">((videodata.title| truncate: 30))</span>
+        <span class="bold">((user.display_name))</span> shared this video with you using <span class="bold">Rockpack</span>. Enjoy
       </div>
     </div>
     <div id="player"></div>
-    <div class="hidden-phone" id="pause" ng-class="{play: playerState=='2', 'hideOverlay': hideOverlay && playerState=='1'}" ng-click="pausePlay()" ng-mouseover="mouseOver()" ng-mouseout="mouseOut()"></div>
-    <div class="hidden-phone" id="scrubber" ng-click="seekTo($event)" ng-mouseover="mouseOver()" ng-class="{'hideOverlay': hideOverlay && playerState=='1'}" ng-mouseover="mouseOver()" ng-mouseout="mouseOut()">
+    <div class="visible-desktop" id="pause" ng-class="{play: playerState=='2', 'hideOverlay': hideOverlay && playerState=='1'}" ng-click="pausePlay()"></div>
+    <div class="visible-desktop" id="scrubber" ng-click="seekTo($event)" ng-mouseover="mouseOver()" ng-class="{'hideOverlay': hideOverlay && playerState=='1'}"">
       <div id="currentPosition" ng-style="{'width': currentPosition*100 +'%'}"></div>
       <div id="loadedData"></div>
     </div>
+    <div id="videoTitle">
+      ((videodata.title))
+    </div>
     <div id="playerfooter">
-      Maecenas tincidunt nulla non magna?
-      Nam accumsan semper magna, sed feugiat magna fringilla eget ac rutrum.
+      <p>
+        You’ll find thousands of packs – collections of videos from across the web to<br>
+        browse, watch and share with friends. <span class="bold">Anyone can create, everyone can enjoy.</span>
+      </p>
       <div class="lowerdownloadbtn"><a href="https://itunes.apple.com/app/rockpack/id660697542?mt=8&ls=1" class="rockpack-button">GET THE APP</a></div>
+      <p class="visible-desktop">
+        Download the free Rockpack app on your iPhone or iPad.
+      </p>
     </div>
     <div id="weblightshare">
       Share:
@@ -31,9 +37,6 @@
         <img ng-src="((assets_url))/assets/weblight/images/fbshare.png">
       </a>
       <a href="http://twitter.com/share?text=Check out this great channel on @rockpack" target="_blank"><img ng-src="((assets_url))/assets/weblight/images/twittershare.png"></a>
-    </div>
-    <div id="footer">
-      <a href="http://rockpack.com">rockpack.com</a>
     </div>
   </div>
 </div>

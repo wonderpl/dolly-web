@@ -59,7 +59,7 @@
     {% endassets %}
 
     {% assets filters="weblighttemplates, rjsmin", output="gen/video-templates.%(version)s.js",
-      "weblight/webplayer/views/header.html", "weblight/webplayer/views/videoplayer.html", "weblight/webplayer/views/channel.html" %}
+      "weblight/webplayer/views/videoplayer.html" %}
       <script type="text/javascript" src="{{ ASSET_URL }}"></script>
     {% endassets %}
 
