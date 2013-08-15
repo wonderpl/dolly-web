@@ -47,7 +47,8 @@ window.Weblight.controller('VideoCtrl', ['$scope', '$rootScope', '$routeParams',
 
   $scope.seekTo = (event) ->
     isSkeeping = true
-    seekPosition = event.offsetX / 620
+    offsetX = if event.offsetX then event.offsetX else event.clientX - $(event.target).offset().left
+    seekPosition = offsetX/620
     $scope.player.seekTo($scope.player.getDuration() * seekPosition )
     $scope.player.playVideo()
     $scope.playerState = 1
