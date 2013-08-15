@@ -42,7 +42,7 @@
       <link rel="stylesheet" href="{{ ASSET_URL }}"/>
     {% endassets %}
 
-    {% assets  output="gen/weblightlib.%(version)s.js", "assets/vendor/js/angular.js", "assets/vendor/js/ng-infinite-scroll.js"%}
+    {% assets  output="gen/weblightlib.%(version)s.js", "assets/vendor/js/jquery-1.10.1.min.js", "assets/vendor/js/angular.js", "assets/vendor/js/ng-infinite-scroll.js"%}
       <script type="text/javascript" src="{{ ASSET_URL }}"></script>
     {% endassets %}
 
@@ -70,7 +70,7 @@
     {% endassets %}
 
     {% assets filters="coffeescript", output="gen/channel-js.%(version)s.js", "weblight/channel/app.coffee", "weblight/channel/controllers/AppCtrl.coffee", "weblight/channel/controllers/ChannelCtrl.coffee",
-    "weblight/channel/controllers/VideoCtrl.coffee", "weblight/channel/services/userService.coffee", "weblight/channel/services/userService.coffee"
+    "weblight/channel/controllers/VideoCtrl.coffee", "weblight/channel/services/userService.coffee", "weblight/channel/services/contentService.coffee"
     %}
     <script type="text/javascript" src="{{ ASSET_URL }}"></script>
     {% endassets %}
