@@ -119,7 +119,11 @@ def send_push_notifications(user):
 
         srv = push_client.APNs(push_client.connection)
         result = srv.send(push_client.Message(device.external_token, **message))
-        app.logger.info('Sent message to %s: %r', device.user, message)
+        if result.errors or result.failed:
+            app.logger.error('Failed to send message to %s: %r: %r: %r',
+                             device.user, message, result.errors, result.failed)
+        else:
+            app.logger.info('Sent message to %s: %r: %r', device.user, message)
         return result
     except Exception:
         app.logger.exception('Failed to send push notification: %d', notification.id)
