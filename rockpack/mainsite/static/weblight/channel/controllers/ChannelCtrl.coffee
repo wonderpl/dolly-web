@@ -60,5 +60,22 @@ window.Weblight.controller('ChannelCtrl', ['$scope', '$routeParams', '$location'
 
   $scope.showPopup = true
 
+  $scope.load_videos = () ->
+    console.log '******'
+    # Did we already load all the videos?
+    console.log $scope.channel.totalvideos
+    if typeof $scope.channel.totalvideos == "undefined" or $scope.page*40 <= $scope.totalvideos
+      ContentService.getChannelVideos($routeParams.userid, $routeParams.channelid, 40, $scope.page*40).then (data) =>
+        if $scope.channel == null
+          $scope.channel = data
+          $scope.totalvideos = data.videos.total
+          $scope.background = data.cover.thumbnail_url.replace('thumbnail_medium', 'background')
+          console.log $scope.channel
+        else
+          $scope.channel.videos.items = $scope.channel.videos.items.concat(data.videos.items)
+        $scope.page += 1
+    return
+
+
   return
 ])
