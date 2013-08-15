@@ -124,5 +124,4 @@ APNS_FEEDBACK_TYPE = 'feedback_sandbox'
 APNS_CERT_NAME = 'apns-dev.pem'
 APNS_PASSPHRASE = 'rockpack'
 
-SHARE_REDIRECT_PASSTHROUGH_PARAMS = dict(
-)
+SHARE_REDIRECT_PASSTHROUGH_PARAMS = 'utm_source', 'utm_medium', 'utm_campaign'
