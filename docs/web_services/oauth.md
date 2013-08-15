@@ -352,3 +352,27 @@ If request was accepted and the reset email sent then a `204` will be returned.
 HTTP/1.1 204 OK
 Content-Type: application/json
 ```
+
+Sessions
+========
+
+Record a new session by `POST`ing a session description:
+
+```http
+GET /ws/session/ HTTP/1.1
+Host: secure.rockpack.com
+Authorization: Bearer xxx
+Content-Type: application/json
+
+"a value"
+```
+
+If there is a logged-in user on the client then the access token should be provided with the
+`Authorization` header, otherwise it can be omitted.
+The request body is optional but if provided should define a JSON string describing the session.
+
+A `204` will be returned on success.
+
+```http
+HTTP/1.1 204 NO CONTENT
+```
