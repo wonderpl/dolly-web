@@ -37,7 +37,7 @@ window.Weblight.controller('VideoCtrl', ['$scope', '$rootScope', '$routeParams',
           iv_load_policy: 3,
         },
         events: {
-          'onReady': onPlayerReady,
+#          'onReady': onPlayerReady,
           'onStateChange': onPlayerStateChange
         }
 
@@ -53,8 +53,8 @@ window.Weblight.controller('VideoCtrl', ['$scope', '$rootScope', '$routeParams',
     $scope.player.playVideo()
     $scope.playerState = 1
 
-  onPlayerReady = (event) ->
-    $scope.player.mute()
+#  onPlayerReady = (event) ->
+#    $scope.player.mute()
 
   onPlayerStateChange = (event) ->
     $scope.playerState = event.data
