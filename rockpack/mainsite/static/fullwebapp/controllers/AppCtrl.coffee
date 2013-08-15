@@ -4,6 +4,8 @@
 
 window.WebApp.controller('AppCtrl', ['$rootScope', '$location', 'UserManager', '$route', '$scope', ($rootScope, $location, UserManager, $route, $scope) ->
 
+  $rootScope.asideOpen = true
+
   routesThatRequireAuth = ['/feed']
 
   $rootScope.$on("$locationChangeStart", (event, NewUrl, OldUrl) ->
@@ -36,14 +38,25 @@ window.WebApp.controller('AppCtrl', ['$rootScope', '$location', 'UserManager', '
 
 
   $scope.$watch($scope.getWidth, (newValue, oldValue) ->
-    if newValue > 1200
+    ContentWidthCalculator(newValue)
+  )
+
+  $scope.$watch('asideOpen', (newValue, oldValue) ->
+    console.log ('lll')
+    ContentWidthCalculator(10)
+  )
+
+  ContentWidthCalculator = (width) ->
+    if width > 1200
       $scope.sidebarWidth = 360
     else
       $scope.sidebarWidth = 246
 
-    $rootScope.contentWidth = newValue - $scope.sidebarWidth + 'px'
+    if $rootScope.asideOpen
+      $rootScope.contentWidth = width - $scope.sidebarWidth + 'px'
+    else
+      $rootScope.contentWidth = '100%'
 
-  )
 
   window.onresize = () ->
     $scope.$apply()

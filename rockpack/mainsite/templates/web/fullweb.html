@@ -56,7 +56,7 @@
 
 </head>
 
-<body ng-controller="AppCtrl" id="WebApp">
+<body ng-controller="AppCtrl" id="WebApp" ng-class="{aside: asideOpen}">
   <div id="fb-root"></div>
   <script>
     window.fbAsyncInit = function() {
@@ -84,7 +84,7 @@
     <div ng-include src="'header.html'"></div>
     <div class="ng-view contentwrapper"></div>
   </div>
-  <div id="aside"></div>
+  <div ng-include src="'aside.html'"></div>
   <message-handler></message-handler>
 </body>
 </html>

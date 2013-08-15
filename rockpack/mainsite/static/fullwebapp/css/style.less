@@ -17,6 +17,8 @@ body {
 .videocell {
   display: inline-block;
   position: relative;
+  width: 230px;
+  height: 130px;
 }
 
 #coverSelector {
@@ -373,9 +375,10 @@ body {
   background: #282d33;
   z-index: 1000;
 
-  .close {
+  #asideClose {
     width: 14px;
     height: 14px;
+    background: url(/static/assets/fullwebapp/images/aside-close.png);
   }
 }
 
@@ -435,11 +438,26 @@ body {
   }
 }
 
+#channelheader {
+
+  margin: 100px 0 80px 0;
+
+  h1 {
+    color: #fff;
+    font-size: 60px;
+    line-height: 60px;
+    font-family: "dn-regular", Helvetica;
+    text-shadow: 2px 0 2px rgba(0,0,0,0.11),
+                 0px 0 20px rgba(0,0,0,0.2);
+    max-width: 430px;
+  }
+}
+
 .contentwrapper {
   padding-top: 90px;
 }
 
-.channelsmenu {
+.channelsmenu, .aside .channelsmenu {
   -webkit-box-sizing: border-box; /* Safari/Chrome, other WebKit */
   -moz-box-sizing: border-box;    /* Firefox, other Gecko */
   box-sizing: border-box;         /* Opera/IE 8+ */
@@ -512,6 +530,8 @@ body {
 .video {
   display: inline-block;
   position: relative;
+  margin: 7px;
+
 }
 
 .addToChannel {
@@ -521,12 +541,6 @@ body {
   top: 5px;
   right: 5px;
 }
-
-.video {
-  display: inline-block;
-  margin: 10px;
-}
-
 .channelThumbail {
   width: 152px;
   height: 152px;
@@ -541,30 +555,23 @@ body {
 }
 
 
+.aside {
+
+  .wrapper {
+    width: 732px;
+  }
+}
+
 .wrapper {
-  width: 732px;
+  width: 976px;
   margin: 0 auto;
 }
 
 /* Large desktop */
 @media (min-width: 1200px) {
 
-  .wrapper{
-    width: 732px;
-  }
-
   #aside {
     width: 360px;
-  }
-
-
-}
-
-/* Really large desktop */
-@media (min-width: 1340px) {
-
-  .wrapper{
-    width: 976px;
   }
 
   .channelsmenu {
@@ -574,13 +581,36 @@ body {
       font-size: 16px;
 
       ul {
-        position: absolute;
-        left: 0;
-        margin: 0;
-        list-style: none;
-        background: #eaeaea;
-        width: 100%;
 
+        &>li {
+          font-size: 12px;
+        }
+      }
+    }
+  }
+}
+
+/* Really large desktop */
+@media (min-width: 1340px) {
+
+  .aside {
+
+    .wrapper {
+      width: 976px;
+    }
+  }
+
+  .wrapper{
+    width: 976px;
+  }
+
+  .channelsmenu, .aside .channelsmenu {
+
+    li {
+      padding: 0 15px;
+      font-size: 16px;
+
+      ul {
 
         &>li {
           font-size: 12px;
