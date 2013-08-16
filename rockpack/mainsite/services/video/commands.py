@@ -164,7 +164,7 @@ def update_channel_promo_activity():
 @manager.cron_command(interval=900)
 def update_channel_promotions():
     """ Update promotion data for channels in ES """
-    JOB_NAME = 'update_subscriber_stats'
+    JOB_NAME = 'update_channel_promotions'
     job_control = JobControl.query.get(JOB_NAME)
     now = datetime.now()
     if not job_control:
