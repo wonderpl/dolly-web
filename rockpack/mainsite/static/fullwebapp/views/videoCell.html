@@ -1,4 +1,9 @@
-<div class="videocell">
-  <img ng-src="{{video.video.thumbnail_url}}" ng-click="setCurrentVideo(video)" >
-  <img src="/static/assets/fullwebapp/images/ButtonAddSmall.png" class="addToChannel" ng-click="addToChannel(video.id)" ng-hide="User.isLoggedIn == false"></div>
+<div class="videocell" ng-mouseleave="video.displayOverlay = false">
+  <img ng-src="{{video.video.thumbnail_url}}" ng-click="setCurrentVideo(video)">
+  <div class="videoShaerOverlay" ng-class="{active: video.displayOverlay}">
+    <div class="addFavorite" ng-show="isloggedIn"></div>
+    <div class="addToChannel" ng-show="isloggedIn" ng-click="addToChannel(video)"></div>
+    <div class="share"></div>
+  </div>
+  <div class="videoShare" ng-click="video.displayOverlay = true" ng-class="{active: video.displayOverlay}"></div>
 </div>

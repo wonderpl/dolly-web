@@ -19,6 +19,84 @@ body {
   position: relative;
   width: 230px;
   height: 130px;
+  overflow: hidden;
+
+  .videoShare {
+    width: 38px;
+    height: 38px;
+    background: url(/static/assets/fullwebapp/images/sharelogo.png) -38px 0 no-repeat;
+    position: absolute;
+    top: 10px;
+    right: 10px;
+
+    &.active, &:hover {
+      background: url(/static/assets/fullwebapp/images/sharelogo.png) 0 0 no-repeat;
+    }
+
+  }
+
+  .videoShaerOverlay  {
+    background: rgba(0,0,0,0.6);
+    padding: 45px;
+    color: #fff;
+    width: 140px;
+    height: 39px;
+    position: absolute;
+    left: 230px;
+    top: -130px;
+    transition: all 0.5s ease;
+    margin: 0 3px;
+    text-align: center;
+
+    &.active {
+      left: 0;
+      top: 0;
+    }
+
+    .addFavorite, .addToChannel, .share {
+      width: 38px;
+      height: 38px;
+      background: url(/static/assets/fullwebapp/images/shareicons.png) no-repeat;
+      display: inline-block;
+    }
+
+    .addFavorite {
+      background-position: 0 -38px;
+
+      &:hover {
+        background-position: 0 -76px;
+      }
+
+      &:active {
+        background-position: 0 0;
+      }
+    }
+
+    .addToChannel {
+      background-position: -38px -38px ;
+
+      &:hover {
+        background-position: -38px -76px;
+      }
+
+      &:active {
+        background-position: -38px 0;
+      }
+    }
+
+    .share {
+      background-position: -76px -38px;
+
+      &:hover {
+        background-position: -76px -76px;
+      }
+
+      &:active {
+        background-position: -76px 0;
+      }
+    }
+  }
+
 }
 
 #coverSelector {
@@ -451,7 +529,33 @@ body {
                  0px 0 20px rgba(0,0,0,0.2);
     max-width: 430px;
   }
+
+  #subscriberCount {
+    color: #fff;
+    font-family: "dn-bold", Helvetica;
+    font-size: 18px;
+    text-shadow: 2px 0 2px rgba(0,0,0,0.11),
+    0px 0 20px rgba(0,0,0,0.2);
+  }
+
+  #userdetails {
+    list-style: none;
+    margin: 30px 0;
+    font-family: "dn-bold", Helvetica;
+    font-size: 18px;
+
+
+    a, a:hover, a:active {
+      color: #fff;
+    }
+
+    li {
+      display: inline-block;
+      margin-right: 20px;
+    }
+  }
 }
+
 
 .contentwrapper {
   padding-top: 90px;
@@ -531,16 +635,9 @@ body {
   display: inline-block;
   position: relative;
   margin: 7px;
-
+  vertical-align: top;
 }
 
-.addToChannel {
-  position: absolute;
-  width: 25px;
-  height: 25px;
-  top: 5px;
-  right: 5px;
-}
 .channelThumbail {
   width: 152px;
   height: 152px;
@@ -565,6 +662,17 @@ body {
 .wrapper {
   width: 976px;
   margin: 0 auto;
+}
+
+.whitebutton {
+  font-family: "dn-bold", Helvetica;
+  font-size: 20px;
+  background: #fff;
+  padding: 12px 26px;
+  text-transform: uppercase;
+  border: 0;
+  box-shadow: 2px 0 2px rgba(0,0,0,0.11),
+              0 0 25px rgba(0,0,0,0.3);
 }
 
 /* Large desktop */

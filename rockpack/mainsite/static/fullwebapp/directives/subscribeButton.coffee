@@ -2,6 +2,7 @@ angular.module('WebApp').directive('subscribeButton', ['UserManager', '$route', 
   return {
     restrict: 'A'
     templateUrl: 'subscribeButton.html'
+    replace: true
     controller: ($scope) ->
       if UserManager.isLoggedIn
 

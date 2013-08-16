@@ -1,7 +1,7 @@
-<div ng-switch on="state">
+<div ng-switch on="state" style="display: inline-block">
   <div ng-switch-when="loggedout"></div>
   <div ng-switch-when="subscribe">
-    <input type="button" value="subscribe" ng-click="subscribe()">
+    <input type="button" value="subscribe" ng-click="subscribe()" class="whitebutton">
   </div>
   <div ng-switch-when="unsubscribe">
     <input type="button" value="unsubscribe" ng-click="subscribe()">
