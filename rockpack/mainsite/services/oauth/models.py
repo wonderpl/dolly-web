@@ -129,6 +129,8 @@ class ExternalFriend(db.Model):
                 avatar_url=facebook.FACEBOOK_PICTURE_URL % friend['id'],
                 has_ios_device=False,
             )
+        if not external_friends:
+            return
 
         if with_devices:
             userdata = graph.get_objects(external_friends.keys(), fields='devices,picture.type(large)')
