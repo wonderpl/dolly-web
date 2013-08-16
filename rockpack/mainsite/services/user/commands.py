@@ -55,13 +55,6 @@ def star_message(activity, video_instance):
     )
 
 
-activity_notification_map = dict(
-    # map action -> activity list, object model, message function
-    subscribe=([], Channel, subscribe_message),
-    star=([], VideoInstance, star_message),
-)
-
-
 # XXX: This assumes that the notifications passed in are not yet
 # committed to the db
 def send_push_notifications(user):
@@ -130,6 +123,12 @@ def send_push_notifications(user):
 
 
 def create_new_activity_notifications(date_from=None, date_to=None, user_notifications=None):
+    activity_notification_map = dict(
+        # map action -> activity list, object model, message function
+        subscribe=([], Channel, subscribe_message),
+        star=([], VideoInstance, star_message),
+    )
+
     activity_window = UserActivity.query.options(joinedload('actor'))
     if date_from:
         activity_window = activity_window.filter(UserActivity.date_actioned >= date_from)

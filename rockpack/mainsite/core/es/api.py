@@ -483,7 +483,6 @@ class VideoSearch(EntitySearch, CategoryMixin, MediaSortMixin):
         """ Checks the allow/deny list for country """
         if country:
             self._exclusion_filters.append(filters.country_restriction(country))
-            self._exclusion_filters.append(filters.country_restriction(country, 'deny'))
 
     def videos(self, with_channels=False, with_stars=False):
         if not self._video_results:
