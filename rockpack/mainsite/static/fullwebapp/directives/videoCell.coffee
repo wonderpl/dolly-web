@@ -10,6 +10,11 @@ angular.module('WebApp').directive('videoCell', [ '$location', '$dialog', 'UserM
       $scope.setCurrentVideo = (video) ->
         $location.search( 'video', video.id )
 
+      $scope.addToFavourites = (videoid) ->
+        for channel in UserManager.details.channels.items
+          if channel.favourites?
+            UserManager.addVideo(channel.resource_url,videoid)
+
       $scope.addToChannel = (videoId) ->
         dialog = $dialog.dialog(
           controller: 'AddtoChannelCtrl',
