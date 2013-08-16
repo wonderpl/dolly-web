@@ -672,8 +672,7 @@ def add_video_to_index(video_instance, bulk=False, refresh=False, no_check=False
         category=video_instance.category,
         date_added=video_instance.date_added,
         position=video_instance.position,
-        locales=locale_dict_from_object(video_instance.metas),
-        recent_user_stars=video_stars(video_instance.id)
+        locales=locale_dict_from_object(video_instance.metas)
     )
 
     if update_recentstars:
