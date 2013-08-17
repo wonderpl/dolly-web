@@ -99,6 +99,7 @@ def init_app():
         handler = logging.StreamHandler()
         handler.setFormatter(logging.Formatter(
             '%(asctime)s - %(levelname)s: %(message)s', '%Y-%m-%dT%H:%M:%S'))
+        app.logger.setLevel(app.config.get('LOG_LEVEL', logging.INFO))
         app.logger.addHandler(handler)
     if app.debug:
         try:
