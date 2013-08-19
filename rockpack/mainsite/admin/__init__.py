@@ -37,6 +37,9 @@ def setup_admin(app):
         category='Permissions'))
     """
 
+    # init commands:
+    from . import commands
+
     from datetime import datetime
     from flask.ext.admin import BaseView, expose
     from rockpack.mainsite.services.video import models
