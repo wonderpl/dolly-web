@@ -16,7 +16,7 @@ def locale_filter(entity):
 
 
 def country_restriction(country):
-    script = "(doc['country_restriction.allow'].value == null ? 1 : (doc['country_restriction.allow'].value.contains('{country}') ? 1 : 0)) & (doc['country_restriction.deny'].value == null ? 1 : (doc['country_restriction.deny'].value.contains('{country}') ? 1 : 0))".format(country=country)
+    script = "(doc['country_restriction.allow'].value == null ? 1 : (doc['country_restriction.allow'].value.contains('{country}') ? 1 : 0)) & (doc['country_restriction.deny'].value == null ? 1 : (doc['country_restriction.deny'].value.contains('{country}') ? 0 : 1))".format(country=country)
     return pyes.ScriptFilter(script)
 
 

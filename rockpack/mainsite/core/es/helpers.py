@@ -124,7 +124,7 @@ class DBImport(object):
             offset = 0
             bulk_size = 2000
             for v in query.yield_per(6000):
-                api.add_video_to_index(v, bulk=True, refresh=False, no_check=True, update_restrictions=False)
+                api.add_video_to_index(v, bulk=True, refresh=False, no_check=True, update_restrictions=False, update_recentstars=False)
                 cur = self.print_percent_complete(cur, done, floated)
                 done += 1
             """
