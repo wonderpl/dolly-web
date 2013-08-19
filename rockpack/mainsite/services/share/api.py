@@ -17,7 +17,7 @@ SHARE_OBJECT_TYPE_MAP = dict(
 
 OBJECT_NAME_MAP = dict(
     video_instance='video',
-    channel='channel'
+    channel='pack'
 )
 
 
