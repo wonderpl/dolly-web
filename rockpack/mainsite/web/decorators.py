@@ -1,7 +1,9 @@
+from urllib import urlencode
 from functools import wraps
-from flask import Response, render_template
+from flask import request, Response, redirect, render_template, json
 from rockpack.mainsite import app
 from rockpack.mainsite.helpers.http import cache_for
+from rockpack.mainsite.helpers.urls import url_for
 
 
 def render(template=None):
@@ -31,4 +33,20 @@ def expose_web(url, template=None, methods=['GET'], secure=None, cache_age=None,
             app.add_url_rule(url, None, cache_for(cache_age, cache_private)(render(template)(func)),
                              methods=methods, subdomain=subdomain)
         return func
+    return decorator
+
+
+def iframe_proxy_redirect():
+    """Take AJAX result and pass it to iframe_proxy via a 302 redirect."""
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            response = func(*args, **kwargs)
+            proxy_url = url_for('iframe_proxy')
+            params = dict(result=json.dumps(response))
+            callback = request.args.get('_callback') or request.form.get('_callback')
+            if callback:
+                params['_callback'] = callback
+            return redirect(proxy_url + '?' + urlencode(params))
+        return wrapper
     return decorator

@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title></title>
+    <script type="text/javascript">
+      try {
+          var callback = window.parent.{{ callback }};
+          if (typeof callback == 'function')
+              callback.apply({% if callback_base %}window.parent.{{ callback_base }}{% else %}null{% endif %}, {{ result|safe }});
+      } finally {
+          {#- set timer to replace this iframe so that a page reload doesn't resubmit #}
+          if (! window.closed) {
+              window.setTimeout('location.href = "about:blank"', 1000);
+          }
+      }
+     </script>
+  </head>
+  <body></body>
+</html>
