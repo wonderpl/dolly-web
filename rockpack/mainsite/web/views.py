@@ -43,7 +43,6 @@ def ws_request(url, method='GET', content_type=None, body=None, token=None, **kw
         response = u''.join(app.wsgi_app(env, start_response))
         if meta['status'] == '404 NOT FOUND':
             abort(404)
-    print 'RESP', response
     return response and json.loads(response)
 
 
