@@ -420,6 +420,9 @@ class TokenWS(WebService):
 
 
 def send_password_reset(user):
+    if not user.email:
+        app.logger.warning("Can't reset password for %s: no email address", user.id)
+        return
     token = create_access_token(user.id, '', 86400)
     url = url_for('reset_password') + '?token=' + token
     template = email_env.get_template('reset.html')

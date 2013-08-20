@@ -1,5 +1,6 @@
 from urllib import urlencode
 from urlparse import urljoin, parse_qs, urlsplit, urlunsplit
+from cStringIO import StringIO
 import pyes
 from flask import request, json, render_template, abort, redirect
 from flask.ext import wtf
@@ -13,10 +14,10 @@ from rockpack.mainsite.helpers.http import cache_for
 from rockpack.mainsite.services.user.models import User
 from rockpack.mainsite.services.share.models import ShareLink
 from rockpack.mainsite.services.oauth.api import record_user_event
-from .decorators import expose_web
+from .decorators import expose_web, iframe_proxy_redirect
 
 
-def ws_request(url, **kwargs):
+def ws_request(url, method='GET', content_type=None, body=None, token=None, **kwargs):
     ws_base_url = app.config.get('WEB_WS_SERVICE_URL')
     if ws_base_url:
         response = requests.get(urljoin(ws_base_url, url), params=kwargs).content
@@ -26,16 +27,23 @@ def ws_request(url, **kwargs):
             meta['headers'] = headers
         # Make local in-process request at top of WSGI stack
         env = request.environ.copy()
+        if content_type:
+            env['CONTENT_TYPE'] = content_type
+        if body:
+            env['CONTENT_LENGTH'] = len(body)
+            env['wsgi.input'] = StringIO(body)
         env['PATH_INFO'] = url
-        env['REQUEST_METHOD'] = 'GET'
+        env['REQUEST_METHOD'] = method
         env['QUERY_STRING'] = urlencode(kwargs)
-        if 'API_SUBDOMAIN' in app.config:
+        if token:
+            env['HTTP_AUTHORIZATION'] = 'Bearer %s' % str(token)
+        if not token and 'API_SUBDOMAIN' in app.config:
             env['HTTP_HOST'] = '.'.join((app.config['API_SUBDOMAIN'], app.config['SERVER_NAME']))
         meta = {}
         response = u''.join(app.wsgi_app(env, start_response))
         if meta['status'] == '404 NOT FOUND':
             abort(404)
-    return json.loads(response)
+    return response and json.loads(response)
 
 
 @expose_web('/welcome_email', 'web/welcome_email.html', cache_age=3600)
@@ -56,6 +64,37 @@ def fullweb():
         return dict(api_urls=api_urls)
     else:
         abort(404)
+
+
+class FileUploadForm(wtf.Form):
+    user = wtf.HiddenField(validators=[wtf.Required()])
+    token = wtf.HiddenField(validators=[wtf.Required()])
+    file = wtf.FileField(validators=[wtf.Required(), wtf.FileRequired()])
+
+
+@app.route('/upload/<any("avatar", "cover_art"):type>', methods=['POST'], subdomain=app.config.get('SECURE_SUBDOMAIN'))
+@iframe_proxy_redirect()
+def fileupload(type):
+    form = FileUploadForm(csrf_enabled=False)
+    if not form.validate_on_submit():
+        return dict(error='invalid_request', form_errors=form.errors)
+    ws_url = '/ws/%s/%s/' % (form.user.data, type)
+    method = 'PUT' if type == 'avatar' else 'POST'
+    body = form.file.data.stream.read()
+    return ws_request(ws_url, method, 'image/unknown', body, form.token.data)
+
+
+@expose_web('/iframe_proxy', 'web/iframe_proxy.html')
+def iframe_proxy():
+    callback = request.args.get('_callback', 'alert')
+    result = request.args.get('result', '[]')
+    if not result.startswith('['):
+        result = '[%s]' % result    # javascript argument must be a list
+    return dict(
+        callback=callback,
+        callback_base='.'.join(callback.split('.')[0:-1]),
+        result=result,
+    )
 
 
 @expose_web('/bookmarklet', 'web/bookmarklet.html', cache_age=3600, secure=True)
@@ -119,7 +158,7 @@ def update_qs(url, dict_):
 def add_carry_thru_params(url):
     allow_params = app.config.get('SHARE_REDIRECT_PASSTHROUGH_PARAMS')
     if allow_params:
-       url =  update_qs(url, {k: request.args[k] for k in allow_params if k in request.args})
+        url = update_qs(url, {k: request.args[k] for k in allow_params if k in request.args})
     return url
 
 

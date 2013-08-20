@@ -776,7 +776,7 @@ class UserWS(WebService):
         user = User.query.get_or_404(userid)
         user.avatar = process_image(User.avatar)
         user.save()
-        return None, 204, [('Location', user.avatar.url)]
+        return dict(thumbnail_url=user.avatar.url), 200, [('Location', user.avatar.url)]
 
     @expose_ajax('/<userid>/activity/', cache_age=60, cache_private=True)
     @check_authorization(self_auth=True)

@@ -29,7 +29,7 @@ class TestShare(base.RockPackTestCase):
 
     def test_share_channel(self):
         data = self._share_content(None, 'channel', ChannelData.channel1.id)
-        self.assertIn('channel', data['message'])
+        self.assertIn('pack', data['message'])
 
         # Confirm link redirects to channel
         with self.app.test_client() as client:

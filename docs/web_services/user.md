@@ -381,8 +381,13 @@ Content-Type: application/json
 If successful:
 
 ```http
-HTTP/1.1 204 OK
+HTTP/1.1 200 OK
 Location: http://path/uploaded/media.png
+Content-Type: application/json
+
+{
+ "thumbnail_url": "http://path/uploaded/media.png"
+}
 ```
 
 Channel
