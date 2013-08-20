@@ -124,7 +124,7 @@ def privacy():
 
 
 def web_channel_data(channelid, load_video=None):
-    channel_data = ws_request('/ws/-/channels/%s/' % channelid, size=100)
+    channel_data = ws_request('/ws/-/channels/%s/' % channelid, size=40)
     selected_video = None
     if load_video:
         for instance in channel_data['videos']['items']:
