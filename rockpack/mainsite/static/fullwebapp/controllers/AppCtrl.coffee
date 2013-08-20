@@ -61,4 +61,7 @@ window.WebApp.controller('AppCtrl', ['$rootScope', '$location', 'UserManager', '
   window.onresize = () ->
     $scope.$apply()
 
+
+  # Expose the assets url to all controllers
+  $rootScope.assets_url = window.assets_url
 ])

@@ -317,17 +317,8 @@ a:link, a:visited, div a {
               <!-- // Begin Module: Standard Preheader \ -->
               <table border="0" cellpadding="10" cellspacing="0" width="100%">
                 <tr>
-                  <!-- *|IFNOT:ARCHIVE_PAGE|* -->
-                  <td valign="top" width="190">
-                    <div>
-                      <center>Is this email not displaying correctly? <a href="http://rockpack.com/welcome_email" target="_blank">View it in your browser</a>.</center>
-                    </div>
-                  </td>
-                  <!-- *|END:IF|* -->
-                </tr>
-                <tr>
                   <td>
-                    <center><a href="https://itunes.apple.com/app/rockpack/id660697542?mt=8&ls=1"><img src="{{ config.ASSETS_URL }}/assets/emails/images/logo.png"></a></center>
+                    <center><a href="http://bit.ly/12lO91r"><img src="images/logo.png"></a></center>
                   </td>
                 </tr>
               </table>
@@ -344,12 +335,9 @@ a:link, a:visited, div a {
               <table border="0" cellpadding="0" cellspacing="20" width="600" id="templateHeader">
                 <tr>
                   <td class="headerContent">
-                    Hi {{ username }},<br />                     
-                    <p>Thank you for joining us on Rockpack! We created this app because we wanted a better way to discover amazing videos from across the web and share them with people who would love them too.</p>
-                    <p><b>Sometimes the simple ideas are the best ones...</b></p>
-                    <p>So we came up with Rockpack. We knew we had to design an app that made videos fun to find, simple to organise, easy to share.</p>
-                    <p>It looks like our hard work has paid off. Since we launched in July, our users have already created tens of thousands of packs filled with videos they love. We were thrilled to have 80 publications around the world feature us – and to be Wired's Start up of the week!</p>
-                    <p>Thanks to our friends, we've discovered videos we didn't know existed – and we can share them with just a press and swipe.</p>
+                    Hi *|MMERGE3|*,<br />                     
+                    <p>We’ve just added some brilliant new features to the Rockpack app, making it a lot more social. You’ll also see we’ve changed the word ‘channels’ to ‘packs’. We think it sounds more us – fun, quick (and, of course, part of our name). They’re still the way to
+                      discover and collect videos you love.</p>
                   </td>
                 </tr>
               </table>
@@ -362,7 +350,47 @@ a:link, a:visited, div a {
               <table border="0" cellpadding="0" cellspacing="20" width="600" id="templateBody">
                 <tr>
                   <td>
-                    <center><img src="{{ config.ASSETS_URL }}/assets/emails/images/title.png" style="margin-bottom: 20px;"></center>
+                    <table border="0" cellpadding="0" cellspacing="0">
+                      <tr>
+                        <td>
+                          <img src="images/change1.jpg">
+                        </td>
+                        <td>
+                          Sharing, liking and adding videos to packs is<br>
+                          now easier: you just press and swipe.
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>
+                          Use your feed to find out what your friends<br>
+                          are liking, and see new packs created by<br>
+                          people you already subscribe to.
+                        </td>
+                        <td align="right">
+                          <img src="images/change2.jpg">
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <img src="images/change3.jpg">
+                        </td>
+                        <td>
+                          Go to ‘Friends’ to invite Facebook friends to<br>
+                          join, share videos and make their own packs.
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    <br>
+                    <center>We hope you like the changes we’d love to get your thoughts at <a href="mailto:hello@rockpack.com">hello@rockpack.com</a></center>
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    <center style="margin-top: 20px;margin-bottom:10px;"><img src="images/title.png" ></center>
                   </td>
                 </tr>
                 <tr>
@@ -373,19 +401,19 @@ a:link, a:visited, div a {
                           <table border="0" cellpadding="0" cellspacing="0" width="192">
                             <tr>
                               <td width="40" style="padding-bottom: 10px;border-collapse: collapse;font-family: helvetica;">
-                                <a href="http://share.rockpack.com/s/vTkoY2I?interstitial=true"><img src="{{ config.ASSETS_URL }}/assets/emails/images/w1avatar1.jpg"></a>
+                                <a href="http://share.rockpack.com/s/8BvXFbY?interstitial=true"><img src="images/avatar1.jpg"></a>
                               </td>
                               <td style="padding-bottom: 10px;border-collapse: collapse;font-family: helvetica;font-size: 13px;">
-                                KristaAnna
+                                TheStoryofStuffProject
                               </td>
                             </tr>
                             <tr>
-                              <td colspan="2"><a href="http://share.rockpack.com/s/vTkoY2I?interstitial=true"><img src="{{ config.ASSETS_URL }}/assets/emails/images/w1channel1.jpg"></a></td>
+                              <td colspan="2"><a href="http://share.rockpack.com/s/8BvXFbY?interstitial=true"><img src="images/channel1.jpg"></a></td>
                             </tr>
                             <tr>
                               <td colspan="2">
                                 <div style="font-size:12px;margin-top:5px;">
-                                  A great indie collection at your fingertips.
+                                  Unbelievable and uplifting stories
                                 </div>
                               </td>
                             </tr>
@@ -395,19 +423,19 @@ a:link, a:visited, div a {
                           <table border="0" cellpadding="0" cellspacing="0" width="192">
                             <tr>
                               <td width="40" style="padding-bottom: 10px;border-collapse: collapse;font-family: helvetica;">
-                                <a href="http://share.rockpack.com/s/aNRhPP8?interstitial=true"><img src="{{ config.ASSETS_URL }}/assets/emails/images/w1avatar2.jpg"></a>
+                                <a href="http://share.rockpack.com/s/yh3QgZU?interstitial=true"><img src="images/avatar2.jpg"></a>
                               </td>
-                              <td style="padding-bottom: 10px;border-collapse: collapse;font-family: helvetica;font-size: 13px;">GoProCamera</td>
+                              <td style="padding-bottom: 10px;border-collapse: collapse;font-family: helvetica;font-size: 13px;">HypebeastTV</td>
                             </tr>
                             <tr>
                               <td colspan="2">
-                                <a href="http://share.rockpack.com/s/aNRhPP8?interstitial=true"><img src="{{ config.ASSETS_URL }}/assets/emails/images/w1channel2.jpg"></a>
+                                <a href="http://share.rockpack.com/s/yh3QgZU?interstitial=true"><img src="images/channel2.jpg"></a>
                               </td>
                             </tr>
                             <tr>
                               <td colspan="2">
                                 <div style="font-size:12px;margin-top:5px;">
-                                  Feel the adrenaline from the comfort of your own home.
+                                  On point style & music know-how.
                                 </div>
                               </td>
                             </tr>
@@ -417,19 +445,19 @@ a:link, a:visited, div a {
                           <table border="0" cellpadding="0" cellspacing="0" width="174">
                             <tr>
                               <td width="40" style="padding-bottom: 10px;border-collapse: collapse;font-family: helvetica;">
-                                <a href="http://share.rockpack.com/s/jRwgQ5U?interstitial=true"><img src="{{ config.ASSETS_URL }}/assets/emails/images/w1avatar3.jpg"></a>
+                                <a href="http://share.rockpack.com/s/duUY2L4?interstitial=true"><img src="images/avatar3.jpg"></a>
                               </td>
-                              <td style="padding-bottom: 10px;border-collapse: collapse;font-family: helvetica;font-size: 13px;">NBCNetwork</td>
+                              <td style="padding-bottom: 10px;border-collapse: collapse;font-family: helvetica;font-size: 13px;">joeoc</td>
                             </tr>
                             <tr>
                               <td colspan="2">
-                                <a href="http://share.rockpack.com/s/jRwgQ5U?interstitial=true"><img src="{{ config.ASSETS_URL }}/assets/emails/images/w1channel3.jpg"></a>
+                                <a href="http://share.rockpack.com/s/duUY2L4?interstitial=true"><img src="images/channel3.jpg"></a>
                               </td>
                             </tr>
                             <tr>
                               <td colspan="2">
                                 <div style="font-size:12px;margin-top:5px;">
-                                  A comedy king that never fails to make us laugh.
+                                  Disregard take-out, acquire babes.
                                 </div>
                               </td>
                             </tr>
@@ -441,12 +469,10 @@ a:link, a:visited, div a {
                 </tr>
                 <tr>
                   <td class="headerContent">
-                    <p>It feels like it should have been this much fun – and this easy – all along.  We hope you enjoy it as much as we do, and invite your friends to join too.</p>
-                    <p style="margin-bottom:30px;"><b>Watch it. Love it. Pack it. Share it.</b></p>
+                    <p><b>Watch it. Like it. Pack it. Share it.</b></p>
                     <p>See you on Rockpack!</p>
                     <p>Sofia and the team</p>
-                    <br>
-                    <p>P.s. Please do let us know what you think, we can't improve it without your feedback. Email us at <a href="mailto:hello@rockpack.com">hello@rockpack.com</a></p>
+                    <p>Go to the new, improved Rockpack</p>
                     <br>
                   </td>
                 </tr>
@@ -458,20 +484,23 @@ a:link, a:visited, div a {
         <br />
         <table border="0" cellpadding="10" cellspacing="0" width="600" id="footer">
           <tr>
-            <td><img src="{{ config.ASSETS_URL }}/assets/emails/images/press.png"></td>
+            <td><img src="images/press.png"></td>
           </tr>
           <tr>
             <td>
-              <center><a href="https://itunes.apple.com/app/rockpack/id660697542?mt=8&ls=1"><img src="{{ config.ASSETS_URL }}/assets/emails/images/download.png"></a></center>
+              <center><a href="http://bit.ly/12lO91r"><img src="images/openapp.png"></a></center>
             </td>
           </tr>
           <tr>
             <td>
-              <center><a href="https://itunes.apple.com/app/rockpack/id660697542?mt=8&ls=1"><img src="{{ config.ASSETS_URL }}/assets/emails/images/logo.png"></a></center>
+              <center><a href="http://bit.ly/12lO91r"><img src="images/logo.png"></a></center>
             </td>
           </tr>
           <tr>
             <td>
+              <p>To ensure our emails reach your inbox please make sure to add</p>
+              <p>{{ email_sender|e }} to your address book or safe list.</p>
+              <p>*|UNSUB|*</p>
               <p>Your privacy is important to us, have a read to our <a href="http://rockpack.com/privacy">privacy policy</a>.</p>
             </td>
           </tr>

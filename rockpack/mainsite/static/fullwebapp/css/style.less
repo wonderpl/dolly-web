@@ -14,12 +14,83 @@ body {
   user-select: none;
 }
 
+#logout {
+  text-align: center;
+}
+
+.reportOverlay {
+  position: fixed;
+  top:0;
+  left:0;
+  background: rgba(0,0,0,0.8);
+  height: 100%;
+  width: 100%;
+  z-index: 10000;
+  color: #c6c6c6;
+  font-family: "dn-regular", Helvetica;
+
+  .reportClose {
+    width: 25px;
+    height: 25px;
+    background: url(/static/assets/fullwebapp/images/reportClose.png);
+    position: absolute;
+    right: 20px;
+    top: 20px;
+  }
+
+  #reoportMenu {
+    width: 600px;
+    height: 325px;
+    border: 1px solid #c6c6c6;
+    background: #fff;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    margin-left: -300px;
+    margin-top: -162px;
+
+    h2 {
+      color: #0e0e0e;
+      font-family: "dn-regular", Helvetica;
+      font-size: 18px;
+      margin: 30px 0 15px 25px;
+      line-height: 18px;
+    }
+
+    h1 {
+      color: #000;
+      font-size: 30px;
+      font-family: "dn-bold", Helvetica;
+      text-align: center;
+      line-height: 60px;
+      border-bottom: 1px solid #c6c6c6;
+    }
+
+    ul {
+      li {
+        width: 265px;
+        margin: 15px 0;
+        font-size: 18px;
+        line-height: 18px;
+      }
+    }
+  }
+}
+
 .videocell {
   display: inline-block;
   position: relative;
   width: 230px;
   height: 130px;
-  overflow: hidden;
+
+  .playoverlay {
+    width: 100%;
+    height: 100%;
+    background: url(/static/assets/fullwebapp/images/playButton.png) 50% 50% no-repeat;
+    top: 0;
+    left: 0;
+    position: absolute;
+  }
 
   .videoShare {
     width: 38px;
@@ -35,6 +106,67 @@ body {
 
   }
 
+  .shareContainer {
+    background: #f1f1f1;
+    position: absolute;
+    width: 240px;
+    height: 75px;
+    bottom: -60px;
+    left: 37px;
+    z-index: 1000;
+    opacity: 0;
+
+    &.shareActive {
+      opacity: 1;
+    }
+
+    &:after {
+      bottom: 100%;
+      border: solid transparent;
+      content: " ";
+      height: 0;
+      width: 0;
+      position: absolute;
+      pointer-events: none;
+    }
+
+    &:after {
+      border-color: rgba(241, 241, 241, 0);
+      border-bottom-color: #f1f1f1;
+      border-width: 25px;
+      left: 50%;
+      margin-left: -25px;
+    }
+
+    &>div, &>avideoShaerOverlay {
+      display: inline-block;
+      margin-top:20px;
+      margin-right: 10px;
+      cursor: pointer;
+    }
+
+    .facebookShare {
+      width: 37px;
+      height: 37px;
+      background: url(/static/assets/fullwebapp/images/facebookShare.png);
+    }
+
+    .twitterShare {
+      width: 44px;
+      height: 37px;
+      background: url(/static/assets/fullwebapp/images/twitterShare.png);
+    }
+
+    .emailShare {
+      width: 52px;
+      height: 37px;
+      background: url(/static/assets/fullwebapp/images/emailShare.png);
+      display: inline-block;
+    }
+
+  }
+
+
   .videoShaerOverlay  {
     background: rgba(0,0,0,0.6);
     padding: 45px;
@@ -42,15 +174,14 @@ body {
     width: 140px;
     height: 39px;
     position: absolute;
-    left: 230px;
-    top: -130px;
+    left: 0;
+    top: 0;
     transition: all 0.5s ease;
-    margin: 0 3px;
     text-align: center;
+    display: none;
 
     &.active {
-      left: 0;
-      top: 0;
+      display: block;
     }
 
     .addFavorite, .addToChannel, .share {
@@ -486,6 +617,22 @@ body {
   }
 }
 
+.rockpack-button {
+  display: inline-block;
+  background: #0ba6ab;
+  padding: 20px 40px 18px 40px;
+  color: #fff;
+  text-shadow: 0px 1px 2px #087477;
+  font-family: "dn-bold";
+  font-size: 18px;
+  line-height: 18px;
+
+  &:hover {
+    color: #fff;
+    text-decoration: none;
+  }
+}
+
 .reportButton {
   width: 83px;
   height: 29px;
@@ -520,7 +667,7 @@ body {
 
   margin: 100px 0 80px 0;
 
-  h1 {
+  &>h1 {
     color: #fff;
     font-size: 60px;
     line-height: 60px;

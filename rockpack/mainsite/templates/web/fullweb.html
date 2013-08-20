@@ -36,6 +36,7 @@
     tag.src = "//www.youtube.com/iframe_api";
     var firstScriptTag = document.getElementsByTagName('script')[0];
     firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+    var  assets_url = '{{config.ASSETS_URL}}';
   </script>
 
   {% assets "fullwebVendorJS" %}

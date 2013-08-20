@@ -3,6 +3,8 @@ window.WebApp.controller('ChannelCtrl', ['$scope', '$routeParams', '$rootScope',
   $scope.page = 0
   $scope.User = UserManager
   $scope.channel = null
+  $scope.currentUrl = encodeURIComponent($location.absUrl())
+
 
   $scope.load_videos = =>
     # Did we already load all the videos?
@@ -35,18 +37,17 @@ window.WebApp.controller('ChannelCtrl', ['$scope', '$routeParams', '$rootScope',
       )
   )
 
-  $scope.share = (method, shareid) ->
-    shareService.fetchShareUrl('channel', shareid)
-    .success((data) ->
-      if method == "facebook"
-        FB.ui({
-          method: 'feed',
-          link: data.resource_url,
-          picture: $scope.background,
-          name: 'Rockpack',
-          caption: data.message
-        })
-    )
+  $scope.shareFacebook = (video) ->
+    FB.ui({
+      method: 'feed',
+      link: $location.absUrl(),
+      picture: video.video.thumbnail_url,
+      name: 'Rockpack',
+      caption: 'Shared a video with you'
+    })
+
+  $scope.shareTwitter = (url) ->
+    window.open("http://twitter.com/intent/tweet?url=#{url}")
 
   #Variable width manager
   $scope.videoWidth = 340

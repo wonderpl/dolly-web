@@ -2,58 +2,55 @@
   <div id="whatson">
     <div class="wrapper">
       <div class="headline">
-        <h1>WHAT’S ON YOUR CHANNEL?</h1>
-        <h2>The app that makes it easy to create, share and subscribe to personalized video channels. Add your favorite videos from across the web with just one tap.</h2>
+        <h1>Watch it. Love it. Pack it. Share it.</h1>
+        <h2>On Rockpack you’ll find packs of videos from across the web. A pack is a collection that anyone can create, everyone can enjoy. Share with friends and see what they’re watching.</h2>
         <a href="https://itunes.apple.com/app/rockpack/id660697542?mt=8&ls=1" target="_blank"><img ng-src="((assets_url))/assets/front/images/downloadbig.png" ng-click="triggerEvent('appStoreButtonClick')"></a>
       </div>
       <div class="ipadsimgs hidden-phone"></div>
     </div>
   </div>
+  <div class="hidden-phone" id="logos">
+    <div class="wrapper">
+      <img ng-src="((assets_url))/assets/front/images/logos.jpg">
+    </div>
+  </div>
 
   <div id="iphone-instructions" class="wrapper visible-phone">
-    <h3>Tap to add, create and subscribe to<br>channels</h3>
     <div class="imgcontainer">
-      <img ng-src="((assets_url))/assets/front/images/iphone-mobilev1.png">
+      <img ng-src="((assets_url))/assets/front/images/iphone-mobilev2.png">
     </div>
     <div class="container">
-      <div class="plus">
-        <img ng-src="((assets_url))/assets/front/images/plus.png">
-        <p>Tap the + to add videos to your channels.</p>
+      <div class="text">
+        <h3>A pack for every moment</h3>
+        <p>Browse thousands of packs of videos created by friends and celebrities.</p>
       </div>
       <div class="text">
-        <h3>Create</h3>
-        <p>Personalize your channel with a unique cover or your own photos.</p>
+        <h3>Create your own packs</h3>
+        <p>If you like what’s in someone else’s pack, subscribe to it for free.</p>
       </div>
       <div class="text">
-        <h3>SUBSCRIBE</h3>
-        <p>Subscribe to channels curated by family, friends and experts.</p>
+        <h3>Share with friends</h3>
+        <p>Invite your Facebook friends. Use your feed to see what they're watching and liking.</p>
       </div>
+    </div>
+    <div>
+      <img ng-src="((assets_url))/assets/front/images/mobile-logos.png">
     </div>
   </div>
 
-  <div class="hidden-phone video-container">
-    <div id="video" ng-click="playVideo()">
-      <div>
-        <h2>Life is everyday curation.</h2>
-        <img ng-src="((assets_url))/assets/front/images/play.png" id="play">
-      </div>
-    </div>
-  </div>
   <div class="hidden-phone" id="iphones">
-    <h2>TAP TO ADD, CREATE AND SUBSCRIBE TO CHANNELS</h2>
-
     <div id="addvideo">
       <div id="iphone1"></div>
-      <div class="plus">
-        <img ng-src="((assets_url))/assets/front/images/plus.png">
-        <p>Tap the + to add videos to your channels.</p>
+      <div class="text">
+        <h3>A pack for every moment</h3>
+        <p>Browse thousands of packs of videos created by friends and celebrities. Or if you know what you want, just search for it: there are millions of videos from across the web on Rockpack.</p>
       </div>
     </div>
 
     <div id="create">
       <div class="text">
-        <h3>CREATE</h3>
-        <p>Personalise your channel with a unique cover or your own photo.</p>
+        <h3>Create your own packs and fill them with videos you love</h3>
+        <p>If you like what’s in someone else’s pack, subscribe to it for free. When they find great videos, so do you.</p>
       </div>
       <div id="iphone2"></div>
     </div>
@@ -61,15 +58,23 @@
     <div id="subscribe">
       <div id="iphone3"></div>
       <div class="text">
-        <h3>SUBSCRIBE</h3>
-        <p>Subscribe to channels curated by family, friends and experts. </p>
+        <h3>Share with friends who’ll love it too</h3>
+        <p>It’s one of the best things about watching a great video. Just press and swipe to share. Invite your Facebook friends to join, make their own packs and subscribe to yours. Use your feed to see what they're watching and liking.</p>
       </div>
     </div>
 
   </div>
 
+  <div class="hidden-phone video-container">
+    <div id="video" ng-click="playVideo()">
+      <div>
+        <img ng-src="((assets_url))/assets/front/images/play.png" id="play">
+      </div>
+    </div>
+  </div>
+
+
   <div id="iphoneShare" class="visible-phone">
-    <h2>Life is everyday curation</h2>
     <div class="watchvideo" id="mobilevideo" ng-click="playMobileVideo()"></div>
     <a href="https://itunes.apple.com/app/rockpack/id660697542?mt=8&ls=1" target="_blank" class="download"><img ng-src="((assets_url))/assets/front/images/downloadbig.png" ng-click="triggerEvent('appStoreButtonClick')"></a>
     <div id="share">

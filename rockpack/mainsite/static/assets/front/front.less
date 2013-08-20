@@ -172,13 +172,13 @@ body {
 
 
   .ipadsimgs {
-    width: 587px;
-    height: 360px;
+    width: 586px;
+    height: 366px;
     position: absolute;
     right: 15px;
     text-align: right;
     bottom: 15px;
-    background: url(/static/assets/front/images/ipadsv1.png) no-repeat;
+    background: url(/static/assets/front/images/ipadsv2.png) no-repeat;
   }
 
   .headline {
@@ -236,6 +236,7 @@ body {
   color: #fff;
   background: url(/static/assets/front/images/video_960.jpg) no-repeat 50% 50%;
   height: 538px;
+  margin-bottom: 40px;
 
   &:hover {
     #play {
@@ -257,7 +258,7 @@ body {
   }
 
   #play {
-    margin-top: 70px;
+    margin-top: 200px;
     opacity: .5;
     -webkit-transition: opacity .5s;
     -moz-transition: opacity .5s;
@@ -267,31 +268,38 @@ body {
 
 }
 
+#logos {
+  background: #fff;
+
+  img {
+    margin: 55px 0;
+  }
+}
+
 #iphones {
   margin-top: 60px;
   width: 800px;
-  margin: 0 auto;
+  margin: 40px auto;
 
   #iphone1 {
-    background: url(/static/assets/front/images/iphone1v1.jpg) no-repeat;
+    background: url(/static/assets/front/images/iphone1v2.png) no-repeat;
     width: 210px;
-    height: 442px;
+    height: 443px;
     display: inline-block;
   }
 
   #iphone2 {
-    background: url(/static/assets/front/images/iphone2v1.jpg) no-repeat;
+    background: url(/static/assets/front/images/iphone2v2.png) no-repeat;
     width: 212px;
     height: 446px;
     display: inline-block;
   }
 
   #iphone3 {
-    background: url(/static/assets/front/images/iphone3v1.jpg) no-repeat;
+    background: url(/static/assets/front/images/iphone3v2.png) no-repeat;
     width: 214px;
     height: 451px;
     display: inline-block;
-    margin-bottom: 66px;
   }
 
   p {
@@ -312,6 +320,8 @@ body {
 
   h3 {
     font-size: 20px;
+    line-height: 20px;
+    margin-bottom: 30px;
   }
 
   #addvideo {
@@ -322,10 +332,11 @@ body {
       display: inline-block;
     }
 
-    .plus {
-      margin: 100px 0 0 140px;
+    .text {
+      margin: 150px 0 0 140px;
       display: inline-block;
       vertical-align: top;
+      width: 400px;
 
       img {
         width: 35px;
@@ -341,7 +352,7 @@ body {
 
     .text {
       display: inline-block;
-      margin: 120px 156px 0 0;
+      margin: 140px 156px 0 0;
       width: 325px;
       vertical-align: top;
     }
@@ -356,7 +367,7 @@ body {
 
     .text {
       display: inline-block;
-      margin: 120px 0 0 136px;
+      margin: 140px 0 0 136px;
       width: 340px;
       vertical-align: top;
     }
@@ -1112,6 +1123,16 @@ footer, #footer {
 
 @media (min-width: 1200px) {
 
+  #iphones {
+    width: 1200px;
+  }
+
+  #video {
+    #play {
+      margin-top: 250px;
+    }
+  }
+
   .wrapper {
     width: 1100px;
   }
@@ -1134,8 +1155,11 @@ footer, #footer {
     .headline {
 
       text-align: left;
-      width: 500px;
       margin-left: 50px;
+
+      h2 {
+        width: 500px;
+      }
 
       img {
         margin-top: 45px;
@@ -1146,90 +1170,6 @@ footer, #footer {
     .ipadsimgs {
       margin-right: 50px;
     }
-  }
-
-  #iphones {
-
-    width: 1100px;
-
-    #iphone2 {
-      background: url(/static/assets/front/images/iphone2_widev1.jpg);
-      width: 282px;
-      height: 595px;
-      display: block;
-      margin: 0 auto;
-    }
-
-    #iphone1 {
-      background: url(/static/assets/front/images/iphone1_widev1.jpg);
-      width: 282px;
-      height: 595px;
-      display: block;
-      margin: 0 auto;
-    }
-
-    #iphone3 {
-      background: url(/static/assets/front/images/iphone3_widev1.jpg);
-      width: 282px;
-      height: 595px;
-      display: block;
-      margin: 0 auto;
-    }
-
-    #addvideo, #create, #subscribe {
-      display: inline-block;
-      width: 285px;
-      vertical-align: top;
-      margin-top: 0;
-      margin-right: 118px;
-      position: relative;
-
-      &:last-child {
-        margin-right: 0;
-      }
-
-      img {
-        display: block;
-      }
-
-      .text {
-        display: block;
-        text-align: center;
-      }
-    }
-
-    #addvideo {
-      .plus {
-        margin: 60px 0 0 0;
-        text-align: center;
-
-        img {
-          margin: 0 auto 20px;
-        }
-      }
-    }
-
-    #create {
-
-      .text {
-        width: 285px;
-        position: absolute;
-        top: 645px;
-        text-align: text;
-        margin: 0;
-        left: 0;
-      }
-    }
-
-    #subscribe {
-
-      .text {
-        margin: 60px 0 0 0;
-        width: 285px;
-      }
-
-    }
-
   }
 
   #faq {
@@ -1312,8 +1252,8 @@ footer, #footer {
     background: url(/static/assets/front/images/video_725.jpg) no-repeat 50% 50%;
     height: 406px;
 
-    h2 {
-      padding-top: 70px;
+    #play {
+      margin-top: 150px;
     }
   }
 
@@ -1341,19 +1281,19 @@ footer, #footer {
     width: 763px;
 
     #iphone2 {
-      background: url(/static/assets/front/images/iphone2v1.jpg);
+      background: url(/static/assets/front/images/iphone2v2.png);
       width: 214px;
       height: 445px;
     }
 
     #iphone1 {
-      background: url(/static/assets/front/images/iphone1v1.jpg);
+      background: url(/static/assets/front/images/iphone1v2.png);
       width: 210px;
       height: 445px;
     }
 
     #iphone3 {
-      background: url(/static/assets/front/images/iphone3v1.jpg);
+      background: url(/static/assets/front/images/iphone3v2.png);
       width: 214px;
       height: 445px;
     }
@@ -1383,7 +1323,7 @@ footer, #footer {
       right: 15px;
       text-align: right;
       bottom: 15px;
-      background: url(/static/assets/front/images/ipads_smallv1.png) no-repeat;
+      background: url(/static/assets/front/images/ipads_smallv2.png) no-repeat;
     }
 
     .headline {
@@ -1497,7 +1437,7 @@ footer, #footer {
     background: none;
     text-align: center;
     position: relative;
-    margin: 40px auto;
+    margin: 10px auto 0 auto;
   }
 
   #iphone-instructions {
@@ -1526,20 +1466,17 @@ footer, #footer {
     .container {
       width: 50%;
       display: inline-block;
-      margin: 0;
-      vertical-align: bottom;
+      vertical-align: middle;
       text-align: center;
 
-      .plus {
-        img {
-          width: 25px;
-          height: 25px;
-        }
+      .text {
+        margin: 0 0 20px 0;
       }
 
       h3 {
-        font-size: 13px;
+        font-size: 14px;
         line-height: 13px;
+        margin: 3px 0;
       }
 
       p {
@@ -1614,7 +1551,6 @@ footer, #footer {
         color: #484d51;
         text-shadow: none;
         font-size: 13px;
-        width: 60%;
         line-height: 18px;
         margin: 0 auto;
       }

@@ -1,4 +1,4 @@
-window.WebApp.controller('HeaderCtrl', ['$scope', 'cookies', '$location', 'UserManager', 'SearchService', ($scope, cookies, $location, UserManager, SearchService) ->
+window.WebApp.controller('HeaderCtrl', ['$scope', 'cookies', '$location', 'UserManager', 'SearchService', '$rootScope', ($scope, cookies, $location, UserManager, SearchService, $rootScope) ->
 
   $scope.user = UserManager
 
@@ -17,6 +17,7 @@ window.WebApp.controller('HeaderCtrl', ['$scope', 'cookies', '$location', 'UserM
 
   $scope.logout = ->
     $scope.user.LogOut()
-    $location.path("/login").replace()
+    $location.path("/logout").replace()
+    $rootScope.asideOpen = false
 
 ])

@@ -1,1 +1,17 @@
-<div class="reportButton" ng-show="isLoggedin" ng-click="report()"></div>
+<div class="reportOverlay" ng-show="showReportOverlay">
+  <div id="reoportMenu">
+    <h1>Report</h1>
+    <div class="reportClose" ng-click="showReportOverlay = false"></div>
+    <h2>Why are you reporting this?</h2>
+    <ul>
+      <li ng-click="report-reason='Nudity or pornography'">Nudity or pornography</li>
+      <li ng-click="report-reason='Graphic violence'">Graphic violence</li>
+      <li ng-click="report-reason='Actively promotes self-harm'">Actively promotes self-harm</li>
+      <li ng-click="report-reason='Attacks a group or individual'">Attacks a group or individual</li>
+      <li ng-click="report-reason='Hateful speech or symbols'">Hateful speech or symbols</li>
+      <li ng-click="report-reason='Spam'">Spam</li>
+      <li ng-click="report-reason='Other'">Other</li>
+    </ul>
+  </div>
+</div>
+<div class="reportButton" ng-show="isLoggedin" ng-click="showReportOverlay = true"></div>

@@ -8,7 +8,6 @@ angular.module('WebApp').directive('reportButton', ['UserManager', '$rootScope',
       objectType: '@'
     },
     link: (scope, element, attrs) ->
-      console.log scope
       scope.report = () ->
         UserManager.Report(scope.objectId, scope.objectType)
         .then((data) ->

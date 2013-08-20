@@ -6,6 +6,7 @@ window.WebApp = angular.module('WebApp', ['infinite-scroll','ui.bootstrap'])
     $routeProvider.when('/:userid/channel/:channelid', {templateUrl: 'channel.html', reloadOnSearch: false})
     $routeProvider.when('/reset-password', {templateUrl: 'resetPassword.html'})
     $routeProvider.when('/register', {templateUrl: 'register.html'})
+    $routeProvider.when('/logout', {templateUrl: 'logout.html'})
 #    $routeProvider.when('/feed', {
 #      templateUrl: 'feed.html',
 #      controller: 'FeedCtrl',
