@@ -6,10 +6,13 @@ fullwebVendorCss:
         - assets/vendor/css/bootstrap-responsive.css
 
 fullwebCss:
-    filters: less,cssmin
+    filters: less
     output: gen/fullweb_css.%(version)s.css
     contents:
-        - fullwebapp/css/*.less
+        - fullwebapp/css/style.less
+    depends:
+        - fullwebapp/css/login_logout.less
+        - fullwebapp/css/mixins.less
 
 fullwebVendorJS:
 #    filters: rjsmin

@@ -4,7 +4,7 @@
 
 window.WebApp.controller('AppCtrl', ['$rootScope', '$location', 'UserManager', '$route', '$scope', ($rootScope, $location, UserManager, $route, $scope) ->
 
-  $rootScope.asideOpen = true
+  $rootScope.asideOpen = false
 
   routesThatRequireAuth = ['/feed']
 
@@ -62,6 +62,6 @@ window.WebApp.controller('AppCtrl', ['$rootScope', '$location', 'UserManager', '
     $scope.$apply()
 
 
-  # Expose the assets url to all controllers
+  # Expose the assets
   $rootScope.assets_url = window.assets_url
 ])
