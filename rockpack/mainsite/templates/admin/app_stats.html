@@ -1,0 +1,15 @@
+{% extends 'admin/chart.html' %}
+
+{% block body %}
+<div>
+  {% call chart('Downloads', download_data) %}{}{% endcall %}
+  {% call chart('Updates', update_data) %}{}{% endcall %}
+  {% call chart('Registrations', reg_data, 'ComboChart') %}
+  {
+    seriesType: 'line',
+    series: {0: {type: 'bars'} },
+    legend: 'in'
+  }
+  {% endcall %}
+</div>
+{% endblock %}
