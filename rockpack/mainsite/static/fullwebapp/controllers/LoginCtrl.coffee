@@ -17,13 +17,6 @@ window.WebApp.controller('LoginCtrl', ['$scope', '$location', 'cookies', 'UserMa
     FB.login((response) ->
       if (response.authResponse)
         $scope.User.ExternalLogin('facebook', response.authResponse.accessToken)
-        .success((data) ->
-            $scope.User.isLoggedIn = true
-            $scope.User.FetchUserData(UserManager.credentials.resource_url)
-              .then((data) ->
-                $location.path('/channels')
-              )
-          )
       else
         console.log 'canceled'
     )

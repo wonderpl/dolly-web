@@ -1,7 +1,7 @@
 <div ng-controller="HeaderCtrl" id="header" ng-style="{width: contentWidth}">
   <div id="topmenu" class="wrapper">
     <div class="leftmenu">
-      <div><a href="#/channels">Channels</a></div>
+      <div><a href="#!/channels">CHANNELS</a></div>
       <!--<div>-->
         <!--<form id="searchform" ng-submit="fetchresults()">-->
           <!--<input type="text" placeholder="Search" id="searchfield" ng-model="searchPhrase" typeaheadMinLength="2" typeahead="result for result in searchresults($viewValue)" required typeahead-on-select="fetchresults()">-->
@@ -24,8 +24,8 @@
               <img src="/static/assets/fullwebapp/images/settings.png" id="settings">
             </div>
             <div id="UserMenu">
-              <div><a href="#/{{user.details.id}}/profile">My Channels</a></div>
-              <div><a href="#/{{user.details.id}}/profile">My Subscriptions</a></div>
+              <div><a href="#!/{{user.details.id}}/profile">My Channels</a></div>
+              <div><a href="#!/{{user.details.id}}/profile">My Subscriptions</a></div>
               <div>Friends</div>
               <div class="logout" ng-click="logout()">Logout</div>
             </div>
@@ -33,8 +33,8 @@
         </div>
       </div>
       <div ng-switch-when=false>
-        <div><a href="#/login/">Login</a> or</div>
-        <div><a href="#/register/">Sign Up</a></div>
+        <div id="toplogin"><a href="#!/login/">Login</a> or</div>
+        <div id="topsignup"><a href="#!/register/">SIGN UP</a></div>
       </div>
     </div>
   </div>

@@ -79,6 +79,21 @@ window.WebApp.factory('UserManager', ['cookies', '$http', '$q', '$location','api
           return data.data
         )
 
+    ExternalLogin: (provider, external_token) ->
+      oauthService.ExternalLogin(provider, external_token)
+        .then((data) ->
+          User.credentials = data.data
+          User.FetchUserData()
+          .then((data) ->
+              User.isLoggedIn = true
+              console.log data
+              $location.path('/channels')
+              return data.data
+          )
+          return data.data
+        )
+
+
 
     RefreshToken: () ->
       oauthService.RefreshToken(User.credentials.refresh_token)
@@ -92,7 +107,7 @@ window.WebApp.factory('UserManager', ['cookies', '$http', '$q', '$location','api
           User.timeOfLastRefresh = (new Date()).getTime()
         )
 
-    FetchUserData: () ->
+    FetchUserData: (resource_url) ->
       deferred = $q.defer()
       $http({
         method: 'GET',

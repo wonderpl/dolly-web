@@ -1,5 +1,5 @@
 <div ng-controller="RegisterCtrl" class="wrapper">
-  <form id="registrationForm" name="registrationForm" class="loginoutbox" ng-submit="register(user)" >
+  <form id="registrationForm" name="registrationForm" class="loginoutbox" ng-submit="register(registrationForm)" >
     <div id="facebookLogin">
       <img src="/static/assets/fullwebapp/images/ButtonSignUpFacebook.png" ng-click="facebook()">
     </div>
@@ -9,17 +9,17 @@
       <input type="email" id="email" placeholder="Email" ng-model="user.email" required>
       <input type="password" id="password" placeholder="Password" ng-model="user.password" required>
       <div class="dob">
-        <input type="text" id="day" placeholder="DD" ng-model="user.day" required>
-        <input type="text" id="month" placeholder="MM" ng-model="user.month" required>
-        <input type="text" id="year" placeholder="YYYY" ng-model="user.year" required>
+        <input type="text" id="day" placeholder="DD" ng-model="user.day" required ng-pattern="/^\d{2}$/">
+        <input type="text" id="month" placeholder="MM" ng-model="user.month" required ng-pattern="/^\d{2}$/">
+        <input type="text" id="year" placeholder="YYYY" ng-model="user.year" required ng-pattern="/^\d{4}$/">
       </div>
       <ul>
         <li>
-          <span></span><input type="radio" id="male" name="myRadio"/><span></span>
+          <span></span><input type="radio" id="male" name="myRadio" ng-model="user.gender" value="m"/><span></span>
           <label for="male">Male</label>
         </li>
         <li>
-          <span></span><input type="radio" id="female" name="myRadio" /><span></span>
+          <span></span><input type="radio" id="female" name="myRadio" ng-model="user.gender" value="f"/><span></span>
           <label for="female">Female</label>
         </li>
       </ul>
@@ -27,7 +27,7 @@
         <a href="/tos">Terms of Service</a> and <a href="/privacy">Privacy Policy</a></p>
       <button class="rockpack-button">Signup</button>
       <p class="additionaltext">
-        Already got an account? <a href="#/login">Login</a>
+        Already got an account? <a href="#!/login">Login</a>
       </p>
     </div>
   </form>

@@ -1,6 +1,6 @@
-<div class="videocell" ng-mouseleave="video.displayOverlay = false; video.showShare = false">
+<div class="videocell" ng-mouseleave="video.displayOverlay = false; video.showShare = false" ng-click="setCurrentVideo(video)">
   <img ng-src="{{video.video.thumbnail_url}}" >
-  <div class="playoverlay" ng-click="setCurrentVideo(video)"></div>
+  <div class="playoverlay"></div>
   <div class="videoShaerOverlay" ng-class="{active: video.displayOverlay}">
     <div class="addFavorite" ng-show="isloggedIn" ng-click="addToFavourites(video.id)"></div>
     <div class="addToChannel" ng-show="isloggedIn" ng-click="addToChannel(video.id)"></div>
@@ -13,4 +13,5 @@
     </div>
   </div>
   <div class="videoShare" ng-mouseover="video.displayOverlay = true" ng-class="{active: video.displayOverlay}"></div>
+  <div class="videoTitle">{{video.title | truncate:32}}</div>
 </div>

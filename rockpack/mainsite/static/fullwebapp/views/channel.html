@@ -4,9 +4,9 @@
     <h1>{{channel.title}}</h1>
     <div id="subscriberCount"><div subscribe-button></div> {{channel.subscriber_count}} Subscribers</div>
     <ul id="userdetails">
-      <li><a href="#/profile/{{channel.owner.id}}"><img class="user-profile" ng-src="{{channel.owner.avatar_thumbnail_url}}"></a></li>
+      <li><a href="#!/profile/{{channel.owner.id}}"><img class="user-profile" ng-src="{{channel.owner.avatar_thumbnail_url}}"></a></li>
       <li id="curatedby">
-         <span id="username"><a href="#/profile/{{channel.owner.id}}">{{channel.owner.display_name}}</a></span>
+         <span id="username"><a href="#!/profile/{{channel.owner.id}}">{{channel.owner.display_name}}</a></span>
          <div report-button is-loggedin='{{User.isLoggedIn}}' object-id='{{channel.id}}' object-type='channel'></div>
       </li>
     </ul>

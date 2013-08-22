@@ -4,14 +4,13 @@
 
 window.WebApp.controller('AppCtrl', ['$rootScope', '$location', 'UserManager', '$route', '$scope', ($rootScope, $location, UserManager, $route, $scope) ->
 
-  $rootScope.asideOpen = false
+  $rootScope.asideOpen = true
 
-  routesThatRequireAuth = ['/feed']
+  routesThatRequireAuth = ['/channels']
 
   $rootScope.$on("$locationChangeStart", (event, NewUrl, OldUrl) ->
 
     if (UserManager.isLoggedIn == false)
-      console.log 'user is logged off'
       if (UserManager.credentials.refresh_token?)
         event.preventDefault()
         UserManager.RefreshToken()
@@ -35,14 +34,11 @@ window.WebApp.controller('AppCtrl', ['$rootScope', '$location', 'UserManager', '
   $scope.getWidth = () ->
     return $(window).width()
 
-
-
   $scope.$watch($scope.getWidth, (newValue, oldValue) ->
     ContentWidthCalculator(newValue)
   )
 
   $scope.$watch('asideOpen', (newValue, oldValue) ->
-    console.log ('lll')
     ContentWidthCalculator(10)
   )
 

@@ -9,14 +9,14 @@
       <tab heading="Channels">
         <div infinite-scroll="load_channels()" infinite-scroll-distance="1">
           <div ng-repeat="channel in channels.channels.items">
-            <a href="#/channel/{{channel.owner.id}}/{{channel.id}}"><img ng-src="{{channel.cover.thumbnail_url}}"></a>
+            <a href="#!/channel/{{channel.owner.id}}/{{channel.id}}"><img ng-src="{{channel.cover.thumbnail_url}}"></a>
           </div>
         </div>
       </tab>
       <tab heading="Users">
         <div infinite-scroll="load_users()" infinite-scroll-distance="1">
           <div ng-repeat="user in users.users.items">
-            <a href="#/{{user.id}}/profile"><img ng-src="{{user.avatar_thumbnail_url}}"></a>
+            <a href="#!/{{user.id}}/profile"><img ng-src="{{user.avatar_thumbnail_url}}"></a>
           </div>
         </div>
       </tab>

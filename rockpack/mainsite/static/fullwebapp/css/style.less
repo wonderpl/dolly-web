@@ -106,6 +106,15 @@ body {
   width: 230px;
   height: 130px;
 
+  .videoTitle {
+    color: #fff;
+    .bold_font();
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+    text-shadow: 1px 3px rgba(0, 0, 0, 0.24);
+  }
+
   .playoverlay {
     width: 100%;
     height: 100%;
@@ -305,21 +314,20 @@ body {
   padding: 0;
   .bold_font();
   text-transform: uppercase;
-  font-size: 9px;
-  overflow-y: scroll;
+  font-size: 16px;
+  overflow-y: auto;
   overflow-x: hidden;
-  height: 300px;
 
   .channel {
-    width: 152px;
-    height: 152px;
-    float: left;
+    width: 230px;
+    height: 230px;
+    display: inline-block;
     margin: 4px 4px;
     position: relative;
 
     img {
-      width: 152px;
-      height: 152px;
+      width: 100%;
+      height: 100%;
     }
 
     .reflection {
@@ -341,8 +349,8 @@ body {
     &.selected {
       .selectedOverlay {
         background: url(/static/assets/bookmarklet/images/selected.png) 0 0 no-repeat;
-        width: 152px;
-        height: 152px;
+        width: 100%;
+        height: 100%;
         position: absolute;
         top: 0;
         left: 0;
@@ -407,6 +415,12 @@ body {
 
     .leftmenu {
       float: left;
+
+      &>div {
+        border-left: 1px solid #dcdcdc;
+        border-right: 1px solid #dcdcdc;
+        padding: 0 25px;
+      }
     }
 
     .rightmenu {
@@ -506,15 +520,32 @@ body {
       }
     }
 
+    #topsignup {
+      background: #0ba5aa;
+      padding: 0 20px;
+
+      a, a:hover, a:visited {
+        color: #fff;
+      }
+    }
+
+    #toplogin {
+      .regular_font();
+      color: #b2b2b2;
+
+      a, a:hover, a:visited {
+        color: #000;
+      }
+    }
+
     div {
       display: inline-block;
+      .bold_font();
 
       div {
-        .bold_font();
-        font-size: 17px;
+        font-size: 20px;
         text-align: center;
         margin: 0;
-        padding: 0 10px;
 
         a {
           display: inline-block;
@@ -732,7 +763,26 @@ body {
   padding-top: 90px;
 }
 
-.channelsmenu, .aside .channelsmenu {
+.aside .channelsmenu {
+
+  li {
+    padding: 0 11px;
+    font-size: 12px;
+  }
+}
+
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1050;
+  width: 100%;
+  background: transparent;
+  border: 0;
+  margin: 0;
+}
+
+.channelsmenu  {
   -webkit-box-sizing: border-box; /* Safari/Chrome, other WebKit */
   -moz-box-sizing: border-box;    /* Firefox, other Gecko */
   box-sizing: border-box;         /* Opera/IE 8+ */
@@ -754,8 +804,8 @@ body {
     float: left;
     border-right: 1px solid #dcdcdc;
     .regular_font();
-    padding: 0 11px;
-    font-size: 12px;
+    padding: 0 15px;
+    font-size: 16px;
     text-align: center;
     line-height: 46px;
     cursor: pointer;

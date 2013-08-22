@@ -1,5 +1,7 @@
 window.WebApp = angular.module('WebApp', ['infinite-scroll','ui.bootstrap'])
-  .config(['$routeProvider', '$httpProvider', ($routeProvider, $httpProvider) ->
+  .config(['$routeProvider', '$httpProvider', '$locationProvider', ($routeProvider, $httpProvider, $locationProvider) ->
+    $locationProvider.hashPrefix('!')
+
     $routeProvider.when('/login', {templateUrl: 'login.html'})
     $routeProvider.when('/search', {templateUrl: 'search.html', reloadOnSearch: false})
     $routeProvider.when('/:userid/channel', {templateUrl: 'editchannel.html', reloadOnSearch: false})
@@ -33,6 +35,7 @@ window.WebApp = angular.module('WebApp', ['infinite-scroll','ui.bootstrap'])
 ])
   .value('locale', window.navigator.userLanguage || window.navigator.language)
   .constant('apiUrl', window.apiUrls)
+
 window.onYouTubeIframeAPIReady = ->
   updateScope()
   return
