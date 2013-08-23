@@ -24,7 +24,7 @@ def record_user_event(username, type, value=''):
     except AttributeError:
         clientid = ''
     UserAccountEvent(
-        username=trunc('username', username),
+        username=trunc('username', username or '-'),
         event_type=type,
         event_value=value,
         ip_address=request.remote_addr or '',
@@ -90,6 +90,8 @@ class LoginWS(WebService):
 
 def username_validator():
     def _valid(form, field):
+        if not field.data:
+            return
         if field.data != User.sanitise_username(field.data):
             raise wtf.ValidationError(_('Username can only contain alphanumerics.'))
         exists = username_exists(field.data)
@@ -104,6 +106,8 @@ def username_validator():
 def email_validator():
     # Additional address validation for SES - doesn't like foo@bar.com. or foo@bar..com
     def _valid(form, field):
+        if not field.data:
+            return
         if field.data.endswith('.') or '..' in field.data.rsplit('@', 1)[-1]:
             raise wtf.ValidationError(_('Invalid email address.'))
     return _valid
@@ -328,7 +332,7 @@ class ExternalUser(AbstractTokenManager):
             except IndexError:
                 pass
             else:
-                if g.lower() in ('m', 'f'):
+                if g.lower() in GENDERS:
                     return g
 
     @property
@@ -380,6 +384,7 @@ class RegistrationWS(WebService):
             date_of_birth=form.date_of_birth.data,
             email=form.email.data,
             password=form.password.data,
+            gender=form.gender.data or None,
             locale=form.locale.data)
         record_user_event(user.username, 'registration succeeded', user.id)
         return user.get_credentials()
