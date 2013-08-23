@@ -1,14 +1,42 @@
 <div class="wrapper">
-  <ul id="userChannels">
-    <li><h3>User Channels</h3></li>
-    <li ng-repeat="userchannel in User.details.channels.items" id="mychannels">
-      <a href="#!/{{User.credentials.user_id}}/channel/{{userchannel.id}}"><img ng-src="{{userchannel.cover.thumbnail_url}}" class="channelThumbail"></a>
+  <div id="profileHeader">
+    <img ng-src="{{User.largeAvatar}}">
+    <h1>{{User.details.display_name}}</h1>
+  </div>
+  <ul id="profileNav">
+    <li ng-class="{active: state == 'channels'}" ng-click="changeState('channels')"><span ng-show='isMyProfile'>MY</span> CHANNELS<br><span class="numcontainer">(</span><span class="profileNumbers">{{User.details.channels.total}}</span><span class="numcontainer">)</span></li>
+    <li ng-class="{active: state == 'subscriptions'}" ng-click="changeState('subscriptions')"><span ng-show='isMyProfile'>MY</span> SUBSCRIPTIONS<br><span class="numcontainer">(</span><span class="profileNumbers">{{subscriptions.total}}</span><span class="numcontainer">)</span></li>
+  </ul>
+  <ul id="userChannels" ng-show="state == 'channels'">
+    <li ng-repeat="userchannel in User.details.channels.items" class="channel">
+      <a href="#!/{{userchannel.id}}/channel/{{userchannel.id}}">
+        <img ng-src="{{userchannel.cover.thumbnail_url}}">
+        <div class="channelTitle">{{userchannel.title | truncate: 25}}</div>
+      </a>
+    </li>
+    <li ng-show="isMyProfile && User.details.channels.total == 1" id="profilepromo">
+      <ul>
+        <li><img ng-src="{{assets_url}}/assets/fullwebapp/images/aleftIphone.png"></li>
+        <li>
+          <h1>Lorem ipsum dolor sit amet</h1>
+          <h2>Consectetur adipiscing elit.<br>Proin id condimentum felis,
+            eu ultricies turpis.</h2>
+          <a href="https://itunes.apple.com/app/rockpack/id660697542?mt=8&ls=1" class="rockpack-button">Get the App</a>
+        </li>
+      </ul>
+
+
     </li>
   </ul>
-  <ul id="userSubscriptions">
-    <li><h3>User Subscriptions</h3></li>
-    <li ng-repeat="subscribedchannel in subscriptions" id="mysubscriptions">
-      <a href="#!/{{subscribedchannel.owner.id}}/channel/{{subscribedchannel.id}}"><img ng-src="{{subscribedchannel.cover.thumbnail_url}}"></a>
+  <ul id="userSubscriptions" ng-show="state == 'subscriptions'">
+    <li ng-repeat="subscribedchannel in subscriptions.items" class="channel">
+      <a href="#!/{{subscribedchannel.owner.id}}/channel/{{subscribedchannel.id}}">
+        <img ng-src="{{subscribedchannel.cover.thumbnail_url}}">
+        <div class="channelTitle">{{subscribedchannel.title | truncate: 25}}</div>
+      </a>
+      <a href="#!/{{subscribedchannel.owner.id}}/profile/">
+        <div class="channelOwnerTitle">{{subscribedchannel.owner.display_name}}</div>
+      </a>
     </li>
   </ul>
 </div>

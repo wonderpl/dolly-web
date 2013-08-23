@@ -69,11 +69,9 @@ window.WebApp.factory('UserManager', ['cookies', '$http', '$q', '$location','api
     ExternalLogin: (provider, external_token) ->
       oauthService.ExternalLogin(provider, external_token)
         .then((data) ->
-          User.credentials = data.data
+          ApplyLogin(data.data)
           User.FetchUserData()
           .then((data) ->
-              User.isLoggedIn = true
-              console.log data
               $location.path('/channels')
               return data.data
           )
@@ -95,28 +93,23 @@ window.WebApp.factory('UserManager', ['cookies', '$http', '$q', '$location','api
         )
 
     FetchUserData: (resource_url) ->
-      deferred = $q.defer()
       $http({
         method: 'GET',
         url: User.credentials.resource_url,
         headers: {"authorization": "Bearer #{User.credentials.access_token}", "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"}
       })
-      .success((data) ->
-        User.details = data
-        User.FetchUnreadNotifications()
-        User.FetchNotifications()
-#        User.RecentActivityTimedRetrive()
-        .then((data) ->
-            deferred.resolve(data.data)
+      .then((data) ->
+        _.each(data.data.channels.items, (channel) ->
+          channel.cover.thumbnail_url = channel.cover.thumbnail_url.replace('thumbnail_medium', 'thumbnail_large')
         )
+        User.details = data.data
 
-      )
-      .error((data) =>
-        console.log data
-        deferred.reject ('failed to retreive data')
-      )
+#       DISABLED Notification + Activity fetching as mostly relevant for full web
 
-      return deferred.promise
+#        User.FetchUnreadNotifications()
+#        User.FetchNotifications()
+#        User.RecentActivityTimedRetrive()
+        )
 
     Report: (object_id, object_type) ->
       $http({
@@ -240,20 +233,6 @@ window.WebApp.factory('UserManager', ['cookies', '$http', '$q', '$location','api
         )
         .error((data) =>
           console.log data
-        )
-
-#   For Future use in Full web. Periodical fetch of activities related to the user
-    RecentActivityTimedRetrive: () ->
-      activityService.fetchRecentActivity(User.details.activity.resource_url, User.credentials.access_token)
-        .success((data) ->
-          User.recentActivity.recently_starred = _.union(User.recentActivity.recently_starred, data.recently_starred)
-          User.recentActivity.recently_viewed = _.union(User.recentActivity.recently_viewed, data.recently_viewed)
-          User.recentActivity.subscribed = _.union(User.recentActivity.subscribed, data.subscribed)
-          User.recentActivity.cacheTime = data.cacheTime
-          setTimeout((
-            () ->
-              User.RecentActivityTimedRetrive()
-          ), User.recentActivity.cacheTime*1000)
         )
 
 

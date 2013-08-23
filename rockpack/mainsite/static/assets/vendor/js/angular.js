@@ -9068,8 +9068,6 @@ function $HttpProvider() {
         }
       }
 
-      console.log (url);
-
       $http.pendingRequests.push(config);
       promise.then(removePendingReq, removePendingReq);
 

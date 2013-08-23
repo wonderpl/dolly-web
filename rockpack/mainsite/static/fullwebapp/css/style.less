@@ -318,46 +318,6 @@ body {
   overflow-y: auto;
   overflow-x: hidden;
 
-  .channel {
-    width: 230px;
-    height: 230px;
-    display: inline-block;
-    margin: 4px 4px;
-    position: relative;
-
-    img {
-      width: 100%;
-      height: 100%;
-    }
-
-    .reflection {
-      position: absolute;
-      top: 0;
-      left: 0;
-      z-index: 100;
-    }
-
-    .channelname {
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      z-index: 110;
-      color: #fff;
-      margin: 0 0 10px 10px;
-    }
-
-    &.selected {
-      .selectedOverlay {
-        background: url(/static/assets/bookmarklet/images/selected.png) 0 0 no-repeat;
-        width: 100%;
-        height: 100%;
-        position: absolute;
-        top: 0;
-        left: 0;
-        z-index: 105;
-      }
-    }
-  }
 
   .newchannel {
     background: #f5f5f5;
@@ -407,7 +367,7 @@ body {
   line-height: 60px;
   position: fixed;
   background: #fff;
-  z-index: 1000;
+  z-index: 1010;
   box-shadow: 0 0 9px rgba(172, 172, 172, 0.25);
 
 
@@ -445,11 +405,10 @@ body {
     .userAvatar {
 
       position: relative;
-    
+
       img {
-        border: 1px solid #000;
-        width: 45px;
-        height: 45px;
+        width: 60px;
+        height: 60px;
         background: #b5bdc8; /* Old browsers */
         background: -moz-linear-gradient(top, #b5bdc8 0%, #828c95 36%, #28343b 100%); /* FF3.6+ */
         background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#b5bdc8), color-stop(36%,#828c95), color-stop(100%,#28343b)); /* Chrome,Safari4+ */
@@ -462,59 +421,76 @@ body {
 
       #userMenuContainer {
         position: absolute;
-        left: -100px;
+        left: -150px;
         width: 200px;
         top: 80px;
-        background: #666666;
-        color: #fff;
-        padding: 10px;
+        background: #eaeaea;
+        color: #acacac;
+        .regular_font();
+        border: 1px solid #b5b5b5;
+        .drop-shadow(0,0,5px,0.25);
+        .rounded(5px);
 
-        &:after {
-          bottom: 100%;
-          border: solid transparent;
-          content: " ";
-          height: 0;
-          width: 0;
+        #toparrow {
+          width: 25px;
+          height: 13px;
+          background: url(/static/assets/fullwebapp/images/toparrow.png);
           position: absolute;
-          pointer-events: none;
-          border-bottom-color: #666666;
-          border-width: 15px;
-          left: 60%;
-          margin-left: -15px;
-
+          top: -13px;
+          left: 160px;
         }
 
         #userMenuHeader {
           padding: 0;
+          width: 100%;
+          text-align: left;
 
-          img {
-            border: 0;
+          .userName {
+            font-size: 17px;
+            .bold_font();
+            color: #515151;
           }
 
-          #settings {
-            width: auto;
-            height: auto;
+          img {
+            width: 40px;
+            height: 40px;
+            margin-left: 10px;
           }
 
         }
 
         #UserMenu {
           padding: 0;
+          width: 100%;
 
           div {
+            text-align: left;
             display: block;
+            width: 100%;
             height: 40px;
-            background: #999999;
-            margin: 5px 0;
+            background: #fff;
+            padding: 5px 0;
             line-height: 42px;
+            font-size: 14px;
+            text-transform: uppercase;
+            border-bottom: 1px solid #eaeaea;
 
             a {
-              color: #fff;
+              color: #acacac;
+              margin-left: 20px;
             }
 
-            &.logout {
-              margin-top: 10px;
-            }
+          }
+        }
+
+        #lowerMenu {
+          line-height: 10px;
+          height: 25px;
+          margin: 0;
+          font-size: 10px;
+
+          a {
+            color: #acacac;
           }
         }
       }
@@ -583,49 +559,48 @@ body {
   cursor: pointer;
 }
 
-#channels {
+.channel {
+  display: inline-block;
+  margin: 0 7px 30px 7px;
+  width: 230px;
+  height: 230px;
+  .drop-shadow(0,0,5px,0.25);
 
 
-  .channel {
-    display: inline-block;
-    margin: 0 7px 30px 7px;
+  a:hover {
+    text-decoration: none;
+  }
+
+  img {
+    height: 230px;
     width: 230px;
+    background: #b5bdc8; /* Old browsers */
+    background: -moz-linear-gradient(top, #b5bdc8 0%, #828c95 36%, #28343b 100%); /* FF3.6+ */
+    background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#b5bdc8), color-stop(36%,#828c95), color-stop(100%,#28343b)); /* Chrome,Safari4+ */
+    background: -webkit-linear-gradient(top, #b5bdc8 0%,#828c95 36%,#28343b 100%); /* Chrome10+,Safari5.1+ */
+    background: -o-linear-gradient(top, #b5bdc8 0%,#828c95 36%,#28343b 100%); /* Opera 11.10+ */
+    background: -ms-linear-gradient(top, #b5bdc8 0%,#828c95 36%,#28343b 100%); /* IE10+ */
+    background: linear-gradient(to bottom, #b5bdc8 0%,#828c95 36%,#28343b 100%); /* W3C */
+    filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#b5bdc8', endColorstr='#28343b',GradientType=0 ); /* IE6-9 */
+  }
 
-    a:hover {
-      text-decoration: none;
-    }
+  .channelTitle {
+    .bold_font();
+    font-size: 16px;
+    line-height: 16px;
+    color: #fff;
+    text-transform: uppercase;
+    margin: -20px 0 0 10px;
+    text-shadow: 0 0 5px rgba(0,0,0,0.84);
+  }
 
-    img {
-      height: 230px;
-      width: 230px;
-      background: #b5bdc8; /* Old browsers */
-      background: -moz-linear-gradient(top, #b5bdc8 0%, #828c95 36%, #28343b 100%); /* FF3.6+ */
-      background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#b5bdc8), color-stop(36%,#828c95), color-stop(100%,#28343b)); /* Chrome,Safari4+ */
-      background: -webkit-linear-gradient(top, #b5bdc8 0%,#828c95 36%,#28343b 100%); /* Chrome10+,Safari5.1+ */
-      background: -o-linear-gradient(top, #b5bdc8 0%,#828c95 36%,#28343b 100%); /* Opera 11.10+ */
-      background: -ms-linear-gradient(top, #b5bdc8 0%,#828c95 36%,#28343b 100%); /* IE10+ */
-      background: linear-gradient(to bottom, #b5bdc8 0%,#828c95 36%,#28343b 100%); /* W3C */
-      filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#b5bdc8', endColorstr='#28343b',GradientType=0 ); /* IE6-9 */
-      box-shadow: 0 0 5px rgba(0,0,0,0.25);
-    }
-
-    .channelTitle {
-      .bold_font();
-      font-size: 16px;
-      line-height: 16px;
-      color: #fff;
-      text-transform: uppercase;
-      margin: -20px 0 0 10px;
-    }
-
-    .channelOwnerTitle {
-      .regular_font();
-      font-size: 14px;
-      line-height: 14px;
-      color: #000000;
-      text-transform: uppercase;
-      margin: 10px 0 0 0;
-    }
+  .channelOwnerTitle {
+    .regular_font();
+    font-size: 14px;
+    line-height: 14px;
+    color: #000000;
+    text-transform: uppercase;
+    margin: 10px 0 0 0;
   }
 }
 
@@ -654,20 +629,102 @@ body {
   }
 }
 
+#profileHeader {
+  img {
+    width: 73px;
+    height: 73px;
+    display: inline-block;
+
+  }
+
+  h1 {
+    display: inline-block;
+    width: 300px;
+    .bold_font();
+    font-size: 30px;
+    line-height: 30px;
+    margin-left: 16px;
+    text-align: middle;
+  }
+
+}
+
+#profileNav {
+  position: absolute;
+  width: 358px;
+  top: 0;
+  right: 0;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+
+  li {
+    float: left;
+    width: 177px;
+    margin: 0;
+    padding: 0;
+    background: #fff;
+    font-size: 16px;
+    .regular_font();
+    text-align: center;
+    padding: 16px 0;
+    cursor: pointer;
+
+    &.active {
+      background: #0ba6ab;
+      color: #fff !important;
+
+      .numcontainer {
+        color: #fff !important;
+      }
+
+      .profileNumbers {
+        color: #fff !important;
+      }
+    }
+
+    .numcontainer {
+      color: #aeaeae;
+    }
+
+    .profileNumbers {
+      color: #0ba6ab;
+    }
+  }
+}
+
 #userChannels, #userSubscriptions {
-  width: 40%;
+  width: 100%;
   display: inline-block;
   overflow: hidden;
   vertical-align: top;
-  text-align: center;
+  margin: 0;
 
   li {
     display: inline-block;
-    margin: 10px;
+    margin: 30px 7px;
 
-    &:first-child {
-      display: block;
-    }
+  }
+}
+
+#profilepromo {
+
+  li {
+    vertical-align: middle;
+  }
+
+  h1 {
+    color: #282d33;
+    .bold_font();
+    font-size: 30px;
+    line-height: 30px;
+  }
+
+  h2 {
+    color: #8e8e8e;
+    .regular_font();
+    font-size: 18px;
+    line-height: 18px;
   }
 }
 
@@ -708,6 +765,7 @@ body {
   position: fixed;
   top: 60px;
   background: #f1f1f1;
+  z-index: 1000;
 }
 
 #channels {
@@ -761,14 +819,26 @@ body {
 
 .contentwrapper {
   padding-top: 90px;
+  position: relative;
 }
 
-.aside .channelsmenu {
+.aside {
 
-  li {
-    padding: 0 11px;
-    font-size: 12px;
+  .channelsmenu {
+
+    li {
+      padding: 0 11px;
+      font-size: 12px;
+    }
   }
+
+  #profilepromo {
+
+    h1, h2 {
+      max-width: 200px;
+    }
+  }
+
 }
 
 .modal {
@@ -860,8 +930,8 @@ body {
 }
 
 .channelThumbail {
-  width: 152px;
-  height: 152px;
+  width: 230px;
+  height: 230px;
   background: #b5bdc8; /* Old browsers */
   background: -moz-linear-gradient(top, #b5bdc8 0%, #828c95 36%, #28343b 100%); /* FF3.6+ */
   background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#b5bdc8), color-stop(36%,#828c95), color-stop(100%,#28343b)); /* Chrome,Safari4+ */
@@ -883,6 +953,7 @@ body {
 .wrapper {
   width: 976px;
   margin: 0 auto;
+  position: relative;
 }
 
 .whitebutton {

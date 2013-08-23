@@ -9,7 +9,7 @@
       <!--</div>-->
     </div>
 
-    <div class="logo"><a href="#/feed"><img ng-src="/static/assets/fullwebapp/images/logo.png"></a></div>
+    <div class="logo"><a href="#!/channels"><img ng-src="/static/assets/fullwebapp/images/logo.png"></a></div>
 
     <div ng-switch on="isLoggedIn" class="rightmenu">
       <div ng-switch-when=true>
@@ -17,18 +17,25 @@
           <img ng-src="{{user.details.avatar_thumbnail_url}}" ng-click="userMenu = !userMenu" src="/static/assets/fullwebapp/images/AvatarProfile.png">
           <div id="userMenuContainer" ng-show="userMenu" ng-click="userMenu = !userMenu">
             <div id="userMenuHeader">
+              <div id="toparrow"></div>
               <img ng-src="{{user.details.avatar_thumbnail_url}}" src="/static/assets/fullwebapp/images/AvatarProfile.png">
               <div class="userName">
                 {{user.details.display_name}}
               </div>
-              <img src="/static/assets/fullwebapp/images/settings.png" id="settings">
             </div>
             <div id="UserMenu">
-              <div><a href="#!/{{user.details.id}}/profile">My Channels</a></div>
-              <div><a href="#!/{{user.details.id}}/profile">My Subscriptions</a></div>
-              <div>Friends</div>
-              <div class="logout" ng-click="logout()">Logout</div>
+              <div><a href="#!/{{user.details.id}}/profile?state=channels">My Channels</a></div>
+              <div><a href="#!/{{user.details.id}}/profile?state=subscriptions">My Subscriptions</a></div>
+              <div><a href="#!/settings">My Settings</a></div>
+              <div class="logout" ng-click="logout()"><a>Logout</a></div>
             </div>
+            <ul id="lowerMenu">
+              <li><a href>About</a> •</li>
+              <li><a href>Blog</a> •</li>
+              <li><a href>Help</a> •</li>
+              <li><a href>Terms</a> •</li>
+              <li><a href>Privacy</a></li>
+            </ul>
           </div>
         </div>
       </div>

@@ -4,7 +4,7 @@
 
 window.WebApp.controller('AppCtrl', ['$rootScope', '$location', 'UserManager', '$route', '$scope', ($rootScope, $location, UserManager, $route, $scope) ->
 
-  $rootScope.asideOpen = false
+  $rootScope.asideOpen = true
 
   routesThatRequireAuth = ['/channels']
 
@@ -35,14 +35,15 @@ window.WebApp.controller('AppCtrl', ['$rootScope', '$location', 'UserManager', '
     return $(window).width()
 
   $scope.$watch($scope.getWidth, (newValue, oldValue) ->
-    ContentWidthCalculator(newValue)
+    ContentWidthCalculator()
   )
 
   $scope.$watch('asideOpen', (newValue, oldValue) ->
-    ContentWidthCalculator(10)
+    ContentWidthCalculator()
   )
 
-  ContentWidthCalculator = (width) ->
+  ContentWidthCalculator = () ->
+    width = $scope.getWidth()
     if width > 1200
       $scope.sidebarWidth = 360
     else
@@ -52,7 +53,6 @@ window.WebApp.controller('AppCtrl', ['$rootScope', '$location', 'UserManager', '
       $rootScope.contentWidth = width - $scope.sidebarWidth + 'px'
     else
       $rootScope.contentWidth = '100%'
-
 
   window.onresize = () ->
     $scope.$apply()

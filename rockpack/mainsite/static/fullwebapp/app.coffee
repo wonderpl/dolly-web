@@ -17,6 +17,7 @@ window.WebApp = angular.module('WebApp', ['infinite-scroll','ui.bootstrap'])
     $routeProvider.when('/:userid/profile', {
       templateUrl: 'profile.html',
       controller: 'ProfileCtrl',
+      reloadOnSearch: false
     })
     $routeProvider.when('/channels', {
       templateUrl: 'channels.html',
