@@ -117,6 +117,7 @@ def setup_admin(app):
 
     admin.add_view(user_views.UserView(name='Users', endpoint='user', category='Users'))
     admin.add_view(user_views.ExternalTokenView(name='External Accounts', endpoint='external_accounts', category='Users'))
+    admin.add_view(user_views.BroadcastMessageView(name='Broadcast Messages', endpoint='broadcast', category='Users'))
     admin.add_view(import_views.ImportView(name='Import', endpoint='import'))
     admin.add_view(ranking_views.RankingView(name='Ranking', endpoint='ranking'))
     admin.add_view(ContentStats(name='Content', endpoint='stats/content', category='Stats'))

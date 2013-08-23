@@ -38,3 +38,14 @@ class ExternalTokenView(AdminView):
     column_searchable_list = (models.User.username, 'external_uid')
 
     form_overrides = dict(user_rel=wtf.TextField)
+
+
+class BroadcastMessageView(AdminView):
+    model = models.BroadcastMessage
+    model_name = model.__tablename__
+
+    column_list = ('label', 'external_system', 'date_scheduled', 'date_processed')
+    column_filters = ('date_scheduled',)
+    column_searchable_list = ('label',)
+
+    form_columns = ('label', 'external_system', 'date_scheduled', 'message', 'filter')
