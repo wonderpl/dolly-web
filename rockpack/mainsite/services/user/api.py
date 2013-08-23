@@ -554,8 +554,8 @@ def _aggregate_content_feed(items):
                 continue
             # Don't include most starred videos (up to a maximum of 5)
             group.sort(key=lambda i: i['video']['star_count'], reverse=True)
-            x = 0
-            while x < 5 and group[x].get('starring_users'):
+            x, count = 0, len(group)
+            while x < min(5, count) and group[x].get('starring_users'):
                 x += 1
             group = group[x:]
 
