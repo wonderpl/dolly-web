@@ -469,6 +469,26 @@ def process_facebook_autosharing(date_from, date_to):
     send_facebook_adds(date_from, date_to)
 
 
+@manager.cron_command(interval=900)
+@job_control
+def reset_expiring_tokens(date_from, date_to):
+    """Reset the refresh token of a user if their facebook tokens are expiring."""
+    # In order to get a new facebook token we need to force the user to reconnect/relogin
+    # rockpack with their facebook account.  To do so we force them to logout by changing
+    # their refresh_token.
+    users = User.query.filter_by(is_active=True).join(
+        ExternalToken,
+        (ExternalToken.user == User.id) &
+        (ExternalToken.external_system == 'facebook') &
+        (ExternalToken.expires.between(date_from + timedelta(1), date_to + timedelta(1)))
+    )
+    count = 0
+    for user in users:
+        user.reset_refresh_token()
+        count += 1
+    app.logger.info('Reset refresh token for %d users', count)
+
+
 @manager.command
 def delete_user(username):
     """Mark a user as inactive and delete their channels."""
