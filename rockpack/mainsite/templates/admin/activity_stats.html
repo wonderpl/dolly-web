@@ -1,0 +1,14 @@
+{% extends 'admin/chart.html' %}
+
+{% block body %}
+<div>
+  {% call chart('User Activity', activity_data, 'ComboChart') %}
+  {
+    seriesType: 'line',
+    series: {0: {type: 'bars'}, 1: {type: 'area', targetAxisIndex: 1} },
+    legend: 'in',
+    height: 500
+  }
+  {% endcall %}
+</div>
+{% endblock %}
