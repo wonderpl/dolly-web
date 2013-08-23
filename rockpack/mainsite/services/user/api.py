@@ -1,4 +1,3 @@
-import pkg_resources
 from werkzeug.datastructures import MultiDict
 from sqlalchemy import desc, func, text
 from sqlalchemy.orm import lazyload, contains_eager
@@ -537,49 +536,42 @@ def _content_feed(userid, locale, paging, country=None):
 
 
 def _aggregate_content_feed(items):
-    def _agg_key(item):
+    # First group all items by key
+    itemgroups = {}
+    for item in items:
         if 'channel' in item:
-            return item['channel']['id'], item['date_added'][:10]
+            key = 'video', item['channel']['id'], item['date_added'][:10]   # same channel and day
         else:
-            return item['owner']['id'], item['date_published'][:8]
+            key = 'channel', item['owner']['id'], item['date_published'][:8]  # same owner and week
+        itemgroups.setdefault(key, []).append(item)
 
-    def _summarise(aggregation):
-        items = aggregation.pop('items')
-        firstitem = items_by_id[items[0]]
-        aggregation['count'] = len(items)
-        aggregation['type'] = 'video' if 'video' in firstitem else 'channel'
-        if aggregation['type'] == 'video':
-            # Use video with most stars as cover
-            items.sort(key=lambda i: items_by_id[i]['video']['star_count'], reverse=True)
-            coverlimit = 1
-        else:
-            coverlimit = 4
-        aggregation['covers'] = items[:coverlimit]
-
-    previous = items[0]
-    prev_key = _agg_key(previous)
-    items_by_id = {previous['id']: previous}
-    aggid = None
+    # Then summarise aggregations from selected groups
     aggregations = {}
-    for item in items[1:]:
-        items_by_id[item['id']] = item
-        cur_key = _agg_key(item)
-        if (cur_key == prev_key):
-            if aggid:
-                aggregations[aggid]['items'].append(item['id'])
-            else:
-                aggid = str(previous['position'])
-                previous['aggregation'] = aggid
-                aggregations[aggid] = dict(items=[previous['id'], item['id']])
+    for (type, key, date), group in itemgroups.iteritems():
+        if type == 'video':
+            # Don't create small aggregations for videos
+            if len(group) <= 3:
+                continue
+            # Don't include most starred videos (up to a maximum of 5)
+            group.sort(key=lambda i: i['video']['star_count'], reverse=True)
+            x = 0
+            while x < 5 and group[x].get('starring_users'):
+                x += 1
+            group = group[x:]
+
+        count = len(group)
+        if count <= 1:
+            continue
+
+        aggid = str(group[0]['position'])
+        aggregations[aggid] = dict(
+            type=type,
+            count=count,
+            covers=[item['id'] for item in group[:4 if type == 'channel' else 1]],
+        )
+        for item in group:
             item['aggregation'] = aggid
-        else:
-            if aggid:
-                _summarise(aggregations[aggid])
-                aggid = None
-        previous = item
-        prev_key = cur_key
-    if aggid:
-        _summarise(aggregations[aggid])
+
     return aggregations
 
 

@@ -363,15 +363,18 @@ class TestProfileEdit(base.RockPackTestCase):
             self.assertEquals(data['total'], len(c1instances) + 2)
             itemids = [i['id'] for i in data['items']]
 
-            # Check videos from channel1 are present and aggregated
+            # Check videos from channel1 (except c1starred) are present and aggregated
             self.assertIn(c1instances[0].id, itemids)
             agg = [a for a in data['aggregations'].values() if a['type'] == 'video'][0]
-            self.assertEquals(agg['count'], len(c1instances))
+            self.assertEquals(agg['count'], len(c1instances) - 1)
 
-            # Check stars on cover video
+            # Check stars on c1starred and that no stars on cover video
+            self.assertNotIn(c1starred.id, agg['covers'])
             cover = [i for i in data['items'] if i['id'] == agg['covers'][0]][0]
-            self.assertEquals(cover['video']['star_count'], 3)
-            self.assertItemsEqual([u['id'] for u in cover['starring_users']], [user1, user2, user3])
+            self.assertEquals(cover['video']['star_count'], 0)
+            starred = [i for i in data['items'] if i['id'] == c1starred.id][0]
+            self.assertEquals(starred['video']['star_count'], 3)
+            self.assertItemsEqual([u['id'] for u in starred['starring_users']], [user1, user2, user3])
 
             # Check that new channels from friend and from subscription owner are present
             self.assertNotIn(u2old, itemids)
