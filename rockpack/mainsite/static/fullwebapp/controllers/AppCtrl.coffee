@@ -4,7 +4,7 @@
 
 window.WebApp.controller('AppCtrl', ['$rootScope', '$location', 'UserManager', '$route', '$scope', ($rootScope, $location, UserManager, $route, $scope) ->
 
-  $rootScope.asideOpen = true
+  $rootScope.asideOpen = false
 
   routesThatRequireAuth = ['/channels']
 
