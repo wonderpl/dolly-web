@@ -32,7 +32,7 @@ class AppDownloadRecord(db.Model):
     source = Column(Enum('itunes', 'playstore', name='app_download_source'), nullable=False)
     version = Column(String(16), nullable=False)
     action = Column(Enum('download', 'update', name='app_download_action'), nullable=False)
-    country = Column(CHAR(2))
+    country = Column(CHAR(2), nullable=False)
     date = Column(Date(), nullable=False)
     count = Column(Integer(), nullable=False, server_default='0')
 

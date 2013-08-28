@@ -294,6 +294,19 @@ class Subscription(db.Model):
     resource_url = property(get_resource_url)
 
 
+class BroadcastMessage(db.Model):
+    __tablename__ = 'broadcast_message'
+
+    id = Column(Integer, primary_key=True)
+    label = Column(String(64), nullable=False)
+    external_system = Column(Enum(*EXTERNAL_SYSTEM_NAMES, name='external_system_names'), nullable=False)
+    date_created = Column(DateTime(), nullable=False, default=func.now())
+    date_scheduled = Column(DateTime(), nullable=False)
+    date_processed = Column(DateTime())
+    message = Column(Text(), nullable=False)
+    filter = Column(String(1024))
+
+
 def username_exists(username):
     username_filter = lambda m: func.lower(m.username) == username.lower()
     if User.query.filter(username_filter(User)).count():
