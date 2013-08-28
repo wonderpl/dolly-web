@@ -96,9 +96,11 @@ class ExternalFriend(db.Model):
     external_system = Column(Enum(*EXTERNAL_SYSTEM_NAMES, name='external_system_names'), nullable=False)
     external_uid = Column(String(1024), nullable=False)
     date_updated = Column(DateTime(), nullable=False, default=func.now(), onupdate=func.now())
-    name = Column(String(1024), nullable=False)
-    avatar_url = Column(String(1024), nullable=False)
+    name = Column(String(1024), nullable=True)
+    email = Column(String(254), nullable=True)
+    avatar_url = Column(String(1024), nullable=True)
     has_ios_device = Column(Boolean)
+    last_shared_date = Column(DateTime(), nullable=True)
 
     user_rel = relationship('User', remote_side=[User.id], backref='external_friends')
 
@@ -107,8 +109,12 @@ class ExternalFriend(db.Model):
     def populate_facebook_friends(cls, userid, with_devices=True):
         """Update ExternalFriend mapping for facebook friends of the specified user"""
         # Don't update if existing data is less than an hour old or if no token available
-        delta = ExternalFriend.query.filter_by(user=userid).value(
-            func.now() - func.max(ExternalFriend.date_updated))
+        try:
+            delta = ExternalFriend.query.filter_by(user=userid).value(
+                func.now() - func.max(ExternalFriend.date_updated))
+        except ValueError:
+            # Can happen on sqlite where date arithmetic isn't supported
+            delta = None
         if delta and (delta.days * 86400) + delta.seconds < 3600:
             return
         token = ExternalToken.query.filter_by(

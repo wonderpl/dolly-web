@@ -15,7 +15,7 @@ from rockpack.mainsite.core.es.api import add_user_to_index
 
 
 USER_FLAGS = 'facebook_autopost_star', 'facebook_autopost_add'
-EXTERNAL_SYSTEM_NAMES = 'facebook', 'twitter', 'google', 'apns'
+EXTERNAL_SYSTEM_NAMES = 'email', 'facebook', 'twitter', 'google', 'apns'
 GENDERS_MAP = {'m': 'male', 'f': 'female'}
 GENDERS = GENDERS_MAP.keys()
 

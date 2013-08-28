@@ -1394,15 +1394,19 @@ Friends
 Retrieve a list of friends (from external systems).
 
 ```http
-GET /ws/USERID/friends/?device_filter=DEVICE_TYPE HTTP/1.1
+GET /ws/USERID/friends/?device_filter=DEVICE_TYPE&share_filter= HTTP/1.1
 ```
 
 Parameter      | Required? | Value             | Description
 :------------- | :-------- | :---------------- | :----------
 device_filter  | no        | `ios`, `android`  | Exclude any users who don't have the specified device type
+share_filter   | no        | `true`            | Include only those users with whom the user has shared content
 
 The list can contain two user types: rockpack and external.  Rockpack users include a `resource_url` for
 full profile detail.  External users include `external_system` and `external_uid` fields to identify the user.
+
+If `share_filter` is specified then the result list is sorted by the date the user was last shared with.
+Otherwise the list is sorted alphabetically by `display_name`.
 
 ```http
 HTTP/1.1 200 OK
@@ -1418,6 +1422,7 @@ Content-Type: application/json
     "resource_url": "http://user/resource/url/",
     "id": "0nXumv5EBp8NCCDeDzvxpg",
     "display_name": "Allan B",
+    "email": "allan@rockpack.com",
     "avatar_thumbnail_url": "http://rockpack/avatar/img.jpg",
    },
    {
@@ -1425,6 +1430,7 @@ Content-Type: application/json
     "external_system": "facebook",
     "external_uid": "504775065",
     "display_name": "Gregory Talon",
+    "email": null,
     "avatar_thumbnail_url": "http://facebook/picture.jpg",
     "has_ios_device": true
    }

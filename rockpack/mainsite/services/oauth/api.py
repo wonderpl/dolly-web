@@ -108,7 +108,7 @@ def email_validator():
     def _valid(form, field):
         if not field.data:
             return
-        if field.data.endswith('.') or '..' in field.data.rsplit('@', 1)[-1]:
+        if field.data.endswith('.') or ' ' in field.data or '..' in field.data.rsplit('@', 1)[-1]:
             raise wtf.ValidationError(_('Invalid email address.'))
     return _valid
 
