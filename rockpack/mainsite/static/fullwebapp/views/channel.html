@@ -21,7 +21,7 @@
     <div ng-style="windowWidth" id="channelcontainer">
       <div id="videoslist" infinite-scroll='load_videos()' infinite-scroll-distance='1'>
         <div ng-repeat="video in channel.videos.items" class="video">
-          <video-cell></video-cell>
+          <div ng-include src="'videoCell.html'"></div>
         </div>
       </div>
     </div>

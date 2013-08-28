@@ -1,14 +1,17 @@
-# TODO: Currently the overlay is part of each cell, which adds unneccesry elements for each video cell. Should be moved globally
+# No Longer in use, functions assigned directly to controllers.
 angular.module('WebApp').directive('videoCell', [ '$location', '$dialog', 'UserManager', ($location, $dialog, UserManager) ->
   return {
     restrict: 'E'
     templateUrl: 'videoCell.html'
     controller: ($scope) ->
+
+#     Hide Add to channel/Favorites if user is not logged in
       if UserManager.isLoggedIn
         $scope.isloggedIn = true
 
       $scope.setCurrentVideo = (video) ->
-        $location.search( 'video', video.id )
+        if video.displayOverlay == false
+          $location.search( 'video', video.id )
 
       $scope.addToFavourites = (videoid) ->
         for channel in UserManager.details.channels.items

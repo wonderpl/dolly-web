@@ -1,11 +1,11 @@
 window.WebApp.controller('AddtoChannelCtrl', ['$scope','UserManager', 'videoId', 'dialog', ($scope, UserManager, videoId, dialog) ->
 
   $scope.channels = UserManager.details.channels.items
-  console.log UserManager.details.channels.items
   $scope.videoID = videoId
   $scope.selectedChannel = null
 
   $scope.selectChannel = (channelurl) ->
+    console.log channelurl
     $scope.selectedChannel  = channelurl
     return
 

@@ -2,9 +2,9 @@
 # For example, as an unregisteres user go to /login and then change url to /feed
 # Possible Angularjs bug,
 
-window.WebApp.controller('AppCtrl', ['$rootScope', '$location', 'UserManager', '$route', '$scope', ($rootScope, $location, UserManager, $route, $scope) ->
+window.WebApp.controller('AppCtrl', ['$rootScope', '$location', 'UserManager', '$route', '$scope', 'playerService', ($rootScope, $location, UserManager, $route, $scope, playerService) ->
 
-  $rootScope.asideOpen = true
+  $rootScope.asideOpen = false
 
   routesThatRequireAuth = ['/channels']
 
@@ -34,6 +34,8 @@ window.WebApp.controller('AppCtrl', ['$rootScope', '$location', 'UserManager', '
   $scope.getWidth = () ->
     return $(window).width()
 
+  #TODO The browser does not trigger a width change when the scroll bar is added, will cause some problem in edge cases and needs to be fixed
+
   $scope.$watch($scope.getWidth, (newValue, oldValue) ->
     ContentWidthCalculator()
   )
@@ -57,7 +59,22 @@ window.WebApp.controller('AppCtrl', ['$rootScope', '$location', 'UserManager', '
   window.onresize = () ->
     $scope.$apply()
 
-
   # Expose the assets
   $rootScope.assets_url = window.assets_url
+
+  #
+  $scope.showFullPlayer = false
+
+  $scope.$watch((()-> playerService.getVideo()), (newValue) ->
+    if newValue?
+      $scope.showFullPlayer = true
+  )
+
+  $scope.$watch((()-> playerService.getLocation()), (newValue) ->
+    if newValue == 2
+      $rootScope.asideOpen = true
+    else
+      $rootScope.asideOpen = false
+  )
+
 ])

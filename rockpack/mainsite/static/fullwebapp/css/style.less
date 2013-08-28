@@ -37,6 +37,126 @@ body {
   user-select: none;
 }
 
+#playerWrapper {
+  display: none;
+  position: fixed;
+  z-index: 1300;
+  width: 860px;
+
+  &.main {
+    top: 50%;
+    left: 50%;
+    margin-left: -430px;
+    margin-top: -245px;
+    display: block;
+  }
+
+  &.multitask {
+    display: block;
+    right: 0;
+    top: 0;
+    width: auto;
+  }
+
+}
+
+#lightbox {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.75);
+  z-index: 1100;
+  display: none;
+
+  &.active {
+    display: block;
+  }
+
+  #playercontainer {
+    width: 1006px;
+    height: 670px;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    margin-top: -290px;
+    margin-left: -503px;
+
+    #innerContainer {
+      width: 860px;
+      margin: 0 auto;
+
+      #playerheader {
+        position: relative;
+
+        img {
+          width: 45px;
+          height: 45px;
+          margin-right: 10px;
+        }
+
+        #videoInfo {
+          display: inline-block;
+          color: #fff;
+          vertical-align: middle;
+
+          #channeltitle {
+            font-size: 16px;
+            .bold_font();
+          }
+
+          #username {
+            font-size: 12px;
+            .regular_font();
+          }
+        }
+
+        #minimize {
+          width: 35px;
+          height: 30px;
+          position: absolute;
+          top: 10px;
+          right: 83px;
+          z-index: 20000;
+          background: url(/static/assets/fullwebapp/images/minimize.png);
+        }
+
+        #closePlayer {
+          width: 30px;
+          height: 30px;
+          position: absolute;
+          top: 10px;
+          right: 19px;
+          z-index: 20000;
+          background: url(/static/assets/fullwebapp/images/closePlayer.png);
+        }
+      }
+
+      #videoPlaceholder {
+        width: 830px;
+        height: 485px;
+        position: relative;
+
+      }
+
+      #playerFooter {
+        background: #282d33;
+        width: 100%;
+        height: 130px;
+      }
+
+      #videotitle {
+        .regular_font();
+        color: #fff;
+        font-size: 22px;
+      }
+    }
+  }
+}
+
+
+
 #logout {
   text-align: center;
 }
@@ -98,6 +218,66 @@ body {
       }
     }
   }
+}
+
+#addtoChannel {
+
+  margin-top: 26px;
+
+  #addtoChannel-header {
+    height: 65px;
+
+    li {
+      display: inline-block;
+
+      img {
+        margin-top:14px;
+      }
+    }
+
+    .confirm {
+      float: right;
+    }
+
+    .title {
+      font-size: 30px;
+      line-height: 30px;
+      color: #fff;
+      .bold_font();
+      position: absolute;
+      left: 50%;
+      margin-left: -125px;
+      top: 20px;
+    }
+  }
+
+  .channel {
+    position: relative;
+
+    .channelname {
+      position: absolute;
+      bottom: 15px;
+      left: 15px;
+      font-size: 16px;
+      text-shadow: 1px 3px rgba(0, 0, 0, 0.24);
+      color: #fff;
+    }
+
+    .selectedOverlay {
+      background: rgba(23,31,33,0.9) url(/static/assets/fullwebapp/images/selectedChannel.png) no-repeat 50% 50%;
+      width: 100%;
+      height: 100%;
+      position: absolute;
+      display: none;
+
+    }
+
+    &.selected .selectedOverlay{
+      display: block;
+    }
+
+  }
+
 }
 
 .videocell {
@@ -613,10 +793,42 @@ body {
   background: #282d33;
   z-index: 1000;
 
-  #asideClose {
+  #aside-player-placeholder {
+    width: 100%;
+    height: 136px;
+  }
+
+  #aside-close {
     width: 14px;
     height: 14px;
     background: url(/static/assets/fullwebapp/images/aside-close.png);
+  }
+
+  #aside-prev {
+    width: 23px;
+    height: 14px;
+    background: url(/static/assets/fullwebapp/images/asidePrev.png);
+  }
+
+  #aside-next {
+    width: 23px;
+    height: 14px;
+    background: url(/static/assets/fullwebapp/images/asideNext.png);
+  }
+
+  #maximize {
+    width: 14px;
+    height: 14px;
+    background: url(/static/assets/fullwebapp/images/maximize.png);
+  }
+
+  #aside-video-container {
+    overflow-y: scroll;
+    height: 100%;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
   }
 }
 
@@ -726,6 +938,17 @@ body {
     font-size: 18px;
     line-height: 18px;
   }
+}
+
+.yellow-botton {
+  border: 0;
+  display: inline-block;
+  background: #fff600;
+  padding: 20px 40px 18px 40px;
+  color: #333333;
+  .bold_font();
+  font-size: 27px;
+  line-height: 27px;
 }
 
 .rockpack-button {

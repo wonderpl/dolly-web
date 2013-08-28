@@ -1,4 +1,4 @@
-window.WebApp.controller('ChannelCtrl', ['$scope', '$routeParams', '$rootScope', '$location', 'ContentService', '$dialog', 'UserManager', 'shareService', ($scope, $routeParams, $rootScope, $location, ContentService, $dialog, UserManager, shareService) ->
+window.WebApp.controller('ChannelCtrl', ['$scope', '$routeParams', '$rootScope', '$location', 'ContentService', '$dialog', 'UserManager', 'shareService', 'playerService', ($scope, $routeParams, $rootScope, $location, ContentService, $dialog, UserManager, shareService, playerService) ->
 
   $scope.page = 0
   $scope.User = UserManager
@@ -14,29 +14,12 @@ window.WebApp.controller('ChannelCtrl', ['$scope', '$routeParams', '$rootScope',
           $scope.channel = data
           $scope.totalvideos = data.videos.total
           $scope.background = data.cover.thumbnail_url.replace('thumbnail_medium', 'background')
-          console.log $scope.channel
         else
           $scope.channel.videos.items = $scope.channel.videos.items.concat(data.videos.items)
         $scope.page += 1
     return
 
-  # Video Player
-  $scope.$watch((() -> return $location.search().video), (newValue, oldValue) ->
-    if newValue?
-
-      dialog = $dialog.dialog(
-        controller: 'VideoPlayerCtrl',
-        resolve: {
-          ChannelData: () ->
-            return $scope.channel
-        }
-      )
-
-      dialog.open('videoPlayer.html').then(() ->
-        $location.search( 'video', null )
-      )
-  )
-
+  #Video Specific Functions
   $scope.shareFacebook = (video) ->
     FB.ui({
       method: 'feed',
@@ -49,19 +32,24 @@ window.WebApp.controller('ChannelCtrl', ['$scope', '$routeParams', '$rootScope',
   $scope.shareTwitter = (url) ->
     window.open("http://twitter.com/intent/tweet?url=#{url}")
 
-  #Variable width manager
-  $scope.videoWidth = 340
-  $scope.containerPadding = 0
+  $scope.setCurrentVideo = (video) ->
+    playerService.setNewPlaylist($scope.channel, video.id, 1)
+    $location.search( 'video', video.id )
 
-  $scope.getWidth = ->
-    return $(window).width()
+  $scope.addToFavourites = (videoid) ->
+    for channel in UserManager.details.channels.items
+      if channel.favourites?
+        UserManager.addVideo(channel.resource_url,videoid)
 
-  window.onresize = ->
-    $scope.$apply()
-
-  $scope.$watch($scope.getWidth, (newValue, oldValue) ->
-    $scope.videwWrapperWidth = { width: (Math.floor(($(window).width() - $scope.containerPadding) / $scope.videoWidth) * $scope.videoWidth + $scope.containerPadding) + 'px', margin: '0 auto'}
-    return
-  )
+  $scope.addToChannel = (videoId) ->
+    dialog = $dialog.dialog(
+      controller: 'AddtoChannelCtrl',
+      resolve: {
+        videoId: () ->
+          return videoId
+        }
+    )
+    dialog.open('addtochannel.html')
+      link: (scope, elem, attrs) ->
 
 ])

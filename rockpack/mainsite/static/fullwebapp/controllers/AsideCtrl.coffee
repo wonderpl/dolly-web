@@ -1,5 +1,17 @@
-window.WebApp.controller('AsideCtrl', ['$scope','UserManager', '$rootScope', ($scope, UserManager, $rootScope) ->
+window.WebApp.controller('AsideCtrl', ['$scope','UserManager', '$rootScope', 'playerService', ($scope, UserManager, $rootScope, playerService) ->
+
+  $scope.$watch((()->playerService.getLocation()), (newValue) ->
+    if newValue == 2
+      $scope.channel = playerService.getChannel()
+      $scope.video = playerService.getVideo()
+      console.log $scope.channel
+      console.log $scope.video
+  )
 
   $scope.closeAside = () ->
-    $rootScope.asideOpen = false
+    playerService.closePlayer()
+
+  $scope.maximize = () ->
+    playerService.setLocation(1)
+
 ])

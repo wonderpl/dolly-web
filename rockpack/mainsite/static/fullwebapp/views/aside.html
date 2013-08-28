@@ -1,3 +1,19 @@
 <div id="aside" ng-controller="AsideCtrl" ng-show="asideOpen">
-  <div id="asideClose" ng-click="closeAside()"></div>
+  <div id="aside-header">
+    <div id="aside-channel-name"></div>
+    <div id="aside-user-name"></div>
+  </div>
+  <div id="aside-player-placeholder"></div>
+  <div id="aside-player-controls">
+    <div id="aside-player-title"></div>
+    <div id="maximize" ng-click="maximize()"></div>
+    <div id="aside-prev"></div>
+    <div id="aside-next"></div>
+    <div id="aside-close" ng-click="closeAside()"></div>
+  </div>
+  <div id="aside-video-container">
+    <div ng-repeat="video in channel.videos.items" class="video">
+      <div ng-include src="'videoCell.html'"></div>
+    </div>
+  </div>
 </div>

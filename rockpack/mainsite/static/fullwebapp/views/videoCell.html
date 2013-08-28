@@ -1,9 +1,9 @@
-<div class="videocell" ng-mouseleave="video.displayOverlay = false; video.showShare = false" ng-click="setCurrentVideo(video)">
+<div class="videocell" ng-mouseleave="video.displayOverlay = false; video.showShare = false">
   <img ng-src="{{video.video.thumbnail_url}}" >
-  <div class="playoverlay"></div>
+  <div class="playoverlay" ng-click="setCurrentVideo(video)"></div>
   <div class="videoShaerOverlay" ng-class="{active: video.displayOverlay}">
-    <div class="addFavorite" ng-show="isloggedIn" ng-click="addToFavourites(video.id)"></div>
-    <div class="addToChannel" ng-show="isloggedIn" ng-click="addToChannel(video.id)"></div>
+    <div class="addFavorite" ng-show="User.isLoggedIn" ng-click="addToFavourites(video.id)"></div>
+    <div class="addToChannel" ng-show="User.isLoggedIn" ng-click="addToChannel(video.id)"></div>
     <div class="share" ng-click="video.showShare = true">
       <div class="shareContainer" ng-class="{shareActive: video.showShare}">
         <div class="facebookShare"  ng-click="shareFacebook(video)"></div>
