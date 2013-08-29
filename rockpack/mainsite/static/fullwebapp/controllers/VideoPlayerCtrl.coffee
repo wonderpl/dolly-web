@@ -25,8 +25,6 @@ window.WebApp.controller('VideoPlayerCtrl', ['$scope', '$rootScope', '$routePara
       $scope.channel = playerService.getChannel()
 
       if $scope.player?
-        console.log 'player exist load next video'
-        console.log $scope.video.video.source_id
         $scope.player.loadVideoById($scope.video.video.source_id)
       else
         $scope.player = new YT.Player('player', {
@@ -68,7 +66,9 @@ window.WebApp.controller('VideoPlayerCtrl', ['$scope', '$rootScope', '$routePara
           $scope.player.setSize($scope.playerSize.sideSmall.width, $scope.playerSize.sideSmall.height)
         else
           $scope.player.setSize($scope.playerSize.sideBig.width, $scope.playerSize.sideBig.height)
-      $scope.playerLocation = newValue
+      else
+        $scope.player.stopVideo()
+    $scope.playerLocation = newValue
   )
 
   $scope.$watch((-> $rootScope.playerReady), (newValue) ->

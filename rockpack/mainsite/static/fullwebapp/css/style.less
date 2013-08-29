@@ -190,6 +190,26 @@ body {
   color: #c6c6c6;
   .regular_font();
 
+  #cancelReport {
+    position: absolute;
+    bottom: -90px;
+    left: 0;
+    width: 225px;
+    padding:0;
+    height: 62px;
+    font-size: 22px;
+  }
+
+  #sendReport {
+    position: absolute;
+    bottom: -90px;
+    right: 0;
+    width: 225px;
+    padding:0;
+    height: 62px;
+    font-size: 22px;
+  }
+
   .reportClose {
     width: 25px;
     height: 25px;
@@ -214,7 +234,7 @@ body {
       color: #0e0e0e;
       .regular_font();
       font-size: 18px;
-      margin: 30px 0 15px 25px;
+      margin: 20px 0 15px 25px;
       line-height: 18px;
     }
 
@@ -223,16 +243,76 @@ body {
       font-size: 30px;
       .bold_font();
       text-align: center;
-      line-height: 60px;
+      line-height: 64px;
       border-bottom: 1px solid #c6c6c6;
+      margin: 0;
     }
 
-    ul {
-      li {
+    #reportForm {
+
+      padding: 0 25px;
+
+      div {
         width: 265px;
         margin: 15px 0;
         font-size: 18px;
         line-height: 18px;
+        display: inline-block;
+        position: relative;
+
+        span{
+          position: absolute;
+          left: 0;
+          line-height: 25px;
+          color: #FFF;
+          text-align: center;
+          background: url(/static/assets/fullwebapp/images/radioButtons.png) no-repeat;
+          background-position: -17px 0;
+          width: 16px;
+          height: 16px;
+        }
+
+        span:after{
+          content: " "; /*if CSS are disbled span elements are not displayed*/
+        }
+
+        input{
+          position: absolute;
+          left: 0;
+          margin: 0;
+          width: 31px;
+          height: 31px;
+          /*hide the radio button*/
+          filter:alpha(opacity=0);
+          -moz-opacity:0;
+          -khtml-opacity: 0;
+          opacity: 0;
+          cursor: pointer;
+        }
+
+        input[type="radio"] + span{ /*the span element that immediately follow the radio button */
+          visibility: hidden; /*temporarily hide the "YES" label*/
+          background: url(/static/assets/fullwebapp/images/radioButtons.png) no-repeat;
+          width: 16px;
+          height: 16px;
+        }
+
+        input[type="radio"] + span:after{
+          content: " "; /*if CSS are disbled span elements are not displayed*/
+        }
+
+
+        input[type="radio"]:checked + span{
+          visibility: visible; /*show the "YES" label only if the radio button is checked*/
+        }
+
+        label {
+          display: inline-block;
+          font-size: 17px;
+          line-height: 17px;
+          padding: 0;
+          padding-left: 25px;
+        }
       }
     }
   }
@@ -900,6 +980,11 @@ body {
     height: 100%;
     text-align: center;
 
+    .active .playoverlay {
+      background: url(/static/assets/fullwebapp/images/nowPlaying.png);
+      background-size: cover;
+    }
+
     &::-webkit-scrollbar {
       display: none;
     }
@@ -907,6 +992,7 @@ body {
     .videocell {
       width: 222px;
       height: 125px;
+
     }
   }
 }
@@ -1019,7 +1105,19 @@ body {
   }
 }
 
-.yellow-botton {
+.grey-button {
+  border: 0;
+  display: inline-block;
+  background: #cbcbcb;
+  padding: 20px 40px 18px 40px;
+  color: #f1f1f1;
+  .bold_font();
+  font-size: 27px;
+  line-height: 27px;
+}
+
+
+.yellow-button {
   border: 0;
   display: inline-block;
   background: #fff600;

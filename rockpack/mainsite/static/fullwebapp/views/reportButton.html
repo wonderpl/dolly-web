@@ -3,15 +3,25 @@
     <h1>Report</h1>
     <div class="reportClose" ng-click="showReportOverlay = false"></div>
     <h2>Why are you reporting this?</h2>
-    <ul>
-      <li ng-click="reportReason='Nudity or pornography'">Nudity or pornography</li>
-      <li ng-click="reportReason='Graphic violence'">Graphic violence</li>
-      <li ng-click="reportReason='Actively promotes self-harm'">Actively promotes self-harm</li>
-      <li ng-click="reportReason='Attacks a group or individual'">Attacks a group or individual</li>
-      <li ng-click="reportReason='Hateful speech or symbols'">Hateful speech or symbols</li>
-      <li ng-click="reportReason='Spam'">Spam</li>
-      <li ng-click="reportReason='Other'">Other</li>
-    </ul>
+    <form id="reportForm" name="reportForm" ng-submit="report(reportForm)">
+      <div><span></span><input type="radio" id="porn" name="myRadio" ng-model="report.reason" value="Nudity or pornography"/><span></span>
+        <label for="porn">Nudity or pornography</label></div>
+      <div><span></span><input type="radio" id="violence" name="myRadio" ng-model="report.reason" value="Graphic violence"/><span></span>
+        <label for="violence">Graphic violence</label></div>
+      <div><span></span><input type="radio" id="selfharm" name="myRadio" ng-model="report.reason" value="Actively promotes self-harm"/><span></span>
+        <label for="selfharm">Actively promotes self-harm</label></div>
+      <div><span></span><input type="radio" id="attack" name="myRadio" ng-model="report.reason" value="Attacks a group or individual"/><span></span>
+        <label for="attack">Attacks a group or individual</label></div>
+      <div><span></span><input type="radio" id="hateful" name="myRadio" ng-model="report.reason" value="Hateful speech or symbols"/><span></span>
+        <label for="hateful">Hateful speech or symbols</label></div>
+      <div><span></span><input type="radio" id="spam" name="myRadio" ng-model="report.reason" value="Spam"/><span></span>
+        <label for="spam">Spam</label></div>
+      <div><span></span><input type="radio" id="other" name="myRadio" ng-model="report.reason" value="Other"/><span></span>
+        <label for="other">Other</label></div>
+
+      <button id="cancelReport" class="grey-button" ng-click="showReportOverlay = false">Cancel</button>
+      <input type="submit" id="sendReport" class="rockpack-button" value="Report">
+    </form>
   </div>
 </div>
 <div class="reportButton" ng-show="isLoggedin" ng-click="showReportOverlay = true"></div>

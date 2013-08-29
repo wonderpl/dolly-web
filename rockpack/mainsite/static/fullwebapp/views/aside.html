@@ -18,7 +18,7 @@
   </div>
   <div id="aside-video-container">
     <div ng-repeat="video in channel.videos.items" class="video">
-      <div ng-include src="'videoCell.html'"></div>
+      <div ng-include src="'videoCell.html'" ng-class="{active: $index == selectedVideo}"></div>
     </div>
   </div>
 </div>

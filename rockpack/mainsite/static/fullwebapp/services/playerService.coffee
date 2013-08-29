@@ -12,11 +12,16 @@ window.WebApp.factory('playerService', [() ->
       if currentChannel != channel
         currentChannel = channel
         # We need to update the channel list as well
-      currentVideoPosition = 0
-      currentVideo = _.find(currentChannel.videos.items, (videoObj) -> currentVideoPosition++; videoObj.id == videoid)
+      currentVideo = _.find(currentChannel.videos.items, (videoObj) -> videoObj.id == videoid; )
+      currentVideoPosition = currentChannel.videos.items.indexOf(currentVideo)
       playerLocation = location
 
     playVideoFromChannel: (positionId) ->
+      if positionId > currentChannel.videos.total
+        positionId = 0
+      else if positionId  < 0
+          positionId = currentChannel.videos.total-1
+
       currentVideo = currentChannel.videos.items[positionId]
       currentVideoPosition = positionId
 

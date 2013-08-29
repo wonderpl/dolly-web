@@ -1,3 +1,4 @@
+#TODO: UserManager is not being passed properly/watched, won't change to unsubscribe!
 angular.module('WebApp').directive('subscribeButton', ['UserManager', '$route', (UserManager, $route) ->
   return {
     restrict: 'A'

@@ -111,12 +111,12 @@ window.WebApp.factory('UserManager', ['cookies', '$http', '$q', '$location','api
 #        User.RecentActivityTimedRetrive()
         )
 
-    Report: (object_id, object_type) ->
+    Report: (object_id, object_type, reason) ->
       $http({
         method: 'POST',
         url: "#{User.credentials.resource_url}content_reports/"
         headers: {"authorization": "Bearer #{User.credentials.access_token}", "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"}
-        data: $.param({object_type: "#{object_type}", object_id: "#{object_id}", reason: "Web Reoprt"})
+        data: $.param({object_type: "#{object_type}", object_id: "#{object_id}", reason: reason})
       })
 
 
