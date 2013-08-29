@@ -21,6 +21,7 @@ def setup_admin(app):
     admin.add_view(stats_views.ContentStatsView(name='Content', endpoint='stats/content', category='Stats'))
     admin.add_view(stats_views.AppStatsView(name='Downloads', endpoint='stats/downloads', category='Stats'))
     admin.add_view(stats_views.ActivityStatsView(name='User Activity', endpoint='stats/activity', category='Stats'))
+    admin.add_view(stats_views.RetentionStatsView(name='Retention', endpoint='stats/retention', category='Stats'))
 
     # Need to import here to avoid import uninitialised google_oauth decorator
     from .auth.views import login, logout, oauth_callback

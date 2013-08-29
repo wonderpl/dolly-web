@@ -2,19 +2,19 @@ from datetime import datetime, date
 from sqlalchemy import func, Integer
 from sqlalchemy.orm import aliased
 from flask.ext.admin import BaseView, expose
+from rockpack.mainsite.core.dbapi import readonly_session
 
 
 class ContentStatsView(BaseView):
     @expose('/')
     def index(self):
         from rockpack.mainsite.services.video import models
-        channels = models.Channel.query
-        session = channels.session
+        channels = readonly_session.query(models.Channel)
 
         public = channels.join(models.ChannelLocaleMeta).filter(
             models.ChannelLocaleMeta.visible == True, models.Channel.public == True)
         parent = aliased(models.Category)
-        cat_group = session.query(
+        cat_group = readonly_session.query(
             models.VideoInstanceLocaleMeta.locale,
             parent.name,
             models.Category.name,
@@ -34,7 +34,7 @@ class ContentStatsView(BaseView):
         ).order_by(parent.name.desc())
         cat_count = cat_group.count()
 
-        channel_group = session.query(
+        channel_group = readonly_session.query(
             models.ChannelLocaleMeta.locale,
             parent.name,
             models.Category.name,
@@ -82,7 +82,7 @@ class AppStatsView(BaseView):
         for action in 'download', 'update':
             table = Table((dict(id='date', type=date), dict(id='count', type=long)))
             table.extend(
-                AppDownloadRecord.query.filter_by(action=action).
+                readonly_session.query(AppDownloadRecord).filter_by(action=action).
                 group_by('1').order_by('1').
                 values(AppDownloadRecord.date, func.sum(AppDownloadRecord.count))
             )
@@ -90,7 +90,8 @@ class AppStatsView(BaseView):
         table = Table([dict(id='date', type=date)] +
                       [dict(id=i, type=long) for i in 'Total', 'US', 'UK', 'Other'])
         table.extend(
-            User.query.filter(User.date_joined > '2013-06-26', User.refresh_token != None).
+            readonly_session.query(User).filter(
+                User.date_joined > '2013-06-26', User.refresh_token != None).
             group_by('1').order_by('1').
             values(
                 func.date(User.date_joined),
@@ -113,7 +114,7 @@ class ActivityStatsView(BaseView):
                       [dict(id=i, type=long) for i in
                        'Total', 'Unique Users', 'Views', 'Subscriptions', 'Plusses', 'Likes'])
         table.extend(
-            UserActivity.query.filter(UserActivity.date_actioned > '2013-06-26').
+            readonly_session.query(UserActivity).filter(UserActivity.date_actioned > '2013-06-26').
             group_by('1').order_by('1').
             values(
                 func.date(UserActivity.date_actioned),
@@ -126,3 +127,40 @@ class ActivityStatsView(BaseView):
             )
         )
         return self.render('admin/activity_stats.html', activity_data=table.encode())
+
+
+class RetentionStatsView(BaseView):
+    @expose('/')
+    def index(self):
+        from gviz_data_table import Table
+        from rockpack.mainsite.services.user.models import User, UserActivity
+        user_count = readonly_session.query(func.count(User.id)).\
+            filter(User.refresh_token != '').scalar()
+        header = ('user count', 'max lifetime', 'avg lifetime', 'stddev lifetime',
+                  'max active days', 'avg active days', 'stddev active days')
+        lifetime = func.date_part('days', func.max(UserActivity.date_actioned) -
+                                  func.min(UserActivity.date_actioned)).label('lifetime')
+        active_days = func.count(func.distinct(func.date(
+            UserActivity.date_actioned))).label('active_days')
+        activity = readonly_session.query(UserActivity.user, lifetime, active_days).\
+            group_by(UserActivity.user)
+        ctx = {}
+        for key, having_expr in ('all', None), ('1day', lifetime > 1), ('7day', lifetime > 7):
+            data = activity.having(having_expr).from_self(
+                func.count('*'),
+                func.max(lifetime),
+                func.avg(lifetime),
+                func.stddev_samp(lifetime),
+                func.max(active_days),
+                func.avg(active_days),
+                func.stddev_samp(active_days)
+            ).one()
+            table = Table([
+                dict(id='metric', type=str),
+                dict(id='value', type=float),
+                dict(id='%', type=str),
+            ])
+            pdata = ('%d%%' % (data[0] * 100 / user_count),) + ('',) * 6
+            table.extend(zip(*(header, map(float, data), pdata)))
+            ctx['ret_%s_data' % key] = table.encode()
+        return self.render('admin/retention_stats.html', **ctx)
