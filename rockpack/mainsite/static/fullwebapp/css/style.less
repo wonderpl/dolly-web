@@ -89,7 +89,7 @@ body {
       height: 80px;
       position: absolute;
       top: 200px;
-      right: 0;
+      right: 25px;
     }
 
     #prevVideo {
@@ -98,6 +98,7 @@ body {
       height: 80px;
       position: absolute;
       top: 200px;
+      left: 25px;
     }
 
     #innerContainer {
@@ -805,8 +806,9 @@ body {
   position: fixed;
   right: 0;
   top: 0;
-  width: 246px;
+  width: 242px;
   height: 100%;
+  border-left: 4px solid #1b1b1b;
   background: #282d33;
   z-index: 1000;
 
@@ -837,6 +839,43 @@ body {
 
   }
 
+  #aside-player-controls {
+
+    #aside-player-nav {
+      position: absolute;
+      left: 50%;
+      margin-left: -36px;
+
+      #aside-prev {
+        width: 23px;
+        height: 14px;
+        background: url(/static/assets/fullwebapp/images/asidePrev.png);
+        display: inline-block;
+        margin-right: 23px;
+      }
+
+      #aside-next {
+        width: 23px;
+        height: 14px;
+        background: url(/static/assets/fullwebapp/images/asideNext.png);
+        display: inline-block;
+      }
+    }
+
+    &>div {
+      display: inline-block;
+    }
+
+    #aside-close {
+      float: right;
+      margin-right: 10px;
+    }
+
+    #maximize {
+      margin-left: 10px;
+    }
+  }
+
   #aside-player-placeholder {
     width: 100%;
     height: 136px;
@@ -849,17 +888,6 @@ body {
     background: url(/static/assets/fullwebapp/images/aside-close.png);
   }
 
-  #aside-prev {
-    width: 23px;
-    height: 14px;
-    background: url(/static/assets/fullwebapp/images/asidePrev.png);
-  }
-
-  #aside-next {
-    width: 23px;
-    height: 14px;
-    background: url(/static/assets/fullwebapp/images/asideNext.png);
-  }
 
   #maximize {
     width: 14px;
@@ -1052,7 +1080,7 @@ body {
 
 #channelheader {
 
-  margin: 100px 0 80px 0;
+  margin: 100px 0 80px 7px;
 
   &>h1 {
     color: #fff;
@@ -1242,10 +1270,23 @@ body {
 }
 
 /* Large desktop */
-@media (min-width: 1200px) {
+@media (min-width: 1224px) {
 
   #aside {
-    width: 360px;
+    width: 354px;
+
+    #aside-video-container {
+
+      .videocell {
+        width: 312px;
+        height: 176px;
+      }
+
+    }
+
+    #aside-player-placeholder {
+      height: 200px;
+    }
   }
 
   .channelsmenu {

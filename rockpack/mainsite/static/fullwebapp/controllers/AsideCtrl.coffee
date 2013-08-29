@@ -14,4 +14,9 @@ window.WebApp.controller('AsideCtrl', ['$scope','UserManager', '$rootScope', 'pl
   $scope.maximize = () ->
     playerService.setLocation(1)
 
+  $scope.next = () ->
+    playerService.playVideoFromChannel(playerService.getVideoPosition()+1)
+
+  $scope.prev = () ->
+    playerService.playVideoFromChannel(playerService.getVideoPosition()-1)
 ])

@@ -25,6 +25,8 @@ window.WebApp.controller('VideoPlayerCtrl', ['$scope', '$rootScope', '$routePara
       $scope.channel = playerService.getChannel()
 
       if $scope.player?
+        console.log 'player exist load next video'
+        console.log $scope.video.video.source_id
         $scope.player.loadVideoById($scope.video.video.source_id)
       else
         $scope.player = new YT.Player('player', {
@@ -40,28 +42,33 @@ window.WebApp.controller('VideoPlayerCtrl', ['$scope', '$rootScope', '$routePara
             cc_load_policy: 0,
             fs: 1,
             iv_load_policy: 3,
-            rel: 0,
-
+            rel: 0
+          }
+          events: {
+            'onStateChange': onPlayerStateChange
           }
         })
+
+  onPlayerStateChange = (event) ->
+    if event.data == 0
+      $scope.next()
+      $scope.$digest()
 
   $scope.$watch((-> playerService.getVideo()), (newValue) ->
     if newValue != null
       $scope.PlayVideo()
-    else
-      if $scope.player?
-        $scope.player.stopVideo()
   )
 
   $scope.$watch((-> playerService.getLocation()), (newValue, oldValue) ->
-    if newValue == 1
-      $scope.player.setSize($scope.playerSize.main.width, $scope.playerSize.main.height)
-    else if newValue == 2
-      if $scope.sidebarWidth == 246
-        $scope.player.setSize($scope.playerSize.sideSmall.width, $scope.playerSize.sideSmall.height)
-      else
-        $scope.player.setSize($scope.playerSize.sideBig.width, $scope.playerSize.sideBig.height)
-    $scope.playerLocation = newValue
+    if $scope.player?
+      if newValue == 1
+        $scope.player.setSize($scope.playerSize.main.width, $scope.playerSize.main.height)
+      else if newValue == 2
+        if $scope.sidebarWidth == 246
+          $scope.player.setSize($scope.playerSize.sideSmall.width, $scope.playerSize.sideSmall.height)
+        else
+          $scope.player.setSize($scope.playerSize.sideBig.width, $scope.playerSize.sideBig.height)
+      $scope.playerLocation = newValue
   )
 
   $scope.$watch((-> $rootScope.playerReady), (newValue) ->
