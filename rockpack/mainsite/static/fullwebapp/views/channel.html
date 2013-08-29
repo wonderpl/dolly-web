@@ -2,7 +2,10 @@
   <img ng-src="{{background}}" id="bgimage">
   <div id="channelheader">
     <h1>{{channel.title}}</h1>
-    <div id="subscriberCount"><div subscribe-button></div> {{channel.subscriber_count}} Subscribers</div>
+    <div>
+      <div id="playChannel" ng-click="playAll()"></div>
+      <div id="subscriberCount"><div subscribe-button></div> {{channel.subscriber_count}} Subscribers</div>
+    </div>
     <ul id="userdetails">
       <li><a href="#!/{{channel.owner.id}}/profile"><img class="user-profile" ng-src="{{channel.owner.avatar_thumbnail_url}}"></a></li>
       <li id="curatedby">

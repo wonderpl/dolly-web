@@ -1,29 +1,34 @@
-<div ng-controller="HeaderCtrl" id="header" ng-style="{width: contentWidth}">
+<div ng-controller="HeaderCtrl" id="header" ng-style="{width: contentWidth}" ng-class="{transparent: isTransparent}">
   <div id="topmenu" class="wrapper">
     <div class="leftmenu">
       <div><a href="#!/channels">CHANNELS</a></div>
-      <!--<div>-->
-        <!--<form id="searchform" ng-submit="fetchresults()">-->
-          <!--<input type="text" placeholder="Search" id="searchfield" ng-model="searchPhrase" typeaheadMinLength="2" typeahead="result for result in searchresults($viewValue)" required typeahead-on-select="fetchresults()">-->
-        <!--</form>-->
-      <!--</div>-->
     </div>
 
-    <div class="logo"><a href="#!/channels"><img ng-src="/static/assets/fullwebapp/images/logo.png"></a></div>
+    <a class="logo" href="#!/channels"><div id="rockpackLogo"></div></a>
 
     <div ng-switch on="isLoggedIn" class="rightmenu">
       <div ng-switch-when=true>
+        <div id="topSearch">
+          <div id="searchIcon" ng-click="showSearch = !showSearch"></div>
+          <form id="searchform" ng-submit="fetchresults()" class="topMenuContainer" ng-show="showSearch">
+            <div class="topArrow"></div>
+            <div class="topMenuHeader">
+              <span class="inputSearchIcon"></span>
+              <input type="text" id="searchfield" ng-model="searchPhrase" typeaheadMinLength="2" typeahead="result for result in searchresults($viewValue)" required typeahead-on-select="fetchresults()">
+            </div>
+          </form>
+        </div>
         <div class="userAvatar">
           <img ng-src="{{user.details.avatar_thumbnail_url}}" ng-click="userMenu = !userMenu" src="/static/assets/fullwebapp/images/AvatarProfile.png">
-          <div id="userMenuContainer" ng-show="userMenu" ng-click="userMenu = !userMenu">
-            <div id="userMenuHeader">
-              <div id="toparrow"></div>
+          <div class="topMenuContainer" ng-show="userMenu" ng-click="userMenu = !userMenu">
+            <div class="topMenuHeader">
+              <div class="topArrow"></div>
               <img ng-src="{{user.details.avatar_thumbnail_url}}" src="/static/assets/fullwebapp/images/AvatarProfile.png">
               <div class="userName">
                 {{user.details.display_name}}
               </div>
             </div>
-            <div id="UserMenu">
+            <div class="topMenu">
               <div><a href="#!/{{user.details.id}}/profile?state=channels">My Channels</a></div>
               <div><a href="#!/{{user.details.id}}/profile?state=subscriptions">My Subscriptions</a></div>
               <div><a href="#!/settings">My Settings</a></div>

@@ -52,4 +52,9 @@ window.WebApp.controller('ChannelCtrl', ['$scope', '$routeParams', '$rootScope',
     dialog.open('addtochannel.html')
       link: (scope, elem, attrs) ->
 
+
+  $scope.playAll = () ->
+
+    playerService.setNewPlaylist($scope.channel, $scope.channel.videos.items[0].id, 1)
+    $location.search( 'video', $scope.channel.videos.items[0].id )
 ])

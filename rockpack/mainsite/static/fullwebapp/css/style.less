@@ -565,16 +565,6 @@ body {
   }
 }
 
-#topmenu {
-
-  position: relative;
-
-  li {
-    display: inline-block;
-    list-style: none;
-  }
-}
-
 #message {
   position: fixed;
   bottom: 0;
@@ -614,7 +604,7 @@ body {
 
 #bgimage {
   position: fixed;
-  top: 60px;
+  top: 0;
   left: 0;
   width: 100%;
   z-index: -100;
@@ -648,6 +638,97 @@ body {
   z-index: 1010;
   box-shadow: 0 0 9px rgba(172, 172, 172, 0.25);
 
+  #rockpackLogo {
+    width: 144px;
+    height: 24px;
+    background: url(/static/assets/fullwebapp/images/logo.png);
+  }
+
+  #topSearch {
+    position: relative;
+
+    #searchIcon {
+      width: 30px;
+      height: 30px;
+      margin-right: 20px !important;
+      background: url(/static/assets/fullwebapp/images/searchIcon.png);
+      cursor: pointer;
+    }
+
+
+    #searchform {
+      position: absolute;
+      margin: 0;
+      right:0;
+      width: 245px;
+
+      .dropdown-menu {
+        left: -1px !important;
+        border-top-left-radius: 0;
+        border-top-right-radius: 0;
+        border-top: 0;
+        border: 1px solid #b5b5b5;
+        .drop-shadow(0,2px,5px,0.25);
+      }
+
+      .inputSearchIcon {
+        width: 18px;
+        height: 18px;
+        background: url(/static/assets/fullwebapp/images/inputSearchIcon.png);
+        display: inline-block;
+        margin-top: 17px;
+        margin-left: 14px;
+      }
+
+      input {
+        padding-top: 0;
+        background: #eaeaea;
+        color: #000;
+        box-shadow: none;
+        width: 180px;
+      }
+    }
+  }
+
+  &.transparent {
+    background: transparent;
+    box-shadow: none;
+
+    #topSearch {
+      #searchIcon {
+        background: url(/static/assets/fullwebapp/images/whiteSearchIcon.png);
+      }
+    }
+
+    #rockpackLogo {
+      background: url(/static/assets/fullwebapp/images/whiteLogo.png);
+    }
+
+
+      #topmenu {
+
+      a {
+        color: #fff;
+        text-shadow: 2px 0 2px rgba(0,0,0,0.11),
+                     0px 0 20px rgba(0,0,0,0.2);
+
+
+        &:hover, &:active {
+          text-decoration: none;
+        }
+
+      }
+
+      .leftmenu {
+
+        &>div {
+          border: 0;
+        }
+      }
+    }
+
+  }
+
 
   #topmenu {
 
@@ -671,12 +752,79 @@ body {
       margin-left: -65px;
     }
 
-    #searchform {
-      margin: 0;
+    .topMenuContainer {
+      position: absolute;
+      left: -150px;
+      width: 200px;
+      top: 80px;
+      background: #eaeaea;
+      color: #acacac;
+      .regular_font();
+      border: 1px solid #b5b5b5;
+      .drop-shadow(0,0,5px,0.25);
+      .rounded(5px);
 
-      input {
+      .topArrow {
+        width: 25px;
+        height: 13px;
+        background: url(/static/assets/fullwebapp/images/toparrow.png);
+        position: absolute;
+        top: -13px;
+        left: 160px;
+      }
+
+      .topMenuHeader {
+        padding: 0;
+        width: 100%;
+        text-align: left;
+
+        .userName {
+          font-size: 17px;
+          .bold_font();
+          color: #515151;
+        }
+
+        img {
+          width: 40px;
+          height: 40px;
+          margin-left: 10px;
+        }
+
+      }
+
+      .topMenu, .dropdown-menu {
+        padding: 0;
+        width: 100%;
+
+        div {
+          text-align: left;
+          display: block;
+          width: 100%;
+          height: 40px;
+          background: #fff;
+          padding: 5px 0;
+          line-height: 42px;
+          font-size: 14px;
+          text-transform: uppercase;
+          border-bottom: 1px solid #eaeaea;
+
+          a {
+            color: #acacac;
+            margin-left: 20px;
+          }
+
+        }
+      }
+
+      #lowerMenu {
+        line-height: 10px;
+        height: 25px;
         margin: 0;
-        background: #fff;
+        font-size: 10px;
+
+        a {
+          color: #acacac;
+        }
       }
     }
 
@@ -697,81 +845,7 @@ body {
         filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#b5bdc8', endColorstr='#28343b',GradientType=0 ); /* IE6-9 */
       }
 
-      #userMenuContainer {
-        position: absolute;
-        left: -150px;
-        width: 200px;
-        top: 80px;
-        background: #eaeaea;
-        color: #acacac;
-        .regular_font();
-        border: 1px solid #b5b5b5;
-        .drop-shadow(0,0,5px,0.25);
-        .rounded(5px);
 
-        #toparrow {
-          width: 25px;
-          height: 13px;
-          background: url(/static/assets/fullwebapp/images/toparrow.png);
-          position: absolute;
-          top: -13px;
-          left: 160px;
-        }
-
-        #userMenuHeader {
-          padding: 0;
-          width: 100%;
-          text-align: left;
-
-          .userName {
-            font-size: 17px;
-            .bold_font();
-            color: #515151;
-          }
-
-          img {
-            width: 40px;
-            height: 40px;
-            margin-left: 10px;
-          }
-
-        }
-
-        #UserMenu {
-          padding: 0;
-          width: 100%;
-
-          div {
-            text-align: left;
-            display: block;
-            width: 100%;
-            height: 40px;
-            background: #fff;
-            padding: 5px 0;
-            line-height: 42px;
-            font-size: 14px;
-            text-transform: uppercase;
-            border-bottom: 1px solid #eaeaea;
-
-            a {
-              color: #acacac;
-              margin-left: 20px;
-            }
-
-          }
-        }
-
-        #lowerMenu {
-          line-height: 10px;
-          height: 25px;
-          margin: 0;
-          font-size: 10px;
-
-          a {
-            color: #acacac;
-          }
-        }
-      }
     }
 
     #topsignup {
@@ -795,6 +869,7 @@ body {
     div {
       display: inline-block;
       .bold_font();
+      vertical-align: middle;
 
       div {
         font-size: 20px;
@@ -1190,12 +1265,27 @@ body {
     max-width: 430px;
   }
 
+  #playChannel {
+    width: 44px;
+    height: 44px;
+    background: #fff url(/static/assets/fullwebapp/images/playChannel.png) 50% 50% no-repeat;
+    display: inline-block;
+    vertical-align: top;
+    margin-right: 11px;
+    box-shadow: 2px 0 2px rgba(0, 0, 0, 0.11), 0 0 25px rgba(0, 0, 0, 0.3);
+  }
+
   #subscriberCount {
     color: #fff;
     .bold_font();
     font-size: 18px;
     text-shadow: 2px 0 2px rgba(0,0,0,0.11),
     0px 0 20px rgba(0,0,0,0.2);
+    display: inline-block;
+
+    &>div {
+      margin-right: 20px;
+    }
   }
 
   #userdetails {
@@ -1212,6 +1302,7 @@ body {
     li {
       display: inline-block;
       margin-right: 20px;
+      vertical-align: middle;
     }
   }
 }

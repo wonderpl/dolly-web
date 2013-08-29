@@ -2,8 +2,17 @@ window.WebApp.controller('HeaderCtrl', ['$scope', 'cookies', '$location', 'UserM
 
   $scope.user = UserManager
 
+  $scope.showSearch = false
+
   $scope.$watch('user.isLoggedIn', (newValue, oldValue) ->
     $scope.isLoggedIn = newValue
+  )
+
+  $scope.$watch((()-> $location.path()), (newValue) ->
+    if newValue.indexOf('/channel/') > 0
+      $scope.isTransparent = true
+    else
+      $scope.isTransparent = false
   )
 
   $scope.userMenu = false
@@ -13,7 +22,8 @@ window.WebApp.controller('HeaderCtrl', ['$scope', 'cookies', '$location', 'UserM
 
   # Needed to use window.location isntead of $location.path as I could not pass a get variable on redirect
   $scope.fetchresults = () ->
-    window.location.assign("#/search?search=#{$scope.searchPhrase}")
+    console.log $scope.searchPhrase
+    window.location.assign("#!/search?search=#{$scope.searchPhrase}")
 
   $scope.logout = ->
     $scope.user.LogOut()
