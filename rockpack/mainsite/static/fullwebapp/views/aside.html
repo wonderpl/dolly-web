@@ -1,7 +1,10 @@
 <div id="aside" ng-controller="AsideCtrl" ng-show="asideOpen">
   <div id="aside-header">
-    <div id="aside-channel-name"></div>
-    <div id="aside-user-name"></div>
+    <img ng-src="{{channel.owner.avatar_thumbnail_url}}">
+    <div id="videoInfo">
+      <div id="aside-channeltitle">{{channel.title| truncate:30}}</div>
+      <div id="aside-username">{{channel.owner.display_name}}</div>
+    </div>
   </div>
   <div id="aside-player-placeholder"></div>
   <div id="aside-player-controls">

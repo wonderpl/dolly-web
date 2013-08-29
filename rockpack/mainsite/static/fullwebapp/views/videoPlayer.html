@@ -4,6 +4,7 @@
   </div>
   <div id="lightbox" ng-class="{active: playerLocation == 1}">
     <div id="playercontainer">
+      <div id="prevVideo" ng-click="prev()"></div>
       <div id="innerContainer">
         <div id="playerheader">
           <img ng-src="{{channel.owner.avatar_thumbnail_url}}">
@@ -23,6 +24,7 @@
           </ul>
         </div>
       </div>
+      <div id="nextVideo" ng-click="next()"></div>
     </div>
   </div>
 </div>

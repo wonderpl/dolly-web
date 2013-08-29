@@ -7,10 +7,10 @@ angular.module('WebApp').filter('truncate', ($http, locale, apiUrl) ->
       end = "..."
 
     if typeof text != "undefined"
-      if (text.length <= length || text.length - end.length <= length)
+      if text.length+3 <= length
         return text
       else
-        return String(text).substring(0, length-end.length) + end
+        return String(text).substring(0, length-end.length-3) + end
 )
 
 angular.module('WebApp').filter('weekDay', ($http, locale, apiUrl) ->

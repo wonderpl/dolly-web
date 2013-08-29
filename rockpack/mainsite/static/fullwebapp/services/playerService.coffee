@@ -2,6 +2,7 @@ window.WebApp.factory('playerService', [() ->
 
   currentChannel = null
   currentVideo = null
+  currentVideoPosition = null
   # 0 - hidden, 1 - visible on main stage, 2 - visible on aside
   playerLocation = 0
 
@@ -11,11 +12,19 @@ window.WebApp.factory('playerService', [() ->
       if currentChannel != channel
         currentChannel = channel
         # We need to update the channel list as well
-      currentVideo = _.find(currentChannel.videos.items, (videoObj) -> videoObj.id == videoid)
+      currentVideoPosition = 0
+      currentVideo = _.find(currentChannel.videos.items, (videoObj) -> currentVideoPosition++; videoObj.id == videoid)
       playerLocation = location
+
+    playVideoFromChannel: (positionId) ->
+      currentVideo = currentChannel.videos.items[positionId]
+      currentVideoPosition = positionId
 
     getVideo: () ->
       return currentVideo
+
+    getVideoPosition: () ->
+      return currentVideoPosition
 
     getChannel: () ->
       return currentChannel

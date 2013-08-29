@@ -81,6 +81,11 @@ window.WebApp.controller('VideoPlayerCtrl', ['$scope', '$rootScope', '$routePara
   $scope.close = () ->
     playerService.closePlayer()
 
+  $scope.next = () ->
+    playerService.playVideoFromChannel(playerService.getVideoPosition()+1)
+
+  $scope.prev = () ->
+    playerService.playVideoFromChannel(playerService.getVideoPosition()-1)
 
   return
 ])
