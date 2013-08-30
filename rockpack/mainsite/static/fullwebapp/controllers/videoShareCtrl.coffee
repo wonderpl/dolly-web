@@ -8,9 +8,6 @@ window.WebApp.controller('videoShareCtrl', ['$scope','UserManager', 'videoShareS
     $scope.video = newValue
   )
 
-  $scope.hideOverlay = () ->
-    $("#videoShareContainer").prependTo('body')
-
   $scope.showShare = false
 
   #Video Specific Functions

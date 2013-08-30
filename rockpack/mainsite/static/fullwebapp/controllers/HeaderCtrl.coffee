@@ -17,12 +17,12 @@ window.WebApp.controller('HeaderCtrl', ['$scope', 'cookies', '$location', 'UserM
 
   $scope.userMenu = false
 
-  $scope.searchresults = (searchPhrase) ->
-    SearchService.suggest(searchPhrase)
+  $scope.searchresults = (typedSearch) ->
+    SearchService.suggest(typedSearch)
 
   # Needed to use window.location isntead of $location.path as I could not pass a get variable on redirect
   $scope.fetchresults = () ->
-    console.log $scope.searchPhrase
+    console.log searchform
     window.location.assign("#!/search?search=#{$scope.searchPhrase}")
 
   $scope.logout = ->

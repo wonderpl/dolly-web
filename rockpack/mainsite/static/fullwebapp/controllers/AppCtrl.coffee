@@ -83,4 +83,7 @@ window.WebApp.controller('AppCtrl', ['$rootScope', '$location', 'UserManager', '
     $("#videoShareContainer").appendTo($event.currentTarget)
     videoShareService.setVideoObj(videoObj)
 
+  $scope.hideShare = () ->
+    $("#videoShareContainer").prependTo('body')
+
 ])

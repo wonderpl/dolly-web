@@ -10,7 +10,7 @@
       <div ng-switch-when=true>
         <div id="topSearch">
           <div id="searchIcon" ng-click="showSearch = !showSearch"></div>
-          <form id="searchform" ng-submit="fetchresults()" class="topMenuContainer" ng-show="showSearch">
+          <form id="searchform" name="searchform" ng-submit="fetchresults()" class="topMenuContainer" ng-show="showSearch">
             <div class="topArrow"></div>
             <div class="topMenuHeader">
               <span class="inputSearchIcon"></span>
