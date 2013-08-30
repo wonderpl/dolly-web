@@ -1,0 +1,15 @@
+<!-- A global Video Sharing overlay, used both in channel and Aside-->
+<div id="videoShareContainer" ng-controller="videoShareCtrl" >
+  <div class="videoShare" ng-mouseover="displayOverlay = true" ng-class="{active: displayOverlay}"></div>
+  <div ng-show="displayOverlay" id="videoShaerOverlay" ng-mouseleave="hideOverlay(); displayOverlay = false;showShare  = false">
+    <div class="addFavorite" ng-show="isLoggedIn" ng-click="addToFavourites(video.id)"></div>
+    <div class="addToChannel" ng-show="isLoggedIn" ng-click="addToChannel(video.id)"></div>
+    <div class="share" ng-click="showShare = true">
+      <div class="shareContainer" ng-show="showShare">
+        <div class="facebookShare"  ng-click="shareFacebook(video)"></div>
+        <div class="twitterShare"  ng-click="shareTwitter(currentUrl)"></div>
+        <a href="mailto:" class="emailShare"  ng-click="shareTwitter(currentUrl)"></a>
+      </div>
+    </div>
+  </div>
+</div>

@@ -378,6 +378,137 @@ body {
 
 }
 
+.shareContainer {
+  background: #f1f1f1;
+  position: absolute;
+  width: 240px;
+  height: 75px;
+  bottom: -60px;
+  left: 37px;
+  z-index: 1000;
+
+  &:after {
+    bottom: 100%;
+    border: solid transparent;
+    content: " ";
+    height: 0;
+    width: 0;
+    position: absolute;
+    pointer-events: none;
+  }
+
+  &:after {
+    border-color: rgba(241, 241, 241, 0);
+    border-bottom-color: #f1f1f1;
+    border-width: 25px;
+    left: 50%;
+    margin-left: -25px;
+  }
+
+  &>div, &>avideoShaerOverlay {
+    display: inline-block;
+    margin-top:20px;
+    margin-right: 10px;
+    cursor: pointer;
+  }
+
+  .facebookShare {
+    width: 37px;
+    height: 37px;
+    background: url(/static/assets/fullwebapp/images/facebookShare.png);
+  }
+
+  .twitterShare {
+    width: 44px;
+    height: 37px;
+    background: url(/static/assets/fullwebapp/images/twitterShare.png);
+  }
+
+  .emailShare {
+    width: 52px;
+    height: 37px;
+    background: url(/static/assets/fullwebapp/images/emailShare.png);
+    display: inline-block;
+  }
+
+}
+
+.videocell .videoShare {
+  display: block;
+}
+
+.videoShare {
+  width: 38px;
+  height: 38px;
+  background: url(/static/assets/fullwebapp/images/sharelogo.png) -38px 0 no-repeat;
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: none;
+
+  &.active, &:hover {
+    background: url(/static/assets/fullwebapp/images/sharelogo.png) 0 0 no-repeat;
+  }
+
+}
+
+
+#videoShaerOverlay  {
+  background: rgba(0,0,0,0.6);
+  padding: 45px;
+  color: #fff;
+  width: 140px;
+  height: 39px;
+  position: absolute;
+  left: 0;
+  top: 0;
+  transition: all 0.5s ease;
+  text-align: center;
+
+  .addFavorite, .addToChannel, .share {
+    width: 38px;
+    height: 38px;
+    background: url(/static/assets/fullwebapp/images/shareicons.png) no-repeat;
+    display: inline-block;
+  }
+
+  .addFavorite {
+    background-position: 0 -38px;
+
+    &:hover {
+      background-position: 0 -76px;
+    }
+
+    &:active {
+      background-position: 0 0;
+    }
+  }
+
+  .addToChannel {
+    background-position: -38px -38px ;
+
+    &:hover {
+      background-position: -38px -76px;
+    }
+
+    &:active {
+      background-position: -38px 0;
+    }
+  }
+
+  .share {
+    background-position: -76px -38px;
+
+    &:hover {
+      background-position: -76px -76px;
+    }
+
+    &:active {
+      background-position: -76px 0;
+    }
+  }
+}
+
 .videocell {
   display: inline-block;
   position: relative;
@@ -400,142 +531,6 @@ body {
     top: 0;
     left: 0;
     position: absolute;
-  }
-
-  .videoShare {
-    width: 38px;
-    height: 38px;
-    background: url(/static/assets/fullwebapp/images/sharelogo.png) -38px 0 no-repeat;
-    position: absolute;
-    top: 10px;
-    right: 10px;
-
-    &.active, &:hover {
-      background: url(/static/assets/fullwebapp/images/sharelogo.png) 0 0 no-repeat;
-    }
-
-  }
-
-  .shareContainer {
-    background: #f1f1f1;
-    position: absolute;
-    width: 240px;
-    height: 75px;
-    bottom: -60px;
-    left: 37px;
-    z-index: 1000;
-    opacity: 0;
-
-    &.shareActive {
-      opacity: 1;
-    }
-
-    &:after {
-      bottom: 100%;
-      border: solid transparent;
-      content: " ";
-      height: 0;
-      width: 0;
-      position: absolute;
-      pointer-events: none;
-    }
-
-    &:after {
-      border-color: rgba(241, 241, 241, 0);
-      border-bottom-color: #f1f1f1;
-      border-width: 25px;
-      left: 50%;
-      margin-left: -25px;
-    }
-
-    &>div, &>avideoShaerOverlay {
-      display: inline-block;
-      margin-top:20px;
-      margin-right: 10px;
-      cursor: pointer;
-    }
-
-    .facebookShare {
-      width: 37px;
-      height: 37px;
-      background: url(/static/assets/fullwebapp/images/facebookShare.png);
-    }
-
-    .twitterShare {
-      width: 44px;
-      height: 37px;
-      background: url(/static/assets/fullwebapp/images/twitterShare.png);
-    }
-
-    .emailShare {
-      width: 52px;
-      height: 37px;
-      background: url(/static/assets/fullwebapp/images/emailShare.png);
-      display: inline-block;
-    }
-
-  }
-
-
-  .videoShaerOverlay  {
-    background: rgba(0,0,0,0.6);
-    padding: 45px;
-    color: #fff;
-    width: 140px;
-    height: 39px;
-    position: absolute;
-    left: 0;
-    top: 0;
-    transition: all 0.5s ease;
-    text-align: center;
-    display: none;
-
-    &.active {
-      display: block;
-    }
-
-    .addFavorite, .addToChannel, .share {
-      width: 38px;
-      height: 38px;
-      background: url(/static/assets/fullwebapp/images/shareicons.png) no-repeat;
-      display: inline-block;
-    }
-
-    .addFavorite {
-      background-position: 0 -38px;
-
-      &:hover {
-        background-position: 0 -76px;
-      }
-
-      &:active {
-        background-position: 0 0;
-      }
-    }
-
-    .addToChannel {
-      background-position: -38px -38px ;
-
-      &:hover {
-        background-position: -38px -76px;
-      }
-
-      &:active {
-        background-position: -38px 0;
-      }
-    }
-
-    .share {
-      background-position: -76px -38px;
-
-      &:hover {
-        background-position: -76px -76px;
-      }
-
-      &:active {
-        background-position: -76px 0;
-      }
-    }
   }
 
 }

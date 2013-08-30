@@ -2,7 +2,7 @@
 # For example, as an unregisteres user go to /login and then change url to /feed
 # Possible Angularjs bug,
 
-window.WebApp.controller('AppCtrl', ['$rootScope', '$location', 'UserManager', '$route', '$scope', 'playerService', ($rootScope, $location, UserManager, $route, $scope, playerService) ->
+window.WebApp.controller('AppCtrl', ['$rootScope', '$location', 'UserManager', '$route', '$scope', 'playerService', 'videoShareService', ($rootScope, $location, UserManager, $route, $scope, playerService, videoShareService) ->
 
   $rootScope.asideOpen = false
 
@@ -76,5 +76,11 @@ window.WebApp.controller('AppCtrl', ['$rootScope', '$location', 'UserManager', '
     else
       $rootScope.asideOpen = false
   )
+
+  $scope.isShareVisible = false
+
+  $scope.showShare = (videoObj, $event) ->
+    $("#videoShareContainer").appendTo($event.currentTarget)
+    videoShareService.setVideoObj(videoObj)
 
 ])
