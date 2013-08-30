@@ -23,4 +23,8 @@ window.WebApp.controller('AsideCtrl', ['$scope','UserManager', '$rootScope', 'pl
 
   $scope.prev = () ->
     playerService.playVideoFromChannel(playerService.getVideoPosition()-1)
+
+  $scope.setCurrentVideo = (video) ->
+    playerService.setNewPlaylist($scope.channel, video.id, 2)
+
 ])
