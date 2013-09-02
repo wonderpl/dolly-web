@@ -1107,24 +1107,36 @@ class UserWS(WebService):
     @check_authorization(self_auth=True)
     def get_friends(self, userid):
         ExternalFriend.populate_facebook_friends(userid)
-        friends = ExternalFriend.query.filter_by(user=userid).all()
+        friends = ExternalFriend.query.filter_by(user=userid)
+        if request.args.get('share_filter'):
+            friends = friends.filter(ExternalFriend.last_shared_date.isnot(None))
+        friends = friends.all()
         rockpack_friends = dict(
-            (user.external_tokens[0].external_uid, user)
+            (('facebook', user.external_tokens[0].external_uid), user)
             for user in User.query.join(ExternalToken, (
                 (ExternalToken.user == User.id) &
                 (ExternalToken.external_system == 'facebook') &
-                (ExternalToken.external_uid.in_(set(f.external_uid for f in friends)))
-            )).options(contains_eager(User.external_tokens)).order_by('date_joined desc')
+                (ExternalToken.external_uid.in_(
+                    set(f.external_uid for f in friends if f.external_system == 'facebook')))
+            )).options(contains_eager(User.external_tokens))
+        )
+        rockpack_friends.update(
+            (('email', user.email), user)
+            for user in User.query.filter(
+                User.email.in_(set(f.email for f in friends if f.external_system == 'email')))
         )
         items = []
         for friend in friends:
-            rockpack_user = rockpack_friends.get(friend.external_uid)
+            uid = friend.email if friend.external_system == 'email' else friend.external_uid
+            rockpack_user = rockpack_friends.get((friend.external_system, uid))
             if rockpack_user:
                 item = dict(
                     id=rockpack_user.id,
                     resource_url=rockpack_user.get_resource_url(),
                     display_name=rockpack_user.display_name,
                     avatar_thumbnail_url=rockpack_user.avatar.url,
+                    email=rockpack_user.email,
+                    _last_shared_date=friend.last_shared_date,
                 )
             else:
                 item = dict(
@@ -1132,15 +1144,21 @@ class UserWS(WebService):
                     avatar_thumbnail_url=friend.avatar_url,
                     external_uid=friend.external_uid,
                     external_system=friend.external_system,
+                    email=friend.email,
+                    _last_shared_date=friend.last_shared_date,
                 )
             if friend.has_ios_device:
                 item['has_ios_device'] = True
             items.append(item)
         if 'ios' in request.args.get('device_filter', ''):
             items = [i for i in items if 'resource_url' in i or 'has_ios_device' in i]
-        items.sort(key=lambda i: i['display_name'])
+        if request.args.get('share_filter'):
+            items.sort(key=lambda i: i['_last_shared_date'], reverse=True)
+        else:
+            items.sort(key=lambda i: i['display_name'])
         for i, item in enumerate(items):
             item['position'] = i
+            del item['_last_shared_date']
         return dict(users=dict(items=items, total=len(items)))
 
     @expose_ajax('/<userid>/friends/', methods=['POST'])
