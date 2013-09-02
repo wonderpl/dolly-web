@@ -1,3 +1,4 @@
+#NOT IN Used, partial capabilities of channel editing. Removed from Medium web
 window.WebApp.controller('EditChannelCtrl', ['$scope', '$routeParams', '$rootScope', '$location', 'ContentService', '$dialog', 'UserManager', 'shareService', 'categoryService', ($scope, $routeParams, $rootScope, $location, ContentService, $dialog, UserManager, shareService, categoryService) ->
 
   #TODO: Pass video added to channel creation process (can pass id, but won't be playable)

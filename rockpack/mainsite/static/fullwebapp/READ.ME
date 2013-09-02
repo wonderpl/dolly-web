@@ -1,0 +1,50 @@
+Full web application
+
+
+Technology:
+1. Less
+2. Coffeescript
+3. AngularJS
+
+Build Process
+We user web assets to precompile LESS and Coffeescript (etc.)
+The web assets configuration file exists in /static/assets/fullweb/assets.yaml
+
+Angular Services
+In Angular Services are mostly used as the equivalent of models
+The majority of the services are just wrappers for the backend API calls with the following exceptions:
+
+1. UserManager - holds the current user state and implements some of the user related api calls (in some cases it just
+wraps other services)
+The User Manager will automatically renew the access token of the user after 90% of the server defined timeout has passed
+
+2. VideoShare service + playerService are both internal services that just help me pass data between controllers.
+
+
+Filters
+Used to modify variables in the views. We use a single filter to trunc long strings
+
+Templates (Views)
+Angular views are HTML snippets with variables (anything within a {{}}) and directives (explained later)
+Should be familiar if you've used other templating frameworks before
+
+Controllers
+Will coincide with a view 90% of the time.
+The connection between a controller and a view can either be done in the view (in an ng-controller tag) or in the global
+app.js routing. We use both methods.
+
+Unique controllers are:
+1. AppCtrl - an appwide controller that tracks the state of the app:
+a. It will check if the user is logged in when a view is loaded, and redirect/log the user accordingly
+b. it tracks the window width so the main view will be sized correctly based on the side pane (needed for centering
+elements)
+
+2.videoShareCtrl - we have a video sharing overlay that is a singleton that is moved around the DOM based on user
+interaction (hovering over a video will move the share pane there). The controller simply implements the share capabilities
+
+
+Directives
+Angular allows you to create new html elements or properties. We are using several simple directives I created for html
+snippets that repeat themselves (like a video cell). I'm also using an external directive called ng-infinite-scroll which
+manages the infinite scroll
+

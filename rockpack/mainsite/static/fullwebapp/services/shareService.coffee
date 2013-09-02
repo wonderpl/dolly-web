@@ -1,3 +1,4 @@
+#Not really in use, as share is also enabled for unregistered users (which is not supported by the API)
 angular.module('WebApp').factory('shareService', ['$http', 'UserManager', 'apiUrl', '$rootScope', ($http, UserManager, apiUrl, $rootScope) ->
 
   Share = {

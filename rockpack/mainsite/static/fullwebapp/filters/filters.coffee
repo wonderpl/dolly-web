@@ -13,6 +13,7 @@ angular.module('WebApp').filter('truncate', ($http, locale, apiUrl) ->
         return String(text).substring(0, length-end.length-3) + end
 )
 
+# NOT IN USE - was created for the original Feed display (which shows which day an individual video was added)
 angular.module('WebApp').filter('weekDay', ($http, locale, apiUrl) ->
   return (text, length, end) ->
 
