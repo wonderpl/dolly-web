@@ -236,7 +236,7 @@ class VideoData(DataSet):
         id = 'RP000001ZQAIPJR6SDO436GDXWNPBOH6YXPLSOFZ'
         title = 'A video'
         source = 1
-        source_videoid = 'xxx'
+        source_videoid = 'lBFBbm1Nudc'
         date_published = datetime(2013, 1, 1, 0, 0, 0)
 
     class video2:

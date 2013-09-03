@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
@@ -490,3 +491,12 @@ h4{
 </body>
 </html>
 "{{ object.title }}"
+{{ user.display_name }} shared this {{ object_type_name }} with you on Rockpack.
+
+{% if object_type == "channel" %}
+"{{ object.title }}" by {{ object.owner_rel.display_name }}
+<img src="{{ object.default_thumbnail }}"/>
+{% else %}
+"{{ object.video_rel.title }}" on "{{ object.video_channel.title }}"
+<img src="{{ object.default_thumbnail }}"/>
+{% endif %}

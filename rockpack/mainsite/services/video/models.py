@@ -333,6 +333,10 @@ class Channel(db.Model):
         return public
 
     @property
+    def default_thumbnail(self):
+        return self.cover.thumbnail_large
+
+    @property
     def editable(self):
         return not self.favourite
 

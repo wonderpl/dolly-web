@@ -5,6 +5,7 @@ from flask import json
 from test import base
 from test.test_helpers import get_auth_header
 from test.fixtures import ChannelData, VideoInstanceData
+from rockpack.mainsite import app
 from rockpack.mainsite.services.video.models import Channel
 
 
@@ -113,5 +114,22 @@ class TestShare(base.RockPackTestCase):
                 self.assertEquals(r.status_code, 200, r.data)
                 friends = json.loads(r.data)['users']['items']
                 self.assertIn(('email', recipient),
-                    [(f['external_system'], f['email']) for f in friends])
+                              [(f['external_system'], f['email']) for f in friends])
 
+    if app.config.get('TEST_SHARE_EMAIL'):
+        def test_share_email_wo_patch(self):
+            with self.app.test_client() as client:
+                userid = self.create_test_user().id
+                for object_type, object_id in [
+                        ('channel', ChannelData.channel1.id),
+                        ('video_instance', VideoInstanceData.video_instance1.id)]:
+                    r = client.post(
+                        '/ws/share/email/',
+                        data=json.dumps(dict(
+                            object_type=object_type,
+                            object_id=object_id,
+                            email=app.config['TEST_SHARE_EMAIL'],
+                        )),
+                        content_type='application/json',
+                        headers=[get_auth_header(userid)])
+                    self.assertEquals(r.status_code, 204, r.data)

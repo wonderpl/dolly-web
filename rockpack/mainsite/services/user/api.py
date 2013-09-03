@@ -1129,6 +1129,7 @@ class UserWS(WebService):
         for friend in friends:
             uid = friend.email if friend.external_system == 'email' else friend.external_uid
             rockpack_user = rockpack_friends.get((friend.external_system, uid))
+            last_shared_date = friend.last_shared_date and friend.last_shared_date.isoformat()
             if rockpack_user:
                 item = dict(
                     id=rockpack_user.id,
@@ -1136,7 +1137,7 @@ class UserWS(WebService):
                     display_name=rockpack_user.display_name,
                     avatar_thumbnail_url=rockpack_user.avatar.url,
                     email=rockpack_user.email,
-                    _last_shared_date=friend.last_shared_date,
+                    last_shared_date=last_shared_date,
                 )
             else:
                 item = dict(
@@ -1145,7 +1146,7 @@ class UserWS(WebService):
                     external_uid=friend.external_uid,
                     external_system=friend.external_system,
                     email=friend.email,
-                    _last_shared_date=friend.last_shared_date,
+                    last_shared_date=last_shared_date,
                 )
             if friend.has_ios_device:
                 item['has_ios_device'] = True
@@ -1153,12 +1154,11 @@ class UserWS(WebService):
         if 'ios' in request.args.get('device_filter', ''):
             items = [i for i in items if 'resource_url' in i or 'has_ios_device' in i]
         if request.args.get('share_filter'):
-            items.sort(key=lambda i: i['_last_shared_date'], reverse=True)
+            items.sort(key=lambda i: i['last_shared_date'], reverse=True)
         else:
             items.sort(key=lambda i: i['display_name'])
         for i, item in enumerate(items):
             item['position'] = i
-            del item['_last_shared_date']
         return dict(users=dict(items=items, total=len(items)))
 
     @expose_ajax('/<userid>/friends/', methods=['POST'])
