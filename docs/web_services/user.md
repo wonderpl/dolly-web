@@ -1405,8 +1405,10 @@ share_filter   | no        | `true`            | Include only those users with w
 The list can contain two user types: rockpack and external.  Rockpack users include a `resource_url` for
 full profile detail.  External users include `external_system` and `external_uid` fields to identify the user.
 
-If `share_filter` is specified then the result list is sorted by the date the user was last shared with.
-Otherwise the list is sorted alphabetically by `display_name`.
+The `last_shared_date` field specifies the date on which the user last shared some content with this
+friend (or `null` if never shared).
+If `share_filter` is specified then the result list is sorted by descending `last_shared_date`,
+otherwise the list is sorted alphabetically by `display_name`.
 
 ```http
 HTTP/1.1 200 OK
@@ -1424,6 +1426,7 @@ Content-Type: application/json
     "display_name": "Allan B",
     "email": "allan@rockpack.com",
     "avatar_thumbnail_url": "http://rockpack/avatar/img.jpg",
+    "last_shared_date": "2013-08-28T16:26:02.222917"
    },
    {
     "position": 1,
@@ -1432,7 +1435,8 @@ Content-Type: application/json
     "display_name": "Gregory Talon",
     "email": null,
     "avatar_thumbnail_url": "http://facebook/picture.jpg",
-    "has_ios_device": true
+    "has_ios_device": true,
+    "last_shared_date": null
    }
   ]
  }
