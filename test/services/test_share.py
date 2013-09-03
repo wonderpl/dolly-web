@@ -119,7 +119,7 @@ class TestShare(base.RockPackTestCase):
     if app.config.get('TEST_SHARE_EMAIL'):
         def test_share_email_wo_patch(self):
             with self.app.test_client() as client:
-                userid = self.create_test_user().id
+                userid = self.create_test_user(avatar='avatar').id
                 for object_type, object_id in [
                         ('channel', ChannelData.channel1.id),
                         ('video_instance', VideoInstanceData.video_instance1.id)]:

@@ -31,6 +31,7 @@ def send_share_email(recipient, user, object_type, object, link):
     template = email.env.get_template('share.html')
     body = template.render(
         user=user,
+        link=link,
         object_type=object_type,
         object_type_name=object_type_name,
         object=object,
