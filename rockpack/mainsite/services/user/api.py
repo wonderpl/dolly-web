@@ -550,12 +550,12 @@ def _aggregate_content_feed(items):
     for (type, key, date), group in itemgroups.iteritems():
         if type == 'video':
             # Don't create small aggregations for videos
-            if len(group) <= 3:
+            if len(group) <= 5:
                 continue
             # Don't include most starred videos (up to a maximum of 5)
             group.sort(key=lambda i: i['video']['star_count'], reverse=True)
             x, count = 0, len(group)
-            while x < min(5, count) and group[x].get('starring_users'):
+            while x < min(10, count) and group[x].get('starring_users'):
                 x += 1
             group = group[x:]
 
