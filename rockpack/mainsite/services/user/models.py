@@ -304,7 +304,37 @@ class BroadcastMessage(db.Model):
     date_scheduled = Column(DateTime(), nullable=False)
     date_processed = Column(DateTime())
     message = Column(Text(), nullable=False)
+    url_target = Column(String(1024))
     filter = Column(String(1024))
+
+    _filter_patterns = (
+        re.compile('(gender) is ([mf])'),
+        re.compile('(locale) like (\S+)'),
+        re.compile('(email) like (\S+)'),
+        re.compile('(age) between (\d+) and (\d+)'),
+    )
+
+    @classmethod
+    def parse_filter_string(cls, str):
+        for expr in str.split(','):
+            expr = expr.strip()
+            match = None
+            for pattern in cls._filter_patterns:
+                match = pattern.search(expr)
+                if match:
+                    break
+            if match:
+                yield expr, match.group(1), match.groups()[1:]
+            else:
+                yield expr, None, None
+
+    @staticmethod
+    def get_target_resource_url(target):
+        from rockpack.mainsite.services.video import models
+        model = models.Channel if target.startswith('ch') else models.VideoInstance
+        object = model.query.filter_by(id=target).first()
+        if object:
+            return object.resource_url
 
 
 def username_exists(username):

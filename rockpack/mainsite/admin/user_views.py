@@ -40,6 +40,19 @@ class ExternalTokenView(AdminView):
     form_overrides = dict(user_rel=wtf.TextField)
 
 
+def _filter_validator(form, field):
+    if field.data:
+        for expr, type, values in models.BroadcastMessage.parse_filter_string(field.data):
+            if type is None:
+                raise wtf.ValidationError('Invalid filter expression: %s' % expr)
+
+
+def _url_target_validator(form, field):
+    if field.data:
+        if not models.BroadcastMessage.get_target_resource_url(field.data):
+            raise wtf.ValidationError('Invalid target id')
+
+
 class BroadcastMessageView(AdminView):
     model = models.BroadcastMessage
     model_name = model.__tablename__
@@ -48,4 +61,8 @@ class BroadcastMessageView(AdminView):
     column_filters = ('date_scheduled',)
     column_searchable_list = ('label',)
 
-    form_columns = ('label', 'external_system', 'date_scheduled', 'message', 'filter')
+    form_columns = ('label', 'external_system', 'date_scheduled', 'message', 'url_target', 'filter')
+    form_args = dict(
+        filter=dict(validators=[_filter_validator]),
+        url_target=dict(validators=[_url_target_validator]),
+    )
