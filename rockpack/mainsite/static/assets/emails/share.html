@@ -1,2 +1,9 @@
 {{ user.display_name }} shared this {{ object_type_name }} with you on Rockpack.
-"{{ object.title }}"
+
+{% if object_type == "channel" %}
+"{{ object.title }}" by {{ object.owner_rel.display_name }}
+<img src="{{ object.default_thumbnail }}"/>
+{% else %}
+"{{ object.video_rel.title }}" on "{{ object.video_channel.title }}"
+<img src="{{ object.default_thumbnail }}"/>
+{% endif %}

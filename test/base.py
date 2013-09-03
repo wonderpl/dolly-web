@@ -21,8 +21,8 @@ class RockPackTestCase(unittest.TestCase):
         user = dict(
             username='test_' + postfix,
             password='password',
-            first_name='foo',
-            last_name='bar',
+            first_name='Alexia',
+            last_name='Barrichello',
             date_of_birth=date(2000, 1, 1),
             email='test_' + postfix + '@test.rockpack.com',
             avatar='',
