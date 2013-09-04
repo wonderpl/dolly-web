@@ -1,4 +1,5 @@
 import urlparse
+from itertools import izip_longest
 from functools import wraps
 from datetime import datetime, timedelta
 from flask import json
@@ -78,9 +79,9 @@ def _process_apns_broadcast(users, alert, url=None):
     message = dict(alert=alert, id=0)
     if url:
         message['url'] = _apns_url(url)
-    for user, token in users:
-        # TODO: batch these apns requests
-        _send_apns_message(user, token, message)
+    # batch push calls into chunks of 100 (unique) tokens
+    for tokens in izip_longest(*[(t for u, t in users)] * 100, fillvalue=None):
+        _send_apns_message('batch', filter(None, set(tokens)), message)
 
 
 def send_push_notifications(user):
@@ -505,7 +506,8 @@ def process_broadcast_messages(date_from, date_to):
                 ExternalToken,
                 (ExternalToken.external_system == 'apns') &
                 (ExternalToken.user == User.id)
-            ).values(User.id, ExternalToken.external_token)
+            ).order_by(ExternalToken.external_token).\
+                values(User.id, ExternalToken.external_token)
             _process_apns_broadcast(users, message.message, url)
 
         app.logger.info('Processed broadcast message: %s', message.label)
