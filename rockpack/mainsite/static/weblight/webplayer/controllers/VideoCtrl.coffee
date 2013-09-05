@@ -6,20 +6,12 @@ window.Weblight.controller('VideoCtrl', ['$scope', '$rootScope', '$routeParams',
   windowWidth = if "innerWidth" in window then window.innerWidth else document.documentElement.offsetWidth
 
   @getPlayerWidth = () ->
-    if windowWidth >= 1600
-      @playerWidth = 1000
-      @playerHeight = 562
+    if windowWidth <= 979
+      @playerWidth = 300
+      @playerHeight = 169
     else
-      if windowWidth >= 1200
-        @playerWidth = 770
-        @playerHeight = 433
-      else
-        if windowWidth > 700
-          @playerWidth = 570
-          @playerHeight = 320
-        else
-          @playerWidth = 320
-          @playerHeight = 180
+      @playerWidth = 620
+      @playerHeight = 349
 
 
   getQueryVariable = (variable) ->

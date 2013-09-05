@@ -20,29 +20,29 @@ html,body, .ng-view {
   height: 20px;
   background: rgba(241,241,241,0.3);
   position: absolute;
-  top: 333px;
+  top: 439px;
   z-index: 12001;
   opacity: 1;
 
-#currentPosition {
-  height: 20px;
-  width: 0;
-  background: #0ba6ab;
-  -webkit-transition: all 45ms;
-  -moz-transition: all 45ms;
-  -o-transition: all 45ms;
-  transition: all 45ms;
-}
-
-&.hideOverlay {
-  opacity: 0;
-}
-
+  #currentPosition {
+    height: 20px;
+    width: 0;
+    background: #0ba6ab;
+    -webkit-transition: all 45ms;
+    -moz-transition: all 45ms;
+    -o-transition: all 45ms;
+    transition: all 45ms;
   }
+
+  &.hideOverlay {
+    opacity: 0;
+  }
+
+}
 
 #pause {
   position: absolute;
-  top: 130px;
+  top: 230px;
   left: 247px;
   z-index: 12000;
   width: 93px;
@@ -73,23 +73,12 @@ body {
   font-size: 12px;
   color: #282d33;
   font-family: Arial;
-  background: #ffffff; /* Old browsers */
-  /* IE9 SVG, needs conditional override of 'filter' to 'none' */
-  background: url(data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiA/Pgo8c3ZnIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgdmlld0JveD0iMCAwIDEgMSIgcHJlc2VydmVBc3BlY3RSYXRpbz0ibm9uZSI+CiAgPGxpbmVhckdyYWRpZW50IGlkPSJncmFkLXVjZ2ctZ2VuZXJhdGVkIiBncmFkaWVudFVuaXRzPSJ1c2VyU3BhY2VPblVzZSIgeDE9IjAlIiB5MT0iMCUiIHgyPSIwJSIgeTI9IjEwMCUiPgogICAgPHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iI2ZmZmZmZiIgc3RvcC1vcGFjaXR5PSIxIi8+CiAgICA8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiNmNWY1ZjUiIHN0b3Atb3BhY2l0eT0iMSIvPgogIDwvbGluZWFyR3JhZGllbnQ+CiAgPHJlY3QgeD0iMCIgeT0iMCIgd2lkdGg9IjEiIGhlaWdodD0iMSIgZmlsbD0idXJsKCNncmFkLXVjZ2ctZ2VuZXJhdGVkKSIgLz4KPC9zdmc+);
-  background: -moz-linear-gradient(top,  #ffffff 0%, #f5f5f5 100%); /* FF3.6+ */
-  background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#ffffff), color-stop(100%,#f5f5f5)); /* Chrome,Safari4+ */
-  background: -webkit-linear-gradient(top,  #ffffff 0%,#f5f5f5 100%); /* Chrome10+,Safari5.1+ */
-  background: -o-linear-gradient(top,  #ffffff 0%,#f5f5f5 100%); /* Opera 11.10+ */
-  background: -ms-linear-gradient(top,  #ffffff 0%,#f5f5f5 100%); /* IE10+ */
-  background: linear-gradient(to bottom,  #ffffff 0%,#f5f5f5 100%); /* W3C */
-  filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffff', endColorstr='#f5f5f5',GradientType=0 ); /* IE6-8 */
+  background: #f1f1f1; /* Old browsers */
 }
 
 #sharecontainer {
   .clearfix();
-  position: absolute;
-  bottom: 0;
-  right: 0;
+  padding-bottom: 20px;
 }
 
 #weblightshare {
@@ -115,9 +104,9 @@ body {
 }
 
 .wrapper {
-  widows: 570px;
   position: relative;
   margin: 0 auto;
+  width: 620px;
   .clearfix();
 }
 
@@ -130,7 +119,7 @@ body {
 // Video Player
 
 #playercontainer {
-  width:570px;
+  width:620px;
   padding: 0;
   margin: 0 auto;
   position: relative;
@@ -142,22 +131,15 @@ body {
 
   #playerfooter {
     text-align: center;
-    width: 570px;
-    margin-top: 13px;
+    width: 580px;
+    background: #fff;
+    margin-top: 20px;
+    padding: 20px;
     font-size: 16px;
     font-family: "dn-regular", Helvetica;
-    text-transform: uppercase;
 
-    &>img {
-      width: 44px;
-      height: 44px;
-      margin-bottom: 14px;
-    }
-
-    #desc {
-      font-size: 9px;
-      color: #696969;
-      line-height: 9px;
+    p {
+      margin: 0;
     }
 
     .lowerdownloadbtn {
@@ -172,14 +154,42 @@ body {
 
   #playerheader {
 
-    font-size: 15px;
+    font-size: 16px;
     font-family: "dn-regular";
     color: #282d33;
-    text-transform: uppercase;
     .clearfix();
-    margin-bottom: 13px;
+    margin-bottom: 20px;
 
+    img {
+      float: left;
+      height: 90px;
+    }
+
+    #desc {
+      float: left;
+      padding: 21px 20px;
+      background: #fff;
+      width: 490px;
+      font-size: 20px;
+      line-height: 20px;
+      line-height: 24px;
+    }
+
+    #videotitle {
+      text-shadow: 1px 1px #dddddd;
+      font-family: "dn-bold";
+    }
+
+    #logos {
+      float: right;
+
+      .bluelogo {
+        margin-right: 10px;
+      }
+    }
   }
+
+
 }
 
 #ChannelCtrl {
@@ -198,6 +208,95 @@ body {
 
 .uppercase {
   text-transform: uppercase;
+}
+
+#channelwrapper {
+  font-family: "dn-regular", Helvetica;
+  font-size: 18px;
+  width: 340px;
+  margin-top: 115px;
+  color: #282d33;
+  display: inline-block;
+
+  p {
+    margin: 40px 0;
+  }
+
+  img {
+    margin: 20px 0;
+  }
+}
+
+#screenshot {
+  width:236px;
+  height: 496px;
+  background:url(/static/assets/weblight/images/iphonebg.png) repeat;
+  display: inline-block;
+  margin-left: 95px;
+  position: relative;
+  vertical-align: bottom;
+
+  div {
+    overflow: hidden;
+  }
+}
+
+#gloss {
+  width:236px;
+  height: 496px;
+  background:url(/static/assets/weblight/images/gloss.png) repeat;
+  position: absolute;
+  top: 0;
+  right: -2px;
+}
+
+#iostitle {
+  font-family: "dn-regular", Helvetica;
+  color: #fff;
+  text-transform: uppercase;
+  font-size: 24px;
+  width: 150px;
+  margin-top: 70px;
+  margin-left: 15px;
+  line-height: 28px;
+}
+
+#iosuser {
+
+  margin-left: 15px;
+  color: #fff;
+  font-family: "dn-regular", Helvetica;
+  font-size: 11px;
+  text-transform: uppercase;
+
+  img {
+    width: 40px;
+    height: 40px;
+    display: inline-block;
+  }
+
+  div {
+    display: inline-block;
+    vertical-align: middle;
+  }
+}
+
+#iosshare {
+  position: absolute;
+  bottom: 70px;
+  right: 15px;
+}
+
+#iosplus {
+  position: absolute;
+  bottom: 20px;
+  right: 15px;
+}
+
+#iosplay {
+  position: absolute;
+  bottom: 0;
+  right: 85px;
 }
 
 #videothumbnail {
@@ -228,11 +327,11 @@ body {
   margin-top: 55px;
   text-align: center;
 
-a, a:hover, a:visited {
-  color: #282d33;
-  text-decoration: underline;
-}
+  a, a:hover, a:visited {
+    color: #282d33;
+    text-decoration: underline;
   }
+}
 
 #bg {
   width: 200px;
@@ -241,33 +340,28 @@ a, a:hover, a:visited {
   top: 72px;
   left: 21px;
 }
-#header {
-  background: #fff;
-  height: 50px;
-  line-height: 46px;
-  position: fixed;
-  width: 100%;
-  z-index: 1000;
-
-img {
-  width: 125px;
-  height: 22px;
-  vertical-align: middle;
-
-}
-  }
 
 #overlayheader {
   background: #fff;
-  height: 22px;
+  height: 50px;
+  line-height: 46px;
   width: 100%;
-  margin: 10px 0 60px 0;
+  margin-bottom: 20px;
   text-align: center;
 
-  .logo {
-    width: 125px;
-    height: 22px;
-    vertical-align: middle;
+  #logo {
+
+    float: left;
+
+    img {
+      width: 125px;
+      height: 22px;
+      vertical-align: middle;
+    }
+  }
+
+  #appstore {
+    float: right;
   }
 
 }
@@ -283,10 +377,10 @@ img {
   margin-bottom: 30px;
   font-size: 16px;
 
-img {
-  margin-bottom: 20px;
-}
+  img {
+    margin-bottom: 20px;
   }
+}
 
 .rockpack-button {
   display: inline-block;
@@ -308,70 +402,72 @@ img {
   text-align: center;
 }
 
-@media (min-width: 1200px) {
-  .wrapper {
-    width: 770px;
-  }
 
-  #playercontainer {
-    width:770px;
+@media (max-width: 767px) {
 
-    #playerfooter {
-      width: 770px;
-
-    }
-  }
-
-  #pause {
-    top: 180px;
-    left: 330px;
-  }
-
-  #scrubber {
-    top: 446px;
-  }
-}
-
-@media (min-width: 1600px) {
-  .wrapper {
-    width: 1000px;
-  }
-
-  #playercontainer {
-    width:1000px;
-
-    #playerfooter {
-      width: 1000px;
-
-    }
-  }
-
-  #pause {
-    top: 260px;
-    left: 450px;
-  }
-
-  #scrubber {
-    top: 575px;
-  }
-}
-
-
-@media (max-width: 700px) {
-  wrapper {
-    width: 95%
-  }
-
-  #playercontainer {
-    width:95%;
-
-    #playerfooter {
-      width: 95%;
-
+  #overlayheader {
+    .wrapper {
+      width: 300px !important;
     }
   }
 
   .visible-desktop {
     display: none;
+  }
+
+  .channelwrapper  {
+    width: 95%;
+  }
+
+  .wrapper {
+    width: 320px;
+  }
+
+  #channelwrapper {
+    display: block;
+    margin: 0 auto;
+    text-align: center;
+    width: 300px;
+    margin-top: 80px;
+
+    img {
+      margin: 0 0 40px 0;
+    }
+  }
+
+  #ChannelCtrl {
+    height: auto;
+  }
+
+  #screenshot {
+    margin: 0 auto;
+    display: block;
+  }
+
+  #playercontainer {
+    width:300px;
+    height:auto;
+    padding: 0;
+    margin: 0 auto;
+
+    #playerheader {
+
+      background: #fff;
+
+      img {
+        height: 60px;
+      }
+
+      #desc {
+        width: 220px;
+        padding: 10px;
+        font-size: 14px;
+        line-height: 14px;
+      }
+    }
+
+    #playerfooter {
+      width: 260px;
+    }
   }
 }
