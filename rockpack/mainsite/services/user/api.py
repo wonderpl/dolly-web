@@ -85,7 +85,7 @@ def get_or_create_video_records(instance_ids):
     # Check if any "real" ids are invalid
     if real_instance_ids:
         instances = VideoInstance.query.filter(VideoInstance.id.in_(real_instance_ids))
-        existing_ids = dict(instances.values('id', 'video'))
+        existing_ids = dict((i, (v, c)) for i, v, c in instances.values('id', 'video', 'channel'))
         invalid = list(real_instance_ids - set(existing_ids.keys()))
         if invalid:
             abort(400, message=_('Invalid video instance ids'), data=invalid)
@@ -98,7 +98,7 @@ def get_or_create_video_records(instance_ids):
         for source, source_videoid in external_instance_ids:
             video_id = gen_videoid(None, source, source_videoid)
             video_id_map[video_id] = source, source_videoid
-            existing_ids[(source, source_videoid)] = video_id
+            existing_ids[(source, source_videoid)] = (video_id, None)
 
         # Check which video references from search instances already exist
         # and create records for any that don't
@@ -126,7 +126,7 @@ def save_video_activity(userid, action, instance_id, locale):
     except KeyError:
         abort(400, message=_('Invalid action'))
 
-    video_id = get_or_create_video_records([instance_id])[0]
+    video_id = get_or_create_video_records([instance_id])[0][0]
     activity = dict(user=userid, action=action,
                     object_type='video_instance', object_id=instance_id)
     if not UserActivity.query.filter_by(**activity).count():
@@ -189,9 +189,10 @@ def add_videos_to_channel(channel, instance_list, locale, delete_existing=False)
     video_ids = get_or_create_video_records(instance_list)
     existing = dict((v.video, v) for v in VideoInstance.query.filter_by(channel=channel.id))
     added = []
-    for position, video_id in enumerate(video_ids):
+    for position, (video_id, video_source) in enumerate(video_ids):
         if video_id not in added:
-            instance = existing.get(video_id) or VideoInstance(video=video_id, channel=channel.id)
+            instance = existing.get(video_id) or \
+                VideoInstance(video=video_id, channel=channel.id, source_channel=video_source)
             instance.position = position
             VideoInstance.query.session.add(instance)
             added.append(video_id)

@@ -233,7 +233,7 @@ class ChannelLocaleMetaData(DataSet):
 
 class VideoData(DataSet):
     class video1:
-        id = 'RP000001ZQAIPJR6SDO436GDXWNPBOH6YXPLSOFZ'
+        id = 'RP000001GZVLQVP5S5M3T6VMQZKSJQW6DVUV4VHY'
         title = 'A video'
         source = 1
         source_videoid = 'lBFBbm1Nudc'
