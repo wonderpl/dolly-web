@@ -9,6 +9,9 @@ from rockpack.mainsite import app
 ACCESS_TOKEN_VERSION = 1
 ACCESS_TOKEN_FMT = '>Hd16s16s'  # Version (unsigned short), Expiry (double), 16 byte id, 16 byte id
 
+UNSUBSCRIBE_TOKEN_VERSION = 1
+UNSUBSCRIBE_TOKEN_FMT = '>BB16s'    # Version (unsigned byte), List (unsigned byte), 16 byte id
+
 
 class ExpiredTokenError(TypeError):
     pass
@@ -16,6 +19,30 @@ class ExpiredTokenError(TypeError):
 
 def _sign(value):
     return hmac.new(app.secret_key, value, hashlib.sha1).hexdigest()
+
+
+# user & client ids are decoded so that the whole token can be recoded more efficiently
+def _decode_id(id):
+    return b64decode(str(id) + '==')
+
+
+def _encode_id(id):
+    return b64encode(id)[:-2]
+
+
+def _create_token(format, version, *values):
+    payload = struct.pack(format, version, *values)
+    return _sign(payload) + b64encode(payload)
+
+
+def _parse_token(format, token):
+    signature, payload = token[:40], token[40:]
+    try:
+        payload = b64decode(payload)
+    except TypeError:
+        return
+    if _sign(payload) == signature:
+        return struct.unpack(format, payload)
 
 
 def create_access_token(userid, clientid, age):
@@ -26,11 +53,9 @@ def create_access_token(userid, clientid, age):
     >>> len(create_access_token('', ''))
     96
     """
-    # user & client ids are decoded so that the whole token can be recoded more efficiently
-    userid, clientid = (b64decode(str(i) + '==') for i in (userid, clientid))
+    userid, clientid = (_decode_id(i) for i in (userid, clientid))
     expiry = time.time() + age
-    payload = struct.pack(ACCESS_TOKEN_FMT, ACCESS_TOKEN_VERSION, expiry, userid, clientid)
-    return _sign(payload) + b64encode(payload)
+    return _create_token(ACCESS_TOKEN_FMT, ACCESS_TOKEN_VERSION, expiry, userid, clientid)
 
 
 def parse_access_token(token):
@@ -41,15 +66,27 @@ def parse_access_token(token):
     >>> parse_access_token('invalid')
     None
     """
-    signature, payload = token[:40], token[40:]
     try:
-        payload = b64decode(payload)
+        version, expiry, userid, clientid = _parse_token(ACCESS_TOKEN_FMT, token)
     except TypeError:
-        return
-    if _sign(payload) == signature:
-        version, expiry, userid, clientid = struct.unpack(ACCESS_TOKEN_FMT, payload)
+        pass
+    else:
         if version == 1:
             if expiry < time.time():
                 raise ExpiredTokenError()
-            userid, clientid = (b64encode(i)[:-2] for i in (userid, clientid))
+            userid, clientid = (_encode_id(i) for i in (userid, clientid))
             return userid, clientid
+
+
+def create_unsubscribe_token(listid, userid):
+    return _create_token(UNSUBSCRIBE_TOKEN_FMT, UNSUBSCRIBE_TOKEN_VERSION, listid, _decode_id(userid))
+
+
+def parse_unsubscribe_token(token):
+    try:
+        version, listid, userid = _parse_token(UNSUBSCRIBE_TOKEN_FMT, token)
+    except TypeError:
+        pass
+    else:
+        if version == 1:
+            return listid, _encode_id(userid)

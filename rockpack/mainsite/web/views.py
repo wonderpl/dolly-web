@@ -7,7 +7,7 @@ from flask.ext import wtf
 from werkzeug.http import HTTP_STATUS_CODES
 from werkzeug.exceptions import NotFound
 from rockpack.mainsite import app, requests
-from rockpack.mainsite.core.token import parse_access_token
+from rockpack.mainsite.core.token import parse_access_token, parse_unsubscribe_token
 from rockpack.mainsite.core.webservice import JsonReponse
 from rockpack.mainsite.helpers.urls import url_for, slugify
 from rockpack.mainsite.helpers.http import cache_for
@@ -285,6 +285,21 @@ def reset_password():
             user.change_password(user, form.password.data)
             record_user_event(user.username, 'password changed')
     return locals()
+
+
+@expose_web('/unsubscribe/', 'web/unsubscribe.html', secure=True)
+def unsubscribe():
+    token = request.args.get('token')
+    try:
+        listid, userid = parse_unsubscribe_token(str(token))
+    except TypeError:
+        return dict(error='Invalid token')
+    else:
+        user = User.query.filter_by(id=userid).first()
+        if user:
+            user.set_flag('unsub%d' % listid)
+            user.save()
+            return dict(email=user.email)
 
 
 @app.route('/status/', subdomain='<sub>')
