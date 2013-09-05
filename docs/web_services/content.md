@@ -137,19 +137,25 @@ Cache-Control: public, max-age=3600
 
 {
  "channels": {
-  "total": 105,
+  "total": 1,
   "items": [
    {
-    "position": 1,
+    "position": 0,
     "id": "Unique channel id",
     "resource_url": "http://base/ws/USERID/channels/CHANNELID/",
     "title": "Channel title",
+    "category": 123,
+    "description": "channel desc",
+    "public": true,
+    "date_published": "2013-12-01T12:00:00",
+    "ecommerce_url": "",
     "cover": {
       "thumbnail_url": "http://path/to/channel/cover.jpg",
-      "aoi": [0, 0, 1, 1],
+      "aoi": [0, 0, 1, 1]
     },
     "owner": {
      "id": "Unique user id",
+     "resource_url": "http://base/ws/USERID/",
      "display_name": "User display name",
      "avatar_thumbnail_url": "https://path/to/avatar/small.jpg"
     },

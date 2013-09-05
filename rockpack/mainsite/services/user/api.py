@@ -1,3 +1,4 @@
+from itertools import groupby
 from werkzeug.datastructures import MultiDict
 from sqlalchemy import desc, func, text
 from sqlalchemy.orm import lazyload, contains_eager
@@ -305,7 +306,7 @@ def user_subscriptions(userid, locale, paging):
     if not subscriptions.count():
         return dict(items=[], total=0)
     subs = {s[0]: s[1] for s in subscriptions.values('channel', 'date_created')}
-    items, total = video_api.get_local_channel(locale, paging, channels=subs.keys())
+    items, total = video_api.get_db_channels(locale, paging, channels=subs.keys())
     items = [item for date, item in
              sorted([(subs[i['id']], i) for i in items], reverse=True)]
     for item in items:
@@ -573,6 +574,23 @@ def _aggregate_content_feed(items):
             item['aggregation'] = aggid
 
     return aggregations
+
+
+def _channel_recommendations(userid, locale, paging):
+    (gender, age), = User.query.filter_by(id=userid).values(
+        User.gender, func.age(User.date_of_birth))
+    boosts = app.config['RECOMMENDER_CATEGORY_BOOSTS']
+    user_boosts = []
+    if gender:
+        user_boosts.extend(boosts['gender'][gender])
+    if age:
+        age = age.days / 365
+        user_boosts.extend(next(
+            (v for k, v in sorted(boosts['age'].items()) if age < k), ()))
+    # combine boosts by multiplying each with the same category
+    user_boosts = [(i, reduce(lambda a, b: a * b[1], grp, 1))
+                   for i, grp in groupby(sorted(user_boosts), lambda x: x[0])]
+    return video_api.get_es_channels(locale, paging, None, user_boosts)
 
 
 def _channel_videos(channelid, locale, paging, own=False):
@@ -1069,6 +1087,12 @@ class UserWS(WebService):
         items, total = _content_feed(userid, self.get_locale(), self.get_page())
         aggregations = _aggregate_content_feed(items) if items else {}
         return dict(content=dict(items=items, total=total, aggregations=aggregations))
+
+    @expose_ajax('/<userid>/channel_recommendations/', cache_age=3600, cache_private=True)
+    @check_authorization(self_auth=True)
+    def channel_recommendations(self, userid):
+        items, total = _channel_recommendations(userid, self.get_locale(), self.get_page())
+        return dict(channels=dict(items=items, total=total))
 
     @expose_ajax('/<userid>/external_accounts/', cache_age=60, cache_private=True)
     @check_authorization(self_auth=True)

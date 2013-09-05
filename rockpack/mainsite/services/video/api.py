@@ -54,7 +54,7 @@ def channel_dict(channel, with_owner=True, owner_url=False):
     return ch_data
 
 
-def get_local_channel(locale, paging, **filters):
+def get_db_channels(locale, paging, **filters):
     channels = models.Channel.query.filter_by(public=True, deleted=False).\
         outerjoin(
             models.ChannelLocaleMeta,
@@ -82,6 +82,28 @@ def get_local_channel(locale, paging, **filters):
         channel_data.append(item)
 
     return channel_data, total
+
+
+def get_es_channels(locale, paging, category, category_boosts=None):
+    cs = ChannelSearch(locale)
+    cs.set_paging(*paging)
+    # Boost popular channels based on ...
+    if category_boosts:
+        for boost in category_boosts:
+            cs.add_filter(filters.category_boost(*boost))
+    cs.add_filter(filters.boost_from_field_value('editorial_boost'))
+    cs.add_filter(filters.boost_from_field_value('subscriber_frequency'))
+    cs.add_filter(filters.boost_from_field_value('update_frequency', reduction_factor=4))
+    cs.add_filter(filters.negatively_boost_favourites())
+    cs.add_filter(filters.verified_channel_boost())
+    cs.add_filter(filters.boost_by_time())
+    cs.filter_category(category)
+    cs.promotion_settings(category)
+    cs.date_sort(request.args.get('date_order'))
+    if request.args.get('user_id'):
+        cs.add_term('owner', request.args.get('user_id'))
+    channels = cs.channels(with_owners=True)
+    return channels, cs.total
 
 
 def video_dict(instance):
@@ -212,38 +234,10 @@ class ChannelWS(WebService):
 
     @expose_ajax('/', cache_age=3600)
     def channel_list(self):
-        if not use_elasticsearch():
-            data, total = get_local_channel(
-                self.get_locale(),
-                self.get_page(),
-                category=request.args.get('category'))
-            return dict(channels=dict(items=data, total=total))
-
-        cs = ChannelSearch(self.get_locale())
-        offset, limit = self.get_page()
-        cs.set_paging(offset, limit)
-
-        # Boost popular channels based on ...
-        cs.add_filter(filters.boost_from_field_value('editorial_boost'))
-        cs.add_filter(filters.boost_from_field_value('subscriber_frequency'))
-        cs.add_filter(filters.boost_from_field_value('update_frequency', reduction_factor=4))
-        cs.add_filter(filters.negatively_boost_favourites())
-        cs.add_filter(filters.verified_channel_boost())
-        cs.add_filter(filters.boost_by_time())
-        cs.filter_category(request.args.get('category'))
-        cs.promotion_settings(request.args.get('category'))
-        cs.date_sort(request.args.get('date_order'))
-        if request.args.get('user_id'):
-            cs.add_term('owner', request.args.get('user_id'))
-        channels = cs.channels(with_owners=True)
-        total = cs.total
-
-        return dict(
-            channels=dict(
-                items=channels,
-                total=total
-            )
-        )
+        get_channels = get_es_channels if use_elasticsearch() else get_db_channels
+        items, total = get_channels(self.get_locale(), self.get_page(),
+                                    category=request.args.get('category'))
+        return dict(channels=dict(items=items, total=total))
 
 
 class CategoryWS(WebService):
