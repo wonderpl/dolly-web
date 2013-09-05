@@ -1,8 +1,9 @@
 import urlparse
+from itertools import izip_longest
 from functools import wraps
 from datetime import datetime, timedelta
 from flask import json
-from sqlalchemy import func
+from sqlalchemy import func, text, between
 from sqlalchemy.orm import joinedload, contains_eager, aliased
 from sqlalchemy.orm.exc import NoResultFound
 from rockpack.mainsite import app
@@ -55,6 +56,10 @@ def star_message(activity, video_instance):
     )
 
 
+def _apns_url(url):
+    return urlparse.urlparse(url).path.lstrip('/ws/')
+
+
 def _send_apns_message(user, token, message):
     try:
         srv = push_client.APNs(push_client.connection)
@@ -69,10 +74,14 @@ def _send_apns_message(user, token, message):
         app.logger.exception('Failed to send push notification: %d', message.get('id', 0))
 
 
-def _process_apns_broadcast(users, message):
-    for user, token in users:
-        # TODO: batch these apns requests
-        _send_apns_message(user, token, dict(alert=message))
+def _process_apns_broadcast(users, alert, url=None):
+    # Fake notification id passed because iOS app won't follow url without it :-(
+    message = dict(alert=alert, id=0)
+    if url:
+        message['url'] = _apns_url(url)
+    # batch push calls into chunks of 100 (unique) tokens
+    for tokens in izip_longest(*[(t for u, t in users)] * 100, fillvalue=None):
+        _send_apns_message('batch', filter(None, set(tokens)), message)
 
 
 def send_push_notifications(user):
@@ -106,7 +115,7 @@ def send_push_notifications(user):
         key = 'video'
         push_message = "%@ has liked your video"
     push_message_args = [data['user']['display_name']]
-    deeplink_url = urlparse.urlparse(data[key]['resource_url']).path.lstrip('/ws/')
+    deeplink_url = _apns_url(data[key]['resource_url'])
 
     message = dict(
         alert={
@@ -477,16 +486,29 @@ def process_broadcast_messages(date_from, date_to):
     )
     users = User.query.filter_by(is_active=True)
     for message in messages:
-        if message.filter and '@' in message.filter:
-            users = users.filter(User.email.like('%%%s' % message.filter))
+        url = message.url_target and BroadcastMessage.get_target_resource_url(message.url_target)
+        if message.filter:
+            for expr, type, values in BroadcastMessage.parse_filter_string(message.filter):
+                if type == 'email':
+                    users = users.filter(User.email.like('%%%s' % values))
+                if type == 'locale':
+                    users = users.filter(User.locale.like('%s%%' % values))
+                if type == 'gender':
+                    users = users.filter(User.gender == values[0])
+                if type == 'age':
+                    users = users.filter(between(
+                        func.age(User.date_of_birth),
+                        text("interval '%s years'" % values[0]),
+                        text("interval '%s years'" % values[1])))
 
         if message.external_system == 'apns':
             users = users.join(
                 ExternalToken,
                 (ExternalToken.external_system == 'apns') &
                 (ExternalToken.user == User.id)
-            ).values(User.id, ExternalToken.external_token)
-            _process_apns_broadcast(users, message.message)
+            ).order_by(ExternalToken.external_token).\
+                values(User.id, ExternalToken.external_token)
+            _process_apns_broadcast(users, message.message, url)
 
         app.logger.info('Processed broadcast message: %s', message.label)
         message.date_processed = datetime.utcnow()

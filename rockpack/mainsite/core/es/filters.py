@@ -33,6 +33,13 @@ def verified_channel_boost():
     )
 
 
+def category_boost(category, boost):
+    return pyes.CustomFiltersScoreQuery.Filter(
+        pyes.TermFilter(field='category', value=category),
+        boost=boost
+    )
+
+
 def boost_from_field_value(field, reduction_factor=1):
     script = "(doc['{}'].value + 1.0) / {}".format(field, reduction_factor)
     return pyes.CustomFiltersScoreQuery.Filter(pyes.MatchAllFilter(), script=script)

@@ -1,3 +1,4 @@
+from itertools import groupby
 from werkzeug.datastructures import MultiDict
 from sqlalchemy import desc, func, text
 from sqlalchemy.orm import lazyload, contains_eager
@@ -84,7 +85,7 @@ def get_or_create_video_records(instance_ids):
     # Check if any "real" ids are invalid
     if real_instance_ids:
         instances = VideoInstance.query.filter(VideoInstance.id.in_(real_instance_ids))
-        existing_ids = dict(instances.values('id', 'video'))
+        existing_ids = dict((i, (v, c)) for i, v, c in instances.values('id', 'video', 'channel'))
         invalid = list(real_instance_ids - set(existing_ids.keys()))
         if invalid:
             abort(400, message=_('Invalid video instance ids'), data=invalid)
@@ -97,7 +98,7 @@ def get_or_create_video_records(instance_ids):
         for source, source_videoid in external_instance_ids:
             video_id = gen_videoid(None, source, source_videoid)
             video_id_map[video_id] = source, source_videoid
-            existing_ids[(source, source_videoid)] = video_id
+            existing_ids[(source, source_videoid)] = (video_id, None)
 
         # Check which video references from search instances already exist
         # and create records for any that don't
@@ -125,7 +126,7 @@ def save_video_activity(userid, action, instance_id, locale):
     except KeyError:
         abort(400, message=_('Invalid action'))
 
-    video_id = get_or_create_video_records([instance_id])[0]
+    video_id = get_or_create_video_records([instance_id])[0][0]
     activity = dict(user=userid, action=action,
                     object_type='video_instance', object_id=instance_id)
     if not UserActivity.query.filter_by(**activity).count():
@@ -188,9 +189,10 @@ def add_videos_to_channel(channel, instance_list, locale, delete_existing=False)
     video_ids = get_or_create_video_records(instance_list)
     existing = dict((v.video, v) for v in VideoInstance.query.filter_by(channel=channel.id))
     added = []
-    for position, video_id in enumerate(video_ids):
+    for position, (video_id, video_source) in enumerate(video_ids):
         if video_id not in added:
-            instance = existing.get(video_id) or VideoInstance(video=video_id, channel=channel.id)
+            instance = existing.get(video_id) or \
+                VideoInstance(video=video_id, channel=channel.id, source_channel=video_source)
             instance.position = position
             VideoInstance.query.session.add(instance)
             added.append(video_id)
@@ -305,7 +307,7 @@ def user_subscriptions(userid, locale, paging):
     if not subscriptions.count():
         return dict(items=[], total=0)
     subs = {s[0]: s[1] for s in subscriptions.values('channel', 'date_created')}
-    items, total = video_api.get_local_channel(locale, paging, channels=subs.keys())
+    items, total = video_api.get_db_channels(locale, paging, channels=subs.keys())
     items = [item for date, item in
              sorted([(subs[i['id']], i) for i in items], reverse=True)]
     for item in items:
@@ -550,12 +552,12 @@ def _aggregate_content_feed(items):
     for (type, key, date), group in itemgroups.iteritems():
         if type == 'video':
             # Don't create small aggregations for videos
-            if len(group) <= 3:
+            if len(group) <= 5:
                 continue
             # Don't include most starred videos (up to a maximum of 5)
             group.sort(key=lambda i: i['video']['star_count'], reverse=True)
             x, count = 0, len(group)
-            while x < min(5, count) and group[x].get('starring_users'):
+            while x < min(10, count) and group[x].get('starring_users'):
                 x += 1
             group = group[x:]
 
@@ -573,6 +575,23 @@ def _aggregate_content_feed(items):
             item['aggregation'] = aggid
 
     return aggregations
+
+
+def _channel_recommendations(userid, locale, paging):
+    (gender, age), = User.query.filter_by(id=userid).values(
+        User.gender, func.age(User.date_of_birth))
+    boosts = app.config['RECOMMENDER_CATEGORY_BOOSTS']
+    user_boosts = []
+    if gender:
+        user_boosts.extend(boosts['gender'][gender])
+    if age:
+        age = age.days / 365
+        user_boosts.extend(next(
+            (v for k, v in sorted(boosts['age'].items()) if age < k), ()))
+    # combine boosts by multiplying each with the same category
+    user_boosts = [(i, reduce(lambda a, b: a * b[1], grp, 1))
+                   for i, grp in groupby(sorted(user_boosts), lambda x: x[0])]
+    return video_api.get_es_channels(locale, paging, None, user_boosts)
 
 
 def _channel_videos(channelid, locale, paging, own=False):
@@ -1069,6 +1088,12 @@ class UserWS(WebService):
         items, total = _content_feed(userid, self.get_locale(), self.get_page())
         aggregations = _aggregate_content_feed(items) if items else {}
         return dict(content=dict(items=items, total=total, aggregations=aggregations))
+
+    @expose_ajax('/<userid>/channel_recommendations/', cache_age=3600, cache_private=True)
+    @check_authorization(self_auth=True)
+    def channel_recommendations(self, userid):
+        items, total = _channel_recommendations(userid, self.get_locale(), self.get_page())
+        return dict(channels=dict(items=items, total=total))
 
     @expose_ajax('/<userid>/external_accounts/', cache_age=60, cache_private=True)
     @check_authorization(self_auth=True)
