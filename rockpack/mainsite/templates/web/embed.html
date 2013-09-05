@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en" id="ng-app" ng-app="Weblight" xmlns:ng="http://angularjs.org">
+<head prefix="og: http://ogp.me/ns# {{ config.FACEBOOK_APP_NAMESPACE }}: http://ogp.me/ns/apps/{{ config.FACEBOOK_APP_NAMESPACE }}#">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="HandheldFriendly" content="True">
+  <meta http-equiv="cleartype" content="on">
+
+  {% include 'web/meta_social.html' %}
+
+  <!--[if lt IE 9]>
+  <script src="{{config.ASSETS_URL}}/assets/vendor/js-no-compile/html5.js"></script>
+  <style type="text/css">
+    .gradient {
+      filter: none;
+    }
+  </style>
+  <![endif]-->
+
+  <!--[if lte IE 8]>
+  <script type="text/javascript">
+    document.createElement('ng-include');
+    document.createElement('ng-pluralize');
+    document.createElement('ng-view');
+    document.createElement('ng:include');
+    document.createElement('ng:pluralize');
+    document.createElement('ng:view');
+  </script>
+  <script src="{{config.ASSETS_URL}}/assets/vendor/js-no-compile/json2.js"></script>
+  <![endif]-->
+
+  <script type="text/javascript">
+    var channel_data = {{ channel_data|tojson|safe }},
+    assets_url = '{{config.ASSETS_URL}}',
+            selected_video = {{selected_video|tojson|safe}},
+    full_path = '/',
+            apiUrls = {{api_urls|safe}}
+
+  </script>
+
+  {% assets filters="cssmin", output="gen/vendor-weblight.%(version)s.css", "assets/vendor/css/bootstrap.css" %}
+  <link rel="stylesheet" href="{{ ASSET_URL }}"/>
+  {% endassets %}
+
+  {% assets  output="gen/weblightlib.%(version)s.js", "assets/vendor/js/jquery-1.10.1.min.js", "assets/vendor/js/angular.js", "assets/vendor/js/ng-infinite-scroll.js"%}
+  <script type="text/javascript" src="{{ ASSET_URL }}"></script>
+  {% endassets %}
+
+
+  {% assets filters="less, cssmin", output="gen/embed.%(version)s.css", "assets/weblight/css/embed.less" %}
+  <link rel="stylesheet" href="{{ ASSET_URL }}"/>
+  {% endassets %}
+
+  {% assets filters="coffeescript, rjsmin", output="gen/embed.%(version)s.js", "weblight/embed/app.coffee", "weblight/embed/controllers/AppCtrl.coffee",
+  "weblight/embed/controllers/VideoCtrl.coffee", "weblight/embed/controllers/ChannelCtrl.coffee", "weblight/embed/services/userService.coffee" %}
+  <script type="text/javascript" src="{{ ASSET_URL }}"></script>
+  {% endassets %}
+
+  {% assets filters="weblighttemplates, rjsmin", output="gen/embed-templates.%(version)s.js",
+  "weblight/embed/views/channel.html" %}
+  <script type="text/javascript" src="{{ ASSET_URL }}"></script>
+  {% endassets %}
+
+  <script>
+    var tag = document.createElement('script');
+    tag.src = "//www.youtube.com/iframe_api";
+    var firstScriptTag = document.getElementsByTagName('script')[0];
+    firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+  </script>
+
+</head>
+<body ng-controller="AppCtrl" ng-class="currentPage" id="app">
+<div class="wrapper">
+  <div id="playercontainer" ng-mouseover="mouseOver()" ng-mouseout="mouseOut()">
+    <div id="player"></div>
+    <div class="visible-desktop" id="pause" ng-class="{play: playerState=='2', 'hideOverlay': hideOverlay && playerState=='1'}" ng-click="pausePlay()"></div>
+    <div class="visible-desktop" id="scrubber" ng-click="seekTo($event)" ng-mouseover="mouseOver()" ng-class="{'hideOverlay': hideOverlay && playerState=='1'}">
+      <div id="currentPosition" ng-style="{'width': currentPosition*100 +'%'}"></div>
+      <div id="loadedData"></div>
+    </div>
+  </div>
+  <div ng-include="'channel.html'" id="channel"></div>
+</div>
+{% include 'web/ga_ajax.html' %}
+</body>
+</html>

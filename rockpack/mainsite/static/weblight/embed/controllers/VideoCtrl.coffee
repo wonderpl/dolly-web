@@ -1,42 +1,8 @@
-window.Weblight.controller('VideoCtrl', ['$scope', '$rootScope', '$routeParams', '$location', 'isMobile', 'userService', ($scope, $rootScope, $routeParams, $location, isMobile, userService) ->
-
-  $scope.triggerEvent = (action, label) ->
-    ga('send', 'event', 'uiAction', action, label)
-
-  windowWidth = if "innerWidth" in window then window.innerWidth else document.documentElement.offsetWidth
+window.Weblight.controller('VideoCtrl', ['$scope', '$rootScope', '$routeParams', '$location', 'userService', ($scope, $rootScope, $routeParams, $location, userService) ->
 
   @getPlayerWidth = () ->
-    if windowWidth >= 1600
-      @playerWidth = 1000
-      @playerHeight = 562
-    else
-      if windowWidth >= 1200
-        @playerWidth = 770
-        @playerHeight = 433
-      else
-        if windowWidth > 700
-          @playerWidth = 570
-          @playerHeight = 320
-        else
-          @playerWidth = 320
-          @playerHeight = 180
-
-
-  getQueryVariable = (variable) ->
-    query = window.location.search.substring(1)
-    if (query.indexOf("&") > -1)
-      vars = query.split("&")
-    else
-      vars = [query]
-    for i in [0..vars.length-1]
-      pair = vars[i].split("=")
-      if(pair[0] == variable)
-        return pair[1]
-    return(false)
-
-  $scope.userID = getQueryVariable('shareuser')
-
-  $scope.user = userService.fetchUser($scope.userID)
+    @playerWidth = 368
+    @playerHeight = 207
 
   $scope.PlayVideo = =>
     if $rootScope.playerReady
@@ -124,8 +90,6 @@ window.Weblight.controller('VideoCtrl', ['$scope', '$rootScope', '$routeParams',
       $scope.player.pauseVideo()
     else if $scope.player.getPlayerState() == 2
       $scope.player.playVideo()
-
-  $scope.state = 'test'
 
   return
 ])

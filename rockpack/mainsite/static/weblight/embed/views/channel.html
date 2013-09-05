@@ -1,0 +1,20 @@
+<div ng-controller="ChannelCtrl">
+
+
+  <div id="cover" ng-style="{'background-image': 'url(' + channel.cover.thumbnail_url + ')' }">
+    <div id="gradientShadow"></div>
+  </div>
+  <div id="videos">
+    <div id="header">This pack was made with love by <span class="highlight">((channel.owner.display_name))</span></div>
+    <ul id="videoslist" infinite-scroll='load_videos()' infinite-scroll-distance='1'>
+      <li ng-repeat="video in channel.videos.items" class="videocell" ng-click="showVideo(video)">
+        ((video.title | truncate : 26))
+      </li>
+    </ul>
+    <div id="footer">
+      <a href="" id="follow">Follow this Pack</a>
+      <a href="" id="twitter"></a>
+      <a href="" id="facebook"></a>
+    </div>
+  </div>
+</div>

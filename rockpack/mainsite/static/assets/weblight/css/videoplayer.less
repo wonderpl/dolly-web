@@ -20,7 +20,7 @@ html,body, .ng-view {
   height: 20px;
   background: rgba(241,241,241,0.3);
   position: absolute;
-  top: 439px;
+  top: 333px;
   z-index: 12001;
   opacity: 1;
 
@@ -42,7 +42,7 @@ html,body, .ng-view {
 
 #pause {
   position: absolute;
-  top: 230px;
+  top: 130px;
   left: 247px;
   z-index: 12000;
   width: 93px;
@@ -87,7 +87,9 @@ body {
 
 #sharecontainer {
   .clearfix();
-  padding-bottom: 20px;
+  position: absolute;
+  bottom: 0;
+  right: 0;
 }
 
 #weblightshare {
@@ -113,9 +115,9 @@ body {
 }
 
 .wrapper {
+  widows: 570px;
   position: relative;
   margin: 0 auto;
-  width: 592px;
   .clearfix();
 }
 
@@ -128,7 +130,7 @@ body {
 // Video Player
 
 #playercontainer {
-  width:620px;
+  width:570px;
   padding: 0;
   margin: 0 auto;
   position: relative;
@@ -140,15 +142,22 @@ body {
 
   #playerfooter {
     text-align: center;
-    width: 580px;
-    background: #fff;
-    margin-top: 20px;
-    padding: 20px;
+    width: 570px;
+    margin-top: 13px;
     font-size: 16px;
     font-family: "dn-regular", Helvetica;
+    text-transform: uppercase;
 
-    p {
-      margin: 0;
+    &>img {
+      width: 44px;
+      height: 44px;
+      margin-bottom: 14px;
+    }
+
+    #desc {
+      font-size: 9px;
+      color: #696969;
+      line-height: 9px;
     }
 
     .lowerdownloadbtn {
@@ -163,43 +172,15 @@ body {
 
   #playerheader {
 
-    font-size: 16px;
+    font-size: 15px;
     font-family: "dn-regular";
     color: #282d33;
-  .clearfix();
-  margin-bottom: 20px;
+    text-transform: uppercase;
+    .clearfix();
+    margin-bottom: 13px;
 
-  img {
-    float: left;
-    height: 90px;
-  }
-
-  #desc {
-    float: left;
-    padding: 21px 20px;
-    background: #fff;
-    width: 490px;
-    font-size: 20px;
-    line-height: 20px;
-    line-height: 24px;
-  }
-
-  #videotitle {
-    text-shadow: 1px 1px #dddddd;
-    font-family: "dn-bold";
-  }
-
-  #logos {
-    float: right;
-
-  .bluelogo {
-    margin-right: 10px;
-  }
   }
 }
-
-
-  }
 
 #ChannelCtrl {
   background-size: cover !important;
@@ -217,95 +198,6 @@ body {
 
 .uppercase {
   text-transform: uppercase;
-}
-
-#channelwrapper {
-  font-family: "dn-regular", Helvetica;
-  font-size: 18px;
-  width: 340px;
-  margin-top: 115px;
-  color: #282d33;
-  display: inline-block;
-
-p {
-  margin: 40px 0;
-}
-
-img {
-  margin: 20px 0;
-}
-  }
-
-#screenshot {
-  width:236px;
-  height: 496px;
-  background:url(/static/assets/weblight/images/iphonebg.png) repeat;
-  display: inline-block;
-  margin-left: 95px;
-  position: relative;
-  vertical-align: bottom;
-
-div {
-  overflow: hidden;
-}
-  }
-
-#gloss {
-  width:236px;
-  height: 496px;
-  background:url(/static/assets/weblight/images/gloss.png) repeat;
-  position: absolute;
-  top: 0;
-  right: -2px;
-}
-
-#iostitle {
-  font-family: "dn-regular", Helvetica;
-  color: #fff;
-  text-transform: uppercase;
-  font-size: 24px;
-  width: 150px;
-  margin-top: 70px;
-  margin-left: 15px;
-  line-height: 28px;
-}
-
-#iosuser {
-
-  margin-left: 15px;
-  color: #fff;
-  font-family: "dn-regular", Helvetica;
-  font-size: 11px;
-  text-transform: uppercase;
-
-img {
-  width: 40px;
-  height: 40px;
-  display: inline-block;
-}
-
-div {
-  display: inline-block;
-  vertical-align: middle;
-}
-  }
-
-#iosshare {
-  position: absolute;
-  bottom: 70px;
-  right: 15px;
-}
-
-#iosplus {
-  position: absolute;
-  bottom: 20px;
-  right: 15px;
-}
-
-#iosplay {
-  position: absolute;
-  bottom: 0;
-  right: 85px;
 }
 
 #videothumbnail {
@@ -367,10 +259,9 @@ img {
 
 #overlayheader {
   background: #fff;
-  height: 50px;
-  line-height: 46px;
+  height: 22px;
   width: 100%;
-  margin-bottom: 20px;
+  margin: 10px 0 60px 0;
   text-align: center;
 
   .logo {
@@ -417,73 +308,70 @@ img {
   text-align: center;
 }
 
+@media (min-width: 1200px) {
+  .wrapper {
+    width: 770px;
+  }
 
-@media (max-width: 767px) {
+  #playercontainer {
+    width:770px;
 
-  #overlayheader {
-    .wrapper {
-      width: 300px !important;
+    #playerfooter {
+      width: 770px;
+
+    }
+  }
+
+  #pause {
+    top: 180px;
+    left: 330px;
+  }
+
+  #scrubber {
+    top: 446px;
+  }
+}
+
+@media (min-width: 1600px) {
+  .wrapper {
+    width: 1000px;
+  }
+
+  #playercontainer {
+    width:1000px;
+
+    #playerfooter {
+      width: 1000px;
+
+    }
+  }
+
+  #pause {
+    top: 260px;
+    left: 450px;
+  }
+
+  #scrubber {
+    top: 575px;
+  }
+}
+
+
+@media (max-width: 700px) {
+  wrapper {
+    width: 95%
+  }
+
+  #playercontainer {
+    width:95%;
+
+    #playerfooter {
+      width: 95%;
+
     }
   }
 
   .visible-desktop {
     display: none;
   }
-
-  .channelwrapper  {
-    width: 95%;
-  }
-
-  .wrapper {
-    width: 320px;
-  }
-
-  #channelwrapper {
-    display: block;
-    margin: 0 auto;
-    text-align: center;
-    width: 300px;
-    margin-top: 80px;
-
-  img {
-    margin: 0 0 40px 0;
-  }
 }
-
-  #ChannelCtrl {
-    height: auto;
-  }
-
-  #screenshot {
-    margin: 0 auto;
-    display: block;
-  }
-
-  #playercontainer {
-    width:300px;
-    height:auto;
-    padding: 0;
-    margin: 0 auto;
-
-    #playerheader {
-
-      background: #fff;
-
-      img {
-        height: 60px;
-      }
-
-      #desc {
-        width: 220px;
-        padding: 10px;
-        font-size: 14px;
-        line-height: 14px;
-      }
-    }
-
-    #playerfooter {
-      width: 260px;
-    }
-  }
-}
-

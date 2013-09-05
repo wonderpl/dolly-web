@@ -207,6 +207,12 @@ def channel(slug, channelid):
     return web_channel_data(channelid, load_video=videoid)
 
 
+@expose_web('/embed/<channelid>/', 'web/embed.html', cache_age=3600)
+def embed(channelid):
+    videoid = request.args.get('video', None)
+    return web_channel_data(channelid, load_video=videoid)
+
+
 if app.config.get('SHARE_SUBDOMAIN'):
     @app.route('/s/<linkid>', subdomain=app.config.get('DEFAULT_SUBDOMAIN'))
     def old_share_redirect(linkid):
