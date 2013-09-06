@@ -643,7 +643,6 @@ def update_channel_to_index(channel, no_check=False):
                 final = _construct_string(this, v) + final
             return final
         else:
-            this_val = "'%s'" % val
             if isinstance(val, bool):
                 this_val = "'%s'" % str(val).lower()
             elif isinstance(val, (int, float)):
@@ -654,6 +653,8 @@ def update_channel_to_index(channel, no_check=False):
                 this_val = "[%s]" % ",".join(val if isinstance(val, (int, float)) else map(lambda x: "'%s'" % str(x), val))
             elif val is None:
                 this_val = "null"
+            else:
+                this_val = "'%s'" % val
 
             prefix += " = %s;" % this_val
         return prefix
