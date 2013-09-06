@@ -106,7 +106,9 @@ class DBImport(object):
 
         with app.test_request_context():
             query = VideoInstance.query.join(
-                Channel, Video).outerjoin(
+                Channel,
+                Channel.id == VideoInstance.channel
+                ).join(Video).outerjoin(
                     VideoInstanceLocaleMeta,
                     VideoInstance.id == VideoInstanceLocaleMeta.video_instance
                 ).options(
@@ -231,7 +233,7 @@ class DBImport(object):
         from rockpack.mainsite.services.video.models import VideoInstance, Channel
         from sqlalchemy import distinct, func
 
-        from rockpack.mainsite.core.dbapi import db
+        from rockpack.mainsite.core.dbapi import readonly_session
 
         total = 0
         missing = 0
@@ -259,7 +261,7 @@ class DBImport(object):
             )
 
             # activity for channels from videos
-            query = db.session.query(
+            query = readonly_session.query(
                 distinct(Channel.id).label('channel_id'),
                 summation.label('summed')
             ).join(
@@ -290,7 +292,7 @@ class DBImport(object):
             )
 
             # activity for channel shares
-            query = db.session.query(
+            query = readonly_session.query(
                 distinct(Channel.id).label('channel_id'),
                 summation.label('summed')
             ).join(
@@ -318,7 +320,7 @@ class DBImport(object):
             print 'channel shares done'
 
             # activity for videos shares of channels
-            query = db.session.query(
+            query = readonly_session.query(
                 distinct(Channel.id).label('channel_id'),
                 summation.label('summed')
             ).join(

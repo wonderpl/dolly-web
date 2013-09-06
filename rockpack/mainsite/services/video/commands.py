@@ -6,7 +6,7 @@ from sqlalchemy import func, text, TIME, distinct, or_
 from rockpack.mainsite import app
 from rockpack.mainsite.manager import manager
 from rockpack.mainsite.core.es import mappings, api
-from rockpack.mainsite.core.es import es_connection
+from rockpack.mainsite.core.es import es_connection, helpers
 from rockpack.mainsite.core.dbapi import commit_on_success
 from rockpack.mainsite.core.youtube import batch_query, _parse_datetime
 from rockpack.mainsite.services.base.models import JobControl
@@ -106,6 +106,11 @@ def set_channel_view_count(time_from=None, time_to=None):
             for meta in channel_metas:
                 meta.view_count += ids[locale][meta.channel]
                 session.add(meta)
+
+
+@manager.cron_command(interval=3600)
+def update_channel_rank():
+    helpers.DBImport().import_channel_share()
 
 
 @manager.cron_command(interval=3600)
