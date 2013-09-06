@@ -18,6 +18,49 @@
   position: relative;
 }
 
+#logo {
+  position: absolute;
+  top: 10px;
+  left: 15px;
+  background: url(/static/assets/embed/images/logo.png);
+  width: 101px;
+  height: 24px;
+  display: block;
+  z-index: 100000;
+}
+
+
+#close {
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  width: 24px;
+  height: 24px;
+  background: url(/static/assets/embed/images/close.png);
+  cursor: pointer;  
+}
+
+#playAll {
+  position: absolute;
+  top: 130px;
+  left: 15px;
+  width: 35px;
+  height: 35px;
+  background: url(/static/assets/embed/images/playAll.png);
+  cursor: pointer;
+}
+
+#channelTitle {
+  position: absolute;
+  top: 180px;
+  left: 15px;
+  color: #fff;
+  font-family: "dn-regular";
+  font-size: 26px;
+  line-height: 26px;
+  width: 200px;  
+}
+
 #cover {
   width: 242px;
   height: 242px;
@@ -101,6 +144,7 @@
       text-transform: uppercase;
       border-bottom: 1px solid #d9d9d9;
       padding-left: 10px;
+      cursor: pointer;
     }
   }
 }
@@ -112,6 +156,11 @@
   top: 0;
   left: 0;
   display: none;
+
+  &.active {
+    display: block;
+    z-index: 10000
+  }
 }
 
 #scrubber {
@@ -119,7 +168,7 @@
   height: 20px;
   background: rgba(241,241,241,0.3);
   position: absolute;
-  top: 333px;
+  top: 222px;
   z-index: 12001;
   opacity: 1;
 
@@ -141,8 +190,8 @@
 
 #pause {
   position: absolute;
-  top: 130px;
-  left: 247px;
+  top: 70px;
+  left: 170px;
   z-index: 12000;
   width: 93px;
   height: 102px;

@@ -1,37 +1,40 @@
 window.Weblight.controller('VideoCtrl', ['$scope', '$rootScope', '$routeParams', '$location', 'userService', ($scope, $rootScope, $routeParams, $location, userService) ->
 
+
   @getPlayerWidth = () ->
-    @playerWidth = 368
-    @playerHeight = 207
+    @playerWidth = 430
+    @playerHeight = 242
 
   $scope.PlayVideo = =>
-    if $rootScope.playerReady
+    if $rootScope.playerReady && $rootScope.currVideo?
 
       @getPlayerWidth()
 
-      $scope.videodata = window.selected_video
-      $scope.player = new YT.Player('player', {
-        height: @playerHeight,
-        width: @playerWidth,
-        videoId: $scope.videodata.video.source_id,
-        playerVars: {
-          autoplay: 1,
-          showinfo: 0,
-          modestbranding: 1,
-          wmode: "opaque",
-          controls: 0,
-          color: 'white',
-          rel: 0,
-          iv_load_policy: 3,
-        },
-        events: {
-#          'onReady': onPlayerReady,
-          'onStateChange': onPlayerStateChange
-        }
+      # $scope.videoPosition = 
+      if $scope.player?
+        console.log 'player exists'
+        $scope.player.loadVideoById($rootScope.currVideo)
+      else
+        $scope.player = new YT.Player('player', {
+          height: @playerHeight,
+          width: @playerWidth,
+          videoId: $rootScope.currVideo,
+          playerVars: {
+            autoplay: 1,
+            showinfo: 0,
+            modestbranding: 1,
+            wmode: "opaque",
+            controls: 0,
+            color: 'white',
+            rel: 0,
+            iv_load_policy: 3,
+          },
+          events: {
+            'onStateChange': onPlayerStateChange
+          }
 
-      })
-
-  $scope.isSkeeping = false
+        })
+    $scope.isSkeeping = false
 
   $scope.seekTo = (event) ->
     isSkeeping = true
@@ -40,15 +43,15 @@ window.Weblight.controller('VideoCtrl', ['$scope', '$rootScope', '$routeParams',
     $scope.player.playVideo()
     $scope.playerState = 1
 
-#  onPlayerReady = (event) ->
-#    $scope.player.mute()
-
   onPlayerStateChange = (event) ->
     $scope.playerState = event.data
     $scope.$apply()
 
     if event.data == 1
       setTimeout(trackProgress, 40)
+    else if event.data == 0
+      console.log 'next'
+
 
   $scope.currentPosition = 0
 
@@ -72,12 +75,15 @@ window.Weblight.controller('VideoCtrl', ['$scope', '$rootScope', '$routeParams',
     $scope.hideOverlay = true
 
 
-  $scope.$watch((-> window.orientation), (newValue, oldValue) =>
-    if oldValue != newValue
-      @getPlayerWidth()
-      $('#player').width(@playerWidth).height(@playerHeight)
-
+  $scope.$watch((-> $rootScope.currVideo), (newValue) ->
+    if newValue? 
+      $scope.PlayVideo()
+    else
+      if $scope.player? 
+        $scope.player.stopVideo()
+    return
   )
+
 
   $scope.$watch((-> $rootScope.playerReady), (newValue) ->
     if newValue
@@ -90,6 +96,10 @@ window.Weblight.controller('VideoCtrl', ['$scope', '$rootScope', '$routeParams',
       $scope.player.pauseVideo()
     else if $scope.player.getPlayerState() == 2
       $scope.player.playVideo()
+
+
+  $scope.close = () ->
+    $rootScope.currVideo = null
 
   return
 ])
