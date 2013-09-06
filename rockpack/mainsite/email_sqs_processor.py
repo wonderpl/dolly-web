@@ -52,6 +52,8 @@ if __name__ == '__main__':
 
     if not app.blueprints:
         init_app()
+        # Needed to generate urls (for ES signals)
+        app.app_context().push()
 
     if 'SENTRY_DSN' in app.config:
         from raven.contrib.flask import Sentry
