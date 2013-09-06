@@ -591,6 +591,8 @@ def _channel_recommendations(userid, locale, paging):
     # combine boosts by multiplying each with the same category
     user_boosts = [(i, reduce(lambda a, b: a * b[1], grp, 1))
                    for i, grp in groupby(sorted(user_boosts), lambda x: x[0])]
+    # increase the boost factor so that these boosts dominate the default ranking
+    user_boosts = [(c, b * 10) for c, b in user_boosts]
     return video_api.get_es_channels(locale, paging, None, user_boosts)
 
 

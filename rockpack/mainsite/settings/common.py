@@ -181,7 +181,6 @@ RECOMMENDER_CATEGORY_BOOSTS = dict(
             (214, 2.6),   # knowledge/history
             (221, 2.6),   # knowledge/other
             (155, 2.1),   # FILM/Movie extras
-            (444, 2.1),   # living/pets
             (156, 2.0),   # FILM/shorts
             (165, 2.0),   # tv-news/series
             (209, 1.9),   # living/travel
@@ -205,6 +204,7 @@ DEFAULT_EMAIL_SOURCE = 'rockpack <noreply@rockpack.com>'
 
 SQS_REGION = 'eu-west-1'
 SQS_CRON_QUEUE = 'mainsite-cron'
+SQS_EMAIL_QUEUE = 'mainsite-email'
 
 ENABLE_TIMINGS = True
 
