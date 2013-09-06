@@ -614,8 +614,7 @@ def _channel_data_for_index(channel):
             aoi=aoi
         ),
         keywords=[channel.owner_rel.display_name.lower(), channel.owner_rel.username.lower()],
-        promotion=channel.promotion_map(),
-        normalised_rank={'en-us': 0.0, 'en-gb': 0.0}
+        promotion=channel.promotion_map()
     )
 
     if app.config.get('SHOW_OLD_CHANNEL_COVER_URLS', True):
@@ -630,6 +629,8 @@ def add_channel_to_index(channel, bulk=False, refresh=False, boost=None, no_chec
         return
 
     data = _channel_data_for_index(channel)
+    # initialisation data only
+    data['normalised_rank'] = {'en-us': 0.0, 'en-gb': 0.0}
     return add_to_index(data, mappings.CHANNEL_INDEX, mappings.CHANNEL_TYPE, id=channel.id, bulk=bulk, refresh=refresh)
 
 
