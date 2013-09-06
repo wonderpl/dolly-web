@@ -668,7 +668,6 @@ def update_channel_to_index(channel, no_check=False):
     if data:
         updates = []
         for item, value in data.iteritems():
-            print item, value
             if item != 'id':
                 updates.append(_construct_string('ctx._source.%s' % item, value))
 
