@@ -20,6 +20,7 @@ def upgrade():
     print 'Apply manually:'
     for i in range(1, 5):
         print "alter type user_flag_enum add value 'unsub%d';" % i
+    print "alter type user_flag_enum add value 'bouncing';"
 
 
 def downgrade():
