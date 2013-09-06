@@ -1,4 +1,4 @@
-window.Weblight.controller('VideoCtrl', ['$scope', '$rootScope', '$routeParams', '$location', 'userService', ($scope, $rootScope, $routeParams, $location, userService) ->
+window.Weblight.controller('VideoCtrl', ['$scope', '$rootScope', '$routeParams', '$location', ($scope, $rootScope, $routeParams, $location) ->
 
 
   @getPlayerWidth = () ->
