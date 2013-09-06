@@ -110,7 +110,9 @@ def set_channel_view_count(time_from=None, time_to=None):
 
 @manager.cron_command(interval=3600)
 def update_channel_rank():
+    start = time.time()
     helpers.DBImport().import_channel_share()
+    app.logger.info('Ran update_channel_rank in %ds', time.time() - start)
 
 
 @manager.cron_command(interval=3600)
