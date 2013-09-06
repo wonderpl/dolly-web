@@ -1,0 +1,541 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>*|MC:SUBJECT|*</title>
+<style type="text/css">
+  /* Client-specific Styles */
+#outlook a{padding:0;} /* Force Outlook to provide a "view in browser" button. */
+body{width:100% !important;} .ReadMsgBody{width:100%;} .ExternalClass{width:100%;} /* Force Hotmail to display emails at full width */
+body{-webkit-text-size-adjust:none;} /* Prevent Webkit platforms from changing default text sizes. */
+
+  /* Reset Styles */
+body{margin:0; padding:0;}
+img{border:0; height:auto; line-height:100%; outline:none; text-decoration:none;}
+table td{border-collapse:collapse;font-family: Arial;font-size: 13px;}
+#bodyTable{height:100% !important; margin:0; padding:0; width:100% !important;}
+
+  /* Template Styles */
+
+  /**
+  * @tab Page
+  * @section background color
+  * @tip Set the background color for your email. You may want to choose one that matches your company's branding.
+  * @theme page
+  */
+body, #bodyTable{
+  /*@editable*/ background-color:#f1f1f1;
+}
+
+  /**
+  * @tab Page
+  * @section heading 1
+  * @tip Set the styling for all first-level headings in your emails. These should be the largest of your headings.
+  * @style heading 1
+  */
+h1{
+  /*@editable*/ color:#FFFFFF;
+  display:block;
+  /*@editable*/ font-family:Arial;
+  /*@editable*/ font-size:36px;
+  /*@editable*/ font-weight:bold;
+  /*@editable*/ line-height:100%;
+  /*@editable*/ letter-spacing:normal;
+  margin-top:0;
+  margin-right:0;
+  margin-bottom:10px;
+  margin-left:0;
+  /*@editable*/ text-align:left;
+}
+
+  /**
+  * @tab Page
+  * @section heading 2
+  * @tip Set the styling for all second-level headings in your emails.
+  * @style heading 2
+  */
+h2{
+  /*@editable*/ color:#2D9CE8;
+  display:block;
+  /*@editable*/ font-family:Arial;
+  /*@editable*/ font-size:24px;
+  /*@editable*/ font-weight:bold;
+  /*@editable*/ line-height:100%;
+  /*@editable*/ letter-spacing:normal;
+  margin-top:0;
+  margin-right:0;
+  margin-bottom:10px;
+  margin-left:0;
+  /*@editable*/ text-align:left;
+}
+
+  /**
+  * @tab Page
+  * @section heading 3
+  * @tip Set the styling for all third-level headings in your emails.
+  * @style heading 3
+  */
+h3{
+  /*@editable*/ color:#000000;
+  display:block;
+  /*@editable*/ font-family:Arial;
+  /*@editable*/ font-size:15px;
+  /*@editable*/ font-weight:bold;
+  /*@editable*/ line-height:100%;
+  /*@editable*/ letter-spacing:normal;
+  margin-top:0;
+  margin-right:0;
+  margin-bottom:10px;
+  margin-left:0;
+  /*@editable*/ text-align:left;
+}
+
+  /**
+  * @tab Page
+  * @section heading 4
+  * @tip Set the styling for all fourth-level headings in your emails. These should be the smallest of your headings.
+  * @style heading 4
+  */
+h4{
+  /*@editable*/ color:#2D9CE8;
+  display:block;
+  /*@editable*/ font-family:Arial;
+  /*@editable*/ font-size:15px;
+  /*@editable*/ font-weight:bold;
+  /*@editable*/ line-height:100%;
+  /*@editable*/ letter-spacing:normal;
+  margin-top:0;
+  margin-right:0;
+  margin-bottom:10px;
+  margin-left:0;
+  /*@editable*/ text-align:left;
+}
+
+  /* /\/\/\/\/\/\/\/\/\/\ STANDARD STYLING: PREHEADER /\/\/\/\/\/\/\/\/\/\ */
+
+  /**
+  * @tab Header
+  * @section preheader style
+  * @tip Set the background color and bottom border for your email's preheader area.
+  * @theme page
+  */
+#templatePreheader{
+  /*@editable*/ background-color:#002D54;
+  /*@editable*/ border-bottom:0;
+}
+
+  /**
+  * @tab Header
+  * @section preheader text
+  * @tip Set the styling for your email's preheader text. Choose a size and color that is easy to read.
+  */
+.preheaderContent{
+  /*@editable*/ color:#FFFFFF;
+  /*@editable*/ font-family:Arial;
+  /*@editable*/ font-size:11px;
+  /*@editable*/ line-height:125%;
+  /*@editable*/ text-align:left;
+}
+
+  /**
+  * @tab Header
+  * @section preheader link
+  * @tip Set the styling for your email's preheader links. Choose a color that helps them stand out from your text.
+  */
+.preheaderContent a:link, .preheaderContent a:visited, /* Yahoo! Mail Override */ .preheaderContent a .yshortcuts /* Yahoo! Mail Override */{
+  /*@editable*/ color:#FFFFFF;
+  /*@editable*/ font-weight:normal;
+  /*@editable*/ text-decoration:underline;
+}
+
+  /* /\/\/\/\/\/\/\/\/\/\ STANDARD STYLING: HEADER /\/\/\/\/\/\/\/\/\/\ */
+
+  /**
+  * @tab Header
+  * @section header text
+  * @tip Set the styling for your email's header text. Choose a size and color that is easy to read.
+  */
+.headerContent{
+  /*@editable*/ color:#505050;
+  /*@editable*/ font-family:Arial;
+  /*@editable*/ font-size:18px;
+  /*@editable*/ font-weight:bold;
+  /*@editable*/ line-height:100%;
+  /*@editable*/ padding-top:20px;
+  /*@editable*/ padding-right:20px;
+  /*@editable*/ padding-bottom:0;
+  /*@editable*/ padding-left:20px;
+  /*@editable*/ vertical-align:middle;
+}
+
+  /**
+  * @tab Header
+  * @section header link
+  * @tip Set the styling for your email's header links. Choose a color that helps them stand out from your text.
+  */
+.headerContent a:link, .headerContent a:visited, /* Yahoo! Mail Override */ .headerContent a .yshortcuts /* Yahoo! Mail Override */{
+  /*@editable*/ color:#505050;
+  /*@editable*/ font-weight:normal;
+  /*@editable*/ text-decoration:underline;
+}
+
+#headerImage{
+  height:auto;
+  max-width:600px !important;
+}
+
+  /* /\/\/\/\/\/\/\/\/\/\ STANDARD STYLING: MAIN BODY /\/\/\/\/\/\/\/\/\/\ */
+
+  /**
+  * @tab Body
+  * @section body style
+  * @tip Set the background color for your email's body area.
+  */
+#templateBody{
+  -moz-border-radius:5px;
+  -webkit-border-radius:5px;
+  border-radius:5px;
+}
+
+#whitebg {
+  background: #ffffff;
+}
+
+#greybg {
+  background: #f7f7f7;
+}
+
+
+  /**
+  * @tab Body
+  * @section body text container
+  * @tip Set the background color for your email's body content block.
+  */
+#bodyContentBlock{
+  -moz-border-radius:5px;
+  -webkit-border-radius:5px;
+  /*@editable*/ background-color:#003B71;
+  border-radius:5px;
+}
+
+  /**
+  * @tab Body
+  * @section body text
+  * @tip Set the styling for your email's main content text. Choose a size and color that is easy to read.
+  * @theme main
+  */
+.bodyContent{
+  /*@editable*/ color:#000000;
+  /*@editable*/ font-family:Arial;
+  /*@editable*/ font-size:13px;
+  /*@editable*/ line-height:150%;
+  /*@editable*/ text-align:left;
+}
+
+  /**
+  * @tab Body
+  * @section body link
+  * @tip Set the styling for your email's main content links. Choose a color that helps them stand out from your text.
+  */
+.bodyContent a:link, .bodyContent a:visited, /* Yahoo! Mail Override */ .bodyContent a .yshortcuts /* Yahoo! Mail Override */{
+  /*@editable*/ color:#000000;
+  /*@editable*/ font-weight:bold;
+  /*@editable*/ text-decoration:none;
+}
+
+.userTitle a:link, .userTitle a:visited, /* Yahoo! Mail Override */ .userTitle a .yshortcuts /* Yahoo! Mail Override */{
+  /*@editable*/ color:#000000;
+  /*@editable*/ text-decoration:none;
+}
+
+
+  /**
+  * @tab Body
+  * @section button style
+  * @tip Set the styling for your email's button. Choose a style that draws attention.
+  */
+.templateButton{
+  -moz-border-radius:3px;
+  -webkit-border-radius:3px;
+  /*@editable*/ background-color:#2A9AE7;
+  border-radius:3px;
+}
+
+  /**
+  * @tab Body
+  * @section button style
+  * @tip Set the styling for your email's button. Choose a style that draws attention.
+  */
+.templateButtonContent, .templateButtonContent a:link, .templateButtonContent a:visited, /* Yahoo! Mail Override */ .templateButtonContent a .yshortcuts /* Yahoo! Mail Override */{
+  /*@editable*/ color:#FFFFFF;
+  /*@editable*/ font-family:Arial;
+  /*@editable*/ font-size:11px;
+  /*@editable*/ font-weight:bold;
+  /*@editable*/ line-height:100%;
+  text-align:center;
+  text-decoration:none;
+}
+
+.bodyContent img{
+  display:inline;
+  height:auto;
+}
+
+  /* /\/\/\/\/\/\/\/\/\/\ STANDARD STYLING: COLUMNS; LEFT, CENTER, RIGHT /\/\/\/\/\/\/\/\/\/\ */
+
+  /**
+  * @tab Columns
+  * @section left column text
+  * @tip Set the styling for your email's left column text. Choose a size and color that is easy to read.
+  */
+.leftColumnContent{
+  /*@editable*/ color:#000000;
+  /*@editable*/ font-family:Arial;
+  /*@editable*/ font-size:13px;
+  /*@editable*/ line-height:125%;
+  /*@editable*/ text-align:left;
+}
+
+  /**
+  * @tab Columns
+  * @section left column link
+  * @tip Set the styling for your email's left column links. Choose a color that helps them stand out from your text.
+  */
+.leftColumnContent a:link, .leftColumnContent a:visited, /* Yahoo! Mail Override */ .leftColumnContent a .yshortcuts /* Yahoo! Mail Override */{
+  /*@editable*/ color:#003B71;
+  /*@editable*/ font-weight:bold;
+  /*@editable*/ text-decoration:none;
+}
+
+  /**
+  * @tab Columns
+  * @section center column text
+  * @tip Set the styling for your email's center column text. Choose a size and color that is easy to read.
+  */
+.centerColumnContent{
+  /*@editable*/ color:#000000;
+  /*@editable*/ font-family:Arial;
+  /*@editable*/ font-size:13px;
+  /*@editable*/ line-height:125%;
+  /*@editable*/ text-align:left;
+}
+
+  /**
+  * @tab Columns
+  * @section center column link
+  * @tip Set the styling for your email's center column links. Choose a color that helps them stand out from your text.
+  */
+.centerColumnContent a:link, .centerColumnContent a:visited, /* Yahoo! Mail Override */ .centerColumnContent a .yshortcuts /* Yahoo! Mail Override */{
+  /*@editable*/ color:#003B71;
+  /*@editable*/ font-weight:bold;
+  /*@editable*/ text-decoration:none;
+}
+
+  /**
+  * @tab Columns
+  * @section right column text
+  * @tip Set the styling for your email's right column text. Choose a size and color that is easy to read.
+  */
+.rightColumnContent{
+  /*@editable*/ color:#000000;
+  /*@editable*/ font-family:Arial;
+  /*@editable*/ font-size:13px;
+  /*@editable*/ line-height:125%;
+  /*@editable*/ text-align:left;
+}
+
+  /**
+  * @tab Columns
+  * @section right column link
+  * @tip Set the styling for your email's right column links. Choose a color that helps them stand out from your text.
+  */
+.rightColumnContent a:link, .rightColumnContent a:visited, /* Yahoo! Mail Override */ .rightColumnContent a .yshortcuts /* Yahoo! Mail Override */{
+  /*@editable*/ color:#003B71;
+  /*@editable*/ font-weight:bold;
+  /*@editable*/ text-decoration:none;
+}
+
+.leftColumnContent img, .centerColumnContent img, .rightColumnContent img{
+  display:inline;
+  height:auto;
+}
+
+  /* /\/\/\/\/\/\/\/\/\/\ STANDARD STYLING: FOOTER /\/\/\/\/\/\/\/\/\/\ */
+
+  /**
+  * @tab Footer
+  * @section footer text
+  * @tip Set the styling for your email's footer text. Choose a size and color that is easy to read.
+  * @theme footer
+  */
+.footerContent{
+  /*@editable*/ color:#aaaaaa;
+  /*@editable*/ font-family:Arial;
+  /*@editable*/ font-size:10px;
+  /*@editable*/ line-height:150%;
+  /*@editable*/ text-align:center;
+}
+
+  /**
+  * @tab Footer
+  * @section footer link
+  * @tip Set the styling for your email's footer links. Choose a color that helps them stand out from your text.
+  */
+.footerContent a:link, .footerContent a:visited, /* Yahoo! Mail Override */ .footerContent a .yshortcuts /* Yahoo! Mail Override */{
+  /*@editable*/ color:#aaaaaa;
+  /*@editable*/ font-weight:normal;
+  /*@editable*/ text-decoration:underline;
+}
+
+.footerContent img{
+  display:inline;
+}
+
+#monkeyRewards img{
+  max-width:190px;
+}
+
+.footerContent {
+  color: #aaaaaa;
+  font-size: 11px;
+  text-align: center;
+}
+
+</style>
+</head>
+<body leftmargin="0" marginwidth="0" topmargin="0" marginheight="0" offset="0">
+<center>
+<table border="0" cellpadding="0" cellspacing="0" height="100%" width="100%" id="bodyTable" bgcolor="#f1f1f1">
+<tr>
+<td align="center" valign="top" style="padding-top:20px; padding-bottom:20px;">
+<!-- // BEGIN CONTAINER -->
+<table border="0" cellpadding="0" cellspacing="0" width="600" id="templateContainer">
+<tr>
+  <td align="center" valign="top">
+    <!-- // BEGIN HEADER -->
+    <table border="0" cellpadding="0" cellspacing="0" width="600" id="templateHeader">
+      <tr>
+        <td align="center" valign="top">
+          <table border="0" cellpadding="0" cellspacing="0" width="100%">
+            <tr>
+              <td class="headerContent" align="center">
+                <img src="{{ assets }}/assets/emails/images/blueLogo.png">
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+    <!-- END HEADER \\ -->
+  </td>
+</tr>
+<tr>
+<td align="center" valign="top">
+<!-- // BEGIN BODY -->
+<table border="0" cellpadding="0" cellspacing="0" width="600" id="templateBody">
+<tr>
+<td align="center" valign="top" style="padding:20px;">
+<table border="0" cellpadding="20" cellspacing="0" width="100%" id="whitebg" bgcolor="#ffffff">
+  <tr>
+    <td>
+      <table border="0" cellpadding="0" cellspacing="0" width="100%" id="whitebg" bgcolor="#ffffff">
+        <tr>
+          <td width="60">
+            {% if user.avatar.url is defined %}
+              <img src="{{user.avatar.url}}">
+            {% else %}
+              <img src="{{ assets }}/assets/emails/images/davatar.png">
+            {% endif %}
+          </td>
+          <td class="bodyContent" valign="middle">
+            <div style="margin-left:20px;">
+              <b>
+                {{ user.display_name }} sent you a
+                {% if object_type == "channel" %}
+                pack of videos
+                {% else %}
+                video
+                {% endif %}
+              </b>
+              on Rockpack
+            </div>
+          </td>
+        </tr>
+       </table>
+    </td>
+  </tr>
+</table>
+<table border="0" cellpadding="0" cellspacing="0" width="100%" id="greybg" bgcolor="#f7f7f7">
+  <tr>
+    {% if object_type == "channel" %}
+    <td width="243">
+      <a href="{{link.url}}"><img src="{{ object.default_thumbnail }}"/></a>
+    </td>
+    <td align="center">
+      <div style="font-size:18px;font-weight: bold;margin-bottom: 30px;"><a href="{{link.url}}" style="color:#000001;text-decoration: none">{{ object.title }}</a></div>
+      <a href="{{link.url}}"><img src="{{ assets }}/assets/emails/images/viewbutton.png"></a>
+    </td>
+    {% else %}
+    <td width="320">
+      <a href="{{link.url}}"><img src="{{ object.default_thumbnail }}"/></a>
+    </td>
+    <td align="center">
+      <div style="font-size:18px;font-weight: bold;margin-bottom: 30px;"><a href="{{link.url}}" style="color:#000001;text-decoration: none">{{ object.video_rel.title }}</a></div>
+      <a href="{{link.url}}"><img src="{{ assets }}/assets/emails/images/watchbutton.png"></a>
+    </td>
+    {% endif %}
+  </tr>
+</table>
+</td>
+</tr>
+</table>
+<!-- END BODY \\ -->
+</td>
+</tr>
+<tr>
+  <td align="center" valign="top">
+    <table border="0" cellpadding="10" cellspacing="0" width="600" >
+      <tr>
+        <td align="center" valign="top">
+          <div>
+            <img src="{{ assets }}/assets/emails/images/logo.png">
+          </div>
+        </td>
+      </tr>
+    </table>
+  </td>
+</tr>
+<tr>
+  <td align="center" valign="top">
+    <!-- // BEGIN FOOTER -->
+    <table border="0" cellpadding="20" cellspacing="0" width="600" id="templateFooter">
+      <tr>
+        <td align="center" valign="top">
+          <table border="0" cellpadding="0" cellspacing="0" width="100%" style="  color: #aaaaaa;font-size: 11px;text-align: center;">
+            <tr>
+              <td valign="top" class="footerContent">
+                To ensure our emails reach your inbox please make sure to add<br>
+                noreply@rockpack.com to your address book or safe list. <br>
+              </td>
+            </tr>
+            <tr>
+              <td class="footerContent">
+                <br>
+                Your privacy is important to us, have a read to our <a href="http://rockpack.com/privacy" style="color:#aaaaaa" >privacy policy</a>.
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+    <!-- END FOOTER \\ -->
+  </td>
+</tr>
+</table>
+<!-- END CONTAINER \\ -->
+</td>
+</tr>
+</table>
+</center>
+</body>
+</html>

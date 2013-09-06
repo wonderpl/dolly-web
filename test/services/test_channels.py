@@ -46,13 +46,15 @@ class ChannelViewCountPopulation(base.RockPackTestCase):
             this_locale = 'en-us'
 
             models.ChannelLocaleMeta(
-                    channel=channel_id,
-                    locale=this_locale,
-                    date_added=datetime.now()).save()
+                channel=channel_id,
+                locale=this_locale,
+                date_added=datetime.now()
+            ).save()
 
             video_instance = models.VideoInstance(
-                    channel=channel_id,
-                    video=VideoData.video1.id).save()
+                channel=channel_id,
+                video=VideoData.video1.id
+            ).save()
 
             UserActivity(
                 user=user2_id,
@@ -60,7 +62,8 @@ class ChannelViewCountPopulation(base.RockPackTestCase):
                 date_actioned=datetime.now(),
                 object_type='channel',
                 object_id=channel_id,
-                locale=this_locale).save()
+                locale=this_locale
+            ).save()
 
             UserActivity(
                 user=user3_id,
@@ -68,14 +71,15 @@ class ChannelViewCountPopulation(base.RockPackTestCase):
                 date_actioned=datetime.now(),
                 object_type='video',
                 object_id=video_instance.id,
-                locale=this_locale).save()
+                locale=this_locale
+            ).save()
 
             end = datetime.now()
             set_channel_view_count(begin, end)
 
             meta = models.ChannelLocaleMeta.query.filter(
-                    models.ChannelLocaleMeta.locale == this_locale,
-                    models.ChannelLocaleMeta.channel == channel_id).first()
+                models.ChannelLocaleMeta.locale == this_locale,
+                models.ChannelLocaleMeta.channel == channel_id).first()
 
             self.assertEquals(meta.view_count, 2)
             begin = datetime.now()
@@ -103,19 +107,20 @@ class ChannelPromotionTest(base.RockPackTestCase):
             if use_elasticsearch():
                 now = datetime.utcnow()
                 models.ChannelPromotion(
-                    channel = ChannelData.channel1.id,
-                    date_start = now - timedelta(seconds=10),
-                    date_end = now + timedelta(seconds=30),
-                    category = 0,
-                    locale = 'en-us',
-                    position = 1
-                    ).save()
+                    channel=ChannelData.channel1.id,
+                    date_start=now - timedelta(seconds=10),
+                    date_end=now + timedelta(seconds=30),
+                    category=0,
+                    locale='en-us',
+                    position=1
+                ).save()
 
                 update_channel_promo_activity()
                 time.sleep(2)
 
                 user = self.create_test_user()
-                r = client.get('/ws/channels/',
+                r = client.get(
+                    '/ws/channels/',
                     content_type='application/json',
                     headers=[get_auth_header(user.id)]
                 )
@@ -677,3 +682,30 @@ class ChannelCreateTestCase(base.RockPackTestCase):
 
                 r = client.get(resource, headers=[get_auth_header(user_id)])
                 self.assertEquals(json.loads(r.data)['public'], public)
+
+
+class ChannelVideoTestCase(base.RockPackTestCase):
+
+    def test_channel_source(self):
+        user_id = self.create_test_user().id
+        favourites = models.Channel.query.filter_by(
+            owner=user_id, favourite=True).value('id')
+        with self.app.test_client() as client:
+            r = client.post(
+                '/ws/{}/channels/{}/videos/'.format(user_id, favourites),
+                data=json.dumps([
+                    ('youtube', VideoData.video1.source_videoid),
+                    VideoInstanceData.video_instance2.id,
+                ]),
+                content_type='application/json',
+                headers=[get_auth_header(user_id)]
+            )
+            self.assertEquals(r.status_code, 204)
+            # Check that video from youtube doesn't have source_channel
+            # and video from video_instance2 references the source channel
+            src_map = models.VideoInstance.query.filter_by(
+                channel=favourites).values('video', 'source_channel')
+            self.assertItemsEqual(src_map, [
+                (VideoData.video1.id, None),
+                (VideoData.video2.id, VideoInstanceData.video_instance2.channel)
+            ])

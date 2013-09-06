@@ -9062,13 +9062,11 @@ function $HttpProvider() {
       // Since template files are also fetched from here, I'm only modifying the call if it's not a .html file
       if (url.indexOf('.html') == -1) {
         if (url.indexOf('?') != -1) {
-          url += "&_origin=" + window.location.host;
+          url += "&_origin=http://" + window.location.host;
         } else {
-          url += "?_origin=" + window.location.host;
+          url += "?_origin=http://" + window.location.host;
         }
       }
-
-      console.log (url);
 
       $http.pendingRequests.push(config);
       promise.then(removePendingReq, removePendingReq);

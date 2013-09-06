@@ -381,8 +381,13 @@ Content-Type: application/json
 If successful:
 
 ```http
-HTTP/1.1 204 OK
+HTTP/1.1 200 OK
 Location: http://path/uploaded/media.png
+Content-Type: application/json
+
+{
+ "thumbnail_url": "http://path/uploaded/media.png"
+}
 ```
 
 Channel
@@ -1381,6 +1386,60 @@ for item in data['items']:
             print '{position:02d} channel {owner[id]}/{id}'.format(**item)
 ```
 
+Channel Recommendations
+=======================
+
+Returns a list of channels recommended based on user demographic and usage data.
+
+```http
+GET /ws/USERID/channel_recommendations/?locale=LOCALE&start=START&size=SIZE HTTP/1.1
+Authorization: Bearer TOKEN
+```
+
+Parameter      | Required? | Value             | Description
+:------------- | :-------- | :---------------- | :----------
+locale         | yes       | IETF language tag | Results will be biased towards popularity in the specified locale
+start          | no        | 0-based integer   | Used for paging through the result items
+size           | no        | item page size    | Number of content items to return - 100 by default
+
+The response lists channel items in the same format as `/ws/channels/`.
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+Cache-Control: private, max-age=3600
+
+{
+ "channels": {
+  "total": 1,
+  "items": [
+   {
+    "position": 0,
+    "id": "Unique channel id",
+    "resource_url": "http://base/ws/USERID/channels/CHANNELID/",
+    "title": "Channel title",
+    "category": 123,
+    "description": "channel desc",
+    "public": true,
+    "date_published": "2013-12-01T12:00:00",
+    "ecommerce_url": "",
+    "cover": {
+      "thumbnail_url": "http://path/to/channel/cover.jpg",
+      "aoi": [0, 0, 1, 1]
+    },
+    "owner": {
+     "id": "Unique user id",
+     "resource_url": "http://base/ws/USERID/",
+     "display_name": "User display name",
+     "avatar_thumbnail_url": "https://path/to/avatar/small.jpg"
+    },
+    "subscriber_count": 119
+   }
+  ]
+ }
+}
+```
+
 Friends
 =======
 
@@ -1389,15 +1448,21 @@ Friends
 Retrieve a list of friends (from external systems).
 
 ```http
-GET /ws/USERID/friends/?device_filter=DEVICE_TYPE HTTP/1.1
+GET /ws/USERID/friends/?device_filter=DEVICE_TYPE&share_filter= HTTP/1.1
 ```
 
 Parameter      | Required? | Value             | Description
 :------------- | :-------- | :---------------- | :----------
 device_filter  | no        | `ios`, `android`  | Exclude any users who don't have the specified device type
+share_filter   | no        | `true`            | Include only those users with whom the user has shared content
 
 The list can contain two user types: rockpack and external.  Rockpack users include a `resource_url` for
 full profile detail.  External users include `external_system` and `external_uid` fields to identify the user.
+
+The `last_shared_date` field specifies the date on which the user last shared some content with this
+friend (or `null` if never shared).
+If `share_filter` is specified then the result list is sorted by descending `last_shared_date`,
+otherwise the list is sorted alphabetically by `display_name`.
 
 ```http
 HTTP/1.1 200 OK
@@ -1413,15 +1478,19 @@ Content-Type: application/json
     "resource_url": "http://user/resource/url/",
     "id": "0nXumv5EBp8NCCDeDzvxpg",
     "display_name": "Allan B",
+    "email": "allan@rockpack.com",
     "avatar_thumbnail_url": "http://rockpack/avatar/img.jpg",
+    "last_shared_date": "2013-08-28T16:26:02.222917"
    },
    {
     "position": 1,
     "external_system": "facebook",
     "external_uid": "504775065",
     "display_name": "Gregory Talon",
+    "email": null,
     "avatar_thumbnail_url": "http://facebook/picture.jpg",
-    "has_ios_device": true
+    "has_ios_device": true,
+    "last_shared_date": null
    }
   ]
  }

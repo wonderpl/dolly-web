@@ -268,6 +268,8 @@ def search_v2(query, order=None, start=0, size=10, region=None, client_address=N
         'restriction': client_address,
         'safeSearch': app.config.get('YOUTUBE_SAFESEARCH'),
     }
+    if app.config.get('YOUTUBE_SEARCH_PARTNER_ONLY'):
+        params['uploader'] = 'partner'
     data = _youtube_feed('videos', '', params)['feed']
     total = data['openSearch$totalResults']['$t']
     videos = [_get_video_data(e, id) for e in data.get('entry', [])]

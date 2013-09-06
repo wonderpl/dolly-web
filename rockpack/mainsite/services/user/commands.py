@@ -1,8 +1,9 @@
 import urlparse
+from itertools import izip_longest
 from functools import wraps
 from datetime import datetime, timedelta
 from flask import json
-from sqlalchemy import func
+from sqlalchemy import func, text, between
 from sqlalchemy.orm import joinedload, contains_eager, aliased
 from sqlalchemy.orm.exc import NoResultFound
 from rockpack.mainsite import app
@@ -15,7 +16,7 @@ from rockpack.mainsite.services.base.models import JobControl
 from rockpack.mainsite.services.oauth.models import ExternalFriend, ExternalToken
 from rockpack.mainsite.services.video.models import Channel, VideoInstance
 from rockpack.mainsite.services.share.models import ShareLink
-from .models import User, UserActivity, UserNotification, UserContentFeed, UserFlag, Subscription
+from .models import User, UserActivity, UserNotification, UserContentFeed, UserFlag, Subscription, BroadcastMessage
 
 
 def activity_user(activity):
@@ -55,22 +56,41 @@ def star_message(activity, video_instance):
     )
 
 
-activity_notification_map = dict(
-    # map action -> activity list, object model, message function
-    subscribe=([], Channel, subscribe_message),
-    star=([], VideoInstance, star_message),
-)
+def _apns_url(url):
+    return urlparse.urlparse(url).path.lstrip('/ws/')
 
 
-# XXX: This assumes that the notifications passed in are not yet
-# committed to the db
+def _send_apns_message(user, token, message):
+    try:
+        srv = push_client.APNs(push_client.connection)
+        result = srv.send(push_client.Message(token, **message))
+        if result.errors or result.failed:
+            app.logger.error('Failed to send message to %s: %r: %r: %r',
+                             user, message, result.errors, result.failed)
+        else:
+            app.logger.info('Sent message to %s: %r', user, message)
+        return result
+    except Exception:
+        app.logger.exception('Failed to send push notification: %d', message.get('id', 0))
+
+
+def _process_apns_broadcast(users, alert, url=None):
+    # Fake notification id passed because iOS app won't follow url without it :-(
+    message = dict(alert=alert, id=0)
+    if url:
+        message['url'] = _apns_url(url)
+    # batch push calls into chunks of 100 (unique) tokens
+    for tokens in izip_longest(*[(t for u, t in users)] * 100, fillvalue=None):
+        _send_apns_message('batch', filter(None, set(tokens)), message)
+
+
 def send_push_notifications(user):
     try:
         try:
             user_id = user.id
         except:
             user_id = user
-        device = ExternalToken.query.filter(
+        token = ExternalToken.query.filter(
             ExternalToken.external_system == 'apns',
             ExternalToken.external_token != 'INVALID',
             ExternalToken.user == user_id).one()
@@ -83,49 +103,40 @@ def send_push_notifications(user):
 
     # Send most recent notification only
     notification = sorted(notifications, key=lambda n: n.id, reverse=True)[0]
+    data = json.loads(notification.message)
 
-    try:
-        if notification.message_type == 'subscribed':
-            key = 'channel'
-            push_message = "%@ has subscribed to your channel"
-        elif notification.message_type == 'joined':
-            key = 'user'
-            push_message = "Your Facebook friend %@ has joined Rockpack"
-        else:
-            key = 'video'
-            push_message = "%@ has liked your video"
+    if notification.message_type == 'subscribed':
+        key = 'channel'
+        push_message = "%@ has subscribed to your channel"
+    elif notification.message_type == 'joined':
+        key = 'user'
+        push_message = "Your Facebook friend %@ has joined Rockpack"
+    else:
+        key = 'video'
+        push_message = "%@ has liked your video"
+    push_message_args = [data['user']['display_name']]
+    deeplink_url = _apns_url(data[key]['resource_url'])
 
-        data = json.loads(notification.message)
-        name = data['user']['display_name']
+    message = dict(
+        alert={
+            "loc-key": push_message,
+            "loc-args": push_message_args,
+        },
+        badge=count,
+        id=notification.id,
+        url=deeplink_url,
+    )
 
-        push_message_args = [name]
-
-        extra_kwargs = {}
-        if app.config.get('ENABLE_APNS_DEEPLINKS', True):
-            extra_kwargs.update(
-                dict(
-                    url=urlparse.urlparse(data[key]['resource_url']).path.lstrip('/ws/')
-                )
-            )
-
-        message = dict(
-            alert={
-                "loc-key": push_message,
-                "loc-args": push_message_args,
-            },
-            badge=count,
-            id=notification.id,
-            **extra_kwargs)
-
-        srv = push_client.APNs(push_client.connection)
-        result = srv.send(push_client.Message(device.external_token, **message))
-        app.logger.info('Sent message to %s: %r', device.user, message)
-        return result
-    except Exception:
-        app.logger.exception('Failed to send push notification: %d', notification.id)
+    return _send_apns_message(token.user, token.external_token, message)
 
 
 def create_new_activity_notifications(date_from=None, date_to=None, user_notifications=None):
+    activity_notification_map = dict(
+        # map action -> activity list, object model, message function
+        subscribe=([], Channel, subscribe_message),
+        star=([], VideoInstance, star_message),
+    )
+
     activity_window = UserActivity.query.options(joinedload('actor'))
     if date_from:
         activity_window = activity_window.filter(UserActivity.date_actioned >= date_from)
@@ -363,7 +374,8 @@ def send_facebook_adds(date_from, date_to):
         VideoInstance.date_added.between(date_from, date_to)
     ).join(
         Channel,
-        Channel.id == VideoInstance.channel
+        (Channel.id == VideoInstance.channel) &
+        (Channel.favourite == False)
     ).join(
         UserFlag,
         (UserFlag.flag == 'facebook_autopost_add') &
@@ -435,12 +447,12 @@ def set_normalised_values():
 """
 
 
-@manager.cron_command
+@manager.cron_command(interval=604800)  # run weekly
 def update_apns_tokens():
     _invalidate_apns_tokens()
 
 
-@manager.cron_command
+@manager.cron_command(interval=300)
 @job_control
 def update_user_notifications(date_from, date_to):
     """Update user notifications based on recent activity."""
@@ -455,7 +467,7 @@ def update_user_notifications(date_from, date_to):
         send_push_notifications(user)
 
 
-@manager.cron_command
+@manager.cron_command(interval=300)
 @job_control
 def update_user_content_feed(date_from, date_to):
     """Update users content feed based on recent content changes."""
@@ -465,19 +477,77 @@ def update_user_content_feed(date_from, date_to):
     remove_old_feed_items()
 
 
-@manager.cron_command
+@manager.cron_command(interval=300)
 @job_control
 def send_registration_emails(date_from, date_to):
     """Send an email based on a template."""
     create_registration_emails(date_from, date_to)
 
 
-@manager.cron_command
+@manager.cron_command(interval=60)
 @job_control
 def process_facebook_autosharing(date_from, date_to):
     """Check for activity by users who have auto-share enabled and post to Facebook."""
     send_facebook_likes(date_from, date_to)
     send_facebook_adds(date_from, date_to)
+
+
+@manager.cron_command(interval=900)
+@job_control
+def process_broadcast_messages(date_from, date_to):
+    """Send out scheduled broadcast messages."""
+    messages = BroadcastMessage.query.filter(
+        (BroadcastMessage.date_scheduled.between(date_from, date_to)) &
+        (BroadcastMessage.date_processed == None)
+    )
+    users = User.query.filter_by(is_active=True)
+    for message in messages:
+        url = message.url_target and BroadcastMessage.get_target_resource_url(message.url_target)
+        if message.filter:
+            for expr, type, values in BroadcastMessage.parse_filter_string(message.filter):
+                if type == 'email':
+                    users = users.filter(User.email.like('%%%s' % values))
+                if type == 'locale':
+                    users = users.filter(User.locale.like('%s%%' % values))
+                if type == 'gender':
+                    users = users.filter(User.gender == values[0])
+                if type == 'age':
+                    users = users.filter(between(
+                        func.age(User.date_of_birth),
+                        text("interval '%s years'" % values[0]),
+                        text("interval '%s years'" % values[1])))
+
+        if message.external_system == 'apns':
+            users = users.join(
+                ExternalToken,
+                (ExternalToken.external_system == 'apns') &
+                (ExternalToken.user == User.id)
+            ).order_by(ExternalToken.external_token).\
+                values(User.id, ExternalToken.external_token)
+            _process_apns_broadcast(users, message.message, url)
+
+        app.logger.info('Processed broadcast message: %s', message.label)
+        message.date_processed = datetime.utcnow()
+
+
+@manager.cron_command(interval=900)
+@job_control
+def reset_expiring_tokens(date_from, date_to):
+    """Reset the refresh token of a user if their facebook tokens are expiring."""
+    # In order to get a new facebook token we need to force the user to reconnect/relogin
+    # rockpack with their facebook account.  To do so we force them to logout by changing
+    # their refresh_token.
+    users = User.query.filter_by(is_active=True).join(
+        ExternalToken,
+        (ExternalToken.user == User.id) &
+        (ExternalToken.external_system == 'facebook') &
+        (ExternalToken.expires.between(date_from + timedelta(1), date_to + timedelta(1)))
+    )
+    count = 0
+    for user in users:
+        user.reset_refresh_token()
+        count += 1
+    app.logger.info('Reset refresh token for %d users', count)
 
 
 @manager.command

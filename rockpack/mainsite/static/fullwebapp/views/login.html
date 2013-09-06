@@ -1,24 +1,18 @@
-<form name="loginForm" ng-controller="LoginCtrl" class="form-horizontal wrapper">
-  <div class="control-group">
-    <label class="control-label" for="userName" >User Name:</label>
-    <div class="controls">
-      <input type="text" name="userName" ng-model="username" required>
+<div class="wrapper">
+  <form name="loginForm" ng-controller="LoginCtrl" class="loginoutbox" ng-submit="submit()">
+    <div id="facebookLogin">
+      <img src="/static/assets/fullwebapp/images/ButtonFacebookDefault.png" ng-click="facebook()">
     </div>
-  </div>
-  <div class="control-group">
-    <label class="control-label" for="Password" >Password</label>
-    <div class="controls">
-      <input type="password" name="Password" ng-model="password" required>
+    <div id="formcontainer">
+        <input type="text" name="userName" ng-model="username" required placeholder="Username">
+        <div>
+          <input type="password" name="Password" ng-model="password" required placeholder="Password">
+          <a id="forgotPassword" href="#/reset-password">Forgot your password?</a>
+        </div>
+        <button class="rockpack-button">Login</button>
+        <div id="registerLink">
+          Not a member? <a href="#!/register">Sign Up</a>
+        </div>
     </div>
-    <div>
-      <a href="#/reset-password">Forgot your password?</a>
-    </div>
-    <div class="control-group">
-      <button ng-click="submit()" class="btn">Submit</button>
-    </div>
-  </div>
-  <img src="/static/assets/fullwebapp/images/ButtonFacebookDefault.png" ng-click="facebook()">
-  <div>
-    New? <a href="#/register" class="btn">Sign Up</a>
-  </div>
-</form>
+  </form>
+</div>

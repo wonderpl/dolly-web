@@ -36,11 +36,12 @@ window.Weblight.controller('ChannelCtrl', ['$scope', '$routeParams', '$location'
         return pair[1]
     return(false)
 
+  $scope.userID = getQueryVariable('shareuser')
+
   # Catch share of specific video url
   if(getQueryVariable('video'))
     $scope.url = getQueryVariable('video')
 
-  $scope.userID = getQueryVariable('shareuser')
 
 
   if selected_video != null

@@ -1,4 +1,4 @@
-import pkg_resources
+from itertools import groupby
 from werkzeug.datastructures import MultiDict
 from sqlalchemy import desc, func, text
 from sqlalchemy.orm import lazyload, contains_eager
@@ -85,7 +85,7 @@ def get_or_create_video_records(instance_ids):
     # Check if any "real" ids are invalid
     if real_instance_ids:
         instances = VideoInstance.query.filter(VideoInstance.id.in_(real_instance_ids))
-        existing_ids = dict(instances.values('id', 'video'))
+        existing_ids = dict((i, (v, c)) for i, v, c in instances.values('id', 'video', 'channel'))
         invalid = list(real_instance_ids - set(existing_ids.keys()))
         if invalid:
             abort(400, message=_('Invalid video instance ids'), data=invalid)
@@ -98,7 +98,7 @@ def get_or_create_video_records(instance_ids):
         for source, source_videoid in external_instance_ids:
             video_id = gen_videoid(None, source, source_videoid)
             video_id_map[video_id] = source, source_videoid
-            existing_ids[(source, source_videoid)] = video_id
+            existing_ids[(source, source_videoid)] = (video_id, None)
 
         # Check which video references from search instances already exist
         # and create records for any that don't
@@ -126,7 +126,7 @@ def save_video_activity(userid, action, instance_id, locale):
     except KeyError:
         abort(400, message=_('Invalid action'))
 
-    video_id = get_or_create_video_records([instance_id])[0]
+    video_id = get_or_create_video_records([instance_id])[0][0]
     activity = dict(user=userid, action=action,
                     object_type='video_instance', object_id=instance_id)
     if not UserActivity.query.filter_by(**activity).count():
@@ -189,9 +189,10 @@ def add_videos_to_channel(channel, instance_list, locale, delete_existing=False)
     video_ids = get_or_create_video_records(instance_list)
     existing = dict((v.video, v) for v in VideoInstance.query.filter_by(channel=channel.id))
     added = []
-    for position, video_id in enumerate(video_ids):
+    for position, (video_id, video_source) in enumerate(video_ids):
         if video_id not in added:
-            instance = existing.get(video_id) or VideoInstance(video=video_id, channel=channel.id)
+            instance = existing.get(video_id) or \
+                VideoInstance(video=video_id, channel=channel.id, source_channel=video_source)
             instance.position = position
             VideoInstance.query.session.add(instance)
             added.append(video_id)
@@ -306,7 +307,7 @@ def user_subscriptions(userid, locale, paging):
     if not subscriptions.count():
         return dict(items=[], total=0)
     subs = {s[0]: s[1] for s in subscriptions.values('channel', 'date_created')}
-    items, total = video_api.get_local_channel(locale, paging, channels=subs.keys())
+    items, total = video_api.get_db_channels(locale, paging, channels=subs.keys())
     items = [item for date, item in
              sorted([(subs[i['id']], i) for i in items], reverse=True)]
     for item in items:
@@ -537,50 +538,60 @@ def _content_feed(userid, locale, paging, country=None):
 
 
 def _aggregate_content_feed(items):
-    def _agg_key(item):
+    # First group all items by key
+    itemgroups = {}
+    for item in items:
         if 'channel' in item:
-            return item['channel']['id'], item['date_added'][:10]
+            key = 'video', item['channel']['id'], item['date_added'][:10]   # same channel and day
         else:
-            return item['owner']['id'], item['date_published'][:8]
+            key = 'channel', item['owner']['id'], item['date_published'][:8]  # same owner and week
+        itemgroups.setdefault(key, []).append(item)
 
-    def _summarise(aggregation):
-        items = aggregation.pop('items')
-        firstitem = items_by_id[items[0]]
-        aggregation['count'] = len(items)
-        aggregation['type'] = 'video' if 'video' in firstitem else 'channel'
-        if aggregation['type'] == 'video':
-            # Use video with most stars as cover
-            items.sort(key=lambda i: items_by_id[i]['video']['star_count'], reverse=True)
-            coverlimit = 1
-        else:
-            coverlimit = 4
-        aggregation['covers'] = items[:coverlimit]
-
-    previous = items[0]
-    prev_key = _agg_key(previous)
-    items_by_id = {previous['id']: previous}
-    aggid = None
+    # Then summarise aggregations from selected groups
     aggregations = {}
-    for item in items[1:]:
-        items_by_id[item['id']] = item
-        cur_key = _agg_key(item)
-        if (cur_key == prev_key):
-            if aggid:
-                aggregations[aggid]['items'].append(item['id'])
-            else:
-                aggid = str(previous['position'])
-                previous['aggregation'] = aggid
-                aggregations[aggid] = dict(items=[previous['id'], item['id']])
+    for (type, key, date), group in itemgroups.iteritems():
+        if type == 'video':
+            # Don't create small aggregations for videos
+            if len(group) <= 5:
+                continue
+            # Don't include most starred videos (up to a maximum of 5)
+            group.sort(key=lambda i: i['video']['star_count'], reverse=True)
+            x, count = 0, len(group)
+            while x < min(10, count) and group[x].get('starring_users'):
+                x += 1
+            group = group[x:]
+
+        count = len(group)
+        if count <= 1:
+            continue
+
+        aggid = str(group[0]['position'])
+        aggregations[aggid] = dict(
+            type=type,
+            count=count,
+            covers=[item['id'] for item in group[:4 if type == 'channel' else 1]],
+        )
+        for item in group:
             item['aggregation'] = aggid
-        else:
-            if aggid:
-                _summarise(aggregations[aggid])
-                aggid = None
-        previous = item
-        prev_key = cur_key
-    if aggid:
-        _summarise(aggregations[aggid])
+
     return aggregations
+
+
+def _channel_recommendations(userid, locale, paging):
+    (gender, age), = User.query.filter_by(id=userid).values(
+        User.gender, func.age(User.date_of_birth))
+    boosts = app.config['RECOMMENDER_CATEGORY_BOOSTS']
+    user_boosts = []
+    if gender:
+        user_boosts.extend(boosts['gender'][gender])
+    if age:
+        age = age.days / 365
+        user_boosts.extend(next(
+            (v for k, v in sorted(boosts['age'].items()) if age < k), ()))
+    # combine boosts by multiplying each with the same category
+    user_boosts = [(i, reduce(lambda a, b: a * b[1], grp, 1))
+                   for i, grp in groupby(sorted(user_boosts), lambda x: x[0])]
+    return video_api.get_es_channels(locale, paging, None, user_boosts)
 
 
 def _channel_videos(channelid, locale, paging, own=False):
@@ -776,7 +787,7 @@ class UserWS(WebService):
         user = User.query.get_or_404(userid)
         user.avatar = process_image(User.avatar)
         user.save()
-        return None, 204, [('Location', user.avatar.url)]
+        return dict(thumbnail_url=user.avatar.url), 200, [('Location', user.avatar.url)]
 
     @expose_ajax('/<userid>/activity/', cache_age=60, cache_private=True)
     @check_authorization(self_auth=True)
@@ -1078,6 +1089,12 @@ class UserWS(WebService):
         aggregations = _aggregate_content_feed(items) if items else {}
         return dict(content=dict(items=items, total=total, aggregations=aggregations))
 
+    @expose_ajax('/<userid>/channel_recommendations/', cache_age=3600, cache_private=True)
+    @check_authorization(self_auth=True)
+    def channel_recommendations(self, userid):
+        items, total = _channel_recommendations(userid, self.get_locale(), self.get_page())
+        return dict(channels=dict(items=items, total=total))
+
     @expose_ajax('/<userid>/external_accounts/', cache_age=60, cache_private=True)
     @check_authorization(self_auth=True)
     def get_external_accounts(self, userid):
@@ -1115,24 +1132,37 @@ class UserWS(WebService):
     @check_authorization(self_auth=True)
     def get_friends(self, userid):
         ExternalFriend.populate_facebook_friends(userid)
-        friends = ExternalFriend.query.filter_by(user=userid).all()
+        friends = ExternalFriend.query.filter_by(user=userid)
+        if request.args.get('share_filter'):
+            friends = friends.filter(ExternalFriend.last_shared_date.isnot(None))
+        friends = friends.all()
         rockpack_friends = dict(
-            (user.external_tokens[0].external_uid, user)
+            (('facebook', user.external_tokens[0].external_uid), user)
             for user in User.query.join(ExternalToken, (
                 (ExternalToken.user == User.id) &
                 (ExternalToken.external_system == 'facebook') &
-                (ExternalToken.external_uid.in_(set(f.external_uid for f in friends)))
-            )).options(contains_eager(User.external_tokens)).order_by('date_joined desc')
+                (ExternalToken.external_uid.in_(
+                    set(f.external_uid for f in friends if f.external_system == 'facebook')))
+            )).options(contains_eager(User.external_tokens))
+        )
+        rockpack_friends.update(
+            (('email', user.email), user)
+            for user in User.query.filter(
+                User.email.in_(set(f.email for f in friends if f.external_system == 'email')))
         )
         items = []
         for friend in friends:
-            rockpack_user = rockpack_friends.get(friend.external_uid)
+            uid = friend.email if friend.external_system == 'email' else friend.external_uid
+            rockpack_user = rockpack_friends.get((friend.external_system, uid))
+            last_shared_date = friend.last_shared_date and friend.last_shared_date.isoformat()
             if rockpack_user:
                 item = dict(
                     id=rockpack_user.id,
                     resource_url=rockpack_user.get_resource_url(),
                     display_name=rockpack_user.display_name,
                     avatar_thumbnail_url=rockpack_user.avatar.url,
+                    email=rockpack_user.email,
+                    last_shared_date=last_shared_date,
                 )
             else:
                 item = dict(
@@ -1140,13 +1170,18 @@ class UserWS(WebService):
                     avatar_thumbnail_url=friend.avatar_url,
                     external_uid=friend.external_uid,
                     external_system=friend.external_system,
+                    email=friend.email,
+                    last_shared_date=last_shared_date,
                 )
             if friend.has_ios_device:
                 item['has_ios_device'] = True
             items.append(item)
         if 'ios' in request.args.get('device_filter', ''):
             items = [i for i in items if 'resource_url' in i or 'has_ios_device' in i]
-        items.sort(key=lambda i: i['display_name'])
+        if request.args.get('share_filter'):
+            items.sort(key=lambda i: i['last_shared_date'], reverse=True)
+        else:
+            items.sort(key=lambda i: i['display_name'])
         for i, item in enumerate(items):
             item['position'] = i
         return dict(users=dict(items=items, total=len(items)))

@@ -1,9 +1,10 @@
-from flask import request, g
+from flask import request, g, json
 from rockpack.mainsite import app
 from rockpack.mainsite.helpers import get_country_code_from_address
 from rockpack.mainsite.helpers.urls import url_for
-from rockpack.mainsite.core.webservice import WebService, expose_ajax
+from rockpack.mainsite.core.webservice import WebService, expose_ajax, ajax_create_response
 from rockpack.mainsite.core.oauth.decorators import check_authorization
+from .models import SessionRecord
 
 
 def _discover_response():
@@ -50,3 +51,16 @@ class BaseWS(WebService):
     @expose_ajax('/location/', secure=True)
     def get_location(self):
         return get_country_code_from_address(request.remote_addr) or ''
+
+    @expose_ajax('/session/', methods=['POST'], secure=True)
+    @check_authorization(abort_on_fail=False)
+    def post_session(self):
+        value = request.json
+        if value and not isinstance(value, basestring):
+            value = json.dumps(value)
+        SessionRecord(
+            ip_address=request.remote_addr or '',
+            user_agent=request.user_agent.string[:1024],
+            user=g.authorized.userid,
+            value=value,
+        ).save()

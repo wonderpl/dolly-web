@@ -1,0 +1,217 @@
+@import "mixins.less";
+@import url("http://fast.fonts.com/t/1.css?apiType=css&projectid=e8c15b58-fc59-463c-be33-77dba4bf5031");
+@font-face{
+  font-family:"dn-bold";
+  src:url("/static/assets/fonts/b32ab78b-6c51-4bd3-bc37-4edcec0331f8.eot?#iefix");
+  src:url("/static/assets/fonts/b32ab78b-6c51-4bd3-bc37-4edcec0331f8.eot?#iefix") format("eot"),url("/static/assets/fonts/9949035f-6226-4080-a14a-bf7d94ffb1e1.woff") format("woff"),url("/static/assets/fonts/6241bd09-15c2-485e-9796-9db8d0aa6974.ttf") format("truetype"),url("/static/assets/fonts/af94da3e-4232-416a-b6bc-f39f85dd5db6.svg#af94da3e-4232-416a-b6bc-f39f85dd5db6") format("svg");
+}
+@font-face{
+  font-family:"dn-regular";
+  src:url("/static/assets/fonts/da088ecc-a53c-4831-a95b-6fd81b5b338a.eot?#iefix");
+  src:url("/static/assets/fonts/da088ecc-a53c-4831-a95b-6fd81b5b338a.eot?#iefix") format("eot"),url("/static/assets/fonts/c5a7f89e-15b6-49a9-8259-5ea665e72191.woff") format("woff"),url("/static/assets/fonts/868c94b5-ca49-46b7-b62b-297f8d861125.ttf") format("truetype"),url("/static/assets/fonts/e3145f65-29b5-4f7f-8c6e-2dc135021b6a.svg#e3145f65-29b5-4f7f-8c6e-2dc135021b6a") format("svg");
+}
+
+.wrapper {
+  width: 430px;
+  height: 242px;
+  overflow: hidden;
+  position: relative;
+}
+
+#logo {
+  position: absolute;
+  top: 10px;
+  left: 15px;
+  background: url(/static/assets/embed/images/logo.png);
+  width: 101px;
+  height: 24px;
+  display: block;
+  z-index: 100000;
+}
+
+
+#close {
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  width: 24px;
+  height: 24px;
+  background: url(/static/assets/embed/images/close.png);
+  cursor: pointer;  
+}
+
+#playAll {
+  position: absolute;
+  top: 130px;
+  left: 15px;
+  width: 35px;
+  height: 35px;
+  background: url(/static/assets/embed/images/playAll.png);
+  cursor: pointer;
+}
+
+#channelTitle {
+  position: absolute;
+  top: 180px;
+  left: 15px;
+  color: #fff;
+  font-family: "dn-regular";
+  font-size: 26px;
+  line-height: 26px;
+  width: 200px;  
+}
+
+#cover {
+  width: 242px;
+  height: 242px;
+  float: left;
+  position: relative;
+
+  #gradientShadow {
+    width: 100%;
+    height: 100%;
+    background: url(/static/assets/embed/images/gradient.png) no-repeat;
+    position: absolute;
+    top: 0;
+    left: 0;
+  }
+}
+
+#footer {
+  border-top: 1px solid #d9d9d9;
+
+  &>a {
+    float: left;
+  }
+
+  #follow {
+    width: 128px;
+    background: #ffffff;
+    color: #3e3e3e;
+    font-size: 12px;
+    font-family: "dn-bold";
+    text-transform: uppercase;
+    text-align: center;
+    line-height: 30px;
+    text-decoration: none;
+    display: block;
+  }
+
+  #twitter {
+    height: 30px;
+    width: 30px;
+    background: url(/static/assets/embed/images/shareicons.png);
+    display: block;
+    float: left;
+  }
+
+  #facebook {
+    height: 30px;
+    width: 30px;
+    background: url(/static/assets/embed/images/shareicons.png) 30px 0;
+    display: block;
+    float: left;
+  }
+}
+
+#header {
+  font-size: 13px;
+  padding: 5px 10px;
+  color: #808080;
+  font-family: "dn-regular";
+  border-bottom: 1px solid #d9d9d9;
+
+  .highlight {
+    color: #0ba6ab;
+    font-family: "dn-bold";
+  }
+}
+
+#videos {
+  width: 188px;
+  height: 242px;
+  float: left;
+
+  #videoslist {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    overflow: auto;
+    height: 160px;
+
+    li {
+      line-height: 30px;
+      background: #efefef;
+      font-size: 10px;
+      font-family: "dn-regular";
+      color: #808080;
+      text-transform: uppercase;
+      border-bottom: 1px solid #d9d9d9;
+      padding-left: 10px;
+      cursor: pointer;
+    }
+  }
+}
+
+#playercontainer {
+  width: 430px;
+  height: 242px;
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: none;
+
+  &.active {
+    display: block;
+    z-index: 10000
+  }
+}
+
+#scrubber {
+  width: 100%;
+  height: 20px;
+  background: rgba(241,241,241,0.3);
+  position: absolute;
+  top: 222px;
+  z-index: 12001;
+  opacity: 1;
+
+  #currentPosition {
+    height: 20px;
+    width: 0;
+    background: #0ba6ab;
+    -webkit-transition: all 45ms;
+    -moz-transition: all 45ms;
+    -o-transition: all 45ms;
+    transition: all 45ms;
+  }
+
+  &.hideOverlay {
+    opacity: 0;
+  }
+
+}
+
+#pause {
+  position: absolute;
+  top: 70px;
+  left: 170px;
+  z-index: 12000;
+  width: 93px;
+  height: 102px;
+  background: url(/static/assets/weblight/images/pause.png) no-repeat 50% 50%;
+  opacity: 1;
+  -webkit-transition: opacity  0.3s;
+  -moz-transition: opacity 0.3s;
+  -o-transition: opacity  0.3s;
+  transition: opacity 0.3s;
+
+  &.play {
+    background: url(/static/assets/weblight/images/play.png) no-repeat 50% 50%;
+    opacity: 1;
+  }
+
+  &.hideOverlay {
+    opacity: 0;
+  }
+}

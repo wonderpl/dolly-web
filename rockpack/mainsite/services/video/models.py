@@ -221,6 +221,7 @@ class VideoInstance(db.Model):
 
     video = Column(ForeignKey('video.id', ondelete='CASCADE'), nullable=False)
     channel = Column(ForeignKey('channel.id'), nullable=False)
+    source_channel = Column(ForeignKey('channel.id'), nullable=True)
     category = Column(ForeignKey('category.id'), nullable=True)
 
     metas = relationship('VideoInstanceLocaleMeta', backref='video_instance_rel', cascade='all,delete')
@@ -296,7 +297,8 @@ class Channel(db.Model):
     deleted = Column(Boolean(), nullable=False, server_default='false', default=False)
     visible = Column(Boolean(), nullable=False, server_default='True', default=True)
 
-    video_instances = relationship('VideoInstance', backref='video_channel')
+    video_instances = relationship('VideoInstance', backref='video_channel',
+                                   foreign_keys=[VideoInstance.__table__.c.channel])
     metas = relationship('ChannelLocaleMeta', backref=db.backref('channel_rel', lazy='joined', innerjoin=True))
 
     def __unicode__(self):
@@ -331,6 +333,10 @@ class Channel(db.Model):
             return False
 
         return public
+
+    @property
+    def default_thumbnail(self):
+        return self.cover.thumbnail_large
 
     @property
     def editable(self):

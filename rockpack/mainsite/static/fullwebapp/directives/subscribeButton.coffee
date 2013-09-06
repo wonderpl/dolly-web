@@ -1,19 +1,16 @@
+#TODO: UserManager is not being passed properly/watched, won't change to unsubscribe!
 angular.module('WebApp').directive('subscribeButton', ['UserManager', '$route', (UserManager, $route) ->
   return {
     restrict: 'A'
     templateUrl: 'subscribeButton.html'
+    replace: true
     controller: ($scope) ->
       if UserManager.isLoggedIn
-
-        # Is it your channel
-        if $route.current.params.userid == UserManager.credentials.user_id
-          $scope.state = 'edit'
+        $scope.currentChannel = _.find(UserManager.recentActivity.subscribed, (channel) -> return channel == $route.current.params.channelid)
+        if $scope.currentChannel?
+          $scope.state = 'unsubscribe'
         else
-          $scope.currentChannel = _.find(UserManager.recentActivity.subscribed, (channel) -> return channel == $route.current.params.channelid)
-          if $scope.currentChannel?
-            $scope.state = 'unsubscribe'
-          else
-            $scope.state = 'subscribe'
+          $scope.state = 'subscribe'
       else
         $scope.state = 'loggedout'
 

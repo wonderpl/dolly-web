@@ -33,9 +33,6 @@ angular.module('WebApp').factory('oauthService', [ '$http', 'apiUrl', 'cookies',
         url: window.apiUrls.login_register_external,
         headers: headers
       })
-        .then((data) ->
-          return data.data
-        )
 
     Register: (user) ->
       $http({

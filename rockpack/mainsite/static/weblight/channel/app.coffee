@@ -1,4 +1,4 @@
-window.Weblight = angular.module('Weblight', [])
+window.Weblight = angular.module('Weblight', ['infinite-scroll'])
   
   # Detect if user is browsing using a mobile browser
   .constant('isMobile', ( (a) -> 

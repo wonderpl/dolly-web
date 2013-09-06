@@ -1,4 +1,5 @@
-<div ng-controller="ChannelCtrl" id="ChannelCtrl" ng-style="{'background-image' : 'url(' + channel.cover.thumbnail_url + ')'}">
+<div ng-controller="ChannelCtrl" id="ChannelCtrl">
+  <div id="background-image" ng-style="{'background-image' : 'url(' + channel.cover.thumbnail_url + ')'}"></div>
   <div id="mobilepopup" ng-show="showPopup" class="hidden-desktop">
     <div id="closepopup" ng-click="showPopup = false"></div>
     <div class="wrapper">

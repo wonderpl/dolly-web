@@ -108,7 +108,7 @@ def set_channel_view_count(time_from=None, time_to=None):
                 session.add(meta)
 
 
-@manager.cron_command
+@manager.cron_command(interval=3600)
 def update_channel_view_counts():
     """Update view counts for channel."""
     JOB_NAME = 'update_channel_view_stats'
@@ -124,7 +124,7 @@ def update_channel_view_counts():
     job_control.save()
 
 
-@manager.cron_command
+@manager.cron_command(interval=900)
 def update_channel_stats():
     """Update statistics for channels."""
     job_control = JobControl.query.get('update_channel_stats')
@@ -137,7 +137,7 @@ def update_channel_stats():
     job_control.save()
 
 
-@manager.cron_command
+@manager.cron_command(interval=900)
 def update_subscriber_stats():
     """Update statistics for channel."""
     JOB_NAME = 'update_subscriber_stats'
@@ -161,10 +161,10 @@ def update_channel_promo_activity():
         api.add_channel_to_index(p.channel_rel)
 
 
-@manager.cron_command
+@manager.cron_command(interval=900)
 def update_channel_promotions():
     """ Update promotion data for channels in ES """
-    JOB_NAME = 'update_subscriber_stats'
+    JOB_NAME = 'update_channel_promotions'
     job_control = JobControl.query.get(JOB_NAME)
     now = datetime.now()
     if not job_control:
@@ -179,7 +179,7 @@ def update_channel_promotions():
     job_control.save()
 
 
-@manager.cron_command
+@manager.cron_command(interval=900)
 def check_video_player_errors():
     """Scan player error records and check that videos are still available."""
     JOB_NAME = 'check_video_player_errors'

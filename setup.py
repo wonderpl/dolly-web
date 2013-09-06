@@ -79,7 +79,6 @@ setup(
     include_package_data=True,
     data_files=[
         ('/etc/rockpack/mainsite', ['uwsgi.ini']),
-        ('/etc/cron.d', ['rockpack-mainsite.cron']),
         ('/etc/rc.d/init.d', [name]),
         ('share/rockpack/mainsite', ['alembic.ini']),
     ] + [('share/rockpack/mainsite/' + x[0], map(lambda y: x[0] + '/' + y, x[2]))

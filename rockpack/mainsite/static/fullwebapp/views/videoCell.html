@@ -1,4 +1,5 @@
-<div class="videocell">
-  <img ng-src="{{video.video.thumbnail_url}}" ng-click="setCurrentVideo(video)" >
-  <img src="/static/assets/fullwebapp/images/ButtonAddSmall.png" class="addToChannel" ng-click="addToChannel(video.id)" ng-hide="User.isLoggedIn == false"></div>
+<div class="videocell" ng-mouseenter="showShare(video, $event)" ng-mouseleave="hideShare()">
+  <img ng-src="{{video.video.thumbnail_url}}">
+  <div class="playoverlay" ng-click="setCurrentVideo(video)"></div>
+  <div class="videoTitle">{{video.title | truncate:32}}</div>
 </div>

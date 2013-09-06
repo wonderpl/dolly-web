@@ -21,9 +21,9 @@ def country_restriction(country):
     script = """(
         doc['country_restriction.allow'].value == null ? 1 : (doc['country_restriction.allow'].value.contains('{country}') ? 1 : 0)
         ) &
-    (
-    doc['country_restriction.deny'].value == null ? 1 : (doc['country_restriction.deny'].value.contains('{country}') ? 1 : 0)
-    )""".format(country=country)  # % both  #.format(rel=relationship, country=country, condition=condition)
+        (
+        doc['country_restriction.deny'].value == null ? 1 : (doc['country_restriction.deny'].value.contains('{country}') ? 1 : 0)
+        )""".format(country=country)
     return pyes.ScriptFilter(script)
 
 
@@ -37,6 +37,13 @@ def verified_channel_boost():
     return pyes.CustomFiltersScoreQuery.Filter(
         pyes.TermFilter(field='verified', value=True),
         boost=app.config.get('VERIFIED_BOOST', 1.5)
+    )
+
+
+def category_boost(category, boost):
+    return pyes.CustomFiltersScoreQuery.Filter(
+        pyes.TermFilter(field='category', value=category),
+        boost=boost
     )
 
 

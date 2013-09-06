@@ -12,14 +12,9 @@
 }
 
 
-html,body {
+html,body, .ng-view {
   height:100%;
 }
-
-.ng-view {
-  height: 100%;
-}
-
 #scrubber {
   width: 100%;
   height: 20px;
@@ -29,29 +24,29 @@ html,body {
   z-index: 12001;
   opacity: 1;
 
-#currentPosition {
-  height: 20px;
-  width: 0;
-  background: #0ba6ab;
-  -webkit-transition: all 45ms;
-  -moz-transition: all 45ms;
-  -o-transition: all 45ms;
-  transition: all 45ms;
-}
-
-&.hideOverlay {
-  opacity: 0;
-}
-
+  #currentPosition {
+    height: 20px;
+    width: 0;
+    background: #0ba6ab;
+    -webkit-transition: all 45ms;
+    -moz-transition: all 45ms;
+    -o-transition: all 45ms;
+    transition: all 45ms;
   }
+
+  &.hideOverlay {
+    opacity: 0;
+  }
+
+}
 
 #pause {
   position: absolute;
+  top: 230px;
+  left: 247px;
   z-index: 12000;
-  top: 110px;
-  left: 0;
-  width: 620px;
-  height: 349px;
+  width: 93px;
+  height: 102px;
   background: url(/static/assets/weblight/images/pause.png) no-repeat 50% 50%;
   opacity: 1;
   -webkit-transition: opacity  0.3s;
@@ -59,15 +54,15 @@ html,body {
   -o-transition: opacity  0.3s;
   transition: opacity 0.3s;
 
-&.play {
-  background: url(/static/assets/weblight/images/play.png) no-repeat 50% 50%;
-  opacity: 1;
-}
-
-&.hideOverlay {
-  opacity: 0;
-}
+  &.play {
+    background: url(/static/assets/weblight/images/play.png) no-repeat 50% 50%;
+    opacity: 1;
   }
+
+  &.hideOverlay {
+    opacity: 0;
+  }
+}
 
 h1,h2,h3,h4,h5 {
   -webkit-font-smoothing: antialiased;
@@ -78,7 +73,12 @@ body {
   font-size: 12px;
   color: #282d33;
   font-family: Arial;
-  background: #f7f7f7;
+  background: #f1f1f1; /* Old browsers */
+}
+
+#sharecontainer {
+  .clearfix();
+  padding-bottom: 20px;
 }
 
 #weblightshare {
@@ -103,99 +103,94 @@ body {
   text-transform: uppercase;
 }
 
-.channelwrapper {
-  position: relative;
-  margin: 0 auto;
-  width: 675px;
-.clearfix();
-
-  }
-
 .wrapper {
   position: relative;
   margin: 0 auto;
   width: 620px;
-.clearfix();
-  }
-
-#lightbox {
-  position:fixed; /* keeps the lightbox window in the current viewport */
-  top:0;
-  left:0;
-  width:100%;
-  height:100%;
-  background:url(/static/assets/weblight/images/overlay.png) repeat;
-  z-index: 1000;
-  display: none;
+  .clearfix();
 }
 
-
+#videoTitle {
+  background: #fff;
+  font-family: "dn-bold", Helvetica;
+  font-size: 17px;
+  padding: 10px 10px 7px 10px;
+}
 // Video Player
 
 #playercontainer {
-     width:620px;
-     height:646px;
-     padding: 0;
-     position: absolute;
-     top: 0;
-     margin-top: 100px;
-     left: 50%;
-     margin-left: -310px;
-     z-index: 1010;
-
-iframe {
-  display: block;
-}
-
-#playerfooter {
-
-  width: 580px;
-  background: #fff;
-  margin-top: 20px;
-  padding: 20px;
-}
-
-#mobilefooter {
-  display: none;
-}
+  width:620px;
+  padding: 0;
+  margin: 0 auto;
+  position: relative;
 
 
-#playerheader {
-
-  font-size: 16px;
-  font-family: "dn-regular";
-  color: #282d33;
-.clearfix();
-margin-bottom: 20px;
-
-img {
-  float: left;
-  height: 90px;
-}
-
-#desc {
-  float: left;
-  padding: 25px 20px;
-  background: #fff;
-  width: 490px;
-}
-
-#videotitle {
-  text-shadow: 1px 1px #dddddd;
-  font-family: "dn-bold";
-}
-
-#logos {
-  float: right;
-
-.bluelogo {
-  margin-right: 10px;
-}
+  iframe {
+    display: block;
   }
+
+  #playerfooter {
+    text-align: center;
+    width: 580px;
+    background: #fff;
+    margin-top: 20px;
+    padding: 20px;
+    font-size: 16px;
+    font-family: "dn-regular", Helvetica;
+
+    p {
+      margin: 0;
+    }
+
+    .lowerdownloadbtn {
+      margin: 20px 0;
+    }
+  }
+
+  #mobilefooter {
+    display: none;
   }
 
 
+  #playerheader {
+
+    font-size: 16px;
+    font-family: "dn-regular";
+    color: #282d33;
+    .clearfix();
+    margin-bottom: 20px;
+
+    img {
+      float: left;
+      height: 90px;
+    }
+
+    #desc {
+      float: left;
+      padding: 21px 20px;
+      background: #fff;
+      width: 490px;
+      font-size: 20px;
+      line-height: 20px;
+      line-height: 24px;
+    }
+
+    #videotitle {
+      text-shadow: 1px 1px #dddddd;
+      font-family: "dn-bold";
+    }
+
+    #logos {
+      float: right;
+
+      .bluelogo {
+        margin-right: 10px;
+      }
+    }
   }
+
+
+}
 
 #ChannelCtrl {
   background-size: cover !important;
@@ -209,7 +204,6 @@ img {
 
 .bold {
   font-family: "dn-bold", Helvetica;
-  color: #0ba6ab;
 }
 
 .uppercase {
@@ -224,14 +218,14 @@ img {
   color: #282d33;
   display: inline-block;
 
-p {
-  margin: 40px 0;
-}
-
-img {
-  margin: 20px 0;
-}
+  p {
+    margin: 40px 0;
   }
+
+  img {
+    margin: 20px 0;
+  }
+}
 
 #screenshot {
   width:236px;
@@ -242,10 +236,10 @@ img {
   position: relative;
   vertical-align: bottom;
 
-div {
-  overflow: hidden;
-}
+  div {
+    overflow: hidden;
   }
+}
 
 #gloss {
   width:236px;
@@ -275,17 +269,17 @@ div {
   font-size: 11px;
   text-transform: uppercase;
 
-img {
-  width: 40px;
-  height: 40px;
-  display: inline-block;
-}
-
-div {
-  display: inline-block;
-  vertical-align: middle;
-}
+  img {
+    width: 40px;
+    height: 40px;
+    display: inline-block;
   }
+
+  div {
+    display: inline-block;
+    vertical-align: middle;
+  }
+}
 
 #iosshare {
   position: absolute;
@@ -333,11 +327,11 @@ div {
   margin-top: 55px;
   text-align: center;
 
-a, a:hover, a:visited {
-  color: #282d33;
-  text-decoration: underline;
-}
+  a, a:hover, a:visited {
+    color: #282d33;
+    text-decoration: underline;
   }
+}
 
 #bg {
   width: 200px;
@@ -346,41 +340,31 @@ a, a:hover, a:visited {
   top: 72px;
   left: 21px;
 }
-#header {
-  background: #fff;
-  height: 50px;
-  line-height: 46px;
-  position: fixed;
-  width: 100%;
-  z-index: 1000;
-
-img {
-  width: 125px;
-  height: 22px;
-  vertical-align: middle;
-
-}
-  }
 
 #overlayheader {
   background: #fff;
   height: 50px;
   line-height: 46px;
-  position: fixed;
   width: 100%;
-  z-index: 1000;
-  top: 0;
+  margin-bottom: 20px;
+  text-align: center;
 
-.logo {
-  width: 125px;
-  height: 22px;
-  vertical-align: middle;
-}
+  #logo {
 
-.appstore {
-  float: right;
-}
+    float: left;
+
+    img {
+      width: 125px;
+      height: 22px;
+      vertical-align: middle;
+    }
   }
+
+  #appstore {
+    float: right;
+  }
+
+}
 
 #greygbg {
   background: #f1f1f1;
@@ -393,19 +377,19 @@ img {
   margin-bottom: 30px;
   font-size: 16px;
 
-img {
-  margin-bottom: 20px;
-}
+  img {
+    margin-bottom: 20px;
   }
+}
 
 .rockpack-button {
   display: inline-block;
   background: #0ba6ab;
   padding: 20px 35px 18px 35px;
   color: #fff;
-  text-shadow: 1px 0 1px #000;
+  text-shadow: 0px 1px 2px #087477;
   font-family: "dn-bold";
-  font-size: 24px;
+  font-size: 22px;
   line-height: 22px;
 
   &:hover {
@@ -420,6 +404,16 @@ img {
 
 
 @media (max-width: 767px) {
+
+  #overlayheader {
+    .wrapper {
+      width: 300px !important;
+    }
+  }
+
+  .visible-desktop {
+    display: none;
+  }
 
   .channelwrapper  {
     width: 95%;
@@ -436,51 +430,44 @@ img {
     width: 300px;
     margin-top: 80px;
 
-  img {
-    margin: 0 0 40px 0;
-  }
-}
-
-#ChannelCtrl {
-  height: auto;
-}
-
-#screenshot {
-  margin: 0 auto;
-  display: block;
-}
-
-#playercontainer {
-  width:320px;
-  height:240px;
-  padding: 0;
-  position: absolute;
-  top: 5px;
-  left: 50%;
-  margin-left: -160px;
-  margin-top: 0;
-  z-index: 1010;
-
-#playerheader {
-
-  margin-top: 80px;
-  font-size: 14px;
-
-img {
-  height: 60px;
-}
-
-#desc {
-  width: 220px;
-  padding: 10px;
-}
+    img {
+      margin: 0 0 40px 0;
+    }
   }
 
-#playerfooter {
-  width: 260px;
+  #ChannelCtrl {
+    height: auto;
+  }
+
+  #screenshot {
+    margin: 0 auto;
+    display: block;
+  }
+
+  #playercontainer {
+    width:300px;
+    height:auto;
+    padding: 0;
+    margin: 0 auto;
+
+    #playerheader {
+
+      background: #fff;
+
+      img {
+        height: 60px;
+      }
+
+      #desc {
+        width: 220px;
+        padding: 10px;
+        font-size: 14px;
+        line-height: 14px;
+      }
+    }
+
+    #playerfooter {
+      width: 260px;
+    }
+  }
 }
-
-
-  }
-  }
-

@@ -3,25 +3,39 @@ window.Weblight.controller('VideoCtrl', ['$scope', '$rootScope', '$routeParams',
   $scope.triggerEvent = (action, label) ->
     ga('send', 'event', 'uiAction', action, label)
 
+  windowWidth = if "innerWidth" in window then window.innerWidth else document.documentElement.offsetWidth
+
   @getPlayerWidth = () ->
-    if $(window).width() <= 979
+    if windowWidth <= 979
       @playerWidth = 300
       @playerHeight = 169
     else
       @playerWidth = 620
       @playerHeight = 349
 
+
+  getQueryVariable = (variable) ->
+    query = window.location.search.substring(1)
+    if (query.indexOf("&") > -1)
+      vars = query.split("&")
+    else
+      vars = [query]
+    for i in [0..vars.length-1]
+      pair = vars[i].split("=")
+      if(pair[0] == variable)
+        return pair[1]
+    return(false)
+
+  $scope.userID = getQueryVariable('shareuser')
+
   $scope.user = userService.fetchUser($scope.userID)
 
   $scope.PlayVideo = =>
-    if $rootScope.playerReady && typeof $routeParams.video != "undefined"
+    if $rootScope.playerReady
 
       @getPlayerWidth()
 
-      $("#lightbox").show()
-
       $scope.videodata = window.selected_video
-
       $scope.player = new YT.Player('player', {
         height: @playerHeight,
         width: @playerWidth,
@@ -78,11 +92,9 @@ window.Weblight.controller('VideoCtrl', ['$scope', '$rootScope', '$routeParams',
   ), 100)
 
   $scope.mouseOver = () ->
-    console.log 'in'
     $scope.hideOverlay = false
 
   $scope.mouseOut = () ->
-    console.log 'out'
     $scope.hideOverlay = true
 
 
@@ -91,23 +103,6 @@ window.Weblight.controller('VideoCtrl', ['$scope', '$rootScope', '$routeParams',
       @getPlayerWidth()
       $('#player').width(@playerWidth).height(@playerHeight)
 
-  )
-
-  $scope.playNextVid = (videoNumber) ->
-    if videoNumber < -5 or  videoNumber > $scope.videos.length-1
-      $scope.videoNum = 0
-    else
-      if videoNumber < 0
-        $scope.videoNum = $scope.videos.length-1
-      else
-        $scope.videoNum = videoNumber
-
-    $location.search( 'video',$scope.videos[$scope.videoNum].id)
-
-  $scope.$watch((-> $routeParams.video), (newValue) ->
-    if newValue
-      $scope.PlayVideo()
-    return
   )
 
   $scope.$watch((-> $rootScope.playerReady), (newValue) ->

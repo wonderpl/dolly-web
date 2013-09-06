@@ -1,8 +1,10 @@
-window.WebApp.controller('ChannelCtrl', ['$scope', '$routeParams', '$rootScope', '$location', 'ContentService', '$dialog', 'UserManager', 'shareService', ($scope, $routeParams, $rootScope, $location, ContentService, $dialog, UserManager, shareService) ->
+window.WebApp.controller('ChannelCtrl', ['$scope', '$routeParams', '$rootScope', '$location', 'ContentService', '$dialog', 'UserManager', 'shareService', 'playerService', ($scope, $routeParams, $rootScope, $location, ContentService, $dialog, UserManager, shareService, playerService) ->
 
   $scope.page = 0
   $scope.User = UserManager
   $scope.channel = null
+  $scope.currentUrl = encodeURIComponent($location.absUrl())
+
 
   $scope.load_videos = =>
     # Did we already load all the videos?
@@ -12,55 +14,17 @@ window.WebApp.controller('ChannelCtrl', ['$scope', '$routeParams', '$rootScope',
           $scope.channel = data
           $scope.totalvideos = data.videos.total
           $scope.background = data.cover.thumbnail_url.replace('thumbnail_medium', 'background')
-          console.log $scope.channel
         else
           $scope.channel.videos.items = $scope.channel.videos.items.concat(data.videos.items)
         $scope.page += 1
     return
 
-  # Video Player
-  $scope.$watch((() -> return $location.search().video), (newValue, oldValue) ->
-    if newValue?
+  $scope.setCurrentVideo = (video) ->
+    playerService.setNewPlaylist($scope.channel, video.id, 1)
+    $location.search( 'video', video.id )
 
-      dialog = $dialog.dialog(
-        controller: 'VideoPlayerCtrl',
-        resolve: {
-          ChannelData: () ->
-            return $scope.channel
-        }
-      )
 
-      dialog.open('videoPlayer.html').then(() ->
-        $location.search( 'video', null )
-      )
-  )
-
-  $scope.share = (method, shareid) ->
-    shareService.fetchShareUrl('channel', shareid)
-    .success((data) ->
-      if method == "facebook"
-        FB.ui({
-          method: 'feed',
-          link: data.resource_url,
-          picture: $scope.background,
-          name: 'Rockpack',
-          caption: data.message
-        })
-    )
-
-  #Variable width manager
-  $scope.videoWidth = 340
-  $scope.containerPadding = 0
-
-  $scope.getWidth = ->
-    return $(window).width()
-
-  window.onresize = ->
-    $scope.$apply()
-
-  $scope.$watch($scope.getWidth, (newValue, oldValue) ->
-    $scope.videwWrapperWidth = { width: (Math.floor(($(window).width() - $scope.containerPadding) / $scope.videoWidth) * $scope.videoWidth + $scope.containerPadding) + 'px', margin: '0 auto'}
-    return
-  )
-
+  $scope.playAll = () ->
+    playerService.setNewPlaylist($scope.channel, $scope.channel.videos.items[0].id, 1)
+    $location.search( 'video', $scope.channel.videos.items[0].id )
 ])

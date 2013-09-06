@@ -1,0 +1,20 @@
+{% extends 'admin/master.html' %}
+
+{% macro chart(title, data, type='ColumnChart') -%}
+  <div id="{{ title }}"></div>
+  <script>
+    google.setOnLoadCallback(function () {
+      var data = new google.visualization.DataTable({{ data|safe }}),
+          chart = new google.visualization.{{ type }}(document.getElementById('{{ title }}'));
+      chart.draw(data, $.extend({title:'{{ title }}', legend:'none'}, {{ caller() }}));
+    });
+  </script>
+{%- endmacro %}
+
+{% block head %}
+{{ super() }}
+<script src="//www.google.com/jsapi" type="text/javascript"></script>
+<script>
+  google.load('visualization', '1', {packages: ['corechart', 'table']});
+</script>
+{% endblock %}

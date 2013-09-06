@@ -702,7 +702,7 @@ def video_stars(instance_id):
     return [_[0] for _ in stars]
 
 
-def add_video_to_index(video_instance, bulk=False, refresh=False, no_check=False, update_restrictions=True):
+def add_video_to_index(video_instance, bulk=False, refresh=False, no_check=False, update_restrictions=True, update_recentstars=True):
     if not check_es(no_check):
         return
 
@@ -737,10 +737,17 @@ def add_video_to_index(video_instance, bulk=False, refresh=False, no_check=False
         position=video_instance.position,
         locales=locale_dict_from_object(video_instance.metas)
     )
+
+    if update_recentstars:
+        data['recent_user_stars']=video_stars(video_instance.id)
+    else:
+        data['recent_user_stars'] = []
+
     if update_restrictions:
         data['country_restriction'] = _get_country_restrictions(video_instance.video_rel.restrictions)
     else:
         data['country_restriction'] = dict(allow=[], deny=[])
+
     return add_to_index(data, mappings.VIDEO_INDEX, mappings.VIDEO_TYPE, id=video_instance.id, bulk=bulk, refresh=refresh)
 
 

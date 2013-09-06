@@ -59,19 +59,6 @@ window.WebApp.factory('UserManager', ['cookies', '$http', '$q', '$location','api
 
         )
 
-    RecentActivityTimedRetrive: () ->
-      activityService.fetchRecentActivity(User.details.activity.resource_url, User.credentials.access_token)
-        .success((data) ->
-          User.recentActivity.recently_starred = _.union(User.recentActivity.recently_starred, data.recently_starred)
-          User.recentActivity.recently_viewed = _.union(User.recentActivity.recently_viewed, data.recently_viewed)
-          User.recentActivity.subscribed = _.union(User.recentActivity.subscribed, data.subscribed)
-          User.recentActivity.cacheTime = data.cacheTime
-          setTimeout((
-            () ->
-              User.RecentActivityTimedRetrive()
-          ), User.recentActivity.cacheTime*1000)
-        )
-
     Register: (user) ->
       oauthService.Register(user)
         .then((data) ->
@@ -79,7 +66,20 @@ window.WebApp.factory('UserManager', ['cookies', '$http', '$q', '$location','api
           return data.data
         )
 
+    ExternalLogin: (provider, external_token) ->
+      oauthService.ExternalLogin(provider, external_token)
+        .then((data) ->
+          ApplyLogin(data.data)
+          User.FetchUserData()
+          .then((data) ->
+              $location.path('/channels')
+              return data.data
+          )
+          return data.data
+        )
 
+
+#   Automatically refresh the token after 90% of the token refresh time has expired
     RefreshToken: () ->
       oauthService.RefreshToken(User.credentials.refresh_token)
         .then((data) ->
@@ -92,96 +92,32 @@ window.WebApp.factory('UserManager', ['cookies', '$http', '$q', '$location','api
           User.timeOfLastRefresh = (new Date()).getTime()
         )
 
-    FetchUserData: () ->
-      deferred = $q.defer()
+    FetchUserData: (resource_url) ->
       $http({
         method: 'GET',
         url: User.credentials.resource_url,
         headers: {"authorization": "Bearer #{User.credentials.access_token}", "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"}
       })
-      .success((data) ->
-        User.details = data
-        User.FetchUnreadNotifications()
-        User.FetchNotifications()
-        User.RecentActivityTimedRetrive()
-        .then((data) ->
-            deferred.resolve(data.data)
+      .then((data) ->
+        _.each(data.data.channels.items, (channel) ->
+          channel.cover.thumbnail_url = channel.cover.thumbnail_url.replace('thumbnail_medium', 'thumbnail_large')
+        )
+        User.details = data.data
+
+#       DISABLED Notification + Activity fetching as mostly relevant for full web
+
+#        User.FetchUnreadNotifications()
+#        User.FetchNotifications()
+#        User.RecentActivityTimedRetrive()
         )
 
-      )
-      .error((data) =>
-        console.log data
-        deferred.reject ('failed to retreive data')
-      )
-
-      return deferred.promise
-
-    FetchRecentSubscriptions: (start, size) ->
-      $http({
-      method: 'GET',
-      url: User.details.subscriptions.updates,
-      params: {start: start, size: size}
-      headers: {"authorization": "Bearer #{User.credentials.access_token}", "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"}
-      })
-        .success((data, status, headers, config) ->
-
-          if User.feed.total == null
-            User.feed.total = data.videos.total
-
-          currentPos = 0
-
-          _.each(data.videos.items, (video) ->
-            datestring  = video.date_added.substr(0, 10)
-
-            while User.feed.items[currentPos]? and  User.feed.items[currentPos].date != datestring
-              currentPos++
-
-            if not (User.feed.items[currentPos]?)
-              User.feed.items[currentPos] = {date: datestring, videos: []}
-
-            User.feed.items[currentPos].videos.push(video)
-          )
-        )
-        .error((data) =>
-          console.log data
-        )
-
-    Report: (object_id, object_type) ->
+    Report: (object_id, object_type, reason) ->
       $http({
         method: 'POST',
         url: "#{User.credentials.resource_url}content_reports/"
         headers: {"authorization": "Bearer #{User.credentials.access_token}", "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"}
-        data: $.param({object_type: "#{object_type}", object_id: "#{object_id}", reason: "Web Reoprt"})
+        data: $.param({object_type: "#{object_type}", object_id: "#{object_id}", reason: reason})
       })
-
-    FetchNotifications: () ->
-      $http({
-      method: 'GET',
-      url: User.details.notifications.resource_url,
-      headers: {"authorization": "Bearer #{User.credentials.access_token}", "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"}
-      })
-        .then(((data) ->
-          User.details.notifications.total = data.data.notifications.total
-          User.details.notifications.items = data.data.notifications.items
-        ), (data) ->
-          console.log data
-        )
-
-    #TODO: Add resource url for unread notifications
-    FetchUnreadNotifications: () ->
-      $http({
-        method: 'GET',
-        url: "#{User.details.notifications.resource_url}unread_count/",
-        headers: {"authorization": "Bearer #{User.credentials.access_token}", "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"}
-      })
-        .success((data) ->
-          if data != 0 and parseInt(data) != User.details.notifications.unread_count
-            User.details.notifications.unread_count = parseInt(data)
-            User.FetchNotifications()
-        )
-        .error((data) =>
-          console.log data
-        )
 
 
     FetchSubscriptions: () ->
@@ -224,19 +160,6 @@ window.WebApp.factory('UserManager', ['cookies', '$http', '$q', '$location','api
           console.log data
         )
 
-#    CreateChannel: () ->
-#      $http({
-#        method: 'POST',
-#        url: User.details.channels.resource_url,
-#        headers: {"authorization": "Bearer #{@credentials.access_token}", "Content-Type": "application/json"}
-#        data: '"' + channelResource + '"'
-#      })
-#        .success((data) ->
-#
-#        )
-#        .error((data) =>
-#          console.log data
-#        )
     addVideo: (channelurl, videoId) ->
       $http({
         method: 'POST',
@@ -251,6 +174,84 @@ window.WebApp.factory('UserManager', ['cookies', '$http', '$q', '$location','api
           return data
         )
 
+ #   Notifications are part of Full web, NOT IN USE
+    FetchNotifications: () ->
+      $http({
+      method: 'GET',
+      url: User.details.notifications.resource_url,
+      headers: {"authorization": "Bearer #{User.credentials.access_token}", "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"}
+      })
+        .then(((data) ->
+          User.details.notifications.total = data.data.notifications.total
+          User.details.notifications.items = data.data.notifications.items
+        ), (data) ->
+          console.log data
+        )
+
+#   Notifications are part of Full web, NOT IN USE
+    FetchUnreadNotifications: () ->
+      $http({
+        method: 'GET',
+        url: "#{User.details.notifications.resource_url}unread_count/",
+        headers: {"authorization": "Bearer #{User.credentials.access_token}", "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"}
+      })
+        .success((data) ->
+          if data != 0 and parseInt(data) != User.details.notifications.unread_count
+            User.details.notifications.unread_count = parseInt(data)
+            User.FetchNotifications()
+        )
+        .error((data) =>
+          console.log data
+        )
+
+#   Used by the old Feed system (full web) NOT IN USE
+    FetchRecentSubscriptions: (start, size) ->
+      $http({
+      method: 'GET',
+      url: User.details.subscriptions.updates,
+      params: {start: start, size: size}
+      headers: {"authorization": "Bearer #{User.credentials.access_token}", "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"}
+      })
+        .success((data, status, headers, config) ->
+
+          if User.feed.total == null
+            User.feed.total = data.videos.total
+
+          currentPos = 0
+
+          _.each(data.videos.items, (video) ->
+            datestring  = video.date_added.substr(0, 10)
+
+            while User.feed.items[currentPos]? and  User.feed.items[currentPos].date != datestring
+              currentPos++
+
+            if not (User.feed.items[currentPos]?)
+              User.feed.items[currentPos] = {date: datestring, videos: []}
+
+            User.feed.items[currentPos].videos.push(video)
+          )
+        )
+        .error((data) =>
+          console.log data
+        )
+
+
+
+
+#    CreateChannel: () ->
+#      $http({
+#        method: 'POST',
+#        url: User.details.channels.resource_url,
+#        headers: {"authorization": "Bearer #{@credentials.access_token}", "Content-Type": "application/json"}
+#        data: '"' + channelResource + '"'
+#      })
+#        .success((data) ->
+#
+#        )
+#        .error((data) =>
+#          console.log data
+#        )
+#
 #    getTimeToNextRefresh: () ->
 #      if @timeOfLastRefresh?
 #        return @credentials.expiers_in*0.9*1000 - ( (new Date()).getTime() - @timeOfLastRefresh )

@@ -1,0 +1,20 @@
+<div ng-controller="ChannelCtrl">
+  <div id="cover" ng-style="{'background-image': 'url(' + channel.cover.thumbnail_url + ')' }">
+    <div id="gradientShadow"></div>
+    <div id="playAll" ng-click="playVideo(channel.videos.items[0].video.source_id)"></div>
+    <div id="channelTitle">((channel.title))</div>
+  </div>
+  <div id="videos">
+    <div id="header">This pack was made with love by <span class="highlight">((channel.owner.display_name | truncate : 20))</span></div>
+    <ul id="videoslist" infinite-scroll='load_videos()' infinite-scroll-distance='1'>
+      <li ng-repeat="video in channel.videos.items" class="videocell" ng-click="playVideo(video.video.source_id)">
+        ((video.title | truncate : 26))
+      </li>
+    </ul>
+    <div id="footer">
+      <a href="http://www.rockpack.com/channel/((channel.owner.id))/((channel.id))/#" id="follow">Follow this Pack</a>
+      <div id="twitter" ng-click="shareTwitter()"></div>
+      <div id="facebook" ng-click="shareFacebook()"></div>
+    </div>
+  </div>
+</div>

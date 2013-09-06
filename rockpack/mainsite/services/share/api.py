@@ -1,12 +1,16 @@
-from collections import defaultdict
+from datetime import datetime
 from flask import abort, g
 from flask.ext import wtf
 from rockpack.mainsite import app
+from rockpack.mainsite.core import email
 from rockpack.mainsite.core.webservice import WebService, expose_ajax, ajax_create_response
 from rockpack.mainsite.core.oauth.decorators import check_authorization
 from rockpack.mainsite.services.video.models import Channel, VideoInstance
 from rockpack.mainsite.services.user.api import save_video_activity
+from rockpack.mainsite.services.user.models import EXTERNAL_SYSTEM_NAMES
 from rockpack.mainsite.services.search.api import VIDEO_INSTANCE_PREFIX
+from rockpack.mainsite.services.oauth.models import ExternalFriend
+from rockpack.mainsite.services.oauth.api import email_validator
 from .models import ShareLink
 
 
@@ -17,8 +21,23 @@ SHARE_OBJECT_TYPE_MAP = dict(
 
 OBJECT_NAME_MAP = dict(
     video_instance='video',
-    channel='channel'
+    channel='pack'
 )
+
+
+def send_share_email(recipient, user, object_type, object, link):
+    object_type_name = OBJECT_NAME_MAP[object_type]
+    subject = '%s shared a %s with you on Rockpack' % (user.display_name, object_type_name)
+    template = email.env.get_template('share.html')
+    body = template.render(
+        user=user,
+        link=link,
+        object_type=object_type,
+        object_type_name=object_type_name,
+        object=object,
+        assets=app.config.get('ASSETS_URL', '')
+    )
+    email.send_email(recipient, subject, body, format='html')
 
 
 class ShareForm(wtf.Form):
@@ -30,24 +49,6 @@ class ShareForm(wtf.Form):
         self._locale = locale
         super(ShareForm, self).__init__(*args, **kwargs)
 
-    def _set_share_message_on_form(self, object):
-        kw = defaultdict(str)
-        kw['object_type'] = OBJECT_NAME_MAP[self.object_type.data]
-
-        if self.object_type.data == 'video_instance':
-            kw['title'] = object.video_rel.title
-        else:
-            kw['title'] = object.title
-
-        message_fmt = app.config.get('SHARE_MESSAGE_MAP', {})
-
-        for key, val in message_fmt.iteritems():
-            try:
-                setattr(self, key, val.format(kw))
-            except KeyError:
-                setattr(self, key, '')
-
-
     def validate_object_id(self, field):
         object_type = SHARE_OBJECT_TYPE_MAP.get(self.object_type.data)
         if object_type:
@@ -57,11 +58,26 @@ class ShareForm(wtf.Form):
                 instance = save_video_activity(self._user, 'star', field.data, self._locale)
                 field.data = getattr(instance, 'id', instance)
 
-            object = object_type.query.filter_by(id=field.data).first()
-            if not object:
+            self.object = object_type.query.filter_by(id=field.data).first()
+            if not self.object:
                 raise wtf.ValidationError('invalid id')
 
-            self._set_share_message_on_form(object)
+    def get_message_map(self):
+        ctx = dict(
+            object_type=OBJECT_NAME_MAP[self.object_type.data],
+            title=(self.object.video_rel.title if self.object_type.data == 'video_instance'
+                   else self.object.title),
+        )
+        return dict((k, v.format(ctx))
+                    for k, v in app.config['SHARE_MESSAGE_MAP'].iteritems())
+
+
+class EmailShareForm(ShareForm):
+    email = wtf.StringField(validators=[wtf.Required(), wtf.Email(), email_validator()])
+    name = wtf.StringField()
+    _external_system_choices = zip(EXTERNAL_SYSTEM_NAMES, map(str.capitalize, EXTERNAL_SYSTEM_NAMES))
+    external_system = wtf.SelectField(choices=_external_system_choices, validators=[wtf.Optional()])
+    external_uid = wtf.StringField()
 
 
 class ShareWS(WebService):
@@ -74,12 +90,30 @@ class ShareWS(WebService):
         form = ShareForm(csrf_enabled=False, user=g.authorized.userid, locale=self.get_locale())
         if not form.validate():
             abort(400, form_errors=form.errors)
-        link = ShareLink.create(
-            g.authorized.userid, form.object_type.data, form.object_id.data)
-        msg_dict = dict(
-            message=form.message,
-            message_facebook=form.facebook,
-            message_twitter=form.twitter,
-            message_email=form.email,
-        )
-        return ajax_create_response(link, msg_dict)
+        link = ShareLink.create(g.authorized.userid, form.object_type.data, form.object_id.data)
+        return ajax_create_response(link, form.get_message_map())
+
+    @expose_ajax('/email/', methods=['POST'], secure=True)
+    @check_authorization()
+    def email_share(self):
+        form = EmailShareForm(csrf_enabled=False, user=g.authorized.userid, locale=self.get_locale())
+        if not form.validate():
+            abort(400, form_errors=form.errors)
+        if form.external_uid.data:
+            # Update email & name fields on existing friend record or create new record
+            friendkey = dict(
+                user=g.authorized.userid,
+                external_system=form.external_system.data,
+                external_uid=form.external_uid.data,
+            )
+            friendval = dict(
+                email=form.email.data,
+                last_shared_date=datetime.utcnow(),
+            )
+            if form.name.data:
+                friendval['name'] = form.name.data
+            updated = ExternalFriend.query.filter_by(**friendkey).update(friendval)
+            if not updated and form.external_system.data == 'email':
+                ExternalFriend(**dict(friendkey, **friendval)).save()
+        link = ShareLink.create(g.authorized.userid, form.object_type.data, form.object_id.data)
+        send_share_email(form.email.data, g.authorized.user, form.object_type.data, form.object, link)

@@ -5,7 +5,7 @@ from rockpack.mainsite import app
 from rockpack.mainsite.core.webservice import WebService, expose_ajax
 from rockpack.mainsite.core import youtube
 from rockpack.mainsite.helpers.db import gen_videoid
-from rockpack.mainsite.services.video.api import get_local_channel
+from rockpack.mainsite.services.video.api import get_db_channels
 from rockpack.mainsite.services.video.models import Channel, User
 from rockpack.mainsite.core.es.api import ChannelSearch, VideoSearch, UserSearch
 from rockpack.mainsite.core.es import use_elasticsearch, filters
@@ -88,16 +88,15 @@ class SearchWS(WebService):
             ch.add_filter(filters.negatively_boost_favourites())
             if request.args.get('order') == 'latest':
                 ch.date_sort('desc')
-            channels = ch.channels(with_owners=True)
-            return dict(channels=dict(items=channels, total=ch.total))
-
-        # XXX: Obviously this needs to be replaced by a search engine
-        date_order = True if request.args.get('order') == 'latest' else False
-        items, total = get_local_channel(self.get_locale(),
-                                         self.get_page(),
-                                         query=request.args.get('q', ''),
-                                         date_order=date_order)
-        return {'channels': {'items': items, 'total': total}}
+            items, total = ch.channels(with_owners=True), ch.total
+        else:
+            # DB fallback
+            date_order = True if request.args.get('order') == 'latest' else False
+            items, total = get_db_channels(self.get_locale(),
+                                           self.get_page(),
+                                           query=request.args.get('q', ''),
+                                           date_order=date_order)
+        return dict(channels=dict(items=items, total=total))
 
     @expose_ajax('/users/', cache_age=300)
     def search_users(self):

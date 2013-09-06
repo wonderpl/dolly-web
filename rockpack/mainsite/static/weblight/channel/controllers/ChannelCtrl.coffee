@@ -1,7 +1,7 @@
-window.Weblight.controller('ChannelCtrl', ['$scope', '$routeParams', '$location', 'isMobile', 'channelData', 'userService', ($scope, $routeParams, $location, isMobile, channelData, userService) ->
+window.Weblight.controller('ChannelCtrl', ['$scope', '$routeParams', '$location', 'isMobile', 'channelData', 'userService', 'ContentService', ($scope, $routeParams, $location, isMobile, channelData, userService, ContentService) ->
 
   $scope.channel = channelData
-
+  $scope.page = 1
   $scope.getQueryVariable = (variable) ->
     query = window.location.search.substring(1)
     if (query.indexOf("&") > -1)
@@ -59,6 +59,15 @@ window.Weblight.controller('ChannelCtrl', ['$scope', '$routeParams', '$location'
         $scope.videodata = videoObject
 
   $scope.showPopup = true
+
+  $scope.load_videos = () ->
+    # Did we already load all the videos?
+    if $scope.page*40 <= $scope.channel.videos.total
+      ContentService.getChannelVideos(channelData.id, 40, $scope.page*40).then (data) =>
+        $scope.channel.videos.items = $scope.channel.videos.items.concat(data.data.videos.items)
+        $scope.page += 1
+    return
+
 
   return
 ])

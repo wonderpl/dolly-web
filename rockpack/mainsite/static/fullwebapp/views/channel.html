@@ -1,25 +1,30 @@
-<div ng-controller="ChannelCtrl" id="ChannelCtrl" ng-style="videwWrapperWidth">
+<div ng-controller="ChannelCtrl" id="ChannelCtrl" ng-style="videoWrapperWidth" class="wrapper">
   <img ng-src="{{background}}" id="bgimage">
-  <div class="channelheader">
+  <div id="channelheader">
+    <h1>{{channel.title}}</h1>
     <div>
-      <h1>{{channel.title}}</h1>
-      <div id="subscriberCount">{{channel.subscriber_count}} Subscribers</div>
-      <ul id="userdetails">
-        <li><a href="#/profile/{{channel.owner.id}}"><img class="user-profile" ng-src="{{channel.owner.avatar_thumbnail_url}}"></a></li>
-        <li id="curatedby"><span id="username"><a href="#/profile/{{channel.owner.id}}">{{channel.owner.display_name}}</a></span></li>
-      </ul>
-      <div report-button is-loggedin='{{User.isLoggedIn}}' object-id='{{channel.id}}' object-type='channel'></div>
-      <div subscribe-button></div>
-      <button ng-click="share('facebook', channel.id)">Share FB</button>
-      <a href="https://twitter.com/share" class="twitter-share-button" data-lang="en">Tweet</a>
-      <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src="https://platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
+      <div id="playChannel" ng-click="playAll()"></div>
+      <div id="subscriberCount"><div subscribe-button></div> {{channel.subscriber_count}} Subscribers</div>
     </div>
+    <ul id="userdetails">
+      <li><a href="#!/{{channel.owner.id}}/profile"><img class="user-profile" ng-src="{{channel.owner.avatar_thumbnail_url}}"></a></li>
+      <li id="curatedby">
+         <span id="username"><a href="#!/{{channel.owner.id}}/profile">{{channel.owner.display_name}}</a></span>
+         <div report-button is-loggedin='{{User.isLoggedIn}}' object-id='{{channel.id}}' object-type='channel'></div>
+      </li>
+    </ul>
+    <div id="shareChanne">
+
+    </div>
+    <!--<button ng-click="share('facebook', channel.id)">Share FB</button>-->
+    <!--<a href="https://twitter.com/share" class="twitter-share-button" data-lang="en">Tweet</a>-->
+    <!--<script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src="https://platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>-->
   </div>
   <div id="channeloverlay" >
     <div ng-style="windowWidth" id="channelcontainer">
       <div id="videoslist" infinite-scroll='load_videos()' infinite-scroll-distance='1'>
         <div ng-repeat="video in channel.videos.items" class="video">
-          <video-cell></video-cell>
+          <div ng-include src="'videoCell.html'"></div>
         </div>
       </div>
     </div>

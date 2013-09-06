@@ -342,4 +342,4 @@ def admin_views():
     for v in registered:
         yield v(name=v.__name__,
                 endpoint=v.model_name,
-                category='Video',)
+                category='Content',)

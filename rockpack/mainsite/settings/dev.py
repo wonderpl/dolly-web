@@ -19,7 +19,7 @@ S3_BUCKET = 'media.dev.rockpack.com'
 SENTRY_USER = _decrypt('#\x13\xf7\x06\x8f\x0c:+\x90\xcdD\xd2 \xd3sv\xec\xb8\xb8\x1e86\xd1E\xf0\x0b\xa6\xca\xc4\xc2\ng')
 SENTRY_PASSWORD = _decrypt('r\x0e\xba+q\xd9\x13Mt1\x14\xdc\x14)\xdf\x97\xfbQ\xb6\xa2Q:\xb3Tu,\x8a \x15\xb1\x0e\xc0')
 SENTRY_DSN = 'https://%s:%s@sentry.dev.rockpack.com/2' % (SENTRY_USER, SENTRY_PASSWORD)
-SENTRY_ENABLE_LOGGING = True
+SENTRY_ENABLE_LOGGING = 30  # logging.WARNING
 
 ELASTICSEARCH_URL = 'http://localhost:9200'
 
@@ -27,6 +27,6 @@ STATSD_HOST = 'admin'
 
 ENABLE_TIMINGS = True
 
-USE_GEVENT = True
+#USE_GEVENT = True
 
 ENABLE_FULLWEB = True

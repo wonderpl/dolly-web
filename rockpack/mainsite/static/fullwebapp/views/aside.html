@@ -1,0 +1,24 @@
+<div id="aside" ng-controller="AsideCtrl" ng-show="asideOpen">
+  <div id="aside-header">
+    <img ng-src="{{channel.owner.avatar_thumbnail_url}}">
+    <div id="videoInfo">
+      <div id="aside-channeltitle">{{channel.title| truncate:30}}</div>
+      <div id="aside-username">{{channel.owner.display_name}}</div>
+    </div>
+  </div>
+  <div id="aside-player-placeholder"></div>
+  <div id="aside-player-controls">
+    <div id="aside-player-title"></div>
+    <div id="maximize" ng-click="maximize()"></div>
+    <div id="aside-player-nav">
+      <div id="aside-prev" ng-click="prev()"></div>
+      <div id="aside-next" ng-click="next()"></div>
+    </div>
+    <div id="aside-close" ng-click="closeAside()"></div>
+  </div>
+  <div id="aside-video-container">
+    <div ng-repeat="video in channel.videos.items" class="video">
+      <div ng-include src="'videoCell.html'" ng-class="{active: $index == selectedVideo}"></div>
+    </div>
+  </div>
+</div>

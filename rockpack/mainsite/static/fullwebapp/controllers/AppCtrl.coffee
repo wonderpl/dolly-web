@@ -2,14 +2,15 @@
 # For example, as an unregisteres user go to /login and then change url to /feed
 # Possible Angularjs bug,
 
-window.WebApp.controller('AppCtrl', ['$rootScope', '$location', 'UserManager', '$route', '$scope', ($rootScope, $location, UserManager, $route, $scope) ->
+window.WebApp.controller('AppCtrl', ['$rootScope', '$location', 'UserManager', '$route', '$scope', 'playerService', 'videoShareService', ($rootScope, $location, UserManager, $route, $scope, playerService, videoShareService) ->
 
-  routesThatRequireAuth = ['/feed']
+  $rootScope.asideOpen = false
+
+  routesThatRequireAuth = ['/channels']
 
   $rootScope.$on("$locationChangeStart", (event, NewUrl, OldUrl) ->
 
     if (UserManager.isLoggedIn == false)
-      console.log 'user is logged off'
       if (UserManager.credentials.refresh_token?)
         event.preventDefault()
         UserManager.RefreshToken()
@@ -33,19 +34,56 @@ window.WebApp.controller('AppCtrl', ['$rootScope', '$location', 'UserManager', '
   $scope.getWidth = () ->
     return $(window).width()
 
-
+  #TODO The browser does not trigger a width change when the scroll bar is added, will cause some problem in edge cases and needs to be fixed
 
   $scope.$watch($scope.getWidth, (newValue, oldValue) ->
-    if newValue > 1200
+    ContentWidthCalculator()
+  )
+
+  $scope.$watch('asideOpen', (newValue, oldValue) ->
+    ContentWidthCalculator()
+  )
+
+  ContentWidthCalculator = () ->
+    width = $scope.getWidth()
+    if width > 1200
       $scope.sidebarWidth = 360
     else
       $scope.sidebarWidth = 246
 
-    $rootScope.contentWidth = newValue - $scope.sidebarWidth + 'px'
-
-  )
+    if $rootScope.asideOpen
+      $rootScope.contentWidth = width - $scope.sidebarWidth + 'px'
+    else
+      $rootScope.contentWidth = '100%'
 
   window.onresize = () ->
     $scope.$apply()
+
+  # Expose the assets
+  $rootScope.assets_url = window.assets_url
+
+  #
+  $scope.showFullPlayer = false
+
+  $scope.$watch((()-> playerService.getVideo()), (newValue) ->
+    if newValue?
+      $scope.showFullPlayer = true
+  )
+
+  $scope.$watch((()-> playerService.getLocation()), (newValue) ->
+    if newValue == 2
+      $rootScope.asideOpen = true
+    else
+      $rootScope.asideOpen = false
+  )
+
+  $scope.isShareVisible = false
+
+  $scope.showShare = (videoObj, $event) ->
+    $("#videoShareContainer").appendTo($event.currentTarget)
+    videoShareService.setVideoObj(videoObj)
+
+  $scope.hideShare = () ->
+    $("#videoShareContainer").prependTo('body')
 
 ])

@@ -1,4 +1,5 @@
-from sqlalchemy import String, Column, Integer, DateTime, func
+from sqlalchemy import (
+    String, Column, Integer, DateTime, Date, Enum, CHAR, func, PrimaryKeyConstraint)
 from werkzeug import FileStorage
 from flask.ext import login, wtf
 from flask.ext.admin.model.typefmt import BASE_FORMATTERS, Markup
@@ -20,6 +21,20 @@ class AdminLogRecord(db.Model):
     model = Column(String(254), nullable=False)
     instance_id = Column(String(254), nullable=False)
     value = Column(String(254), nullable=False)
+
+
+class AppDownloadRecord(db.Model):
+    __tablename__ = 'app_download'
+    __table_args__ = (
+        PrimaryKeyConstraint('source', 'version', 'action', 'country', 'date'),
+    )
+
+    source = Column(Enum('itunes', 'playstore', name='app_download_source'), nullable=False)
+    version = Column(String(16), nullable=False)
+    action = Column(Enum('download', 'update', name='app_download_action'), nullable=False)
+    country = Column(CHAR(2), nullable=False)
+    date = Column(Date(), nullable=False)
+    count = Column(Integer(), nullable=False, server_default='0')
 
 
 def _render_image(img):

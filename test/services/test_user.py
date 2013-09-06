@@ -87,14 +87,17 @@ class TestAPNS(base.RockPackTestCase):
             ).save()
 
             def _new_send(obj, message):
-                return message.payload
+                # simulate success
+                return apnsclient.Result(message)
 
             app.config['ENABLE_APNS_DEEPLINKS'] = True
 
             import apnsclient
             from rockpack.mainsite.services.user.commands import send_push_notifications
             with patch.object(apnsclient.APNs, 'send', _new_send):
-                message = send_push_notifications(user)
+                result = send_push_notifications(user)
+                self.assertFalse(result.failed or result.errors)
+                message = result.message.payload
                 self.assertEquals(user.display_name, message['aps']['alert']['loc-args'][0])
                 self.assertEquals(1, message['aps']['badge'])
                 self.assertEquals(un.id, message['id'])
@@ -360,15 +363,18 @@ class TestProfileEdit(base.RockPackTestCase):
             self.assertEquals(data['total'], len(c1instances) + 2)
             itemids = [i['id'] for i in data['items']]
 
-            # Check videos from channel1 are present and aggregated
+            # Check videos from channel1 (except c1starred) are present and aggregated
             self.assertIn(c1instances[0].id, itemids)
             agg = [a for a in data['aggregations'].values() if a['type'] == 'video'][0]
-            self.assertEquals(agg['count'], len(c1instances))
+            self.assertEquals(agg['count'], len(c1instances) - 1)
 
-            # Check stars on cover video
+            # Check stars on c1starred and that no stars on cover video
+            self.assertNotIn(c1starred.id, agg['covers'])
             cover = [i for i in data['items'] if i['id'] == agg['covers'][0]][0]
-            self.assertEquals(cover['video']['star_count'], 3)
-            self.assertItemsEqual([u['id'] for u in cover['starring_users']], [user1, user2, user3])
+            self.assertEquals(cover['video']['star_count'], 0)
+            starred = [i for i in data['items'] if i['id'] == c1starred.id][0]
+            self.assertEquals(starred['video']['star_count'], 3)
+            self.assertItemsEqual([u['id'] for u in starred['starring_users']], [user1, user2, user3])
 
             # Check that new channels from friend and from subscription owner are present
             self.assertNotIn(u2old, itemids)
@@ -435,7 +441,7 @@ class TestProfileEdit(base.RockPackTestCase):
                 assert user.email == send_email.call_args[0][0]
                 assert 'Welcome to Rockpack' == send_email.call_args[0][1]
                 assert 'Hi {}'.format(user.username) in send_email.call_args[0][2]
-                assert 'You are subscribed as {}'.format(user.email) in send_email.call_args[0][2]
+                #assert 'You are subscribed as {}'.format(user.email) in send_email.call_args[0][2]
                 assert 'To ensure our emails reach your inbox please make sure to add {}'.format(
                     cgi.escape(app.config['DEFAULT_EMAIL_SOURCE'])) in send_email.call_args[0][2]
 
