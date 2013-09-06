@@ -92,11 +92,8 @@ def get_es_channels(locale, paging, category, category_boosts=None):
         for boost in category_boosts:
             cs.add_filter(filters.category_boost(*boost))
     cs.add_filter(filters.boost_from_field_value('editorial_boost'))
-    cs.add_filter(filters.boost_from_field_value('subscriber_frequency'))
-    cs.add_filter(filters.boost_from_field_value('update_frequency', reduction_factor=4))
     cs.add_filter(filters.negatively_boost_favourites())
-    cs.add_filter(filters.verified_channel_boost())
-    cs.add_filter(filters.boost_by_time())
+    cs.add_filter(filters.channel_rank_boost(locale))
     cs.filter_category(category)
     cs.promotion_settings(category)
     cs.date_sort(request.args.get('date_order'))
