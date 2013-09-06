@@ -163,7 +163,7 @@ def update_channel_promo_activity():
     # Push everything to es. Promotion data
     # will get updated during insert
     for p in ChannelPromotion.query.all():
-        api.add_channel_to_index(p.channel_rel)
+        api.update_channel_to_index(p.channel_rel)
 
 
 @manager.cron_command(interval=900)

@@ -360,8 +360,6 @@ class DBImport(object):
                     for k, v in _dict.iteritems():
                         if k.startswith('norm'):
                             count += v
-                        else:
-                            u_strings.append('ctx._source.%s = %s' % (k, map(lambda x: Decimal.to_eng_string(x) if x else 0, v),))
 
                     u_strings.append('ctx._source.normalised_rank[\'%s\'] = %f' % (locale, float(count),))
 

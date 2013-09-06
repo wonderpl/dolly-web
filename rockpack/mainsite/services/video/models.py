@@ -556,7 +556,7 @@ def _channel_insert(mapper, connection, target):
     # possibly do a lookup for owner in resource_url method instead of having it rely on self.owner_rel here
     channel = Channel.query.get(target.channel)
     if channel_not_deleted:
-        _add_es_channel(channel)
+        _add_or_remove_channel(channel)
 
 
 @event.listens_for(ChannelLocaleMeta, 'after_update')
