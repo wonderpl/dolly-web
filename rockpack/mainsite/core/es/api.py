@@ -1,4 +1,5 @@
 import logging
+import datetime
 from ast import literal_eval
 from urlparse import urlparse, urljoin
 import pyes
@@ -12,7 +13,7 @@ from rockpack.mainsite.helpers.urls import url_for
 
 logger = logging.getLogger(__name__)
 
-DEFAULT_FILTERS = [filters.locale_filter]
+DEFAULT_FILTERS = []  # [filters.locale_filter]
 
 # Term occurance conditions
 MUST = 'must'
@@ -483,7 +484,6 @@ class VideoSearch(EntitySearch, CategoryMixin, MediaSortMixin):
         """ Checks the allow/deny list for country """
         if country:
             self._exclusion_filters.append(filters.country_restriction(country))
-            self._exclusion_filters.append(filters.country_restriction(country, 'deny'))
 
     def videos(self, with_channels=False, with_stars=False):
         if not self._video_results:
@@ -574,10 +574,7 @@ def promotion_formatter(locale, category, position):
     return '|'.join([str(locale), str(category), str(position)])
 
 
-def add_channel_to_index(channel, bulk=False, refresh=False, boost=None, no_check=False):
-    if not check_es(no_check):
-        return
-
+def _channel_data_for_index(channel):
     category = []
     if channel.category:
         if not channel.category_rel:
@@ -617,14 +614,79 @@ def add_channel_to_index(channel, bulk=False, refresh=False, boost=None, no_chec
             aoi=aoi
         ),
         keywords=[channel.owner_rel.display_name.lower(), channel.owner_rel.username.lower()],
-        promotion=channel.promotion_map()
+        promotion=channel.promotion_map(),
+        normalised_rank={'en-us': 0.0, 'en-gb': 0.0}
     )
 
     if app.config.get('SHOW_OLD_CHANNEL_COVER_URLS', True):
         for k in 'thumbnail_large', 'thumbnail_small', 'background':
             data['cover_%s_url' % k] = urlparse(getattr(convert(channel, 'cover', 'CHANNEL'), k)).path
 
+    return data
+
+
+def add_channel_to_index(channel, bulk=False, refresh=False, boost=None, no_check=False):
+    if not check_es(no_check):
+        return
+
+    data = _channel_data_for_index(channel)
     return add_to_index(data, mappings.CHANNEL_INDEX, mappings.CHANNEL_TYPE, id=channel.id, bulk=bulk, refresh=refresh)
+
+
+def update_channel_to_index(channel, no_check=False):
+
+    def _construct_string(prefix, val):
+        if isinstance(val, dict):
+            final = ''
+            for k, v in val.iteritems():
+                this = prefix + "['%s']" % k
+                final = _construct_string(this, v) + final
+            return final
+        else:
+            this_val = "'%s'" % val
+            if isinstance(val, bool):
+                this_val = "'%s'" % str(val).lower()
+            elif isinstance(val, (int, float)):
+                this_val = val
+            elif isinstance(val, datetime.datetime):
+                this_val = "'%s'" % 'T'.join(str(val).split())
+            elif isinstance(val, list):
+                this_val = "[%s]" % ",".join(val if isinstance(val, (int, float)) else map(lambda x: "'%s'" % str(x), val))
+            elif val is None:
+                this_val = "null"
+
+            prefix += " = %s;" % this_val
+        return prefix
+
+    if not check_es(no_check):
+        return
+
+    data = _channel_data_for_index(channel)
+
+    if data:
+        updates = []
+        for item, value in data.iteritems():
+            print item, value
+            if item != 'id':
+                updates.append(_construct_string('ctx._source.%s' % item, value))
+
+        try:
+            es_connection.partial_update(
+                mappings.CHANNEL_INDEX,
+                mappings.CHANNEL_TYPE,
+                channel.id,
+                ''.join(updates)
+            )
+        except Exception, e:
+            if isinstance(e, pyes.exceptions.NotFoundException) or 'DocumentMissingException' in e.result.get('error', ''):
+            # If the channel doesn't exist we need to create it.
+            # Switch to an insert statement instead.
+                try:
+                    add_channel_to_index(channel)
+                except Exception, e:
+                    pass
+        else:
+            es_connection.flush_bulk(forced=True)
 
 
 def video_stars(instance_id):
@@ -673,11 +735,10 @@ def add_video_to_index(video_instance, bulk=False, refresh=False, no_check=False
         category=video_instance.category,
         date_added=video_instance.date_added,
         position=video_instance.position,
-        locales=locale_dict_from_object(video_instance.metas),
-        recent_user_stars=video_stars(video_instance.id)
+        locales=locale_dict_from_object(video_instance.metas)
     )
     if update_restrictions:
-        data['country_restriction'] =_get_country_restrictions(video_instance.video_rel.restrictions)
+        data['country_restriction'] = _get_country_restrictions(video_instance.video_rel.restrictions)
     else:
         data['country_restriction'] = dict(allow=[], deny=[])
     return add_to_index(data, mappings.VIDEO_INDEX, mappings.VIDEO_TYPE, id=video_instance.id, bulk=bulk, refresh=refresh)

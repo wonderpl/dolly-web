@@ -478,6 +478,10 @@ def _remove_es_channel(channel):
     es_api.remove_channel_from_index(channel.id)
 
 
+def _update_es_channel(channel):
+    es_api.update_channel_to_index(channel)
+
+
 def previous_state(flag, obj):
     # Only for boolean flags
     val = getattr(obj, flag)
@@ -506,7 +510,7 @@ def _add_or_remove_channel(channel):
     if now_deleted:
         _remove_es_channel(channel)
     elif channel_not_deleted(channel):
-        _add_es_channel(channel)
+        _update_es_channel(channel)
 
 
 def _remove_es_video_instance(video_instance):

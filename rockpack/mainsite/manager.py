@@ -66,11 +66,11 @@ def init_es(rebuild=False, map_only=False):
 
 
 @manager.command
-def import_to_es(channels_only=False, videos_only=False, users_only=False, stars_only=False, restrictions_only=False):
+def import_to_es(channels_only=False, videos_only=False, users_only=False, stars_only=False, restrictions_only=False, lshares_only=False):
     """Import data into elasticsearch from the db"""
     from rockpack.mainsite.core.es import helpers
     i = helpers.DBImport()
-    if not stars_only and not restrictions_only:
+    if not stars_only and not restrictions_only and not lshares_only:
         if not (videos_only or users_only):
             i.import_channels()
         if not (channels_only or users_only):
@@ -83,6 +83,9 @@ def import_to_es(channels_only=False, videos_only=False, users_only=False, stars
 
     if restrictions_only:
         i.import_video_restrictions()
+
+    if lshares_only:
+        i.import_channel_share()
 
 
 @manager.command

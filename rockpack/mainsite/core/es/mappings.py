@@ -176,6 +176,19 @@ channel_mapping = {
             "index": "not_analyzed"},
         "promotion": {
             "type": "string",
-            "index": "not_analyzed"}
+            "index": "not_analyzed"
+        },
+        "normalised_rank": {
+            "properties": {
+                "en-us": {
+                    "type": "float",
+                    "null_value": 0.0
+                },
+                "en-gb": {
+                    "type": "float",
+                    "null_value": 0.0
+                }
+            }
+        }
     }
 }

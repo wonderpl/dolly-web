@@ -1,3 +1,5 @@
+import time
+import datetime
 import pyes
 from rockpack.mainsite import app
 
@@ -15,12 +17,13 @@ def locale_filter(entity):
     return pyes.CustomFiltersScoreQuery.Filter(pyes.MatchAllFilter(), script=script)
 
 
-def country_restriction(country, relationship='allow'):
-    condition = '=='
-    if relationship != 'allow':
-        condition = '!='
-
-    script = "doc['country_restriction.{rel}'].value == null ? 1 : doc['country_restriction.{rel}'].value.contains('{country}') {condition} 1".format(rel=relationship, country=country, condition=condition)
+def country_restriction(country):
+    script = """(
+        doc['country_restriction.allow'].value == null ? 1 : (doc['country_restriction.allow'].value.contains('{country}') ? 1 : 0)
+        ) &
+    (
+    doc['country_restriction.deny'].value == null ? 1 : (doc['country_restriction.deny'].value.contains('{country}') ? 1 : 0)
+    )""".format(country=country)  # % both  #.format(rel=relationship, country=country, condition=condition)
     return pyes.ScriptFilter(script)
 
 
@@ -43,5 +46,10 @@ def boost_from_field_value(field, reduction_factor=1):
 
 
 def boost_by_time():
-    script = "(0.08 * ((3.16*pow(10,-11)) * doc['{}'].value) + 0.05) + 1.0".format('date_added')
+    script = "(0.05 * ((3.16*pow(10,-19)) * doc['{}'].date.getMillis()) + 0.09) + 1.0".format('date_added')
+    return pyes.CustomFiltersScoreQuery.Filter(pyes.MatchAllFilter(), script=script)
+
+
+def channel_rank_boost(locale):
+    script = "doc['normalised_rank.%s'].value + 1.0" % locale
     return pyes.CustomFiltersScoreQuery.Filter(pyes.MatchAllFilter(), script=script)

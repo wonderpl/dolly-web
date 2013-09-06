@@ -418,6 +418,22 @@ def _invalidate_apns_tokens():
 
         app.logger.info('%d APN device tokens invalidated', updated)
 
+"""
+def set_normalised_values():
+    target = 1.0
+
+    norm_e = (e - e_min) / (e_max - e_min)
+
+    ConstantMetrics(
+        name='normalised_subscribers',
+        value=target/Subscription.query.filter().count()
+    )
+    ConstantMetrics(
+        name='normalised_likes',
+        value=target/(UserActivity.query.filter_by(action='star').count() - UserActivity.query.filter_by(action='unstar').count())
+    )
+"""
+
 
 @manager.cron_command
 def update_apns_tokens():

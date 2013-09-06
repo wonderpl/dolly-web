@@ -14,7 +14,6 @@ class RankingView(BaseView):
     def is_accessible(self):
         return self.is_authenticated()
 
-
     @expose('/locale/<locale>/<channelid>/', ('GET',))
     def channel_videos(self, locale, channelid):
         offset, limit = request.args.get('start', 0), request.args.get('size', 20)
@@ -29,11 +28,11 @@ class RankingView(BaseView):
         vs.set_paging(offset, limit)
 
         ctx = {'videos': [],
-                'image_cdn': app.config['IMAGE_CDN'],
-                'referrer': request.args.get('referrer', request.referrer),
-                'url': request.url,
-                'path': request.path,
-                'position': order_by_position}
+            'image_cdn': app.config['IMAGE_CDN'],
+            'referrer': request.args.get('referrer', request.referrer),
+            'url': request.url,
+            'path': request.path,
+            'position': order_by_position}
 
         for video in vs.results():
             c = {}
@@ -63,7 +62,6 @@ class RankingView(BaseView):
 
         return self.render('admin/ranking.html', **ctx)
 
-
     @expose('/', ('GET',))
     def index(self):
         return redirect(request.url + 'locale/en-gb/')
@@ -71,18 +69,18 @@ class RankingView(BaseView):
     @expose('/locale/<string:locale>/', ('GET',))
     def ranking_locale(self, locale):
         category = int(request.args.get('category', 0))
-        search  = request.args.get('search')
+        search = request.args.get('search')
 
         toggle_locale = {'en-us': 'en-gb', 'en-gb': 'en-us'}.get(locale)
         ctx = {
-                'locale_base': self.url + '/locale/' + locale + '/',
-                'locale_toggle_name': toggle_locale,
-                'locale_toggle': self.url + '/locale/' + toggle_locale + '/',
-                'categories': category_list(),
-                'image_cdn': app.config['IMAGE_CDN'],
-                'category': category,
-                'locale': locale,
-                'search_term': request.args.get('search', 'Search for a channel')}
+            'locale_base': self.url + '/locale/' + locale + '/',
+            'locale_toggle_name': toggle_locale,
+            'locale_toggle': self.url + '/locale/' + toggle_locale + '/',
+            'categories': category_list(),
+            'image_cdn': app.config['IMAGE_CDN'],
+            'category': category,
+            'locale': locale,
+            'search_term': request.args.get('search', 'Search for a channel')}
 
         if category == 0:
             category = None
@@ -93,12 +91,8 @@ class RankingView(BaseView):
         if search:
             cs.add_text('title', search)
         else:
-            cs.add_filter(filters.boost_from_field_value('editorial_boost'))
-            cs.add_filter(filters.boost_from_field_value('subscriber_frequency'))
-            cs.add_filter(filters.boost_from_field_value('update_frequency', reduction_factor=4))
+            cs.add_filter(filters.channel_rank_boost(locale))
             cs.add_filter(filters.negatively_boost_favourites())
-            cs.add_filter(filters.verified_channel_boost())
-            cs.add_filter(filters.boost_by_time())
             cs.filter_category(category)
             cs.promotion_settings(category)
         processed_channels = cs.channels(with_owners=True)
@@ -125,6 +119,7 @@ class RankingView(BaseView):
             c['promotion'] = channel.promotion
             c['gbcount'] = channel.locales['en-gb']['view_count']
             c['uscount'] = channel.locales['en-us']['view_count']
+            c['normalised_rank'] = channel.normalised_rank
             raw_channels[channel.id] = c
 
         # loop again to get the correct order
@@ -132,7 +127,7 @@ class RankingView(BaseView):
             c = raw_channels[channel['id']]
             promo_string = '|'.join([locale, str(category or 0), str(channel['position'] + 1)])
             c['promoted'] = False
-            if promo_string in c['promotion']:
+            if c.get('promotion', []) and promo_string in c.get('promotion', []):
                 c['promoted'] = True
             ctx['channels'].append(c)
 
