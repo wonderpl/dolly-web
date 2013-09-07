@@ -650,7 +650,7 @@ def update_channel_to_index(channel, no_check=False):
                 this_val = val
             elif isinstance(val, datetime.datetime):
                 this_val = "'%s'" % 'T'.join(str(val).split())
-            elif isinstance(val, list):
+            elif isinstance(val, (list, tuple)):
                 this_val = "[%s]" % ",".join(val if isinstance(val, (int, float)) else map(lambda x: "'%s'" % x, val))
             elif val is None:
                 this_val = "null"
