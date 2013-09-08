@@ -198,7 +198,7 @@ def add_videos_to_channel(channel, instance_list, locale, delete_existing=False)
             added.append(video_id)
 
     if delete_existing:
-        deleted_video_ids = set(existing.keys()).difference(video_ids)
+        deleted_video_ids = set(existing.keys()).difference([v[0] for v in video_ids])
         if deleted_video_ids:
             VideoInstance.query.filter(
                 VideoInstance.video.in_(deleted_video_ids),
