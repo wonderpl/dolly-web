@@ -645,7 +645,7 @@ def update_channel_to_index(channel, no_check=False):
             return final
         else:
             if isinstance(val, bool):
-                this_val = "'%s'" % str(val).lower()
+                this_val = "%s" % str(val).lower()
             elif isinstance(val, (int, float)):
                 this_val = val
             elif isinstance(val, datetime.datetime):
