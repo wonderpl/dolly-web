@@ -1,21 +1,30 @@
-window.Weblight.controller('ChannelCtrl', ['$scope', '$routeParams', '$location', 'channelData', '$rootScope', ($scope, $routeParams, $location, channelData, $rootScope) ->
+window.Weblight.controller('ChannelCtrl', ['$scope', '$rootScope', 'ContentService', ($scope, $rootScope, ContentService) ->
 
-	$scope.channel = channelData
-	$scope.channel.cover.thumbnail_url = $scope.channel.cover.thumbnail_url.replace('thumbnail_medium', 'thumbnail_large')
+  $scope.channel = window.channel_data
+  $scope.totalvideos = $scope.channel.videos.total
+  $scope.page = 1
+  $scope.channel.cover.thumbnail_url = $scope.channel.cover.thumbnail_url.replace('thumbnail_medium', 'thumbnail_large')
 
-	$scope.playVideo = (videoid) ->
-		$rootScope.currVideo = videoid 
+  $scope.playVideo = (videoPos) ->
+    $rootScope.videoPosition = videoPos
 
-	$scope.shareFacebook = () ->
-		FB.ui({
-			method: 'feed',
-			link: "http://www.rockpack.com/channel/#{$scope.channel.owner.id}/#{$scope.channel.id}/#",
-			picture: $scope.channel.cover.thumbnail_url,
-			name: 'Rockpack',
-			caption: 'Shared a video with you'
-		})
+  $scope.load_videos = () ->
+    if $scope.page*40 <= $scope.totalvideos
+      ContentService.getChannelVideos(40, $scope.page*40).then ((data) ->
+        $scope.channel.videos.items = $scope.channel.videos.items.concat(data.videos.items)
+        $scope.page += 1
+      )
 
-	$scope.shareTwitter = (url) ->
-		window.open("http://twitter.com/intent/tweet?url=http://www.rockpack.com/channel/#{$scope.channel.owner.id}/#{$scope.channel.id}/#")
+  $scope.shareFacebook = () ->
+    FB.ui({
+      method: 'feed',
+      link: "http://www.rockpack.com/channel/#{$scope.channel.owner.id}/#{$scope.channel.id}/#",
+      picture: $scope.channel.cover.thumbnail_url,
+      name: 'Rockpack',
+      caption: 'Shared a video with you'
+    })
+
+  $scope.shareTwitter = (url) ->
+    window.open("http://twitter.com/intent/tweet?url=http://www.rockpack.com/channel/#{$scope.channel.owner.id}/#{$scope.channel.id}/#")
 
 ])

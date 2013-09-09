@@ -6,11 +6,13 @@
   </div>
   <div id="videos">
     <div id="header">This pack was made with love by <span class="highlight">((channel.owner.display_name | truncate : 20))</span></div>
-    <ul id="videoslist" infinite-scroll='load_videos()' infinite-scroll-distance='1'>
-      <li ng-repeat="video in channel.videos.items" class="videocell" ng-click="playVideo(video.video.source_id)">
-        ((video.title | truncate : 26))
-      </li>
-    </ul>
+    <div id="videolistContaienr">
+      <ul id="videoslist" infinite-scroll='load_videos()' infinite-scroll-distance='1'>
+        <li ng-repeat="video in channel.videos.items" class="videocell" ng-click="playVideo($index)">
+          ((video.title | truncate : 26))
+        </li>
+      </ul>
+    </div>
     <div id="footer">
       <a href="http://www.rockpack.com/channel/((channel.owner.id))/((channel.id))/#" id="follow">Follow this Pack</a>
       <div id="twitter" ng-click="shareTwitter()"></div>

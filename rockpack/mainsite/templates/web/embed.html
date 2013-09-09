@@ -42,7 +42,7 @@
   <link rel="stylesheet" href="{{ ASSET_URL }}"/>
   {% endassets %}
 
-  {% assets  output="gen/weblightlib.%(version)s.js", "assets/vendor/js/jquery-1.10.1.min.js", "assets/vendor/js/angular.js", "assets/vendor/js/ng-infinite-scroll.js"%}
+  {% assets  output="gen/weblightlib.%(version)s.js", "assets/vendor/js/jquery-1.10.1.min.js", "assets/vendor/js/lodash.js", "assets/vendor/js/angular.js", "assets/vendor/js/ng-infinite-scroll.js"%}
   <script type="text/javascript" src="{{ ASSET_URL }}"></script>
   {% endassets %}
 
@@ -51,8 +51,8 @@
   <link rel="stylesheet" href="{{ ASSET_URL }}"/>
   {% endassets %}
 
-  {% assets filters="coffeescript", output="gen/embed.%(version)s.js", "weblight/embed/app.coffee", "weblight/embed/controllers/AppCtrl.coffee",
-  "weblight/embed/controllers/VideoCtrl.coffee", "weblight/embed/controllers/ChannelCtrl.coffee" %}
+  {% assets filters="coffeescript", output="gen/embed.%(version)s.js", "weblight/embed/app.coffee",
+  "weblight/embed/controllers/VideoCtrl.coffee", "weblight/embed/controllers/ChannelCtrl.coffee", "weblight/embed/services/ContentService.coffee" %}
   <script type="text/javascript" src="{{ ASSET_URL }}"></script>
   {% endassets %}
 
@@ -69,7 +69,7 @@
   </script>
 
 </head>
-<body ng-class="currentPage" id="app" ng-controller="AppCtrl">
+<body ng-class="currentPage" id="app">
   <div id="fb-root"></div>
   <script>
     window.fbAsyncInit = function() {
