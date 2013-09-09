@@ -312,6 +312,7 @@ class BroadcastMessage(db.Model):
         re.compile('(locale) like (\S+)'),
         re.compile('(email) like (\S+)'),
         re.compile('(age) between (\d+) and (\d+)'),
+        re.compile('(subscribed) to (\S+)'),
     )
 
     @classmethod
