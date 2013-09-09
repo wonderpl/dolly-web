@@ -1,7 +1,8 @@
 <div ng-controller="ChannelCtrl">
   <div id="cover" ng-style="{'background-image': 'url(' + channel.cover.thumbnail_url + ')' }">
+    <a href="http://www.rockpack.com" class="logo" ng-class="{'hideOverlay': hideOverlay}"></a>
     <div id="gradientShadow"></div>
-    <div id="playAll" ng-click="playVideo(channel.videos.items[0].video.source_id)"></div>
+    <div id="playAll" ng-click="playVideo(0)"></div>
     <div id="channelTitle">((channel.title))</div>
   </div>
   <div id="videos">

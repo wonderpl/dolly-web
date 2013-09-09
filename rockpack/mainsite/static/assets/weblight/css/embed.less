@@ -18,7 +18,7 @@
   position: relative;
 }
 
-#logo {
+.logo {
   position: absolute;
   top: 10px;
   left: 15px;
@@ -26,9 +26,8 @@
   width: 101px;
   height: 24px;
   display: block;
-  z-index: 100000;
+  z-index: 100;
 }
-
 
 #close {
   position: absolute;
@@ -166,6 +165,18 @@
   left: 0;
   display: none;
 
+  .logo, #close {
+    opacity: 1;
+    -webkit-transition: opacity  0.3s;
+    -moz-transition: opacity 0.3s;
+    -o-transition: opacity  0.3s;
+    transition: opacity 0.3s;
+
+    &.hideOverlay {
+      opacity: 0;
+    }
+  }
+
   &.active {
     display: block;
     z-index: 10000
@@ -199,12 +210,12 @@
 
 #pause {
   position: absolute;
-  top: 70px;
-  left: 170px;
+  top: 100px;
+  left: 200px;
   z-index: 12000;
-  width: 93px;
-  height: 102px;
-  background: url(/static/assets/weblight/images/pause.png) no-repeat 50% 50%;
+  width: 45px;
+  height: 50px;
+  background: url(/static/assets/embed/images/pause.png) no-repeat 50% 50%;
   opacity: 1;
   -webkit-transition: opacity  0.3s;
   -moz-transition: opacity 0.3s;
@@ -212,7 +223,7 @@
   transition: opacity 0.3s;
 
   &.play {
-    background: url(/static/assets/weblight/images/play.png) no-repeat 50% 50%;
+    background: url(/static/assets/embed/images/play.png) no-repeat 50% 50%;
     opacity: 1;
   }
 

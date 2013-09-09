@@ -87,6 +87,10 @@ body {
   font-size: 16px;
   float: right;
   margin: 20px 0 0 0;
+
+  a, div {
+    margin: 0 5px;
+  }
 }
 
 #videoplayer {
@@ -402,6 +406,35 @@ body {
   text-align: center;
 }
 
+#embedBtn {
+  width: 21px;
+  height: 15px;
+  background:  url(/static/assets/weblight/images/embed.png);
+  display: inline-block;
+  vertical-align: middle;
+  cursor: pointer;
+}
+
+
+#embedOverlay {
+  background: #fff;
+  padding: 20px;
+  position: fixed;
+  top: 30%;
+  left: 50%;
+  margin-left: -310px;
+  width: 580px;
+  z-index: 1000000;
+  box-shadow: 0 0 45px rgba(0,0,0,0.75);
+
+  textarea {
+    width: 570px;
+    height: 50px;
+    border: 1px solid #c4c4c4;
+    color: #000000;
+  }
+
+}
 
 @media (max-width: 767px) {
 
