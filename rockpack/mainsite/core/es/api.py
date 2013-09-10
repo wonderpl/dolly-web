@@ -269,14 +269,6 @@ class ChannelSearch(EntitySearch, CategoryMixin, MediaSortMixin):
         IMAGE_CDN = app.config.get('IMAGE_CDN', '')
         BASE_URL = url_for('basews.discover')
 
-        def _get_sub_cat(category):
-            if not category:
-                return None
-            elif isinstance(channel[k], list):
-                return category[0]  # First item is subcat
-            else:
-                return category
-
         def _check_position(position, max_check):
             if position > max_check:
                 return None
@@ -320,9 +312,9 @@ class ChannelSearch(EntitySearch, CategoryMixin, MediaSortMixin):
                     if not channel[k]:
                         ch[k] = None
                     elif isinstance(channel[k], list):
-                        ch[k] = channel[k][0]  # First item is subcat
+                        ch[k] = str(channel[k][0])  # First item is subcat
                     else:
-                        ch[k] = channel[k]
+                        ch[k] = str(channel[k])
 
             if with_owners:
                 owner_list.add(channel.owner)
