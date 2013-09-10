@@ -105,6 +105,7 @@ class ChannelData(DataSet):
         id = 'ch6JCPZAcXSjGroanQdVB8jw'
         owner = UserData.test_user_a.id
         title = 'channel #1'
+        public = True
         description = ''
         cover = RockpackCoverArtData.comic_cover.cover
         category = 3

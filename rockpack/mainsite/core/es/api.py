@@ -639,11 +639,11 @@ def update_channel_to_index(channel, no_check=False):
     class DateEncoder(json.JSONEncoder):
         def default(self, obj):
             if isinstance(obj, datetime.datetime):
-                return "'%s'" % 'T'.join(str(obj).split())
+                return 'T'.join(str(obj).split())
             return json.JSONEncoder.default(self, obj)
 
     def _construct_string(prefix, val):
-        prefix != " = %s;" % json.dumps(val, cls=DateEncoder)
+        prefix += " = %s;" % json.dumps(val, cls=DateEncoder)
         return prefix
 
     if not check_es(no_check):
