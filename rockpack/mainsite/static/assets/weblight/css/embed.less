@@ -69,15 +69,22 @@
   #gradientShadow {
     width: 100%;
     height: 100%;
-    background: url(/static/assets/embed/images/gradient.png) no-repeat;
+    background: url(/static/assets/embed/images/gradient2.png) no-repeat;
     position: absolute;
     top: 0;
     left: 0;
   }
 }
 
+.lightgrey {
+  color: #a7a7a7;
+}
+
 #footer {
   border-top: 1px solid #d9d9d9;
+  .clearfix();
+  box-shadow: 2px 0 5px rgba(0,0,0,0.12);
+
 
   &>a {
     float: left;
@@ -85,13 +92,13 @@
 
   #follow {
     width: 128px;
-    background: #ffffff;
-    color: #3e3e3e;
+    background: #0ba6ab;
+    color: #fff;
     font-size: 12px;
     font-family: "dn-bold";
     text-transform: uppercase;
     text-align: center;
-    line-height: 30px;
+    line-height: 34px;
     text-decoration: none;
     display: block;
   }
@@ -114,7 +121,9 @@
 }
 
 #header {
-  font-size: 13px;
+  font-size: 12px;
+  line-height: 14px;
+  height: 40px;
   padding: 5px 10px;
   color: #808080;
   font-family: "dn-regular";
@@ -140,7 +149,7 @@
       list-style: none;
       margin: 0;
       padding: 0;
-      background: #efefef;
+      background: #f1f1f1;
 
       li {
         line-height: 30px;

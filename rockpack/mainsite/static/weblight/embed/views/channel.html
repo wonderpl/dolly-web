@@ -6,7 +6,7 @@
     <div id="channelTitle">((channel.title))</div>
   </div>
   <div id="videos">
-    <div id="header">This pack was made with love by <span class="highlight">((channel.owner.display_name | truncate : 20))</span></div>
+    <div id="header">This pack was made with love by <a href="http://www.rockpack.com/channel/((channel.owner.id))/((channel.id))/#" class="highlight">((channel.owner.display_name | truncate : 30))</a> <span class="lightgrey">on</span> <a href="http://www.rockpack.com/channel/((channel.owner.id))/((channel.id))/#" class="highlight">Rockpack</a></div>
     <div id="videolistContaienr">
       <ul id="videoslist" infinite-scroll='load_videos()' infinite-scroll-distance='1'>
         <li ng-repeat="video in channel.videos.items" class="videocell" ng-click="playVideo($index)">
