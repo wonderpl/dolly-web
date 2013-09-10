@@ -313,9 +313,9 @@ class ChannelSearch(EntitySearch, CategoryMixin, MediaSortMixin):
                     if not channel[k]:
                         ch[k] = None
                     elif isinstance(channel[k], list):
-                        ch[k] = str(channel[k][0])  # First item is subcat
+                        ch[k] = int(channel[k][0])  # First item is subcat
                     else:
-                        ch[k] = str(channel[k])
+                        ch[k] = int(channel[k])
 
             if with_owners:
                 owner_list.add(channel.owner)
