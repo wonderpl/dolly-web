@@ -635,7 +635,14 @@ def update_channel_to_index(channel, no_check=False):
             return json.JSONEncoder.default(self, obj)
 
     def _construct_string(prefix, val):
-        prefix += " = %s;" % json.dumps(val, cls=DateEncoder)
+        if isinstance(val, dict):
+            final = ''
+            for k, v in val.iteritems():
+                this = prefix + "['%s']" % k
+                final = _construct_string(this, v) + final
+            return final
+        else:
+            prefix += " = %s;" % json.dumps(val, cls=DateEncoder)
         return prefix
 
     if not check_es(no_check):
