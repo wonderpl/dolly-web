@@ -43,9 +43,8 @@ mod.directive('infiniteScroll', [
                     var elementBottom, remaining, scrollBottom, shouldScroll;
                     elementBottom = elementTop + elem.height();
                     scrollBottom = $scrollParent.height() + $scrollParent.scrollTop();
-                    remaining = elementBottom - scrollBottom;
+                    remaining = elementBottom - scrollBottom * scrollDistance;
                     shouldScroll = remaining <= $scrollParent.height();
-
                     if (shouldScroll && scrollEnabled && callPending === false) {
                         if ($rootScope.$$phase) {
                             callPending = true;

@@ -1,10 +1,20 @@
-window.Weblight.controller('AppCtrl', ['$routeParams', 'isMobile', '$scope', '$location', '$rootScope', ($routeParams, isMobile, $scope, $location, $rootScope) ->
-
-  $scope.isVertical = false
+window.Weblight.controller('AppCtrl', ['$routeParams', 'isMobile', '$scope', '$location', '$rootScope', '$window', ($routeParams, isMobile, $scope, $location, $rootScope, $window) ->
 
   $scope.$watch((-> $location.path()), (newValue, oldValue) ->
     $scope.currentPage = newValue.substring(1)
   )
+
+  $scope.getHeight = () ->
+   return $(window).height()
+
+  $scope.$watch($scope.getHeight, (newValue, oldValue) ->
+    $scope.documentHeight = newValue
+    $scope.channelHeight = newValue - 450 - 64
+  )
+
+  window.onresize = () ->
+    $scope.$apply()
+
 
   if typeof channel_data.category != "undefined"
     ga('send', 'pageview', {
@@ -14,5 +24,6 @@ window.Weblight.controller('AppCtrl', ['$routeParams', 'isMobile', '$scope', '$l
     ga('send', 'pageview')
 
   $scope.assets_url = assets_url
+
 ])
 

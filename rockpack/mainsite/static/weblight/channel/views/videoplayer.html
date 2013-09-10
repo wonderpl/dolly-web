@@ -1,25 +1,26 @@
-<div ng-controller="VideoCtrl" id="lightbox" ng-show="videoVisible">
-  <div id="playercontainer" ng-mouseover="mouseOver()" ng-mouseout="mouseOut()">
-    <div id="closeVideo" ng-click="closeVideo()"></div>
-    <div id="playerheader">
-      <img ng-src="((ChannelAvatar))">
-      <div id="desc">
-        <div class="name">
-          ((channel.title))
-        </div>
-        <div class="user">
-          ((channel.owner.display_name))
-        </div>
-      </div>
-    </div>
+<div ng-controller="VideoCtrl" class="wrapper">
+  <div id="videoTitle">((videoObj.title | truncate: 60))</div>
+  <div id="playercontainer" ng-mouseover="mouseOver()" ng-mouseout="mouseOut()" ng-class="{active: currVideo}">
     <div id="player"></div>
-    <div class="visible-desktop" id="pause" ng-class="{play: playerState=='2', 'hideOverlay': hideOverlay && playerState=='1'}" ng-click="pausePlay()"></div>
-    <div class="visible-desktop" id="scrubber" ng-click="seekTo($event)" ng-mouseover="mouseOver()" ng-class="{'hideOverlay': hideOverlay && playerState=='1'}">
+    <div id="close" ng-click="close()" ng-class="{'hideOverlay': hideOverlay  && playerState=='1'}"></div>
+    <div id="pause" ng-class="{play: playerState=='2', 'hideOverlay': hideOverlay && playerState=='1'}" ng-click="pausePlay()"></div>
+    <div id="scrubber" ng-click="seekTo($event)" ng-mouseover="mouseOver()" ng-class="{'hideOverlay': hideOverlay && playerState=='1'}">
       <div id="currentPosition" ng-style="{'width': currentPosition*100 +'%'}"></div>
       <div id="loadedData"></div>
     </div>
-    <div id="playerfooter">
-      ((videodata.title))
-    </div>
+  </div>
+  <div id="footer">
+      <div id="getapp">
+        <div>
+          LIKE IT?<br>
+          JOIN ((User.display_name)) ON ROCKPACK
+        </div>
+        <a href="" class="blue-btn">GET THE APP</a>
+      </div>
+      <div id="share">
+        <div id="embed"></div>
+        <div id="facebook" ng-click="shareFacebook()"></div>
+        <div id="twitter" ng-click="shareTwitter()"></div>
+      </div>
   </div>
 </div>

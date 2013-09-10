@@ -3,45 +3,54 @@ window.Weblight.controller('VideoCtrl', ['$scope', '$rootScope', '$routeParams',
   $scope.triggerEvent = (action, label) ->
     ga('send', 'event', 'uiAction', action, label)
 
-  $scope.videoVisible = false
-
+  $scope.currentPosition = 0
   windowWidth = if "innerWidth" in window then window.innerWidth else document.documentElement.offsetWidth
 
   @getPlayerWidth = () ->
-    if windowWidth <= 768
-      @playerWidth = windowWidth
-      @playerHeight = windowWidth*(9/16)
+    if windowWidth < 1200
+      @playerWidth = 600
     else
-      @playerWidth = 620
-      @playerHeight = 349
+      if windowWidth < 1600
+        @playerWidth = 800
+      else
+        @playerWidth = 1000
+
+    @playerHeight = @playerWidth*(9/16)
 
   $scope.PlayVideo = =>
     if $rootScope.playerReady && typeof $routeParams.video != "undefined"
 
       @getPlayerWidth()
 
+      if typeof $rootScope.videoObj == "undefined"
+        $rootScope.videoObj = _.find($rootScope.channel.videos.items, (video) ->
+          return video.id == $routeParams.video
+        )
+        $rootScope.videoObj
 
-      $scope.videoVisible = true
-      $scope.player = new YT.Player('player', {
-        height: @playerHeight,
-        width: @playerWidth,
-        videoId: $scope.videodata.video.source_id,
-        playerVars: {
-          autoplay: 1,
-          showinfo: 0,
-          modestbranding: 1,
-          wmode: "opaque",
-          controls: 0,
-          color: 'white',
-          rel: 0,
-          iv_load_policy: 3,
-        },
-        events: {
-#          'onReady': onPlayerReady,
-          'onStateChange': onPlayerStateChange
-        }
 
-      })
+      if $scope.player?
+        $scope.player.loadVideoById($scope.videoObj.video.source_id)
+      else
+        $scope.player = new YT.Player('player', {
+          height: @playerHeight,
+          width: @playerWidth,
+          videoId: $rootScope.videoObj.video.source_id,
+          playerVars: {
+            autoplay: 1,
+            showinfo: 0,
+            modestbranding: 1,
+            wmode: "opaque",
+            controls: 0,
+            color: 'white',
+            rel: 0,
+            iv_load_policy: 3,
+          },
+          events: {
+            'onStateChange': onPlayerStateChange
+          }
+
+        })
 
   $scope.isSkeeping = false
 
@@ -53,9 +62,6 @@ window.Weblight.controller('VideoCtrl', ['$scope', '$rootScope', '$routeParams',
     $scope.player.playVideo()
     $scope.playerState = 1
 
-#  onPlayerReady = (event) ->
-#    $scope.player.mute()
-
   onPlayerStateChange = (event) ->
     $scope.playerState = event.data
     $scope.$apply()
@@ -63,7 +69,6 @@ window.Weblight.controller('VideoCtrl', ['$scope', '$rootScope', '$routeParams',
     if event.data == 1
       setTimeout(trackProgress, 40)
 
-  $scope.currentPosition = 0
 
   trackProgress = () ->
     if $scope.playerState == 1
@@ -104,6 +109,7 @@ window.Weblight.controller('VideoCtrl', ['$scope', '$rootScope', '$routeParams',
     $location.search( 'video',$scope.videos[$scope.videoNum].id)
 
   $scope.$watch((-> $routeParams.video), (newValue) ->
+    console.log 'video changed'
     if newValue?
       $scope.PlayVideo()
     return
@@ -120,6 +126,19 @@ window.Weblight.controller('VideoCtrl', ['$scope', '$rootScope', '$routeParams',
       $scope.player.pauseVideo()
     else if $scope.player.getPlayerState() == 2
       $scope.player.playVideo()
+
+
+  $scope.shareFacebook = () ->
+    FB.ui({
+      method: 'feed',
+      link: "http://www.rockpack.com/channel/#{$scope.channel.owner.id}/#{$scope.channel.id}/#",
+      picture: $scope.channel.cover.thumbnail_url,
+      name: 'Rockpack',
+      caption: 'Shared a video with you'
+    })
+
+  $scope.shareTwitter = (url) ->
+    window.open("http://twitter.com/intent/tweet?url=http://www.rockpack.com/channel/#{$scope.channel.owner.id}/#{$scope.channel.id}/#")
 
   return
 ])

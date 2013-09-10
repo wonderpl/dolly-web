@@ -1,6 +1,6 @@
-window.Weblight.controller('ChannelCtrl', ['$scope', '$routeParams', '$location', 'isMobile', 'channelData', 'userService', 'ContentService', ($scope, $routeParams, $location, isMobile, channelData, userService, ContentService) ->
+window.Weblight.controller('ChannelCtrl', ['$scope', '$routeParams', '$location', 'isMobile', 'channelData', 'userService', 'ContentService', '$rootScope', ($scope, $routeParams, $location, isMobile, channelData, userService, ContentService, $rootScope) ->
 
-  $scope.channel = channelData
+  $rootScope.channel = channelData
   $scope.page = 1
   $scope.getQueryVariable = (variable) ->
     query = window.location.search.substring(1)
@@ -18,23 +18,13 @@ window.Weblight.controller('ChannelCtrl', ['$scope', '$routeParams', '$location'
   $scope.triggerEvent = (action, label) ->
     ga('send', 'event', 'uiAction', action, label)
 
-  height = if "innerHeight" in window then window.innerHeight else document.documentElement.offsetHeight
-  width = if "innerWidth" in window then window.innerWidth else document.documentElement.offsetWidth
-  calculatedPadding = (height - 32 - 322 - 227) / 2
-  if calculatedPadding > 100
-    $scope.pagePadding = calculatedPadding
-  else
-    $scope.pagePadding = 100
-
-
   $scope.coverRegex = new RegExp("channel/.*/")
 
-  if width > 768
-    $scope.channel.cover.thumbnail_url = $scope.channel.cover.thumbnail_url.replace($scope.coverRegex, 'channel/background/')
-  else
-    $scope.channel.cover.thumbnail_url = $scope.channel.cover.thumbnail_url.replace($scope.coverRegex, 'channel/background_portrait/')
+  $scope.channel.cover.thumbnail_url = $scope.channel.cover.thumbnail_url.replace($scope.coverRegex, 'channel/background_portrait/')
 
-  $scope.channel.owner.avatar = channelData.owner.avatar_thumbnail_url.replace('thumbnail_medium', 'thumbnail_large')
+  $scope.channel.owner.avatar = channelData.owner.avatar_thumbnail_url.replace('thumbnail_medium', 'thumbnail_small')
+
+  $scope.ChannelAvatar = $scope.channel.cover.thumbnail_url.replace($scope.coverRegex, 'channel/thumbnail_small/')
 
 
   userID = $scope.getQueryVariable('shareuser')
@@ -45,12 +35,14 @@ window.Weblight.controller('ChannelCtrl', ['$scope', '$routeParams', '$location'
         return data
       )
 
-
-  $scope.ChannelAvatar = $scope.channel.cover.thumbnail_url.replace($scope.coverRegex, 'channel/thumbnail_small/')
-
-  $scope.showVideo = (videoObject) ->
+  $scope.showVideo = (videoObject, index) ->
     $location.search({'video': videoObject.id})
-    $scope.videodata = videoObject
+    $rootScope.videoIndex = index
+    $rootScope.videoObj = videoObject
+
+
+  if not $routeParams.video?
+    $scope.showVideo($rootScope.channel.videos.items[0],0)
 
   selectedVideoID = $location.search().video
   if selectedVideoID? and selectedVideoID != true
