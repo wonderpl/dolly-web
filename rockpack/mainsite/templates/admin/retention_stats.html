@@ -1,26 +1,36 @@
 {% extends 'admin/chart.html' %}
 
+{% macro select(param, values, default=None) -%}
+  <div class="sel">
+    <label for="{{ param }}">{{ param }}</label>
+    <select name="{{ param }}" onchange="this.form.submit()">
+      {% with sel = request.args.get(param, default) %}
+      {% if not default %}
+      <option {% if not sel %}selected="true"{% endif %}></option>
+      {% endif %}
+      {% for value in values %}
+      <option {% if sel == value %}selected="true"{% endif %}>{{ value }}</option>
+      {% endfor %}
+      {% endwith %}
+    </select>
+  </div>
+{%- endmacro %}
+
 {% block body %}
-<div style='width: 40em'>
-  <h3>All active users</h3>
+<style>
+  .sel { display: inline-block; }
+  .sel label { display: inline-block; }
+  .sel select { width: auto; }
+</style>
+<div>
+  <form action="" method="get">
+    {{ select('activity', ('activity', 'account_event'), 'account_event') }}
+    {{ select('locale', ('en-us', 'en-gb')) }}
+    {{ select('gender', ('m', 'f')) }}
+    {{ select('age', ('13-18', '18-25', '25-35', '35-45', '45-55')) }}
+  </form>
   <div>
-    {% call chart('All active users', ret_all_data, 'Table') %}
-    {
-      alternatingRowStyle: false
-    }
-    {% endcall %}
-  </div>
-  <h3>Users active more than one day</h3>
-  <div>
-    {% call chart('Users active more than one day', ret_1day_data, 'Table') %}
-    {
-      alternatingRowStyle: false
-    }
-    {% endcall %}
-  </div>
-  <h3>Users active more than one week</h3>
-  <div>
-    {% call chart('Users active more than one week', ret_7day_data, 'Table') %}
+    {% call chart('Retention', data, 'Table') %}
     {
       alternatingRowStyle: false
     }

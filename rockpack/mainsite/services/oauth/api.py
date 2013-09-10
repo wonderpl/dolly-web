@@ -21,9 +21,12 @@ def record_user_event(username, type, value=''):
     trunc = lambda f, v: v[:get_column_property(UserAccountEvent, f, 'length')]
     try:
         clientid = g.app_client_id or g.authorized.clientid
+        userid = g.authorized.userid
     except AttributeError:
         clientid = ''
+        userid = None
     UserAccountEvent(
+        user=userid,
         username=trunc('username', username or '-'),
         event_type=type,
         event_value=value,

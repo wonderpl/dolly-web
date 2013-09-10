@@ -256,6 +256,7 @@ class UserAccountEvent(db.Model):
     __tablename__ = 'user_account_event'
 
     id = Column(Integer, primary_key=True)
+    user = Column(ForeignKey('user.id'), nullable=True)
     username = Column(String(52), nullable=False)
     event_date = Column(DateTime(), nullable=False, default=func.now())
     event_type = Column(String(32), nullable=False)
