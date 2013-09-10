@@ -1,4 +1,5 @@
 import logging
+import json
 import datetime
 from ast import literal_eval
 from urlparse import urlparse, urljoin
@@ -636,28 +637,14 @@ def add_channel_to_index(channel, bulk=False, refresh=False, boost=None, no_chec
 
 def update_channel_to_index(channel, no_check=False):
 
-    def _construct_string(prefix, val):
-        if isinstance(val, dict):
-            final = ''
-            for k, v in val.iteritems():
-                this = prefix + "['%s']" % k
-                final = _construct_string(this, v) + final
-            return final
-        else:
-            if isinstance(val, bool):
-                this_val = "'%s'" % str(val).lower()
-            elif isinstance(val, (int, float)):
-                this_val = val
-            elif isinstance(val, datetime.datetime):
-                this_val = "'%s'" % 'T'.join(str(val).split())
-            elif isinstance(val, list):
-                this_val = "[%s]" % ",".join(val if isinstance(val, (int, float)) else map(lambda x: "'%s'" % str(x), val))
-            elif val is None:
-                this_val = "null"
-            else:
-                this_val = "'%s'" % val
+    class DateEncoder(json.JSONEncoder):
+        def default(self, obj):
+            if isinstance(obj, datetime.datetime):
+                return "'%s'" % 'T'.join(str(obj).split())
+            return json.JSONEncoder.default(self, obj)
 
-            prefix += " = %s;" % this_val
+    def _construct_string(prefix, val):
+        prefix != " = %s;" % json.dumps(val, cls=DateEncoder)
         return prefix
 
     if not check_es(no_check):
