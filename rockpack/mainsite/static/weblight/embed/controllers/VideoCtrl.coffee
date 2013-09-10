@@ -1,24 +1,25 @@
 window.Weblight.controller('VideoCtrl', ['$scope', '$rootScope', '$routeParams', '$location', ($scope, $rootScope, $routeParams, $location) ->
 
+  $rootScope.videoPosition = null
+  $scope.currentPosition = 0
+
 
   @getPlayerWidth = () ->
     @playerWidth = 430
     @playerHeight = 242
 
   $scope.PlayVideo = =>
-    if $rootScope.playerReady && $rootScope.currVideo?
+    if $rootScope.playerReady && $scope.currVideo?
 
       @getPlayerWidth()
 
-      # $scope.videoPosition = 
       if $scope.player?
-        console.log 'player exists'
-        $scope.player.loadVideoById($rootScope.currVideo)
+        $scope.player.loadVideoById($scope.currVideo)
       else
         $scope.player = new YT.Player('player', {
           height: @playerHeight,
           width: @playerWidth,
-          videoId: $rootScope.currVideo,
+          videoId: $scope.currVideo,
           playerVars: {
             autoplay: 1,
             showinfo: 0,
@@ -38,7 +39,7 @@ window.Weblight.controller('VideoCtrl', ['$scope', '$rootScope', '$routeParams',
 
   $scope.seekTo = (event) ->
     isSkeeping = true
-    seekPosition = event.offsetX / 620
+    seekPosition = event.offsetX / 430
     $scope.player.seekTo($scope.player.getDuration() * seekPosition )
     $scope.player.playVideo()
     $scope.playerState = 1
@@ -50,10 +51,10 @@ window.Weblight.controller('VideoCtrl', ['$scope', '$rootScope', '$routeParams',
     if event.data == 1
       setTimeout(trackProgress, 40)
     else if event.data == 0
-      console.log 'next'
+      if $rootScope.videoPosition < window.channel_data.videos.total
+        $rootScope.videoPosition++
+        $rootScope.$apply()
 
-
-  $scope.currentPosition = 0
 
   trackProgress = () ->
     if $scope.playerState == 1
@@ -75,8 +76,9 @@ window.Weblight.controller('VideoCtrl', ['$scope', '$rootScope', '$routeParams',
     $scope.hideOverlay = true
 
 
-  $scope.$watch((-> $rootScope.currVideo), (newValue) ->
-    if newValue? 
+  $scope.$watch((-> $rootScope.videoPosition), (newValue) ->
+    if newValue?
+      $scope.currVideo = window.channel_data.videos.items[newValue].video.source_id
       $scope.PlayVideo()
     else
       if $scope.player? 
@@ -97,9 +99,14 @@ window.Weblight.controller('VideoCtrl', ['$scope', '$rootScope', '$routeParams',
     else if $scope.player.getPlayerState() == 2
       $scope.player.playVideo()
 
+  $scope.getVideoPosition = (videoId) ->
+    _.find(window.channel_data.videos.items, (video) ->
+      return video.video.source_id == videoId
+    )
 
   $scope.close = () ->
-    $rootScope.currVideo = null
+    $scope.currVideo = null
+    $rootScope.videoPosition = null
 
   return
 ])

@@ -27,7 +27,6 @@ a:hover, a:visited, a:active {
   text-decoration: underline;
 }
 
-
 .wrapper {
   margin: 0 auto;
   position: relative;
@@ -39,6 +38,28 @@ body {
   background: #f7f7f7;
 }
 
+#topmenu {
+  float: right;
+  list-style: none;
+
+  li {
+    float: left;
+    margin-left: 15px;
+
+    a {
+      color: #000;
+      text-decoration: none;
+      font-family: "dn-bold";
+      font-size: 16px;
+      display: block;
+      line-height: 50px;
+
+      &:hover {
+        color: #0ba6ab;
+      }
+    }
+  }
+}
 
 #header {
   background: #fff;
@@ -1124,7 +1145,7 @@ footer, #footer {
 @media (min-width: 1200px) {
 
   #iphones {
-    width: 1200px;
+    width: 800px;
   }
 
   #video {

@@ -636,7 +636,6 @@ def add_channel_to_index(channel, bulk=False, refresh=False, boost=None, no_chec
 
 
 def update_channel_to_index(channel, no_check=False):
-
     class DateEncoder(json.JSONEncoder):
         def default(self, obj):
             if isinstance(obj, datetime.datetime):

@@ -240,7 +240,7 @@ def share_redirect(linkid):
         )
         return redirect(location, 302)
 
-    if request.args.get('interstitial') == 'true':
+    if request.user_agent.platform == 'ios' or request.args.get('interstitial') == 'true':
         link = ShareLink.query.get_or_404(linkid)
         data = link.process_redirect(increment_click_count=False)
         share_data = web_channel_data(data['channel'], load_video=data.get('video', None))

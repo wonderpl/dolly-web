@@ -1,4 +1,7 @@
 <div ng-controller="VideoCtrl" id="lightbox">
+  <!--<div id="embedOverlay" ng-show="showEmbed == true">-->
+    <!--<textarea><iframe src='http://myrockpack.com/embed/chnStCl-CqTt2IpqspxqUWmQ/' width='430' height='242' scrolling='no' seamless frameborder=0></textarea>-->
+  <!--</div>-->
   <div id="overlayheader">
     <div class="wrapper">
       <a id="logo" href="/#"><img ng-src="((assets_url))/assets/weblight/images/logo.png"></a>
@@ -33,6 +36,7 @@
   <div id="sharecontainer">
     <div id="weblightshare">
       Share:
+      <!--<div id="embedBtn" ng-click="showEmbed = true"></div>-->
       <a onclick="window.open('https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(location.href), 'facebook-share-dialog', 'width=626,height=436'); return false;">
         <img ng-src="((assets_url))/assets/weblight/images/fbshare.png">
       </a>

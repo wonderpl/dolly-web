@@ -516,6 +516,10 @@ def process_broadcast_messages(date_from, date_to):
                         func.age(User.date_of_birth),
                         text("interval '%s years'" % values[0]),
                         text("interval '%s years'" % values[1])))
+                if type == 'subscribed':
+                    users = users.join(Subscription,
+                                       (Subscription.user == User.id) &
+                                       (Subscription.channel == values[0]))
 
         if message.external_system == 'apns':
             users = users.join(

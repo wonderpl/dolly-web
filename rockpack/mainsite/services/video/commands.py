@@ -110,7 +110,9 @@ def set_channel_view_count(time_from=None, time_to=None):
 
 @manager.cron_command(interval=3600)
 def update_channel_rank():
+    start = time.time()
     helpers.DBImport().import_channel_share()
+    app.logger.info('Ran update_channel_rank in %ds', time.time() - start)
 
 
 @manager.cron_command(interval=3600)
@@ -122,7 +124,7 @@ def update_channel_view_counts():
     if not job_control:
         job_control = JobControl(job=JOB_NAME)
         job_control.last_run = now - timedelta(hours=1)
-    logging.info('%s: from %s to %s', JOB_NAME, job_control.last_run, now)
+    app.logger.info('%s: from %s to %s', JOB_NAME, job_control.last_run, now)
 
     set_channel_view_count(job_control.last_run)
     job_control.last_run = now
@@ -134,7 +136,7 @@ def update_channel_stats():
     """Update statistics for channels."""
     job_control = JobControl.query.get('update_channel_stats')
     now = datetime.now()
-    logging.info('update_channel_stats: from %s to %s', job_control.last_run, now)
+    app.logger.info('update_channel_stats: from %s to %s', job_control.last_run, now)
 
     set_update_frequency(job_control.last_run.time(), now.time())
 
@@ -151,7 +153,7 @@ def update_subscriber_stats():
     if not job_control:
         job_control = JobControl(job=JOB_NAME)
         job_control.last_run = now
-    logging.info('%s: from %s to %s', JOB_NAME, job_control.last_run, now)
+    app.logger.info('%s: from %s to %s', JOB_NAME, job_control.last_run, now)
 
     set_subscription_update_frequency(job_control.last_run.time(), now.time())
 
@@ -162,8 +164,10 @@ def update_subscriber_stats():
 def update_channel_promo_activity():
     # Push everything to es. Promotion data
     # will get updated during insert
-    for p in ChannelPromotion.query.all():
-        api.update_channel_to_index(p.channel_rel)
+    promo_channels = Channel.query.filter_by(public=True, deleted=False).join(
+        ChannelPromotion, ChannelPromotion.channel == Channel.id).distinct()
+    for channel in promo_channels:
+        api.update_channel_to_index(channel)
 
 
 @manager.cron_command(interval=900)
@@ -176,7 +180,7 @@ def update_channel_promotions():
         job_control = JobControl(job=JOB_NAME)
         job_control.last_run = now
 
-    logging.info('%s: from %s to %s', JOB_NAME, job_control.last_run, now)
+    app.logger.info('%s: from %s to %s', JOB_NAME, job_control.last_run, now)
 
     update_channel_promo_activity()
 
@@ -193,7 +197,7 @@ def check_video_player_errors():
     if not job_control:
         job_control = JobControl(job=JOB_NAME)
         job_control.last_run = now
-    logging.info('%s: from %s to %s', JOB_NAME, job_control.last_run, now)
+    app.logger.info('%s: from %s to %s', JOB_NAME, job_control.last_run, now)
 
     error_videos = set(v[0] for v in PlayerErrorReport.query.filter(
         PlayerErrorReport.date_updated.between(job_control.last_run, now)).
@@ -229,17 +233,17 @@ def get_youtube_video_data(video_qs, start):
                 videos[id].source_username = entry.author[0].name.text
                 videos[id].date_published = _parse_datetime(entry.published.text)
                 if 'noembed' in [e.tag for e in entry.extension_elements]:
-                    logging.warning('%s: marked not visible: noembed', id)
+                    app.logger.warning('%s: marked not visible: noembed', id)
                     videos[id].visible = False
                 #group = [e for e in entry.extension_elements if e.tag == 'group'][0]
                 #print id, [(c.attributes, c.text) for c in group.children if c.tag == 'restriction']
             elif entry.batch_status.code == '404':
-                logging.error('Failed to update %s: %s', id, entry.batch_status.reason)
+                app.logger.error('Failed to update %s: %s', id, entry.batch_status.reason)
                 if not videos[id].source_username:
                     videos[id].source_username = 'Unknown'
                 videos[id].visible = False
             else:
-                logging.warning('%s: %s', id, entry.batch_status.reason)
+                app.logger.warning('%s: %s', id, entry.batch_status.reason)
                 time.sleep(1)
         Video.query.session.commit()
         if len(videos) == 50:

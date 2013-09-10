@@ -686,6 +686,62 @@ class ChannelCreateTestCase(base.RockPackTestCase):
 
 class ChannelVideoTestCase(base.RockPackTestCase):
 
+    def test_channel_videos(self):
+        user_id = self.create_test_user().id
+        with self.app.test_client() as client:
+            # create new channel
+            r = client.post(
+                '/ws/{}/channels/'.format(user_id),
+                data=json.dumps(dict(
+                    title='test',
+                    description='test',
+                    category='',
+                    cover='',
+                    public=True,
+                )),
+                content_type='application/json',
+                headers=[get_auth_header(user_id)]
+            )
+            self.assertEquals(r.status_code, 201)
+            channel_id = json.loads(r.data)['id']
+
+            # add videos
+            r = client.put(
+                '/ws/{}/channels/{}/videos/'.format(user_id, channel_id),
+                data=json.dumps([
+                    VideoInstanceData.video_instance1.id,
+                    VideoInstanceData.video_instance2.id,
+                ]),
+                content_type='application/json',
+                headers=[get_auth_header(user_id)]
+            )
+            self.assertEquals(r.status_code, 204)
+            positions = models.VideoInstance.query.filter_by(
+                channel=channel_id).values('video', 'position')
+            self.assertItemsEqual(positions, [
+                (VideoData.video1.id, 0),
+                (VideoData.video2.id, 1),
+            ])
+
+            # change positions
+            r = client.put(
+                '/ws/{}/channels/{}/videos/'.format(user_id, channel_id),
+                data=json.dumps([
+                    VideoInstanceData.video_instance2.id,
+                    VideoInstanceData.video_instance1.id,
+                ]),
+                content_type='application/json',
+                headers=[get_auth_header(user_id)]
+            )
+            self.assertEquals(r.status_code, 204)
+            positions = models.VideoInstance.query.filter_by(
+                channel=channel_id).values('video', 'position')
+            self.assertItemsEqual(positions, [
+                (VideoData.video2.id, 0),
+                (VideoData.video1.id, 1),
+            ])
+
+
     def test_channel_source(self):
         user_id = self.create_test_user().id
         favourites = models.Channel.query.filter_by(
