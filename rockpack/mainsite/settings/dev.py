@@ -12,7 +12,7 @@ DATABASE_URL = 'postgresql://mainsite:%s@db1/rockpack' % DB_PASSWORD
 GOOGLE_CONSUMER_KEY = '981375550038-dbckr7s2hb5rsaohj9j4fhl0cbu4col7.apps.googleusercontent.com'
 GOOGLE_CONSUMER_SECRET = _decrypt('#w\x81\xcf\x95K "\xe3\x10\xa8\xd0\x84\xf9\xee\xe5\xea]\x90\x9dw\x9b\xd9\xb2')
 
-ASSETS_URL = '//dm4udhbt1x280.cloudfront.net/static/'
+ASSETS_URL = '//dm4udhbt1x280.cloudfront.net/static'
 IMAGE_CDN = 'http://media.dev.rockpack.com'
 S3_BUCKET = 'media.dev.rockpack.com'
 
