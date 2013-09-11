@@ -29,13 +29,17 @@ def send_share_email(recipient, user, object_type, object, link):
     object_type_name = OBJECT_NAME_MAP[object_type]
     subject = '%s shared a %s with you on Rockpack' % (user.display_name, object_type_name)
     template = email.env.get_template('share.html')
+    assets_url = app.config.get('ASSETS_URL', '')
+    if assets_url.startswith('//'):
+        # Force https for static images in html email (seems to be needed by yahoo mail)
+        assets_url = 'https:' + assets_url
     body = template.render(
         user=user,
         link=link,
         object_type=object_type,
         object_type_name=object_type_name,
         object=object,
-        assets=app.config.get('ASSETS_URL', '')
+        assets=assets_url,
     )
     email.send_email(recipient, subject, body, format='html')
 
