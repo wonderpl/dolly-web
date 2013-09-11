@@ -2,7 +2,7 @@
 
 {% macro select(param, values, default=None) -%}
   <div class="sel">
-    <label for="{{ param }}">{{ param }}</label>
+    <label for="{{ param }}">{{ param|capitalize }}</label>
     <select name="{{ param }}" onchange="this.form.submit()">
       {% with sel = request.args.get(param, default) %}
       {% if not default %}
@@ -18,8 +18,8 @@
 
 {% block body %}
 <style>
-  .sel { display: inline-block; }
-  .sel label { display: inline-block; }
+  .sel { display: inline-block; margin-right: 2em; }
+  .sel label { display: block; }
   .sel select { width: auto; }
 </style>
 <div>
