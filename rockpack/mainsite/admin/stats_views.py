@@ -173,12 +173,12 @@ class RetentionStatsView(BaseView):
 
         table = Table(
             [dict(id='cohort', type=date)] +
-            [dict(id='week%d' % i, type=str) for i in range(8)]
+            [dict(id='week%d' % i, type=str) for i in range(10)]
         )
 
         for c, t in sorted(totals.items()):
             data = []
-            for i in range(8):
+            for i in range(10):
                 a = active_users.get((c, i), '')
                 data.append(a and '%s%% (%s)' % (a * 100 / t, a))
             table.append([c] + data)

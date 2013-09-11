@@ -298,6 +298,8 @@ class ChannelSearch(EntitySearch, CategoryMixin, MediaSortMixin):
             )
             if channel.favourite:
                 ch['favourites'] = True
+            if channel.verified:
+                ch['verified'] = True
 
             for k, v in channel.iteritems():
                 if isinstance(v, (str, unicode)) and k.endswith('_url'):
