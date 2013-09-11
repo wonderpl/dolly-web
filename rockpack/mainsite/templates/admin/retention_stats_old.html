@@ -1,0 +1,30 @@
+{% extends 'admin/chart.html' %}
+
+{% block body %}
+<div style='width: 40em'>
+  <h3>All active users</h3>
+  <div>
+    {% call chart('All active users', ret_all_data, 'Table') %}
+    {
+      alternatingRowStyle: false
+    }
+    {% endcall %}
+  </div>
+  <h3>Users active more than one day</h3>
+  <div>
+    {% call chart('Users active more than one day', ret_1day_data, 'Table') %}
+    {
+      alternatingRowStyle: false
+    }
+    {% endcall %}
+  </div>
+  <h3>Users active more than one week</h3>
+  <div>
+    {% call chart('Users active more than one week', ret_7day_data, 'Table') %}
+    {
+      alternatingRowStyle: false
+    }
+    {% endcall %}
+  </div>
+</div>
+{% endblock %}

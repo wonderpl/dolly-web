@@ -91,6 +91,7 @@ class RankingView(BaseView):
         if search:
             cs.add_text('title', search)
         else:
+            cs.add_filter(filters.boost_from_field_value('editorial_boost'))
             cs.add_filter(filters.channel_rank_boost(locale))
             cs.add_filter(filters.negatively_boost_favourites())
             cs.filter_category(category)

@@ -1,7 +1,9 @@
 from datetime import datetime, date
-from sqlalchemy import func, Integer
+from sqlalchemy import func, between, text, Integer
 from sqlalchemy.orm import aliased
+from flask import request
 from flask.ext.admin import BaseView, expose
+from rockpack.mainsite import app
 from rockpack.mainsite.core.dbapi import readonly_session
 
 
@@ -133,6 +135,59 @@ class RetentionStatsView(BaseView):
     @expose('/')
     def index(self):
         from gviz_data_table import Table
+        from rockpack.mainsite.services.user.models import User, UserActivity, UserAccountEvent
+        if request.args.get('activity') == 'activity':
+            activity_model, activity_date = UserActivity, UserActivity.date_actioned
+        else:
+            activity_model, activity_date = UserAccountEvent, UserAccountEvent.event_date
+
+        cohort = func.date_part('week', User.date_joined)
+        cohort_label = func.max(func.date(User.date_joined))
+        weeks_active = (func.date_part('week', activity_date) - cohort).label('weeks_active')
+
+        q = readonly_session.query(User).filter(
+            User.date_joined > '2013-06-26', User.refresh_token != '')
+        if request.args.get('gender') in ('m', 'f'):
+            q = q.filter(User.gender == request.args['gender'])
+        if request.args.get('locale') in app.config['ENABLED_LOCALES']:
+            q = q.filter(User.locale == request.args['locale'])
+        if request.args.get('age') in ('13-18', '18-25', '25-35', '35-45', '45-55'):
+            age1, age2 = map(int, request.args['age'].split('-'))
+            q = q.filter(between(
+                func.age(User.date_of_birth),
+                text("interval '%d years'" % age1),
+                text("interval '%d years'" % age2)
+            ))
+
+        totals = dict(q.group_by(cohort).values(cohort_label, func.count('*')))
+        active_users = dict(
+            ((c, int(w)), u) for c, w, u in
+            q.join(
+                activity_model,
+                (activity_model.user == User.id) &
+                (activity_date > User.date_joined)
+            ).group_by(cohort, weeks_active).values(
+                cohort_label, weeks_active, func.count(func.distinct(activity_model.user))
+            )
+        )
+
+        table = Table(
+            [dict(id='cohort', type=date)] +
+            [dict(id='week%d' % i, type=str) for i in range(8)]
+        )
+
+        for c, t in sorted(totals.items()):
+            data = []
+            for i in range(8):
+                a = active_users.get((c, i), '')
+                data.append(a and '%s%% (%s)' % (a * 100 / t, a))
+            table.append([c] + data)
+
+        return self.render('admin/retention_stats.html', data=table.encode())
+
+    @expose('/old/')
+    def index_old(self):
+        from gviz_data_table import Table
         from rockpack.mainsite.services.user.models import User, UserActivity
         user_count = readonly_session.query(func.count(User.id)).\
             filter(User.refresh_token != '').scalar()
@@ -163,4 +218,5 @@ class RetentionStatsView(BaseView):
             pdata = ('%d%%' % (data[0] * 100 / user_count),) + ('',) * 6
             table.extend(zip(*(header, map(float, data), pdata)))
             ctx['ret_%s_data' % key] = table.encode()
-        return self.render('admin/retention_stats.html', **ctx)
+
+        return self.render('admin/retention_stats_old.html', **ctx)

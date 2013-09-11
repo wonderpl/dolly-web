@@ -1133,10 +1133,12 @@ class UserWS(WebService):
     @expose_ajax('/<userid>/friends/', cache_age=600, cache_private=True)
     @check_authorization(self_auth=True)
     def get_friends(self, userid):
-        ExternalFriend.populate_facebook_friends(userid)
-        friends = ExternalFriend.query.filter_by(user=userid)
         if request.args.get('share_filter'):
-            friends = friends.filter(ExternalFriend.last_shared_date.isnot(None))
+            friends = ExternalFriend.query.filter_by(user=userid).filter(
+                ExternalFriend.last_shared_date.isnot(None))
+        else:
+            ExternalFriend.populate_facebook_friends(userid)
+            friends = ExternalFriend.query.filter_by(user=userid)
         friends = friends.all()
         rockpack_friends = dict(
             (('facebook', user.external_tokens[0].external_uid), user)

@@ -1,4 +1,5 @@
 import logging
+import json
 import datetime
 from ast import literal_eval
 from urlparse import urlparse, urljoin
@@ -269,14 +270,6 @@ class ChannelSearch(EntitySearch, CategoryMixin, MediaSortMixin):
         IMAGE_CDN = app.config.get('IMAGE_CDN', '')
         BASE_URL = url_for('basews.discover')
 
-        def _get_sub_cat(category):
-            if not category:
-                return None
-            elif isinstance(channel[k], list):
-                return category[0]  # First item is subcat
-            else:
-                return category
-
         def _check_position(position, max_check):
             if position > max_check:
                 return None
@@ -320,9 +313,9 @@ class ChannelSearch(EntitySearch, CategoryMixin, MediaSortMixin):
                     if not channel[k]:
                         ch[k] = None
                     elif isinstance(channel[k], list):
-                        ch[k] = channel[k][0]  # First item is subcat
+                        ch[k] = int(channel[k][0])  # First item is subcat
                     else:
-                        ch[k] = channel[k]
+                        ch[k] = int(channel[k])
 
             if with_owners:
                 owner_list.add(channel.owner)
@@ -635,6 +628,11 @@ def add_channel_to_index(channel, bulk=False, refresh=False, boost=None, no_chec
 
 
 def update_channel_to_index(channel, no_check=False):
+    class DateEncoder(json.JSONEncoder):
+        def default(self, obj):
+            if isinstance(obj, datetime.datetime):
+                return 'T'.join(str(obj).split())
+            return json.JSONEncoder.default(self, obj)
 
     def _construct_string(prefix, val):
         if isinstance(val, dict):
@@ -644,20 +642,7 @@ def update_channel_to_index(channel, no_check=False):
                 final = _construct_string(this, v) + final
             return final
         else:
-            if isinstance(val, bool):
-                this_val = "%s" % str(val).lower()
-            elif isinstance(val, (int, float)):
-                this_val = val
-            elif isinstance(val, datetime.datetime):
-                this_val = "'%s'" % 'T'.join(str(val).split())
-            elif isinstance(val, (list, tuple)):
-                this_val = "[%s]" % ",".join(val if isinstance(val, (int, float)) else map(lambda x: "'%s'" % x, val))
-            elif val is None:
-                this_val = "null"
-            else:
-                this_val = "'%s'" % val
-
-            prefix += " = %s;" % this_val
+            prefix += " = %s;" % json.dumps(val, cls=DateEncoder)
         return prefix
 
     if not check_es(no_check):
