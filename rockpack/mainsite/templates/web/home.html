@@ -62,7 +62,8 @@
 
   <script type="text/javascript">
     var injectorUrl = '{{injectorUrl}}',
-            assets_url = '{{config.ASSETS_URL}}';
+        assets_url = '{{config.ASSETS_URL}}',
+        top_channels = {{top_channels|tojson|safe}};
   </script>
 
 </head>
