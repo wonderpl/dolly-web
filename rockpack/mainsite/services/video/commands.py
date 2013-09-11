@@ -233,12 +233,12 @@ def get_youtube_video_data(video_qs, start):
                 videos[id].source_username = entry.author[0].name.text
                 videos[id].date_published = _parse_datetime(entry.published.text)
                 if 'noembed' in [e.tag for e in entry.extension_elements]:
-                    app.logger.warning('%s: marked not visible: noembed', id)
+                    app.logger.info('%s: marked not visible: noembed', id)
                     videos[id].visible = False
                 #group = [e for e in entry.extension_elements if e.tag == 'group'][0]
                 #print id, [(c.attributes, c.text) for c in group.children if c.tag == 'restriction']
             elif entry.batch_status.code == '404':
-                app.logger.error('Failed to update %s: %s', id, entry.batch_status.reason)
+                app.logger.info('%s: marked not visible: %s', id, entry.batch_status.reason)
                 if not videos[id].source_username:
                     videos[id].source_username = 'Unknown'
                 videos[id].visible = False
