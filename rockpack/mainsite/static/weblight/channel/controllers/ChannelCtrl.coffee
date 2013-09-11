@@ -35,10 +35,9 @@ window.Weblight.controller('ChannelCtrl', ['$scope', '$routeParams', '$location'
         return data
       )
 
-  $scope.showVideo = (videoObject, index) ->
+  $scope.showVideo = (videoObject, videoPos) ->
     $location.search({'video': videoObject.id})
-    $rootScope.videoIndex = index
-    $rootScope.videoObj = videoObject
+    $rootScope.videoPosition = videoPos
 
 
   if not $routeParams.video?

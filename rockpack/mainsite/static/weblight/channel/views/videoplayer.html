@@ -1,4 +1,9 @@
 <div ng-controller="VideoCtrl" class="wrapper">
+  <div id="embedCode" ng-show="showEmbed == true" ng-click="showEmbed = false">
+    <div id="embedContainer" class="wrapper" >
+      <textarea ng-click="$event.stopPropagation()"><iframe width="430" height="242" src="http://www.rockpack.com/embed/((channel.id))" frameborder="0" ></iframe></textarea></iframe>
+    </div>
+  </div>
   <div id="videoTitle">((videoObj.title | truncate: 60))</div>
   <div id="playercontainer" ng-mouseover="mouseOver()" ng-mouseout="mouseOut()" ng-class="{active: currVideo}">
     <div id="player"></div>
@@ -13,12 +18,12 @@
       <div id="getapp">
         <div>
           LIKE IT?<br>
-          JOIN ((User.display_name)) ON ROCKPACK
+          JOIN ((user.display_name)) ON ROCKPACK
         </div>
-        <a href="" class="blue-btn">GET THE APP</a>
+        <a href="" class="blue-btn" >GET THE APP</a>
       </div>
       <div id="share">
-        <div id="embed"></div>
+        <div id="embed" ng-click="showEmbed = true"></div>
         <div id="facebook" ng-click="shareFacebook()"></div>
         <div id="twitter" ng-click="shareTwitter()"></div>
       </div>

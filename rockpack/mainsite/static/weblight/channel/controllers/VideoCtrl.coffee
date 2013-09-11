@@ -6,35 +6,28 @@ window.Weblight.controller('VideoCtrl', ['$scope', '$rootScope', '$routeParams',
   $scope.currentPosition = 0
   windowWidth = if "innerWidth" in window then window.innerWidth else document.documentElement.offsetWidth
 
-  @getPlayerWidth = () ->
+  $scope.getPlayerWidth = () ->
     if windowWidth < 1200
-      @playerWidth = 600
+      $scope.playerWidth = 600
     else
       if windowWidth < 1600
-        @playerWidth = 800
+        $scope.playerWidth = 800
       else
-        @playerWidth = 1000
+        $scope.playerWidth = 1000
 
-    @playerHeight = @playerWidth*(9/16)
+    $scope.playerHeight = $scope.playerWidth*(9/16)
 
   $scope.PlayVideo = =>
     if $rootScope.playerReady && typeof $routeParams.video != "undefined"
 
-      @getPlayerWidth()
-
-      if typeof $rootScope.videoObj == "undefined"
-        $rootScope.videoObj = _.find($rootScope.channel.videos.items, (video) ->
-          return video.id == $routeParams.video
-        )
-        $rootScope.videoObj
-
+      $scope.getPlayerWidth()
 
       if $scope.player?
         $scope.player.loadVideoById($scope.videoObj.video.source_id)
       else
         $scope.player = new YT.Player('player', {
-          height: @playerHeight,
-          width: @playerWidth,
+          height: $scope.playerHeight,
+          width: $scope.playerWidth,
           videoId: $rootScope.videoObj.video.source_id,
           playerVars: {
             autoplay: 1,
@@ -57,7 +50,8 @@ window.Weblight.controller('VideoCtrl', ['$scope', '$rootScope', '$routeParams',
   $scope.seekTo = (event) ->
     isSkeeping = true
     offsetX = if event.offsetX then event.offsetX else event.clientX - $(event.target).offset().left
-    seekPosition = offsetX/620
+    console.log @playerWidth
+    seekPosition = offsetX/$scope.playerWidth
     $scope.player.seekTo($scope.player.getDuration() * seekPosition )
     $scope.player.playVideo()
     $scope.playerState = 1
@@ -65,10 +59,14 @@ window.Weblight.controller('VideoCtrl', ['$scope', '$rootScope', '$routeParams',
   onPlayerStateChange = (event) ->
     $scope.playerState = event.data
     $scope.$apply()
-
     if event.data == 1
       setTimeout(trackProgress, 40)
-
+    else if event.data == 0
+      if $rootScope.videoPosition < $rootScope.channel.videos.total
+        $rootScope.videoPosition++
+        $rootScope.videoObj = $rootScope.channel.videos.items[$rootScope.videoPosition]
+        $location.search('video', $rootScope.videoObj)
+        $rootScope.$apply()
 
   trackProgress = () ->
     if $scope.playerState == 1
@@ -90,27 +88,16 @@ window.Weblight.controller('VideoCtrl', ['$scope', '$rootScope', '$routeParams',
     $scope.hideOverlay = true
 
 
-  $scope.closeVideo = () ->
-    $scope.player.destroy()
-    $location.search('video', null)
-    $scope.videoVisible = false
-
-
-
-  $scope.playNextVid = (videoNumber) ->
-    if videoNumber < -5 or  videoNumber > $scope.videos.length-1
-      $scope.videoNum = 0
-    else
-      if videoNumber < 0
-        $scope.videoNum = $scope.videos.length-1
-      else
-        $scope.videoNum = videoNumber
-
-    $location.search( 'video',$scope.videos[$scope.videoNum].id)
-
   $scope.$watch((-> $routeParams.video), (newValue) ->
-    console.log 'video changed'
     if newValue?
+      if not $rootScope.videoPosition?
+        tempIndex = 0
+        $rootScope.videoObj = _.find($rootScope.channel.videos.items, (video) ->
+          tempIndex++
+          return video.id == $routeParams.video
+        )
+        $rootScope.videoPosition = tempIndex-1
+      $rootScope.videoObj = $rootScope.channel.videos.items[$rootScope.videoPosition]
       $scope.PlayVideo()
     return
   )
@@ -122,9 +109,9 @@ window.Weblight.controller('VideoCtrl', ['$scope', '$rootScope', '$routeParams',
   )
 
   $scope.pausePlay = () ->
-    if $scope.player.getPlayerState() == 1
+    if $scope.playerState == 1
       $scope.player.pauseVideo()
-    else if $scope.player.getPlayerState() == 2
+    else if $scope.playerState == 2
       $scope.player.playVideo()
 
 
@@ -139,6 +126,23 @@ window.Weblight.controller('VideoCtrl', ['$scope', '$rootScope', '$routeParams',
 
   $scope.shareTwitter = (url) ->
     window.open("http://twitter.com/intent/tweet?url=http://www.rockpack.com/channel/#{$scope.channel.owner.id}/#{$scope.channel.id}/#")
+
+  getQueryVariable = (variable) ->
+    query = window.location.search.substring(1)
+    if (query.indexOf("&") > -1)
+      vars = query.split("&")
+    else
+      vars = [query]
+    for i in [0..vars.length-1]
+      pair = vars[i].split("=")
+      if(pair[0] == variable)
+       return pair[1]
+  return(false)
+
+  $scope.userID = getQueryVariable('shareuser')
+
+  $scope.user = userService.fetchUser($scope.userID)
+
 
   return
 ])
