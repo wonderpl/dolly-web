@@ -37,6 +37,8 @@ def channel_dict(channel, with_owner=True, owner_url=False):
     )
     if channel.favourite:
         ch_data['favourites'] = True
+    if channel.verified:
+        ch_data['verified'] = True
     if with_owner:
         ch_data['owner'] = dict(
             id=channel.owner_rel.id,
