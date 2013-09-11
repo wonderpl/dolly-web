@@ -40,7 +40,10 @@ window.Weblight.controller('ChannelCtrl', ['$scope', '$routeParams', '$location'
     $rootScope.videoPosition = videoPos
 
 
-  if not $routeParams.video?
+  windowWidth = if "innerWidth" in window then window.innerWidth else document.documentElement.offsetWidth
+  # Window Width is used to determine if this is a mobile view or not. Mobile does not autoplay the first video
+
+  if not $routeParams.video? && windowWidth > 800
     $scope.showVideo($rootScope.channel.videos.items[0],0)
 
   selectedVideoID = $location.search().video

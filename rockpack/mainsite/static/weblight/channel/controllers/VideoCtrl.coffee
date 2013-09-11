@@ -7,19 +7,24 @@ window.Weblight.controller('VideoCtrl', ['$scope', '$rootScope', '$routeParams',
   windowWidth = if "innerWidth" in window then window.innerWidth else document.documentElement.offsetWidth
 
   $scope.getPlayerWidth = () ->
-    if windowWidth < 1200
-      $scope.playerWidth = 600
+    if windowWidth < 600
+      $scope.playerWidth = 320
     else
-      if windowWidth < 1600
-        $scope.playerWidth = 800
+      if windowWidth < 1200
+        $scope.playerWidth = 600
       else
-        $scope.playerWidth = 1000
+        if windowWidth < 1600
+          $scope.playerWidth = 800
+        else
+          $scope.playerWidth = 1000
 
     $scope.playerHeight = $scope.playerWidth*(9/16)
 
   $scope.PlayVideo = =>
     if $rootScope.playerReady && typeof $routeParams.video != "undefined"
 
+      # ONLY USED FOR MOBILE VIDEO OVERLAY
+      $rootScope.videoVisible = true
       $scope.getPlayerWidth()
 
       if $scope.player?
@@ -137,11 +142,16 @@ window.Weblight.controller('VideoCtrl', ['$scope', '$rootScope', '$routeParams',
       pair = vars[i].split("=")
       if(pair[0] == variable)
        return pair[1]
-  return(false)
+    return(false)
 
   $scope.userID = getQueryVariable('shareuser')
 
   $scope.user = userService.fetchUser($scope.userID)
+
+  $scope.closeVideo = () ->
+    $scope.player.stopVideo()
+    $location.search('video', null)
+    $rootScope.videoVisible = false
 
 
   return
