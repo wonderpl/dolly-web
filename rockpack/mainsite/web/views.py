@@ -166,6 +166,14 @@ def add_userid_param(url, userid):
     return update_qs(url, {'shareuser': userid})
 
 
+def add_mobile_ua_param(url):
+    ua_str = request.user_agent.string
+    if (app.config['MOBILE_BROWSER_RE1'].search(ua_str) or
+            app.config['MOBILE_BROWSER_RE2'].search(ua_str[:4])):
+        url = update_qs(url, (('mobile', 'true'),))
+    return url
+
+
 def share_link_processing(linkid):
     not_social_bot = True
     show_meta_only = False
@@ -188,6 +196,7 @@ def share_link_processing(linkid):
 
     new_url = add_carry_thru_params(data.get('url'))
     new_url = add_userid_param(new_url, link.user)
+    new_url = add_mobile_ua_param(new_url)
     return redirect(new_url, 302)
 
 
