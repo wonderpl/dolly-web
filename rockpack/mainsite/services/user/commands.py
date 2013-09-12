@@ -500,8 +500,8 @@ def process_broadcast_messages(date_from, date_to):
         (BroadcastMessage.date_scheduled.between(date_from, date_to)) &
         (BroadcastMessage.date_processed == None)
     )
-    users = User.query.filter_by(is_active=True)
     for message in messages:
+        users = User.query.filter_by(is_active=True)
         url = message.url_target and BroadcastMessage.get_target_resource_url(message.url_target)
         if message.filter:
             for expr, type, values in BroadcastMessage.parse_filter_string(message.filter):
@@ -532,6 +532,7 @@ def process_broadcast_messages(date_from, date_to):
 
         app.logger.info('Processed broadcast message: %s', message.label)
         message.date_processed = datetime.utcnow()
+        message.save()  # commit now that this message has been processed
 
 
 @manager.cron_command(interval=900)
