@@ -18,13 +18,13 @@ window.Weblight.controller('ChannelCtrl', ['$scope', '$rootScope', 'ContentServi
   $scope.shareFacebook = () ->
     FB.ui({
       method: 'feed',
-      link: "http://www.rockpack.com/channel/#{$scope.channel.owner.id}/#{$scope.channel.id}/#",
+      link: "http://rockpack.com/channel/#{$scope.channel.owner.id}/#{$scope.channel.id}/#",
       picture: $scope.channel.cover.thumbnail_url,
       name: 'Rockpack',
       caption: 'Shared a video with you'
     })
 
   $scope.shareTwitter = (url) ->
-    window.open("http://twitter.com/intent/tweet?url=http://www.rockpack.com/channel/#{$scope.channel.owner.id}/#{$scope.channel.id}/#")
+    window.open("http://twitter.com/intent/tweet?url=http://rockpack.com/channel/#{$scope.channel.owner.id}/#{$scope.channel.id}/#")
 
 ])

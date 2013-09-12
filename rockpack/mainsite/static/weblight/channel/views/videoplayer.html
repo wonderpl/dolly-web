@@ -1,7 +1,7 @@
 <div ng-controller="VideoCtrl" class="wrapper">
   <div id="embedCode" ng-show="showEmbed == true" ng-click="showEmbed = false">
     <div id="embedContainer" class="wrapper" >
-      <textarea ng-click="$event.stopPropagation()"><iframe width="430" height="242" src="http://www.rockpack.com/embed/((channel.id))" frameborder="0" ></iframe></textarea></iframe>
+      <textarea ng-click="$event.stopPropagation()"><iframe width="430" height="242" src="http://rockpack.com/embed/((channel.id))" frameborder="0" ></iframe></textarea></iframe>
     </div>
   </div>
   <div id="videoTitle">((videoObj.title | truncate: 60))</div>
