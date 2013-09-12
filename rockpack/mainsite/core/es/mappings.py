@@ -124,6 +124,10 @@ channel_mapping = {
         "editorial_boost": {"type": "float", "null_value": 1.0},
         "favourite": {"type": "boolean"},
         "verified": {"type": "boolean"},
+        "video_terms": {
+            "type": "string",
+            "analyzer": "snowball"
+        },
         "keywords": {
             "type": "string",
             "index": "not_analyzed"

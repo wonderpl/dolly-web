@@ -116,6 +116,13 @@ def update_channel_rank():
 
 
 @manager.cron_command(interval=3600)
+def update_video_channel_terms():
+    start = time.time()
+    helpers.DBImport().import_video_channel_terms()
+    app.logger.info('Ran import_video_channel_terms in %ds', time.time() - start)
+
+
+@manager.cron_command(interval=3600)
 def update_channel_view_counts():
     """Update view counts for channel."""
     JOB_NAME = 'update_channel_view_stats'
