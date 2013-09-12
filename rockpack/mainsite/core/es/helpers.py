@@ -1,8 +1,8 @@
 import sys
 import time
 import datetime
-from decimal import Decimal
 from itertools import groupby
+from flask import json
 from . import api
 from . import mappings
 
@@ -218,13 +218,53 @@ class DBImport(object):
                 self.conn.flush_bulk(forced=True)
             print '%s finished in' % total, time.time() - start, 'seconds (%s videos not in es)' % missing
 
-    def _partial_update(self, index, id, script):
+    def _partial_update(self, index, id, script, params=None):
         self.conn.partial_update(
             self.indexing.indexes[index]['index'],
             self.indexing.indexes[index]['type'],
             id,
-            script
+            script,
+            params=params
         )
+
+    def import_video_channel_terms(self):
+        from pyes.exceptions import ElasticSearchException
+        from rockpack.mainsite.services.video.models import VideoInstance, Channel, Video
+
+        query = VideoInstance.query.join(
+            Channel,
+            Channel.id == VideoInstance.channel
+        ).join(
+            Video,
+            Video.id == VideoInstance.video
+        ).filter(Channel.public == True, Channel.deleted == False)
+
+        channel_terms = {}
+
+        total = 0
+        missing = 0
+        start = time.time()
+
+        print 'Building data ...'
+        for v in query.yield_per(600):
+            channel_terms.setdefault(v.channel, []).append(v.video_rel.title)
+
+        print 'Updating records in es ...'
+        for c_id, terms_list in channel_terms.iteritems():
+            try:
+                self._partial_update(
+                    'channel',
+                    c_id,
+                    'ctx._source.video_terms = term',
+                    params={'term': json.dumps(terms_list)}
+                )
+            except ElasticSearchException, e:
+                print e
+                missing += 1
+            total += 1
+
+        self.conn.flush_bulk(forced=True)
+        print '%s finished in' % total, time.time() - start, 'seconds (%s channels not in es)' % missing
 
     def import_channel_share(self):
         from pyes.exceptions import ElasticSearchException

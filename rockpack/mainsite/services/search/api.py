@@ -82,8 +82,7 @@ class SearchWS(WebService):
             ch = ChannelSearch(self.get_locale())
             offset, limit = self.get_page()
             ch.set_paging(offset, limit)
-            ch.add_text('title', request.args.get('q', ''))
-            ch.add_text('keywords', request.args.get('q', '').lower())
+            ch.search_terms(request.args.get('q', ''))
             ch.add_filter(filters.verified_channel_boost())
             ch.add_filter(filters.negatively_boost_favourites())
             if request.args.get('order') == 'latest':

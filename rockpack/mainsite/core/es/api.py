@@ -75,6 +75,7 @@ class EntitySearch(object):
 
         self._filters = []
         self._exclusion_filters = []
+        self._multiple_field_terms = ()
 
         self._must_terms = []
         self._should_terms = []
@@ -108,7 +109,8 @@ class EntitySearch(object):
 
     def _construct_terms(self):
         if self._must_terms or self._should_terms or self._must_not_terms:
-            return pyes.BoolQuery(must=self._must_terms, must_not=self._must_not_terms, should=self._should_terms)
+            return pyes.BoolQuery(must=self._must_terms, must_not=self._must_not_terms, should=self._should_terms,
+                minimum_number_should_match=0)
         return pyes.MatchAllQuery()
 
     def _construct_filters(self, query):
@@ -145,24 +147,10 @@ class EntitySearch(object):
             doc_types=self.get_type_name(),
             explain=explain,
             **self._query_params)
+
         if explain:
             from pprint import pprint as pp
-            try:
-                result.__dict__
-                pp(result.__dict__['hits'])
-            except:
-                pass
-            pp(result.__dict__['query'])
-            """
-            try:
-                result.next()
-                pp(result.__dict__['hits'][0])
-                pp(result.__dict__['hits'][1])
-                pp(result.__dict__['hits'][2])
-                pp(result.__dict__['hits'][3])
-            except (KeyError, IndexError):
-                pass
-            """
+            pp(result.search.serialize())
         return result
 
     def get_index_name(self):
@@ -281,7 +269,6 @@ class ChannelSearch(EntitySearch, CategoryMixin, MediaSortMixin):
 
         position = 0
         for channel in channels:
-
             ch = dict(
                 id=channel.id,
                 owner=channel.owner,
@@ -405,6 +392,25 @@ class ChannelSearch(EntitySearch, CategoryMixin, MediaSortMixin):
                 script='1000000000000000000'
             )
         )
+
+    def search_terms(self, phrase):
+        if phrase:
+            query = pyes.StringQuery(
+                phrase,
+                default_operator='AND',
+                search_fields=['title^10', 'video_terms', 'keywords'],
+                analyzer='snowball',
+                minimum_should_match=0
+            )
+            self._add_term_occurs(query, MUST)
+            query = pyes.TextQuery(
+                'video_terms',
+                phrase,
+                type='phrase',
+                operator='and',
+                boost=5
+            )
+            self._add_term_occurs(query, SHOULD)
 
     def check_country_allowed(self, country):
         """ Set filter on videos for restricted content
@@ -673,6 +679,8 @@ def update_channel_to_index(channel, no_check=False):
                     add_channel_to_index(channel)
                 except Exception, e:
                     pass
+            else:
+                app.logger.error(e)
         else:
             es_connection.flush_bulk(forced=True)
 
