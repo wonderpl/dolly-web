@@ -3,7 +3,6 @@ window.Weblight.controller('VideoCtrl', ['$scope', '$rootScope', '$routeParams',
   $rootScope.videoPosition = null
   $scope.currentPosition = 0
 
-
   @getPlayerWidth = () ->
     @playerWidth = 430
     @playerHeight = 242
@@ -55,6 +54,14 @@ window.Weblight.controller('VideoCtrl', ['$scope', '$rootScope', '$routeParams',
         $rootScope.videoPosition++
         $rootScope.$apply()
 
+  $scope.next = () ->
+    if $rootScope.videoPosition < window.channel_data.videos.total
+      $rootScope.videoPosition++
+
+
+  $scope.prev = () ->
+    if $rootScope.videoPosition > 0
+      $rootScope.videoPosition--
 
   trackProgress = () ->
     if $scope.playerState == 1

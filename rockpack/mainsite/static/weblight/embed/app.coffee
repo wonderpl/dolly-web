@@ -25,6 +25,16 @@ window.Weblight = angular.module('Weblight', ['infinite-scroll'])
             return String(text).substring(0, length-end.length) + end
   )
 
+   .filter('minutes', ->
+    return (text, end) ->
+
+      if typeof text != "undefined"
+        seconds = text%60
+        if text%60 < 10
+          seconds = "0#{text%60}"
+        return "#{Math.floor(text/60)}:#{seconds}"
+  )
+
 window.onYouTubeIframeAPIReady = ->
   updateScope()
   return
