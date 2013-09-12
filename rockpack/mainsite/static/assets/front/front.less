@@ -182,7 +182,7 @@ body {
 #whatson {
   overflow: hidden;
   height: 671px;
-  background: url(/static/assets/front/images/cover.jpg) no-repeat 50% 50%;
+  background: url(/static/assets/front/images/cover2.jpg) no-repeat 50% 50%;
   background-size: cover;
   position: relative;
 
@@ -199,12 +199,12 @@ body {
     right: 15px;
     text-align: right;
     bottom: 15px;
-    background: url(/static/assets/front/images/ipadsv3.png) no-repeat;
+    background: url(/static/assets/front/images/ipadsv4.png) no-repeat;
   }
 
   .headline {
     width: auto;
-    color: #fff;
+    color: #c0e8e9;
     text-align: center;
 
     img {
@@ -218,7 +218,6 @@ body {
     font-size: 55px;
     line-height: 55px;
     font-family: "dn-bold", sans-serif;
-    text-shadow: 0 1px 5px rgba(0,0,0,0.45);
     font-weight: normal;
   }
 
@@ -227,7 +226,6 @@ body {
     font-size: 24px;
     line-height: 34px;
     margin-top: 30px;
-    text-shadow: 0 1px 5px rgba(0,0,0,0.45);
     font-weight: normal;
   }
 
@@ -291,6 +289,7 @@ body {
 
 #logos {
   background: #fff;
+  margin-top: 45px;
 
   img {
     margin: 55px 0;
@@ -794,6 +793,62 @@ footer, #footer {
   }
 }
 
+#popularChannels {
+
+  width: 960px;
+  margin: 0 auto;
+
+  h1 {
+    color: #0ba6ab;
+    font-size: 44px;
+    font-family: "dn-regular";
+    text-align: center;
+    margin: 80px 0;
+  }
+
+  ul {
+    list-style: none;
+    margin: 0;
+    position: relative;
+    overflow-y: hidden;
+    height: 255px;
+    text-align: center;
+
+    .channel {
+      position: relative;
+      width: 251px;
+      height: 251px;
+      background-size: cover;
+      display: inline-block;
+      margin-left: 40px;
+      color: #fff;
+      font-family: "dn-regular";
+      font-size: 22px;
+      text-transform: uppercase;
+      cursor: pointer;
+
+      &:first-child {
+        margin-left: 0;
+      }
+
+      .channelTitle {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        margin: 0 0 18px 18px;
+      }
+
+      img {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+      }
+    }
+  }
+}
+
 #channel-playbook {
   padding-top: 50px;
   text-align: left;
@@ -1144,6 +1199,11 @@ footer, #footer {
 
 @media (min-width: 1200px) {
 
+  #popularChannels {
+
+    width: 1200px;
+  }
+
   #iphones {
     width: 800px;
   }
@@ -1269,6 +1329,11 @@ footer, #footer {
     width: 725px;
   }
 
+  #popularChannels {
+
+    width: 768px;
+  }
+
   #video {
     background: url(/static/assets/front/images/video_725.jpg) no-repeat 50% 50%;
     height: 406px;
@@ -1337,6 +1402,10 @@ footer, #footer {
       line-height: 25px;
     }
 
+    h1 {
+      font-size: 52px;
+    }
+
     .ipadsimgs {
       width: 524px;
       height: 322px;
@@ -1344,7 +1413,7 @@ footer, #footer {
       right: 15px;
       text-align: right;
       bottom: 15px;
-      background: url(/static/assets/front/images/ipads_smallv3.png) no-repeat;
+      background: url(/static/assets/front/images/ipads_smallv4.png) no-repeat;
     }
 
     .headline {

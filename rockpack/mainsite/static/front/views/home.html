@@ -9,12 +9,20 @@
       <div class="ipadsimgs hidden-phone"></div>
     </div>
   </div>
+  <div ng-controller="popularChannels" class="hidden-phone" id="popularChannels">
+    <h1>What pack could you be into?</h1>
+    <ul>
+      <li ng-repeat="channel in channels.items" class="channel" ng-style="{'background-image': 'url(' + channel.cover.thumbnail_url + ')' }" ng-click="show(channel.id, channel.owner.id)">
+        <div class="channelTitle">((channel.title))</div>
+      </li>
+    </ul>
+  </div>
+
   <div class="hidden-phone" id="logos">
     <div class="wrapper">
       <img ng-src="((assets_url))/assets/front/images/logos.jpg">
     </div>
   </div>
-
   <div id="iphone-instructions" class="wrapper visible-phone">
     <div class="imgcontainer">
       <img ng-src="((assets_url))/assets/front/images/iphone-mobilev2.png">
