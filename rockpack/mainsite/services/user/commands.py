@@ -1,5 +1,5 @@
 import urlparse
-from itertools import izip_longest
+from itertools import izip_longest, groupby
 from functools import wraps
 from datetime import datetime, timedelta
 from flask import json
@@ -8,7 +8,7 @@ from sqlalchemy.orm import joinedload, contains_eager, aliased
 from sqlalchemy.orm.exc import NoResultFound
 from rockpack.mainsite import app
 from rockpack.mainsite.manager import manager
-from rockpack.mainsite.core.dbapi import commit_on_success, db
+from rockpack.mainsite.core.dbapi import commit_on_success, db, readonly_session
 from rockpack.mainsite.core import email
 from rockpack.mainsite.core.apns import push_client
 from rockpack.mainsite.services.oauth import facebook
@@ -16,7 +16,9 @@ from rockpack.mainsite.services.base.models import JobControl
 from rockpack.mainsite.services.oauth.models import ExternalFriend, ExternalToken
 from rockpack.mainsite.services.video.models import Channel, VideoInstance
 from rockpack.mainsite.services.share.models import ShareLink
-from .models import User, UserActivity, UserNotification, UserContentFeed, UserFlag, Subscription, BroadcastMessage
+from .models import (
+    User, UserActivity, UserNotification, UserContentFeed,
+    UserFlag, UserInterest, Subscription, BroadcastMessage)
 
 
 def activity_user(activity):
@@ -533,6 +535,35 @@ def process_broadcast_messages(date_from, date_to):
         app.logger.info('Processed broadcast message: %s', message.label)
         message.date_processed = datetime.utcnow()
         message.save()  # commit now that this message has been processed
+
+
+@manager.cron_command(interval=3600)
+@job_control
+def update_user_interests(date_from, date_to):
+    active_users = readonly_session.query(UserActivity.user).filter(
+        UserActivity.date_actioned.between(date_from, date_to)).subquery()
+    activity_categories = readonly_session.query(
+        UserActivity.user,
+        Channel.category,
+        func.count(func.distinct(Channel.id))
+    ).outerjoin(
+        VideoInstance,
+        (UserActivity.object_type == 'video_instance') &
+        (UserActivity.object_id == VideoInstance.id)
+    ).filter(
+        ((UserActivity.object_type == 'channel') & (UserActivity.object_id == Channel.id)) |
+        (VideoInstance.channel == Channel.id)
+    ).filter(
+        UserActivity.user.in_(active_users),
+        Channel.category != None
+    ).group_by('1, 2').order_by('1, 3 desc')
+
+    for user, categories in groupby(activity_categories, lambda x: x[0]):
+        UserInterest.query.filter_by(user=user).delete()
+        db.session.execute(UserInterest.__table__.insert(), [
+            dict(user=user, explicit=False, category=category, weight=weight)
+            for user, category, weight in categories
+            ][:10])
 
 
 @manager.cron_command(interval=900)

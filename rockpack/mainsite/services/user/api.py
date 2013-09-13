@@ -28,7 +28,8 @@ from rockpack.mainsite.services.cover_art import api as cover_api
 from rockpack.mainsite.services.video import api as video_api
 from rockpack.mainsite.services.search import api as search_api
 from .models import (
-    User, UserActivity, UserContentFeed, UserNotification, Subscription, UserFlag, USER_FLAGS)
+    User, UserActivity, UserContentFeed, UserNotification, UserInterest,
+    Subscription, UserFlag, USER_FLAGS)
 
 
 ACTION_COLUMN_VALUE_MAP = dict(
@@ -198,7 +199,7 @@ def add_videos_to_channel(channel, instance_list, locale, delete_existing=False)
             added.append(video_id)
 
     if delete_existing:
-        deleted_video_ids = set(existing.keys()).difference([v[0] for v in video_ids])
+        deleted_video_ids = set(existing.keys()).difference(zip(*video_ids)[0])
         if deleted_video_ids:
             VideoInstance.query.filter(
                 VideoInstance.video.in_(deleted_video_ids),
@@ -580,19 +581,28 @@ def _aggregate_content_feed(items):
 def _channel_recommendations(userid, locale, paging):
     (gender, age), = User.query.filter_by(id=userid).values(
         User.gender, func.age(User.date_of_birth))
-    boosts = app.config['RECOMMENDER_CATEGORY_BOOSTS']
-    user_boosts = []
+    interests = list(UserInterest.query.filter_by(user=userid, explicit=False).
+                     order_by('weight desc').limit(5).values('category', 'weight'))
+    boostfactor = app.config.get('RECOMMENDER_INTEREST_BOOST_FACTOR', 1.4)
+    d = boostfactor / interests[0][1]
+    user_boosts = [(c, i * d) for c, i in interests]
+    demo_boosts = app.config['RECOMMENDER_CATEGORY_BOOSTS']
     if gender:
-        user_boosts.extend(boosts['gender'][gender])
+        user_boosts.extend(demo_boosts['gender'][gender])
     if age:
         age = age.days / 365
         user_boosts.extend(next(
-            (v for k, v in sorted(boosts['age'].items()) if age < k), ()))
+            (v for k, v in sorted(demo_boosts['age'].items()) if age < k), ()))
     # combine boosts by multiplying each with the same category
     user_boosts = [(i, reduce(lambda a, b: a * b[1], grp, 1))
                    for i, grp in groupby(sorted(user_boosts), lambda x: x[0])]
-    # increase the boost factor so that these boosts dominate the default ranking
-    #user_boosts = [(c, b * 1.5) for c, b in user_boosts]
+    # normalise the positive boosts so that the max boost factor is at the limit
+    if user_boosts:
+        boostlimit = app.config.get('RECOMMENDER_BOOST_LIMIT', 1.8) - 1
+        boosts = [b for c, b in user_boosts if b > 1]
+        bmin, bmax = min(boosts), max(boosts)
+        user_boosts = [(c, 1 + (boostlimit * (b - bmin) / (bmax - bmin)) if b > 1 else b)
+                       for c, b in user_boosts]
     return video_api.get_es_channels(locale, paging, None, user_boosts)
 
 

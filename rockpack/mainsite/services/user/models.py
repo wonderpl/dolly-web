@@ -266,6 +266,16 @@ class UserAccountEvent(db.Model):
     clientid = Column(CHAR(22), nullable=False)
 
 
+class UserInterest(db.Model):
+    __tablename__ = 'user_interest'
+
+    id = Column(Integer, primary_key=True)
+    user = Column(ForeignKey('user.id'), nullable=False)
+    explicit = Column(Boolean, nullable=False, server_default='false', default=False)
+    category = Column(ForeignKey('category.id'), nullable=False)
+    weight = Column(Integer, nullable=True)
+
+
 class ReservedUsername(db.Model):
     __tablename__ = 'reserved_username'
 
