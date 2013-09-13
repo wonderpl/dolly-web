@@ -16,7 +16,17 @@
   src:url("/static/assets/fonts/da088ecc-a53c-4831-a95b-6fd81b5b338a.eot?#iefix");
   src:url("/static/assets/fonts/da088ecc-a53c-4831-a95b-6fd81b5b338a.eot?#iefix") format("eot"),url("/static/assets/fonts/c5a7f89e-15b6-49a9-8259-5ea665e72191.woff") format("woff"),url("/static/assets/fonts/868c94b5-ca49-46b7-b62b-297f8d861125.ttf") format("truetype"),url("/static/assets/fonts/e3145f65-29b5-4f7f-8c6e-2dc135021b6a.svg#e3145f65-29b5-4f7f-8c6e-2dc135021b6a") format("svg");
 }
+@font-face{
+  font-family:"dn-ultralight";
+  src:url("/static/assets/fonts/06e964c1-d71a-48a5-b3fd-88c164e2b0fa.eot?#iefix");
+  src:url("/static/assets/fonts/06e964c1-d71a-48a5-b3fd-88c164e2b0fa.eot?#iefix") format("eot"),url("/static/assets/fonts/04c0d1f1-0fdf-4866-a034-1b5d1ba44a94.woff") format("woff"),url("/static/assets/fonts/a840f6fc-ef1f-44cd-a5fb-f68784b9bc1e.ttf") format("truetype"),url("/static/assets/fonts/4032b83f-6bbc-40a1-bfb9-cafd86356a17.svg#4032b83f-6bbc-40a1-bfb9-cafd86356a17") format("svg");
+}
 
+@font-face{
+  font-family:"dn-light";
+  src:url("/static/assets/fonts/3e0b2cd7-9657-438b-b4af-e04122e8f1f7.eot?#iefix");
+  src:url("/static/assets/fonts/3e0b2cd7-9657-438b-b4af-e04122e8f1f7.eot?#iefix") format("eot"),url("/static/assets/fonts/bc176270-17fa-4c78-a343-9fe52824e501.woff") format("woff"),url("/static/assets/fonts/3516f91d-ac48-42cd-acfe-1be691152cc4.ttf") format("truetype"),url("/static/assets/fonts/d1b1e866-a411-42ba-8f75-72bf28e23694.svg#d1b1e866-a411-42ba-8f75-72bf28e23694") format("svg");
+}
 
 a {
   color: #0ba6ab;
@@ -41,6 +51,7 @@ body {
 #topmenu {
   float: right;
   list-style: none;
+  margin: 0;
 
   li {
     float: left;
@@ -182,9 +193,30 @@ body {
 #whatson {
   overflow: hidden;
   height: 671px;
-  background: url(/static/assets/front/images/cover2.jpg) no-repeat 50% 50%;
-  background-size: cover;
+  background: #218a8c; /* Old browsers */
+  /* IE9 SVG, needs conditional override of 'filter' to 'none' */
+  background: url(data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiA/Pgo8c3ZnIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgdmlld0JveD0iMCAwIDEgMSIgcHJlc2VydmVBc3BlY3RSYXRpbz0ibm9uZSI+CiAgPGxpbmVhckdyYWRpZW50IGlkPSJncmFkLXVjZ2ctZ2VuZXJhdGVkIiBncmFkaWVudFVuaXRzPSJ1c2VyU3BhY2VPblVzZSIgeDE9IjAlIiB5MT0iMCUiIHgyPSIwJSIgeTI9IjEwMCUiPgogICAgPHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iIzIxOGE4YyIgc3RvcC1vcGFjaXR5PSIxIi8+CiAgICA8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiM3Y2MwYzEiIHN0b3Atb3BhY2l0eT0iMSIvPgogIDwvbGluZWFyR3JhZGllbnQ+CiAgPHJlY3QgeD0iMCIgeT0iMCIgd2lkdGg9IjEiIGhlaWdodD0iMSIgZmlsbD0idXJsKCNncmFkLXVjZ2ctZ2VuZXJhdGVkKSIgLz4KPC9zdmc+);
+  background: -moz-linear-gradient(top,  #218a8c 0%, #7cc0c1 100%); /* FF3.6+ */
+  background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#218a8c), color-stop(100%,#7cc0c1)); /* Chrome,Safari4+ */
+  background: -webkit-linear-gradient(top,  #218a8c 0%,#7cc0c1 100%); /* Chrome10+,Safari5.1+ */
+  background: -o-linear-gradient(top,  #218a8c 0%,#7cc0c1 100%); /* Opera 11.10+ */
+  background: -ms-linear-gradient(top,  #218a8c 0%,#7cc0c1 100%); /* IE10+ */
+  background: linear-gradient(to bottom,  #218a8c 0%,#7cc0c1 100%); /* W3C */
+  filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#218a8c', endColorstr='#7cc0c1',GradientType=0 ); /* IE6-8 */
   position: relative;
+  font-family:"dn-ultralight";
+  font-size: 24px;
+  line-height: 28px;
+
+  .headline {
+    width: 450px;
+    margin-top: 80px;
+    color: #b3d5d5;
+
+    p {
+      margin: 20px 0;
+    }
+  }
 
   .wrapper {
     height: 571px;
@@ -193,40 +225,22 @@ body {
 
 
   .ipadsimgs {
-    width: 586px;
-    height: 366px;
+    width: 500px;
+    height: 312px;
     position: absolute;
-    right: 15px;
     text-align: right;
     bottom: 15px;
-    background: url(/static/assets/front/images/ipadsv4.png) no-repeat;
+    right: 0;
+    background: url(/static/assets/front/images/ipads_smallv5.png) no-repeat;
   }
 
   .headline {
-    width: auto;
-    color: #c0e8e9;
-    text-align: center;
 
     img {
-      margin-top: 170px;
+      margin-top: 60px;
       margin-left: 15px;
       float: left;
     }
-  }
-
-  h1 {
-    font-size: 55px;
-    line-height: 55px;
-    font-family: "dn-bold", sans-serif;
-    font-weight: normal;
-  }
-
-  h2 {
-    font-family: "dn-regular", sans-serif;
-    font-size: 24px;
-    line-height: 34px;
-    margin-top: 30px;
-    font-weight: normal;
   }
 
   #logo {
@@ -322,26 +336,16 @@ body {
     display: inline-block;
   }
 
-  p {
-    font-size: 19px;
-    font-family: "dn-regular", sans-serif;
-    line-height: 19px;
-  }
-
-  h2 {
-    text-align: center;
-    color: #858a8e;
-    font-size: 35px;
-    text-shadow: 1px 1px #fff;
-    font-family: "dn-regular", sans-serif;
-    margin: 0 auto;
-    margin: 65px 0;
-  }
-
   h3 {
-    font-size: 20px;
-    line-height: 20px;
-    margin-bottom: 30px;
+    font-family: "dn-light", sans-serif;
+    font-size: 30px;
+    text-transform: uppercase;
+  }
+
+  p {
+    font-size: 25px;
+    font-family: "dn-light", sans-serif;
+    line-height: 28px;
   }
 
   #addvideo {
@@ -801,7 +805,7 @@ footer, #footer {
   h1 {
     color: #0ba6ab;
     font-size: 44px;
-    font-family: "dn-regular";
+    font-family: "dn-light";
     text-align: center;
     margin: 80px 0;
   }
@@ -820,7 +824,7 @@ footer, #footer {
       height: 251px;
       background-size: cover;
       display: inline-block;
-      margin-left: 40px;
+      margin-left: 32px;
       color: #fff;
       font-family: "dn-regular";
       font-size: 22px;
@@ -1201,11 +1205,11 @@ footer, #footer {
 
   #popularChannels {
 
-    width: 1200px;
+    width: 1100px;
   }
 
   #iphones {
-    width: 800px;
+    width: 1000px;
   }
 
   #video {
@@ -1229,18 +1233,7 @@ footer, #footer {
 
   #whatson {
     
-    .wrapper {
-      width: 1200px;
-    }
-
     .headline {
-
-      text-align: left;
-      margin-left: 50px;
-
-      h2 {
-        width: 500px;
-      }
 
       img {
         margin-top: 45px;
@@ -1249,8 +1242,14 @@ footer, #footer {
     }
 
     .ipadsimgs {
-      margin-right: 50px;
+      width: 586px;
+      height: 366px;
+      position: absolute;
+      text-align: right;
+      bottom: 15px;
+      background: url(/static/assets/front/images/ipadsv5.png) no-repeat;
     }
+
   }
 
   #faq {
@@ -1391,36 +1390,24 @@ footer, #footer {
     }
   }
 
+  #popularChannels h1 {
+    font-size: 34px;
+  }
+
   #whatson {
+    font-size: 20px;
+    line-height: 24px;
 
     .wrapper {
       width: 760px;
     }
 
-    h2 {
-      font-size: 20px;
-      line-height: 25px;
-    }
-
-    h1 {
-      font-size: 52px;
-    }
-
-    .ipadsimgs {
-      width: 524px;
-      height: 322px;
-      position: absolute;
-      right: 15px;
-      text-align: right;
-      bottom: 15px;
-      background: url(/static/assets/front/images/ipads_smallv4.png) no-repeat;
-    }
-
     .headline {
       width: auto;
+      margin-top: 0;
 
       img {
-        margin-top: 210px;
+        margin-top: 230px;
       }
     }
 
@@ -1540,6 +1527,7 @@ footer, #footer {
       font-size: 18px;
       line-height: 20px;
       margin-bottom: 20px;
+      text-transform: uppercase;
     }
 
     .imgcontainer {
@@ -1623,26 +1611,15 @@ footer, #footer {
     }
 
     .headline {
+      font-size: 16px;
+      line-height: 18px;
+      color: #000;
+      margin-top:10px;
       width: auto;
 
       img {
         float: none;
         margin: 30px 0;
-      }
-
-      h1 {
-        color: #484d51;
-        text-shadow: none;
-        font-size: 18px;
-        line-height: 20px;
-      }
-
-      h2 {
-        color: #484d51;
-        text-shadow: none;
-        font-size: 13px;
-        line-height: 18px;
-        margin: 0 auto;
       }
 
       img {
