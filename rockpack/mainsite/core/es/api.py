@@ -650,7 +650,7 @@ def update_channel_to_index(channel, no_check=False):
                 final = _construct_string(this, v) + final
             return final
         else:
-            prefix += " = %s;" % json.dumps(val, cls=DateEncoder)
+            prefix += " = %s;" % json.dumps(val, ensure_ascii=False, cls=DateEncoder)
         return prefix
 
     if not check_es(no_check):
