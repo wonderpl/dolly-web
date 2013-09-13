@@ -16,7 +16,13 @@
     <h1>Whatever you’re into, there’s a pack for that.</h1>
     <ul>
       <li ng-repeat="channel in channels.items" class="channel" ng-style="{'background-image': 'url(' + channel.cover.thumbnail_url + ')' }" ng-click="show(channel.id, channel.owner.id)">
-        <div class="channelTitle">((channel.title))</div>
+        <div class="metacontainer">
+          <div class="playcontainer">
+            <div class="playAll" ng-click="playVideo(0)"></div>
+          </div>
+          <div class="channelTitle">((channel.title |truncate :20))</div>
+          <div class="by">by ((channel.owner.display_name |truncate :20))</div>
+        </div>
       </li>
     </ul>
   </div>
