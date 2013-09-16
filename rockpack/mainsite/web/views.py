@@ -293,7 +293,7 @@ def reset_password():
         if form.validate_on_submit():
             user = User.query.get(userid)
             user.change_password(user, form.password.data)
-            record_user_event(user.username, 'password changed')
+            record_user_event(user.username, 'password changed', userid=userid)
     return locals()
 
 

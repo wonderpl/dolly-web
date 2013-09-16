@@ -1127,7 +1127,7 @@ class UserWS(WebService):
             abort(400, error='unauthorized_client')
 
         token = ExternalToken.update_token(userid, eu)
-        record_user_event(str(userid), '%s token updated' % eu.system, userid)
+        record_user_event(str(userid), '%s token updated' % eu.system, userid=userid)
         return None if hasattr(token, '_existing') else ajax_create_response(token)
 
     @expose_ajax('/<userid>/friends/', cache_age=600, cache_private=True)
