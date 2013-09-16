@@ -1,5 +1,5 @@
 import logging
-import json
+from flask import json
 import datetime
 from ast import literal_eval
 from urlparse import urlparse, urljoin
