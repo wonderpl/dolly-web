@@ -1,6 +1,6 @@
 <div ng-controller="ChannelCtrl">
   <div id="cover" ng-style="{'background-image': 'url(' + channel.cover.thumbnail_url + ')' }">
-    <a href="/" class="logo" ng-class="{'hideOverlay': hideOverlay}"></a>
+    <a href="/" target="_blank" class="logo" ng-class="{'hideOverlay': hideOverlay}"></a>
     <div id="gradientShadow"></div>
     <div id="metacontainer">
       <div id="playcontainer">
@@ -8,7 +8,7 @@
         <span id="videotitle">((channel.videos.total)) Videos</span>
       </div>
       <div id="channelTitle">((channel.title))</div>
-      <div id="by">by <a href="http://www.rockpack.com/channel/((channel.owner.id))/((channel.id))/#" class="highlight">((channel.owner.display_name | truncate : 30))</a> <span class="lightgrey"></div>
+      <div id="by">by <a href="/channel/-/((channel.id))/#" target="_blank" class="highlight">((channel.owner.display_name | truncate : 30))</a> <span class="lightgrey"></div>
     </div>
   </div>
   <div id="videos">
