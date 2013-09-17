@@ -42,7 +42,7 @@ class TestShare(base.RockPackTestCase):
         data = self._get_share_link(None, 'video_instance', VideoInstanceData.video_instance2.id)
 
         self.assertEquals(
-            'Check out this great video "Primer" on Rockpack',
+            'I found "Primer" on Rockpack and thought you might like it too.',
             data['message_email'],
             'Video title should be in the email message'
         )

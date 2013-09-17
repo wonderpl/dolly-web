@@ -67,13 +67,13 @@ class ShareForm(wtf.Form):
                 raise wtf.ValidationError('invalid id')
 
     def get_message_map(self):
+        type = self.object_type.data
         ctx = dict(
-            object_type=OBJECT_NAME_MAP[self.object_type.data],
-            title=(self.object.video_rel.title if self.object_type.data == 'video_instance'
+            title=(self.object.video_rel.title if type == 'video_instance'
                    else self.object.title),
         )
         return dict((k, v.format(ctx))
-                    for k, v in app.config['SHARE_MESSAGE_MAP'].iteritems())
+                    for k, v in app.config['SHARE_MESSAGE_MAP'][type].iteritems())
 
 
 class EmailShareForm(ShareForm):
