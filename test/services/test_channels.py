@@ -11,7 +11,7 @@ from test.services.test_user_flows import BaseUserTestCase
 from rockpack.mainsite import app
 from rockpack.mainsite.services.video.commands import set_channel_view_count, update_channel_promo_activity
 from rockpack.mainsite.core.es import use_elasticsearch
-from rockpack.mainsite.core.es.api import ChannelSearch
+from rockpack.mainsite.core.es.search import ChannelSearch
 from rockpack.mainsite.services.video import models
 from rockpack.mainsite.services.user.models import UserActivity
 
@@ -116,9 +116,10 @@ class ChannelPromotionTest(base.RockPackTestCase):
                 ).save()
 
                 update_channel_promo_activity()
+                user = self.create_test_user()
+
                 time.sleep(2)
 
-                user = self.create_test_user()
                 r = client.get(
                     '/ws/channels/',
                     content_type='application/json',

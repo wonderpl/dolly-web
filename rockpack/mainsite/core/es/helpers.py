@@ -4,10 +4,10 @@ import datetime
 from itertools import groupby
 from flask import json
 from . import api
-from . import mappings
-
+from . import exceptions
 from rockpack.mainsite import app
 from rockpack.mainsite.core.es import es_connection
+from rockpack.mainsite.core.es.api import ESObjectIndexer, ESVideo, ESChannel, ESVideoAttributeMap
 
 
 class Indexing(object):
@@ -15,23 +15,7 @@ class Indexing(object):
     def __init__(self):
         self.conn = es_connection
 
-        self.indexes = {
-            'channel': {
-                'index': mappings.CHANNEL_INDEX,
-                'type': mappings.CHANNEL_TYPE,
-                'mapping': mappings.channel_mapping
-            },
-            'video': {
-                'index': mappings.VIDEO_INDEX,
-                'type': mappings.VIDEO_TYPE,
-                'mapping': mappings.video_mapping
-            },
-            'user': {
-                'index': mappings.USER_INDEX,
-                'type': mappings.USER_TYPE,
-                'mapping': mappings.user_mapping
-            },
-        }
+        self.indexes = ESObjectIndexer.indexes
 
     def delete_index(self, index):
         app.logger.debug('deleting %s index %s', index, self.indexes[index]['index'])
@@ -65,6 +49,14 @@ class DBImport(object):
         self.conn = es_connection
         self.indexing = Indexing()
 
+    def print_percent_complete(self, current, total):
+        n = round(current/float(total)*100, 1)
+        if n < 1:
+            n = 1
+        if n % 1 == 0.0 or n == 1:
+            print int(n), "percent complete                                                \r",
+            sys.stdout.flush()
+
     def import_users(self):
         from rockpack.mainsite.services.user import models
         with app.test_request_context():
@@ -72,8 +64,11 @@ class DBImport(object):
             total = users.count()
             print 'importing {} users'.format(total)
             start = time.time()
+            count = 1
             for users in users.yield_per(6000):
-                api.add_user_to_index(users, bulk=True, refresh=False, no_check=True)
+                api.add_user_to_index(users, bulk=True, no_check=True)
+                self.print_percent_complete(count, total)
+                count += 1
             self.conn.flush_bulk(forced=True)
             print 'finished in', time.time() - start, 'seconds'
 
@@ -88,17 +83,15 @@ class DBImport(object):
                 )
             print 'importing {} PUBLIC channels\r'.format(channels.count())
             start = time.time()
+            ec = ESChannel.inserter(bulk=True)
+            count = 1
+            total = channels.count()
             for channel in channels.yield_per(6000):
-                api.add_channel_to_index(channel, bulk=True, refresh=False, no_check=True)
-            self.conn.flush_bulk(forced=True)
+                ec.insert(channel.id, channel)
+                self.print_percent_complete(count, total)
+                count += 1
+            ec.flush_bulk()
             print 'finished in', time.time() - start, 'seconds'
-
-    def print_percent_complete(self, current, done, total):
-        n = round(done/total*100, 1)
-        if n != current:
-            print n, "percent complete                                                \r",
-            sys.stdout.flush()
-        return n
 
     def import_videos(self):
         from rockpack.mainsite.services.video.models import Channel, Video, VideoInstanceLocaleMeta, VideoInstance
@@ -122,33 +115,30 @@ class DBImport(object):
             total = query.count()
             print 'importing {} videos'.format(total)
             start = time.time()
-            floated = float(total)
-            cur = 0
             done = 1
 
-            offset = 0
-            bulk_size = 2000
+            ev = ESVideo.inserter(bulk=True)
             for v in query.yield_per(6000):
-                api.add_video_to_index(v, bulk=True, refresh=False, no_check=True, update_restrictions=False, update_recentstars=False)
-                cur = self.print_percent_complete(cur, done, floated)
+                mapped = ESVideoAttributeMap(v)
+                rep = dict(
+                    id=mapped.id,
+                    public=mapped.public,
+                    video=mapped.video,
+                    title=mapped.title,
+                    channel=mapped.channel,
+                    category=mapped.category,
+                    date_added=mapped.date_added,
+                    position=mapped.position,
+                    locales=mapped.locales,
+                    recent_user_stars=mapped.recent_user_stars(empty=True),
+                    country_restriction=mapped.country_restriction(empty=True)
+                )
+                ev.manager.indexer.insert(v.id, rep)
+
+                self.print_percent_complete(done, total)
                 done += 1
-            """
-            while True:
-                repeat = False
-                for v in query.offset(offset).limit(bulk_size):#.yield_per(2000):
-                    api.add_video_to_index(v, bulk=True, refresh=False, no_check=True, update_restrictions=False, update_recentstars=False)
-                    cur = self.print_percentage_complete(cur, floated)
-                    repeat = True
 
-                time.sleep(2)
-                offset += bulk_size
-                print 'next batch                       /r',
-                sys.stdout.flush()
-
-                if not repeat:
-                    break
-            """
-            self.conn.flush_bulk(forced=True)
+            ev.flush_bulk()
             print 'finished in', time.time() - start, 'seconds'
 
     def import_video_stars(self):
@@ -162,22 +152,23 @@ class DBImport(object):
                 'object_id', 'date_actioned desc'
             )
 
-            indexing = Indexing()
-            total = 0
+            total = query.count()
             missing = 0
+            done = 1
             start = time.time()
             for instance_id, group in groupby(query.yield_per(200).values(UserActivity.object_id, UserActivity.user), lambda x: x[0]):
                 try:
-                    self.conn.partial_update(
-                        indexing.indexes['video']['index'],
-                        indexing.indexes['video']['type'],
-                        instance_id,
-                        "ctx._source.recent_user_stars = %s" % str(
+                    ec = ESVideo.updater(bulk=True)
+                    ec.set_document_id(instance_id)
+                    ec.add_field('recent_user_stars', str(
                             list(set([u.encode('utf8') for v, u in group]))[:5]
                         )
                     )
+                    ec.update()
                 except ElasticSearchException:
                     missing += 1
+                done += 1
+                self.print_percent_complete(done, total)
 
             self.conn.flush_bulk(forced=True)
             print '%s finished in' % total, time.time() - start, 'seconds (%s videos not in es)' % missing
@@ -267,7 +258,6 @@ class DBImport(object):
         print '%s finished in' % total, time.time() - start, 'seconds (%s channels not in es)' % missing
 
     def import_channel_share(self):
-        from pyes.exceptions import ElasticSearchException
         from rockpack.mainsite.services.share.models import ShareLink
         from rockpack.mainsite.services.user.models import UserActivity, User
         from rockpack.mainsite.services.video.models import VideoInstance, Channel
@@ -341,6 +331,8 @@ class DBImport(object):
             ).join(
                 User, User.id == ShareLink.user
             ).filter(
+                Channel.deleted == False,
+                Channel.public == True,
                 ShareLink.object_type == 'channel',
                 ShareLink.date_created > zulu,
                 ShareLink.click_count > 0,
@@ -372,6 +364,8 @@ class DBImport(object):
             ).join(
                 User, User.id == ShareLink.user
             ).filter(
+                Channel.deleted == False,
+                Channel.public == True,
                 ShareLink.object_type == 'video_instance',
                 ShareLink.date_created > zulu,
                 ShareLink.click_count > 0,
@@ -391,24 +385,29 @@ class DBImport(object):
             print 'video shares done'
 
             print '... updating elasticsearch for %s ...' % locale
+
+            done = 1
+            i_total = len(channel_dict)
             for id, _dict in channel_dict.iteritems():
                 try:
-                    #print 'inserting', _dict, 'in to', id
                     count = 0
-                    u_strings = []
-
                     for k, v in _dict.iteritems():
                         if k.startswith('norm'):
                             count += v
 
-                    u_strings.append('ctx._source.normalised_rank[\'%s\'] = %f' % (locale, float(count),))
+                    if count == 0:
+                        continue
 
-                    if count > 0:
-                        self._partial_update('channel', id, ';'.join(u_strings))
-                except ElasticSearchException, e:
+                    ec = ESChannel.updater(bulk=True)
+                    ec.set_document_id(id)
+                    ec.add_field('normalised_rank[\'%s\']' % locale, float(count))
+                    ec.update()
+
+                except exceptions.DocumentMissingException, e:
                     missing += 1
                 total += 1
+                self.print_percent_complete(done, i_total)
+                done += 1
+            ec.flush_bulk()
 
-        self.conn.flush_bulk(forced=True)
-
-        print '%s finished in' % total, time.time() - start, 'seconds (%s channels not in es)' % missing
+        print '%s total updates in two passesfinished in' % total, time.time() - start, 'seconds (%s channels not in es)' % missing

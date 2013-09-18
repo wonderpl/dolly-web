@@ -1,4 +1,9 @@
 def pytest_configure(config):
+    from rockpack.mainsite.core.es import mappings
+    mappings.CHANNEL_INDEX = 'test_channels'
+    mappings.VIDEO_INDEX = 'test_videos'
+    mappings.USER_INDEX = 'test_users'
+
     from rockpack.mainsite import app, init_app
 
     app.config['FORCE_INDEX_INSERT_REFRESH'] = True
@@ -8,11 +13,7 @@ def pytest_configure(config):
     from rockpack.mainsite.core import dbapi
 
     if app.config.get('ELASTICSEARCH_URL'):
-        from rockpack.mainsite.core.es import mappings, helpers
-
-        mappings.CHANNEL_INDEX = 'test_channels'
-        mappings.VIDEO_INDEX = 'test_videos'
-        mappings.USER_INDEX = 'test_users'
+        from rockpack.mainsite.core.es import helpers
 
         i = helpers.Indexing()
         i.create_all_indexes(rebuild=True)

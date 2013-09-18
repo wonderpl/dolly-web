@@ -206,6 +206,7 @@ DEFAULT_EMAIL_SOURCE = 'rockpack <noreply@rockpack.com>'
 SQS_REGION = 'eu-west-1'
 SQS_CRON_QUEUE = 'mainsite-cron'
 SQS_EMAIL_QUEUE = 'mainsite-email'
+SQS_VIDEO_UPDATE_QUEUE = 'es-video-update'
 
 ENABLE_TIMINGS = True
 

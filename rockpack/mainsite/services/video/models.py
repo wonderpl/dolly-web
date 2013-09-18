@@ -385,8 +385,19 @@ class Channel(db.Model):
         now = datetime.utcnow()
         for p in self.channel_promotion:
             if p.date_start < now and p.date_end > now:
-                promos.append(es_api.promotion_formatter(p.locale, p.category, p.position))
+                promos.append(
+                    '|'.join([str(p.locale), str(p.category), str(p.position)])
+                )
         return promos
+
+    def child_parent_for_category(self):
+        category = []
+        if self.category:
+            if not self.category_rel:
+                category = Category.query.filter_by(id=self.category).values('id', 'parent').next()
+            else:
+                category = [self.category_rel.id, self.category_rel.parent]
+        return category
 
 
 class ChannelPromotion(db.Model):
@@ -531,10 +542,12 @@ def _video_insert(mapper, connection, target):
 @event.listens_for(Video, 'after_update')
 def _video_update(mapper, connection, target):
     if not target.visible:
-        for i in VideoInstance.query.filter_by(video=target.id):
-            _remove_es_video_instance(i)
+        from rockpack.mainsite.core.es.api import ESVideo
+        ids = VideoInstance.query.filter_by(video=target.id).values('id')
+        ESVideo.delete(ids)
 
 
+"""
 @event.listens_for(VideoInstance, 'after_insert')
 def _video_instance_insert(mapper, connection, target):
     _add_es_video(target)
@@ -548,6 +561,7 @@ def _video_instance_update(mapper, connection, target):
 @event.listens_for(VideoInstance, 'after_delete')
 def _video_instance_delete(mapper, connection, target):
     _remove_es_video_instance(target)
+"""
 
 
 @event.listens_for(ChannelLocaleMeta, 'after_insert')

@@ -8,7 +8,7 @@ from rockpack.mainsite.core.dbapi import readonly_session, db, commit_on_success
 from rockpack.mainsite.core.webservice import WebService, expose_ajax
 from rockpack.mainsite.core.oauth.decorators import check_authorization
 from rockpack.mainsite.core.es import use_elasticsearch, filters
-from rockpack.mainsite.core.es.api import VideoSearch, ChannelSearch
+from rockpack.mainsite.core.es.search import VideoSearch, ChannelSearch
 from rockpack.mainsite.services.video import models
 
 

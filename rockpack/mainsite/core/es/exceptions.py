@@ -8,3 +8,7 @@ class MissingTermsList(Exception):
 
 class InvalidTermCondition(Exception):
     pass
+
+
+class DocumentMissingException(Exception):
+    pass

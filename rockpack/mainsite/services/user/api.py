@@ -13,7 +13,8 @@ from rockpack.mainsite.core.dbapi import commit_on_success
 from rockpack.mainsite.core.webservice import WebService, expose_ajax, ajax_create_response, process_image
 from rockpack.mainsite.core.oauth.decorators import check_authorization
 from rockpack.mainsite.core.youtube import get_video_data
-from rockpack.mainsite.core.es import use_elasticsearch, api
+from rockpack.mainsite.core.es import use_elasticsearch, search as es_search
+from rockpack.mainsite.core.es.api import ESVideo, es_update_channel_videos
 from rockpack.mainsite.helpers import lazy_gettext as _
 from rockpack.mainsite.helpers.forms import naughty_word_validator
 from rockpack.mainsite.helpers.urls import url_for, url_to_endpoint
@@ -204,6 +205,11 @@ def add_videos_to_channel(channel, instance_list, locale, delete_existing=False)
                 VideoInstance.video.in_(deleted_video_ids),
                 VideoInstance.channel == channel.id
             ).delete(synchronize_session='fetch')
+
+    return dict(
+        extant=added + existing,
+        deleted=delete_existing
+    )
 
 
 def _user_list(paging, **filters):
@@ -474,7 +480,7 @@ def _content_feed(userid, locale, paging, country=None):
     usermap = dict()
 
     # Get video data
-    vs = api.VideoSearch(locale)
+    vs = es_search.VideoSearch(locale)
     vs.check_country_allowed(country)
     vs.set_paging(0, -1)
     vs.add_id(videomap.keys())
@@ -491,7 +497,7 @@ def _content_feed(userid, locale, paging, country=None):
         items[i] = video
 
     # Get channel data - for both feed channel items and video items
-    cs = api.ChannelSearch(locale)
+    cs = es_search.ChannelSearch(locale)
     cs.set_paging(0, -1)
     cs.add_id(channelmap.keys())
     for channel in cs.channels():
@@ -505,7 +511,7 @@ def _content_feed(userid, locale, paging, country=None):
             channel.pop('position')
 
     # Get user data for channel owners and stars list
-    us = api.UserSearch()
+    us = es_search.UserSearch()
     us.set_paging(0, -1)
     us.add_id(usermap.keys())
     for user in us.users():
@@ -630,13 +636,13 @@ class UserWS(WebService):
     @expose_ajax('/<userid>/', cache_age=600, secure=False)
     def user_info(self, userid):
         if use_elasticsearch():
-            us = api.UserSearch()
+            us = es_search.UserSearch()
             us.add_id(userid)
             owners = us.users()
             if not owners:
                 abort(404)
             owner = owners[0]
-            ch = api.ChannelSearch(self.get_locale())
+            ch = es_search.ChannelSearch(self.get_locale())
             offset, limit = self.get_page()
             ch.set_paging(offset, limit)
             ch.favourite_sort('desc')
@@ -868,7 +874,7 @@ class UserWS(WebService):
     @expose_ajax('/<userid>/channels/<channelid>/', cache_age=600, secure=False)
     def channel_info(self, userid, channelid):
         if use_elasticsearch():
-            ch = api.ChannelSearch(self.get_locale())
+            ch = es_search.ChannelSearch(self.get_locale())
             ch.add_id(channelid)
             location = request.args.get('location')
             if location:
@@ -947,7 +953,7 @@ class UserWS(WebService):
     def channel_videos(self, userid, channelid):
         if use_elasticsearch():
             location = request.args.get('location')
-            vs = api.VideoSearch(self.get_locale())
+            vs = es_search.VideoSearch(self.get_locale())
             vs.add_term('channel', [channelid])
             if location:
                 vs.check_country_allowed(location.upper())
@@ -979,7 +985,9 @@ class UserWS(WebService):
         if request.json is None or not isinstance(request.json, list):
             abort(400, message=_('List can be empty, but must be present'))
         existing_videos = len(channel.video_instances)
-        add_videos_to_channel(channel, request.json, self.get_locale(), request.method == 'PUT')
+
+        updates = add_videos_to_channel(channel, request.json, self.get_locale(), request.method == 'PUT')
+        es_update_channel_videos(updates['extant'], updates['deleted'])
 
         intended_public = channel.should_be_public(channel, channel.public)
         if not channel.video_instances and not intended_public:

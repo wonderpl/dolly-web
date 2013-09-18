@@ -3,7 +3,7 @@ from flask.ext.admin import BaseView, expose
 from flask import request, redirect
 from rockpack.mainsite import app
 from rockpack.mainsite.admin.video_views import category_list
-from rockpack.mainsite.core.es.api import ChannelSearch, VideoSearch
+from rockpack.mainsite.core.es.search import ChannelSearch, VideoSearch
 from rockpack.mainsite.core.es import filters
 
 

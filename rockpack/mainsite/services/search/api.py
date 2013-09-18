@@ -7,7 +7,7 @@ from rockpack.mainsite.core import youtube
 from rockpack.mainsite.helpers.db import gen_videoid
 from rockpack.mainsite.services.video.api import get_db_channels
 from rockpack.mainsite.services.video.models import Channel, User
-from rockpack.mainsite.core.es.api import ChannelSearch, VideoSearch, UserSearch
+from rockpack.mainsite.core.es.search import ChannelSearch, VideoSearch, UserSearch
 from rockpack.mainsite.core.es import use_elasticsearch, filters
 
 
