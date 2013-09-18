@@ -590,7 +590,7 @@ def add_video_to_index(video_instance, bulk=False, no_check=False):
     es_video.insert(video_instance.id, video_instance)
 
 
-def es_update_channel_videos(extant, deleted, async=app.connfig('ASYNC_ES_VIDEO_UPDATES', False)):
+def es_update_channel_videos(extant, deleted, async=app.config.get('ASYNC_ES_VIDEO_UPDATES', False)):
     """ Updates the es documents for videos belonging to channels
         extant - list of strings
         deleted - list of strings

@@ -198,6 +198,7 @@ def add_videos_to_channel(channel, instance_list, locale, delete_existing=False)
             VideoInstance.query.session.add(instance)
             added.append(video_id)
 
+    deleted_video_ids = []
     if delete_existing:
         deleted_video_ids = set(existing.keys()).difference([v[0] for v in video_ids])
         if deleted_video_ids:
@@ -207,8 +208,8 @@ def add_videos_to_channel(channel, instance_list, locale, delete_existing=False)
             ).delete(synchronize_session='fetch')
 
     return dict(
-        extant=added + existing,
-        deleted=delete_existing
+        extant=added + [e[0] for e in existing],
+        deleted=deleted_video_ids
     )
 
 
