@@ -187,10 +187,10 @@ def save_content_report(userid, object_type, object_id, reason):
 
 @commit_on_success
 def add_videos_to_channel(channel, instance_list, locale, delete_existing=False):
-    video_ids = get_or_create_video_records(instance_list)
+    videomap = get_or_create_video_records(instance_list)
     existing = dict((v.video, v) for v in VideoInstance.query.filter_by(channel=channel.id))
     added = []
-    for position, (video_id, video_source) in enumerate(video_ids):
+    for position, (video_id, video_source) in enumerate(videomap):
         if video_id not in added:
             instance = existing.get(video_id) or \
                 VideoInstance(video=video_id, channel=channel.id, source_channel=video_source)
@@ -199,7 +199,7 @@ def add_videos_to_channel(channel, instance_list, locale, delete_existing=False)
             added.append(video_id)
 
     if delete_existing:
-        deleted_video_ids = set(existing.keys()).difference(zip(*video_ids)[0])
+        deleted_video_ids = set(existing.keys()).difference([i for i, s in videomap])
         if deleted_video_ids:
             VideoInstance.query.filter(
                 VideoInstance.video.in_(deleted_video_ids),
