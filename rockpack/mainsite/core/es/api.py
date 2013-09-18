@@ -513,14 +513,8 @@ def add_to_index(data, index, _type, id, bulk=False, refresh=False):
             es_connection.indices.refresh(index)
 
 
-def use_es(no_check=False):
-    if not no_check:
-        return use_elasticsearch()
-    return True
-
-
 def add_user_to_index(user, bulk=False, refresh=False, no_check=False):
-    if not use_es(no_check):
+    if not use_elasticsearch():
         return
 
     data = dict(
@@ -534,12 +528,14 @@ def add_user_to_index(user, bulk=False, refresh=False, no_check=False):
 
 
 def add_channel_to_index(channel, bulk=False, no_check=False):
+    if not use_elasticsearch():
+        return
     es_channel = ESChannel.inserter(bulk=bulk)
     es_channel.insert(channel.id, channel)
 
 
 def update_channel_to_index(channel, no_check=False):
-    if not use_es(no_check):
+    if not use_elasticsearch():
         return
 
     es_channel = ESChannel.updater()
@@ -595,6 +591,9 @@ def es_update_channel_videos(extant, deleted, async=app.config.get('ASYNC_ES_VID
         extant - list of strings
         deleted - list of strings
         async - boolean """
+
+    if not use_elasticsearch():
+        return
 
     if async:
         from rockpack.mainsite.video_update_sqs_processor import _write_message
