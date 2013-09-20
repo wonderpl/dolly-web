@@ -28,6 +28,22 @@ window.contentApp = angular.module('contentApp', [])
     $routeProvider.when('/press', {templateUrl: 'press.html', resolve:{trackingCode: (GATrackingService) -> return GATrackingService.push()}})
   ])
 
+   .filter('truncate', ->
+    return (text, length, end) ->
+      if (isNaN(length))
+          length = 10
+
+      if (end == undefined)
+          end = "..."
+
+      if typeof text != "undefined"
+        if (text.length <= length || text.length - end.length <= length)
+            return text
+        else
+            return String(text).substring(0, length-end.length) + end
+  )
+
+
 window.onYouTubeIframeAPIReady = ->
   updateScope()
   return

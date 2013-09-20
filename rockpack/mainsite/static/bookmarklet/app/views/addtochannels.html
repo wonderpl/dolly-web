@@ -1,13 +1,13 @@
 <div ng-controller="AddtoChannelCtrl" id="addtoChannel">
   <ul id="topmenu">
     <li><img src="/static/assets/bookmarklet/images/close.png" ng-click="close()"></li>
-    <li class="title">Select a Channel</li>
+    <li class="title">Select a Pack</li>
     <li><button class="blue-btn" ng-click="addtoChannel()">Add</button></li>
   </ul>
   <div>
     <ul id="chennellist">
       <li class="channel newchannel" ng-click="createChannel()">
-        <div class="newchanneltext">Create New Channel</div>
+        <div class="newchanneltext">Create New Pack</div>
       </li>
       <li class="channel" ng-repeat="channel in User.channels.items" ng-click="selectChannel(channel.resource_url)" ng-class="{selected : isSelected(channel.resource_url)}">
         <div class="channelname">{{channel.title}}</div>

@@ -89,10 +89,18 @@ FAVOURITE_CHANNEL = 'Favorites', 'My favorite videos', 'fav2.jpg'
 
 # Mapping from share object type to message (can have formatting)
 SHARE_MESSAGE_MAP = dict(
-    message=u"Check out this great {0[object_type]} on @rockpack",
-    message_email=u"Check out this great {0[object_type]} \"{0[title]}\" on Rockpack",
-    message_twitter=u"Check out this great {0[object_type]} on @rockpack",
-    message_facebook=u"Check out this great {0[object_type]} on Rockpack",
+    video_instance=dict(
+        message=u"I found \"{0[title]}\" on @Rockpack and thought you might like it too.",
+        message_email=u"I found \"{0[title]}\" on Rockpack and thought you might like it too.",
+        message_twitter=u"Look what I found on @Rockpack",
+        message_facebook=u"Look what I found on Rockpack",
+    ),
+    channel=dict(
+        message=u"I think you're going to love the video pack \"{0[title]}\" on @Rockpack.",
+        message_email=u"I think you're going to love the video pack \"{0[title]}\" on Rockpack.",
+        message_twitter=u"I found this great pack of videos on @Rockpack",
+        message_facebook=u"I found this great pack of videos on Rockpack",
+    ),
 )
 
 RECOMMENDER_CATEGORY_BOOSTS = dict(

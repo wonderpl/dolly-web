@@ -54,7 +54,7 @@ def welcome_email():
 @expose_web('/', 'web/home.html', cache_age=3600)
 def homepage():
     api_urls = json.dumps(ws_request('/ws/'))
-    channels = ws_request('/ws/channels/' , size=4)
+    channels = ws_request('/ws/channels/' , size=8)
     return dict(api_urls=api_urls, injectorUrl=url_for('injector'), top_channels=channels)
 
 
@@ -293,7 +293,7 @@ def reset_password():
         if form.validate_on_submit():
             user = User.query.get(userid)
             user.change_password(user, form.password.data)
-            record_user_event(user.username, 'password changed')
+            record_user_event(user.username, 'password changed', userid=userid)
     return locals()
 
 

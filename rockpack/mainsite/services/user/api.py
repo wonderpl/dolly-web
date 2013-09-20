@@ -29,7 +29,8 @@ from rockpack.mainsite.services.cover_art import api as cover_api
 from rockpack.mainsite.services.video import api as video_api
 from rockpack.mainsite.services.search import api as search_api
 from .models import (
-    User, UserActivity, UserContentFeed, UserNotification, Subscription, UserFlag, USER_FLAGS)
+    User, UserActivity, UserContentFeed, UserNotification, UserInterest,
+    Subscription, UserFlag, USER_FLAGS)
 
 
 ACTION_COLUMN_VALUE_MAP = dict(
@@ -187,10 +188,10 @@ def save_content_report(userid, object_type, object_id, reason):
 
 @commit_on_success
 def add_videos_to_channel(channel, instance_list, locale, delete_existing=False):
-    video_ids = get_or_create_video_records(instance_list)
+    videomap = get_or_create_video_records(instance_list)
     existing = dict((v.video, v) for v in VideoInstance.query.filter_by(channel=channel.id))
     added = []
-    for position, (video_id, video_source) in enumerate(video_ids):
+    for position, (video_id, video_source) in enumerate(videomap):
         if video_id not in added:
             instance = existing.get(video_id) or \
                 VideoInstance(video=video_id, channel=channel.id, source_channel=video_source)
@@ -200,7 +201,7 @@ def add_videos_to_channel(channel, instance_list, locale, delete_existing=False)
 
     deleted_video_ids = []
     if delete_existing:
-        deleted_video_ids = set(existing.keys()).difference([v[0] for v in video_ids])
+        deleted_video_ids = set(existing.keys()).difference([i for i, s in videomap])
         if deleted_video_ids:
             VideoInstance.query.filter(
                 VideoInstance.video.in_(deleted_video_ids),
@@ -587,19 +588,28 @@ def _aggregate_content_feed(items):
 def _channel_recommendations(userid, locale, paging):
     (gender, age), = User.query.filter_by(id=userid).values(
         User.gender, func.age(User.date_of_birth))
-    boosts = app.config['RECOMMENDER_CATEGORY_BOOSTS']
-    user_boosts = []
+    interests = list(UserInterest.query.filter_by(user=userid, explicit=False).
+                     order_by('weight desc').limit(5).values('category', 'weight'))
+    boostfactor = app.config.get('RECOMMENDER_INTEREST_BOOST_FACTOR', 1.4)
+    d = boostfactor / interests[0][1]
+    user_boosts = [(c, i * d) for c, i in interests]
+    demo_boosts = app.config['RECOMMENDER_CATEGORY_BOOSTS']
     if gender:
-        user_boosts.extend(boosts['gender'][gender])
+        user_boosts.extend(demo_boosts['gender'][gender])
     if age:
         age = age.days / 365
         user_boosts.extend(next(
-            (v for k, v in sorted(boosts['age'].items()) if age < k), ()))
+            (v for k, v in sorted(demo_boosts['age'].items()) if age < k), ()))
     # combine boosts by multiplying each with the same category
     user_boosts = [(i, reduce(lambda a, b: a * b[1], grp, 1))
                    for i, grp in groupby(sorted(user_boosts), lambda x: x[0])]
-    # increase the boost factor so that these boosts dominate the default ranking
-    #user_boosts = [(c, b * 1.5) for c, b in user_boosts]
+    # normalise the positive boosts so that the max boost factor is at the limit
+    if user_boosts:
+        boostlimit = app.config.get('RECOMMENDER_BOOST_LIMIT', 1.8) - 1
+        boosts = [b for c, b in user_boosts if b > 1]
+        bmin, bmax = min(boosts), max(boosts)
+        user_boosts = [(c, 1 + (boostlimit * (b - bmin) / (bmax - bmin)) if b > 1 else b)
+                       for c, b in user_boosts]
     return video_api.get_es_channels(locale, paging, None, user_boosts)
 
 
@@ -1136,7 +1146,7 @@ class UserWS(WebService):
             abort(400, error='unauthorized_client')
 
         token = ExternalToken.update_token(userid, eu)
-        record_user_event(str(userid), '%s token updated' % eu.system, userid)
+        record_user_event(str(userid), '%s token updated' % eu.system, userid=userid)
         return None if hasattr(token, '_existing') else ajax_create_response(token)
 
     @expose_ajax('/<userid>/friends/', cache_age=600, cache_private=True)
@@ -1168,26 +1178,26 @@ class UserWS(WebService):
             uid = friend.email if friend.external_system == 'email' else friend.external_uid
             rockpack_user = rockpack_friends.get((friend.external_system, uid))
             last_shared_date = friend.last_shared_date and friend.last_shared_date.isoformat()
+            item = dict(
+                display_name=friend.name,
+                avatar_thumbnail_url=friend.avatar_url,
+                external_uid=friend.external_uid,
+                external_system=friend.external_system,
+                email=friend.email,
+                last_shared_date=last_shared_date,
+            )
             if rockpack_user:
-                item = dict(
+                item.update(
                     id=rockpack_user.id,
                     resource_url=rockpack_user.get_resource_url(),
                     display_name=rockpack_user.display_name,
                     avatar_thumbnail_url=rockpack_user.avatar.url,
-                    email=rockpack_user.email,
-                    last_shared_date=last_shared_date,
-                )
-            else:
-                item = dict(
-                    display_name=friend.name,
-                    avatar_thumbnail_url=friend.avatar_url,
-                    external_uid=friend.external_uid,
-                    external_system=friend.external_system,
-                    email=friend.email,
-                    last_shared_date=last_shared_date,
+                    email=rockpack_user.email or friend.email,
                 )
             if friend.has_ios_device:
-                item['has_ios_device'] = True
+                item.update(
+                    has_ios_device=True,
+                )
             items.append(item)
         if 'ios' in request.args.get('device_filter', ''):
             items = [i for i in items if 'resource_url' in i or 'has_ios_device' in i]

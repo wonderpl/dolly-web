@@ -39,26 +39,31 @@
   cursor: pointer;  
 }
 
-#playAll {
+#prev, #next {
+  width: 17px;
+  height: 27px;
+  background:  url(/static/assets/embed/images/arrows.png);
   position: absolute;
-  top: 130px;
-  left: 15px;
-  width: 35px;
-  height: 35px;
-  background: url(/static/assets/embed/images/playall.png);
+  top: 110px;
+  opacity: 1;
+  -webkit-transition: opacity  0.3s;
+  -moz-transition: opacity 0.3s;
+  -o-transition: opacity  0.3s;
+  transition: opacity 0.3s;
   cursor: pointer;
+
+  &.hideOverlay {
+    opacity: 0;
+  }
 }
 
-#channelTitle {
-  position: absolute;
-  top: 180px;
-  left: 15px;
-  color: #fff;
-  font-family: "dn-regular";
-  font-size: 26px;
-  line-height: 26px;
-  width: 200px;
-  text-transform: uppercase;
+#next {
+  background-position: 17px 0;
+  right: 8px;
+}
+
+#prev {
+  left: 8px;
 }
 
 #cover {
@@ -70,10 +75,63 @@
   #gradientShadow {
     width: 100%;
     height: 100%;
-    background: url(/static/assets/embed/images/gradient2.png) no-repeat;
+    background: url(/static/assets/embed/images/gradient3.png) no-repeat;
+    background-size: cover;
     position: absolute;
     top: 0;
     left: 0;
+  }
+
+  #playcontainer {
+    margin-bottom: 16px;
+  }
+
+  #metacontainer {
+    position: absolute;
+    bottom: 19px;
+    left: 16px;
+
+    #channelTitle {
+      margin-bottom: 9px;
+      color: #fff;
+      font-family: "dn-regular";
+      font-size: 26px;
+      line-height: 26px;
+      width: 200px;
+      text-transform: uppercase;
+      text-shadow: 0 0 5px rgba(0,0,0,0.35);
+    }
+
+    #playAll {
+      width: 35px;
+      height: 35px;
+      background: url(/static/assets/embed/images/playall.png);
+      cursor: pointer;
+    }
+
+    #videotitle {
+      position: absolute;
+      top: 10px;
+      left: 46px;
+      color: #fff;
+      font-family: "dn-regular";
+      font-size: 12px;
+      width: 100px;
+      text-shadow: 0 0 5px rgba(0,0,0,0.35);
+    }
+
+    #by {
+      color: #fff;
+      font-family: "dn-regular";
+      font-size: 12px;
+      text-shadow: 0 0 5px rgba(0,0,0,0.35);
+
+      a {
+        color: #fff;
+        text-decoration: underline;
+      }
+    }
+
   }
 }
 
@@ -144,13 +202,13 @@
   #videolistContaienr {
 
     overflow: auto;
-    height: 160px;
+    height: 242px;
 
     #videoslist {
       list-style: none;
       margin: 0;
       padding: 0;
-      background: #f1f1f1;
+      background: #fff;
 
       li {
         line-height: 30px;
@@ -160,6 +218,18 @@
         border-bottom: 1px solid #d9d9d9;
         padding-left: 10px;
         cursor: pointer;
+        background: url(/static/assets/embed/images/smallplay.png) no-repeat 5px 7px;
+        padding-left: 33px;
+
+        .duration {
+          float: right;
+          margin-right: 6px;
+        }
+
+        &:hover {
+          background-color: #0ba6ab;
+          color: #fff;
+        }
       }
     }
   }

@@ -96,9 +96,11 @@
 
 <div class="wrapper">
   <div id="playercontainer" ng-mouseover="mouseOver()" ng-mouseout="mouseOut()" ng-controller="VideoCtrl" ng-class="{active: currVideo}">
-    <a href="http://www.rockpack.com" class="logo" ng-class="{'hideOverlay': hideOverlay  && playerState=='1'}"></a>
+    <a href="/" class="logo" target="_blank" ng-class="{'hideOverlay': hideOverlay  && playerState=='1'}"></a>
     <div id="player"></div>
     <div id="close" ng-click="close()" ng-class="{'hideOverlay': hideOverlay  && playerState=='1'}"></div>
+    <div id="prev" ng-class="{'hideOverlay': hideOverlay  && playerState=='1'}" ng-click="prev()"></div>
+    <div id="next" ng-class="{'hideOverlay': hideOverlay  && playerState=='1'}" ng-click="next()"></div>
     <div id="pause" ng-class="{play: playerState=='2', 'hideOverlay': hideOverlay && playerState=='1'}" ng-click="pausePlay()"></div>
     <div id="scrubber" ng-click="seekTo($event)" ng-mouseover="mouseOver()" ng-class="{'hideOverlay': hideOverlay && playerState=='1'}">
       <div id="currentPosition" ng-style="{'width': currentPosition*100 +'%'}"></div>

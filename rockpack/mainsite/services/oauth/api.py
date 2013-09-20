@@ -17,14 +17,13 @@ from rockpack.mainsite.services.video.models import Locale
 from . import facebook, models
 
 
-def record_user_event(username, type, value=''):
+def record_user_event(username, type, value='', userid=None):
     trunc = lambda f, v: v[:get_column_property(UserAccountEvent, f, 'length')]
     try:
         clientid = g.app_client_id or g.authorized.clientid
         userid = g.authorized.userid
     except AttributeError:
         clientid = ''
-        userid = None
     UserAccountEvent(
         user=userid,
         username=trunc('username', username or '-'),
@@ -58,7 +57,7 @@ class LoginWS(WebService):
         if not user:
             record_user_event(request.form['username'], 'login failed')
             abort(400, error='invalid_grant')
-        record_user_event(request.form['username'], 'login succeeded', user.id)
+        record_user_event(request.form['username'], 'login succeeded', userid=user.id)
         return user.get_credentials()
 
     @expose_ajax('/external/', methods=['POST'])
@@ -77,11 +76,11 @@ class LoginWS(WebService):
         user = models.ExternalToken.user_from_uid(eu.system, eu.id)
 
         if user:
-            record_user_event(user.username, 'login succeeded', user.id)
+            record_user_event(user.username, 'login succeeded', userid=user.id)
         else:
             # New user
             user = User.create_from_external_system(eu, self.get_locale())
-            record_user_event(user.username, 'registration succeeded', user.id)
+            record_user_event(user.username, 'registration succeeded', userid=user.id)
             result['registered'] = True
 
         # Update the token record if needed
@@ -389,7 +388,7 @@ class RegistrationWS(WebService):
             password=form.password.data,
             gender=form.gender.data or None,
             locale=form.locale.data)
-        record_user_event(user.username, 'registration succeeded', user.id)
+        record_user_event(user.username, 'registration succeeded', userid=user.id)
         return user.get_credentials()
 
     @expose_ajax('/availability/', methods=['POST'])
@@ -423,7 +422,7 @@ class TokenWS(WebService):
         if not user:
             record_user_event('', 'refresh token failed')
             abort(400, error='invalid_grant')
-        record_user_event(user.username, 'refresh token succeeded', user.id)
+        record_user_event(user.username, 'refresh token succeeded', userid=user.id)
         return user.get_credentials()
 
 
@@ -456,6 +455,6 @@ class ResetWS(WebService):
         user = User.get_from_credentials(request.form['username'], None)
         if not user:
             abort(400)
-        record_user_event(user.username, 'password reset requested')
+        record_user_event(user.username, 'password reset requested', userid=user.id)
         # TODO: move to offline process
         send_password_reset(user)

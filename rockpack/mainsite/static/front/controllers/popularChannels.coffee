@@ -2,6 +2,6 @@ window.contentApp.controller('popularChannels', ['$scope', '$location', ($scope,
   $scope.channels = window.top_channels.channels
 
   $scope.show = (channelid, userid) ->
-    window.location = "http://#{$location.host()}/channel/#{userid}/#{channelid}/"
+    window.location = "/channel/-/#{channelid}/"
 
 ])
