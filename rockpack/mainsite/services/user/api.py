@@ -209,7 +209,7 @@ def add_videos_to_channel(channel, instance_list, locale, delete_existing=False)
             ).delete(synchronize_session='fetch')
 
     return dict(
-        extant=added + [e[0] for e in existing],
+        extant=added,
         deleted=deleted_video_ids
     )
 
