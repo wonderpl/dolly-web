@@ -208,11 +208,6 @@ def add_videos_to_channel(channel, instance_list, locale, delete_existing=False)
                 VideoInstance.channel == channel.id
             ).delete(synchronize_session='fetch')
 
-    return dict(
-        extant=added,
-        deleted=deleted_video_ids
-    )
-
 
 def _user_list(paging, **filters):
     users = User.query.filter_by(is_active=True)
@@ -997,8 +992,14 @@ class UserWS(WebService):
             abort(400, message=_('List can be empty, but must be present'))
         existing_videos = len(channel.video_instances)
 
-        updates = add_videos_to_channel(channel, request.json, self.get_locale(), request.method == 'PUT')
-        es_update_channel_videos(updates['extant'], updates['deleted'])
+        existing_instance_ids = [v[0] for v in VideoInstance.query.filter_by(channel=channelid).values('id')]
+        add_videos_to_channel(channel, request.json, self.get_locale(), request.method == 'PUT')
+
+        extant_instance_ids = [v[0] for v in VideoInstance.query.filter_by(channel=channelid).values('id')]
+        es_update_channel_videos(
+            existing_instance_ids,
+            set(existing_instance_ids).difference(extant_instance_ids)
+        )
 
         intended_public = channel.should_be_public(channel, channel.public)
         if not channel.video_instances and not intended_public:

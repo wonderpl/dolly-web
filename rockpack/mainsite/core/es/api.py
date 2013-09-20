@@ -92,7 +92,7 @@ class ESObjectIndexer(object):
             es_connection.delete_by_query(
                 self.indexes[self.indexing_type]['index'],
                 self.indexes[self.indexing_type]['type'],
-                pyes.TermsQuery(field='id', value=ids)
+                pyes.IdsQuery(ids)
             )
         except pyes.exceptions.NotFoundException, e:
             raise exceptions.DocumentMissingException(e)
