@@ -14,7 +14,7 @@ from rockpack.mainsite.core.webservice import WebService, expose_ajax, ajax_crea
 from rockpack.mainsite.core.oauth.decorators import check_authorization
 from rockpack.mainsite.core.youtube import get_video_data
 from rockpack.mainsite.core.es import use_elasticsearch, search as es_search
-from rockpack.mainsite.core.es.api import ESVideo, es_update_channel_videos
+from rockpack.mainsite.core.es.api import es_update_channel_videos
 from rockpack.mainsite.helpers import lazy_gettext as _
 from rockpack.mainsite.helpers.forms import naughty_word_validator
 from rockpack.mainsite.helpers.urls import url_for, url_to_endpoint
@@ -581,20 +581,25 @@ def _aggregate_content_feed(items):
 
 
 def _channel_recommendations(userid, locale, paging):
-    (gender, age), = User.query.filter_by(id=userid).values(
-        User.gender, func.age(User.date_of_birth))
     interests = list(UserInterest.query.filter_by(user=userid, explicit=False).
                      order_by('weight desc').limit(5).values('category', 'weight'))
-    boostfactor = app.config.get('RECOMMENDER_INTEREST_BOOST_FACTOR', 1.4)
-    d = boostfactor / interests[0][1]
-    user_boosts = [(c, i * d) for c, i in interests]
+    if interests:
+        boostfactor = app.config.get('RECOMMENDER_INTEREST_BOOST_FACTOR', 1.4)
+        d = boostfactor / interests[0][1]
+        user_boosts = [(c, i * d) for c, i in interests]
+    else:
+        user_boosts = []
+
     demo_boosts = app.config['RECOMMENDER_CATEGORY_BOOSTS']
+    (gender, age), = User.query.filter_by(id=userid).values(
+        User.gender, func.age(User.date_of_birth))
     if gender:
         user_boosts.extend(demo_boosts['gender'][gender])
     if age:
         age = age.days / 365
         user_boosts.extend(next(
             (v for k, v in sorted(demo_boosts['age'].items()) if age < k), ()))
+
     # combine boosts by multiplying each with the same category
     user_boosts = [(i, reduce(lambda a, b: a * b[1], grp, 1))
                    for i, grp in groupby(sorted(user_boosts), lambda x: x[0])]
