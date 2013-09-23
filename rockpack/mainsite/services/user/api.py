@@ -944,6 +944,10 @@ class UserWS(WebService):
         channel.deleted = True
         channel.save()
 
+        # Delete all videos from es
+        ids = VideoInstance.query.filter_by(channel=channelid).values('id')
+        es_update_channel_videos([], ids)
+
     @expose_ajax('/<userid>/channels/<channelid>/public/', methods=('PUT',))
     @check_authorization(self_auth=True)
     def channel_public_toggle(self, userid, channelid):

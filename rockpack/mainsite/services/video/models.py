@@ -488,15 +488,12 @@ def _add_es_video(video_instance):
 
 
 def _add_es_channel(channel):
-    es_api.add_channel_to_index(channel)
+    if channel.should_be_public(channel, channel.public):
+        es_api.add_channel_to_index(channel)
 
 
 def _remove_es_channel(channel):
     es_api.remove_channel_from_index(channel.id)
-
-
-def _update_es_channel(channel):
-    es_api.update_channel_to_index(channel)
 
 
 def previous_state(flag, obj):
@@ -522,12 +519,11 @@ def channel_not_deleted(channel):
     return channel.public and not channel.deleted and channel.visible
 
 
-def _add_or_remove_channel(channel):
-    now_deleted = not channel.public or not channel.visible or channel.deleted
-    if now_deleted:
+def _update_or_remove_channel(channel):
+    if channel_not_deleted(channel):
+        es_api.update_channel_to_index(channel)
+    else:
         _remove_es_channel(channel)
-    elif channel_not_deleted(channel):
-        _update_es_channel(channel)
 
 
 def _remove_es_video_instance(video_instance):
@@ -569,34 +565,34 @@ def _channel_insert(mapper, connection, target):
     # NOTE: owner_rel isn't available on Channel if we pass channel_rel for owner.resource_url.
     # possibly do a lookup for owner in resource_url method instead of having it rely on self.owner_rel here
     channel = Channel.query.get(target.channel)
-    if channel_not_deleted:
-        _add_or_remove_channel(channel)
+    if channel_not_deleted(channel):
+        _update_or_remove_channel(channel)
 
 
 @event.listens_for(ChannelLocaleMeta, 'after_update')
 def _es_channel_update_from_clm(mapper, connection, target):
-    _add_or_remove_channel(target.channel_rel)
+    _update_or_remove_channel(target.channel_rel)
 
 
 @event.listens_for(Channel, 'after_insert')
 def _es_channel_insert_from_channel(mapper, connection, target):
-    if channel_not_deleted:
+    if channel_not_deleted(target):
         _add_es_channel(Channel.query.get(target.id))
 
 
 @event.listens_for(Channel, 'after_update')
 def _es_channel_update_from_channel(mapper, connection, target):
-    _add_or_remove_channel(target)
+    _update_or_remove_channel(target)
 
 
 @event.listens_for(ChannelPromotion, 'after_insert')
 def _es_channel_promotion_insert(mapper, connection, target):
-    _add_or_remove_channel(Channel.query.get(target.channel))
+    _update_or_remove_channel(Channel.query.get(target.channel))
 
 
 @event.listens_for(ChannelPromotion, 'after_update')
 def _es_channel_promotion_update(mapper, connection, target):
-    _add_or_remove_channel(Channel.query.get(target.channel))
+    _update_or_remove_channel(Channel.query.get(target.channel))
 
 
 @event.listens_for(Channel, 'before_update')

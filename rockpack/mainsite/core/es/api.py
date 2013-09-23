@@ -82,11 +82,10 @@ class ESObjectIndexer(object):
         if not ids:
             return
 
-        if not isinstance(ids, (list, set, tuple)):
-            raise TypeError
-
-        if isinstance(ids, (set, tuple)):
+        if not isinstance(ids, basestring):
             ids = list(ids)
+        else:
+            raise TypeError('ids shoulds be a list')
 
         try:
             es_connection.delete_by_query(
@@ -570,7 +569,8 @@ def update_channel_to_index(channel, no_check=False):
     try:
         return es_channel.update()
     except exceptions.DocumentMissingException, e:
-        # If the channel doesn't exist we need to create it.
+        # If the channel doesn't exist we need to create it
+        # (likely it was private and now public).
         # Switch to an insert statement instead.
             try:
                 add_channel_to_index(channel)

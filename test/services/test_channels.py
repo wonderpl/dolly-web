@@ -130,50 +130,6 @@ class ChannelPromotionTest(base.RockPackTestCase):
                 self.assertEquals(feed['channels']['items'][0]['id'], ChannelData.channel1.id)
 
 
-class ESChannelTest(base.RockPackTestCase):
-
-    def test_toggle(self):
-        with self.app.test_client():
-            self.app.test_request_context().push()
-            if use_elasticsearch():
-
-                def es_channel(id):
-                    esc = ChannelSearch('en-us')
-                    esc.add_id(channel.id)
-                    return esc.channels()
-
-                user = self.create_test_user()
-                channel = models.Channel(
-                    owner=user.id,
-                    title='a title',
-                    description='',
-                    cover='',
-                ).save()
-
-                time.sleep(2)
-                self.assertEquals(es_channel(channel.id)[0]['id'], channel.id)
-
-                channel.deleted = True
-                channel = channel.save()
-                time.sleep(2)
-                self.assertEquals(es_channel(channel.id), [])
-
-                channel.deleted = False
-                channel = channel.save()
-                time.sleep(2)
-                self.assertEquals(es_channel(channel.id)[0]['id'], channel.id)
-
-                channel.public = False
-                channel = channel.save()
-                time.sleep(2)
-                self.assertEquals(es_channel(channel.id), [])
-
-                channel.deleted = True
-                channel = channel.save()
-                time.sleep(2)
-                self.assertEquals(es_channel(channel.id), [])
-
-
 class ChannelVisibleFlag(BaseUserTestCase):
 
     def test_visible_flag(self):
