@@ -830,7 +830,7 @@ class UserWS(WebService):
         if form.action.data == 'unstar':
             es_update_channel_videos(deleted=form.video_instance.data)
         elif form.action.data == 'star' and new_instance:
-            es_update_channel_videos(extant=getattr(new_instance, 'id', new_instance))
+            es_update_channel_videos(extant=[getattr(new_instance, 'id', new_instance)])
 
         # XXX: For now don't propogate activity to channel.
         # Saves db load and also there's the new set_channel_view_count cron command
