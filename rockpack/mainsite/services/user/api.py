@@ -819,10 +819,19 @@ class UserWS(WebService):
         form = ActivityForm(csrf_enabled=False)
         if not form.validate():
             abort(400, form_errors=form.errors)
-        save_video_activity(userid,
+
+        # Returns new instance id if created
+        new_instance = save_video_activity(userid,
                             form.action.data,
                             form.video_instance.data,
                             self.get_locale())
+
+        # Update favs in es
+        if form.action.data == 'unstar':
+            es_update_channel_videos(deleted=form.video_instance.data)
+        elif form.action.data == 'star' and new_instance:
+            es_update_channel_videos(extant=new_instance.id)
+
         # XXX: For now don't propogate activity to channel.
         # Saves db load and also there's the new set_channel_view_count cron command
         #channelid = VideoInstance.query.filter_by(id=form.video_instance.data).value('channel')
