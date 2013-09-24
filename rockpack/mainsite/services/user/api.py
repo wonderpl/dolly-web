@@ -1029,7 +1029,7 @@ class UserWS(WebService):
         # whether the channel is public
         if channel.public:
             es_update_channel_videos(
-                existing_instance_ids,
+                extant_instance_ids,
                 set(existing_instance_ids).difference(extant_instance_ids)
             )
         else:
