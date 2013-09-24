@@ -828,7 +828,7 @@ class UserWS(WebService):
 
         # Update favs in es
         if form.action.data == 'unstar':
-            es_update_channel_videos(deleted=form.video_instance.data)
+            es_update_channel_videos(deleted=[form.video_instance.data])
         elif form.action.data == 'star' and new_instance:
             es_update_channel_videos(extant=[getattr(new_instance, 'id', new_instance)])
 
