@@ -20,8 +20,13 @@ def pytest_configure(config):
         i.create_all_mappings()
 
     if 'sqlite:' in app.config['DATABASE_URL']:
+        connection = dbapi.db.engine.raw_connection().connection
         # Seems to be required for sub-transaction support:
-        dbapi.db.engine.raw_connection().connection.isolation_level = None
+        connection.isolation_level = None
+        # For compatibility with postgres:
+        from datetime import datetime
+        connection.create_function(
+            'age', 1, lambda d: datetime.today() - datetime.strptime(d, '%Y-%m-%d'))
         # substitute postgres-specific "interval" expression
         from rockpack.mainsite.services.user import api
         from sqlalchemy import text

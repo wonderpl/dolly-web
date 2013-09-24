@@ -1,4 +1,5 @@
 from itertools import groupby
+from functools import partial
 from werkzeug.datastructures import MultiDict
 from sqlalchemy import desc, func, text
 from sqlalchemy.orm import lazyload, contains_eager
@@ -15,6 +16,7 @@ from rockpack.mainsite.core.oauth.decorators import check_authorization
 from rockpack.mainsite.core.youtube import get_video_data
 from rockpack.mainsite.core.es import use_elasticsearch, search as es_search
 from rockpack.mainsite.core.es.api import es_update_channel_videos
+from rockpack.mainsite.core import recommender
 from rockpack.mainsite.helpers import lazy_gettext as _
 from rockpack.mainsite.helpers.forms import naughty_word_validator
 from rockpack.mainsite.helpers.urls import url_for, url_to_endpoint
@@ -34,6 +36,7 @@ from .models import (
 
 
 ACTION_COLUMN_VALUE_MAP = dict(
+    open=('view_count', 1),
     view=('view_count', 1),
     select=('view_count', 1),
     star=('star_count', 1),
@@ -144,6 +147,7 @@ def save_video_activity(userid, action, instance_id, locale):
                 meta = VideoInstance.query.get(instance_id).add_meta(locale)
                 setattr(meta, column, 1)
 
+    activity.update(tracking_code=request.args.get('tracking_code'))
     UserActivity(**activity).add()
 
     if action in ('star', 'unstar'):
@@ -165,12 +169,22 @@ def save_channel_activity(userid, action, channelid, locale):
         abort(400, message=_('Invalid action'))
     incr = lambda m: {getattr(m, column): getattr(m, column) + value}
     # Update channel record:
-    Channel.query.filter_by(id=channelid).update(incr(Channel))
+    updated = Channel.query.filter_by(id=channelid).update(incr(Channel))
+    if not updated:
+        return
     # Update or create locale meta record:
     ChannelLocaleMeta.query.filter_by(channel=channelid, locale=locale).update(incr(ChannelLocaleMeta)) or \
         ChannelLocaleMeta(channel=channelid, locale=locale, **{column: value}).add()
-    if action in ('subscribe', 'unsubscribe'):
-        UserActivity(user=userid, action=action, object_type='channel', object_id=channelid).add()
+    if action in ('subscribe', 'unsubscribe', 'open'):
+        UserActivity(
+            user=userid,
+            action=action,
+            object_type='channel',
+            object_id=channelid,
+            tracking_code=request.args.get('tracking_code'),
+        ).add()
+    if app.config['MYRRIX_URL'] and action == 'open':
+        recommender.record_activity(userid, channelid)
 
 
 @commit_on_success
@@ -178,6 +192,7 @@ def save_content_report(userid, object_type, object_id, reason):
     activity = dict(action='content_reported', user=userid,
                     object_type=object_type, object_id=object_id)
     if not UserActivity.query.filter_by(**activity).count():
+        activity.update(tracking_code=request.args.get('tracking_code'))
         UserActivity(**activity).add()
     report = dict(object_type=object_type, object_id=object_id, reason=reason)
     updated = ContentReport.query.filter_by(**report).update(
@@ -323,14 +338,16 @@ def user_subscriptions(userid, locale, paging):
     return dict(items=items, total=total)
 
 
-def user_channels(userid, locale, paging):
+def user_channels(userid, locale, paging, tracking_prefix='ownprofile'):
     channels = Channel.query.options(lazyload('owner_rel'), lazyload('category_rel')).\
         filter_by(owner=userid, deleted=False)
     total = channels.count()
     offset, limit = paging
     channels = channels.order_by('favourite desc', 'date_added desc').\
         offset(offset).limit(limit)
-    items = [video_api.channel_dict(c, with_owner=False, owner_url=True) for c in channels]
+    items = [video_api.channel_dict(c, p, with_owner=False, owner_url=True,
+                                    add_tracking=partial(_add_tracking, prefix=tracking_prefix))
+             for p, c in enumerate(channels)]
     return dict(items=items, total=total)
 
 
@@ -375,6 +392,10 @@ def set_user_flag(userid, flag):
 def check_present(form, field):
     if field.name not in (request.json or request.form):
         raise ValidationError(_('This field is required, but can be an empty string.'))
+
+
+def _add_tracking(item, prefix=None):
+    item['tracking_code'] = ' '.join(filter(None, map(str, [prefix, item.get('position')])))
 
 
 # Patch BooleanField process_formdata so that passed in values
@@ -446,7 +467,22 @@ class ChannelForm(form.BaseForm):
 
 class ActivityForm(wtf.Form):
     action = wtf.SelectField(choices=ACTION_COLUMN_VALUE_MAP.items())
-    video_instance = wtf.StringField(validators=[wtf.Required()])
+    video_instance = wtf.StringField()  # XXX: needed for backwards compatibility
+    object_type = wtf.SelectField(choices=ACTIVITY_OBJECT_TYPE_MAP.items(), validators=[wtf.Optional()])
+    object_id = wtf.StringField()
+
+    def validate(self):
+        success = super(ActivityForm, self).validate()
+        # check that either video_instance or object_type/object_id is provided
+        if self.video_instance.data:
+            self.object_type.data = 'video_instance'
+            self.object_id.data = self.video_instance.data
+        else:
+            if not self.object_id.data:
+                self._errors = dict([
+                    (f, _('This field is required.')) for f in 'object_type', 'object_id'])
+                success = False
+        return success
 
 
 class ContentReportForm(wtf.Form):
@@ -495,6 +531,7 @@ def _content_feed(userid, locale, paging, country=None):
         usermap.update((u, None) for u in item._starring_users)
         channelmap[item.channel] = None
         video['position'] = i + offset
+        video['tracking_code'] = 'feed %d video' % (i + offset)
         items[i] = video
 
     # Get channel data - for both feed channel items and video items
@@ -507,6 +544,7 @@ def _content_feed(userid, locale, paging, country=None):
         if channel['id'] in itemmap:
             i, item = itemmap[channel['id']]
             channel['position'] = i + offset
+            channel['tracking_code'] = 'feed %d channel' % (i + offset)
             items[i] = channel
         else:
             channel.pop('position')
@@ -584,37 +622,71 @@ def _aggregate_content_feed(items):
     return aggregations
 
 
+def _normalise_boosts(boosts, limit):
+    # normalise the positive boosts so that the max boost factor is at the limit
+    limit = limit - 1   # 1 is added back later
+    pos_boosts = [b for c, b in boosts if b > 1]
+    bmin, bmax = min(pos_boosts), max(pos_boosts)
+    if bmin == bmax:
+        return boosts
+    else:
+        return [(k, 1 + (limit * (b - bmin) / (bmax - bmin)) if b > 1 else b)
+                for k, b in boosts]
+
+
 def _channel_recommendations(userid, locale, paging):
     interests = list(UserInterest.query.filter_by(user=userid, explicit=False).
                      order_by('weight desc').limit(5).values('category', 'weight'))
     if interests:
         boostfactor = app.config.get('RECOMMENDER_INTEREST_BOOST_FACTOR', 1.4)
         d = boostfactor / interests[0][1]
-        user_boosts = [(c, i * d) for c, i in interests]
+        cat_boosts = [(c, i * d) for c, i in interests]
     else:
-        user_boosts = []
+        cat_boosts = []
 
     demo_boosts = app.config['RECOMMENDER_CATEGORY_BOOSTS']
     (gender, age), = User.query.filter_by(id=userid).values(
         User.gender, func.age(User.date_of_birth))
     if gender:
-        user_boosts.extend(demo_boosts['gender'][gender])
+        cat_boosts.extend(demo_boosts['gender'][gender])
     if age:
         age = age.days / 365
-        user_boosts.extend(next(
+        cat_boosts.extend(next(
             (v for k, v in sorted(demo_boosts['age'].items()) if age < k), ()))
 
     # combine boosts by multiplying each with the same category
-    user_boosts = [(i, reduce(lambda a, b: a * b[1], grp, 1))
-                   for i, grp in groupby(sorted(user_boosts), lambda x: x[0])]
-    # normalise the positive boosts so that the max boost factor is at the limit
-    if user_boosts:
-        boostlimit = app.config.get('RECOMMENDER_BOOST_LIMIT', 1.8) - 1
-        boosts = [b for c, b in user_boosts if b > 1]
-        bmin, bmax = min(boosts), max(boosts)
-        user_boosts = [(c, 1 + (boostlimit * (b - bmin) / (bmax - bmin)) if b > 1 else b)
-                       for c, b in user_boosts]
-    return video_api.get_es_channels(locale, paging, None, user_boosts)
+    cat_boosts = [(i, reduce(lambda a, b: a * b[1], grp, 1))
+                  for i, grp in groupby(sorted(cat_boosts), lambda x: x[0])]
+    if cat_boosts:
+        cat_boosts = _normalise_boosts(
+            cat_boosts, app.config.get('RECOMMENDER_CATEGORY_BOOST_LIMIT', 1.8))
+
+    prefix_boosts = None
+    if app.config['MYRRIX_URL']:
+        try:
+            channel_recs = recommender.get_channel_recommendations(userid)
+        except:
+            app.logger.exception('Unable to get recommendations for %s', userid)
+        else:
+            prefix_boosts = _normalise_boosts(
+                [('ch' + c, 1 + w) for c, w in channel_recs],
+                app.config.get('RECOMMENDER_CATEGORY_BOOST_LIMIT', 5.0))
+
+    cat_boost_map = dict(cat_boosts)
+    prefix_boost_map = dict(prefix_boosts or ())
+
+    def add_tracking(channel):
+        extra_tracking = []
+        cat = channel.get('category')
+        if cat in cat_boost_map:
+            extra_tracking.append('cat-%d-%.2f' % (cat, cat_boost_map[cat]))
+        prefix = channel['id'][:12]
+        if prefix in prefix_boost_map:
+            extra_tracking.append('rec-%.2f' % prefix_boost_map[prefix])
+        channel['tracking_code'] = ' '.join(['rec', str(channel['position'])] + extra_tracking)
+
+    return video_api.get_es_channels(
+        locale, paging, None, cat_boosts, prefix_boosts, add_tracking, enable_promotion=False)
 
 
 def _channel_videos(channelid, locale, paging, own=False):
@@ -650,6 +722,7 @@ class UserWS(WebService):
 
     @expose_ajax('/<userid>/', cache_age=600, secure=False)
     def user_info(self, userid):
+        add_tracking = partial(_add_tracking, prefix='profile')
         if use_elasticsearch():
             us = es_search.UserSearch()
             us.add_id(userid)
@@ -663,15 +736,17 @@ class UserWS(WebService):
             ch.favourite_sort('desc')
             ch.add_sort('date_updated')
             ch.add_term('owner', userid)
-            owner.setdefault('channels', {})['items'] = ch.channels(with_owners=False)
+            owner.setdefault('channels', {})['items'] =\
+                ch.channels(with_owners=False, add_tracking=add_tracking)
             owner['channels']['total'] = ch.total
             return owner
 
         user = User.query.get_or_404(userid)
-        channels = [video_api.channel_dict(c, with_owner=False, owner_url=False)
-                    for c in Channel.query.options(lazyload('category_rel')).
+        channels = [video_api.channel_dict(c, p, owner_url=False,
+                                           with_owner=False, add_tracking=add_tracking)
+                    for p, c in enumerate(Channel.query.options(lazyload('category_rel')).
                     filter_by(owner=user.id, deleted=False, public=True).
-                    order_by('favourite desc', 'channel.date_updated desc')]
+                    order_by('favourite desc', 'channel.date_updated desc'))]
 
         return dict(
             id=user.id,
@@ -823,10 +898,12 @@ class UserWS(WebService):
         form = ActivityForm(csrf_enabled=False)
         if not form.validate():
             abort(400, form_errors=form.errors)
-        save_video_activity(userid,
-                            form.action.data,
-                            form.video_instance.data,
-                            self.get_locale())
+        if form.object_type.data == 'channel':
+            save_channel_activity(
+                userid, form.action.data, form.object_id.data, self.get_locale())
+        else:
+            save_video_activity(
+                userid, form.action.data, form.object_id.data, self.get_locale())
 
     @expose_ajax('/<userid>/notifications/', cache_age=60, cache_private=True)
     @check_authorization(self_auth=True)

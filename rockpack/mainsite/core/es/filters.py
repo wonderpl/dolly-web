@@ -1,5 +1,3 @@
-import time
-import datetime
 import pyes
 from rockpack.mainsite import app
 
@@ -42,6 +40,13 @@ def verified_channel_boost():
 def category_boost(category, boost):
     return pyes.CustomFiltersScoreQuery.Filter(
         pyes.TermFilter(field='category', value=category),
+        boost=boost
+    )
+
+
+def channel_prefix_boost(prefix, boost):
+    return pyes.CustomFiltersScoreQuery.Filter(
+        pyes.PrefixFilter('_id', prefix),
         boost=boost
     )
 

@@ -33,47 +33,47 @@ class SourceData(DataSet):
 
 class CategoryData(DataSet):
     class TV:
-        id = 0
+        id = 1
         name = 'TV'
         parent = None
 
     class Series:
-        id = 1
+        id = 2
         name = 'Series'
         parent = 1
 
     class Music:
-        id = 2
+        id = 3
         name = 'Music'
         parent = None
 
     class Rock:
-        id = 3
+        id = 4
         name = 'Rock'
-        parent = 2
+        parent = 3
 
 
 class CategoryTranslationData(DataSet):
     class TV:
-        id = 0
+        id = 1
         name = 'TV'
         locale = LocaleData.US.id
         category = CategoryData.TV.id
 
     class Series:
-        id = 1
+        id = 2
         name = 'Series'
         locale = LocaleData.US.id
         category = CategoryData.Series.id
 
     class Music:
-        id = 2
+        id = 3
         name = 'Music'
         locale = LocaleData.US.id
         category = CategoryData.Music.id
 
     class Rock:
-        id = 3
+        id = 4
         name = 'Rock'
         locale = LocaleData.US.id
         category = CategoryData.Rock.id
@@ -108,7 +108,7 @@ class ChannelData(DataSet):
         public = True
         description = ''
         cover = RockpackCoverArtData.comic_cover.cover
-        category = 3
+        category = 4
         subscriber_count = 34
 
     class channel2:
@@ -117,7 +117,7 @@ class ChannelData(DataSet):
         title = 'channel #2'
         description = ''
         cover = RockpackCoverArtData.comic_cover.cover
-        category = 3
+        category = 4
         subscriber_count = 7
 
     class channel3:
@@ -126,7 +126,7 @@ class ChannelData(DataSet):
         title = 'channel #3'
         description = ''
         cover = RockpackCoverArtData.comic_cover.cover
-        category = 3
+        category = 4
         subscriber_count = 10
 
     class channel4:
@@ -135,7 +135,7 @@ class ChannelData(DataSet):
         title = 'channel #4'
         description = ''
         cover = RockpackCoverArtData.comic_cover.cover
-        category = 3
+        category = 4
         subscriber_count = 2
 
     class channel5:
@@ -144,7 +144,7 @@ class ChannelData(DataSet):
         title = 'channel #5'
         description = ''
         cover = RockpackCoverArtData.comic_cover.cover
-        category = 3
+        category = 4
         subscriber_count = 60
 
     class channel6:
@@ -153,7 +153,7 @@ class ChannelData(DataSet):
         title = 'channel #6'
         description = ''
         cover = RockpackCoverArtData.comic_cover.cover
-        category = 3
+        category = 2
         subscriber_count = 9
 
 
@@ -281,55 +281,55 @@ class VideoInstanceData(DataSet):
         id = 'viw4MLuit1R5WAB4LSQDUo7Q'
         video = VideoData.video1.id
         channel = ChannelData.channel1.id
-        category = 0
+        category = 1
 
     class video_instance2:
         id = 'viw4MLuit1R5dasdasQDUo7Q'
         video = VideoData.video2.id
         channel = ChannelData.channel2.id
-        category = 1
+        category = 2
 
     class video_instance3:
         id = 'viw4MLuit1R5W5464SQDUo7Q'
         video = VideoData.video3.id
         channel = ChannelData.channel2.id
-        category = 1
+        category = 2
 
     class video_instance4:
         id = 'viw4MLu432R5WfasdfQDUo7Q'
         video = VideoData.video4.id
         channel = ChannelData.channel3.id
-        category = 2
+        category = 3
 
     class video_instance5:
         id = 'viw4MLuitlfdsAB4LSQDUo7Q'
         video = VideoData.video5.id
         channel = ChannelData.channel3.id
-        category = 2
+        category = 3
 
     class video_instance6:
         id = 'viw4MLu432R5jkldsaQDUo7Q'
         video = VideoData.video6.id
         channel = ChannelData.channel4.id
-        category = 3
+        category = 4
 
     class video_instance7:
         id = 'viw4MLuit1R5jkl543QDUo7Q'
         video = VideoData.video3.id
         channel = ChannelData.channel5.id
-        category = 3
+        category = 4
 
     class video_instance8:
         id = 'viw4MLuit1RfdsdssaQDUo7Q'
         video = VideoData.video2.id
         channel = ChannelData.channel6.id
-        category = 3
+        category = 4
 
     class video_instance9:
         id = 'viw4MLuit1RgfdldsaQDUo7Q'
         video = VideoData.video1.id
         channel = ChannelData.channel6.id
-        category = 3
+        category = 4
 
 
 all_data = [v for k, v in globals().copy().iteritems() if k.endswith('Data')]

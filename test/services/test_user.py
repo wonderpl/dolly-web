@@ -47,8 +47,8 @@ class TestAPNS(base.RockPackTestCase):
             )
 
             etoken = ExternalToken.query.filter_by(
-                    external_system=system,
-                    external_token=new_token).one()
+                external_system=system,
+                external_token=new_token).one()
             self.assertEquals(new_token, etoken.external_token)
             self.assertEquals(user.id, etoken.external_uid)
 
@@ -381,6 +381,25 @@ class TestProfileEdit(base.RockPackTestCase):
             self.assertIn(u2new, itemids)
             self.assertIn(u3new, itemids)
 
+    def test_channel_recommendations(self):
+        if not self.app.config.get('ELASTICSEARCH_URL'):
+            return
+        self.app.config['RECOMMENDER_CATEGORY_BOOSTS'] = dict(
+            gender={'f': ((2, 1.40),)},
+        )
+        with self.app.test_client() as client:
+            self.app.test_request_context().push()
+            user = self.create_test_user(gender='f')
+            self.wait_for_es()
+            r = client.get(
+                '/ws/{}/channel_recommendations/'.format(user.id),
+                headers=[get_auth_header(user.id)])
+            self.assertEquals(r.status_code, 200)
+            channels = json.loads(r.data)['channels']['items']
+            first = channels[0]
+            self.assertEquals(first['category'], 2)
+            self.assertIn('cat-2-1.40', first['tracking_code'])
+
     def test_subscription_notification(self):
         with self.app.test_client() as client:
             self.app.test_request_context().push()
@@ -429,6 +448,28 @@ class TestProfileEdit(base.RockPackTestCase):
             message = json.loads(notification.message)
             self.assertEquals(message['user']['id'], user.id)
             self.assertEquals(message['video']['id'], video_instance.id)
+
+    def test_activity_tracking(self):
+        with self.app.test_client() as client:
+            self.app.test_request_context().push()
+            r = client.get('/ws/channels/?category=4')
+            self.assertEquals(r.status_code, 200)
+            channel = json.loads(r.data)['channels']['items'][0]
+
+            user = self.create_test_user()
+            r = client.post(
+                '/ws/{}/activity/?tracking_code={}'.format(user.id, channel['tracking_code']),
+                data=json.dumps(dict(
+                    action='open',
+                    object_type='channel',
+                    object_id=channel['id'])),
+                content_type='application/json',
+                headers=[get_auth_header(user.id)])
+            self.assertEquals(r.status_code, 204)
+
+            self.assertIn(
+                ('open', channel['tracking_code']),
+                UserActivity.query.filter_by(user=user.id).values('action', 'tracking_code'))
 
     def test_email_registration(self):
         with self.app.test_client():

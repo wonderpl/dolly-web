@@ -103,8 +103,9 @@ class EntitySearch(object):
 
     def _construct_terms(self):
         if self._must_terms or self._should_terms or self._must_not_terms:
-            return pyes.BoolQuery(must=self._must_terms, must_not=self._must_not_terms, should=self._should_terms,
-                minimum_number_should_match=0)
+            return pyes.BoolQuery(
+                must=self._must_terms, must_not=self._must_not_terms,
+                should=self._should_terms, minimum_number_should_match=0)
         return pyes.MatchAllQuery()
 
     def _construct_filters(self, query):
@@ -269,7 +270,7 @@ class ChannelSearch(EntitySearch, CategoryMixin, MediaSortMixin):
             video_map.setdefault(channel_id_list[0], []).append(v)  # HACK: see above
         self.add_videos_to_channel(channel_list[0], video_map, vs.total)
 
-    def _format_results(self, channels, with_owners=False, with_videos=False, video_paging=(0, 100, )):
+    def _format_results(self, channels, with_owners=False, with_videos=False, video_paging=(0, 100, ), add_tracking=None):
         channel_list = range(self.paging[1])  # We don't know the channel size so default to paging
         channel_id_list = []
         owner_list = set()
@@ -332,7 +333,7 @@ class ChannelSearch(EntitySearch, CategoryMixin, MediaSortMixin):
             # ASSUMPTION: We should have all the promoted channels at the top, so positions of
             # the promoted will already be known by the time we're at the regular channels.
             # (lets also hope this assumption isn't anyones mother)
-            if channel.promotion:
+            if self.promoted_category is not None and channel.promotion:
                 promote_pattern = '|'.join([str(self.locale), str(self.promoted_category)]) + '|'
                 # Could be a promoted channel
                 # for a different category
@@ -351,6 +352,9 @@ class ChannelSearch(EntitySearch, CategoryMixin, MediaSortMixin):
                         # Calculate new offseted position and assign
                         ch['position'] = pos - self.paging[0]
                         channel_list[ch['position']] = ch
+                        if add_tracking:
+                            print channel.promotion, self.promoted_category
+                            add_tracking(ch, 'promoted-%d' % pos)
 
                 if promoted_for_category:
                     continue
@@ -358,6 +362,8 @@ class ChannelSearch(EntitySearch, CategoryMixin, MediaSortMixin):
             position = _check_position(position, self.paging[1] - 1)
             ch['position'] = position + self.paging[0]
             channel_list[position] = ch
+            if add_tracking:
+                add_tracking(ch)
 
             # Start incrementing the counter for
             # non-promoted channels
@@ -423,7 +429,7 @@ class ChannelSearch(EntitySearch, CategoryMixin, MediaSortMixin):
         if country:
             self._country = country
 
-    def channels(self, with_owners=False, with_videos=False, video_paging=(0, 100,)):
+    def channels(self, with_owners=False, with_videos=False, video_paging=(0, 100,), add_tracking=None):
         """ Fetches the results of the query for channels """
         if not self._channel_results:
             # XXX: hack for promotions - we need at least 8
@@ -433,7 +439,9 @@ class ChannelSearch(EntitySearch, CategoryMixin, MediaSortMixin):
                 self._real_paging = self.paging
                 self.paging = 0, 8
             r = self.results()
-            self._channel_results = self._format_results(r, with_owners=with_owners, with_videos=with_videos, video_paging=video_paging)
+            self._channel_results = self._format_results(
+                r, with_owners=with_owners, with_videos=with_videos,
+                video_paging=video_paging, add_tracking=add_tracking)
         return self._channel_results
 
 

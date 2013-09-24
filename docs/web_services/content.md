@@ -159,6 +159,7 @@ Cache-Control: public, max-age=3600
      "display_name": "User display name",
      "avatar_thumbnail_url": "https://path/to/avatar/small.jpg"
     },
+    "tracking_code": "some opaque string",
     "subscriber_count": 119
    }
   ]

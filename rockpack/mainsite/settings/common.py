@@ -44,6 +44,8 @@ INTERSTITIAL_ITUNES_LINK = True
 
 ELASTICSEARCH_URL = None
 
+MYRRIX_URL = None
+
 # Client ID for the iOS app
 ROCKPACK_APP_CLIENT_ID = 'c8fe5f6rock873dpack19Q'
 

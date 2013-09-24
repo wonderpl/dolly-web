@@ -154,7 +154,7 @@ class SubscribingUserTestCase(BaseUserTestCase):
 
         self.assertGreater(len(subscribed_channels), 0)
         subscriptions = self.get(self.urls['subscriptions'], token=self.token)
-        self.assertListEqual(subscribed_channels, [c['id'] for c in subscriptions['channels']['items']])
+        self.assertItemsEqual(subscribed_channels, [c['id'] for c in subscriptions['channels']['items']])
         videos = self.get(self.urls['subscriptions'] + 'recent_videos/', token=self.token)
         self.assertGreater(len(videos['videos']['items']), 0)
         self.assertIn(videos['videos']['items'][0]['channel']['id'], subscribed_channels)

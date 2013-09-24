@@ -228,6 +228,7 @@ class UserActivity(db.Model):
     object_type = Column(String(16), nullable=False)
     object_id = Column(String(64), nullable=False)
     locale = Column(ForeignKey('locale.id'), nullable=False, server_default='')
+    tracking_code = Column(String(128))
 
 
 class UserContentFeed(db.Model):

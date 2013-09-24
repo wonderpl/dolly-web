@@ -773,21 +773,24 @@ User Activity
 Record a view, starring, or selection of a video instance.
 
 ```http
-POST /ws/USERID/activity/?locale=LOCALE HTTP/1.1
+POST /ws/USERID/activity/?locale=LOCALE&tracking_code=CODE HTTP/1.1
 Authorization: Bearer TOKEN
 Content-Type: application/json
 
 {
  "action": "ACTION",
- "video_instance": "VIDEOINSTANCEID"
+ "object_type": "video_instance",
+ "object_id": "VIDEOINSTANCEID"
 }
 ```
 
-Parameter      | Required? | Value                     | Description
-:------------- | :-------- | :------------------------ | :----------
-action         | yes       | `star`¦`unstar`¦`view`¦`select` | Specifies the action type
-video_instance | yes       | instance id               | The id of the video instance that was viewed or starred
-locale         | no        | IETF language tag         | The action will be recorded for the given locale
+Parameter      | Required? | Value                                  | Description
+:------------- | :-------- | :------------------------------------- | :----------
+action         | yes       | `star`¦`unstar`¦`view`¦`select`¦`open` | Specifies the action type
+object_type    | yes       | `channel`¦`video_instance`             | The type of object
+object_id      | yes       | string                                 | The id of the object that was acted upon
+locale         | no        | IETF language tag                      | The action will be recorded for the given locale
+tracking_code  | no        | string                                 | The value for the last retrieved tracking_code
 
 ```http
 HTTP/1.1 204 NO CONTENT
@@ -1121,12 +1124,16 @@ Content-Type: application/json
 `POST` the channel url to create a new subscription.
 
 ```http
-POST /ws/USERID/subscriptions/ HTTP/1.1
+POST /ws/USERID/subscriptions/?tracking_code=CODE HTTP/1.1
 Content-Type: application/json
 Authorization: Bearer TOKEN
 
 "http://path/to/channel"
 ```
+
+Parameter      | Required? | Value    | Description
+:------------- | :-------- | :------- | :----------
+tracking_code  | no        | string   | The value for the last retrieved tracking_code
 
 If the channel url is invalid a `400` will be returned:
 
@@ -1311,6 +1318,7 @@ Cache-Control: private, max-age=60
     "title": "test",
     "category": null,
     "subscriber_count": 0,
+    "tracking_code": "some opaque string",
     "cover": {
      "thumbnail_url": "",
      "aoi": null
@@ -1422,6 +1430,7 @@ Cache-Control: private, max-age=3600
     "description": "channel desc",
     "public": true,
     "date_published": "2013-12-01T12:00:00",
+    "tracking_code": "some opaque string",
     "ecommerce_url": "",
     "cover": {
       "thumbnail_url": "http://path/to/channel/cover.jpg",
@@ -1622,7 +1631,7 @@ Content Report
 Post a record of content the user has flagged as inappropriate.
 
 ```http
-POST /ws/USERID/content_reports/?locale=LOCALE HTTP/1.1
+POST /ws/USERID/content_reports/?locale=LOCALE&tracking_code=CODE HTTP/1.1
 Authorization: Bearer TOKEN
 Content-Type: application/json
 
@@ -1639,6 +1648,7 @@ object_type    | yes       | `channel`, `video`, `user`  | Specifies the type of
 object_id      | yes       | unique content id           | The id of the channel, video, or user
 reason         | yes       | string                      | Limited to 256 characters
 locale         | no        | IETF language tag           |
+tracking_code  | no        | string                      | The value for the last retrieved tracking_code
 
 On error:
 

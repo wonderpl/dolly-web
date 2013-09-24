@@ -22,7 +22,7 @@ def _filter_by_category(query, type, category_id):
     return query.filter(type.category.in_(cat_ids))
 
 
-def channel_dict(channel, with_owner=True, owner_url=False):
+def channel_dict(channel, position=None, with_owner=True, owner_url=False, add_tracking=None):
     ch_data = dict(
         id=channel.id,
         resource_url=channel.get_resource_url(owner_url),
@@ -48,15 +48,19 @@ def channel_dict(channel, with_owner=True, owner_url=False):
         )
     if owner_url:
         ch_data['public'] = channel.public
+    if position is not None:
+        ch_data['position'] = position
     if app.config.get('SHOW_CHANNEL_DESCRIPTION', False):
         ch_data['description'] = channel.description
     if app.config.get('SHOW_OLD_CHANNEL_COVER_URLS', True):
         for k in 'thumbnail_large', 'thumbnail_small', 'background':
             ch_data['cover_%s_url' % k] = getattr(channel.cover, k)
+    if add_tracking:
+        add_tracking(ch_data)
     return ch_data
 
 
-def get_db_channels(locale, paging, **filters):
+def get_db_channels(locale, paging, add_tracking=None, **filters):
     channels = models.Channel.query.filter_by(public=True, deleted=False).\
         outerjoin(
             models.ChannelLocaleMeta,
@@ -77,31 +81,33 @@ def get_db_channels(locale, paging, **filters):
     total = channels.count()
     offset, limit = paging
     channels = channels.offset(offset).limit(limit)
-    channel_data = []
-    for position, channel in enumerate(channels, offset):
-        item = channel_dict(channel)
-        item['position'] = position
-        channel_data.append(item)
+    items = [channel_dict(channel, position, add_tracking=add_tracking)
+             for position, channel in enumerate(channels, offset)]
 
-    return channel_data, total
+    return items, total
 
 
-def get_es_channels(locale, paging, category, category_boosts=None):
+def get_es_channels(locale, paging, category, category_boosts=None,
+                    prefix_boosts=None, add_tracking=None, enable_promotion=True):
     cs = ChannelSearch(locale)
     cs.set_paging(*paging)
     # Boost popular channels based on ...
     if category_boosts:
         for boost in category_boosts:
             cs.add_filter(filters.category_boost(*boost))
+    if prefix_boosts:
+        for boost in prefix_boosts:
+            cs.add_filter(filters.channel_prefix_boost(*boost))
     cs.add_filter(filters.boost_from_field_value('editorial_boost'))
     cs.add_filter(filters.negatively_boost_favourites())
     cs.add_filter(filters.channel_rank_boost(locale))
     cs.filter_category(category)
-    cs.promotion_settings(category)
+    if enable_promotion:
+        cs.promotion_settings(category)
     cs.date_sort(request.args.get('date_order'))
     if request.args.get('user_id'):
         cs.add_term('owner', request.args.get('user_id'))
-    channels = cs.channels(with_owners=True)
+    channels = cs.channels(with_owners=True, add_tracking=add_tracking)
     return channels, cs.total
 
 
@@ -233,9 +239,17 @@ class ChannelWS(WebService):
 
     @expose_ajax('/', cache_age=3600)
     def channel_list(self):
+        def add_tracking(channel, extra=None):
+            channel['tracking_code'] = ' '.join(filter(None, (
+                'browse',
+                str(channel['position']),
+                category and 'cat-%s' % category,
+                extra)))
+        category = request.args.get('category')
         get_channels = get_es_channels if use_elasticsearch() else get_db_channels
         items, total = get_channels(self.get_locale(), self.get_page(),
-                                    category=request.args.get('category'))
+                                    category=category,
+                                    add_tracking=add_tracking)
         return dict(channels=dict(items=items, total=total))
 
 

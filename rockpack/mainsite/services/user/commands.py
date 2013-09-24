@@ -3,7 +3,7 @@ from itertools import izip_longest, groupby
 from functools import wraps
 from datetime import datetime, timedelta
 from flask import json
-from sqlalchemy import func, text, between
+from sqlalchemy import func, text, between, case
 from sqlalchemy.orm import joinedload, contains_eager, aliased
 from sqlalchemy.orm.exc import NoResultFound
 from rockpack.mainsite import app
@@ -563,7 +563,43 @@ def update_user_interests(date_from, date_to):
         db.session.execute(UserInterest.__table__.insert(), [
             dict(user=user, explicit=False, category=category, weight=weight)
             for user, category, weight in categories
-            ][:10])
+        ][:10])
+
+
+def _post_activity_to_recommender(date_from, date_to):
+    weights = (
+        (UserActivity.action == 'subscribe', 10),
+        (UserActivity.action == 'star', 5),
+        (UserActivity.action == 'select', 5),
+        (UserActivity.action == 'unsubscribe', -5),
+    )
+    activity = readonly_session.query(
+        UserActivity.user,
+        Channel.id,
+        case(weights, else_=1)
+    ).outerjoin(
+        VideoInstance,
+        (UserActivity.object_type == 'video_instance') &
+        (UserActivity.object_id == VideoInstance.id)
+    ).filter(
+        ((UserActivity.object_type == 'channel') & (UserActivity.object_id == Channel.id)) |
+        (VideoInstance.channel == Channel.id)
+    )
+    if date_from:
+        activity = activity.filter(UserActivity.date_actioned.between(date_from, date_to))
+    from rockpack.mainsite.core import recommender
+    recommender.load_activity(activity.yield_per(1000))
+
+
+@manager.command
+def init_recommender():
+    _post_activity_to_recommender(None, None)
+
+
+@manager.cron_command(interval=120)
+@job_control
+def update_recommender(date_from, date_to):
+    _post_activity_to_recommender(date_from, date_to)
 
 
 @manager.cron_command(interval=900)
