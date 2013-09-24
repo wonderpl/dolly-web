@@ -920,6 +920,8 @@ class UserWS(WebService):
         if not form.validate():
             abort(400, form_errors=form.errors)
 
+        channel_was_public = channel.public
+
         channel.title = form.title.data
         channel.description = form.description.data
         if not form.cover.data == 'KEEP':
@@ -928,6 +930,12 @@ class UserWS(WebService):
         channel.category = form.category.data
         channel.public = Channel.should_be_public(channel, form.public.data)
         channel.save()
+
+        ids = lambda: [v[0] for v in VideoInstance.query.filter_by(channel=channel.id).values('id')]
+        if channel_was_public and not channel.public:
+            es_update_channel_videos(deleted=ids())
+        elif not channel_was_public and channel.public:
+            es_update_channel_videos(extant=ids())
 
         resource_url = channel.get_resource_url(True)
         return (dict(id=channel.id, resource_url=resource_url),
@@ -1001,14 +1009,13 @@ class UserWS(WebService):
             abort(400, message=_('List can be empty, but must be present'))
         existing_videos = len(channel.video_instances)
 
+        # Get difference from before video update and after
+        # so we that know what to send to es
         existing_instance_ids = [v[0] for v in VideoInstance.query.filter_by(channel=channelid).values('id')]
+
         add_videos_to_channel(channel, request.json, self.get_locale(), request.method == 'PUT')
 
         extant_instance_ids = [v[0] for v in VideoInstance.query.filter_by(channel=channelid).values('id')]
-        es_update_channel_videos(
-            existing_instance_ids,
-            set(existing_instance_ids).difference(extant_instance_ids)
-        )
 
         intended_public = channel.should_be_public(channel, channel.public)
         if not channel.video_instances and not intended_public:
@@ -1017,6 +1024,21 @@ class UserWS(WebService):
         elif not existing_videos and channel.should_be_public(channel, True):
             channel.public = True
             channel.save()
+
+        # Perform video update /after/ we determine
+        # whether the channel is public
+        if channel.public:
+            es_update_channel_videos(
+                existing_instance_ids,
+                set(existing_instance_ids).difference(extant_instance_ids)
+            )
+        else:
+            # Delete all videos out of es as it is
+            # pointless them being there
+            es_update_channel_videos(
+                [],
+                set(existing_instance_ids + extant_instance_ids)
+            )
 
     @expose_ajax('/<userid>/channels/<channelid>/videos/<videoid>/')
     def channel_video_instance(self, userid, channelid, videoid):

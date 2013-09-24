@@ -586,7 +586,7 @@ def add_video_to_index(video_instance, bulk=False, no_check=False):
     es_video.insert(video_instance.id, video_instance)
 
 
-def es_update_channel_videos(extant, deleted, async=app.config.get('ASYNC_ES_VIDEO_UPDATES', False)):
+def es_update_channel_videos(extant=[], deleted=[], async=app.config.get('ASYNC_ES_VIDEO_UPDATES', False)):
     """ Updates the es documents for videos belonging to channels
         extant - list of strings
         deleted - list of strings
@@ -601,13 +601,15 @@ def es_update_channel_videos(extant, deleted, async=app.config.get('ASYNC_ES_VID
 
     from rockpack.mainsite.services.video.models import VideoInstance
 
-    videos = VideoInstance.query.filter(VideoInstance.id.in_(extant))
-    es_video = ESVideo.inserter(bulk=True)
-    for v in videos:
-        es_video.insert(v.id, v)
-    es_video.flush_bulk()
+    if extant:
+        videos = VideoInstance.query.filter(VideoInstance.id.in_(extant))
+        es_video = ESVideo.inserter(bulk=True)
+        for v in videos:
+            es_video.insert(v.id, v)
+        es_video.flush_bulk()
 
-    ESVideo.delete(deleted)
+    if deleted:
+        ESVideo.delete(deleted)
 
 
 def remove_channel_from_index(channel_id):
