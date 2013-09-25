@@ -153,10 +153,8 @@ def save_video_activity(userid, action, instance_id, locale):
                 channel.remove_videos([video_id])
                 ESVideo.delete_by_query({'channel': channel.id, 'video.id': video_id})
             else:
-                new_instance = channel.add_videos([video_id])[0]
-                es_update_channel_videos(extant=[getattr(new_instance, 'id', new_instance)])
                 # Return new instance here so that it can be shared
-                return new_instance
+                return channel.add_videos([video_id])[0]
 
 
 @commit_on_success
@@ -823,10 +821,15 @@ class UserWS(WebService):
         if not form.validate():
             abort(400, form_errors=form.errors)
 
-        save_video_activity(userid,
+        new_instance = save_video_activity(userid,
                             form.action.data,
                             form.video_instance.data,
                             self.get_locale())
+
+        if form.action.data == 'star':
+            # Needs to be here as we need the commit
+            # to get the instance id
+            es_update_channel_videos(extant=[getattr(new_instance, 'id', new_instance)])
 
         # XXX: For now don't propogate activity to channel.
         # Saves db load and also there's the new set_channel_view_count cron command
