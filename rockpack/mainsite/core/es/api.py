@@ -96,6 +96,30 @@ class ESObjectIndexer(object):
         except pyes.exceptions.NotFoundException, e:
             raise exceptions.DocumentMissingException(e)
 
+    def delete_by_query(self, query):
+        """ query is dict of field and value to search for
+            query terms are ANDed """
+
+        if not query:
+            return
+
+        if not isinstance(query, dict):
+            raise TypeError('query should be a dict')
+
+        es_query = []
+        for k, v in query.iteritems():
+            es_query.append(pyes.TermQuery(field=k, value=v))
+
+
+        try:
+            es_connection.delete_by_query(
+                self.indexes[self.indexing_type]['index'],
+                self.indexes[self.indexing_type]['type'],
+                pyes.BoolQuery(must=es_query, minimum_number_should_match=1)
+            )
+        except pyes.exceptions.NotFoundException, e:
+            raise exceptions.DocumentMissingException(e)
+
     def flush(self):
         """ Must be called at the end of insert/update operations
             to ensure the entire group of documents are inserted/updated """
@@ -201,6 +225,11 @@ class ESVideo(object):
     def delete(cls, ids):
         d = ESObjectIndexer(cls._type)
         d.delete(ids)
+
+    @classmethod
+    def delete_by_query(cls, query):
+        d = ESObjectIndexer(cls._type)
+        d.delete_by_query(query)
 
 
 class ESChannel(object):

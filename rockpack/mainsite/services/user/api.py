@@ -14,7 +14,7 @@ from rockpack.mainsite.core.webservice import WebService, expose_ajax, ajax_crea
 from rockpack.mainsite.core.oauth.decorators import check_authorization
 from rockpack.mainsite.core.youtube import get_video_data
 from rockpack.mainsite.core.es import use_elasticsearch, search as es_search
-from rockpack.mainsite.core.es.api import es_update_channel_videos
+from rockpack.mainsite.core.es.api import es_update_channel_videos, ESVideo
 from rockpack.mainsite.helpers import lazy_gettext as _
 from rockpack.mainsite.helpers.forms import naughty_word_validator
 from rockpack.mainsite.helpers.urls import url_for, url_to_endpoint
@@ -151,9 +151,12 @@ def save_video_activity(userid, action, instance_id, locale):
         if channel:
             if action == 'unstar':
                 channel.remove_videos([video_id])
+                ESVideo.delete_by_query({'channel': channel.id, 'video.id': video_id})
             else:
+                new_instance = channel.add_videos([video_id])[0]
+                es_update_channel_videos(extant=[getattr(new_instance, 'id', new_instance)])
                 # Return new instance here so that it can be shared
-                return channel.add_videos([video_id])[0]
+                return new_instance
 
 
 @commit_on_success
@@ -820,17 +823,10 @@ class UserWS(WebService):
         if not form.validate():
             abort(400, form_errors=form.errors)
 
-        # Returns new instance id if created
-        new_instance = save_video_activity(userid,
+        save_video_activity(userid,
                             form.action.data,
                             form.video_instance.data,
                             self.get_locale())
-
-        # Update favs in es
-        if form.action.data == 'unstar':
-            es_update_channel_videos(deleted=[form.video_instance.data])
-        elif form.action.data == 'star' and new_instance:
-            es_update_channel_videos(extant=[getattr(new_instance, 'id', new_instance)])
 
         # XXX: For now don't propogate activity to channel.
         # Saves db load and also there's the new set_channel_view_count cron command

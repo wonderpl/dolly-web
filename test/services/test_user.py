@@ -407,6 +407,7 @@ class TestProfileEdit(base.RockPackTestCase):
 
     def test_star_notification(self):
         with self.app.test_client() as client:
+            self.app.test_request_context().push()
             user = self.create_test_user()
             video_instance = VideoInstanceData.video_instance1
             owner = Channel.query.get(video_instance.channel).owner
