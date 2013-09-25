@@ -150,8 +150,10 @@ def save_video_activity(userid, action, instance_id, locale):
         channel = Channel.query.filter_by(owner=userid, favourite=True).first()
         if channel:
             if action == 'unstar':
+                instance = VideoInstance.query.filter_by(video=video_id, channel=channel.id).first()
                 channel.remove_videos([video_id])
-                ESVideo.delete_by_query({'channel': channel.id, 'video.id': video_id})
+                if instance:
+                    ESVideo.delete([instance.id])
             else:
                 # Return new instance here so that it can be shared
                 return channel.add_videos([video_id])[0]
