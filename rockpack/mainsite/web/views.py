@@ -257,7 +257,7 @@ def share_redirect(linkid):
         protocol_url = rockpack_protocol_url(
             share_data['channel_data']['owner']['id'],
             share_data['channel_data']['id'],
-            videoid=share_data.get('video', None)
+            videoid=data.get('video', None)
         )
 
         url = add_carry_thru_params(data['url'])
