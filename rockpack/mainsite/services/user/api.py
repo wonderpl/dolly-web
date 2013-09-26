@@ -963,8 +963,8 @@ class UserWS(WebService):
         channel.save()
 
         # Delete all videos from es
-        ids = VideoInstance.query.filter_by(channel=channelid).values('id')
-        es_update_channel_videos([], ids)
+        ids = [v[0] for v in VideoInstance.query.filter_by(channel=channelid).values('id')]
+        es_update_channel_videos(deleted=ids)
 
     @expose_ajax('/<userid>/channels/<channelid>/public/', methods=('PUT',))
     @check_authorization(self_auth=True)
