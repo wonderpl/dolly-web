@@ -128,10 +128,8 @@ class CompleteWS(WebService):
 
     endpoint = '/complete'
 
-    @expose_ajax('/videos/', cache_age=86400)
-    def complete_video_terms(self):
-        # Client should hit youtube service directly because this service
-        # is likely to be throttled by IP address
+    @expose_ajax('/all/', cache_age=86400)
+    def complete_all_terms(self):
         query = request.args.get('q', '')
         if not query:
             abort(400)
@@ -143,6 +141,18 @@ class CompleteWS(WebService):
                 result = result.decode('latin1')
             terms = json.loads(result[result.index('(') + 1:result.rindex(')')])
             return self.complete_channel_terms(terms[1])
+        return Response(result, mimetype='text/javascript')
+
+    @expose_ajax('/videos/', cache_age=86400)
+    def complete_video_terms(self, all=False):
+        if request.rockpack_ios_version and request.rockpack_ios_version < (1, 5):
+            return self.complete_all_terms()
+        # Client should hit youtube service directly because this service
+        # is likely to be throttled by IP address
+        query = request.args.get('q', '')
+        if not query:
+            abort(400)
+        result = youtube.complete(query)
         return Response(result, mimetype='text/javascript')
 
     @expose_ajax('/channels/', cache_age=86400)
@@ -172,5 +182,24 @@ class CompleteWS(WebService):
                 terms = terms[:c] + src[:10 - min(c, len(terms))]
                 i += 3
 
-        result = json.dumps((query, [(t[0], 0, []) for t in terms], {}))
+        result = json.dumps((query, [(t[0], 0) for t in terms], {}))
+        return Response('window.google.ac.h(%s)' % result, mimetype='text/javascript')
+
+    @expose_ajax('/users/', cache_age=86400)
+    def complete_user_terms(self, extra_terms=None):
+        query = request.args.get('q', '').lower()
+
+        terms = set(
+            next((n for n in names if n.lower().startswith(query)), names[0])
+            for names in
+            User.query.filter_by(is_active=True).filter(
+                User.username.ilike('%s%%' % query) |
+                User.first_name.ilike('%s%%' % query) |
+                User.last_name.ilike('%s%%' % query)
+            ).join(Channel).group_by(User.id).
+            order_by('count(*) desc').limit(10).
+            values('username', 'first_name', 'last_name')
+        )
+
+        result = json.dumps((query, [(t, 0) for t in terms], {}))
         return Response('window.google.ac.h(%s)' % result, mimetype='text/javascript')

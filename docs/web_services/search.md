@@ -162,8 +162,8 @@ window.google.ac.h(
  [
   "QUERY",
   [
-   ["SUGGESTION 1",0,[]],
-   ["SUGGESTION 2",0,[]]
+   ["SUGGESTION 1",0],
+   ["SUGGESTION 2",0]
   ],
   {"some": "metadata"}
  ]
@@ -176,4 +176,21 @@ window.google.ac.h(
 GET /ws/complete/channels/?locale=LOCALE&q=QUERY HTTP/1.1
 ```
 
-Same as `/ws/complete/videos/`.
+Same as `/ws/complete/videos/` but returns suggested channel names.
+
+### Users
+
+```http
+GET /ws/complete/users/?locale=LOCALE&q=QUERY HTTP/1.1
+```
+
+Same as `/ws/complete/videos/` but returns suggested user names.
+
+
+### All
+
+```http
+GET /ws/complete/all/?locale=LOCALE&q=QUERY HTTP/1.1
+```
+
+Same as `/ws/complete/videos/` but returns a mix of username, channel & video titles.
