@@ -1,3 +1,5 @@
+import os
+import time
 from datetime import datetime, timedelta
 from boto.sqs import connect_to_region
 from boto.sqs.jsonmessage import JSONMessage
@@ -6,6 +8,7 @@ from rockpack.mainsite.manager import manager
 
 
 SQS_DELAY_LIMIT = 900
+SQS_VISIBILITY_TIMEOUT = 600
 
 
 def _get_queue():
@@ -26,7 +29,7 @@ def _write_message(command, next_run, delay_seconds=None):
 
 
 def process_sqs_message():
-    message = _get_queue().read()
+    message = _get_queue().read(SQS_VISIBILITY_TIMEOUT)
     if not message:
         return
 
@@ -41,6 +44,8 @@ def process_sqs_message():
         app.logger.exception('Failed to parse message: %r', body)
         # leave message on queue
         return
+    else:
+        app.logger.info('Got cron command: %s: next run %s (%ss)', command, next_run, interval)
 
     # Check if it's time to run this command now.  Adding 10s leeway so that messages
     # that appear after delay_seconds and close to next_run don't get postponed.
@@ -51,6 +56,7 @@ def process_sqs_message():
         message.delete()
         return
 
+    start_time = time.time()
     try:
         manager.handle('cron', command)
     except Exception:
@@ -58,7 +64,13 @@ def process_sqs_message():
         # message will re-appear on the queue after visibility timeout
         return
 
-    _write_message(command, datetime.utcnow() + timedelta(seconds=interval), interval)
+    processing_time = time.time() - start_time
+    if processing_time < SQS_VISIBILITY_TIMEOUT:
+        # only write new message if this one was processed in time
+        _write_message(command, datetime.utcnow() + timedelta(seconds=interval), interval)
+    else:
+        app.logger.warning('Cron command %s took %ds', command, processing_time)
+
     message.delete()
 
 
@@ -79,4 +91,7 @@ if __name__ == '__main__':
         Sentry(app, logging=app.config.get('SENTRY_ENABLE_LOGGING'))
 
     while True:
-        process_sqs_message()
+        if os.path.exists('/tmp/rockpack-mainsite-cron.lock'):
+            time.sleep(10)
+        else:
+            process_sqs_message()
