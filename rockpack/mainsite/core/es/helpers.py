@@ -210,12 +210,12 @@ class DBImport(object):
             print '%s finished in' % total, time.time() - start, 'seconds (%s videos not in es)' % missing
 
     def _partial_update(self, index, id, script, params=None):
-        self.conn.partial_update(
+        self.conn.update(
             self.indexing.indexes[index]['index'],
             self.indexing.indexes[index]['type'],
             id,
-            script,
-            params=params
+            script=script,
+            bulk=True
         )
 
     def import_video_channel_terms(self):
@@ -233,7 +233,6 @@ class DBImport(object):
         channel_terms = {}
 
         total = 0
-        missing = 0
         start = time.time()
 
         print 'Building data ...'
@@ -246,16 +245,14 @@ class DBImport(object):
                 self._partial_update(
                     'channel',
                     c_id,
-                    'ctx._source.video_terms = term',
-                    params={'term': json.dumps(terms_list)}
+                    'ctx._source.video_terms = %s' % json.dumps(terms_list)
                 )
             except ElasticSearchException, e:
                 print e
-                missing += 1
             total += 1
 
         self.conn.flush_bulk(forced=True)
-        print '%s finished in' % total, time.time() - start, 'seconds (%s channels not in es)' % missing
+        print '%s finished in' % total, time.time() - start, 'seconds'
 
     def import_channel_share(self):
         from rockpack.mainsite.services.share.models import ShareLink
