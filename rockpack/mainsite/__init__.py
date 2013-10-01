@@ -108,5 +108,8 @@ def init_app():
             pass
         else:
             DebugToolbarExtension(app)
+    # Don't duplicate query log messages
+    if app.config.get('SQLALCHEMY_ECHO'):
+        logging.getLogger('sqlalchemy').propagate = False
     run_setups()
     import_services()
