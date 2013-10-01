@@ -87,11 +87,14 @@ class ESObjectIndexer(object):
         else:
             raise TypeError('ids shoulds be a list')
 
+        self.delete_by_query(pyes.IdsQuery(ids))
+
+    def delete_by_query(self, query):
         try:
             es_connection.delete_by_query(
                 self.indexes[self.indexing_type]['index'],
                 self.indexes[self.indexing_type]['type'],
-                pyes.IdsQuery(ids)
+                query
             )
         except pyes.exceptions.NotFoundException, e:
             raise exceptions.DocumentMissingException(e)
@@ -145,28 +148,10 @@ class ESUpdater(object):
         self.manager.indexer.flush()
 
 
-class ESVideo(object):
-
-    _type = 'video'
+class ESObject(object):
 
     def __init__(self, bulk=False):
         self.indexer = ESObjectIndexer(self._type, bulk=bulk)
-
-    def insert_mapper(self, video):
-        mapped = ESVideoAttributeMap(video)
-        return dict(
-            id=mapped.id,
-            public=mapped.public,
-            video=mapped.video,
-            title=mapped.title,
-            channel=mapped.channel,
-            category=mapped.category,
-            date_added=mapped.date_added,
-            position=mapped.position,
-            locales=mapped.locales,
-            recent_user_stars=mapped.recent_user_stars(),
-            country_restriction=mapped.country_restriction()
-        )
 
     def update_mapper(self, field, value):
 
@@ -203,12 +188,35 @@ class ESVideo(object):
         d.delete(ids)
 
 
-class ESChannel(object):
+class ESVideo(ESObject):
+
+    _type = 'video'
+
+    def insert_mapper(self, video):
+        mapped = ESVideoAttributeMap(video)
+        return dict(
+            id=mapped.id,
+            public=mapped.public,
+            video=mapped.video,
+            title=mapped.title,
+            channel=mapped.channel,
+            category=mapped.category,
+            date_added=mapped.date_added,
+            position=mapped.position,
+            locales=mapped.locales,
+            recent_user_stars=mapped.recent_user_stars(),
+            country_restriction=mapped.country_restriction()
+        )
+
+    @classmethod
+    def delete_channel_videos(cls, channelid):
+        query = pyes.TermQuery('channel', channelid)
+        ESObjectIndexer(cls._type).delete_by_query(query)
+
+
+class ESChannel(ESObject):
 
     _type = 'channel'
-
-    def __init__(self, bulk=False):
-        self.indexer = ESObjectIndexer(self._type, bulk=bulk)
 
     def insert_mapper(self, channel):
         mapped = ESChannelAttributeMap(channel)
@@ -243,40 +251,6 @@ class ESChannel(object):
             data['cover_background_url'] = mapped.cover_background_url
 
         return data
-
-    def update_mapper(self, field, value):
-
-        class DateEncoder(json.JSONEncoder):
-            def default(self, obj):
-                if isinstance(obj, datetime.datetime):
-                    return obj.isoformat()
-                return json.JSONEncoder.default(self, obj)
-
-        def construct_update_string(prefix, val):
-            if isinstance(val, dict):
-                final = ''
-                for k, v in val.iteritems():
-                    this = prefix + "['%s']" % k
-                    final = construct_update_string(this, v) + final
-                return final
-            else:
-                prefix += " = %s;" % json.dumps(val, ensure_ascii=False, cls=DateEncoder)
-            return prefix
-
-        return construct_update_string('ctx._source.%s' % field, value)
-
-    @classmethod
-    def inserter(cls, bulk=False):
-        return ESInserter(cls._type, cls(bulk=bulk))
-
-    @classmethod
-    def updater(cls, bulk=False):
-        return ESUpdater(cls._type, cls(bulk=bulk))
-
-    @classmethod
-    def delete(cls, ids):
-        d = ESObjectIndexer(cls._type)
-        d.delete(ids)
 
 
 def locale_dict_from_object(metas):
@@ -602,6 +576,10 @@ def es_update_channel_videos(extant=[], deleted=[], async=app.config.get('ASYNC_
     from rockpack.mainsite.services.video.models import VideoInstance
 
     if extant:
+        # XXX: This is a nasty hack to allow the VideoInstance query to proceed
+        # when this is called from sqlalchemy's after_commit signal
+        if VideoInstance.query.session.transaction._state.name == 'COMMITTED':
+            VideoInstance.query.session.transaction._state = None
         videos = VideoInstance.query.filter(VideoInstance.id.in_(extant))
         es_video = ESVideo.inserter(bulk=True)
         for v in videos:
@@ -620,6 +598,8 @@ def remove_channel_from_index(channel_id):
         ESChannel.delete([channel_id])
     except exceptions.DocumentMissingException:
         pass
+    else:
+        ESVideo.delete_channel_videos(channel_id)
 
 
 def remove_video_from_index(video_id):

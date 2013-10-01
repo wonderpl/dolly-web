@@ -1,10 +1,12 @@
 from datetime import datetime
 from sqlalchemy import (
     Text, String, Column, Boolean, Integer, Float, ForeignKey, DateTime, CHAR,
-    UniqueConstraint, event, func, orm)
+    UniqueConstraint, event, func)
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import relationship, aliased
-from rockpack.mainsite.core.dbapi import db
+from sqlalchemy.orm import relationship, aliased, lazyload
+from flask.ext.sqlalchemy import models_committed
+from rockpack.mainsite.core.dbapi import db, defer_except
+from rockpack.mainsite.core.es.api import es_update_channel_videos
 from rockpack.mainsite.helpers.db import add_base64_pk, add_video_pk, insert_new_only, ImageType, BoxType
 from rockpack.mainsite.helpers.urls import url_for
 from rockpack.mainsite.services.user.models import User
@@ -224,7 +226,8 @@ class VideoInstance(db.Model):
     source_channel = Column(ForeignKey('channel.id'), nullable=True)
     category = Column(ForeignKey('category.id'), nullable=True)
 
-    metas = relationship('VideoInstanceLocaleMeta', backref='video_instance_rel', cascade='all,delete')
+    metas = relationship('VideoInstanceLocaleMeta', backref='video_instance_rel',
+                         cascade='all,delete', passive_deletes=True)
     category_rel = relationship('Category', backref='video_instance_rel')
 
     def __unicode__(self):
@@ -314,25 +317,29 @@ class Channel(db.Model):
     @classmethod
     def create(cls, locale=None, public=True, **kwargs):
         """Create & save a new channel record along with appropriate category metadata"""
-        channel = Channel(**kwargs)
-        channel.public = channel.should_be_public(channel, public)
+        channel = cls(**kwargs)
+        channel.public = cls.should_be_public(channel, public, False)
         return channel.save()
 
     @classmethod
-    def should_be_public(self, channel, public):
+    def should_be_public(self, channel, public, has_instances=None):
         """Return False if conditions for visibility are not met (except for fav channel)"""
         if app.config.get('OVERRIDE_CHANNEL_PUBLIC'):
             return True
         if channel.favourite:
             return True
 
-        if not (channel.cover and channel.category is not None and
-                (channel.title and not
-                    channel.title.upper().startswith(app.config['UNTITLED_CHANNEL'].upper())) and
-                channel.video_instances):
+        if not (channel.title and channel.cover and channel.category is not None):
             return False
-
-        return public
+        else:
+            if channel.title.upper().startswith(app.config['UNTITLED_CHANNEL'].upper()):
+                return False
+            if has_instances is None:
+                has_instances = VideoInstance.query.filter_by(channel=channel.id).value(func.count())
+            if not has_instances:
+                return False
+            else:
+                return public
 
     @property
     def default_thumbnail(self):
@@ -355,14 +362,13 @@ class Channel(db.Model):
         self.query.session.add_all(i for i in instances if i.video not in existing)
 
         # If ...
+        # - we're currently not public
         # - we have no videos yet
         # - we've just added videos
-        # - we're currently not public
         # - and we could otherwise be
         # ... make us public
-        if not existing and instances and not self.public and self.should_be_public(self, True):
-            self.public = True
-            self.save()
+        if not self.public and not existing and instances:
+            self.public = Channel.should_be_public(self, True, instances)
 
         # Get list of instance ids for requested videos
         # XXX: Returning instance here too because id won't be set until after commit
@@ -370,12 +376,13 @@ class Channel(db.Model):
             [j for j in instances if j.video not in existing]
 
     def remove_videos(self, video_ids):
-        VideoInstance.query.filter_by(channel=self.id).filter(VideoInstance.video.in_(video_ids)).delete(synchronize_session=False)
-
-        # If we shouldn't be public and we are, toggle
-        if not self.should_be_public(self, self.public) and self.public:
-            self.public = False
-            self.save()
+        # Instead of bulk deleting by query we get an orm reference for each
+        # and delete individually so the ids are recorded for on_models_committed
+        videos = VideoInstance.query.\
+            options(lazyload('video_rel'), *defer_except(VideoInstance, ['id'])).\
+            filter(VideoInstance.channel == self.id, VideoInstance.video.in_(video_ids))
+        for video in videos:
+            VideoInstance.query.session.delete(video)
 
     def add_meta(self, locale):
         return ChannelLocaleMeta(channel=self.id, locale=locale).save()
@@ -481,58 +488,24 @@ class PlayerErrorReport(db.Model):
 ParentCategory = aliased(Category)
 
 
-def _add_es_video(video_instance):
-    if not video_instance.video_rel:
-        video_instance = VideoInstance.query.get(video_instance.id)
-    es_api.add_video_to_index(video_instance)
-
-
-def _add_es_channel(channel):
-    if channel.should_be_public(channel, channel.public):
-        es_api.add_channel_to_index(channel)
-
-
-def _remove_es_channel(channel):
-    es_api.remove_channel_from_index(channel.id)
-
-
-def previous_state(flag, obj):
-    # Only for boolean flags
-    val = getattr(obj, flag)
-    history = orm.attributes.get_history(obj, flag)
-    if True in history.deleted or True in history.added:
-        # Has changed, so toggle value
-        return not val
-    return val
-
-
-def user_removed(target):
-    return (not target.public and previous_state('public', target)) or\
-        (target.deleted and not previous_state('deleted', target))
-
-
-def editorial_removed(target):
-    return not target.visible and previous_state('visible', target)
-
-
-def channel_not_deleted(channel):
-    return channel.public and not channel.deleted and channel.visible
+def _channel_is_public(channel):
+    return channel.public and channel.visible and not channel.deleted
 
 
 def _update_or_remove_channel(channel):
-    if channel_not_deleted(channel):
+    if _channel_is_public(channel):
         es_api.update_channel_to_index(channel)
     else:
-        _remove_es_channel(channel)
+        es_api.remove_channel_from_index(channel.id)
 
 
-def _remove_es_video_instance(video_instance):
-    es_api.remove_video_from_index(video_instance.id)
-
-
+# XXX: Do we still need this?
 @event.listens_for(VideoInstanceLocaleMeta, 'after_update')
 def _video_insert(mapper, connection, target):
-    _add_es_video(target.video_instance_rel)
+    video_instance = target.video_instance_rel
+    if not video_instance.video_rel:
+        video_instance = VideoInstance.query.get(video_instance.id)
+    es_api.add_video_to_index(video_instance)
 
 
 @event.listens_for(Video, 'after_update')
@@ -543,21 +516,18 @@ def _video_update(mapper, connection, target):
         ESVideo.delete(ids)
 
 
-"""
-@event.listens_for(VideoInstance, 'after_insert')
-def _video_instance_insert(mapper, connection, target):
-    _add_es_video(target)
-
-
-@event.listens_for(VideoInstance, 'after_update')
-def _video_instance_update(mapper, connection, target):
-    _add_es_video(target)
-
-
-@event.listens_for(VideoInstance, 'after_delete')
-def _video_instance_delete(mapper, connection, target):
-    _remove_es_video_instance(target)
-"""
+@models_committed.connect_via(app)
+def on_models_committed(sender, changes):
+    updated_videos, deleted_videos = [], []
+    for obj, change in changes:
+        if isinstance(obj, VideoInstance):
+            if change == 'delete':
+                deleted_videos.append(obj.id)
+            else:
+                updated_videos.append(obj.id)
+    if updated_videos or deleted_videos:
+        print 'es_update_channel_videos', updated_videos, deleted_videos
+        es_update_channel_videos(updated_videos, deleted_videos)
 
 
 @event.listens_for(ChannelLocaleMeta, 'after_insert')
@@ -565,7 +535,7 @@ def _channel_insert(mapper, connection, target):
     # NOTE: owner_rel isn't available on Channel if we pass channel_rel for owner.resource_url.
     # possibly do a lookup for owner in resource_url method instead of having it rely on self.owner_rel here
     channel = Channel.query.get(target.channel)
-    if channel_not_deleted(channel):
+    if _channel_is_public(channel):
         _update_or_remove_channel(channel)
 
 
@@ -576,8 +546,8 @@ def _es_channel_update_from_clm(mapper, connection, target):
 
 @event.listens_for(Channel, 'after_insert')
 def _es_channel_insert_from_channel(mapper, connection, target):
-    if channel_not_deleted(target):
-        _add_es_channel(Channel.query.get(target.id))
+    if _channel_is_public(target):
+        es_api.add_channel_to_index(Channel.query.get(target.id))
 
 
 @event.listens_for(Channel, 'after_update')

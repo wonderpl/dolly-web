@@ -3,7 +3,7 @@ import psycopg2
 from functools import wraps
 
 from sqlalchemy import create_engine, schema
-from sqlalchemy.orm import sessionmaker, scoped_session
+from sqlalchemy.orm import sessionmaker, scoped_session, class_mapper, defer
 from sqlalchemy.exc import StatementError
 from werkzeug.exceptions import HTTPException
 from flask.ext import sqlalchemy
@@ -100,6 +100,10 @@ class _Model(sqlalchemy.Model):
                 raise
         return merged
 
+    def add(self):
+        self.query.session.add(self)
+        return self
+
 
 sqlalchemy.Model = _Model
 
@@ -138,3 +142,11 @@ def commit_on_success(f):
             db.session.commit()
             return result
     return wrapper
+
+
+def defer_except(entity, cols):
+    # see http://www.sqlalchemy.org/trac/ticket/1418
+    m = class_mapper(entity)
+    return [defer(k) for k in
+            set(p.key for p in m.iterate_properties
+                if hasattr(p, 'columns')).difference(cols)]

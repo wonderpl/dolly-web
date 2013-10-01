@@ -14,7 +14,7 @@ from rockpack.mainsite.core.webservice import WebService, expose_ajax, ajax_crea
 from rockpack.mainsite.core.oauth.decorators import check_authorization
 from rockpack.mainsite.core.youtube import get_video_data
 from rockpack.mainsite.core.es import use_elasticsearch, search as es_search
-from rockpack.mainsite.core.es.api import es_update_channel_videos, ESVideo
+from rockpack.mainsite.core.es.api import es_update_channel_videos
 from rockpack.mainsite.helpers import lazy_gettext as _
 from rockpack.mainsite.helpers.forms import naughty_word_validator
 from rockpack.mainsite.helpers.urls import url_for, url_to_endpoint
@@ -144,16 +144,13 @@ def save_video_activity(userid, action, instance_id, locale):
                 meta = VideoInstance.query.get(instance_id).add_meta(locale)
                 setattr(meta, column, 1)
 
-    UserActivity(**activity).save()
+    UserActivity(**activity).add()
 
     if action in ('star', 'unstar'):
         channel = Channel.query.filter_by(owner=userid, favourite=True).first()
         if channel:
             if action == 'unstar':
-                instance = VideoInstance.query.filter_by(video=video_id, channel=channel.id).first()
                 channel.remove_videos([video_id])
-                if instance:
-                    ESVideo.delete([instance.id])
             else:
                 # Return new instance here so that it can be shared
                 return channel.add_videos([video_id])[0]
@@ -171,9 +168,9 @@ def save_channel_activity(userid, action, channelid, locale):
     Channel.query.filter_by(id=channelid).update(incr(Channel))
     # Update or create locale meta record:
     ChannelLocaleMeta.query.filter_by(channel=channelid, locale=locale).update(incr(ChannelLocaleMeta)) or \
-        ChannelLocaleMeta(channel=channelid, locale=locale, **{column: value}).save()
+        ChannelLocaleMeta(channel=channelid, locale=locale, **{column: value}).add()
     if action in ('subscribe', 'unsubscribe'):
-        UserActivity(user=userid, action=action, object_type='channel', object_id=channelid).save()
+        UserActivity(user=userid, action=action, object_type='channel', object_id=channelid).add()
 
 
 @commit_on_success
@@ -181,18 +178,19 @@ def save_content_report(userid, object_type, object_id, reason):
     activity = dict(action='content_reported', user=userid,
                     object_type=object_type, object_id=object_id)
     if not UserActivity.query.filter_by(**activity).count():
-        UserActivity(**activity).save()
+        UserActivity(**activity).add()
     report = dict(object_type=object_type, object_id=object_id, reason=reason)
     updated = ContentReport.query.filter_by(**report).update(
         {ContentReport.count: ContentReport.count + 1})
     if not updated:
-        report = ContentReport(**report).save()
+        report = ContentReport(**report).add()
 
 
 @commit_on_success
 def add_videos_to_channel(channel, instance_list, locale, delete_existing=False):
     videomap = get_or_create_video_records(instance_list)
-    existing = dict((v.video, v) for v in VideoInstance.query.filter_by(channel=channel.id))
+    existing = dict((v.video, v) for v in
+                    VideoInstance.query.filter_by(channel=channel.id).options(lazyload('video_rel')))
     added = []
     for position, (video_id, video_source) in enumerate(videomap):
         if video_id not in added:
@@ -206,10 +204,13 @@ def add_videos_to_channel(channel, instance_list, locale, delete_existing=False)
     if delete_existing:
         deleted_video_ids = set(existing.keys()).difference([i for i, s in videomap])
         if deleted_video_ids:
-            VideoInstance.query.filter(
-                VideoInstance.video.in_(deleted_video_ids),
-                VideoInstance.channel == channel.id
-            ).delete(synchronize_session='fetch')
+            channel.remove_videos(deleted_video_ids)
+
+    # Set to private if videos are cleared, or public if first videos added
+    if delete_existing and not added:
+        channel.public = False
+    elif not existing and Channel.should_be_public(channel, True, added):
+        channel.public = True
 
 
 def _user_list(paging, **filters):
@@ -822,22 +823,10 @@ class UserWS(WebService):
         form = ActivityForm(csrf_enabled=False)
         if not form.validate():
             abort(400, form_errors=form.errors)
-
-        new_instance = save_video_activity(userid,
+        save_video_activity(userid,
                             form.action.data,
                             form.video_instance.data,
                             self.get_locale())
-
-        if form.action.data == 'star':
-            # Needs to be here as we need the commit
-            # to get the instance id
-            es_update_channel_videos(extant=[getattr(new_instance, 'id', new_instance)])
-
-        # XXX: For now don't propogate activity to channel.
-        # Saves db load and also there's the new set_channel_view_count cron command
-        #channelid = VideoInstance.query.filter_by(id=form.video_instance.data).value('channel')
-        #if channelid:
-        #    save_channel_activity(userid, form.action.data, channelid, self.get_locale())
 
     @expose_ajax('/<userid>/notifications/', cache_age=60, cache_private=True)
     @check_authorization(self_auth=True)
@@ -941,11 +930,10 @@ class UserWS(WebService):
         channel.public = Channel.should_be_public(channel, form.public.data)
         channel.save()
 
-        ids = lambda: [v[0] for v in VideoInstance.query.filter_by(channel=channel.id).values('id')]
-        if channel_was_public and not channel.public:
-            es_update_channel_videos(deleted=ids())
-        elif not channel_was_public and channel.public:
-            es_update_channel_videos(extant=ids())
+        # Push all videos to search if channel became public:
+        if channel.public and not channel_was_public:
+            es_update_channel_videos(
+                v[0] for v in VideoInstance.query.filter_by(channel=channel.id).values('id'))
 
         resource_url = channel.get_resource_url(True)
         return (dict(id=channel.id, resource_url=resource_url),
@@ -962,10 +950,6 @@ class UserWS(WebService):
         channel.deleted = True
         channel.save()
 
-        # Delete all videos from es
-        ids = [v[0] for v in VideoInstance.query.filter_by(channel=channelid).values('id')]
-        es_update_channel_videos(deleted=ids)
-
     @expose_ajax('/<userid>/channels/<channelid>/public/', methods=('PUT',))
     @check_authorization(self_auth=True)
     def channel_public_toggle(self, userid, channelid):
@@ -976,7 +960,7 @@ class UserWS(WebService):
             abort(400, message=_('Channel not editable'))
         if not isinstance(request.json, bool):
             abort(400, message=_('Boolean value required'))
-        intended_public = channel.should_be_public(channel, request.json)
+        intended_public = Channel.should_be_public(channel, request.json)
         if channel.public != intended_public:
             channel.public = intended_public
             channel = channel.save()
@@ -1012,43 +996,15 @@ class UserWS(WebService):
     @expose_ajax('/<userid>/channels/<channelid>/videos/', methods=('PUT', 'POST'))
     @check_authorization(self_auth=True)
     def update_channel_videos(self, userid, channelid):
-        channel = Channel.query.filter_by(id=channelid, deleted=False).first_or_404()
+        channel = Channel.query.options(lazyload('owner_rel'), lazyload('category_rel')).\
+            filter_by(id=channelid, deleted=False).first_or_404()
         if not channel.owner == userid:
             abort(403)
         if request.json is None or not isinstance(request.json, list):
             abort(400, message=_('List can be empty, but must be present'))
-        existing_videos = len(channel.video_instances)
 
-        # Get difference from before video update and after
-        # so we that know what to send to es
-        existing_instance_ids = [v[0] for v in VideoInstance.query.filter_by(channel=channelid).values('id')]
-
-        add_videos_to_channel(channel, request.json, self.get_locale(), request.method == 'PUT')
-
-        extant_instance_ids = [v[0] for v in VideoInstance.query.filter_by(channel=channelid).values('id')]
-
-        intended_public = channel.should_be_public(channel, channel.public)
-        if not channel.video_instances and not intended_public:
-            channel.public = intended_public
-            channel.save()
-        elif not existing_videos and channel.should_be_public(channel, True):
-            channel.public = True
-            channel.save()
-
-        # Perform video update /after/ we determine
-        # whether the channel is public
-        if channel.public:
-            es_update_channel_videos(
-                extant_instance_ids,
-                set(existing_instance_ids).difference(extant_instance_ids)
-            )
-        else:
-            # Delete all videos out of es as it is
-            # pointless them being there
-            es_update_channel_videos(
-                [],
-                set(existing_instance_ids + extant_instance_ids)
-            )
+        add_videos_to_channel(channel, request.json, self.get_locale(),
+                              request.method == 'PUT')
 
     @expose_ajax('/<userid>/channels/<channelid>/videos/<videoid>/')
     def channel_video_instance(self, userid, channelid, videoid):
