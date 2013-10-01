@@ -184,7 +184,7 @@ class ESVideo(object):
                     final = construct_update_string(this, v) + final
                 return final
             else:
-                prefix += " = %s;" % json.dumps(val, cls=DateEncoder)
+                prefix += " = %s;" % json.dumps(val, ensure_ascii=False, cls=DateEncoder)
             return prefix
 
         return construct_update_string('ctx._source.%s' % field, value)
@@ -260,7 +260,7 @@ class ESChannel(object):
                     final = construct_update_string(this, v) + final
                 return final
             else:
-                prefix += " = %s;" % json.dumps(val, cls=DateEncoder)
+                prefix += " = %s;" % json.dumps(val, ensure_ascii=False, cls=DateEncoder)
             return prefix
 
         return construct_update_string('ctx._source.%s' % field, value)

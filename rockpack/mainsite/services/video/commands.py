@@ -174,7 +174,11 @@ def update_channel_promo_activity():
     promo_channels = Channel.query.filter_by(public=True, deleted=False).join(
         ChannelPromotion, ChannelPromotion.channel == Channel.id).distinct()
     for channel in promo_channels:
-        api.update_channel_to_index(channel)
+        es_channel = api.ESChannel.updater(bulk=True)
+        es_channel.set_document_id(channel.id)
+        es_channel.add_field(channel.id, channel.promotion_map())
+        es_channel.update()
+    es_channel.flush_bulk()
 
 
 @manager.cron_command(interval=900)

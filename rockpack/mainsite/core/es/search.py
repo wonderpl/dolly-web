@@ -245,6 +245,30 @@ class ChannelSearch(EntitySearch, CategoryMixin, MediaSortMixin):
         channel.setdefault('videos', {}).setdefault('items', videos.get(channel['id'], []))
         channel['videos']['total'] = total
 
+    def _fetch_and_attach_owners(self, channel_list, owner_list):
+        us = UserSearch()
+        us.add_id(list(owner_list))
+        us.set_paging(0, -1)
+        owner_map = {owner['id']: owner for owner in us.users()}
+        self.add_owner_to_channels(channel_list, owner_map)
+
+    def _fetch_and_attach_videos(self, channel_list, channel_id_list, video_paging):
+        # XXX: this assumes only 1 channel for now
+        # This WILL break if there is more than one channel to get videos for
+        # as a single video doesnt reference the channel it belongs to
+        vs = VideoSearch(self.locale)
+        vs.add_term('channel', channel_id_list)
+        vs.add_sort('position', 'asc')
+        vs.date_sort('desc')
+        vs.add_sort('video.date_published', 'desc')
+        if self._country:
+            vs.check_country_allowed(self._country)
+        vs.set_paging(offset=video_paging[0], limit=video_paging[1])
+        video_map = {}
+        for v in vs.videos():
+            video_map.setdefault(channel_id_list[0], []).append(v)  # HACK: see above
+        self.add_videos_to_channel(channel_list[0], video_map, vs.total)
+
     def _format_results(self, channels, with_owners=False, with_videos=False, video_paging=(0, 100, )):
         channel_list = range(self.paging[1])  # We don't know the channel size so default to paging
         channel_id_list = []
@@ -351,28 +375,15 @@ class ChannelSearch(EntitySearch, CategoryMixin, MediaSortMixin):
             channel_list = new_list
 
         if with_owners and owner_list:
-            us = UserSearch()
-            us.add_id(list(owner_list))
-            us.set_paging(0, -1)
-            owner_map = {owner['id']: owner for owner in us.users()}
-            self.add_owner_to_channels(channel_list, owner_map)
+            self._fetch_and_attach_owners(channel_list, owner_list)
 
-        # XXX: this assumes only 1 channel for now
-        # This WILL break if there is more than one channel to get videos for
-        # as a single video doesnt reference the channel it belongs to
         if with_videos and channel_id_list:
-            vs = VideoSearch(self.locale)
-            vs.add_term('channel', channel_id_list)
-            vs.add_sort('position', 'asc')
-            vs.date_sort('desc')
-            vs.add_sort('video.date_published', 'desc')
-            if self._country:
-                vs.check_country_allowed(self._country)
-            vs.set_paging(offset=video_paging[0], limit=video_paging[1])
-            video_map = {}
-            for v in vs.videos():
-                video_map.setdefault(channel_id_list[0], []).append(v)  # HACK: see above
-            self.add_videos_to_channel(channel_list[0], video_map, vs.total)
+            self._fetch_and_attach_videos(channel_list, channel_id_list, video_paging)
+
+        if getattr(self, '_real_paging', False):
+            # XXX: promotion hack - return the actual
+            # amount requested initially
+            channel_list = channel_list[self._real_paging[0]:self._real_paging[0] + self._real_paging[1]]
         return channel_list
 
     def promotion_settings(self, category):
@@ -415,6 +426,12 @@ class ChannelSearch(EntitySearch, CategoryMixin, MediaSortMixin):
     def channels(self, with_owners=False, with_videos=False, video_paging=(0, 100,)):
         """ Fetches the results of the query for channels """
         if not self._channel_results:
+            # XXX: hack for promotions - we need at least 8
+            # positions and then return the correct amount
+            # asked for.
+            if self.paging[1] < 8:
+                self._real_paging = self.paging
+                self.paging = 0, 8
             r = self.results()
             self._channel_results = self._format_results(r, with_owners=with_owners, with_videos=with_videos, video_paging=video_paging)
         return self._channel_results
