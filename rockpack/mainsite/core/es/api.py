@@ -60,7 +60,7 @@ class ESObjectIndexer(object):
                 bulk=self.bulk
             )
         except Exception, e:
-            app.logger.warning(
+            app.logger.exception(
                 "Failed to insert record to index '%s' with id '%s' with: %s",
                 self.indexes[self.indexing_type]['index'],
                 document_id,
@@ -480,7 +480,7 @@ def add_to_index(data, index, _type, id, bulk=False, refresh=False):
     try:
         return es_connection.index(data, index, _type, id=id, bulk=bulk)
     except Exception as e:
-        app.logger.warning("Failed to insert record to index '%s' with id '%s' with: %s", index, id, str(e))
+        app.logger.exception("Failed to insert record to index '%s' with id '%s' with: %s", index, id, str(e))
     else:
         if refresh or app.config.get('FORCE_INDEX_INSERT_REFRESH', False):
             es_connection.indices.refresh(index)
