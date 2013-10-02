@@ -109,18 +109,18 @@ class ExternalFriend(db.Model):
     def populate_facebook_friends(cls, userid, with_devices=True):
         """Update ExternalFriend mapping for facebook friends of the specified user"""
         # Don't update if existing data is less than an hour old or if no token available
-        try:
-            delta = ExternalFriend.query.filter_by(user=userid).value(
-                func.now() - func.max(ExternalFriend.date_updated))
-        except ValueError:
-            # Can happen on sqlite where date arithmetic isn't supported
-            delta = None
+        delta = ExternalFriend.query.filter_by(user=userid).value(
+            func.now() - func.max(ExternalFriend.date_updated))
         if delta and (delta.days * 86400) + delta.seconds < 3600:
             return
         token = ExternalToken.query.filter_by(
             user=userid, external_system='facebook').first()
         if not token:
             return
+
+        last_shared_date = dict(
+            cls.query.filter_by(user=userid, external_system='facebook').
+            filter(cls.last_shared_date != None).values('external_uid', 'last_shared_date'))
 
         graph = facebook.GraphAPI(token.external_token)
         # XXX: Paging not handled. If a user has more than 1000 friends, tough!
@@ -134,6 +134,7 @@ class ExternalFriend(db.Model):
                 name=friend['name'],
                 avatar_url=facebook.FACEBOOK_PICTURE_URL % friend['id'],
                 has_ios_device=False,
+                last_shared_date=last_shared_date.get(friend['id']),
             )
         if not external_friends:
             return
