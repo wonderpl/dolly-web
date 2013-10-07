@@ -89,7 +89,7 @@ class UserData(DataSet):
     class test_user_a:
         id = 'xtpqTpGMTti2OAyohMRPLQ'
         username = 'test_user_1'
-        password_hash = ''
+        password_hash = 'sha1$WaxVi6jh$ed528a3a932fa1293b30dee6fcd2b518c78663e3'
         email = 'test@user.com'
         first_name = 'test'
         last_name = 'user'

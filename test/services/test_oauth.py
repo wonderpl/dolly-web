@@ -120,17 +120,16 @@ class HeadersTestCase(base.RockPackTestCase):
 
 class LoginTestCase(base.RockPackTestCase):
 
-    @patch('rockpack.mainsite.services.user.models.User.get_from_credentials', return_value=User(id='NdVAG1uTS32cTDxlNOskQg'))
     @patch('rockpack.mainsite.services.user.models.User.get_resource_url')
-    def test_succesful_login(self, get_resource_url, user_authenticated):
+    def test_succesful_login(self, get_resource_url):
         with self.app.test_client() as client:
             r = client.post(
                 '/ws/login/',
                 headers=[get_client_auth_header()],
                 data=dict(
                     grant_type='password',
-                    username='foo',
-                    password='bar'
+                    username='test_user_1',
+                    password='rockpack'
                 )
             )
             self.assertEquals(200, r.status_code)
@@ -140,7 +139,7 @@ class LoginTestCase(base.RockPackTestCase):
 class ExternalTokenTestCase(base.RockPackTestCase):
 
     def _new_user(self):
-        u = User(
+        return User(
             username=uuid.uuid4().hex,
             password_hash='',
             first_name='first',
@@ -151,8 +150,7 @@ class ExternalTokenTestCase(base.RockPackTestCase):
             locale='en-us',
             refresh_token='',
             is_active=True
-        )
-        return u.save()
+        ).add()
 
     @patch('rockpack.mainsite.services.oauth.api.ExternalUser.get_new_token')
     @patch('rockpack.mainsite.services.oauth.api.ExternalUser._get_external_data')
@@ -167,7 +165,8 @@ class ExternalTokenTestCase(base.RockPackTestCase):
         token = uuid.uuid4().hex
         eu = ExternalUser('facebook', token, 3600)
         eu._user_data = FACEBOOK_GRAPH_DATA.copy()
-        ExternalToken.update_token(user.id, eu)
+        ExternalToken.update_token(user, eu)
+        self.session.commit()
 
         e = ExternalToken.query.filter_by(external_token=long_lived_fb_token).one()
         self.assertEquals('facebook', e.external_system)
@@ -177,7 +176,8 @@ class ExternalTokenTestCase(base.RockPackTestCase):
         new_token = uuid.uuid4().hex
         eu = ExternalUser('facebook', new_token, 172800)
         eu._user_data = FACEBOOK_GRAPH_DATA.copy()
-        ExternalToken.update_token(user.id, eu)
+        ExternalToken.update_token(user, eu)
+        self.session.commit()
 
         e = ExternalToken.query.filter_by(user=user.id)
         self.assertEquals(1, e.count(), 'only one token should exist')
@@ -193,7 +193,8 @@ class ExternalTokenTestCase(base.RockPackTestCase):
         expires = datetime(2020, 1, 1, 0, 0, 0)
         eu = ExternalUser('facebook', 'xxx123', expires, 'read,write', {'meta':'data'})
         user = self._new_user()
-        ExternalToken.update_token(user.id, eu)
+        ExternalToken.update_token(user, eu)
+        self.session.commit()
         e = ExternalToken.query.filter_by(user=user.id).one()
         self.assertEquals(e.expires, expires)
         self.assertEquals(e.permissions, 'read,write')

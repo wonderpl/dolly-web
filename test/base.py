@@ -18,7 +18,7 @@ class RockPackTestCase(unittest.TestCase):
 
     def create_test_user(self, **kwargs):
         postfix = uuid.uuid4().hex
-        user = dict(
+        userdata = dict(
             username='test_' + postfix,
             password='password',
             first_name='Alexia',
@@ -30,8 +30,10 @@ class RockPackTestCase(unittest.TestCase):
             is_active=True,
             locale='en-us',
         )
-        user.update(kwargs)
-        return User.create_with_channel(**user)
+        userdata.update(kwargs)
+        user = User.create_with_channel(**userdata)
+        self.session.commit()
+        return user
 
     def wait_for_es(self):
         if self.app.config.get('ELASTICSEARCH_URL'):

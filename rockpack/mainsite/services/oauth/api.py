@@ -1,6 +1,7 @@
 from werkzeug.datastructures import MultiDict
 from datetime import datetime, timedelta
 from cStringIO import StringIO
+from sqlalchemy.exc import IntegrityError
 from flask import request, abort, g, json
 from flask.ext import wtf
 from rockpack.mainsite import app, requests
@@ -8,6 +9,7 @@ from rockpack.mainsite.helpers import lazy_gettext as _
 from rockpack.mainsite.helpers.forms import naughty_word_validator
 from rockpack.mainsite.helpers.db import get_column_property, get_column_validators
 from rockpack.mainsite.helpers.urls import url_for
+from rockpack.mainsite.core.dbapi import commit_on_success
 from rockpack.mainsite.core.token import create_access_token
 from rockpack.mainsite.core.email import send_email, env as email_env
 from rockpack.mainsite.core.oauth.decorators import check_client_authorization
@@ -17,22 +19,27 @@ from rockpack.mainsite.services.video.models import Locale
 from . import facebook, models
 
 
-def record_user_event(username, type, value='', userid=None):
+def record_user_event(username, type, value='', user=None, commit=False):
     trunc = lambda f, v: v[:get_column_property(UserAccountEvent, f, 'length')]
     try:
         clientid = g.app_client_id or g.authorized.clientid
-        userid = g.authorized.userid
     except AttributeError:
         clientid = ''
-    UserAccountEvent(
-        user=userid,
+    event = UserAccountEvent(
         username=trunc('username', username or '-'),
         event_type=type,
         event_value=value,
         ip_address=request.remote_addr or '',
         user_agent=trunc('user_agent', request.user_agent.string),
         clientid=clientid,
-    ).save()
+    )
+    if user:
+        event.user_rel = user
+    if commit:
+        event.save()
+    else:
+        event.add()
+    return event
 
 
 if app.config.get('TEST_EXTERNAL_SYSTEM'):
@@ -44,50 +51,47 @@ if app.config.get('TEST_EXTERNAL_SYSTEM'):
                                client_auth_headers=[get_client_auth_header()])
 
 
-class LoginWS(WebService):
+@commit_on_success
+def _register_user(form):
+    user = User.create_with_channel(
+        username=form.username.data,
+        first_name=form.first_name.data,
+        last_name=form.last_name.data,
+        date_of_birth=form.date_of_birth.data,
+        email=form.email.data,
+        password=form.password.data,
+        gender=form.gender.data or None,
+        locale=form.locale.data)
+    record_user_event(user.username, 'registration succeeded', user=user)
+    return user
 
-    endpoint = '/login'
 
-    @expose_ajax('/', methods=['POST'])
-    @check_client_authorization
-    def login(self):
-        if not request.form['grant_type'] == 'password':
-            abort(400, error='unsupported_grant_type')
-        user = User.get_from_credentials(request.form['username'], request.form['password'])
-        if not user:
-            record_user_event(request.form['username'], 'login failed')
-            abort(400, error='invalid_grant')
-        record_user_event(request.form['username'], 'login succeeded', userid=user.id)
-        return user.get_credentials()
+@commit_on_success
+def _login(username, password):
+    user = User.get_from_credentials(username, password)
+    if not user:
+        record_user_event(username, 'login failed', commit=True)
+        abort(400, error='invalid_grant')
+    record_user_event(username, 'login succeeded', user=user)
+    return user
 
-    @expose_ajax('/external/', methods=['POST'])
-    @check_client_authorization
-    def external(self):
-        form = ExternalRegistrationForm(csrf_enabled=False)
-        if not form.validate():
-            abort(400, form_errors=form.errors)
 
-        result = {}
+@commit_on_success
+def _external_login(external_user, locale):
+    user = models.ExternalToken.user_from_uid(external_user.system, external_user.id)
+    if user:
+        record_user_event(user.username, 'login succeeded', user=user)
+        registered = False
+    else:
+        # New user
+        user = User.create_from_external_system(external_user, locale)
+        record_user_event(user.username, 'registration succeeded', user=user)
+        registered = True
 
-        eu = ExternalUser(**form.data)
-        if not eu.token_is_valid:
-            abort(400, error='unauthorized_client')
+    # Update the token record if needed
+    models.ExternalToken.update_token(user, external_user)
 
-        user = models.ExternalToken.user_from_uid(eu.system, eu.id)
-
-        if user:
-            record_user_event(user.username, 'login succeeded', userid=user.id)
-        else:
-            # New user
-            user = User.create_from_external_system(eu, self.get_locale())
-            record_user_event(user.username, 'registration succeeded', userid=user.id)
-            result['registered'] = True
-
-        # Update the token record if needed
-        models.ExternalToken.update_token(user.id, eu)
-
-        result.update(user.get_credentials())
-        return result
+    return user, registered
 
 
 def username_validator():
@@ -140,6 +144,25 @@ def date_of_birth_validator():
             elif delta < 13:
                 raise wtf.ValidationError(_("Rockpack is not available for under 13's yet."))
     return _valid
+
+
+def send_password_reset(user):
+    if not user.email:
+        app.logger.warning("Can't reset password for %s: no email address", user.id)
+        return
+    token = create_access_token(user.id, '', 86400)
+    url = url_for('reset_password') + '?token=' + token
+    template = email_env.get_template('reset.html')
+    subject = 'Rockpack password reset'
+    body = template.render(
+        reset_link=url,
+        subject=subject,
+        username=user.username,
+        email=user.email,
+        email_sender=app.config['DEFAULT_EMAIL_SOURCE'],
+        assets=app.config.get('ASSETS_URL', '')
+    )
+    send_email(user.email, subject, body, format='html')
 
 
 class RockRegistrationForm(wtf.Form):
@@ -368,6 +391,48 @@ def ExternalTokenManager(external_system, external_token, **kwargs):
             return cls(external_system, external_token, **kwargs)
 
 
+class LoginWS(WebService):
+
+    endpoint = '/login'
+
+    @expose_ajax('/', methods=['POST'])
+    @check_client_authorization
+    def login(self):
+        if not request.form['grant_type'] == 'password':
+            abort(400, error='unsupported_grant_type')
+        user = _login(request.form['username'], request.form['password'])
+        return user.get_credentials()
+
+    @expose_ajax('/external/', methods=['POST'])
+    @check_client_authorization
+    def external(self):
+        form = ExternalRegistrationForm(csrf_enabled=False)
+        if not form.validate():
+            abort(400, form_errors=form.errors)
+
+        external_user = ExternalUser(**form.data)
+        if not external_user.token_is_valid:
+            abort(400, error='unauthorized_client')
+
+        # Since the call to Facebook to validate the token can take a while, it's 
+        # possible that another login request could come in here, in which case we
+        # retry once - the first should return a registered=True and second a False.
+        for retry in 1, 0:
+            try:
+                user, registered = _external_login(external_user, self.get_locale())
+            except (models.TokenExistsException, IntegrityError):
+                if retry:
+                    continue
+                else:
+                    app.logger.exception('Unable to register user: %s/%s',
+                                         external_user.system, external_user.id)
+                    abort(400, error='unauthorized_client')
+            else:
+                break
+
+        return dict(registered=registered, **user.get_credentials())
+
+
 class RegistrationWS(WebService):
     endpoint = '/register'
 
@@ -377,18 +442,9 @@ class RegistrationWS(WebService):
         form = RockRegistrationForm(csrf_enabled=False)
         if not form.validate():
             record_user_event(form.username.data, 'registration failed',
-                              ','.join(form.errors.keys()))
+                              ','.join(form.errors.keys()), commit=True)
             abort(400, form_errors=form.errors)
-        user = User.create_with_channel(
-            username=form.username.data,
-            first_name=form.first_name.data,
-            last_name=form.last_name.data,
-            date_of_birth=form.date_of_birth.data,
-            email=form.email.data,
-            password=form.password.data,
-            gender=form.gender.data or None,
-            locale=form.locale.data)
-        record_user_event(user.username, 'registration succeeded', userid=user.id)
+        user = _register_user(form)
         return user.get_credentials()
 
     @expose_ajax('/availability/', methods=['POST'])
@@ -420,29 +476,10 @@ class TokenWS(WebService):
             abort(400, error='unsupported_grant_type')
         user = User.query.filter_by(refresh_token=refresh_token).first()
         if not user:
-            record_user_event('', 'refresh token failed')
+            record_user_event('', 'refresh token failed', commit=True)
             abort(400, error='invalid_grant')
-        record_user_event(user.username, 'refresh token succeeded', userid=user.id)
+        record_user_event(user.username, 'refresh token succeeded', user=user, commit=True)
         return user.get_credentials()
-
-
-def send_password_reset(user):
-    if not user.email:
-        app.logger.warning("Can't reset password for %s: no email address", user.id)
-        return
-    token = create_access_token(user.id, '', 86400)
-    url = url_for('reset_password') + '?token=' + token
-    template = email_env.get_template('reset.html')
-    subject = 'Rockpack password reset'
-    body = template.render(
-        reset_link=url,
-        subject=subject,
-        username=user.username,
-        email=user.email,
-        email_sender=app.config['DEFAULT_EMAIL_SOURCE'],
-        assets=app.config.get('ASSETS_URL', '')
-    )
-    send_email(user.email, subject, body, format='html')
 
 
 class ResetWS(WebService):
@@ -455,6 +492,6 @@ class ResetWS(WebService):
         user = User.get_from_credentials(request.form['username'], None)
         if not user:
             abort(400)
-        record_user_event(user.username, 'password reset requested', userid=user.id)
+        record_user_event(user.username, 'password reset requested', user=user, commit=True)
         # TODO: move to offline process
         send_password_reset(user)

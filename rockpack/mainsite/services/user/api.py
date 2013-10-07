@@ -302,6 +302,13 @@ def _apns_mark_unread(userid):
 
 
 @commit_on_success
+def _update_token(external_user, user):
+    token = ExternalToken.update_token(user, external_user)
+    record_user_event(str(user.id), '%s token updated' % external_user.system, user=user)
+    return token
+
+
+@commit_on_success
 def _mark_read_notifications(userid, id_list):
     unread = UserNotification.query.filter_by(user=userid, date_read=None)
     unread_count = unread.count()
@@ -821,6 +828,7 @@ class UserWS(WebService):
             abort(400, message=form.password.errors)
 
         user.change_password(user, new_p)
+        user.save()
         return user.get_credentials()
 
     @expose_ajax('/<userid>/<any("username", "first_name", "last_name", "email", "locale", "date_of_birth", "gender"):attribute_name>/', methods=('PUT',))
@@ -1216,12 +1224,11 @@ class UserWS(WebService):
         if not form.validate():
             abort(400, form_errors=form.errors)
 
-        eu = ExternalTokenManager(**form.data)
-        if not eu.token_is_valid:
+        external_user = ExternalTokenManager(**form.data)
+        if not external_user.token_is_valid:
             abort(400, error='unauthorized_client')
 
-        token = ExternalToken.update_token(userid, eu)
-        record_user_event(str(userid), '%s token updated' % eu.system, userid=userid)
+        token = _update_token(external_user, g.authorized.user)
         return None if hasattr(token, '_existing') else ajax_create_response(token)
 
     @expose_ajax('/<userid>/friends/', cache_age=600, cache_private=True)

@@ -11,6 +11,10 @@ from rockpack.mainsite.services.user.models import User, EXTERNAL_SYSTEM_NAMES
 from . import exceptions, facebook
 
 
+class TokenExistsException(Exception):
+    pass
+
+
 class ExternalToken(db.Model):
 
     __tablename__ = "external_token"
@@ -48,7 +52,7 @@ class ExternalToken(db.Model):
         return e.user_rel
 
     @classmethod
-    def update_token(cls, userid, eu):
+    def update_token(cls, user, eu):
         """Updates an existing token (or creates a new one) and returns the token object"""
         if eu.system not in EXTERNAL_SYSTEM_NAMES:
             raise exceptions.InvalidExternalSystem('{} is not a valid name'.format(eu.system))
@@ -57,14 +61,17 @@ class ExternalToken(db.Model):
             token = cls.query.filter_by(external_uid=eu.id, external_system=eu.system).one()
             token._existing = True
         except exc.NoResultFound:
-            if ExternalToken.query.filter_by(user=userid, external_system=eu.system).count():
+            if user.id and ExternalToken.query.filter_by(user=user.id, external_system=eu.system).count():
                 abort(400, message=_('User already associated with account'))
-            token = cls(user=userid,
-                        external_system=eu.system,
-                        external_uid=eu.id)
+            token = cls(external_system=eu.system, external_uid=eu.id).add()
+            token.user_rel = user
         else:
-            if token.user != userid:
-                app.logger.error('Token owner %s does not match update user: %s', token.user, userid)
+            if not user.id:
+                # This can happen if two registration requests with the same external token
+                # come in at the same time and the first has been committed when we get here.
+                raise TokenExistsException()
+            if token.user != user.id:
+                app.logger.error('Token owner %s does not match update user: %s', token.user, user.id)
                 abort(400, message=_('External account mismatch'))
 
         token.external_token = eu.token
@@ -80,7 +87,7 @@ class ExternalToken(db.Model):
             token.external_token = new_eu.token
             token.expires = new_eu.expires
 
-        return token.save()
+        return token
 
     def get_resource_url(self, own=True):
         return url_for('userws.get_external_account', userid=self.user, id=self.id)

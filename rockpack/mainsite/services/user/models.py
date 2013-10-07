@@ -113,7 +113,6 @@ class User(db.Model):
     def change_password(cls, user, new_pwd):
         user.set_password(new_pwd)
         user.reset_refresh_token()
-        user = user.save()
 
     @classmethod
     def suggested_username(cls, source_name):
@@ -150,29 +149,25 @@ class User(db.Model):
         if password:
             user.set_password(password)
         user.reset_refresh_token()
-        user = user.save()
+        user.add()
 
         # Prevent circular import
         from rockpack.mainsite.services.video.models import Channel
         title, description, cover = app.config['FAVOURITE_CHANNEL']
-        channel = Channel(
-            favourite=True,
-            title=title,
-            description=description,
-            cover=cover,
-            owner=user.id,
-            public=True,
-        )
-        channel.save()
+        user.channels = [
+            Channel(
+                favourite=True,
+                title=title,
+                description=description,
+                cover=cover,
+                public=True,
+            )
+        ]
 
         return user
 
     @classmethod
     def create_from_external_system(cls, eu, locale):
-        from rockpack.mainsite.services.oauth.models import ExternalToken
-        if ExternalToken.query.filter_by(external_system=eu.system, external_uid=eu.id).count():
-            return None
-
         avatar = eu.avatar
         if avatar:
             avatar = resize_and_upload(avatar, 'AVATAR')
@@ -266,6 +261,8 @@ class UserAccountEvent(db.Model):
     user_agent = Column(String(1024), nullable=False)
     clientid = Column(CHAR(22), nullable=False)
 
+    user_rel = relationship('User')
+
 
 class UserInterest(db.Model):
     __tablename__ = 'user_interest'
@@ -352,12 +349,13 @@ class BroadcastMessage(db.Model):
 
 def username_exists(username):
     username_filter = lambda m: func.lower(m.username) == username.lower()
-    if User.query.filter(username_filter(User)).count():
+    if User.query.filter(username_filter(User)).value(func.count()):
         return 'exists'
-    if ReservedUsername.query.filter(username_filter(ReservedUsername)).count():
+    if ReservedUsername.query.filter(username_filter(ReservedUsername)).value(func.count()):
         return 'reserved'
 
 
+# XXX: Called during registration - needs to move offline
 def _es_user_insert(mapper, connection, target):
     add_user_to_index(target)
 

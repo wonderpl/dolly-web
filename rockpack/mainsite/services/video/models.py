@@ -544,6 +544,7 @@ def _es_channel_update_from_clm(mapper, connection, target):
     _update_or_remove_channel(target.channel_rel)
 
 
+# XXX: This is called on registration to add user's favourites - needs to move offline
 @event.listens_for(Channel, 'after_insert')
 def _es_channel_insert_from_channel(mapper, connection, target):
     if _channel_is_public(target):
