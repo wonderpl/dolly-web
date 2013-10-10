@@ -526,7 +526,6 @@ def on_models_committed(sender, changes):
             else:
                 updated_videos.append(obj.id)
     if updated_videos or deleted_videos:
-        print 'es_update_channel_videos', updated_videos, deleted_videos
         es_update_channel_videos(updated_videos, deleted_videos)
 
 

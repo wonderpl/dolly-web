@@ -31,6 +31,8 @@ def process_sqs_message():
         app.logger.exception('Failed to update channel videos: %s with %s', updates, str(e))
         # message will re-appear on the queue after visibility timeout
         return
+    else:
+        app.logger.debug('Ran es_update_channel_videos: %r', updates)
 
     message.delete()
 

@@ -353,7 +353,6 @@ class ChannelSearch(EntitySearch, CategoryMixin, MediaSortMixin):
                         ch['position'] = pos - self.paging[0]
                         channel_list[ch['position']] = ch
                         if add_tracking:
-                            print channel.promotion, self.promoted_category
                             add_tracking(ch, 'promoted-%d' % pos)
 
                 if promoted_for_category:
