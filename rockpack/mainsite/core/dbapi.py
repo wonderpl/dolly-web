@@ -135,11 +135,11 @@ def commit_on_success(f):
     def wrapper(*args, **kwargs):
         try:
             result = f(*args, **kwargs)
+            db.session.commit()
         except Exception:
             db.session.rollback()
             raise
         else:
-            db.session.commit()
             return result
     return wrapper
 
