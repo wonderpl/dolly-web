@@ -16,7 +16,7 @@ if es_url:
 
 
 def use_elasticsearch():
-    return es_url and request.args.get('_es') != 'false'
+    return es_url and not (request and request.args.get('_es') == 'false')
 
 
 def get_es_connection():
