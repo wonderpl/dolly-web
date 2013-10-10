@@ -401,7 +401,7 @@ class Channel(db.Model):
         category = []
         if self.category:
             if not self.category_rel:
-                category = Category.query.filter_by(id=self.category).values('id', 'parent').next()
+                category = list(Category.query.filter_by(id=self.category).values('id', 'parent').next())
             else:
                 category = [self.category_rel.id, self.category_rel.parent]
         return category
