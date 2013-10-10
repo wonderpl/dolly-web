@@ -1,4 +1,3 @@
-from flask import json
 from boto.sqs import connect_to_region
 from boto.sqs.jsonmessage import JSONMessage
 from rockpack.mainsite import app, init_app
@@ -25,7 +24,7 @@ def process_sqs_message():
         return
 
     # Parse message
-    updates = json.loads(message.get_body())
+    updates = message.get_body()
     try:
         es_update_channel_videos(updates['extant'], updates['deleted'], async=False)
     except Exception, e:
