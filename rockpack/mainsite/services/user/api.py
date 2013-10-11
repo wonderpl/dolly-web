@@ -141,12 +141,15 @@ def save_video_activity(userid, action, instance_id, locale):
         updated = Video.query.filter_by(id=video_id).update(incr(Video))
         assert updated
         if not instance_id.startswith(search_api.VIDEO_INSTANCE_PREFIX):
-            VideoInstance.query.filter_by(id=instance_id).update(incr(VideoInstance))
-            meta = VideoInstanceLocaleMeta.query.filter_by(video_instance=instance_id, locale=locale)
-            updated = meta.update(incr(VideoInstanceLocaleMeta))
-            if not updated:
-                meta = VideoInstance.query.get(instance_id).add_meta(locale)
-                setattr(meta, column, 1)
+            updated = VideoInstance.query.filter_by(id=instance_id).update(incr(VideoInstance))
+            if updated:
+                # It's possible that this instance could have been remove by a concurrent
+                # request, in which case don't bother trying to update/create the meta record.
+                meta = VideoInstanceLocaleMeta.query.filter_by(video_instance=instance_id, locale=locale)
+                updated = meta.update(incr(VideoInstanceLocaleMeta))
+                if not updated:
+                    meta = VideoInstance.query.get(instance_id).add_meta(locale)
+                    setattr(meta, column, 1)
 
     activity.update(tracking_code=request.args.get('tracking_code'))
     UserActivity(**activity).add()
