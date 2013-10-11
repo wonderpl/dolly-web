@@ -1,5 +1,9 @@
+import re
+import pyes
+from functools import wraps
 from flask import request, json, abort, Response
 from urllib2 import HTTPError
+from werkzeug.datastructures import ImmutableMultiDict
 from requests.exceptions import RequestException
 from rockpack.mainsite import app
 from rockpack.mainsite.core.webservice import WebService, expose_ajax
@@ -13,6 +17,35 @@ from rockpack.mainsite.core.es import use_elasticsearch, filters
 
 VIDEO_INSTANCE_PREFIX = 'Svi0xYzZY'
 
+sub_string = lambda x: re.sub(r'([\+\-\&\|\!\(\)\{\}\[\]\^\"\~\*\?\:\\])', r'\\\1', x)
+
+
+def escape_and_retry(func):
+    """ Modifies request.args.get('q') and retries func
+        if pyes.exceptions.ElasticSearchException is thrown
+
+        WARNING: yes, this does indeed modify request.args
+        in order to escape any special characters in the query phrase
+        so handle with care --- may cause paralysis or death """
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        for retry in 0, 1:
+            try:
+                return func(*args, **kwargs)
+            except pyes.exceptions.ElasticSearchException:
+                if retry:
+                    raise
+
+                # request.args is immutable so ...
+                d = dict(request.args)
+
+                # sanitise the query
+                d['q'] = sub_string(request.args.get('q', ''))
+
+                # put everything back how it (mostly) was
+                request.args = ImmutableMultiDict(d)
+    return wrapper
+
 
 class SearchWS(WebService):
 
@@ -22,6 +55,7 @@ class SearchWS(WebService):
     max_page_size = 50
 
     @expose_ajax('/videos/', cache_age=3600)
+    @escape_and_retry
     def search_videos(self):
         """Search youtube videos."""
         order = 'published' if request.args.get('order') == 'latest' else None
@@ -77,6 +111,7 @@ class SearchWS(WebService):
         return {'videos': {'items': items, 'total': total}}
 
     @expose_ajax('/channels/', cache_age=900)
+    @escape_and_retry
     def search_channels(self):
         if use_elasticsearch():
             ch = ChannelSearch(self.get_locale())
@@ -98,6 +133,7 @@ class SearchWS(WebService):
         return dict(channels=dict(items=items, total=total))
 
     @expose_ajax('/users/', cache_age=300)
+    @escape_and_retry
     def search_users(self):
         search_term = request.args.get('q', '').lower()
         offset, limit = self.get_page()
