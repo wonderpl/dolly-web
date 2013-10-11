@@ -2,6 +2,7 @@ from itertools import groupby
 from functools import partial
 from werkzeug.datastructures import MultiDict
 from sqlalchemy import desc, func, text
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import lazyload, contains_eager
 from sqlalchemy.orm.exc import NoResultFound
 from flask import abort, request, json, g
@@ -1238,7 +1239,11 @@ class UserWS(WebService):
             friends = ExternalFriend.query.filter_by(user=userid).filter(
                 ExternalFriend.last_shared_date.isnot(None))
         else:
-            ExternalFriend.populate_facebook_friends(userid)
+            try:
+                ExternalFriend.populate_facebook_friends(userid)
+            except IntegrityError:
+                # Concurrent call to populate_facebook_friends
+                pass
             friends = ExternalFriend.query.filter_by(user=userid)
         friends = friends.all()
         rockpack_friends = dict(
