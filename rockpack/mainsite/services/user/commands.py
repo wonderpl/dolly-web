@@ -403,7 +403,7 @@ def job_control(f):
         job_name = f.__name__
         job_control = JobControl.query.get(job_name)
         if not job_control:
-            job_control = JobControl(job=job_name, last_run=now)
+            job_control = JobControl(job=job_name, last_run=now).add()
         app.logger.info('%s: from %s to %s', job_name, job_control.last_run, now)
 
         f(job_control.last_run, now)
@@ -411,7 +411,6 @@ def job_control(f):
         # XXX: If the cron function throws an exception then last_run is not saved
         # and the job will be retried next time, including the same interval.
         job_control.last_run = now
-        job_control.save()
     return wrapper
 
 
@@ -620,6 +619,29 @@ def reset_expiring_tokens(date_from, date_to):
         user.reset_refresh_token()
         count += 1
     app.logger.info('Reset refresh token for %d users', count)
+
+
+@manager.command
+@commit_on_success
+def fix_invalid_facebook_tokens():
+    updated_count = reset_count = 0
+    tokens = ExternalToken.query.filter_by(
+        external_system='facebook', expires='4001-01-01 00:00:00')
+    for token in tokens.limit(100):
+        data = facebook.validate_token(
+            token.external_token,
+            app.config['FACEBOOK_APP_ID'],
+            app.config['FACEBOOK_APP_SECRET'])
+        if data and data['is_valid']:
+            assert token.external_uid == str(data['user_id']), repr((token.external_uid, data['user_id']))
+            token.expires = datetime.fromtimestamp(data['expires_at'])
+            token.permissions = ','.join(data['scopes'])
+            updated_count += 1
+        else:
+            token.user_rel.reset_refresh_token()
+            reset_count += 1
+    app.logger.info('Updated token for %d users', updated_count)
+    app.logger.info('Reset refresh token for %d users', reset_count)
 
 
 @manager.command
