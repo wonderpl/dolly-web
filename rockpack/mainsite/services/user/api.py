@@ -1018,7 +1018,7 @@ class UserWS(WebService):
         # Push all videos to search if channel became public:
         if channel.public and not channel_was_public:
             es_update_channel_videos(
-                v[0] for v in VideoInstance.query.filter_by(channel=channel.id).values('id'))
+                [v[0] for v in VideoInstance.query.filter_by(channel=channel.id).values('id')])
 
         resource_url = channel.get_resource_url(True)
         return (dict(id=channel.id, resource_url=resource_url),
