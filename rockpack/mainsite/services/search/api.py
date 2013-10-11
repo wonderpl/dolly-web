@@ -17,6 +17,7 @@ from rockpack.mainsite.core.es import use_elasticsearch, filters
 
 VIDEO_INSTANCE_PREFIX = 'Svi0xYzZY'
 
+# lucene special characters
 sub_string = lambda x: re.sub(r'([\+\-\&\|\!\(\)\{\}\[\]\^\"\~\*\?\:\\])', r'\\\1', x)
 
 
