@@ -41,7 +41,7 @@ def escape_and_retry(func):
                 d = dict(request.args)
 
                 # sanitise the query
-                d['q'] = sub_string(request.args.get('q', ''))
+                d['q'] = sub_string(request.args.get('q', '')).lower()
 
                 # put everything back how it (mostly) was
                 request.args = ImmutableMultiDict(d)
