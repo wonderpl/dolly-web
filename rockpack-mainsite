@@ -9,10 +9,10 @@
 
 . /etc/rc.d/init.d/functions
 
-NAME=rockpack-mainsite
+NAME="`basename $0`"
 USER=rockpack-mainsite
 BIN=/usr/sbin/uwsgi
-CFG=/etc/rockpack/mainsite/uwsgi.ini
+CFG=/etc/rockpack/mainsite/uwsgi.ini:rockpack
 LOG=/var/log/$NAME.log
 PID=/var/run/$NAME.pid
 LOCK=/var/lock/subsys/$NAME

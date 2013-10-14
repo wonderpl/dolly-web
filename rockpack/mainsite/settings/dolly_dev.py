@@ -6,7 +6,7 @@ execfile(os.environ['ROCKPACK_SETTINGS'])
 SECRET_KEY = _decrypt('&\xa9C\xe3<j\x0f\xe3\xe6\x8e\t\x04\x81\x1d[b\x87\xcf2\xe4U\x90\x00d\x004\x9d2\xfa\xff\x19\xfc\x9cH\x98PX7\xbfh\xec\x08{LTr|\xae\x92u\x04+\x9a\xe5\x8e\x17\xear\x9c\x02\x1c\x97\xe3\x8c')
 
 DB_PASSWORD = _decrypt('}\xaa\x87\xca\xd1Xx\x99\r\x1c')
-DATABASE_URL = 'postgresql://mainsite:%s@db1/rockpack' % DB_PASSWORD
+DATABASE_URL = 'postgresql://mainsite:%s@db1/dolly' % DB_PASSWORD
 #SLAVE_DATABASE_URL = None
 
 GOOGLE_CONSUMER_KEY = '981375550038-dbckr7s2hb5rsaohj9j4fhl0cbu4col7.apps.googleusercontent.com'
@@ -30,3 +30,19 @@ STATSD_HOST = 'admin'
 ENABLE_TIMINGS = True
 
 #USE_GEVENT = True
+
+
+SERVER_NAME = 'dev.rockpack.com'
+SECURE_SUBDOMAIN = 'secure'
+ADMIN_SUBDOMAIN = 'dolly'
+DEFAULT_SUBDOMAIN = 'lb'
+API_SUBDOMAIN = 'api'
+SHARE_SUBDOMAIN = 'share'
+
+AUTH_HEADER_SANITY_CHECK = True
+
+ROCKPACK_APP_PROTOCOL = 'dolly://'
+
+SQS_CRON_QUEUE = 'dolly-mainsite-cron'
+SQS_EMAIL_QUEUE = 'dolly-mainsite-email'
+SQS_VIDEO_UPDATE_QUEUE = 'dolly-mainsite-es'
