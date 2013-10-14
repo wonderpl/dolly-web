@@ -205,7 +205,9 @@ class ESVideo(ESObject):
             position=mapped.position,
             locales=mapped.locales,
             recent_user_stars=mapped.recent_user_stars(),
-            country_restriction=mapped.country_restriction()
+            country_restriction=mapped.country_restriction(),
+            child_instance_count=mapped.child_instance_count,
+            owner=mapped.owner
         )
 
     @classmethod
@@ -345,6 +347,21 @@ class ESVideoAttributeMap:
     @property
     def locales(self):
         return locale_dict_from_object(self.video_instance.metas)
+
+    @property
+    def child_instance_count(self):
+        """ Initialising value only
+
+        Should be computed offline hence forth """
+        return 0
+
+    @property
+    def owner(self):
+        owner = self.video_instance.channel_rel.owner_rel
+        return dict(
+            avatar=urlparse(convert_image_path(owner, 'avatar', 'AVATAR').thumbnail_medium).path,
+            display_name=owner.display_name,
+            resource_url=urlparse(owner.resource_url).path)
 
     def recent_user_stars(self, empty=False):
         if empty:

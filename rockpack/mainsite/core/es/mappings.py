@@ -83,6 +83,25 @@ video_mapping = {
                     "null_value": []
                 }
             }
+        },
+        "child_instance_count": {
+            "type": "integer"
+        },
+        "owner": {
+            "properties": {
+                "avatar": {
+                    "type": "string",
+                    "index": "not_analyzed"
+                },
+                "display_name": {
+                    "type": "string",
+                    "index": "not_analyzed"
+                },
+                "resource_url": {
+                    "type": "string",
+                    "index": "not_analyzed"
+                }
+            }
         }
     }
 }

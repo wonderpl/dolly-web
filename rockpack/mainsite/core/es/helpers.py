@@ -3,9 +3,14 @@ import time
 import datetime
 from itertools import groupby
 from flask import json
+from pyes.exceptions import ElasticSearchException
+from sqlalchemy import distinct, func
+from sqlalchemy.orm import aliased
+from sqlalchemy.orm import joinedload
 from . import api
 from . import exceptions
 from rockpack.mainsite import app
+from rockpack.mainsite.core.dbapi import readonly_session
 from rockpack.mainsite.core.es import es_connection
 from rockpack.mainsite.core.es.api import ESObjectIndexer, ESVideo, ESChannel, ESVideoAttributeMap
 
@@ -50,7 +55,7 @@ class DBImport(object):
         self.indexing = Indexing()
 
     def print_percent_complete(self, current, total):
-        n = round(current/float(total)*100, 1)
+        n = round(current / float(total) * 100, 1)
         if n < 1:
             n = 1
         if n % 1 == 0.0 or n == 1:
@@ -59,6 +64,7 @@ class DBImport(object):
 
     def import_users(self):
         from rockpack.mainsite.services.user import models
+
         with app.test_request_context():
             users = models.User.query
             total = users.count()
@@ -74,7 +80,7 @@ class DBImport(object):
 
     def import_channels(self):
         from rockpack.mainsite.services.video.models import Channel
-        from sqlalchemy.orm import joinedload
+
         with app.test_request_context():
             channels = Channel.query.filter(
                 Channel.public == True,
@@ -95,7 +101,6 @@ class DBImport(object):
 
     def import_videos(self):
         from rockpack.mainsite.services.video.models import Channel, Video, VideoInstanceLocaleMeta, VideoInstance
-        from sqlalchemy.orm import joinedload
 
         with app.test_request_context():
             query = VideoInstance.query.join(
@@ -141,9 +146,62 @@ class DBImport(object):
             ev.flush_bulk()
             print 'finished in', time.time() - start, 'seconds'
 
+    def import_dolly_video_owners(self):
+        """ Import all the owner attributes of
+            a video instance belonging to a channel """
+
+        from rockpack.mainsite.services.video.models import Channel, VideoInstance
+
+        with app.test_request_context():
+            videos = VideoInstance.query.join(
+                    Channel,
+                    Channel.id == VideoInstance.channel
+                ).options(
+                    joinedload(Channel.owner_rel))
+
+            done = 1
+            start = time.time()
+
+            for video in videos.yield_per(6000):
+                mapped = ESVideoAttributeMap(video)
+                ec = ESVideo.updater(bulk=True)
+                ec.set_document_id(video.id)
+                ec.add_field('owner', mapped.owner)
+                ec.update()
+            self.conn.flush_bulk(forced=True)
+            print '%s finished in %f seconds' % (done, time.time() - start,)
+
+    def import_dolly_repin_counts(self):
+        from rockpack.mainsite.services.video.models import VideoInstance
+
+        with app.test_request_context():
+            V2 = aliased(VideoInstance, name="video_instance_2")
+            query = VideoInstance.query(
+                VideoInstance.id,
+                func.count(VideoInstance.id)
+            ).join(
+                V2,
+                V2.video == VideoInstance.video,
+                V2.source_channel == VideoInstance.channel
+            ).filter(
+                VideoInstance.source_channel is not None
+            ).group_by(VideoInstance.id)
+
+            done = 1
+            start = time.time()
+
+            for _id, count in query.yield_per(6000):
+                ec = ESVideo.update(bulk=True)
+                ec.set_document_id(_id)
+                ec.add_field('child_instance_count', count)
+                ec.update()
+                done += 1
+            self.conn.flush_bulk(forced=True)
+            print '%s finished in %f seconds' % (done, time.time() - start,)
+
     def import_video_stars(self):
-        from pyes.exceptions import ElasticSearchException
         from rockpack.mainsite.services.user.models import UserActivity
+
         with app.test_request_context():
             query = UserActivity.query.filter(
                 UserActivity.action == 'star',
@@ -174,8 +232,8 @@ class DBImport(object):
             print '%s finished in' % total, time.time() - start, 'seconds (%s videos not in es)' % missing
 
     def import_video_restrictions(self):
-        from pyes.exceptions import ElasticSearchException
         from rockpack.mainsite.services.video.models import VideoRestriction, VideoInstance, Video, Channel
+
         with app.test_request_context():
             query = VideoRestriction.query.join(
                 VideoInstance,
@@ -219,7 +277,6 @@ class DBImport(object):
         )
 
     def import_video_channel_terms(self):
-        from pyes.exceptions import ElasticSearchException
         from rockpack.mainsite.services.video.models import VideoInstance, Channel, Video
 
         query = VideoInstance.query.join(
@@ -258,9 +315,6 @@ class DBImport(object):
         from rockpack.mainsite.services.share.models import ShareLink
         from rockpack.mainsite.services.user.models import UserActivity, User
         from rockpack.mainsite.services.video.models import VideoInstance, Channel
-        from sqlalchemy import distinct, func
-
-        from rockpack.mainsite.core.dbapi import readonly_session
 
         total = 0
         missing = 0
