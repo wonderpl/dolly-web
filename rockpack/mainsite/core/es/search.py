@@ -480,7 +480,9 @@ class VideoSearch(EntitySearch, CategoryMixin, MediaSortMixin):
                     duration=v.video.duration,
                     thumbnail_url=urljoin(app.config.get('IMAGE_CDN', ''), v.video.thumbnail_url) if v.video.thumbnail_url else '',
                 ),
-                position=pos
+                position=pos,
+                owner=v.owner,
+                child_instance_count=getattr(v, 'child_instance_count', 0)
             )
             if with_stars:
                 video['recent_user_stars'] = v.get('recent_user_stars', [])

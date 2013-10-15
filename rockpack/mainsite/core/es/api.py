@@ -357,7 +357,7 @@ class ESVideoAttributeMap:
 
     @property
     def owner(self):
-        owner = self.video_instance.channel_rel.owner_rel
+        owner = self.video_instance.video_channel.owner_rel
         return dict(
             avatar=urlparse(convert_image_path(owner, 'avatar', 'AVATAR').thumbnail_medium).path,
             display_name=owner.display_name,

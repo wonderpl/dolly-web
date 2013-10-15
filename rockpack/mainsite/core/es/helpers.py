@@ -136,7 +136,8 @@ class DBImport(object):
                     position=mapped.position,
                     locales=mapped.locales,
                     recent_user_stars=mapped.recent_user_stars(empty=True),
-                    country_restriction=mapped.country_restriction(empty=True)
+                    country_restriction=mapped.country_restriction(empty=True),
+                    child_instance_count=mapped.child_instance_count
                 )
                 ev.manager.indexer.insert(v.id, rep)
 
@@ -156,11 +157,8 @@ class DBImport(object):
             videos = VideoInstance.query.join(
                     Channel,
                     Channel.id == VideoInstance.channel
-                ).options(
-                    joinedload(Channel.owner_rel))
-
-            done = 1
-            start = time.time()
+                )#.options(
+                    #joinedload(Channel.owner_rel))
 
             for video in videos.yield_per(6000):
                 mapped = ESVideoAttributeMap(video)
@@ -169,35 +167,29 @@ class DBImport(object):
                 ec.add_field('owner', mapped.owner)
                 ec.update()
             self.conn.flush_bulk(forced=True)
-            print '%s finished in %f seconds' % (done, time.time() - start,)
 
     def import_dolly_repin_counts(self):
         from rockpack.mainsite.services.video.models import VideoInstance
 
         with app.test_request_context():
-            V2 = aliased(VideoInstance, name="video_instance_2")
-            query = VideoInstance.query(
+            child = aliased(VideoInstance, name='child')
+            query = readonly_session.query(
                 VideoInstance.id,
                 func.count(VideoInstance.id)
             ).join(
-                V2,
-                V2.video == VideoInstance.video,
-                V2.source_channel == VideoInstance.channel
+                child,
+                (VideoInstance.video == child.video) &
+                (VideoInstance.channel == child.source_channel)
             ).filter(
-                VideoInstance.source_channel is not None
+                child.source_channel != None
             ).group_by(VideoInstance.id)
 
-            done = 1
-            start = time.time()
-
             for _id, count in query.yield_per(6000):
-                ec = ESVideo.update(bulk=True)
+                ec = ESVideo.updater(bulk=True)
                 ec.set_document_id(_id)
                 ec.add_field('child_instance_count', count)
                 ec.update()
-                done += 1
             self.conn.flush_bulk(forced=True)
-            print '%s finished in %f seconds' % (done, time.time() - start,)
 
     def import_video_stars(self):
         from rockpack.mainsite.services.user.models import UserActivity

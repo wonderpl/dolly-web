@@ -1,6 +1,13 @@
-CHANNEL_INDEX = 'channels'
-VIDEO_INDEX = 'videos'
-USER_INDEX = 'users'
+from rockpack.mainsite import app
+
+if app.config.get('DOLLY', False):
+    CHANNEL_INDEX = 'd_channels'
+    VIDEO_INDEX = 'd_videos'
+    USER_INDEX = 'd_users'
+else:
+    CHANNEL_INDEX = 'channels'
+    VIDEO_INDEX = 'videos'
+    USER_INDEX = 'users'
 
 CHANNEL_TYPE = 'channel'
 VIDEO_TYPE = 'video'
