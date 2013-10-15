@@ -34,5 +34,11 @@ def record_activity(userid, channelid, weight=1):
 
 
 def get_channel_recommendations(userid):
-    response = _myrrix_request('get', '/recommend/%d' % _to_int(userid))
+    try:
+        response = _myrrix_request('get', '/recommend/%d' % _to_int(userid))
+    except Exception, e:
+        if hasattr(e, 'response') and e.response.status_code == 404:
+            # No recommendations for this user yet
+            return []
+        raise
     return [(_from_int(c), s) for c, s in response.json()]
