@@ -635,6 +635,8 @@ def _aggregate_content_feed(items):
 
 def _normalise_boosts(boosts, limit):
     # normalise the positive boosts so that the max boost factor is at the limit
+    if not boosts:
+        return []
     limit = limit - 1   # 1 is added back later
     pos_boosts = [b for c, b in boosts if b > 1]
     bmin, bmax = min(pos_boosts), max(pos_boosts)
