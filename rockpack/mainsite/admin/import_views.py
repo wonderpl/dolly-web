@@ -4,7 +4,7 @@ from datetime import date
 from cStringIO import StringIO
 from flask import request, url_for, redirect, flash, jsonify
 from flask.ext import wtf, login
-from flask.ext.admin import BaseView, expose, form
+from flask.ext.admin import expose, form
 from wtforms.validators import ValidationError
 from rockpack.mainsite import requests
 from rockpack.mainsite.core.dbapi import commit_on_success, db
@@ -17,6 +17,7 @@ from rockpack.mainsite.services.cover_art.models import UserCoverArt
 from rockpack.mainsite.services.user.models import User
 from rockpack.mainsite.services.oauth.api import RockRegistrationForm
 from .models import AdminLogRecord
+from .base import AuthenticatedView
 
 
 class ImportForm(form.BaseForm):
@@ -78,13 +79,7 @@ class UserForm(RockRegistrationForm):
             raise ValidationError('No file chosen')
 
 
-class ImportView(BaseView):
-
-    def is_authenticated(self):
-        return login.current_user.is_authenticated()
-
-    def is_accessible(self):
-        return self.is_authenticated()
+class ImportView(AuthenticatedView):
 
     @commit_on_success
     def _import_videos(self, form):

@@ -1,18 +1,13 @@
-from flask.ext import login
-from flask.ext.admin import BaseView, expose
+from flask.ext.admin import expose
 from flask import request, redirect
 from rockpack.mainsite import app
 from rockpack.mainsite.admin.video_views import category_list
 from rockpack.mainsite.core.es.search import ChannelSearch, VideoSearch
 from rockpack.mainsite.core.es import filters
+from .base import AuthenticatedView
 
 
-class RankingView(BaseView):
-    def is_authenticated(self):
-        return login.current_user.is_authenticated()
-
-    def is_accessible(self):
-        return self.is_authenticated()
+class RankingView(AuthenticatedView):
 
     @expose('/locale/<locale>/<channelid>/', ('GET',))
     def channel_videos(self, locale, channelid):
@@ -27,12 +22,14 @@ class RankingView(BaseView):
         vs.add_sort('video.date_published', 'desc')
         vs.set_paging(offset, limit)
 
-        ctx = {'videos': [],
+        ctx = {
+            'videos': [],
             'image_cdn': app.config['IMAGE_CDN'],
             'referrer': request.args.get('referrer', request.referrer),
             'url': request.url,
             'path': request.path,
-            'position': order_by_position}
+            'position': order_by_position,
+        }
 
         for video in vs.results():
             c = {}
