@@ -1,3 +1,4 @@
+import time
 import urlparse
 from itertools import izip_longest, groupby
 from functools import wraps
@@ -625,21 +626,31 @@ def reset_expiring_tokens(date_from, date_to):
 @commit_on_success
 def fix_invalid_facebook_tokens():
     updated_count = reset_count = 0
-    tokens = ExternalToken.query.filter_by(
-        external_system='facebook', expires='4001-01-01 00:00:00')
-    for token in tokens.limit(100):
+    tokens = ExternalToken.query.filter(
+        ExternalToken.external_system == 'facebook',
+        ExternalToken.expires >= '4001-01-01'
+    ).join(
+        User,
+        (User.id == ExternalToken.user) &
+        (User.date_joined < func.now() - text("interval '60 days'"))
+    )
+    for token in tokens:
         data = facebook.validate_token(
             token.external_token,
             app.config['FACEBOOK_APP_ID'],
             app.config['FACEBOOK_APP_SECRET'])
-        if data and data['is_valid']:
+        if data and 'error' not in data and data['is_valid']:
             assert token.external_uid == str(data['user_id']), repr((token.external_uid, data['user_id']))
             token.expires = datetime.fromtimestamp(data['expires_at'])
             token.permissions = ','.join(data['scopes'])
             updated_count += 1
         else:
+            if data and 'error' in data:
+                app.logger.info('%s: %s', token.user, data['error'])
+            token.expires = '3001-01-01'    # Don't reset this user again
             token.user_rel.reset_refresh_token()
             reset_count += 1
+        time.sleep(0.1)     # Don't DOS the facebook service
     app.logger.info('Updated token for %d users', updated_count)
     app.logger.info('Reset refresh token for %d users', reset_count)
 
