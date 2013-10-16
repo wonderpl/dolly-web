@@ -63,19 +63,15 @@ class SearchWS(WebService):
         start, size = self.get_page()
         region = self.get_locale().split('-')[1]
 
-        items = []
-        query = request.args.get('q', '')
-        try:
-            result = youtube.search(query, order, start, size,
-                                    region, request.remote_addr)
-        except (HTTPError, RequestException):
-            if not app.config.get('ELASTICSEARCH_URL'):
-                raise
-
-            app.logger.exception('Error contacting YouTube: %s', query)
-
+        def _search_es(query):
+            items = []
             vs = VideoSearch(self.get_locale())
-            vs.add_term('title', query)
+            # Split the term so that the search phrase is
+            # over each individual word, and not the phrase
+            # as a whole - the index will have tokenised
+            # each word and without splitting we won't get
+            # any results back (standard indexer on video title)
+            vs.add_term('title', query.split())
             start, size = self.get_page()
             vs.set_paging(offset=start, limit=size)
             for video in vs.videos():
@@ -88,26 +84,44 @@ class SearchWS(WebService):
                 del video['date_added']
                 items.append(video)
             total = vs.total
+            return total, items
+
+        items = []
+        query = request.args.get('q', '')
+
+        if app.config.get('DOLLY', False):
+            # Only search within the platform
+            total, items = _search_es(query)
         else:
-            for position, video in enumerate(result.videos, start):
-                items.append(
-                    dict(
-                        position=position,
-                        id='%s-%02d-%s' % (VIDEO_INSTANCE_PREFIX, 1, video.source_videoid),
-                        title=video.title,
-                        video=dict(
-                            id=gen_videoid(None, 1, video.source_videoid),
-                            source='youtube',
-                            source_id=video.source_videoid,
-                            source_date_uploaded=video.source_date_uploaded,
-                            source_view_count=video.source_view_count,
-                            source_username=video.source_username,
-                            duration=video.duration,
-                            thumbnail_url=video.default_thumbnail,
+            try:
+                result = youtube.search(query, order, start, size,
+                                        region, request.remote_addr)
+            except (HTTPError, RequestException):
+                if not app.config.get('ELASTICSEARCH_URL'):
+                    raise
+
+                app.logger.exception('Error contacting YouTube: %s', query)
+                total, items = _search_es(query)
+            else:
+                for position, video in enumerate(result.videos, start):
+                    items.append(
+                        dict(
+                            position=position,
+                            id='%s-%02d-%s' % (VIDEO_INSTANCE_PREFIX, 1, video.source_videoid),
+                            title=video.title,
+                            video=dict(
+                                id=gen_videoid(None, 1, video.source_videoid),
+                                source='youtube',
+                                source_id=video.source_videoid,
+                                source_date_uploaded=video.source_date_uploaded,
+                                source_view_count=video.source_view_count,
+                                source_username=video.source_username,
+                                duration=video.duration,
+                                thumbnail_url=video.default_thumbnail,
+                            )
                         )
                     )
-                )
-            total = result.video_count
+                total = result.video_count
 
         return {'videos': {'items': items, 'total': total}}
 

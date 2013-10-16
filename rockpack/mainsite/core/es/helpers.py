@@ -106,16 +106,18 @@ class DBImport(object):
             query = VideoInstance.query.join(
                 Channel,
                 Channel.id == VideoInstance.channel
-                ).join(Video).outerjoin(
-                    VideoInstanceLocaleMeta,
-                    VideoInstance.id == VideoInstanceLocaleMeta.video_instance
-                ).options(
-                    joinedload(VideoInstance.metas)
-                ).options(
-                    joinedload(VideoInstance.video_rel)
-                ).options(
-                    joinedload(VideoInstance.video_channel)
-                ).filter(Video.visible == True, Channel.public == True)
+            ).join(Video).outerjoin(
+                VideoInstanceLocaleMeta,
+                VideoInstance.id == VideoInstanceLocaleMeta.video_instance
+            ).options(
+                joinedload(VideoInstance.metas)
+            ).options(
+                joinedload(VideoInstance.video_rel)
+            ).options(
+                joinedload(VideoInstance.video_channel)
+            ).filter(
+                Video.visible == True, Channel.public == True
+            )
 
             total = query.count()
             print 'importing {} videos'.format(total)
@@ -210,9 +212,9 @@ class DBImport(object):
                 try:
                     ec = ESVideo.updater(bulk=True)
                     ec.set_document_id(instance_id)
-                    ec.add_field('recent_user_stars', str(
-                            list(set([u.encode('utf8') for v, u in group]))[:5]
-                        )
+                    ec.add_field(
+                        'recent_user_stars',
+                        str(list(set([u.encode('utf8') for v, u in group]))[:5])
                     )
                     ec.update()
                 except ElasticSearchException:
