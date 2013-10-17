@@ -12,7 +12,7 @@
 {% if admin_view.child_links %}
 {% for label, base, col in admin_view.child_links %}
 <div class="child-link">
-  <a href="{{ url_for(base + '.index_view') }}?flt1_2={% if col %}{{ form[col].data }}{% else %}{{ request.args.id }}{% endif %}">
+  <a href="{{ url_for(base + '.index_view') }}?flt0_0={% if col %}{{ form[col].data }}{% else %}{{ request.args.id }}{% endif %}">
     {{ label }}
   </a>
 </div>
