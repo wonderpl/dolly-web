@@ -14,6 +14,7 @@ GDATA_URL = 'http://gdata.youtube.com/feeds/api/%s/%s'
 PushConfig = namedtuple('PushConfig', 'hub topic')
 Playlist = namedtuple('Playlist', 'title video_count videos push_config')
 Videolist = namedtuple('Videolist', 'video_count videos')
+UserProfile = namedtuple('UserProfile', 'username display_name thumbnail summary')
 
 
 def _parse_datetime(dt):
@@ -107,7 +108,7 @@ def _get_atom_video_data(youtube_data, playlist=None):
     video = Video(
         source_videoid=media.FindExtensions('videoid')[0].text,
         source_listid=playlist,
-        source_username=youtube_data.author[0].name.text,
+        source_username=media.credit.text,
         date_published=_parse_datetime(youtube_data.published.text),
         title=youtube_data.title.text,
         duration=int(media.duration.seconds) if media.duration else 0,
@@ -155,7 +156,7 @@ def _get_video_data(youtube_data, playlist=None):
     video = Video(
         source_videoid=media['yt$videoid']['$t'],
         source_listid=playlist,
-        source_username=youtube_data['author'][0]['name']['$t'],
+        source_username=media['media$credit'][0]['$t'],
         date_published=_parse_datetime(youtube_data['published']['$t']),
         title=youtube_data['title']['$t'],
         duration=int(media['yt$duration']['seconds']) if 'yt$duration' in media else -1,
@@ -256,6 +257,21 @@ def get_playlist_data(id, fetch_all_videos=False, feed='playlists'):
 def get_user_data(id, fetch_all_videos=False):
     """Return data for users upload playlist."""
     return get_playlist_data('%s/uploads' % id, fetch_all_videos, 'users')
+
+
+def get_user_profile_data(id):
+    data = _youtube_feed('users', id)['entry']
+    username = data['yt$username']['$t']
+    display_name = data['yt$username'].get('display')
+    if display_name == username:
+        display_name = None
+    thumbnail = data['media$thumbnail']['url'].replace('/s88-', '/s%d-' % _max_avatar_size)
+    if 'img/silhouette' in thumbnail:
+        # Ignore default thumbnail
+        thumbnail = None
+    summary = data['summary']['$t'] or None
+    return UserProfile(username, display_name, thumbnail, summary)
+_max_avatar_size = app.config['AVATAR_IMAGES']['thumbnail_large'][0]
 
 
 def search_v2(query, order=None, start=0, size=10, region=None, client_address=None):

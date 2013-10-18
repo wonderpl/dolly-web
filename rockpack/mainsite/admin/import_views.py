@@ -2,6 +2,7 @@ import re
 import logging
 from datetime import date
 from cStringIO import StringIO
+from werkzeug import MultiDict
 from flask import request, url_for, redirect, flash, jsonify
 from flask.ext import wtf, login
 from flask.ext.admin import expose, form
@@ -58,7 +59,7 @@ class ImportForm(form.BaseForm):
             if self.category.data == -1:
                 self.category.errors = ['Please select a category']
                 return
-            if not self.channel.data:
+            if not self.channel.data and self.user.data:
                 self.channel.errors = ['Please select a channel']
                 return
 
@@ -78,7 +79,10 @@ class UserForm(RockRegistrationForm):
     password = None
     date_of_birth = None
     email = None
-    avatar = wtf.FileField()
+    avatar = wtf.FileField(validators=[wtf.Optional()])
+    avatar_url = wtf.TextField(validators=[wtf.Optional(), wtf.URL()])
+    description = wtf.TextField(validators=[wtf.Optional()])
+    site_url = wtf.TextField(validators=[wtf.Optional(), wtf.URL()])
 
     def validate_avatar(form, field):
         if not request.files.get('avatar'):
@@ -93,52 +97,81 @@ class ImportView(AuthenticatedView):
             video.rockpack_curated = True
         count = Video.add_videos(form.import_data.videos, form.source.data)
 
+        if not form.channel.data and not form.user.data:
+            self._set_form_data_from_source(form)
+
         channelid = form.channel.data
-        user = form.user.data
-        if channelid and user:
-            if channelid.startswith('_new:'):
-                channel = Channel.create(
-                    title=channelid.split(':', 1)[1],
-                    owner=user,
-                    description=form.channel_description.data,
-                    cover=form.cover.data,
-                    category=form.category.data)
-                self.record_action('created', channel)
-            else:
-                channel = Channel.query.get_or_404(channelid)
-            channel.add_videos(form.import_data.videos, form.tags.data)
-            self.record_action('imported', channel, '%d videos' % count)
-            push_config = form.import_data.push_config
-            if push_config and channel.id:
-                try:
-                    subscribe(push_config.hub, push_config.topic, channel.id)
-                except Exception, e:
-                    flash('Unable to subscribe to channel: %s' % e.message, 'error')
+        if channelid.startswith('_new:'):
+            channel = Channel.create(
+                title=channelid.split(':', 1)[1],
+                owner=form.user.data,
+                description=form.channel_description.data,
+                cover=form.cover.data,
+                category=form.category.data)
+            self.record_action('created', channel)
         else:
-            channel = None
+            channel = Channel.query.get_or_404(channelid)
+        channel.add_videos(form.import_data.videos, form.tags.data)
+        self.record_action('imported', channel, '%d videos' % count)
+        push_config = form.import_data.push_config
+        if push_config and channel.id:
+            try:
+                subscribe(push_config.hub, push_config.topic, channel.id)
+            except Exception, e:
+                flash('Unable to subscribe to channel: %s' % e.message, 'error')
 
         return count, channel
 
+    def _set_form_data_from_source(self, form):
+        username = form.import_data.videos[0].source_username
+        site_url = 'http://www.youtube.com/%s' % username
+        # check for existing user & channel
+        matches = list(
+            Channel.query.filter(Channel.title.like('YouTube Channel:%')).
+            join(User, (User.id == Channel.owner) &
+                       (User.site_url == site_url) &
+                       (User.username == username)).
+            values(Channel.id, Channel.owner))
+        if matches:
+            form.channel.data, form.user.data = matches[0]
+        else:
+            user = youtube.get_user_profile_data(username)
+            user_form = UserForm(MultiDict(dict(
+                username=username,
+                first_name=user.display_name or '',
+                avatar_url=user.thumbnail,
+                description=user.summary,
+                site_url=site_url,
+            )))
+            form.user.data = self._create_user(user_form)
+            form.channel.data = '_new:YouTube Channel: %s' % username
+
     def _create_user(self, form):
-        if 'avatar' in request.files:
+        if request.files.get('avatar'):
             avatar = resize_and_upload(request.files['avatar'], 'AVATAR')
+        elif form.avatar_url.data:
+            avatar_file = StringIO(requests.get(form.avatar_url.data).content)
+            avatar = resize_and_upload(avatar_file, 'AVATAR')
         else:
             avatar = ''
+
         user = User(
             username=form.username.data.strip(),
             password_hash='',
             first_name=form.first_name.data,
             last_name=form.last_name.data,
+            description=form.description.data,
+            site_url=form.site_url.data,
             email='',
             date_of_birth=date(1900, 1, 1),
             avatar=avatar,
             refresh_token='',
-            locale='en-us',
+            locale=form.locale.data or 'en-us',
             is_active=True)
         self.record_action('created', user)
         db.session.add(user)
         db.session.commit()
-        return user
+        return user.id
 
     def record_action(self, action, model, value=None):
         db.session.add(AdminLogRecord(
@@ -174,14 +207,13 @@ class ImportView(AuthenticatedView):
             if form.commit.data and not form.user.data:
                 if user_form.username.data:
                     if user_form.validate():
-                        user = self._create_user(user_form)
                         # update import form with new user
-                        form.user.data = user.id
+                        form.user.data = self._create_user(user_form)
                     else:
                         return self.render('admin/import.html', **ctx)
                 else:
-                    # create from YouTube
-                    pass
+                    # User and channel will be created from source data
+                    assert form.channel.data == ''
 
             if form.validate():
                 if form.commit.data:
