@@ -4,7 +4,7 @@ from werkzeug import FileStorage
 from flask.ext import login, wtf
 from flask.ext.admin.model.typefmt import BASE_FORMATTERS, Markup
 from flask.ext.admin.model.form import converts
-from flask.ext.admin.contrib.sqlamodel import ModelView, form, filters
+from flask.ext.admin.contrib.sqla import ModelView, form, filters
 from rockpack.mainsite.helpers.db import ImageUrl, ImageType, resize_and_upload, get_box_value
 from rockpack.mainsite.helpers.http import get_external_resource
 from rockpack.mainsite.core.dbapi import db
@@ -37,7 +37,7 @@ class AppDownloadRecord(db.Model):
     count = Column(Integer(), nullable=False, server_default='0')
 
 
-def _render_image(img):
+def _render_image(view, img=None):
     # TODO: specify image width & height?
     return Markup('<img src="%s"/>' % img)
 
@@ -55,7 +55,7 @@ class AdminModelConverter(form.AdminModelConverter):
         # XXX: Allow form to be edited without replacing existing image
         # There must be a better way to do this!
         field_args['validators'] = [v for v in field_args['validators']
-                                    if not isinstance(v, wtf.validators.Required)]
+                                    if not isinstance(v, wtf.validators.InputRequired)]
         try:
             # Check for `reference_only` on the col type obj
             # and return a text field if true, else a file field
@@ -165,8 +165,8 @@ class AdminView(ModelView):
             value=unicode(model),
         ))
 
-    def on_model_change(self, form, model):
-        self.record_action('changed' if model.id else 'created', model)
+    def on_model_change(self, form, model, is_created):
+        self.record_action('created' if is_created else 'changed', model)
 
     def on_model_delete(self, model):
         self.record_action('deleted', model)

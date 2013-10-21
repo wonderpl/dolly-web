@@ -79,6 +79,12 @@ AVATAR_IMAGES = dict(
     thumbnail_large=(120, 120),
 )
 
+PROFILE_IMAGES = dict(
+    iphone=(320, 254),
+    iphone_brand=(320, 340),
+    ipad=(927, 385),
+)
+
 ASSETS_MANIFEST = 'file'
 ASSETS_CACHE = False
 ASSETS_AUTO_BUILD = False

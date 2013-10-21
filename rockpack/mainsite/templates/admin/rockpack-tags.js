@@ -1,32 +1,37 @@
 <script>
 	$(function () {
 		$('#tags').select2({
-			tags: function (query) {
-				var result = {results: [], more: false};
-				if (query && query.term) {
-					if (query.term.length <= 2) {
-						query.callback(result);
-					} else {
-						$.ajax({
-							url: '{{ url_for("import.tags") }}',
-							data: {
-								prefix: query.term,
-								size: 10,
-								start: (query.page - 1) * 10
-							},
-						}).done(function (response) {
-							$.each(response.tags || [], function() {
-								result.results.push({id: this, text: this});
-							});
-							if (response.tags.length == 10) {
-								result['more'] = true;
-							}
-							query.callback(result);
-						});
+			tags: true,
+			minimumInputLength: 3,
+			containerCss: {width: '218px'},
+			ajax: {
+				url: '{{ url_for("import.tags") }}',
+				cache: true,
+				quietMillis: 500,
+				data: function (term, page) {
+					return {prefix: term, size: 10, start: (page - 1) * 10};
+				},
+				results: function (data, page) {
+					var result = {results: [], more: false};
+					$.each(data.tags || [], function() {
+						result.results.push({id: this, text: this});
+					});
+					if (data.tags.length == 10) {
+						result['more'] = true;
 					}
+					return result;
 				}
 			},
-			containerCss: {width: '218px'},
+			createSearchChoice: function (term) {
+				return {id: term, text: term};
+			},
+			initSelection: function (element, callback) {
+				var data = [];
+				$(element.val().split(",")).each(function () {
+					data.push({id: this, text: this});
+				});
+				callback(data);
+			}
 		});
 	});
 </script>

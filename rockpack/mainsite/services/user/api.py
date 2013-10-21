@@ -7,7 +7,6 @@ from sqlalchemy.orm import lazyload, contains_eager
 from sqlalchemy.orm.exc import NoResultFound
 from flask import abort, request, json, g
 from flask.ext import wtf
-from flask.ext.admin import form
 from rockpack.mainsite.core.apns import push_client
 from wtforms.validators import ValidationError
 from rockpack.mainsite import app
@@ -415,7 +414,7 @@ class JsonBooleanField(wtf.BooleanField):
     process_formdata = wtf.Field.process_formdata
 
 
-class ChannelForm(form.BaseForm):
+class ChannelForm(wtf.Form):
     title = wtf.TextField(
         validators=[check_present, naughty_word_validator] +
         get_column_validators(Channel, 'title', False))

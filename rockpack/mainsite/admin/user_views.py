@@ -15,8 +15,10 @@ class UserView(AdminView):
     edit_template = 'admin/edit_with_child_links.html'
     child_links = (('Channels', 'channel', None),)
 
+    form_excluded_columns = ('channels', 'flags', 'activity', 'external_friends')
     form_args = dict(
         username=dict(validators=[wtf.Regexp('^\w{3,50}$', message='alphanumeric only')]),
+        first_name=dict(validators=[wtf.Optional()]),
         last_name=dict(validators=[wtf.Optional()]),
         password_hash=dict(validators=[wtf.Optional()]),
         email=dict(validators=[wtf.Optional()]),
@@ -37,7 +39,9 @@ class ExternalTokenView(AdminView):
     #column_filters = ('external_system',)
     column_searchable_list = (models.User.username, 'external_uid')
 
-    form_overrides = dict(user_rel=wtf.TextField)
+    form_ajax_refs = dict(
+        user_rel={'fields': (models.User.username,)},
+    )
 
 
 def _filter_validator(form, field):
@@ -61,7 +65,7 @@ class BroadcastMessageView(AdminView):
     column_filters = ('date_scheduled',)
     column_searchable_list = ('label',)
 
-    form_columns = ('label', 'external_system', 'date_scheduled', 'message', 'url_target', 'filter')
+    form_excluded_columns = ('date_created', 'date_processed')
     form_args = dict(
         filter=dict(validators=[_filter_validator]),
         url_target=dict(validators=[_url_target_validator]),
