@@ -153,21 +153,31 @@ class DBImport(object):
         """ Import all the owner attributes of
             a video instance belonging to a channel """
 
-        from rockpack.mainsite.services.video.models import Channel, VideoInstance
+        from rockpack.mainsite.services.video.models import Channel
 
         with app.test_request_context():
-            videos = VideoInstance.query.join(
-                    Channel,
-                    Channel.id == VideoInstance.channel
-                )#.options(
-                    #joinedload(Channel.owner_rel))
+            channels = Channel.query.options(
+                joinedload(Channel.owner_rel)
+            ).options(
+                joinedload(Channel.video_instances)
+            ).filter(
+                Channel.public == True,
+                Channel.visible == True,
+                Channel.deleted == False)
 
-            for video in videos.yield_per(6000):
-                mapped = ESVideoAttributeMap(video)
-                ec = ESVideo.updater(bulk=True)
-                ec.set_document_id(video.id)
-                ec.add_field('owner', mapped.owner)
-                ec.update()
+            total = channels.count()
+            done = 1
+
+            for channel in channels.yield_per(6000):
+                for video in channel.video_instances:
+                    mapped = ESVideoAttributeMap(video)
+                    ec = ESVideo.updater(bulk=True)
+                    ec.set_document_id(video.id)
+                    ec.add_field('owner', mapped.owner)
+                    ec.add_field('channel_title', mapped.channel_title)
+                    ec.update()
+                self.print_percent_complete(done, total)
+                done += 1
             self.conn.flush_bulk(forced=True)
 
     def import_dolly_repin_counts(self):
@@ -177,6 +187,7 @@ class DBImport(object):
             child = aliased(VideoInstance, name='child')
             query = readonly_session.query(
                 VideoInstance.id,
+                VideoInstance.video,
                 func.count(VideoInstance.id)
             ).join(
                 child,
@@ -184,14 +195,27 @@ class DBImport(object):
                 (VideoInstance.channel == child.source_channel)
             ).filter(
                 child.source_channel != None
-            ).group_by(VideoInstance.id)
+            ).group_by(VideoInstance.id, VideoInstance.video)
 
-            for _id, count in query.yield_per(6000):
+            instance_counts = {}
+            influential_index = {}
+
+            for _id, video, count in query.yield_per(6000):
+                # Set the count for the video instance
+                instance_counts[(_id, video)] = count
+                # If the count is higher for the same video that
+                # the previous instance, mark this instance as the
+                # influential one for this video
+                if count > influential_index.get(video, [None, 0])[1]:
+                    influential_index.update({video: (_id, count,)})
+
+            for (_id, video), count in instance_counts.iteritems():
                 ec = ESVideo.updater(bulk=True)
                 ec.set_document_id(_id)
                 ec.add_field('child_instance_count', count)
+                ec.add_field('most_influential', True if influential_index.get(video, '') == _id else False)
                 ec.update()
-            self.conn.flush_bulk(forced=True)
+            ESVideo.flush()
 
     def import_video_stars(self):
         from rockpack.mainsite.services.user.models import UserActivity

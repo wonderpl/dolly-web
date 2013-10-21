@@ -1,9 +1,11 @@
 from rockpack.mainsite import app
 
 if app.config.get('DOLLY', False):
-    CHANNEL_INDEX = 'd_channels'
-    VIDEO_INDEX = 'd_videos'
-    USER_INDEX = 'd_users'
+    # Dolly uses a single index for
+    # all of the types below
+    CHANNEL_INDEX = 'dolly'
+    VIDEO_INDEX = 'dolly'
+    USER_INDEX = 'dolly'
 else:
     CHANNEL_INDEX = 'channels'
     VIDEO_INDEX = 'videos'
@@ -53,6 +55,10 @@ video_mapping = {
         "channel": {
             "type": "string",
             "index": "not_analyzed"
+        },
+        "channel_title": {
+            "type": "string",
+            "analyzer": "snowball"
         },
         "video": {
             "properties": {
@@ -109,6 +115,9 @@ video_mapping = {
                     "index": "not_analyzed"
                 }
             }
+        },
+        "most_influential": {
+            "type": "boolean"
         }
     }
 }
@@ -153,6 +162,10 @@ channel_mapping = {
         "video_terms": {
             "type": "string",
             "analyzer": "snowball"
+        },
+        "video_count": {
+            "type": "integer",
+            "null_value": 0
         },
         "keywords": {
             "type": "string",
