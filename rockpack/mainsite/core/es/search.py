@@ -300,7 +300,8 @@ class ChannelSearch(EntitySearch, CategoryMixin, MediaSortMixin):
                 cover=dict(
                     thumbnail_url=urljoin(IMAGE_CDN, channel.cover.thumbnail_url) if channel.cover.thumbnail_url else '',
                     aoi=channel.cover.aoi
-                )
+                ),
+                videos=dict(total=channel.video_count)
             )
             if channel.favourite:
                 ch['favourites'] = True
