@@ -668,13 +668,20 @@ def es_update_channel_videos(extant=[], deleted=[], async=app.config.get('ASYNC_
         ev.update()
     ESVideo.flush()
 
-    video_counts = readonly_session.query(VideoInstance.channel, func.count(VideoInstance.id)).group_by(VideoInstance.channel)
-    for (channel_id, count) in video_counts:
+    # Reset video terms on channel
+    video_details = readonly_session.query(VideoInstance.channel, VideoInstance.title).filter(VideoInstance.channel.in_(channel_ids))
+    channel_map = {}
+    for (channel_id, video_title) in video_details:
+        channel_map.setdefault(channel_id, []).append(video_title)
+
+    for channel_id, video_titles in channel_map.iteritems():
         ec = ESChannel.update(bulk=True)
         ec.set_document_id(channel_id)
-        ec.add_field('video_count', count)
+        ec.add_field('video_terms', video_titles)
+        ec.add_field('video_count', len(video_titles))
         ec.update()
     ESChannel.flush()
+
 
 def remove_channel_from_index(channel_id):
     if not use_elasticsearch():
