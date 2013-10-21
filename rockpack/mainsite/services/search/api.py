@@ -11,7 +11,7 @@ from rockpack.mainsite.core import youtube
 from rockpack.mainsite.helpers.db import gen_videoid
 from rockpack.mainsite.services.video.api import get_db_channels
 from rockpack.mainsite.services.video.models import Channel, User
-from rockpack.mainsite.core.es.search import ChannelSearch, VideoSearch, UserSearch
+from rockpack.mainsite.core.es.search import ChannelSearch, VideoSearch, UserSearch, MUST
 from rockpack.mainsite.core.es import use_elasticsearch, filters
 
 
@@ -72,6 +72,7 @@ class SearchWS(WebService):
             # each word and without splitting we won't get
             # any results back (standard indexer on video title)
             vs.add_term('title', query.split())
+            vs.add_term('most_influential', True, occurs=MUST)
             start, size = self.get_page()
             vs.set_paging(offset=start, limit=size)
             for video in vs.videos():
@@ -89,7 +90,7 @@ class SearchWS(WebService):
         items = []
         query = request.args.get('q', '')
 
-        if app.config.get('DOLLY', False):
+        if app.config.get('DOLLY', False) and not request.args.get('source', '').lower() == 'youtube':
             # Only search within the platform
             total, items = _search_es(query)
         else:
