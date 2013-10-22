@@ -21,7 +21,7 @@ SENTRY_PASSWORD = _decrypt('2N=PN0\xd0{1{\x1c\x10\x18T\x96\x1e\xaag\x17\xed\x1f\
 SENTRY_DSN = 'https://%s:%s@sentry.dev.rockpack.com/5' % (SENTRY_USER, SENTRY_PASSWORD)
 SENTRY_ENABLE_LOGGING = 30  # logging.WARNING
 
-ELASTICSEARCH_URL = 'http://localhost:9200'
+#ELASTICSEARCH_URL = 'http://localhost:9200'
 
 ASYNC_ES_VIDEO_UPDATES = True
 
@@ -30,6 +30,8 @@ STATSD_HOST = 'admin'
 ENABLE_TIMINGS = True
 
 #USE_GEVENT = True
+
+ADMIN_NAME = 'Dolly Admin'
 
 FACEBOOK_APP_ID = '573323026048639'
 FACEBOOK_APP_SECRET = _decrypt('0\xa9\xf4=)\xa9\x0cC#\xda \xa2\xe1.\xf8)R\x04\xf4\x9b\x0c\xb9x\x0f\xc1\xb7\xd5\xfb=\xfb\xef\xc1')
