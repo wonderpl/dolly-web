@@ -255,7 +255,8 @@ class ESChannel(ESObject):
             cover=mapped.cover,
             keywords=mapped.keywords,
             promotion=mapped.promotion,
-            normalised_rank=mapped.normalised_rank
+            normalised_rank=mapped.normalised_rank,
+            video_count=mapped.video_count
         )
 
         if app.config.get('SHOW_OLD_CHANNEL_COVER_URLS', True):
@@ -512,6 +513,10 @@ class ESChannelAttributeMap:
     def normalised_rank(self):
         return {'en-us': 0.0, 'en-gb': 0.0}
 
+    @property
+    def video_count(self):
+        return len(self.channel.video_instances)
+
 
 def add_to_index(data, index, _type, id, bulk=False, refresh=False):
     try:
@@ -613,7 +618,8 @@ def es_update_channel_videos(extant=[], deleted=[], async=app.config.get('ASYNC_
     from rockpack.mainsite.services.video.models import VideoInstance
 
     all_ids = extant + deleted
-    channel_ids = [c for (c,) in VideoInstance.query.filter(VideoInstance.id.in_(all_ids)).values(VideoInstance.channel)]
+    channel_ids = []
+    video_ids = [c for (c,) in VideoInstance.query.filter(VideoInstance.id.in_(all_ids)).values(VideoInstance.video)]
 
     if extant:
         # XXX: This is a nasty hack to allow the VideoInstance query to proceed
@@ -628,6 +634,7 @@ def es_update_channel_videos(extant=[], deleted=[], async=app.config.get('ASYNC_
         )
         es_video = ESVideo.inserter(bulk=True)
         for v in videos:
+            channel_ids.append(v.channel)
             es_video.insert(v.id, v)
         es_video.flush_bulk()
 
@@ -639,32 +646,40 @@ def es_update_channel_videos(extant=[], deleted=[], async=app.config.get('ASYNC_
     query = readonly_session.query(
         VideoInstance.id,
         VideoInstance.video,
+        child.source_channel,
         func.count(VideoInstance.id)
-    ).join(
+    ).outerjoin(
         child,
         (VideoInstance.video == child.video) &
         (VideoInstance.channel == child.source_channel)
     ).filter(
-        child.source_channel.in_(channel_ids),
-    ).group_by(VideoInstance.id, VideoInstance.video)
+        VideoInstance.video.in_(video_ids)
+    ).group_by(VideoInstance.id, VideoInstance.video,child.source_channel)
 
     instance_counts = {}
     influential_index = {}
 
-    for _id, video, count in query.yield_per(6000):
+    for _id, video, source_channel, count in query.yield_per(6000):
         # Set the count for the video instance
         instance_counts[(_id, video)] = count
         # If the count is higher for the same video that
         # the previous instance, mark this instance as the
         # influential one for this video
-        if count > influential_index.get(video, [None, 0])[1]:
+        i_id, i_count = influential_index.get(video, [None, 0])
+
+        # Count will always be at least 1
+        # but should really be zero if no children
+        if not source_channel and count == 1:
+            count = 0
+        if (count > i_count) or\
+                (count == i_count) and not source_channel:
             influential_index.update({video: (_id, count,)})
 
     for (_id, video), count in instance_counts.iteritems():
         ev = ESVideo.updater(bulk=True)
         ev.set_document_id(_id)
         ev.add_field('child_instance_count', count)
-        ev.add_field('most_influential', True if influential_index.get(video, '') == _id else False)
+        ev.add_field('most_influential', True if influential_index.get(video, '')[0] == _id else False)
         ev.update()
     ESVideo.flush()
 

@@ -85,7 +85,10 @@ class DBImport(object):
             channels = Channel.query.filter(
                 Channel.public == True,
                 Channel.deleted == False).options(
-                    joinedload(Channel.category_rel), joinedload(Channel.metas), joinedload(Channel.owner_rel)
+                    joinedload(Channel.category_rel),
+                    joinedload(Channel.metas),
+                    joinedload(Channel.owner_rel),
+                    joinedload(Channel.video_instances)
                 )
             print 'importing {} PUBLIC channels\r'.format(channels.count())
             start = time.time()
@@ -188,33 +191,52 @@ class DBImport(object):
             query = readonly_session.query(
                 VideoInstance.id,
                 VideoInstance.video,
+                child.source_channel,
                 func.count(VideoInstance.id)
-            ).join(
+            ).outerjoin(
                 child,
                 (VideoInstance.video == child.video) &
                 (VideoInstance.channel == child.source_channel)
-            ).filter(
-                child.source_channel != None
-            ).group_by(VideoInstance.id, VideoInstance.video)
+            ).group_by(VideoInstance.id, VideoInstance.video, child.source_channel)
 
             instance_counts = {}
             influential_index = {}
 
-            for _id, video, count in query.yield_per(6000):
+            total = query.count()
+            done = 1
+
+            for _id, video, source_channel, count in query.yield_per(6000):
                 # Set the count for the video instance
                 instance_counts[(_id, video)] = count
                 # If the count is higher for the same video that
                 # the previous instance, mark this instance as the
                 # influential one for this video
-                if count > influential_index.get(video, [None, 0])[1]:
+                i_id, i_count = influential_index.get(video, [None, 0])
+
+                # Count will always be at least 1
+                # but should really be zero if no children
+                if not source_channel and count == 1:
+                    count = 0
+                if (count > i_count) or\
+                        (count == i_count) and not source_channel:
                     influential_index.update({video: (_id, count,)})
+
+                self.print_percent_complete(done, total)
+                done += 1
+
+            total = len(instance_counts)
+            done = 1
 
             for (_id, video), count in instance_counts.iteritems():
                 ec = ESVideo.updater(bulk=True)
                 ec.set_document_id(_id)
                 ec.add_field('child_instance_count', count)
-                ec.add_field('most_influential', True if influential_index.get(video, '') == _id else False)
+                ec.add_field('most_influential', True if influential_index.get(video, '')[0] == _id else False)
                 ec.update()
+
+                self.print_percent_complete(done, total)
+                done += 1
+
             ESVideo.flush()
 
     def import_video_stars(self):

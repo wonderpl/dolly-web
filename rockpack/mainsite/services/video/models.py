@@ -220,7 +220,6 @@ class VideoInstance(db.Model):
     view_count = Column(Integer, nullable=False, server_default='0')
     star_count = Column(Integer, nullable=False, server_default='0')
     position = Column(Integer, nullable=False, server_default='0', default=0)
-    most_influential = Column(Boolean(), nullable=False, server_default='false', default=False)
 
     video = Column(ForeignKey('video.id', ondelete='CASCADE'), nullable=False)
     channel = Column(ForeignKey('channel.id'), nullable=False)
