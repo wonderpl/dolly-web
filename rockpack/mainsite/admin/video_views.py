@@ -1,6 +1,7 @@
 from datetime import datetime
+import wtforms as wtf
 from flask import request
-from flask.ext import wtf
+from flask.ext.wtf import Form
 from flask.ext.admin.form import DateTimePickerWidget
 from flask.ext.admin.model.typefmt import Markup
 from flask.ext.admin.model.form import InlineFormAdmin
@@ -145,8 +146,8 @@ class Channel(AdminView):
         owner_rel={'fields': (models.User.username,)},
     )
     form_args = dict(
-        ecommerce_url=dict(validators=[wtf.Optional()]),
-        description=dict(validators=[wtf.Optional(), wtf.Length(max=200)]),
+        ecommerce_url=dict(validators=[wtf.validators.Optional()]),
+        description=dict(validators=[wtf.validators.Optional(), wtf.validators.Length(max=200)]),
     )
 
     inline_models = (ChannelLocaleMetaFormAdmin(models.ChannelLocaleMeta),)
@@ -190,13 +191,13 @@ def category_list():
     return cats.items()
 
 
-class ChannelPromotionForm(wtf.Form):
+class ChannelPromotionForm(Form):
     channel = wtf.TextField()
     category = wtf.SelectField('Category')
-    locale = wtf.SelectField('Locale', validators=[wtf.Required()])
-    position = wtf.IntegerField(validators=[wtf.Required()])
-    date_start = wtf.DateTimeField(validators=[wtf.Required()], widget=DateTimePickerWidget())
-    date_end = wtf.DateTimeField(validators=[wtf.Required()], widget=DateTimePickerWidget())
+    locale = wtf.SelectField('Locale', validators=[wtf.validators.Required()])
+    position = wtf.IntegerField(validators=[wtf.validators.Required()])
+    date_start = wtf.DateTimeField(validators=[wtf.validators.Required()], widget=DateTimePickerWidget())
+    date_end = wtf.DateTimeField(validators=[wtf.validators.Required()], widget=DateTimePickerWidget())
 
     def __init__(self, *args, **kwargs):
         super(ChannelPromotionForm, self).__init__(*args, **kwargs)

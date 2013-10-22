@@ -5,8 +5,9 @@ from sqlalchemy import desc, func, text
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import lazyload, contains_eager
 from sqlalchemy.orm.exc import NoResultFound
+import wtforms as wtf
 from flask import abort, request, json, g
-from flask.ext import wtf
+from flask.ext.wtf import Form
 from rockpack.mainsite.core.apns import push_client
 from wtforms.validators import ValidationError
 from rockpack.mainsite import app
@@ -414,7 +415,7 @@ class JsonBooleanField(wtf.BooleanField):
     process_formdata = wtf.Field.process_formdata
 
 
-class ChannelForm(wtf.Form):
+class ChannelForm(Form):
     title = wtf.TextField(
         validators=[check_present, naughty_word_validator] +
         get_column_validators(Channel, 'title', False))
@@ -475,10 +476,10 @@ class ChannelForm(wtf.Form):
             field.data = None
 
 
-class ActivityForm(wtf.Form):
+class ActivityForm(Form):
     action = wtf.SelectField(choices=ACTION_COLUMN_VALUE_MAP.items())
     video_instance = wtf.StringField()  # XXX: needed for backwards compatibility
-    object_type = wtf.SelectField(choices=ACTIVITY_OBJECT_TYPE_MAP.items(), validators=[wtf.Optional()])
+    object_type = wtf.SelectField(choices=ACTIVITY_OBJECT_TYPE_MAP.items(), validators=[wtf.validators.Optional()])
     object_id = wtf.StringField()
 
     def validate(self):
@@ -495,9 +496,9 @@ class ActivityForm(wtf.Form):
         return success
 
 
-class ContentReportForm(wtf.Form):
+class ContentReportForm(Form):
     object_type = wtf.SelectField(choices=ACTIVITY_OBJECT_TYPE_MAP.items())
-    object_id = wtf.StringField(validators=[wtf.Required()])
+    object_id = wtf.StringField(validators=[wtf.validators.Required()])
     reason = wtf.StringField(validators=get_column_validators(ContentReport, 'reason'))
 
     def validate_object_id(self, field):

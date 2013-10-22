@@ -1,7 +1,8 @@
 from sqlalchemy import (
     String, Column, Integer, DateTime, Date, Enum, CHAR, func, PrimaryKeyConstraint)
 from werkzeug import FileStorage
-from flask.ext import login, wtf
+import wtforms as wtf
+from flask.ext import login
 from flask.ext.admin.model.typefmt import BASE_FORMATTERS, Markup
 from flask.ext.admin.model.form import converts
 from flask.ext.admin.contrib.sqla import ModelView, form, filters

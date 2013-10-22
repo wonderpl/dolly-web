@@ -1,4 +1,4 @@
-from flask.ext import wtf
+import wtforms as wtf
 from rockpack.mainsite.admin.models import AdminView
 from rockpack.mainsite.services.user import models
 from rockpack.mainsite.services.oauth import models as auth_models
@@ -17,15 +17,15 @@ class UserView(AdminView):
 
     form_excluded_columns = ('channels', 'flags', 'activity', 'external_friends')
     form_args = dict(
-        username=dict(validators=[wtf.Regexp('^\w{3,50}$', message='alphanumeric only')]),
-        first_name=dict(validators=[wtf.Optional()]),
-        last_name=dict(validators=[wtf.Optional()]),
-        password_hash=dict(validators=[wtf.Optional()]),
-        email=dict(validators=[wtf.Optional()]),
-        date_of_birth=dict(validators=[wtf.Optional()]),
-        refresh_token=dict(validators=[wtf.Optional()]),
-        date_joined=dict(validators=[wtf.Optional()]),
-        date_updated=dict(validators=[wtf.Optional()]),
+        username=dict(validators=[wtf.validators.Regexp('^\w{3,50}$', message='alphanumeric only')]),
+        first_name=dict(validators=[wtf.validators.Optional()]),
+        last_name=dict(validators=[wtf.validators.Optional()]),
+        password_hash=dict(validators=[wtf.validators.Optional()]),
+        email=dict(validators=[wtf.validators.Optional()]),
+        date_of_birth=dict(validators=[wtf.validators.Optional()]),
+        refresh_token=dict(validators=[wtf.validators.Optional()]),
+        date_joined=dict(validators=[wtf.validators.Optional()]),
+        date_updated=dict(validators=[wtf.validators.Optional()]),
     )
 
     inline_models = (auth_models.ExternalToken,)

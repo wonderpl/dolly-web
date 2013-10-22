@@ -2,10 +2,10 @@ import os
 import base64
 import hashlib
 import cStringIO
+import wtforms as wtf
 from ast import literal_eval
 from sqlalchemy import types
 from sqlalchemy.dialects import postgres
-from flask.ext import wtf
 from rockpack.mainsite import app
 from rockpack.mainsite.core import imaging
 from .urls import image_url_from_path
@@ -51,9 +51,9 @@ def get_column_validators(model, columnname, required=True):
     column = model._sa_class_manager.mapper.get_property(columnname).columns[0]
     validators = []
     if required and not column.nullable:
-        validators.append(wtf.Required())
+        validators.append(wtf.validators.Required())
     if hasattr(column.type, 'length'):
-        validators.append(wtf.Length(max=column.type.length))
+        validators.append(wtf.validators.Length(max=column.type.length))
     return validators
 
 
