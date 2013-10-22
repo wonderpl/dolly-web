@@ -502,6 +502,17 @@ class VideoSearch(EntitySearch, CategoryMixin, MediaSortMixin):
 
         return vlist
 
+    def search_terms(self, phrase):
+        if phrase:
+            query = pyes.StringQuery(
+                phrase,
+                default_operator='AND',
+                search_fields=['title'],
+                analyzer='snowball',
+                minimum_should_match=1
+            )
+            self._add_term_occurs(query, MUST)
+
     def check_country_allowed(self, country):
         """ Checks the allow/deny list for country """
         if country:

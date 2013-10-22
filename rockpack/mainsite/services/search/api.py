@@ -71,7 +71,12 @@ class SearchWS(WebService):
             # as a whole - the index will have tokenised
             # each word and without splitting we won't get
             # any results back (standard indexer on video title)
-            vs.add_term('title', query.split())
+            if not app.config.get('DOLLY'):
+                vs.add_term('title', query.split())
+            else:
+                # Snowball analyzer is on the Dolly mapping
+                # so we can do a proper search here
+                vs.search_terms(query)
             vs.add_term('most_influential', True, occurs=MUST)
             start, size = self.get_page()
             vs.set_paging(offset=start, limit=size)
@@ -80,7 +85,6 @@ class SearchWS(WebService):
                 video['video']['source_date_uploaded'] = video['date_added']
                 del video['video']['star_count']
                 del video['public']
-                del video['category']
                 del video['video']['view_count']
                 del video['date_added']
                 items.append(video)

@@ -40,87 +40,170 @@ locale_count_dict = {
     }
 }
 
-video_mapping = {
-    "properties": {
-        "id": {"type": "string"},
-        "date_added": {"type": "date"},
-        "title": {
-            "type": "string",
-            "index": "analyzed"
-        },
-        "position": {"type": "integer"},
-        "category": {
-            "type": "integer"},
-        "locales": locale_count_dict,
-        "channel": {
-            "type": "string",
-            "index": "not_analyzed"
-        },
-        "channel_title": {
-            "type": "string",
-            "analyzer": "snowball"
-        },
-        "video": {
-            "properties": {
-                "id": {
-                    "type": "string",
-                    "index": "not_analyzed"},
-                "thumbnail_url": {
-                    "type": "string",
-                    "index": "not_analyzed"},
-                "view_count": {"type": "integer"},
-                "star_count": {"type": "integer"},
-                "source": {
-                    "type": "string",
-                    "index": "not_analyzed"},
-                "source_id": {"type": "string"},
-                "source_username": {"type": "string"},
-                "date_published": {"type": "date"},
-                "duration": {"type": "integer"}
-            }
-        },
-        "recent_user_likes": {
-            "type": "string",
-            "index": "not_analyzed"
-        },
-        "country_restriction": {
-            "properties": {
-                "allow": {
-                    "type": "string",
-                    "index": "not_analyzed",
-                    "null_value": []
-                },
-                "deny": {
-                    "type": "string",
-                    "index": "not_analyzed",
-                    "null_value": []
+if app.config.get('DOLLY', False):
+    video_mapping = {
+        "properties": {
+            "id": {"type": "string"},
+            "date_added": {"type": "date"},
+            "title": {
+                "type": "string",
+                "analyzer": "snowball"
+            },
+            "position": {"type": "integer"},
+            "category": {
+                "type": "integer"},
+            "locales": locale_count_dict,
+            "channel": {
+                "type": "string",
+                "index": "not_analyzed"
+            },
+            "channel_title": {
+                "type": "string",
+                "analyzer": "snowball"
+            },
+            "video": {
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "index": "not_analyzed"},
+                    "thumbnail_url": {
+                        "type": "string",
+                        "index": "not_analyzed"},
+                    "view_count": {"type": "integer"},
+                    "star_count": {"type": "integer"},
+                    "source": {
+                        "type": "string",
+                        "index": "not_analyzed"},
+                    "source_id": {"type": "string"},
+                    "source_username": {"type": "string"},
+                    "date_published": {"type": "date"},
+                    "duration": {"type": "integer"}
                 }
-            }
-        },
-        "child_instance_count": {
-            "type": "integer"
-        },
-        "owner": {
-            "properties": {
-                "avatar": {
-                    "type": "string",
-                    "index": "not_analyzed"
-                },
-                "display_name": {
-                    "type": "string",
-                    "index": "not_analyzed"
-                },
-                "resource_url": {
-                    "type": "string",
-                    "index": "not_analyzed"
+            },
+            "recent_user_likes": {
+                "type": "string",
+                "index": "not_analyzed"
+            },
+            "country_restriction": {
+                "properties": {
+                    "allow": {
+                        "type": "string",
+                        "index": "not_analyzed",
+                        "null_value": []
+                    },
+                    "deny": {
+                        "type": "string",
+                        "index": "not_analyzed",
+                        "null_value": []
+                    }
                 }
+            },
+            "child_instance_count": {
+                "type": "integer"
+            },
+            "owner": {
+                "properties": {
+                    "avatar": {
+                        "type": "string",
+                        "index": "not_analyzed"
+                    },
+                    "display_name": {
+                        "type": "string",
+                        "index": "not_analyzed"
+                    },
+                    "resource_url": {
+                        "type": "string",
+                        "index": "not_analyzed"
+                    }
+                }
+            },
+            "most_influential": {
+                "type": "boolean"
             }
-        },
-        "most_influential": {
-            "type": "boolean"
         }
     }
-}
+else:
+    video_mapping = {
+        "properties": {
+            "id": {"type": "string"},
+            "date_added": {"type": "date"},
+            "title": {
+                "type": "string",
+                "index": "analyzed"
+            },
+            "position": {"type": "integer"},
+            "category": {
+                "type": "integer"},
+            "locales": locale_count_dict,
+            "channel": {
+                "type": "string",
+                "index": "not_analyzed"
+            },
+            "channel_title": {
+                "type": "string",
+                "analyzer": "snowball"
+            },
+            "video": {
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "index": "not_analyzed"},
+                    "thumbnail_url": {
+                        "type": "string",
+                        "index": "not_analyzed"},
+                    "view_count": {"type": "integer"},
+                    "star_count": {"type": "integer"},
+                    "source": {
+                        "type": "string",
+                        "index": "not_analyzed"},
+                    "source_id": {"type": "string"},
+                    "source_username": {"type": "string"},
+                    "date_published": {"type": "date"},
+                    "duration": {"type": "integer"}
+                }
+            },
+            "recent_user_likes": {
+                "type": "string",
+                "index": "not_analyzed"
+            },
+            "country_restriction": {
+                "properties": {
+                    "allow": {
+                        "type": "string",
+                        "index": "not_analyzed",
+                        "null_value": []
+                    },
+                    "deny": {
+                        "type": "string",
+                        "index": "not_analyzed",
+                        "null_value": []
+                    }
+                }
+            },
+            "child_instance_count": {
+                "type": "integer"
+            },
+            "owner": {
+                "properties": {
+                    "avatar": {
+                        "type": "string",
+                        "index": "not_analyzed"
+                    },
+                    "display_name": {
+                        "type": "string",
+                        "index": "not_analyzed"
+                    },
+                    "resource_url": {
+                        "type": "string",
+                        "index": "not_analyzed"
+                    }
+                }
+            },
+            "most_influential": {
+                "type": "boolean"
+            }
+        }
+    }
 
 
 user_mapping = {
