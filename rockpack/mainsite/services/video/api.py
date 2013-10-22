@@ -206,13 +206,16 @@ class VideoWS(WebService):
 
         category = request.args.get('category')
         location = request.args.get('location')
+        date_order = request.args.get('date_order')
+        if app.config.get('DOLLY'):
+            date_order = 'desc'
 
         vs = VideoSearch(self.get_locale())
         offset, limit = self.get_page()
         vs.set_paging(offset, limit)
         vs.filter_category(category)
         vs.star_order_sort(request.args.get('star_order'))
-        vs.date_sort(request.args.get('date_order'))
+        vs.date_sort(date_order)
         if location:
             vs.check_country_allowed(location.upper())
         videos = vs.videos(with_channels=True)
