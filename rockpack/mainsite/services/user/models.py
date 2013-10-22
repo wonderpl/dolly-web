@@ -38,6 +38,8 @@ class User(db.Model):
     date_joined = Column(DateTime(), nullable=False, default=func.now())
     date_updated = Column(DateTime(), nullable=False, default=func.now(), onupdate=func.now())
     display_fullname = Column(Boolean, nullable=False, server_default='true', default=True)
+    description = Column(String(1024))
+    site_url = Column(String(1024))
 
     locale = Column(ForeignKey('locale.id'), nullable=False, server_default='')
 

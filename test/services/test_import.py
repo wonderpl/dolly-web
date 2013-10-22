@@ -68,7 +68,10 @@ class ImportFromYoutubeTestCase(base.RockPackTestCase):
             with self.app.test_client() as client:
                 data = self.data_video.copy()
                 data.update(self._new_user_data())
-                data.update({'avatar': (StringIO(AVATAR_IMG_DATA), 'avatar.jpg',)})
+                data.update({
+                    'avatar': (StringIO(AVATAR_IMG_DATA), 'avatar.jpg',),
+                    'channel': '_new:test',
+                })
 
                 r = client.post('/admin/import/', data=data)
 
@@ -96,9 +99,12 @@ class ImportFromYoutubeTestCase(base.RockPackTestCase):
         with patch.object(ImportView, 'is_authenticated') as mock_prop:
             mock_prop.return_value = True
             with self.app.test_client() as client:
+                user = User.query.filter_by(username=UserData.test_user_a.username).first()
                 data = self.data_video_1.copy()
                 data.update({
-                    'user': User.query.filter_by(username=UserData.test_user_a.username).first().id})
+                    'user': user.id,
+                    'channel': user.channels[0].id,
+                })
 
                 r = client.post('/admin/import/', data=data)
 

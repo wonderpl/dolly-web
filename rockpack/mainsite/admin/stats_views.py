@@ -2,12 +2,13 @@ from datetime import datetime, date
 from sqlalchemy import func, between, text, Integer
 from sqlalchemy.orm import aliased
 from flask import request
-from flask.ext.admin import BaseView, expose
+from flask.ext.admin import expose
 from rockpack.mainsite import app
 from rockpack.mainsite.core.dbapi import readonly_session
+from .base import AuthenticatedView
 
 
-class ContentStatsView(BaseView):
+class ContentStatsView(AuthenticatedView):
     @expose('/')
     def index(self):
         from rockpack.mainsite.services.video import models
@@ -74,7 +75,7 @@ class ContentStatsView(BaseView):
         )
 
 
-class AppStatsView(BaseView):
+class AppStatsView(AuthenticatedView):
     @expose('/')
     def index(self):
         from gviz_data_table import Table
@@ -107,7 +108,7 @@ class AppStatsView(BaseView):
         return self.render('admin/app_stats.html', **ctx)
 
 
-class ActivityStatsView(BaseView):
+class ActivityStatsView(AuthenticatedView):
     @expose('/')
     def index(self):
         from gviz_data_table import Table
@@ -131,7 +132,7 @@ class ActivityStatsView(BaseView):
         return self.render('admin/activity_stats.html', activity_data=table.encode())
 
 
-class RetentionStatsView(BaseView):
+class RetentionStatsView(AuthenticatedView):
     @expose('/')
     def index(self):
         from gviz_data_table import Table

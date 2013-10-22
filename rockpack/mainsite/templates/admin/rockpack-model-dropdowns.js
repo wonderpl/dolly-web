@@ -8,7 +8,7 @@ if (userField.length === 0) {
     userField = $('#owner_rel');
 }
 if (channelField.length === 0) {
-    channelField = $('#channel_rel');
+    channelField = $('#channel_rel, #video_channel');
 }
 
 function dataToResults (data, page) {

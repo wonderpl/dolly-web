@@ -64,12 +64,15 @@ class VideoInstance(AdminView):
     model_name = 'video_instance'
     model = models.VideoInstance
 
-    form_overrides = dict(video_rel=wtf.TextField)
+    form_overrides = dict(
+        video_rel=wtf.TextField,
+        video_channel=wtf.TextField,
+    )
 
     column_list = ('video_rel', 'video_channel', 'date_added', 'category_rel', 'thumbnail')
     column_formatters = dict(thumbnail=_format_video_thumbnail, video_rel=_format_video_instance_link)
     column_filters = ('channel', 'video_rel', 'metas', 'category_rel')
-    form_columns = ('video_channel', 'video_rel', 'position', 'date_added')
+    form_columns = ('video_channel', 'video_rel', 'position', 'date_added', 'tags')
 
     inline_models = (VideoInstanceLocaleMetaFormAdmin(models.VideoInstanceLocaleMeta),)
 

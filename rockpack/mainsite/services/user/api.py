@@ -1266,6 +1266,7 @@ class UserWS(WebService):
                 User.email.in_(set(f.email for f in friends if f.external_system == 'email')))
         )
         items = []
+        added_rockpack_users = {}
         for friend in friends:
             uid = friend.email if friend.external_system == 'email' else friend.external_uid
             rockpack_user = rockpack_friends.get((friend.external_system, uid))
@@ -1279,6 +1280,14 @@ class UserWS(WebService):
                 last_shared_date=last_shared_date,
             )
             if rockpack_user:
+                # Avoid duplicating users via facebook & email mappings, but update last_shared_date
+                added_item = added_rockpack_users.get(rockpack_user.id)
+                if added_item:
+                    if added_item['last_shared_date'] < last_shared_date:
+                        added_item['last_shared_date'] = last_shared_date
+                    continue
+                else:
+                    added_rockpack_users[rockpack_user.id] = item
                 item.update(
                     id=rockpack_user.id,
                     resource_url=rockpack_user.get_resource_url(),

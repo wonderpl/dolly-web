@@ -225,6 +225,7 @@ class VideoInstance(db.Model):
     channel = Column(ForeignKey('channel.id'), nullable=False)
     source_channel = Column(ForeignKey('channel.id'), nullable=True)
     category = Column(ForeignKey('category.id'), nullable=True)
+    tags = Column(String(1024), nullable=True)
 
     metas = relationship('VideoInstanceLocaleMeta', backref='video_instance_rel',
                          cascade='all,delete', passive_deletes=True)
@@ -355,9 +356,9 @@ class Channel(db.Model):
 
     resource_url = property(get_resource_url)
 
-    def add_videos(self, videos):
+    def add_videos(self, videos, tags=None):
         instances = [VideoInstance(channel=self.id, video=getattr(v, 'id', v),
-                                   category=self.category) for v in videos]
+                                   category=self.category, tags=tags) for v in videos]
         existing = dict(VideoInstance.query.filter_by(channel=self.id).values('video', 'id'))
         self.query.session.add_all(i for i in instances if i.video not in existing)
 

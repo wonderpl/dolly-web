@@ -2,9 +2,10 @@ import re
 import logging
 from datetime import date
 from cStringIO import StringIO
+from werkzeug import MultiDict
 from flask import request, url_for, redirect, flash, jsonify
 from flask.ext import wtf, login
-from flask.ext.admin import BaseView, expose, form
+from flask.ext.admin import expose, form
 from wtforms.validators import ValidationError
 from rockpack.mainsite import requests
 from rockpack.mainsite.core.dbapi import commit_on_success, db
@@ -17,6 +18,7 @@ from rockpack.mainsite.services.cover_art.models import UserCoverArt
 from rockpack.mainsite.services.user.models import User
 from rockpack.mainsite.services.oauth.api import RockRegistrationForm
 from .models import AdminLogRecord
+from .base import AuthenticatedView
 
 
 class ImportForm(form.BaseForm):
@@ -25,6 +27,7 @@ class ImportForm(form.BaseForm):
                              validators=[wtf.validators.required()])
     id = wtf.TextField(validators=[wtf.validators.required()])
     category = form.Select2Field(coerce=int, default=-1)
+    tags = wtf.TextField(validators=[wtf.Optional()])
     cover = wtf.FileField(validators=[wtf.Optional()])
     cover_url = wtf.TextField(validators=[wtf.Optional(), wtf.URL()])
     commit = wtf.HiddenField()
@@ -51,10 +54,15 @@ class ImportForm(form.BaseForm):
                 return
             UserCoverArt(cover=self.cover.data, owner=self.user.data).save()
 
-        if self.commit.data and self.category.data == -1:
-            # category is required before commit
-            self.category.errors = ['Please select a category']
-            return
+        if self.commit.data:
+            # channel & category is required before commit
+            if self.category.data == -1:
+                self.category.errors = ['Please select a category']
+                return
+            if not self.channel.data and self.user.data:
+                self.channel.errors = ['Please select a channel']
+                return
+
         if self.source.data == 1:   # youtube
             get_data = getattr(youtube, 'get_%s_data' % self.type.data)
             try:
@@ -71,20 +79,17 @@ class UserForm(RockRegistrationForm):
     password = None
     date_of_birth = None
     email = None
-    avatar = wtf.FileField()
+    avatar = wtf.FileField(validators=[wtf.Optional()])
+    avatar_url = wtf.TextField(validators=[wtf.Optional(), wtf.URL()])
+    description = wtf.TextField(validators=[wtf.Optional()])
+    site_url = wtf.TextField(validators=[wtf.Optional(), wtf.URL()])
 
     def validate_avatar(form, field):
         if not request.files.get('avatar'):
             raise ValidationError('No file chosen')
 
 
-class ImportView(BaseView):
-
-    def is_authenticated(self):
-        return login.current_user.is_authenticated()
-
-    def is_accessible(self):
-        return self.is_authenticated()
+class ImportView(AuthenticatedView):
 
     @commit_on_success
     def _import_videos(self, form):
@@ -92,52 +97,81 @@ class ImportView(BaseView):
             video.rockpack_curated = True
         count = Video.add_videos(form.import_data.videos, form.source.data)
 
-        channel = form.channel.data   # XXX: Need to validate?
-        user = form.user.data
-        if channel and user:
-            if channel.startswith('_new:'):
-                channel = Channel.create(
-                    title=channel.split(':', 1)[1],
-                    owner=user,
-                    description=form.channel_description.data,
-                    cover=form.cover.data,
-                    category=form.category.data)
-                self.record_action('created', channel)
-            else:
-                channel = Channel.query.get(channel)
-            channel.add_videos(form.import_data.videos)
-            self.record_action('imported', channel, '%d videos' % count)
-            push_config = form.import_data.push_config
-            if push_config and channel.id:
-                try:
-                    subscribe(push_config.hub, push_config.topic, channel.id)
-                except Exception, e:
-                    flash('Unable to subscribe to channel: %s' % e.message, 'error')
+        if not form.channel.data and not form.user.data:
+            self._set_form_data_from_source(form)
+
+        channelid = form.channel.data
+        if channelid.startswith('_new:'):
+            channel = Channel.create(
+                title=channelid.split(':', 1)[1],
+                owner=form.user.data,
+                description=form.channel_description.data,
+                cover=form.cover.data,
+                category=form.category.data)
+            self.record_action('created', channel)
         else:
-            channel = None
+            channel = Channel.query.get_or_404(channelid)
+        channel.add_videos(form.import_data.videos, form.tags.data)
+        self.record_action('imported', channel, '%d videos' % count)
+        push_config = form.import_data.push_config
+        if push_config and channel.id:
+            try:
+                subscribe(push_config.hub, push_config.topic, channel.id)
+            except Exception, e:
+                flash('Unable to subscribe to channel: %s' % e.message, 'error')
 
         return count, channel
 
+    def _set_form_data_from_source(self, form):
+        username = form.import_data.videos[0].source_username
+        site_url = 'http://www.youtube.com/%s' % username
+        # check for existing user & channel
+        matches = list(
+            Channel.query.filter(Channel.title.like('YouTube Channel:%')).
+            join(User, (User.id == Channel.owner) &
+                       (User.site_url == site_url) &
+                       (User.username == username)).
+            values(Channel.id, Channel.owner))
+        if matches:
+            form.channel.data, form.user.data = matches[0]
+        else:
+            user = youtube.get_user_profile_data(username)
+            user_form = UserForm(MultiDict(dict(
+                username=username,
+                first_name=user.display_name or '',
+                avatar_url=user.thumbnail,
+                description=user.summary,
+                site_url=site_url,
+            )))
+            form.user.data = self._create_user(user_form)
+            form.channel.data = '_new:YouTube Channel: %s' % username
+
     def _create_user(self, form):
-        if 'avatar' in request.files:
+        if request.files.get('avatar'):
             avatar = resize_and_upload(request.files['avatar'], 'AVATAR')
+        elif form.avatar_url.data:
+            avatar_file = StringIO(requests.get(form.avatar_url.data).content)
+            avatar = resize_and_upload(avatar_file, 'AVATAR')
         else:
             avatar = ''
+
         user = User(
             username=form.username.data.strip(),
             password_hash='',
             first_name=form.first_name.data,
             last_name=form.last_name.data,
+            description=form.description.data,
+            site_url=form.site_url.data,
             email='',
             date_of_birth=date(1900, 1, 1),
             avatar=avatar,
             refresh_token='',
-            locale='en-us',
+            locale=form.locale.data or 'en-us',
             is_active=True)
         self.record_action('created', user)
         db.session.add(user)
         db.session.commit()
-        return user
+        return user.id
 
     def record_action(self, action, model, value=None):
         db.session.add(AdminLogRecord(
@@ -171,12 +205,15 @@ class ImportView(BaseView):
 
         if 'source' in data:
             if form.commit.data and not form.user.data:
-                if not user_form.validate():
-                    return self.render('admin/import.html', **ctx)
-
-                user = self._create_user(user_form)
-                # update import form with new user
-                form.user.data = user.id
+                if user_form.username.data:
+                    if user_form.validate():
+                        # update import form with new user
+                        form.user.data = self._create_user(user_form)
+                    else:
+                        return self.render('admin/import.html', **ctx)
+                else:
+                    # User and channel will be created from source data
+                    assert form.channel.data == ''
 
             if form.validate():
                 if form.commit.data:
@@ -215,10 +252,10 @@ class ImportView(BaseView):
         prefix = request.args.get('prefix', '')
         exact_name = request.args.get('exact_name', '')
         if exact_name:
-            c = jsonify(Channel.query.filter(Channel.title == exact_name).values(Channel.id, Channel.title))
-            if c != '{}':
-                c = jsonify(Channel.query.filter(Channel.id == exact_name).values(Channel.id, Channel.title))
-            return c
+            channels = list(Channel.query.filter(Channel.title == exact_name).values(Channel.id, Channel.title))
+            if not channels:
+                channels = list(Channel.query.filter(Channel.id == exact_name).values(Channel.id, Channel.title))
+            return jsonify(channels)
         if prefix:
             if not re.match('^[!&#\w ]+$', prefix):
                 prefix = None
@@ -234,6 +271,25 @@ class ImportView(BaseView):
         if request.args.get('instance_id'):
             return jsonify(VideoInstance.query.join(Video).filter(VideoInstance.id == request.args.get('instance_id')).values(VideoInstance.video, Video.title))
         return jsonify(Video.query.filter(Video.id.ilike(vid + '%')).values(Video.id, Video.title))
+
+    @expose('/tags.js')
+    def tags(self):
+        prefix = request.args.get('prefix', '')
+        limit = int(request.args.get('size', 10))
+        offset = int(request.args.get('start', 0))
+        print limit, offset
+        tags = []
+        if prefix.startswith('cat-'):
+            prefix = prefix[4:]
+            categories = Category.query.filter(Category.name.like(prefix + '%')).\
+                distinct().order_by(Category.name).limit(limit).offset(offset)
+            tags.extend(('cat-%s' % n) for n, in categories.values(Category.name))
+        elif len(prefix) > 2:
+            instances = VideoInstance.query.filter(VideoInstance.tags.like(prefix + '%')).\
+                distinct().order_by(VideoInstance.tags).limit(limit).offset(offset)
+            tags.extend(set(instance_tags.split(',', 1)[0]
+                            for instance_tags, in instances.values('tags')))
+        return jsonify(tags=tags)
 
     @expose('/bookmarklet.js')
     def bookmarklet(self):

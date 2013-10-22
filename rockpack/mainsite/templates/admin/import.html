@@ -67,8 +67,9 @@
 {% endblock %}
 
 {% block tail %}
-<script src="/admin/static/js/bootstrap-datepicker.js"></script>
-    <script src="/admin/static/js/form.js"></script>
+  <script src="/admin/static/js/bootstrap-datepicker.js"></script>
+  <script src="/admin/static/js/form.js"></script>
+  {% include 'admin/rockpack-tags.js' %}
   <script>
     $(function () {
       // hide the channel description unless we create a new one

@@ -11,7 +11,7 @@ DATABASE_URL = 'postgresql://mainsite:%s@db1/dolly' % DB_PASSWORD
 SLAVE_DATABASE_URL = DATABASE_URL.replace('db1', 'db2')
 
 GOOGLE_CONSUMER_KEY = '981375550038-9kntj6ktabchpfouhvi8hpq082j7m3rd.apps.googleusercontent.com'
-GOOGLE_CONSUMER_SECRET = _decrypt('\x13\xf3+\x01\x04\xca|e\xc0\xf4\xbd\xcb\xeb\xa6\x1ag\xddY\xc4\x9f;')
+GOOGLE_CONSUMER_SECRET = _decrypt('?\xacR[\xb5N\xe3P\xd4\xea\x85\x1e\x89\xd08o\xd8\xfcI\xb8\xceO^k')
 
 #ASSETS_URL = '//d1ndbcg4lpnkzx.cloudfront.net/static'
 IMAGE_CDN = 'http://media.dolly.us.rockpack.com'
@@ -36,11 +36,11 @@ SQS_REGION = 'us-east-1'
 
 FACEBOOK_APP_ID = '517447921656577'
 FACEBOOK_APP_SECRET = _decrypt('#>d\xb3\ri\xc5\x07*\xb7\x99\xb05\x0f8\x19\x03\xff1\xb3Id\xab=\x13\xc9\xcfQD\x0c\xd2G')
-FACEBOOK_APP_NAMESPACE = 'dolly'
+FACEBOOK_APP_NAMESPACE = 'dollyns'
 
 SERVER_NAME = 'rockpack.com'
 SECURE_SUBDOMAIN = 'secure'
-ADMIN_SUBDOMAIN = 'admin'
+ADMIN_SUBDOMAIN = 'dolly'
 DEFAULT_SUBDOMAIN = 'lb.us'
 API_SUBDOMAIN = 'api'
 SHARE_SUBDOMAIN = 'share'
@@ -55,3 +55,7 @@ SHARE_SUBDOMAIN = 'share'
 #ITUNES_CONNECT_VENDORID = '85709520'
 #ITUNES_CONNECT_APPLEID = 'bot@rockpack.com'
 #ITUNES_CONNECT_PASSWORD = _decrypt('\xaf\x11\x0e\xce\r&a\xd0mV')
+
+SQS_CRON_QUEUE = 'dolly-mainsite-cron'
+SQS_EMAIL_QUEUE = 'dolly-mainsite-email'
+SQS_VIDEO_UPDATE_QUEUE = 'dolly-mainsite-es'
