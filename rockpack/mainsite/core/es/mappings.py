@@ -104,6 +104,22 @@ user_mapping = {
             "type": "string",
             "index": "not_analyzed"
         },
+        "profile_cover_url": {
+            "type": "string",
+            "index": "not_analyzed"
+        },
+        "description": {
+            "type": "string",
+            "index": "not_analyzed"
+        },
+        "site_url": {
+            "type": "string",
+            "index": "not_analyzed"
+        },
+        "brand": {
+            "type": "boolean",
+            "null_value": False,
+        },
     }
 }
 

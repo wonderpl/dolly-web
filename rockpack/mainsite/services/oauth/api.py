@@ -175,6 +175,7 @@ class RockRegistrationForm(Form):
     date_of_birth = wtf.DateField(validators=[date_of_birth_validator()] + get_column_validators(User, 'date_of_birth'))
     locale = wtf.TextField(validators=get_column_validators(User, 'locale'))
     email = wtf.TextField(validators=[wtf.validators.Email(), email_validator(), email_registered_validator()] + get_column_validators(User, 'email'))
+    description = wtf.TextField(validators=[wtf.validators.Optional()] + get_column_validators(User, 'description'))
 
 
 class ExternalRegistrationForm(Form):

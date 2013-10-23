@@ -16,11 +16,9 @@ import sqlalchemy as sa
 
 def upgrade():
     op.add_column('user', sa.Column('profile_cover', sa.String(length=1024)))
-    # can't update type in transaction :-(
-    print 'X' * 80
-    print 'Apply manually:'
-    print "alter type user_flag_enum add value 'brand';"
+    op.add_column('user', sa.Column('brand_profile_cover', sa.String(length=1024)))
 
 
 def downgrade():
     op.drop_column('user', 'profile_cover')
+    op.drop_column('user', 'brand_profile_cover')

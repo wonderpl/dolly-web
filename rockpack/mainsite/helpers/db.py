@@ -81,7 +81,7 @@ class ImagePath(object):
     """Wrapper around image path string that can generate thumbnail urls."""
 
     def __init__(self, path, type):
-        self.path = path
+        self.path = path or ''
         self._type = type
         self._names = app.config['%s_IMAGES' % type]
 
