@@ -198,7 +198,7 @@ class ImportView(AuthenticatedView):
         form = ImportForm(data, csrf_enabled=False)
         form.source.choices = list(Source.get_form_choices())
         form.category.choices = [(-1, '')] +\
-            list(Category.get_form_choices(data.get('locale', 'en-us'), True))
+            list(Category.get_form_choices(data.get('locale') or 'en-us', True))
 
         user_form = UserForm(data, csrf_enabled=False)
         ctx['user_form'] = user_form
