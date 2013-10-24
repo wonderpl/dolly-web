@@ -1,3 +1,4 @@
+import re
 import time
 import logging
 from datetime import datetime, timedelta
@@ -9,6 +10,7 @@ from rockpack.mainsite.core.es import mappings, api
 from rockpack.mainsite.core.es import es_connection, helpers
 from rockpack.mainsite.core.dbapi import commit_on_success
 from rockpack.mainsite.core.youtube import batch_query, _parse_datetime
+from rockpack.mainsite.helpers.http import get_external_resource
 from rockpack.mainsite.services.base.models import JobControl
 from rockpack.mainsite.services.user.models import Subscription, UserActivity
 from rockpack.mainsite.services.video.models import (
@@ -197,6 +199,33 @@ def update_channel_promotions():
 
     job_control.last_run = now
     job_control.save()
+
+
+@manager.cron_command(interval=86400)
+@commit_on_success
+def import_google_movies():
+    for channelid, location in app.config['GOOGLE_MOVIE_LOCATIONS']:
+        start = 0
+        video_ids = set()
+        channel = Channel.query.get(channelid)
+        existing = set(v for v, in VideoInstance.query.
+                       filter_by(channel=channelid).join(Video).values('source_videoid'))
+        while True:
+            url = app.config['GOOGLE_MOVIE_URL'] % (location, start)
+            html = get_external_resource(url).read()
+            video_ids.update(re.findall('youtube.com/watch%3Fv%3D(.{11})', html))
+            next = re.search('<a [^>]*start=(\d+)[^>]*><img[^>]*><br>Next</a>', html)
+            if next:
+                start = int(next.group(1))
+                time.sleep(1)   # Don't get blocked by google
+            else:
+                break
+        feed_ids = [('videos', id) for id in video_ids - existing]
+        if feed_ids:
+            playlist = batch_query(feed_ids, playlist='Googlemovietrailers/uploads')
+            added = Video.add_videos(playlist.videos, 1)
+            channel.add_videos(playlist.videos)
+            app.logger.info('Added %d trailers to "%s"', added, channel.title)
 
 
 @manager.cron_command(interval=900)

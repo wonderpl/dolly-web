@@ -90,13 +90,21 @@ else:
     _youtube_feed = _youtube_feed_requests
 
 
-def batch_query(ids, params=None):
+def batch_query(ids, params=None, playlist=None):
     request = gdata.data.BatchFeed()
     for id in ids:
         request.add_query(GDATA_URL % id)
     content = 'application/atom+xml', str(request)
     result = _youtube_feed('videos', 'batch', params, content)
-    return gdata.BatchFeedFromString(result)
+    batch_feed = gdata.BatchFeedFromString(result)
+    if playlist:
+        videos = [_get_atom_video_data(
+                  gdata.youtube.YouTubeVideoEntryFromString(e.ToString()),
+                  playlist)
+                  for e in batch_feed.entry if e.batch_status.code == '200']
+        return Playlist(playlist, len(videos), videos, None)
+    else:
+        return batch_feed
 
 
 def _get_atom_video_data(youtube_data, playlist=None):
