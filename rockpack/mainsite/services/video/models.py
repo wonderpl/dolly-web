@@ -48,17 +48,20 @@ class Category(db.Model):
     external_category_maps = relationship('ExternalCategoryMap', backref='category_ref')
 
     def __unicode__(self):
-        pname = self.parent_category.name if self.parent_category else '-'
-        return '{} - {}'.format(pname, self.name)
+        if self.parent_category:
+            return '{} - {}'.format(self.parent_category.name, self.name)
+        else:
+            return self.name
 
     @classmethod
-    def get_form_choices(cls, locale):
+    def get_form_choices(cls, locale, children_only=False):
         query = cls.query.filter(
             CategoryTranslation.category == Category.id,
-            CategoryTranslation.locale == locale).order_by('parent asc')
-        for q in query:
-            pname = q.parent_category.name if q.parent_category else '-'
-            yield q.id, '%s - %s' % (pname, q.name)
+            CategoryTranslation.locale == locale)
+        if children_only:
+            query = query.filter(Category.parent.isnot(None))
+        for category in query.order_by('parent asc'):
+            yield category.id, unicode(category)
 
 
 class CategoryTranslation(db.Model):
