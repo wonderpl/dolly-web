@@ -7,7 +7,8 @@ def setup_admin(app):
     from . import commands
 
     subdomain = app.config.get('ADMIN_SUBDOMAIN')
-    admin = Admin(app, endpoint='admin', subdomain=subdomain, name='Rockpack Admin')
+    admin_name = app.config.get('ADMIN_NAME', 'Rockpack Admin')
+    admin = Admin(app, endpoint='admin', subdomain=subdomain, name=admin_name)
 
     # video
     for v in video_views.admin_views():

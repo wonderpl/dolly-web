@@ -14,7 +14,9 @@ from rockpack.mainsite.helpers.urls import url_for
 from rockpack.mainsite.core.es.api import add_user_to_index
 
 
-USER_FLAGS = 'facebook_autopost_star', 'facebook_autopost_add'
+VISIBLE_USER_FLAGS = 'facebook_autopost_star', 'facebook_autopost_add'
+HIDDEN_USER_FLAGS = 'unsub1', 'unsub2', 'unsub3', 'unsub4', 'bouncing'
+USER_FLAGS = HIDDEN_USER_FLAGS + VISIBLE_USER_FLAGS
 EXTERNAL_SYSTEM_NAMES = 'email', 'facebook', 'twitter', 'google', 'apns'
 GENDERS_MAP = {'m': 'male', 'f': 'female'}
 GENDERS = GENDERS_MAP.keys()
@@ -38,7 +40,9 @@ class User(db.Model):
     date_joined = Column(DateTime(), nullable=False, default=func.now())
     date_updated = Column(DateTime(), nullable=False, default=func.now(), onupdate=func.now())
     display_fullname = Column(Boolean, nullable=False, server_default='true', default=True)
-    description = Column(String(1024))
+    profile_cover = Column(ImageType('PROFILE'))
+    brand_profile_cover = Column(ImageType('BRAND_PROFILE'))
+    description = Column(String(50))
     site_url = Column(String(1024))
 
     locale = Column(ForeignKey('locale.id'), nullable=False, server_default='')
@@ -86,6 +90,13 @@ class User(db.Model):
             return u'%s %s' % (self.first_name, self.last_name)
         else:
             return self.username
+
+    @property
+    def brand(self):
+        return bool(self.brand_profile_cover)
+
+    def get_profile_cover(self):
+        return self.brand_profile_cover or self.profile_cover
 
     def get_resource_url(self, own=False):
         view = 'userws.own_user_info' if own else 'userws.user_info'

@@ -231,7 +231,6 @@ class ChannelLocaleMetaData(DataSet):
         star_count = 10
 
 
-
 class VideoData(DataSet):
     class video1:
         id = 'RP000001GZVLQVP5S5M3T6VMQZKSJQW6DVUV4VHY'
@@ -333,26 +332,6 @@ class VideoInstanceData(DataSet):
 
 
 all_data = [v for k, v in globals().copy().iteritems() if k.endswith('Data')]
-
-# patch for sqlalchemy and SessionMaker
-
-from flask.ext.sqlalchemy import _SignalTrackingMapperExtension, orm
-from sqlalchemy.orm.interfaces import EXT_CONTINUE
-
-
-def _record(self, mapper, model, operation):
-    pk = tuple(mapper.primary_key_from_instance(model))
-    # Some hack just to prevent from crashing when trying to look
-    # for _model_changes attribute. Happens when loading fixutres with
-    # the fixture library.
-    if not hasattr(orm.object_session(model), '_model_changes'):
-        orm.object_session(model)._model_changes = dict()
-    orm.object_session(model)._model_changes[pk] = (model, operation)
-    return EXT_CONTINUE
-
-
-# duck punch
-_SignalTrackingMapperExtension._record = _record
 
 
 def install(*args):

@@ -283,7 +283,7 @@ def convert_image_path(obj, attr, type_):
     """ Gets the url of the object from a string
         if path object is unavailable on parent """
     obj_attr = getattr(obj, attr)
-    if isinstance(obj_attr, basestring):
+    if isinstance(obj_attr, basestring) or obj_attr is None:
         return ImageType(type_).process_result_value(obj_attr, None)
     return obj_attr
 
@@ -533,12 +533,21 @@ def add_user_to_index(user, bulk=False, refresh=False, no_check=False):
     if not use_elasticsearch():
         return
 
+    urlpath = lambda u: urlparse(u).path
+    if user.brand:
+        cover = convert_image_path(user, 'brand_profile_cover', 'BRAND_PROFILE')
+    else:
+        cover = convert_image_path(user, 'profile_cover', 'PROFILE')
     data = dict(
         id=user.id,
-        avatar_thumbnail_url=urlparse(convert_image_path(user, 'avatar', 'AVATAR').thumbnail_medium).path,
-        resource_url=urlparse(user.resource_url).path,
+        avatar_thumbnail_url=urlpath(convert_image_path(user, 'avatar', 'AVATAR').url),
+        resource_url=urlpath(user.resource_url),
         display_name=user.display_name,
-        username=user.username
+        username=user.username,
+        profile_cover_url=urlpath(cover.url),
+        description=user.description,
+        site_url=user.site_url,
+        brand=user.brand,
     )
     return add_to_index(data, mappings.USER_INDEX, mappings.USER_TYPE, id=user.id, bulk=bulk, refresh=refresh)
 

@@ -1,5 +1,6 @@
+import wtforms as wtf
 from flask import request, abort
-from flask.ext import wtf
+from flask.ext.wtf import Form
 from collections import defaultdict
 from sqlalchemy.orm import contains_eager, lazyload, joinedload
 from sqlalchemy.sql.expression import desc
@@ -189,9 +190,9 @@ def save_player_error(video_instance, reason):
         report = models.PlayerErrorReport(**report).save()
 
 
-class PlayerErrorForm(wtf.Form):
-    error = wtf.StringField(validators=[wtf.Required()])
-    video_instance = wtf.StringField(validators=[wtf.Required()])
+class PlayerErrorForm(Form):
+    error = wtf.StringField(validators=[wtf.validators.Required()])
+    video_instance = wtf.StringField(validators=[wtf.validators.Required()])
 
 
 class VideoWS(WebService):

@@ -29,6 +29,10 @@ Cache-Control: public, max-age=60
   "username": "username",
   "display_name": "display name",
   "avatar_thumbnail_url": "http://path/to/avatar/small.jpg",
+  "profile_cover_url": "",
+  "description": "Description of user",
+  "brand": True,
+  "site_url": "http://link/to/external/site",
   "channels": {
     "total": 1,
     "items": [
@@ -77,6 +81,8 @@ Cache-Control: private
  "locale": "en-us",
  "gender": null,
  "avatar_thumbnail_url": "http://path/to/avatar.img",
+ "profile_cover_url": "",
+ "description": null,
  "date_of_birth": "1900-01-21",
  "subscriptions": {
   "resource_url": "https://path/to/subscriptions/resource/base/url/",
@@ -133,6 +139,7 @@ locale        | String | IETF language tag
 email         | String | Email address
 gender        | String | `m` or `f`
 password      |        | Special case. See [Change Password](#change-password) below
+description   | String | Profile description or tag-line
 
 Responds with a `204`
 
@@ -360,6 +367,45 @@ Avatar
 
 ```http
 PUT /ws/USERID/avatar/ HTTP/1.1
+Authorization: Bearer TOKEN
+Content-Type: image/png
+
+.........IMAGE DATA....
+```
+
+If invalid data:
+
+```http
+HTTP/1.1 400 BAD REQUEST
+Content-Type: application/json
+
+{
+ "error": "invalid_request",
+ "message": "cannot identify image file"
+}
+```
+
+If successful:
+
+```http
+HTTP/1.1 200 OK
+Location: http://path/uploaded/media.png
+Content-Type: application/json
+
+{
+ "thumbnail_url": "http://path/uploaded/media.png"
+}
+```
+
+Profile Cover
+=============
+
+### Update
+
+`PUT` new image data to update the user's profile cover.
+
+```http
+PUT /ws/USERID/profile_cover/ HTTP/1.1
 Authorization: Bearer TOKEN
 Content-Type: image/png
 

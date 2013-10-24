@@ -5,9 +5,9 @@ from sqlalchemy import desc, func, text
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import lazyload, contains_eager
 from sqlalchemy.orm.exc import NoResultFound
+import wtforms as wtf
 from flask import abort, request, json, g
-from flask.ext import wtf
-from flask.ext.admin import form
+from flask.ext.wtf import Form
 from rockpack.mainsite.core.apns import push_client
 from wtforms.validators import ValidationError
 from rockpack.mainsite import app
@@ -33,7 +33,7 @@ from rockpack.mainsite.services.video import api as video_api
 from rockpack.mainsite.services.search import api as search_api
 from .models import (
     User, UserActivity, UserContentFeed, UserNotification, UserInterest,
-    Subscription, UserFlag, USER_FLAGS)
+    Subscription, UserFlag, VISIBLE_USER_FLAGS)
 
 
 ACTION_COLUMN_VALUE_MAP = dict(
@@ -387,12 +387,13 @@ def user_activity(userid, locale, paging):
 
 def user_flags(userid, locale, paging):
     items = [dict(flag=f.flag, resource_url=f.resource_url)
-             for f in UserFlag.query.filter_by(user=userid)]
+             for f in UserFlag.query.filter(
+                 UserFlag.user == userid, UserFlag.flag.in_(VISIBLE_USER_FLAGS))]
     return dict(items=items, total=len(items))
 
 
 def set_user_flag(userid, flag):
-    if flag not in USER_FLAGS:
+    if flag not in VISIBLE_USER_FLAGS:
         abort(400, message=_('Invalid user flag.'))
     user = User.query.get_or_404(userid)
     userflag = user.set_flag(flag)
@@ -415,7 +416,7 @@ class JsonBooleanField(wtf.BooleanField):
     process_formdata = wtf.Field.process_formdata
 
 
-class ChannelForm(form.BaseForm):
+class ChannelForm(Form):
     title = wtf.TextField(
         validators=[check_present, naughty_word_validator] +
         get_column_validators(Channel, 'title', app.config.get('DOLLY', False)))
@@ -476,10 +477,10 @@ class ChannelForm(form.BaseForm):
             field.data = None
 
 
-class ActivityForm(wtf.Form):
+class ActivityForm(Form):
     action = wtf.SelectField(choices=ACTION_COLUMN_VALUE_MAP.items())
     video_instance = wtf.StringField()  # XXX: needed for backwards compatibility
-    object_type = wtf.SelectField(choices=ACTIVITY_OBJECT_TYPE_MAP.items(), validators=[wtf.Optional()])
+    object_type = wtf.SelectField(choices=ACTIVITY_OBJECT_TYPE_MAP.items(), validators=[wtf.validators.Optional()])
     object_id = wtf.StringField()
 
     def validate(self):
@@ -496,9 +497,9 @@ class ActivityForm(wtf.Form):
         return success
 
 
-class ContentReportForm(wtf.Form):
+class ContentReportForm(Form):
     object_type = wtf.SelectField(choices=ACTIVITY_OBJECT_TYPE_MAP.items())
-    object_id = wtf.StringField(validators=[wtf.Required()])
+    object_id = wtf.StringField(validators=[wtf.validators.Required()])
     reason = wtf.StringField(validators=get_column_validators(ContentReport, 'reason'))
 
     def validate_object_id(self, field):
@@ -729,6 +730,23 @@ def _channel_info_response(channel, locale, paging, owner_url):
     return data
 
 
+def _base_user_info(user):
+    data = dict(
+        id=user.id,
+        username=user.username,
+        display_name=user.display_name,
+        avatar_thumbnail_url=user.avatar.url,
+        profile_cover_url=user.get_profile_cover().url,
+        description=user.description,
+    )
+    if user.brand:
+        data.update(
+            brand=True,
+            site_url=user.site_url,
+        )
+    return data
+
+
 class UserWS(WebService):
 
     endpoint = '/'
@@ -739,36 +757,28 @@ class UserWS(WebService):
         if use_elasticsearch():
             us = es_search.UserSearch()
             us.add_id(userid)
-            owners = us.users()
-            if not owners:
+            users = us.users()
+            if not users:
                 abort(404)
-            owner = owners[0]
+            user = users[0]
             ch = es_search.ChannelSearch(self.get_locale())
             offset, limit = self.get_page()
             ch.set_paging(offset, limit)
             ch.favourite_sort('desc')
             ch.add_sort('date_updated')
             ch.add_term('owner', userid)
-            owner.setdefault('channels', {})['items'] =\
+            user.setdefault('channels', {})['items'] =\
                 ch.channels(with_owners=False, add_tracking=add_tracking)
-            owner['channels']['total'] = ch.total
-            return owner
-
-        user = User.query.get_or_404(userid)
-        channels = [video_api.channel_dict(c, p, owner_url=False,
-                                           with_owner=False, add_tracking=add_tracking)
-                    for p, c in enumerate(Channel.query.options(lazyload('category_rel')).
-                    filter_by(owner=user.id, deleted=False, public=True).
-                    order_by('favourite desc', 'channel.date_updated desc'))]
-
-        return dict(
-            id=user.id,
-            name=user.username,     # XXX: backwards compatibility
-            username=user.username,
-            display_name=user.display_name,
-            avatar_thumbnail_url=user.avatar.url,
-            channels=dict(items=channels, total=len(channels)),
-        )
+            user['channels']['total'] = ch.total
+        else:
+            user = _base_user_info(User.query.get_or_404(userid))
+            channels = [video_api.channel_dict(c, p, owner_url=False,
+                                               with_owner=False, add_tracking=add_tracking)
+                        for p, c in enumerate(Channel.query.options(lazyload('category_rel')).
+                        filter_by(owner=userid, deleted=False, public=True).
+                        order_by('favourite desc', 'channel.date_updated desc'))]
+            user['channels'] = dict(items=channels, total=len(channels))
+        return user
 
     @expose_ajax('/<userid>/', cache_private=True)
     @check_authorization()
@@ -776,17 +786,14 @@ class UserWS(WebService):
         if not userid == g.authorized.userid:
             return self.user_info(userid)
         user = g.authorized.user
-        info = dict(
-            id=user.id,
+        info = _base_user_info(user)
+        info.update(
             locale=user.locale,
-            username=user.username,
-            display_name=user.display_name,
             first_name=user.first_name,
             last_name=user.last_name,
             email=user.email,
             gender=user.gender,
             display_fullname=user.display_fullname,
-            avatar_thumbnail_url=user.avatar.url,
             date_of_birth=user.date_of_birth.isoformat() if user.date_of_birth else None,
         )
         data_sections = request.args.getlist('data') or ['channels']
@@ -837,7 +844,7 @@ class UserWS(WebService):
         user.save()
         return user.get_credentials()
 
-    @expose_ajax('/<userid>/<any("username", "first_name", "last_name", "email", "locale", "date_of_birth", "gender"):attribute_name>/', methods=('PUT',))
+    @expose_ajax('/<userid>/<any("username", "first_name", "last_name", "email", "locale", "date_of_birth", "gender", "description"):attribute_name>/', methods=('PUT',))
     @check_authorization(self_auth=True)
     def change_user_info(self, userid, attribute_name):
         value = request.json
@@ -872,7 +879,7 @@ class UserWS(WebService):
     @expose_ajax('/<userid>/flags/<flag>/', cache_age=60, cache_private=True)
     @check_authorization(self_auth=True)
     def get_flag_item(self, userid, flag):
-        if flag not in USER_FLAGS:
+        if flag not in VISIBLE_USER_FLAGS:
             abort(400, message=_('Invalid user flag.'))
         return bool(UserFlag.query.filter_by(user=userid, flag=flag).first_or_404())
 
@@ -900,6 +907,25 @@ class UserWS(WebService):
         user.avatar = process_image(User.avatar)
         user.save()
         return dict(thumbnail_url=user.avatar.url), 200, [('Location', user.avatar.url)]
+
+    @expose_ajax('/<userid>/profile_cover/', cache_age=60)
+    def get_profile_cover(self, userid):
+        user = User.query.get_or_404(userid)
+        cover = user.get_profile_cover()
+        if not cover:
+            abort(404)
+        return None, 302, [('Location', cover.url)]
+
+    @expose_ajax('/<userid>/profile_cover/', methods=['PUT'])
+    @check_authorization(self_auth=True)
+    def set_profile_cover(self, userid):
+        user = User.query.get_or_404(userid)
+        # Upload to and use brand_profile_cover if this is a "brand" user
+        attr = 'brand_profile_cover' if user.brand else 'profile_cover'
+        setattr(user, attr, process_image(getattr(User, attr)))
+        user.save()
+        cover = getattr(user, attr)
+        return dict(thumbnail_url=cover.url), 200, [('Location', cover.url)]
 
     @expose_ajax('/<userid>/activity/', cache_age=60, cache_private=True)
     @check_authorization(self_auth=True)

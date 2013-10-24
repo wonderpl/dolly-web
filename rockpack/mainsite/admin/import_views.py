@@ -3,8 +3,9 @@ import logging
 from datetime import date
 from cStringIO import StringIO
 from werkzeug import MultiDict
+import wtforms as wtf
 from flask import request, url_for, redirect, flash, jsonify
-from flask.ext import wtf, login
+from flask.ext import login
 from flask.ext.admin import expose, form
 from wtforms.validators import ValidationError
 from rockpack.mainsite import requests
@@ -22,18 +23,18 @@ from .base import AuthenticatedView
 
 
 class ImportForm(form.BaseForm):
-    source = form.Select2Field(coerce=int, validators=[wtf.validators.required()])
+    source = form.Select2Field(coerce=int, validators=[wtf.validators.Required()])
     type = form.Select2Field(choices=(('video', 'Video'), ('user', 'User'), ('playlist', 'Playlist')),
-                             validators=[wtf.validators.required()])
-    id = wtf.TextField(validators=[wtf.validators.required()])
+                             validators=[wtf.validators.Required()])
+    id = wtf.TextField(validators=[wtf.validators.Required()])
     category = form.Select2Field(coerce=int, default=-1)
-    tags = wtf.TextField(validators=[wtf.Optional()])
-    cover = wtf.FileField(validators=[wtf.Optional()])
-    cover_url = wtf.TextField(validators=[wtf.Optional(), wtf.URL()])
+    tags = wtf.TextField(validators=[wtf.validators.Optional()])
+    cover = wtf.FileField(validators=[wtf.validators.Optional()])
+    cover_url = wtf.TextField(validators=[wtf.validators.Optional(), wtf.validators.URL()])
     commit = wtf.HiddenField()
     user = wtf.TextField()
     channel = wtf.TextField()
-    channel_description = wtf.TextAreaField(validators=[wtf.Length(max=200)])
+    channel_description = wtf.TextAreaField(validators=[wtf.validators.Length(max=200)])
 
     def validate(self):
         if not super(ImportForm, self).validate():
@@ -79,10 +80,10 @@ class UserForm(RockRegistrationForm):
     password = None
     date_of_birth = None
     email = None
-    avatar = wtf.FileField(validators=[wtf.Optional()])
-    avatar_url = wtf.TextField(validators=[wtf.Optional(), wtf.URL()])
-    description = wtf.TextField(validators=[wtf.Optional()])
-    site_url = wtf.TextField(validators=[wtf.Optional(), wtf.URL()])
+    avatar = wtf.FileField(validators=[wtf.validators.Optional()])
+    avatar_url = wtf.TextField(validators=[wtf.validators.Optional(), wtf.validators.URL()])
+    description = wtf.TextField(validators=[wtf.validators.Optional()])
+    site_url = wtf.TextField(validators=[wtf.validators.Optional(), wtf.validators.URL()])
 
     def validate_avatar(form, field):
         if not request.files.get('avatar'):

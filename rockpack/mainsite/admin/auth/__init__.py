@@ -55,7 +55,7 @@ class LoginManager(login.LoginManager):
             return response
 
 
-class AnonymousUser(login.AnonymousUser):
+class AnonymousUser(login.AnonymousUserMixin):
     username = 'guest'
 
 

@@ -1,6 +1,7 @@
 from datetime import datetime
+import wtforms as wtf
 from flask import abort, g
-from flask.ext import wtf
+from flask.ext.wtf import Form
 from rockpack.mainsite import app
 from rockpack.mainsite.core import email
 from rockpack.mainsite.core.webservice import WebService, expose_ajax, ajax_create_response
@@ -44,9 +45,9 @@ def send_share_email(recipient, user, object_type, object, link):
     email.send_email(recipient, subject, body, format='html')
 
 
-class ShareForm(wtf.Form):
+class ShareForm(Form):
     object_type = wtf.SelectField(choices=SHARE_OBJECT_TYPE_MAP.items())
-    object_id = wtf.StringField(validators=[wtf.Required()])
+    object_id = wtf.StringField(validators=[wtf.validators.Required()])
 
     def __init__(self, user=None, locale=None, *args, **kwargs):
         self._user = user
@@ -77,10 +78,10 @@ class ShareForm(wtf.Form):
 
 
 class EmailShareForm(ShareForm):
-    email = wtf.StringField(validators=[wtf.Required(), wtf.Email(), email_validator()])
+    email = wtf.StringField(validators=[wtf.validators.Required(), wtf.validators.Email(), email_validator()])
     name = wtf.StringField()
     _external_system_choices = zip(EXTERNAL_SYSTEM_NAMES, map(str.capitalize, EXTERNAL_SYSTEM_NAMES))
-    external_system = wtf.SelectField(choices=_external_system_choices, validators=[wtf.Optional()])
+    external_system = wtf.SelectField(choices=_external_system_choices, validators=[wtf.validators.Optional()])
     external_uid = wtf.StringField()
 
 

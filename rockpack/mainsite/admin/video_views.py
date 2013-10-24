@@ -1,6 +1,7 @@
 from datetime import datetime
+import wtforms as wtf
 from flask import request
-from flask.ext import wtf
+from flask.ext.wtf import Form
 from flask.ext.admin.form import DateTimePickerWidget
 from flask.ext.admin.model.typefmt import Markup
 from flask.ext.admin.model.form import InlineFormAdmin
@@ -9,12 +10,12 @@ from rockpack.mainsite.services.video import models
 from rockpack.mainsite.services.cover_art import models as coverart_models
 
 
-def _format_video_thumbnail(context, video, name):
+def _format_video_thumbnail(view, context, video, name):
     t = u'<a target="_blank" href="%s"><img src="%s" width="160" height="90"/></a>'
     return Markup(t % (video.player_link, video.default_thumbnail))
 
 
-def _format_video_instance_link(context, video, name):
+def _format_video_instance_link(view, context, video, name):
     t = u'<a href="/admin/video/?flt1_0={}">{}</a>'
     if video.video_rel:
         return Markup(t.format(video.video, video.video_rel.title))
@@ -34,7 +35,8 @@ class Video(AdminView):
     column_formatters = dict(thumbnail=_format_video_thumbnail)
     column_filters = ('id', 'source_listid', 'sources', 'date_added', 'visible')
     column_searchable_list = ('title',)
-    form_columns = ('title', 'sources', 'source_videoid', 'rockpack_curated', 'visible')
+    form_excluded_columns = ('date_updated', 'date_published', 'instances', 'restrictions')
+    inline_models = (models.VideoThumbnail,)
 
 
 class VideoThumbnail(AdminView):
@@ -47,34 +49,26 @@ class VideoThumbnail(AdminView):
 class VideoInstanceLocaleMeta(AdminView):
     model = models.VideoInstanceLocaleMeta
     model_name = model.__tablename__
-    form_overrides = dict(
-        video_instance_rel=wtf.TextField,
-        view_count=wtf.TextField,
-        star_count=wtf.TextField,
-    )
-    from_args = dict(
-        view_count=dict(validators=[wtf.InputRequired()]),
-        star_count=dict(validators=[wtf.InputRequired()]),
-    )
 
     column_filters = ('video_instance_rel', 'locale_rel',)
+    form_ajax_refs = dict(
+        video_instance_rel={'fields': (models.VideoInstance.id,)},
+    )
 
 
 class VideoInstance(AdminView):
     model_name = 'video_instance'
     model = models.VideoInstance
 
-    form_overrides = dict(
-        video_rel=wtf.TextField,
-        video_channel=wtf.TextField,
-    )
-
     column_list = ('video_rel', 'video_channel', 'date_added', 'category_rel', 'thumbnail')
     column_formatters = dict(thumbnail=_format_video_thumbnail, video_rel=_format_video_instance_link)
     column_filters = ('channel', 'video_rel', 'metas', 'category_rel')
-    form_columns = ('video_channel', 'video_rel', 'position', 'date_added', 'tags')
-
-    inline_models = (VideoInstanceLocaleMetaFormAdmin(models.VideoInstanceLocaleMeta),)
+    form_excluded_columns = ('metas',)
+    form_ajax_refs = dict(
+        video_rel={'fields': (models.Video.title,)},
+        video_channel={'fields': (models.Channel.title,)},
+    )
+    #inline_models = (VideoInstanceLocaleMetaFormAdmin(models.VideoInstanceLocaleMeta),)
 
 
 class Source(AdminView):
@@ -131,7 +125,7 @@ class ChannelLocaleMetaFormAdmin(InlineFormAdmin):
     form_columns = ('id', 'channel_locale', 'visible')
 
 
-def _format_channel_video_count(context, channel, name):
+def _format_channel_video_count(view, context, channel, name):
     count = models.VideoInstance.query.filter(models.VideoInstance.channel == channel.id).count()
     return Markup('{}'.format(count))
 
@@ -140,21 +134,21 @@ class Channel(AdminView):
     model_name = 'channel'
     model = models.Channel
 
-    form_columns = ('title', 'description', 'ecommerce_url', 'cover', 'cover_aoi',
-                    'owner_rel', 'category_rel', 'public', 'verified', 'deleted',
-                    'editorial_boost', 'subscriber_count')
-    form_overrides = dict(owner_rel=wtf.TextField)
-    form_args = dict(
-        ecommerce_url=dict(validators=[wtf.Optional()]),
-        description=dict(validators=[wtf.Length(max=200)]),
-    )
     column_auto_select_related = True
     column_display_all_relations = True
-
     column_list = ('title', 'owner_rel', 'public', 'cover.url', 'category_rel', 'video_count', 'date_added', 'editorial_boost', 'subscriber_count')
     column_filters = ('owner', 'title', 'public', 'category_rel', 'description', 'owner_rel', 'deleted', 'date_added', 'editorial_boost', 'subscriber_count')
     column_searchable_list = ('title',)
     column_formatters = dict(video_count=_format_channel_video_count)
+
+    form_excluded_columns = ('video_instances', 'channel_promotion')
+    form_ajax_refs = dict(
+        owner_rel={'fields': (models.User.username,)},
+    )
+    form_args = dict(
+        ecommerce_url=dict(validators=[wtf.validators.Optional()]),
+        description=dict(validators=[wtf.validators.Optional(), wtf.validators.Length(max=200)]),
+    )
 
     inline_models = (ChannelLocaleMetaFormAdmin(models.ChannelLocaleMeta),)
 
@@ -162,7 +156,7 @@ class Channel(AdminView):
     child_links = (('Videos', 'video_instance', None),)
 
 
-def _format_promo_state(context, channel_promo, name):
+def _format_promo_state(view, context, channel_promo, name):
     now = datetime.utcnow()
     if now < channel_promo.date_start:
         state = '<div style="background-color:#FFBB33; text-align: center; border: solid 1px #FF8800; color: #FFFFFF">WAITING</div>'
@@ -173,19 +167,19 @@ def _format_promo_state(context, channel_promo, name):
     return Markup(state)
 
 
-def _format_category_names(context, channel_promo, name):
+def _format_category_names(view, context, channel_promo, name):
     if channel_promo.category == 0:
         return 'All'
     return models.Category.query.get(channel_promo.category)
 
 
-def _format_channel_from(context, channel_promo, name):
+def _format_channel_from(view, context, channel_promo, name):
     return channel_promo.channel_rel.category_rel
 
 
 def category_list():
     cats = {'0': 'All'}
-    for c in models.CategoryTranslation.query.filter(models.CategoryTranslation.priority>=0).order_by('category'):
+    for c in models.CategoryTranslation.query.filter(models.CategoryTranslation.priority >= 0).order_by('category'):
         if cats.get(c.category) and not c.locale == 'en-gb':
             continue
 
@@ -197,13 +191,13 @@ def category_list():
     return cats.items()
 
 
-class ChannelPromotionForm(wtf.Form):
+class ChannelPromotionForm(Form):
     channel = wtf.TextField()
     category = wtf.SelectField('Category')
-    locale = wtf.SelectField('Locale', validators=[wtf.Required()])
-    position = wtf.IntegerField(validators=[wtf.Required()])
-    date_start = wtf.DateTimeField(validators=[wtf.Required()], widget=DateTimePickerWidget())
-    date_end = wtf.DateTimeField(validators=[wtf.Required()], widget=DateTimePickerWidget())
+    locale = wtf.SelectField('Locale', validators=[wtf.validators.Required()])
+    position = wtf.IntegerField(validators=[wtf.validators.Required()])
+    date_start = wtf.DateTimeField(validators=[wtf.validators.Required()], widget=DateTimePickerWidget())
+    date_end = wtf.DateTimeField(validators=[wtf.validators.Required()], widget=DateTimePickerWidget())
 
     def __init__(self, *args, **kwargs):
         super(ChannelPromotionForm, self).__init__(*args, **kwargs)
@@ -227,11 +221,11 @@ class ChannelPromotionForm(wtf.Form):
             return
 
         promos = models.ChannelPromotion.query.filter(
-                models.ChannelPromotion.date_end > self.date_start.data,
-                models.ChannelPromotion.date_start < self.date_end.data,
-                models.ChannelPromotion.date_end > datetime.utcnow(),
-                models.ChannelPromotion.category == self.category.data,
-                models.ChannelPromotion.locale == self.locale.data)
+            models.ChannelPromotion.date_end > self.date_start.data,
+            models.ChannelPromotion.date_start < self.date_end.data,
+            models.ChannelPromotion.date_end > datetime.utcnow(),
+            models.ChannelPromotion.category == self.category.data,
+            models.ChannelPromotion.locale == self.locale.data)
 
         check_dupe = promos.filter(models.ChannelPromotion.channel == self.channel.data)
         if request.args.get('id'):
@@ -247,7 +241,7 @@ class ChannelPromotionForm(wtf.Form):
                 return
 
             promos = promos.filter(
-                    models.ChannelPromotion.id != request.args.get('id'))
+                models.ChannelPromotion.id != request.args.get('id'))
 
         if int(self.position.data) > 8:
             self.position.errors = ['Only a maximum of 8 position per category can be set']
@@ -280,7 +274,7 @@ class RockpackCoverArt(AdminView):
 
     column_list = ('locale_rel', 'cover.url', 'category_rel')
     column_filters = ('locale_rel', 'category_rel')
-    form_columns = ('locale_rel', 'category_rel', 'cover', 'cover_aoi', 'priority', 'attribution')
+    form_excluded_columns = ('date_created',)
 
     edit_template = 'admin/cover_art_edit.html'
     create_template = 'admin/cover_art_create.html'
@@ -290,10 +284,12 @@ class UserCoverArt(AdminView):
     model = coverart_models.UserCoverArt
     model_name = coverart_models.UserCoverArt.__tablename__
 
-    form_overrides = dict(owner_rel=wtf.TextField)
     column_list = ('owner_rel', 'cover.url', 'date_created')
     column_filters = ('owner_rel',)
-    form_columns = ('owner_rel', 'cover', 'cover_aoi')
+
+    form_ajax_refs = dict(
+        owner_rel={'fields': (models.User.username,)},
+    )
 
     edit_template = 'admin/cover_art_edit.html'
     create_template = 'admin/cover_art_create.html'
@@ -313,12 +309,6 @@ class ChannelLocaleMeta(AdminView):
     model_name = 'channel_locale_meta'
     model = models.ChannelLocaleMeta
 
-    form_overrides = dict(
-        channel_rel=wtf.TextField,
-        view_count=wtf.TextField,
-        star_count=wtf.TextField,
-    )
-
     column_filters = ('channel_rel', 'channel_locale')
 
 
@@ -335,9 +325,9 @@ class ExternalCategoryMap(AdminView):
 
 
 registered = [
-    Video, VideoInstanceLocaleMeta, VideoThumbnail, VideoInstance,
+    Video, VideoInstance,
     Source, Category, CategoryTranslation, Locale, RockpackCoverArt,
-    UserCoverArt, Channel, ChannelLocaleMeta, ChannelPromotion,
+    UserCoverArt, Channel, ChannelPromotion,
     ContentReport, ExternalCategoryMap]
 
 

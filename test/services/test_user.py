@@ -3,8 +3,9 @@ import uuid
 import cgi
 import urlparse
 from datetime import datetime, timedelta
-from test import base
 from mock import patch
+from test import base
+from test.assets import AVATAR_IMG_PATH
 from test.fixtures import ChannelData, VideoData, VideoInstanceData
 from test.test_helpers import get_auth_header
 from test.test_helpers import get_client_auth_header
@@ -309,6 +310,40 @@ class TestProfileEdit(base.RockPackTestCase):
             self.assertEquals(field_map['last_name'], user.last_name)
             self.assertEquals(field_map['first_name'], user.first_name)
             self.assertEquals(field_map['date_of_birth'], user.date_of_birth.strftime("%Y-%m-%d"))
+
+    def test_profile_cover(self):
+        with self.app.test_client() as client:
+            new_user = self.create_test_user()
+            r = client.put(
+                '/ws/{}/{}/'.format(new_user.id, 'profile_cover'),
+                data={'image': (AVATAR_IMG_PATH, 'cover.jpg')},
+                headers=[get_auth_header(new_user.id)],
+            )
+            self.assertEquals(r.status_code, 200)
+            self.assertIn('thumbnail_url', json.loads(r.data))
+
+    def test_brand_profile_cover(self):
+        with self.app.test_client() as client:
+            self.app.test_request_context().push()
+            new_user = self.create_test_user(brand_profile_cover='tmp.jpg')
+            r = client.put(
+                '/ws/{}/{}/'.format(new_user.id, 'profile_cover'),
+                data={'image': (AVATAR_IMG_PATH, 'cover.jpg')},
+                headers=[get_auth_header(new_user.id)],
+            )
+            self.assertEquals(r.status_code, 200)
+            self.assertIn('thumbnail_url', json.loads(r.data))
+            self.assertTrue(new_user.brand)
+            self.assertFalse(bool(new_user.profile_cover))
+
+            self.wait_for_es()
+            r = client.get(
+                '/ws/{}/'.format(new_user.id),
+                headers=[get_auth_header(self.create_test_user().id)],
+            )
+            data = json.loads(r.data)
+            self.assertTrue(data.get('brand'))
+            self.assertIn('brand', data['profile_cover_url'])
 
     def test_content_feed(self):
         if not self.app.config.get('ELASTICSEARCH_URL'):

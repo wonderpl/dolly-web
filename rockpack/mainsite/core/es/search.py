@@ -535,16 +535,23 @@ class UserSearch(EntitySearch):
         IMAGE_CDN = app.config.get('IMAGE_CDN', '')
         BASE_URL = url_for('basews.discover')
         for position, user in enumerate(users, self.paging[0]):
-            user_list.append(
-                dict(
-                    id=user.id,
-                    username=user.username,
-                    display_name=user.display_name,
-                    resource_url=urljoin(BASE_URL, user.resource_url),
-                    avatar_thumbnail_url=urljoin(IMAGE_CDN, user.avatar_thumbnail_url) if user.avatar_thumbnail_url else '',
-                    position=position
-                )
+            u = dict(
+                id=user.id,
+                username=user.username,
+                display_name=user.display_name,
+                resource_url=urljoin(BASE_URL, user.resource_url),
+                avatar_thumbnail_url=urljoin(IMAGE_CDN, user.avatar_thumbnail_url) if user.avatar_thumbnail_url else '',
+                profile_cover_url=urljoin(IMAGE_CDN, user.profile_cover_url) if user.profile_cover_url else '',
+                description=user.description,
+                position=position,
             )
+            if user.brand:
+                u.update(
+                    brand=True,
+                    site_url=user.site_url,
+                )
+            user_list.append(u)
+
         return user_list
 
     def users(self):

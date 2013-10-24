@@ -2,8 +2,9 @@ from werkzeug.datastructures import MultiDict
 from datetime import datetime, timedelta
 from cStringIO import StringIO
 from sqlalchemy.exc import IntegrityError
+import wtforms as wtf
 from flask import request, abort, g, json
-from flask.ext import wtf
+from flask.ext.wtf import Form
 from rockpack.mainsite import app, requests
 from rockpack.mainsite.helpers import lazy_gettext as _
 from rockpack.mainsite.helpers.forms import naughty_word_validator
@@ -165,20 +166,21 @@ def send_password_reset(user):
     send_email(user.email, subject, body, format='html')
 
 
-class RockRegistrationForm(wtf.Form):
-    username = wtf.TextField(validators=[wtf.Length(min=3), username_validator()] + get_column_validators(User, 'username'))
-    password = wtf.PasswordField(validators=[wtf.Required(), wtf.Length(min=6)])
-    first_name = wtf.TextField(validators=[wtf.Optional()] + get_column_validators(User, 'first_name'))
-    last_name = wtf.TextField(validators=[wtf.Optional()] + get_column_validators(User, 'last_name'))
-    gender = wtf.TextField(validators=[wtf.Optional(), gender_validator()] + get_column_validators(User, 'gender'))
+class RockRegistrationForm(Form):
+    username = wtf.TextField(validators=[wtf.validators.Length(min=3), username_validator()] + get_column_validators(User, 'username'))
+    password = wtf.PasswordField(validators=[wtf.validators.Required(), wtf.validators.Length(min=6)])
+    first_name = wtf.TextField(validators=[wtf.validators.Optional()] + get_column_validators(User, 'first_name'))
+    last_name = wtf.TextField(validators=[wtf.validators.Optional()] + get_column_validators(User, 'last_name'))
+    gender = wtf.TextField(validators=[wtf.validators.Optional(), gender_validator()] + get_column_validators(User, 'gender'))
     date_of_birth = wtf.DateField(validators=[date_of_birth_validator()] + get_column_validators(User, 'date_of_birth'))
     locale = wtf.TextField(validators=get_column_validators(User, 'locale'))
-    email = wtf.TextField(validators=[wtf.Email(), email_validator(), email_registered_validator()] + get_column_validators(User, 'email'))
+    email = wtf.TextField(validators=[wtf.validators.Email(), email_validator(), email_registered_validator()] + get_column_validators(User, 'email'))
+    description = wtf.TextField(validators=[wtf.validators.Optional()] + get_column_validators(User, 'description'))
 
 
-class ExternalRegistrationForm(wtf.Form):
-    external_system = wtf.TextField(validators=[wtf.Required()])
-    external_token = wtf.TextField(validators=[wtf.Required()])
+class ExternalRegistrationForm(Form):
+    external_system = wtf.TextField(validators=[wtf.validators.Required()])
+    external_token = wtf.TextField(validators=[wtf.validators.Required()])
     token_expires = wtf.TextField()
     token_permissions = wtf.TextField()
     meta = wtf.TextField()
@@ -414,7 +416,7 @@ class LoginWS(WebService):
         if not external_user.token_is_valid:
             abort(400, error='unauthorized_client')
 
-        # Since the call to Facebook to validate the token can take a while, it's 
+        # Since the call to Facebook to validate the token can take a while, it's
         # possible that another login request could come in here, in which case we
         # retry once - the first should return a registered=True and second a False.
         for retry in 1, 0:

@@ -24,13 +24,14 @@ def render(template=None):
 
 def expose_web(url, template=None, methods=['GET'], secure=None, cache_age=None, cache_private=False):
     def decorator(func):
-        subdomains = [None]
+        subdomains = [(None, '')]
         if app.config.get('DEFAULT_SUBDOMAIN'):
-            subdomains.append(app.config.get('DEFAULT_SUBDOMAIN'))
+            subdomains.append((app.config.get('DEFAULT_SUBDOMAIN'), '_default'))
         if secure and app.config.get('SECURE_SUBDOMAIN'):
-            subdomains = [app.config.get('SECURE_SUBDOMAIN')]
-        for subdomain in subdomains:
-            app.add_url_rule(url, None, cache_for(cache_age, cache_private)(render(template)(func)),
+            subdomains = [(app.config.get('SECURE_SUBDOMAIN'), '')]
+        for subdomain, suffix in subdomains:
+            name = func.func_name + suffix
+            app.add_url_rule(url, name, cache_for(cache_age, cache_private)(render(template)(func)),
                              methods=methods, subdomain=subdomain)
         return func
     return decorator

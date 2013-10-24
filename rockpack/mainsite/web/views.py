@@ -2,8 +2,10 @@ from urllib import urlencode
 from urlparse import urljoin, parse_qs, urlsplit, urlunsplit
 from cStringIO import StringIO
 import pyes
+import wtforms as wtf
 from flask import request, json, render_template, abort, redirect
-from flask.ext import wtf
+from flask.ext.wtf import Form
+from flask.ext.wtf.file import FileRequired
 from werkzeug.http import HTTP_STATUS_CODES
 from werkzeug.exceptions import NotFound
 from rockpack.mainsite import app, requests
@@ -71,10 +73,10 @@ def fullweb():
         abort(404)
 
 
-class FileUploadForm(wtf.Form):
-    user = wtf.HiddenField(validators=[wtf.Required()])
-    token = wtf.HiddenField(validators=[wtf.Required()])
-    file = wtf.FileField(validators=[wtf.Required(), wtf.FileRequired()])
+class FileUploadForm(Form):
+    user = wtf.HiddenField(validators=[wtf.validators.Required()])
+    token = wtf.HiddenField(validators=[wtf.validators.Required()])
+    file = wtf.FileField(validators=[wtf.validators.Required(), FileRequired()])
 
 
 @app.route('/upload/<any("avatar", "cover_art"):type>', methods=['POST'], subdomain=app.config.get('SECURE_SUBDOMAIN'))
@@ -275,10 +277,10 @@ def share_redirect(linkid):
     return share_link_processing(linkid)
 
 
-class ResetPasswordForm(wtf.Form):
+class ResetPasswordForm(Form):
     token = wtf.HiddenField()
-    password = wtf.PasswordField('NEW PASSWORD', validators=[wtf.Required(), wtf.Length(min=6)])
-    password2 = wtf.PasswordField('RETYPE NEW PASSWORD', validators=[wtf.Required(), wtf.Length(min=6)])
+    password = wtf.PasswordField('NEW PASSWORD', validators=[wtf.validators.Required(), wtf.validators.Length(min=6)])
+    password2 = wtf.PasswordField('RETYPE NEW PASSWORD', validators=[wtf.validators.Required(), wtf.validators.Length(min=6)])
 
     def validate_password2(self, field):
         if not self.password.data == self.password2.data:
