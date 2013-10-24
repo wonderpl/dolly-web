@@ -3,6 +3,7 @@
 
 {% block body %}
   {% if 1 %}
+  {% set locale = (request.form or request.args).get('locale') %}
   <div class="bookmarklet">
     Add this link to your bookmarks:
     <a href="
@@ -10,10 +11,10 @@
       (function () {
         var d = document,
           s = d.createElement('script');
-        s.src = '{{ url_for('.bookmarklet', _external=True) }}?locale={{ form.data.locale }}&' + Math.random();
+        s.src = '{{ url_for('.bookmarklet', _external=True) }}?locale={{ locale }}&' + Math.random();
         d.body.appendChild(s);
       }());
-      ">{% if form.locale %}{{ form.locale.data }} {% endif %}rockpack import</a>
+      ">{% if locale %}{{ locale }} {% endif %}{{ admin_view.admin.name }} Import</a>
   </div>
   {% endif %}
 
@@ -146,4 +147,5 @@
     .add-new:after {
       content: ')'
     }
+  </style>
 {% endblock %}
