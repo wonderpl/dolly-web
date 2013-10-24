@@ -38,7 +38,7 @@ def _create_token(format, version, *values):
 def _parse_token(format, token):
     signature, payload = token[:40], token[40:]
     try:
-        payload = b64decode(payload)
+        payload = b64decode(str(payload))
     except TypeError:
         return
     if _sign(payload) == signature:
