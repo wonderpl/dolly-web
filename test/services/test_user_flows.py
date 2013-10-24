@@ -6,6 +6,7 @@ import urlparse
 from itertools import chain
 from flask import Flask
 import rockpack.mainsite
+from test.test_decorators import skip_if_dolly
 from ..base import RockPackTestCase
 from ..test_helpers import get_client_auth_header
 
@@ -42,6 +43,8 @@ class BaseUserTestCase(RockPackTestCase):
             i.import_channels()
             i.import_videos()
             i.import_users()
+            if self.app.config.get('DOLLY'):
+                i.import_dolly_repin_counts()
 
     def tearDown(self):
         rockpack.mainsite.app = self.old_app
@@ -162,6 +165,7 @@ class SubscribingUserTestCase(BaseUserTestCase):
 
 class CuratingUserTestCase(BaseUserTestCase):
 
+    @skip_if_dolly
     def test_flow(self):
         """
         - Register new user

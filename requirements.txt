@@ -20,6 +20,6 @@ pyes>=0.20.1
 apns-client
 gdata==2.0.17
 #Needed for testing & deployment only:
-#pytest==2.3.4
+#pytest==2.4.2
 #fixture==1.4
 #cssmin==0.1.4

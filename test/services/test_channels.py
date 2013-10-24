@@ -6,12 +6,12 @@ from urlparse import urlsplit
 from mock import patch
 from test import base
 from test.fixtures import RockpackCoverArtData, VideoInstanceData, VideoData, ChannelData
+from test.test_decorators import skip_if_dolly
 from test.test_helpers import get_auth_header
 from test.services.test_user_flows import BaseUserTestCase
 from rockpack.mainsite import app
 from rockpack.mainsite.services.video.commands import set_channel_view_count, update_channel_promo_activity
 from rockpack.mainsite.core.es import use_elasticsearch
-from rockpack.mainsite.core.es.search import ChannelSearch
 from rockpack.mainsite.services.video import models
 from rockpack.mainsite.services.user.models import UserActivity
 
@@ -133,7 +133,7 @@ class ChannelPromotionTest(base.RockPackTestCase):
 class ChannelVisibleFlag(BaseUserTestCase):
 
     def test_visible_flag(self):
-        with self.app.test_client():
+        with self.app.test_client() as client:
             self.app.test_request_context().push()
             user = self.register_user()
             user_token = self.token
@@ -154,9 +154,19 @@ class ChannelVisibleFlag(BaseUserTestCase):
                 )
                 owned_resource = r['resource_url']
                 params = dict(q='music', size=1)
-                videos = self.get(self.urls['video_search'], params=params)['videos']['items']
-
-                self.put(owned_resource + 'videos/', [videos[0]['id']], token=self.token)
+                if self.app.config.get('DOLLY'):
+                    #XXX: Search isnt' going to work with ES off
+                    # since we don't search over yt so attach
+                    # a video manually
+                    client.post(
+                        owned_resource + 'videos/',
+                        data=json.dumps([VideoInstanceData.video_instance1.id]),
+                        content_type='application/json',
+                        headers=[get_auth_header(user)]
+                    )
+                else:
+                    videos = self.get(self.urls['video_search'], params=params)['videos']['items']
+                    self.put(owned_resource + 'videos/', [videos[0]['id']], token=self.token)
                 time.sleep(2)
 
                 resource = '{}/ws/{}/channels/{}/'.format(self.default_base_url, user['id'], r['id'])
@@ -249,6 +259,7 @@ class ChannelVisibleFlag(BaseUserTestCase):
 
 class ChannelCreateTestCase(base.RockPackTestCase):
 
+    @skip_if_dolly
     def test_new_channel(self):
         with self.app.test_client() as client:
             self.app.test_request_context().push()
@@ -434,6 +445,7 @@ class ChannelCreateTestCase(base.RockPackTestCase):
                 False,
                 'channel should not be public if privacy is toggled false')
 
+    @skip_if_dolly
     def test_dupe_channel_untitled(self):
         with self.app.test_client() as client:
             self.app.test_request_context().push()
@@ -547,6 +559,7 @@ class ChannelCreateTestCase(base.RockPackTestCase):
                                   headers=[get_auth_header(user.id)])
                 self.assertEquals(204 if code == 200 else code, r.status_code, r.data)
 
+    @skip_if_dolly
     def test_channel_cover(self):
         with self.app.test_client() as client:
             user_id = self.create_test_user().id
@@ -596,6 +609,7 @@ class ChannelCreateTestCase(base.RockPackTestCase):
                 )
                 self.assertEquals(status, r.status_code, r.data)
 
+    @skip_if_dolly
     def test_public_private(self):
         user_id = self.create_test_user().id
         with self.app.test_client() as client:
@@ -697,7 +711,6 @@ class ChannelVideoTestCase(base.RockPackTestCase):
                 (VideoData.video2.id, 0),
                 (VideoData.video1.id, 1),
             ])
-
 
     def test_channel_source(self):
         user_id = self.create_test_user().id

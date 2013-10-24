@@ -379,6 +379,7 @@ class ESVideoAttributeMap:
             display_name=owner.display_name,
             resource_url=urlparse(owner.resource_url).path)
 
+    @property
     def most_influential(self):
         # Default to True so that it automatically
         # shows up in search
@@ -608,35 +609,41 @@ def es_update_channel_videos(extant=[], deleted=[], async=app.config.get('ASYNC_
         deleted - list of strings
         async - boolean """
 
-    if not use_elasticsearch():
+    if not use_elasticsearch() or (not extant and not deleted):
         return
 
     if async:
         from rockpack.mainsite.video_update_sqs_processor import _write_message
         return _write_message(dict(extant=extant, deleted=deleted))
 
-    from rockpack.mainsite.services.video.models import VideoInstance
+    from rockpack.mainsite.services.video.models import VideoInstance, Video
 
-    all_ids = extant + deleted
     channel_ids = []
-    video_ids = [c for (c,) in VideoInstance.query.filter(VideoInstance.id.in_(all_ids)).values(VideoInstance.video)]
+    video_ids = []
 
-    if extant:
-        # XXX: This is a nasty hack to allow the VideoInstance query to proceed
-        # when this is called from sqlalchemy's after_commit signal
-        if VideoInstance.query.session.transaction._state.name == 'COMMITTED':
-            VideoInstance.query.session.transaction._state = None
+    # XXX: This is a nasty hack to allow the VideoInstance query to proceed
+    # when this is called from sqlalchemy's after_commit signal
+    if VideoInstance.query.session.transaction._state.name == 'COMMITTED':
+        VideoInstance.query.session.transaction._state = None
 
-        videos = VideoInstance.query.filter(
-            VideoInstance.id.in_(extant)
-        ).options(
-            joinedload(VideoInstance.video_channel)
-        )
-        es_video = ESVideo.inserter(bulk=True)
-        for v in videos:
-            channel_ids.append(v.channel)
-            es_video.insert(v.id, v)
-        es_video.flush_bulk()
+    all_instances = VideoInstance.query.filter(
+        VideoInstance.id.in_(extant)
+    ).options(
+        joinedload(VideoInstance.video_channel)
+    )
+
+    # Run through the instance data and get
+    # the channel and video ids from the
+    # instances that are to be added/deleted
+    es_video = ESVideo.inserter(bulk=True)
+    for instance in all_instances:
+        channel_ids.append(instance.channel)
+        video_ids.append(instance.video)
+        # Insert any instances to es as necessary
+        # while we're looping through everything
+        if instance.id in extant:
+            es_video.insert(instance.id, instance)
+    es_video.flush_bulk()
 
     if deleted:
         ESVideo.delete(deleted)
@@ -654,7 +661,7 @@ def es_update_channel_videos(extant=[], deleted=[], async=app.config.get('ASYNC_
         (VideoInstance.channel == child.source_channel)
     ).filter(
         VideoInstance.video.in_(video_ids)
-    ).group_by(VideoInstance.id, VideoInstance.video,child.source_channel)
+    ).group_by(VideoInstance.id, VideoInstance.video, child.source_channel)
 
     instance_counts = {}
     influential_index = {}
@@ -684,13 +691,16 @@ def es_update_channel_videos(extant=[], deleted=[], async=app.config.get('ASYNC_
     ESVideo.flush()
 
     # Reset video terms on channel
-    video_details = readonly_session.query(VideoInstance.channel, VideoInstance.title).filter(VideoInstance.channel.in_(channel_ids))
+    video_details = readonly_session.query(VideoInstance.channel, Video.title).join(
+        Video,
+        VideoInstance.video == Video.id
+    ).filter(VideoInstance.channel.in_(channel_ids))
     channel_map = {}
     for (channel_id, video_title) in video_details:
         channel_map.setdefault(channel_id, []).append(video_title)
 
     for channel_id, video_titles in channel_map.iteritems():
-        ec = ESChannel.update(bulk=True)
+        ec = ESChannel.updater(bulk=True)
         ec.set_document_id(channel_id)
         ec.add_field('video_terms', video_titles)
         ec.add_field('video_count', len(video_titles))

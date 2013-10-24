@@ -73,11 +73,11 @@ class SearchWS(WebService):
             # any results back (standard indexer on video title)
             if not app.config.get('DOLLY'):
                 vs.add_term('title', query.split())
+                vs.add_term('most_influential', True, occurs=MUST)
             else:
                 # Snowball analyzer is on the Dolly mapping
                 # so we can do a proper search here
                 vs.search_terms(query)
-            vs.add_term('most_influential', True, occurs=MUST)
             start, size = self.get_page()
             vs.set_paging(offset=start, limit=size)
             for video in vs.videos():

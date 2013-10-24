@@ -118,7 +118,8 @@ if app.config.get('DOLLY', False):
                 }
             },
             "most_influential": {
-                "type": "boolean"
+                "type": "boolean",
+                "null_value": False
             }
         }
     }
@@ -198,9 +199,6 @@ else:
                         "index": "not_analyzed"
                     }
                 }
-            },
-            "most_influential": {
-                "type": "boolean"
             }
         }
     }
