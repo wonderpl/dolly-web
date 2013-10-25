@@ -130,17 +130,23 @@ def complex_push_notification(token, push_message, push_message_args, badge=None
     return _send_apns_message(token.user, token.external_token, message)
 
 
-def send_push_notifications(user):
+def get_apns_token(user_id):
     try:
-        try:
-            user_id = user.id
-        except:
-            user_id = user
-        token = ExternalToken.query.filter(
+        return ExternalToken.query.filter(
             ExternalToken.external_system == 'apns',
             ExternalToken.external_token != 'INVALID',
             ExternalToken.user == user_id).one()
     except NoResultFound:
+        return
+
+
+def send_push_notifications(user):
+    try:
+        user_id = user.id
+    except:
+        user_id = user
+    token = get_apns_token(user_id)
+    if not token:
         return
 
     notifications = UserNotification.query.filter_by(date_read=None, user=user_id).order_by('id desc')
@@ -354,18 +360,26 @@ def create_new_channel_feed_items(date_from, date_to):
         join(ExternalFriend, (ExternalFriend.external_system == ExternalToken.external_system) &
                              (ExternalFriend.external_uid == ExternalToken.external_uid))
     for query, U in (sub_channels, Subscription), (friend_channels, ExternalFriend):
-        UserContentFeed.query.session.add_all(
-            UserContentFeed(user=user, channel=channel, date_added=date_published)
-            for user, channel, date_published in
             # use outerjoin to filter existing records
-            query.outerjoin(
-                UserContentFeed,
-                (UserContentFeed.user == U.user) &
-                (UserContentFeed.channel == Channel.id) &
-                (UserContentFeed.video_instance == None)).
-            filter(UserContentFeed.id == None).
-            distinct().values(U.user, Channel.id, Channel.date_published)
-        )
+        q = query.outerjoin(
+            UserContentFeed,
+            (UserContentFeed.user == U.user) &
+            (UserContentFeed.channel == Channel.id) &
+            (UserContentFeed.video_instance == None)
+        ).filter(
+            UserContentFeed.id == None
+        ).distinct().values(U.user, Channel.id, Channel.date_published)
+        for user, channel, date_published in q:
+            UserContentFeed.query.session.add(
+                UserContentFeed(user=user, channel=channel, date_added=date_published)
+            )
+            token = get_apns_token(user)
+            if not token:
+                continue
+            push_message = '%@ has added a new channel'
+            push_message_args = user.display_name()
+            deeplink_url = channel.get_resource_url(True)
+            complex_push_notification(token, push_message, push_message_args, url=deeplink_url)
 
 
 def remove_old_feed_items():
