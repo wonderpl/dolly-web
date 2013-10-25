@@ -43,6 +43,33 @@ def subscribe_message(activity, channel):
     )
 
 
+def repack_message(repacker, channel):
+    return channel.owner, 'repack', dict(
+        user=dict(
+            id=repacker.id,
+            resource_url=repacker.get_resource_url(),
+            display_name=repacker.display_name,
+            avatar_thumbnail_url=repacker.avatar.thumbnail_medium,
+        ),
+        channel=dict(
+            id=channel.id,
+            resource_url=channel.get_resource_url(True),
+            thumbnail_url=channel.cover.thumbnail_medium,
+        )
+    )
+
+
+def _channel_message(activity, channel, message_type):
+    return channel.owner, message_type, dict(
+        user=activity_user(activity),
+        channel=dict(
+            id=channel.id,
+            resource_url=channel.get_resource_url(True),
+            thumbnail_url=channel.cover.thumbnail_medium,
+        )
+    )
+
+
 def star_message(activity, video_instance):
     channel = video_instance.video_channel
     return channel.owner, 'starred', dict(
@@ -87,6 +114,22 @@ def _process_apns_broadcast(users, alert, url=None):
         _send_apns_message('batch', filter(None, set(tokens)), message)
 
 
+def complex_push_notification(token, push_message, push_message_args, badge=None, id=None, url=None):
+    message = dict(
+        alert={
+            "loc-key": push_message,
+            "loc-args": push_message_args
+        }
+    )
+    if badge is not None:
+        message.update({'badge': badge})
+    if id is not None:
+        message.update({'id': id})
+    if url is not None:
+        message.update({'url': url})
+    return _send_apns_message(token.user, token.external_token, message)
+
+
 def send_push_notifications(user):
     try:
         try:
@@ -114,23 +157,55 @@ def send_push_notifications(user):
     elif notification.message_type == 'joined':
         key = 'user'
         push_message = "Your Facebook friend %@ has joined Rockpack"
+    elif notification.message_type == 'repack':
+        key = 'channel'
+        push_message = "%@ has re-packed one of your videos"
     else:
         key = 'video'
         push_message = "%@ has liked your video"
     push_message_args = [data['user']['display_name']]
     deeplink_url = _apns_url(data[key]['resource_url'])
 
-    message = dict(
-        alert={
-            "loc-key": push_message,
-            "loc-args": push_message_args,
-        },
-        badge=count,
-        id=notification.id,
-        url=deeplink_url,
-    )
+    return complex_push_notification(token, push_message, push_message_args,
+        badge=count, id=notification.id, url=deeplink_url)
 
-    return _send_apns_message(token.user, token.external_token, message)
+
+def create_new_repack_notifications(date_from=None, date_to=None, user_notifications=None):
+    packer_channel = aliased(Channel, name="source_channel")
+    packer_user = aliased(User, name="packer_user")
+    repacker_channel = aliased(Channel, name="repacker_channel")
+    repacker_user = aliased(User, name="repacker_user")
+
+    activity_window = readonly_session.query(VideoInstance, packer_channel, repacker_channel, repacker_user).join(
+        packer_channel,
+        packer_channel.id == VideoInstance.source_channel
+    ).join(
+        packer_user,
+        packer_user.id == packer_channel.owner
+    ).join(
+        repacker_channel,
+        repacker_channel.id == VideoInstance.channel
+    ).join(
+        repacker_user,
+        repacker_user.id == repacker_channel.owner
+    )
+    if date_from:
+        activity_window = activity_window.filter(VideoInstance.date_added >= date_from)
+    if date_to:
+        activity_window = activity_window.filter(VideoInstance.date_added < date_to)
+
+    for video_instance, packer, packer_channel, repacker_channel, repacker in activity_window:
+        user, type, body = repack_message(repacker, repacker_channel)
+
+        notification = UserNotification(
+            user=packer,
+            date_created=video_instance.date_added,
+            message_type=type,
+            message=json.dumps(body, separators=(',', ':')),
+        )
+        UserNotification.query.session.add(notification)
+        if user_notifications is not None:
+            user_notifications.setdefault(user, None)
 
 
 def create_new_activity_notifications(date_from=None, date_to=None, user_notifications=None):
@@ -461,6 +536,7 @@ def update_user_notifications(date_from, date_to):
     user_notifications = {}
     create_new_activity_notifications(date_from, date_to, user_notifications)
     create_new_registration_notifications(date_from, date_to, user_notifications)
+    create_new_repack_notifications(date_from, date_to, user_notifications)
     remove_old_notifications()
     # apns needs the notification ids, so we need to
     # commit first before we continue
