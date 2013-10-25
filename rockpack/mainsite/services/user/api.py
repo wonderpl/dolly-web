@@ -673,7 +673,7 @@ def _channel_recommendations(userid, locale, paging):
                   for i, grp in groupby(sorted(cat_boosts), lambda x: x[0])]
     if cat_boosts:
         cat_boosts = _normalise_boosts(
-            cat_boosts, app.config.get('RECOMMENDER_CATEGORY_BOOST_LIMIT', 1.8))
+            cat_boosts, app.config.get('RECOMMENDER_CATEGORY_BOOST_LIMIT', 1.4))
 
     prefix_boosts = None
     if app.config['MYRRIX_URL']:
@@ -684,7 +684,7 @@ def _channel_recommendations(userid, locale, paging):
         else:
             prefix_boosts = _normalise_boosts(
                 [('ch' + c, 1 + w) for c, w in channel_recs],
-                app.config.get('RECOMMENDER_CATEGORY_BOOST_LIMIT', 5.0))
+                app.config.get('RECOMMENDER_PREFIX_BOOST_LIMIT', 1.8))
 
     cat_boost_map = dict(cat_boosts)
     prefix_boost_map = dict(prefix_boosts or ())

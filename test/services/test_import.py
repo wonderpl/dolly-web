@@ -71,6 +71,7 @@ class ImportFromYoutubeTestCase(base.RockPackTestCase):
                 data.update({
                     'avatar': (StringIO(AVATAR_IMG_DATA), 'avatar.jpg',),
                     'channel': '_new:test',
+                    'category': 2,
                 })
 
                 r = client.post('/admin/import/', data=data)
@@ -104,6 +105,7 @@ class ImportFromYoutubeTestCase(base.RockPackTestCase):
                 data.update({
                     'user': user.id,
                     'channel': user.channels[0].id,
+                    'category': 2,
                 })
 
                 r = client.post('/admin/import/', data=data)
@@ -118,7 +120,8 @@ class ImportFromYoutubeTestCase(base.RockPackTestCase):
             with self.app.test_client() as client:
                 data = self.data_video_2.copy()
                 data.update({
-                    'locale': 'en-us', 'category': 3,
+                    'locale': 'en-us',
+                    'category': 4,
                     'user': User.query.filter_by(username=UserData.test_user_a.username).first().id})
                 data.update(self.data_channel.copy())
 
@@ -137,7 +140,8 @@ class ImportFromYoutubeTestCase(base.RockPackTestCase):
 
                 data = self.data_video_1.copy()
                 data.update({
-                    'locale': 'en-us', 'category': 3,
+                    'locale': 'en-us',
+                    'category': 4,
                     'user': User.query.filter_by(username=UserData.test_user_a.username).first().id})
                 data['channel'] = channel.id
 
