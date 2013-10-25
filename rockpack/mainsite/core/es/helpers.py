@@ -1,6 +1,6 @@
 import sys
 import time
-import datetime
+from datetime import datetime, timedelta
 from itertools import groupby
 from flask import json
 from . import api
@@ -275,8 +275,9 @@ class DBImport(object):
             print id, channel_dict.get(id), channel_dict.setdefault(id, 0), _normalised(val, max_val, min_val)
             channel_dict[id] = channel_dict.setdefault(id, 0) + _normalised(val, max_val, min_val)
 
-        zulu = datetime.datetime(2013, 06, 26)
-        time_since_zulu = (datetime.datetime.utcnow() - zulu).total_seconds()
+        # The strength of actions decay until any older than zulu have no effect
+        zulu = datetime.now() - timedelta(days=app.config.get('CHANNEL_RANK_ZULU', 1))
+        time_since_zulu = (datetime.utcnow() - zulu).total_seconds()
 
         for locale in ['en-gb', 'en-us']:
             print 'starting for', locale
@@ -284,7 +285,7 @@ class DBImport(object):
             channel_shares = {}
 
             summation = func.sum(
-                (time_since_zulu - (func.extract('epoch', datetime.datetime.utcnow()) - func.extract('epoch', UserActivity.date_actioned))) / time_since_zulu
+                (time_since_zulu - (func.extract('epoch', datetime.utcnow()) - func.extract('epoch', UserActivity.date_actioned))) / time_since_zulu
             )
 
             # activity for channels from videos
@@ -315,7 +316,7 @@ class DBImport(object):
             print 'user activity done'
 
             summation = func.sum(
-                (time_since_zulu - (func.extract('epoch', datetime.datetime.utcnow()) - func.extract('epoch', ShareLink.date_created))) / time_since_zulu
+                (time_since_zulu - (func.extract('epoch', datetime.utcnow()) - func.extract('epoch', ShareLink.date_created))) / time_since_zulu
             )
 
             # activity for channel shares
