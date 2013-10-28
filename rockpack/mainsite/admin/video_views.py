@@ -1,10 +1,11 @@
 from datetime import datetime
 import wtforms as wtf
 from flask import request
-from flask.ext.wtf import Form
-from flask.ext.admin.form import DateTimePickerWidget
+from flask.ext.admin.form import BaseForm, DateTimePickerWidget
+from flask.ext.admin.model.fields import AjaxSelectField
 from flask.ext.admin.model.typefmt import Markup
 from flask.ext.admin.model.form import InlineFormAdmin
+from flask.ext.admin.contrib.sqla.ajax import create_ajax_loader
 from rockpack.mainsite.admin.models import AdminView
 from rockpack.mainsite.services.video import models
 from rockpack.mainsite.services.cover_art import models as coverart_models
@@ -191,8 +192,8 @@ def category_list():
     return cats.items()
 
 
-class ChannelPromotionForm(Form):
-    channel = wtf.TextField()
+class ChannelPromotionForm(BaseForm):
+    channel_rel = AjaxSelectField(None)
     category = wtf.SelectField('Category')
     locale = wtf.SelectField('Locale', validators=[wtf.validators.Required()])
     position = wtf.IntegerField(validators=[wtf.validators.Required()])
@@ -201,6 +202,7 @@ class ChannelPromotionForm(Form):
 
     def __init__(self, *args, **kwargs):
         super(ChannelPromotionForm, self).__init__(*args, **kwargs)
+        self.channel_rel.loader = ChannelPromotion()._form_ajax_refs['channel_rel']
         self.category.choices = category_list()
         self.locale.choices = [(l.id, l.name) for l in models.Locale.query.all()]
 
@@ -227,17 +229,17 @@ class ChannelPromotionForm(Form):
             models.ChannelPromotion.category == self.category.data,
             models.ChannelPromotion.locale == self.locale.data)
 
-        check_dupe = promos.filter(models.ChannelPromotion.channel == self.channel.data)
+        check_dupe = promos.filter(models.ChannelPromotion.channel == self.channel_rel.data.id)
         if request.args.get('id'):
             check_dupe = check_dupe.filter(models.ChannelPromotion.id != int(request.args.get('id')))
         if check_dupe.count():
-            self.channel.errors = ['Channel is already promoted in this category']
+            self.channel_rel.errors = ['Channel is already promoted in this category']
             return
 
         if request.args.get('id'):
             promo = models.ChannelPromotion.query.get(int(request.args.get('id')))
-            if promo.channel != self.channel.data:
-                self.channel.errors = ['Channel cannot be changed once set']
+            if promo.channel != self.channel_rel.data.id:
+                self.channel_rel.errors = ['Channel cannot be changed once set']
                 return
 
             promos = promos.filter(
@@ -261,6 +263,9 @@ class ChannelPromotion(AdminView):
     model = models.ChannelPromotion
 
     form = ChannelPromotionForm
+    form_ajax_refs = dict(
+        channel_rel={'fields': (models.Channel.title,)},
+    )
 
     column_formatters = dict(channel_origin=_format_channel_from, promo_state=_format_promo_state, appearing_in=_format_category_names)
     column_list = ('channel_rel', 'channel_origin', 'locale_rel', 'appearing_in', 'promo_state', 'position', 'date_start', 'date_end', 'date_added', 'date_updated')
