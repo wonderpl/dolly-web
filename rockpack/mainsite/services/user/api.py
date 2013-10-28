@@ -419,7 +419,7 @@ class JsonBooleanField(wtf.BooleanField):
 class ChannelForm(Form):
     title = wtf.TextField(
         validators=[check_present, naughty_word_validator] +
-        get_column_validators(Channel, 'title', False))
+        get_column_validators(Channel, 'title', app.config.get('DOLLY', False)))
     description = wtf.TextField(
         validators=[check_present] +
         get_column_validators(Channel, 'description', False))

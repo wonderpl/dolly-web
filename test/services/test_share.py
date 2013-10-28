@@ -3,6 +3,7 @@ from urlparse import urlparse
 from mock import patch
 from flask import json
 from test import base
+from test.test_decorators import skip_if_dolly
 from test.test_helpers import get_auth_header
 from test.fixtures import ChannelData, VideoInstanceData
 from rockpack.mainsite import app
@@ -53,6 +54,7 @@ class TestShare(base.RockPackTestCase):
             self.assertIn('/%s/' % VideoInstanceData.video_instance2.channel, r.headers['Location'])
             self.assertIn('video=%s' % VideoInstanceData.video_instance2.id, r.headers['Location'])
 
+    @skip_if_dolly
     def test_search_video_share_link(self):
         self.app.test_request_context().push()
         userid = self.create_test_user().id

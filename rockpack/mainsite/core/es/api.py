@@ -4,12 +4,16 @@ import datetime
 import pyes
 from ast import literal_eval
 from urlparse import urlparse
+from sqlalchemy import func
+from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import aliased
 from . import mappings
 from . import es_connection
 from . import use_elasticsearch
 from . import exceptions
 from rockpack.mainsite import app
 from rockpack.mainsite.helpers.db import ImageType
+from rockpack.mainsite.core.dbapi import readonly_session
 
 logger = logging.getLogger(__name__)
 
@@ -99,7 +103,8 @@ class ESObjectIndexer(object):
         except pyes.exceptions.NotFoundException, e:
             raise exceptions.DocumentMissingException(e)
 
-    def flush(self):
+    @staticmethod
+    def flush():
         """ Must be called at the end of insert/update operations
             to ensure the entire group of documents are inserted/updated """
         es_connection.flush_bulk(forced=True)
@@ -187,6 +192,10 @@ class ESObject(object):
         d = ESObjectIndexer(cls._type)
         d.delete(ids)
 
+    @staticmethod
+    def flush():
+        ESObjectIndexer.flush()
+
 
 class ESVideo(ESObject):
 
@@ -200,12 +209,16 @@ class ESVideo(ESObject):
             video=mapped.video,
             title=mapped.title,
             channel=mapped.channel,
+            channel_title=mapped.channel_title,
             category=mapped.category,
             date_added=mapped.date_added,
             position=mapped.position,
             locales=mapped.locales,
             recent_user_stars=mapped.recent_user_stars(),
-            country_restriction=mapped.country_restriction()
+            country_restriction=mapped.country_restriction(),
+            child_instance_count=mapped.child_instance_count,
+            most_influential=mapped.most_influential,
+            owner=mapped.owner
         )
 
     @classmethod
@@ -242,7 +255,8 @@ class ESChannel(ESObject):
             cover=mapped.cover,
             keywords=mapped.keywords,
             promotion=mapped.promotion,
-            normalised_rank=mapped.normalised_rank
+            normalised_rank=mapped.normalised_rank,
+            video_count=mapped.video_count
         )
 
         if app.config.get('SHOW_OLD_CHANNEL_COVER_URLS', True):
@@ -331,6 +345,10 @@ class ESVideoAttributeMap:
         return self.video_instance.channel
 
     @property
+    def channel_title(self):
+        return self.video_instance.video_channel.title
+
+    @property
     def category(self):
         return self.video_instance.category
 
@@ -345,6 +363,27 @@ class ESVideoAttributeMap:
     @property
     def locales(self):
         return locale_dict_from_object(self.video_instance.metas)
+
+    @property
+    def child_instance_count(self):
+        """ Initialising value only
+
+        Should be computed offline hence forth """
+        return 0
+
+    @property
+    def owner(self):
+        owner = self.video_instance.video_channel.owner_rel
+        return dict(
+            avatar=urlparse(convert_image_path(owner, 'avatar', 'AVATAR').thumbnail_medium).path,
+            display_name=owner.display_name,
+            resource_url=urlparse(owner.resource_url).path)
+
+    @property
+    def most_influential(self):
+        # Default to True so that it automatically
+        # shows up in search
+        return True
 
     def recent_user_stars(self, empty=False):
         if empty:
@@ -475,6 +514,10 @@ class ESChannelAttributeMap:
     def normalised_rank(self):
         return {'en-us': 0.0, 'en-gb': 0.0}
 
+    @property
+    def video_count(self):
+        return len(self.channel.video_instances)
+
 
 def add_to_index(data, index, _type, id, bulk=False, refresh=False):
     try:
@@ -575,28 +618,103 @@ def es_update_channel_videos(extant=[], deleted=[], async=app.config.get('ASYNC_
         deleted - list of strings
         async - boolean """
 
-    if not use_elasticsearch():
+    if not use_elasticsearch() or (not extant and not deleted):
         return
 
     if async:
         from rockpack.mainsite.video_update_sqs_processor import _write_message
         return _write_message(dict(extant=extant, deleted=deleted))
 
-    from rockpack.mainsite.services.video.models import VideoInstance
+    from rockpack.mainsite.services.video.models import VideoInstance, Video
 
-    if extant:
-        # XXX: This is a nasty hack to allow the VideoInstance query to proceed
-        # when this is called from sqlalchemy's after_commit signal
-        if VideoInstance.query.session.transaction._state.name == 'COMMITTED':
-            VideoInstance.query.session.transaction._state = None
-        videos = VideoInstance.query.filter(VideoInstance.id.in_(extant))
-        es_video = ESVideo.inserter(bulk=True)
-        for v in videos:
-            es_video.insert(v.id, v)
-        es_video.flush_bulk()
+    channel_ids = []
+    video_ids = []
+
+    # XXX: This is a nasty hack to allow the VideoInstance query to proceed
+    # when this is called from sqlalchemy's after_commit signal
+    if VideoInstance.query.session.transaction._state.name == 'COMMITTED':
+        VideoInstance.query.session.transaction._state = None
+
+    all_instances = VideoInstance.query.filter(
+        VideoInstance.id.in_(extant)
+    ).options(
+        joinedload(VideoInstance.video_channel)
+    )
+
+    # Run through the instance data and get
+    # the channel and video ids from the
+    # instances that are to be added/deleted
+    es_video = ESVideo.inserter(bulk=True)
+    for instance in all_instances:
+        channel_ids.append(instance.channel)
+        video_ids.append(instance.video)
+        # Insert any instances to es as necessary
+        # while we're looping through everything
+        if instance.id in extant:
+            es_video.insert(instance.id, instance)
+    es_video.flush_bulk()
 
     if deleted:
         ESVideo.delete(deleted)
+
+    # Re-calculate most influential
+    child = aliased(VideoInstance, name='child')
+    query = readonly_session.query(
+        VideoInstance.id,
+        VideoInstance.video,
+        child.source_channel,
+        func.count(VideoInstance.id)
+    ).outerjoin(
+        child,
+        (VideoInstance.video == child.video) &
+        (VideoInstance.channel == child.source_channel)
+    ).filter(
+        VideoInstance.video.in_(video_ids)
+    ).group_by(VideoInstance.id, VideoInstance.video, child.source_channel)
+
+    instance_counts = {}
+    influential_index = {}
+
+    for _id, video, source_channel, count in query.yield_per(6000):
+        # Set the count for the video instance
+        instance_counts[(_id, video)] = count
+        # If the count is higher for the same video that
+        # the previous instance, mark this instance as the
+        # influential one for this video
+        i_id, i_count = influential_index.get(video, [None, 0])
+
+        # Count will always be at least 1
+        # but should really be zero if no children
+        if not source_channel and count == 1:
+            count = 0
+        if (count > i_count) or\
+                (count == i_count) and not source_channel:
+            influential_index.update({video: (_id, count,)})
+
+    for (_id, video), count in instance_counts.iteritems():
+        ev = ESVideo.updater(bulk=True)
+        ev.set_document_id(_id)
+        ev.add_field('child_instance_count', count)
+        ev.add_field('most_influential', True if influential_index.get(video, '')[0] == _id else False)
+        ev.update()
+    ESVideo.flush()
+
+    # Reset video terms on channel
+    video_details = readonly_session.query(VideoInstance.channel, Video.title).join(
+        Video,
+        VideoInstance.video == Video.id
+    ).filter(VideoInstance.channel.in_(channel_ids))
+    channel_map = {}
+    for (channel_id, video_title) in video_details:
+        channel_map.setdefault(channel_id, []).append(video_title)
+
+    for channel_id, video_titles in channel_map.iteritems():
+        ec = ESChannel.updater(bulk=True)
+        ec.set_document_id(channel_id)
+        ec.add_field('video_terms', video_titles)
+        ec.add_field('video_count', len(video_titles))
+        ec.update()
+    ESChannel.flush()
 
 
 def remove_channel_from_index(channel_id):

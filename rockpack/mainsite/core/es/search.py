@@ -300,7 +300,8 @@ class ChannelSearch(EntitySearch, CategoryMixin, MediaSortMixin):
                 cover=dict(
                     thumbnail_url=urljoin(IMAGE_CDN, channel.cover.thumbnail_url) if channel.cover.thumbnail_url else '',
                     aoi=channel.cover.aoi
-                )
+                ),
+                videos=dict(total=channel.video_count)
             )
             if channel.favourite:
                 ch['favourites'] = True
@@ -480,7 +481,9 @@ class VideoSearch(EntitySearch, CategoryMixin, MediaSortMixin):
                     duration=v.video.duration,
                     thumbnail_url=urljoin(app.config.get('IMAGE_CDN', ''), v.video.thumbnail_url) if v.video.thumbnail_url else '',
                 ),
-                position=pos
+                position=pos,
+                owner=v.owner,
+                child_instance_count=getattr(v, 'child_instance_count', 0)
             )
             if with_stars:
                 video['recent_user_stars'] = v.get('recent_user_stars', [])
@@ -498,6 +501,17 @@ class VideoSearch(EntitySearch, CategoryMixin, MediaSortMixin):
             self.add_channels_to_videos(vlist, channel_map)
 
         return vlist
+
+    def search_terms(self, phrase):
+        if phrase:
+            query = pyes.StringQuery(
+                phrase,
+                default_operator='AND',
+                search_fields=['title'],
+                analyzer='snowball',
+                minimum_should_match=1
+            )
+            self._add_term_occurs(query, MUST)
 
     def check_country_allowed(self, country):
         """ Checks the allow/deny list for country """

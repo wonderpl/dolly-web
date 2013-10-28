@@ -50,6 +50,7 @@ SERVICES = (
     'rockpack.mainsite.services.oauth',
     'rockpack.mainsite.services.share',
     'rockpack.mainsite.services.pubsubhubbub',
+    'rockpack.mainsite.core.es'
 )
 REGISTER_SETUPS = (
     ('rockpack.mainsite.core.timing', 'setup_timing'),
