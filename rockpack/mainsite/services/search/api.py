@@ -171,7 +171,7 @@ class CompleteWS(WebService):
         if not query:
             abort(400)
         result = youtube.complete(query)
-        if len(query) >= app.config.get('USE_CHANNEL_TERMS_FOR_VIDEO_COMPLETE', 4):
+        if len(query) >= 4:
             try:
                 result = result.decode('utf8')
             except UnicodeDecodeError:
@@ -182,7 +182,7 @@ class CompleteWS(WebService):
 
     @expose_ajax('/videos/', cache_age=86400)
     def complete_video_terms(self, all=False):
-        if request.rockpack_ios_version and request.rockpack_ios_version < (1, 5):
+        if app.config.get('USE_ALL_TERMS_FOR_VIDEO_COMPLETE', False):
             return self.complete_all_terms()
         # Client should hit youtube service directly because this service
         # is likely to be throttled by IP address

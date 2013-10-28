@@ -115,6 +115,9 @@ SHARE_MESSAGE_MAP = dict(
     ),
 )
 
+# Keep as True until app is updated to use /ws/complete/all/ instead.
+USE_ALL_TERMS_FOR_VIDEO_COMPLETE = True
+
 RECOMMENDER_CATEGORY_BOOSTS = dict(
     gender={
         'm': (
