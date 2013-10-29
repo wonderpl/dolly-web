@@ -224,6 +224,15 @@ class VideoWS(WebService):
 
         return dict(videos={'items': videos}, total=total)
 
+    @expose_ajax('/<video_id>/channels/')
+    def video_channels(self, video_id, cache_age=3600):
+        v = VideoSearch(self.get_locale())
+        v.add_term('video.id', video_id)
+        videos = v.videos()
+        if not videos:
+            abort(404)
+        return [v['channel_title'] for v in videos[:5]]
+
     @expose_ajax('/players/', cache_age=7200)
     def players(self):
         return dict(models.Source.query.values(models.Source.label, models.Source.player_template))

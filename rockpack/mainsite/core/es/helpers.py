@@ -136,6 +136,7 @@ class DBImport(object):
                     video=mapped.video,
                     title=mapped.title,
                     channel=mapped.channel,
+                    channel_title=mapped.channel_title,
                     category=mapped.category,
                     date_added=mapped.date_added,
                     position=mapped.position,
@@ -177,7 +178,6 @@ class DBImport(object):
                     ec = ESVideo.updater(bulk=True)
                     ec.set_document_id(video.id)
                     ec.add_field('owner', mapped.owner)
-                    ec.add_field('channel_title', mapped.channel_title)
                     ec.update()
                 self.print_percent_complete(done, total)
                 done += 1
