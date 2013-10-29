@@ -153,6 +153,7 @@ window.Weblight.controller('VideoCtrl', ['$scope', '$rootScope', '$routeParams',
     $location.search('video', null)
     $rootScope.videoVisible = false
 
+  $scope.itunesLink = window.itunesLink
 
   return
 ])

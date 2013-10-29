@@ -48,9 +48,10 @@ def ws_request(url, method='GET', content_type=None, body=None, token=None, **kw
     return response and json.loads(response)
 
 
-@expose_web('/welcome_email', 'web/welcome_email.html', cache_age=3600)
+@expose_web('/welcome_email', cache_age=3600)
 def welcome_email():
-    return None
+    from rockpack.mainsite.core.email import env
+    return env.get_template('welcome.html').render(web=True)
 
 
 @expose_web('/', 'web/home.html', cache_age=3600)
@@ -59,9 +60,13 @@ def homepage():
     channels = ws_request('/ws/channels/', size=8)
     return dict(api_urls=api_urls, injectorUrl=url_for('injector'), top_channels=channels)
 
+if app.config.get('SECURE_SUBDOMAIN'):
+    app.add_url_rule('/', 'secure_home_redirect',
+                     lambda: redirect(url_for('homepage')), subdomain=app.config['SECURE_SUBDOMAIN'])
 
 if app.config.get('ADMIN_SUBDOMAIN'):
-    app.add_url_rule('/', 'admin_redirect', lambda: redirect('/admin/'), subdomain=app.config['ADMIN_SUBDOMAIN'])
+    app.add_url_rule('/', 'admin_redirect',
+                     lambda: redirect('/admin/'), subdomain=app.config['ADMIN_SUBDOMAIN'])
 
 
 @expose_web('/fullweb', 'web/fullweb.html', cache_age=3600)

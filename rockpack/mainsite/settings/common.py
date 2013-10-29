@@ -36,6 +36,9 @@ GOOGLE_ANALYTICS_ACCOUNT = 'UA-39188851-2'
 
 # For app store links
 ITUNES_APP_ID = '660697542'
+ITUNES_APP_LINK = 'https://itunes.apple.com/app/rockpack/id%s?mt=8&ls=1' % ITUNES_APP_ID
+
+HELP_SITE_LINK = 'http://help.rockpack.com/'
 
 # For iOS app deeplinking
 ROCKPACK_IOS_URL_SCHEME = 'rockpack'
