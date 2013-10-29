@@ -2,11 +2,7 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-
-<!-- Facebook sharing information tags -->
-<meta property="og:title" content="{{ subject }}" />
-
-<title>{{ subject }}</title>
+<title>Welcome to Rockpack</title>
 <style type="text/css">
   /* Client-specific Styles */
 #outlook a{padding:0;} /* Force Outlook to provide a "view in browser" button. */
@@ -345,7 +341,7 @@ a:link, a:visited, div a {
                 <tr>
                   <td class="headerContent">
                     {% if not web %}
-                    Hi {{ username }},<br />                     
+                    Hi {{ user.display_name }},<br />                     
                     {% endif %}
                     <p>Thank you for joining us on Rockpack! We created this app because we wanted a better way to discover amazing videos from across the web and share them with people who would love them too.</p>
                     <p><b>Sometimes the simple ideas are the best ones...</b></p>

@@ -1,19 +1,23 @@
 <html>
-    <head>
-    </head>
-    <body>
-        <iframe style="display:none" height="0" width="0" id="loader"></iframe>
-        <script>
-            var isiOS = navigator.userAgent.match('iPad') || navigator.userAgent.match('iPhone') || navigator.userAgent.match('iPod');
-            (function(){
-                var fallbackLink = '{{ redirect_url }}';
-                if (isiOS) {
-                    document.getElementById('loader').src = '{{ protocol_url }}';
-                    window.setTimeout(function (){ window.location.replace({% if config.INTERSTITIAL_ITUNES_LINK %}'{{ config.ITUNES_APP_LINK }}'{% else %}fallbackLink{% endif %}); }, 1);
-                } else {
-                    document.location.replace(fallbackLink);
-                }
-            })();
-        </script>
-    </body>
+  <head>
+    <script src="//www.google-analytics.com/analytics.js"></script>
+  </head>
+  <body>
+    <iframe style="display:none" height="0" width="0" id="loader"></iframe>
+    <script>
+      var isiOS = (
+            navigator.userAgent.match('iPad') ||
+            navigator.userAgent.match('iPhone') ||
+            navigator.userAgent.match('iPod'));
+      ga.
+        create('{{ config.GOOGLE_ANALYTICS_ACCOUNT }}').
+        send('event', 'interstitial', 'click', isiOS ? 'ios' : '');
+      var redirectLink = '{{ redirect_url }}';
+      if (isiOS) {
+        document.getElementById('loader').src = '{{ protocol_url }}';
+        redirectLink = '{{ config.ITUNES_APP_LINK }}';
+      }
+      window.setTimeout(function () { console.log('location.replace', redirectLink); }, 1);
+    </script>
+  </body>
 </html>

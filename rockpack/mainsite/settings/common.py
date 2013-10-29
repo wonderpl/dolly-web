@@ -227,6 +227,8 @@ DEFAULT_AVATAR = ''
 
 DEFAULT_EMAIL_SOURCE = 'rockpack <noreply@rockpack.com>'
 
+REACTIVATION_EMAIL_TRACKING_PARAMS = dict(utm_medium='email', utm_campaign='react')
+
 SQS_REGION = 'eu-west-1'
 SQS_CRON_QUEUE = 'mainsite-cron'
 SQS_EMAIL_QUEUE = 'mainsite-email'
