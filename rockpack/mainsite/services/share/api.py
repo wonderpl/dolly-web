@@ -2,13 +2,15 @@ from datetime import datetime
 import wtforms as wtf
 from flask import abort, g
 from flask.ext.wtf import Form
+from sqlalchemy.orm.exc import NoResultFound
 from rockpack.mainsite import app
 from rockpack.mainsite.core import email
 from rockpack.mainsite.core.webservice import WebService, expose_ajax, ajax_create_response
 from rockpack.mainsite.core.oauth.decorators import check_authorization
+from rockpack.mainsite.services.user.commands import complex_push_notification, get_apns_token
 from rockpack.mainsite.services.video.models import Channel, VideoInstance
 from rockpack.mainsite.services.user.api import save_video_activity
-from rockpack.mainsite.services.user.models import EXTERNAL_SYSTEM_NAMES
+from rockpack.mainsite.services.user.models import EXTERNAL_SYSTEM_NAMES, User
 from rockpack.mainsite.services.search.api import VIDEO_INSTANCE_PREFIX
 from rockpack.mainsite.services.oauth.models import ExternalFriend
 from rockpack.mainsite.services.oauth.api import email_validator
@@ -43,6 +45,20 @@ def send_share_email(recipient, user, object_type, object, link):
         assets=assets_url,
     )
     email.send_email(recipient, subject, body, format='html')
+
+    try:
+        recipient_user = User.query.filter(User.email.ilike(recipient.lower())).one()
+        token = get_apns_token(recipient_user.id)
+        if token:
+            msg_func = {'video': lambda video_instance: video_instance.resource_url,
+                    'channel': lambda channel: channel.cover.thumbnail_medium}
+
+            push_message = '%@ shared a ' + object_type_name + ' with you'
+            push_message_args = [user.display_name]
+            deeplink_url = msg_func[object_type_name]
+            complex_push_notification(token, push_message, push_message_args, url=deeplink_url)
+    except NoResultFound:
+        pass
 
 
 class ShareForm(Form):

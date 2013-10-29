@@ -53,7 +53,7 @@ def repack_message(repacker, channel):
         ),
         channel=dict(
             id=channel.id,
-            resource_url=channel.get_resource_url(True),
+            resource_url=channel.resource_url,
             thumbnail_url=channel.cover.thumbnail_medium,
         )
     )
@@ -374,12 +374,11 @@ def create_new_channel_feed_items(date_from, date_to):
                 UserContentFeed(user=user, channel=channel, date_added=date_published)
             )
             token = get_apns_token(user)
-            if not token:
-                continue
-            push_message = '%@ has added a new channel'
-            push_message_args = user.display_name()
-            deeplink_url = channel.get_resource_url(True)
-            complex_push_notification(token, push_message, push_message_args, url=deeplink_url)
+            if token:
+                push_message = '%@ has added a new channel'
+                push_message_args = [user.display_name()]
+                deeplink_url = channel.get_resource_url(True)
+                complex_push_notification(token, push_message, push_message_args, url=deeplink_url)
 
 
 def remove_old_feed_items():
