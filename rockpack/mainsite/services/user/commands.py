@@ -15,7 +15,7 @@ from rockpack.mainsite.core.apns import push_client
 from rockpack.mainsite.services.oauth import facebook
 from rockpack.mainsite.services.base.models import JobControl
 from rockpack.mainsite.services.oauth.models import ExternalFriend, ExternalToken
-from rockpack.mainsite.services.video.models import Channel, VideoInstance
+from rockpack.mainsite.services.video.models import Channel, VideoInstance, Video
 from rockpack.mainsite.services.share.models import ShareLink
 from .models import (
     User, UserActivity, UserNotification, UserContentFeed,
@@ -59,9 +59,8 @@ def repack_message(repacker, channel):
     )
 
 
-def _channel_message(activity, channel, message_type):
-    return channel.owner, message_type, dict(
-        user=activity_user(activity),
+def unavailble_video_in_channel_message(channel):
+    return channel.owner, 'unavilable', dict(
         channel=dict(
             id=channel.id,
             resource_url=channel.get_resource_url(True),
@@ -166,14 +165,50 @@ def send_push_notifications(user):
     elif notification.message_type == 'repack':
         key = 'channel'
         push_message = "%@ has re-packed one of your videos"
+    elif notification.message_type == 'unavailable':
+        key = 'channel'
+        push_message = "One of your videos is no longer available"
     else:
         key = 'video'
         push_message = "%@ has liked your video"
-    push_message_args = [data['user']['display_name']]
+    try:
+        push_message_args = [data['user']['display_name']]
+    except KeyError:
+        push_message_args = []
     deeplink_url = _apns_url(data[key]['resource_url'])
 
     return complex_push_notification(token, push_message, push_message_args,
         badge=count, id=notification.id, url=deeplink_url)
+
+
+def create_unavailable_notification(date_from=None, date_to=None, user_notifications=None):
+    activity_window = readonly_session.query(VideoInstance, Video, Channel).join(
+        Video,
+        Video.id == VideoInstance.video
+    ).join(
+        Channel,
+        Channel.id == VideoInstance.channel
+    ).options(
+        joinedload(Channel.owner_rel)
+    ).filter(
+        Video.visible == False
+    )
+    if date_from:
+        activity_window = activity_window.filter(Video.date_updated >= date_from)
+    if date_to:
+        activity_window = activity_window.filter(Video.date_updated < date_to)
+
+    for video_instance, video, channel in activity_window:
+        user, message_type, message = unavailble_video_in_channel_message(channel)
+        notification = UserNotification(
+            user=user,
+            date_created=video.date_updated,
+            message_type=message_type,
+            message=json.dumps(message, separators=(',', ':')),
+        )
+        UserNotification.query.session.add(notification)
+        if user_notifications is not None:
+            user_notifications.setdefault(user, None)
 
 
 def create_new_repack_notifications(date_from=None, date_to=None, user_notifications=None):
@@ -550,6 +585,7 @@ def update_user_notifications(date_from, date_to):
     create_new_activity_notifications(date_from, date_to, user_notifications)
     create_new_registration_notifications(date_from, date_to, user_notifications)
     create_new_repack_notifications(date_from, date_to, user_notifications)
+    create_unavailable_notification(date_from, date_to, user_notifications)
     remove_old_notifications()
     # apns needs the notification ids, so we need to
     # commit first before we continue
