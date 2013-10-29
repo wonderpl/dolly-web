@@ -9,8 +9,9 @@ from rockpack.mainsite.core.dbapi import readonly_session, db, commit_on_success
 from rockpack.mainsite.core.webservice import WebService, expose_ajax
 from rockpack.mainsite.core.oauth.decorators import check_authorization
 from rockpack.mainsite.core.es import use_elasticsearch, filters
-from rockpack.mainsite.core.es.search import VideoSearch, ChannelSearch
+from rockpack.mainsite.core.es.search import VideoSearch, ChannelSearch, UserSearch
 from rockpack.mainsite.services.video import models
+from rockpack.mainsite.services.user.models import UserActivity
 
 
 def _filter_by_category(query, type, category_id):
@@ -229,14 +230,38 @@ class VideoWS(WebService):
 
         return dict(videos={'items': videos}, total=total)
 
+    @expose_ajax('/<video_id>/starring_users/')
+    def video_starring_users(self, video_id, cache_age=3600):
+        query = readonly_session.query(UserActivity.user).join(
+            models.VideoInstance,
+            models.VideoInstance.id == UserActivity.object_id
+        ).filter(
+            UserActivity.object_type == 'video_instance',
+            UserActivity.action == 'star',
+            models.VideoInstance.video == video_id
+        )
+        user_ids = [_ for _ in query]
+        if not user_ids:
+            abort(404)
+
+        u = UserSearch()
+        u.add_id(user_ids)
+        u.set_paging(*self.get_page())
+        users = u.users()
+
+        if not users:
+            abort(404)
+        return dict(users=dict(items=users, total=len(users)))
+
     @expose_ajax('/<video_id>/channels/')
     def video_channels(self, video_id, cache_age=3600):
         v = VideoSearch(self.get_locale())
         v.add_term('video.id', video_id)
+        v.set_paging(0, 5)
         videos = v.videos()
         if not videos:
             abort(404)
-        return [v['channel_title'] for v in videos[:5]]
+        return [v['channel_title'] for v in videos]
 
     @expose_ajax('/players/', cache_age=7200)
     def players(self):
