@@ -470,6 +470,7 @@ class VideoSearch(EntitySearch, CategoryMixin, MediaSortMixin):
                 title=v.title,
                 date_added=_format_datetime(v.date_added),
                 public=v.public,
+                channel_title=v.channel_title,
                 category='',
                 video=dict(
                     id=v.video.id,
