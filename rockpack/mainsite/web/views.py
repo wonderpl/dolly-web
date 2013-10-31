@@ -1,3 +1,4 @@
+import re
 from urllib import urlencode
 from urlparse import urljoin, parse_qs, urlsplit, urlunsplit
 from cStringIO import StringIO
@@ -159,69 +160,6 @@ def web_channel_data(channelid, load_video=None):
     return dict(channel_data=channel_data, selected_video=selected_video, api_urls=json.dumps(ws_request('/ws/')))
 
 
-def update_qs(url, dict_):
-    scheme, netloc, path, query_string, fragment = urlsplit(url)
-    query_params = parse_qs(query_string)
-    query_params.update(dict_)
-    new_query_string = urlencode(query_params, doseq=True)
-    return urlunsplit((scheme, netloc, path, new_query_string, fragment))
-
-
-def add_carry_thru_params(url):
-    allow_params = app.config.get('SHARE_REDIRECT_PASSTHROUGH_PARAMS')
-    if allow_params:
-        url = update_qs(url, {k: request.args[k] for k in allow_params if k in request.args})
-    return url
-
-
-def add_userid_param(url, userid):
-    return update_qs(url, {'shareuser': userid})
-
-
-def add_mobile_ua_param(url):
-    ua_str = request.user_agent.string
-    if (app.config['MOBILE_BROWSER_RE1'].search(ua_str) or
-            app.config['MOBILE_BROWSER_RE2'].search(ua_str[:4])):
-        url = update_qs(url, (('mobile', 'true'),))
-    return url
-
-
-def share_link_processing(linkid):
-    not_social_bot = True
-    show_meta_only = False
-    if filter(lambda x: x in request.user_agent.string.lower(), ('twitterbot', 'facebookexternalhit',)):
-        not_social_bot = False
-        show_meta_only = True
-
-    link = ShareLink.query.get_or_404(linkid)
-    data = link.process_redirect(increment_click_count=not_social_bot)
-
-    if show_meta_only:
-        return render_template(
-            'web/social_agents.html',
-            short_url=url_for('share_redirect', linkid=linkid),
-            **web_channel_data(
-                data.get('channel'),
-                load_video=data.get('video')
-            )
-        )
-
-    new_url = add_carry_thru_params(data.get('url'))
-    new_url = add_userid_param(new_url, link.user)
-    new_url = add_mobile_ua_param(new_url)
-    return redirect(new_url, 302)
-
-
-def rockpack_protocol_url(userid, channelid, videoid=None):
-    location = '{scheme}://{userid}/channel/{channelid}/'.format(
-        scheme=app.config['ROCKPACK_IOS_URL_SCHEME'],
-        userid=userid,
-        channelid=channelid)
-    if videoid:
-        location += 'video/{}/'.format(videoid)
-    return location
-
-
 @expose_web('/channel/<slug>/<channelid>/', 'web/channel.html', cache_age=3600)
 def channel(slug, channelid):
     videoid = request.args.get('video', None)
@@ -234,6 +172,58 @@ def embed(channelid):
     return web_channel_data(channelid, load_video=videoid)
 
 
+def _update_qs(url, dict_):
+    scheme, netloc, path, query_string, fragment = urlsplit(url)
+    query_params = parse_qs(query_string)
+    query_params.update(dict_)
+    new_query_string = urlencode(query_params, doseq=True)
+    return urlunsplit((scheme, netloc, path, new_query_string, fragment))
+
+
+def _rockpack_protocol_url(url):
+    """Convert a web url to a rockpack protocol ws url."""
+    channel_match = re.search('ch[\w-]{22}', url)
+    if channel_match:
+        video_match = re.search('vi[\w-]{22}', url)
+        url = '{}://-/channels/{}/{}'.format(
+            app.config['ROCKPACK_IOS_URL_SCHEME'],
+            channel_match.group(),
+            'video/{}/'.format(video_match.group()) if video_match else '')
+    return url
+
+
+def _share_redirect(data):
+    # Add additional query params to url
+    pt_params = app.config.get('SHARE_REDIRECT_PASSTHROUGH_PARAMS', [])
+    params = [(k, request.args[k]) for k in pt_params if k in request.args]
+    if 'user' in data:
+        params.append(('shareuser', data['user']))
+    ua_str = request.user_agent.string
+    if (app.config['MOBILE_BROWSER_RE1'].search(ua_str) or
+            app.config['MOBILE_BROWSER_RE2'].search(ua_str[:4])):
+        params.append(('mobile', 'true'))
+    redirect_url = _update_qs(data['url'], params)
+
+    if request.args.get('rockpack_redirect') == 'true':
+        return redirect(_rockpack_protocol_url(redirect_url), 302)
+
+    if data.get('social_bot'):
+        return render_template(
+            'web/social_agents.html',
+            canonical_url=data['share_url'],
+            **web_channel_data(data['channel'], load_video=data.get('video'))
+        )
+
+    if request.user_agent.platform == 'ios' or request.args.get('interstitial') == 'true':
+        return render_template(
+            'web/app_interstitial.html',
+            redirect_url=redirect_url,
+            protocol_url=_rockpack_protocol_url(redirect_url),
+        )
+
+    return redirect(redirect_url, 302)
+
+
 if app.config.get('SHARE_SUBDOMAIN'):
     @app.route('/s/<linkid>', subdomain=app.config.get('DEFAULT_SUBDOMAIN'))
     def old_share_redirect(linkid):
@@ -241,45 +231,30 @@ if app.config.get('SHARE_SUBDOMAIN'):
 
 
 @cache_for(seconds=86400, private=True)
+@app.route('/s', subdomain=app.config.get('SHARE_SUBDOMAIN'))
+def share_redirect_root():
+    channel, video = request.args.get('c'), request.args.get('v')
+    if not channel:
+        abort(404)
+    url = url_for('channel', slug='-', channelid=channel)
+    if video:
+        url += '?video=' + video
+    share_url = url_for('share_redirect_root') + '?c=%s&v=%s' % (channel, video)
+    return _share_redirect(locals())
+
+
+@cache_for(seconds=86400, private=True)
 @app.route('/s/<linkid>', subdomain=app.config.get('SHARE_SUBDOMAIN'))
 def share_redirect(linkid):
-
-    def _share_data(linkid):
-        link = ShareLink.query.get_or_404(linkid)
-        data = link.process_redirect(increment_click_count=False)
-        return web_channel_data(data['channel'], load_video=data.get('video', None))
-
-    if request.args.get('rockpack_redirect') == 'true':
-        data = _share_data(linkid)
-        video = data.get('selected_video', None)
-        if video:
-            video = video['id']
-        location = rockpack_protocol_url(
-            data['channel_data']['owner']['id'],
-            data['channel_data']['id'],
-            videoid=video
-        )
-        return redirect(location, 302)
-
-    if request.user_agent.platform == 'ios' or request.args.get('interstitial') == 'true':
-        link = ShareLink.query.get_or_404(linkid)
-        data = link.process_redirect(increment_click_count=False)
-        share_data = web_channel_data(data['channel'], load_video=data.get('video', None))
-        protocol_url = rockpack_protocol_url(
-            share_data['channel_data']['owner']['id'],
-            share_data['channel_data']['id'],
-            videoid=data.get('video', None)
-        )
-
-        url = add_carry_thru_params(data['url'])
-
-        return render_template(
-            'web/app_interstitial.html',
-            protocol_url=protocol_url,
-            canonical_url=url
-        )
-
-    return share_link_processing(linkid)
+    link = ShareLink.query.get_or_404(linkid)
+    social_bot = any(ua in request.user_agent.string.lower()
+                     for ua in ('twitterbot', 'facebookexternalhit'))
+    data = link.process_redirect(increment_click_count=not social_bot)
+    data.update(
+        social_bot=social_bot,
+        share_url=url_for('share_redirect', linkid=linkid),
+    )
+    return _share_redirect(data)
 
 
 class ResetPasswordForm(Form):

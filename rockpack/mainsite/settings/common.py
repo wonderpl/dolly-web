@@ -43,8 +43,6 @@ HELP_SITE_LINK = 'http://help.rockpack.com/'
 # For iOS app deeplinking
 ROCKPACK_IOS_URL_SCHEME = 'rockpack'
 
-INTERSTITIAL_ITUNES_LINK = True
-
 ELASTICSEARCH_URL = None
 
 MYRRIX_URL = None

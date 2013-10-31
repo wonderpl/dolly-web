@@ -6,7 +6,7 @@
         <script>
             var isiOS = navigator.userAgent.match('iPad') || navigator.userAgent.match('iPhone') || navigator.userAgent.match('iPod');
             (function(){
-                var fallbackLink = '{{ canonical_url }}';
+                var fallbackLink = '{{ redirect_url }}';
                 if (isiOS) {
                     document.getElementById('loader').src = '{{ protocol_url }}';
                     window.setTimeout(function (){ window.location.replace({% if config.INTERSTITIAL_ITUNES_LINK %}'{{ config.ITUNES_APP_LINK }}'{% else %}fallbackLink{% endif %}); }, 1);
