@@ -246,7 +246,7 @@ class VideoWS(WebService):
 
         if not users:
             abort(404)
-        return dict(users=dict(items=users, total=len(users)))
+        return dict(users=dict(items=users, total=u.total))
 
     @expose_ajax('/<video_id>/channels/')
     def video_channels(self, video_id, cache_age=3600):

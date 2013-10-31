@@ -57,6 +57,19 @@ class MediaSortMixin(object):
             self.add_sort('star_count', self._get_order(order))
 
 
+class MultiSearch(object):
+
+    def __init__(self):
+        self._conn = es_connection
+        self.queries = []
+
+    def add(self, search_obj):
+        self.queries.append(search_obj._final_query())
+
+    def results(self):
+        return self._conn.search_multi(self.queries)
+
+
 class EntitySearch(object):
     """ Uses elasticsearch """
 
@@ -78,6 +91,7 @@ class EntitySearch(object):
         self._query_params = {"track_scores": True}
         self._sorting = []
         self._results = {}  # cache results
+        self._count = {}
 
     def _add_term_occurs(self, term, occurs):
         try:
@@ -130,14 +144,22 @@ class EntitySearch(object):
         if dict_:
             self._query_params.update(dict_)
 
-    def _es_search(self):
+    def _final_query(self):
         query = self._construct_query()
         search_query = pyes.Search(query, start=self.paging[0], size=self.paging[1])
-        explain = False
-        if app.config.get('DEBUG'):
-            explain = True
+        return search_query
+
+    def _do_count(self):
+        return self._conn.count(
+            query=self._construct_query(),
+            indices=self.get_index_name(),
+            doc_types=self.get_type_name(),
+            **self._query_params)
+
+    def _do_search(self):
+        explain = app.config.get('DEBUG', False)
         result = self._conn.search(
-            query=search_query,
+            query=self._final_query(),
             indices=self.get_index_name(),
             doc_types=self.get_type_name(),
             explain=explain,
@@ -207,8 +229,14 @@ class EntitySearch(object):
     def results(self, force=False):
         if self._results and not force:
             return self._results
-        self._results = self._es_search()
+        self._results = self._do_search()
         return self._results
+
+    def count(self):
+        if self._count:
+            return self._count
+        self._count = self._do_count()
+        return self._count
 
     @property
     def sorting(self):

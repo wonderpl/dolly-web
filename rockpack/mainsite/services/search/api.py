@@ -11,7 +11,7 @@ from rockpack.mainsite.core import youtube
 from rockpack.mainsite.helpers.db import gen_videoid
 from rockpack.mainsite.services.video.api import get_db_channels
 from rockpack.mainsite.services.video.models import Channel, User
-from rockpack.mainsite.core.es.search import ChannelSearch, VideoSearch, UserSearch, MUST
+from rockpack.mainsite.core.es.search import ChannelSearch, VideoSearch, UserSearch, MultiSearch, MUST
 from rockpack.mainsite.core.es import use_elasticsearch, filters
 
 
@@ -48,6 +48,47 @@ def escape_and_retry(func):
     return wrapper
 
 
+def user_search(paging, query):
+    us = UserSearch()
+    offset, limit = paging
+    us.set_paging(offset, limit)
+    us.add_text('username', query)
+    us.add_text('display_name', query)
+    return us
+
+
+def channel_search(paging, locale, query, order=None):
+    ch = ChannelSearch(locale)
+    offset, limit = paging
+    ch.set_paging(offset, limit)
+    ch.search_terms(query)
+    ch.add_filter(filters.verified_channel_boost())
+    ch.add_filter(filters.negatively_boost_favourites())
+    if order == 'latest':
+        ch.date_sort('desc')
+    return ch
+
+
+def video_search(paging, locale, query):
+    vs = VideoSearch(locale)
+    # NOTE: RP only
+    # Split the term so that the search phrase is
+    # over each individual word, and not the phrase
+    # as a whole - the index will have tokenised
+    # each word and without splitting we won't get
+    # any results back (standard indexer on video title)
+    if not app.config.get('DOLLY'):
+        vs.add_term('title', query.split())
+        vs.add_term('most_influential', True, occurs=MUST)
+    else:
+        # Snowball analyzer is on the Dolly mapping
+        # so we can do a proper search here
+        vs.search_terms(query)
+    start, size = paging
+    vs.set_paging(offset=start, limit=size)
+    return vs
+
+
 class SearchWS(WebService):
 
     endpoint = '/search'
@@ -65,21 +106,7 @@ class SearchWS(WebService):
 
         def _search_es(query):
             items = []
-            vs = VideoSearch(self.get_locale())
-            # Split the term so that the search phrase is
-            # over each individual word, and not the phrase
-            # as a whole - the index will have tokenised
-            # each word and without splitting we won't get
-            # any results back (standard indexer on video title)
-            if not app.config.get('DOLLY'):
-                vs.add_term('title', query.split())
-                vs.add_term('most_influential', True, occurs=MUST)
-            else:
-                # Snowball analyzer is on the Dolly mapping
-                # so we can do a proper search here
-                vs.search_terms(query)
-            start, size = self.get_page()
-            vs.set_paging(offset=start, limit=size)
+            vs = video_search(self.get_page(), self.get_locale().split('-')[1], query)
             for video in vs.videos():
                 video['video']['source_view_count'] = video['video']['view_count']
                 video['video']['source_date_uploaded'] = video['date_added']
@@ -134,14 +161,11 @@ class SearchWS(WebService):
     @escape_and_retry
     def search_channels(self):
         if use_elasticsearch():
-            ch = ChannelSearch(self.get_locale())
-            offset, limit = self.get_page()
-            ch.set_paging(offset, limit)
-            ch.search_terms(request.args.get('q', ''))
-            ch.add_filter(filters.verified_channel_boost())
-            ch.add_filter(filters.negatively_boost_favourites())
-            if request.args.get('order') == 'latest':
-                ch.date_sort('desc')
+            ch = channel_search(
+                self.get_page(),
+                self.get_locale(),
+                request.args.get('q', ''),
+                order=request.args.get('order'))
             items, total = ch.channels(with_owners=True), ch.total
         else:
             # DB fallback
@@ -158,10 +182,11 @@ class SearchWS(WebService):
         search_term = request.args.get('q', '').lower()
         offset, limit = self.get_page()
         if use_elasticsearch():
-            us = UserSearch()
-            us.set_paging(offset, limit)
-            us.add_text('username', search_term)
-            us.add_text('display_name', search_term)
+            us = user_search((offset, limit), search_term)
+            m = MultiSearch()
+            m.add(us)
+            import pdb;pdb.set_trace()
+            print m.results
             return dict(users=dict(items=us.users(), total=us.total))
 
         users = User.query.filter(User.username.ilike(search_term))
