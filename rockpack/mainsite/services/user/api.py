@@ -751,6 +751,14 @@ class UserWS(WebService):
 
     endpoint = '/'
 
+    @expose_ajax('/users/', cache_age=3600, secure=False)
+    def user_list(self):
+        if use_elasticsearch():
+            offset, limit = self.get_page()
+            u = es_search.UserSearch()
+            u.set_paging(offset, limit)
+            return dict(user=dict(items=u.users(), total=u.total))
+
     @expose_ajax('/<userid>/', cache_age=600, secure=False)
     def user_info(self, userid):
         add_tracking = partial(_add_tracking, prefix='profile')
