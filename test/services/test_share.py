@@ -86,7 +86,7 @@ class TestShare(base.RockPackTestCase):
             r = client.get(urlparse(data['resource_url']).path + '?umts=foo')
             self.assertIn('umts=foo', r.headers['Location'])
 
-        self.app.config['SHARE_REDIRECT_PASSTHROUGH_PARAMS'] = None
+        self.app.config['SHARE_REDIRECT_PASSTHROUGH_PARAMS'] = []
 
     def test_channel_share_email(self):
         with patch('rockpack.mainsite.core.email.send_email') as send_email:
