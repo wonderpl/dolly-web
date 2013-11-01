@@ -19,6 +19,7 @@ window.contentApp.controller('PageCtrl', ['isMobile', '$scope', '$location', 'br
 
 
   $scope.assets_url = window.assets_url
+  $scope.itunesLink = window.itunesLink
   $scope.injectorUrl = window.injectorUrl
 
   $scope.playVideo = () ->

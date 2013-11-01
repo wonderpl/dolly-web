@@ -312,7 +312,7 @@ a:link, a:visited, div a {
               <table border="0" cellpadding="10" cellspacing="0" width="100%">
                 <tr>
                   <td>
-                    <center><img src="{{ assets }}/assets/emails/images/logo.png"></center>
+                    <center><img src="{{ config.ASSETS_URL }}/assets/emails/images/logo.png"></center>
                   </td>
                 </tr>
               </table>
@@ -350,7 +350,7 @@ a:link, a:visited, div a {
               <p>To ensure our emails reach your inbox please make sure to add {{ email_sender|e }}</p>
               <p>to your address book or safe list.</p>
               <p>You are subscribed as {{ email }}.</p>
-              <p>Your privacy is important to us, have a read to our <a href="http://rockpack.com/privacy">privacy policy</a>.</p>
+              <p>Your privacy is important to us, have a read to our <a href="{{ url_for('privacy') }}">privacy policy</a>.</p>
             </td>
           </tr>
         </table>

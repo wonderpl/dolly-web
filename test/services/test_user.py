@@ -7,13 +7,15 @@ from mock import patch
 from test import base
 from test.assets import AVATAR_IMG_PATH
 from test.fixtures import ChannelData, VideoData, VideoInstanceData
+from test.test_decorators import skip_unless_config
 from test.test_helpers import get_auth_header
 from test.test_helpers import get_client_auth_header
 from rockpack.mainsite import app
 from rockpack.mainsite.services.video.models import Channel
 from rockpack.mainsite.services.oauth.api import ExternalUser
 from rockpack.mainsite.services.oauth.models import ExternalToken, ExternalFriend
-from rockpack.mainsite.services.user.models import User, UserActivity, UserNotification, Subscription
+from rockpack.mainsite.services.user.models import (
+    User, UserActivity, UserAccountEvent, UserFlag, UserNotification, UserContentFeed, Subscription)
 from rockpack.mainsite.services.user import commands as cron_cmds
 
 
@@ -345,9 +347,11 @@ class TestProfileEdit(base.RockPackTestCase):
             self.assertTrue(data.get('brand'))
             self.assertIn('brand', data['profile_cover_url'])
 
+
+class TestUserContent(base.RockPackTestCase):
+
+    @skip_unless_config('ELASTICSEARCH_URL')
     def test_content_feed(self):
-        if not self.app.config.get('ELASTICSEARCH_URL'):
-            return
         with self.app.test_client() as client:
             self.app.test_request_context().push()
             user1 = self.create_test_user().id
@@ -416,9 +420,8 @@ class TestProfileEdit(base.RockPackTestCase):
             self.assertIn(u2new, itemids)
             self.assertIn(u3new, itemids)
 
+    @skip_unless_config('ELASTICSEARCH_URL')
     def test_channel_recommendations(self):
-        if not self.app.config.get('ELASTICSEARCH_URL'):
-            return
         self.app.config['RECOMMENDER_CATEGORY_BOOSTS'] = dict(
             gender={'f': ((2, 1.40),)},
         )
@@ -506,6 +509,21 @@ class TestProfileEdit(base.RockPackTestCase):
                 ('open', channel['tracking_code']),
                 UserActivity.query.filter_by(user=user.id).values('action', 'tracking_code'))
 
+
+class TestEmail(base.RockPackTestCase):
+
+    def _record_user_event(self, user, event_date):
+        UserAccountEvent(
+            event_date=event_date,
+            event_type='login',
+            event_value='',
+            ip_address='',
+            user_agent='',
+            clientid='',
+            username='',
+            user=user.id,
+        ).save()
+
     def test_email_registration(self):
         with self.app.test_client():
             self.app.test_request_context().push()
@@ -517,7 +535,7 @@ class TestProfileEdit(base.RockPackTestCase):
                 self.assertEquals(send_email.call_count, 1)
                 assert user.email == send_email.call_args[0][0]
                 assert 'Welcome to Rockpack' == send_email.call_args[0][1]
-                assert 'Hi {}'.format(user.username) in send_email.call_args[0][2]
+                assert 'Hi {}'.format(user.display_name) in send_email.call_args[0][2]
                 #assert 'You are subscribed as {}'.format(user.email) in send_email.call_args[0][2]
                 assert 'To ensure our emails reach your inbox please make sure to add {}'.format(
                     cgi.escape(app.config['DEFAULT_EMAIL_SOURCE'])) in send_email.call_args[0][2]
@@ -525,7 +543,7 @@ class TestProfileEdit(base.RockPackTestCase):
                 user2 = self.create_test_user(date_joined=datetime(2100, 2, 2))
                 commands.create_registration_emails(datetime(2100, 2, 1), datetime(2100, 2, 10))
                 self.assertEquals(send_email.call_count, 2)
-                assert 'Hi {}'.format(user2.username) in send_email.call_args[0][2]
+                assert 'Hi {}'.format(user2.display_name) in send_email.call_args[0][2]
 
                 # Check that invalid email doesn't break
                 self.create_test_user(date_joined=datetime(2100, 3, 2), email='xxx')
@@ -535,13 +553,60 @@ class TestProfileEdit(base.RockPackTestCase):
                 commands.create_registration_emails(datetime(2100, 3, 1), datetime(2100, 3, 10))
                 self.assertEquals(send_email.call_count, 3)
 
-    if app.config.get('TEST_WELCOME_EMAIL'):
-        def test_email_registration_wo_patch(self):
-            from rockpack.mainsite.services.user import commands
-            with self.app.test_client():
-                self.app.test_request_context().push()
-                self.create_test_user(
-                    date_joined=datetime(2200, 1, 2),
-                    email=app.config['TEST_WELCOME_EMAIL']
-                )
-                commands.create_registration_emails(datetime(2200, 1, 1), datetime(2200, 1, 10))
+    @skip_unless_config('TEST_WELCOME_EMAIL')
+    def test_email_registration_wo_patch(self):
+        from rockpack.mainsite.services.user import commands
+        with self.app.test_client():
+            self.app.test_request_context().push()
+            self.create_test_user(
+                date_joined=datetime(2200, 1, 2),
+                email=app.config['TEST_WELCOME_EMAIL']
+            )
+            commands.create_registration_emails(datetime(2200, 1, 1), datetime(2200, 1, 10))
+
+    def _create_reactivation_email(self, user):
+        # record an event 7 days ago and set inactivity window to now
+        self._record_user_event(user, datetime.now() - timedelta(7))
+        window = datetime.now() - timedelta(seconds=900), datetime.now()
+
+        # populate users feed
+        for n, i in VideoInstanceData():
+            UserContentFeed(user=user.id, channel=i.channel, video_instance=i.id).save()
+        for n, i in ChannelData():
+            UserContentFeed(user=user.id, channel=i.id).save()
+
+        # create reactivation email
+        self.app.test_request_context().push()
+        cron_cmds.create_reactivation_emails(*window)
+
+        return window
+
+    @patch('rockpack.mainsite.core.email.send_email')
+    def test_email_reactivation(self, send_email):
+        # check successful sending of email
+        user = self.create_test_user()
+        window = self._create_reactivation_email(user)
+        self.assertEqual(send_email.call_count, 1)
+        recipient, subject, body = send_email.call_args[0]
+        self.assertEqual(recipient, user.email)
+        self.assertEqual(subject, "What's trending in your Rockpack")
+        self.assertIn('has added 2 videos to CHANNEL #3', body)
+        self.assertIn('has added 1 videos to CHANNEL #4', body)
+        self.assertIn('utm_medium=email', body)
+        #open('temp.html', 'wb').write(body.encode('utf8'))
+
+        # check that email isn't sent to active, bouncing, or unsubscribed users
+        send_email.reset_mock()
+        for update_user in (lambda u: self._record_user_event(u, datetime.now()),
+                            lambda u: u.set_flag('bouncing'),
+                            lambda u: u.set_flag('unsub1')):
+            UserFlag.query.filter_by(user=user.id).delete()
+            update_user(user)
+            user.save()
+            cron_cmds.create_reactivation_emails(*window)
+            self.assertEqual(send_email.call_count, 0)
+
+    @skip_unless_config('TEST_REACTIVATION_EMAIL')
+    def test_email_reactivation_wo_patch(self):
+        user = self.create_test_user(email=app.config['TEST_REACTIVATION_EMAIL'])
+        self._create_reactivation_email(user)

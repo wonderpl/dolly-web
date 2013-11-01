@@ -62,6 +62,7 @@
 
   <script type="text/javascript">
     var injectorUrl = '{{injectorUrl}}',
+        itunesLink = '{{config.ITUNES_APP_LINK}}',
         assets_url = '{{config.ASSETS_URL}}',
         top_channels = {{top_channels|tojson|safe}};
   </script>
@@ -84,7 +85,7 @@
       <div class="headline">
         <h1>WHAT’S ON YOUR CHANNEL?</h1>
         <h2>The app that makes it easy to create, share and subscribe to personalized video channels. Add your favorite videos from across the web with just one tap.</h2>
-        <a href="http://itunes.apple.com/app/rockpack/id660697542?mt=8&ls=1" target="_blank"><img ng-src="{{config.ASSETS_URL}}/assets/front/images/downloadbig.png" ng-click="triggerEvent('appStoreButtonClick')"></a>
+        <a href="{{ config.ITUNES_APP_LINK }}" target="_blank"><img ng-src="{{config.ASSETS_URL}}/assets/front/images/downloadbig.png" ng-click="triggerEvent('appStoreButtonClick')"></a>
       </div>
       <div class="ipadsimgs hidden-phone"></div>
     </div>
@@ -164,22 +165,8 @@
   </div>
 </div>
 
-<footer id="#footer">
-  <div class="wrapper" ng-style="wrapperWidth()">
-    <ul>
-      <li class="hidden-phone"><a href="#">About</a></li>
-      <li class="hidden-phone"><a href="#/content-providers">Content Providers</a></li>
-      <li class="hidden-phone"><a href="#/people">People</a></li>
-      <li class="hidden-phone"><a href="#/press">Partners & Press</a></li>
-      <li class="hidden-phone"><a href="#/jobs">Jobs</a></li>
-      <li class="hidden-phone"><a href="http://help.rockpack.com/">Help</a></li>
-    </ul>
-    <div class="rights">All rights reserved Rockpack® ltd 2013 - By using Rockpack, you agree to our  <a href="/tos">Terms & Conditions</a> and <a href="/privacy">Privacy Policy</a>.</div>
-    <div class="rights">Apple, the Apple logo, iPhone and iPad are trademarks of Apple Inc., registered in the U.S and other countries.<br>App Store is a service mark of Apple Inc.</div>
-  </div>
-</footer>
-
-{% include 'web/ga_ajax.html' %}
+{% include 'web/footer.html' %}
+{% include 'web/ga.html' %}
 
 </body>
 </html>

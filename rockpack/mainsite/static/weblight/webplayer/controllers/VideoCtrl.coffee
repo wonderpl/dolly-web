@@ -119,5 +119,7 @@ window.Weblight.controller('VideoCtrl', ['$scope', '$rootScope', '$routeParams',
 
   $scope.state = 'test'
 
+  $scope.itunesLink = window.itunesLink
+
   return
 ])

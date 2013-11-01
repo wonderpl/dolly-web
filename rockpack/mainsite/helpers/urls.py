@@ -1,8 +1,10 @@
 import re
 import urlparse
+from urllib import urlencode
+from contextlib import contextmanager
 from unicodedata import normalize
 from werkzeug.exceptions import NotFound
-from flask import current_app, url_for as _url_for
+from flask import current_app, g, url_for as _url_for
 from rockpack.mainsite import app
 
 http_only_domains = []
@@ -10,6 +12,15 @@ if 'SERVER_NAME' in app.config:
     http_only_domains.append(app.config['SERVER_NAME'])
 if 'SHARE_SUBDOMAIN' in app.config:
     http_only_domains.append('.'.join([app.config['SHARE_SUBDOMAIN'], app.config['SERVER_NAME']]))
+
+
+@contextmanager
+def url_tracking_context(params):
+    g._tracking_params = params
+    try:
+        yield
+    finally:
+        g._tracking_params = None
 
 
 def url_for(*args, **kwargs):
@@ -22,6 +33,9 @@ def url_for(*args, **kwargs):
     # Ensure http-only domain don't get https protocol
     if any(url.startswith('https://' + domain + '/') for domain in http_only_domains if domain):
         url = 'http://' + url[8:]
+    tracking_params = getattr(g, '_tracking_params', None)
+    if tracking_params:
+        url += '?' + urlencode(tracking_params)
     return url
 
 

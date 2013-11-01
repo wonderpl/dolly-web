@@ -1,25 +1,32 @@
 import time
+import re
 import urlparse
 from itertools import izip_longest, groupby
 from functools import wraps
 from datetime import datetime, timedelta
 from flask import json
-from sqlalchemy import func, text, between, case
+from sqlalchemy import func, text, between, case, desc
 from sqlalchemy.orm import joinedload, contains_eager, aliased
 from sqlalchemy.orm.exc import NoResultFound
 from rockpack.mainsite import app
 from rockpack.mainsite.manager import manager
 from rockpack.mainsite.core.dbapi import commit_on_success, db, readonly_session
 from rockpack.mainsite.core import email
+from rockpack.mainsite.core.token import create_unsubscribe_token
 from rockpack.mainsite.core.apns import push_client
+from rockpack.mainsite.helpers.urls import url_tracking_context
 from rockpack.mainsite.services.oauth import facebook
 from rockpack.mainsite.services.base.models import JobControl
 from rockpack.mainsite.services.oauth.models import ExternalFriend, ExternalToken
 from rockpack.mainsite.services.video.models import Channel, VideoInstance, Video
 from rockpack.mainsite.services.share.models import ShareLink
 from .models import (
-    User, UserActivity, UserNotification, UserContentFeed,
+    User, UserActivity, UserAccountEvent, UserNotification, UserContentFeed,
     UserFlag, UserInterest, Subscription, BroadcastMessage)
+
+
+# Pick title from a html string
+TITLE_RE = re.compile('<title>([^<]+)</title>')
 
 
 def activity_user(activity):
@@ -430,6 +437,20 @@ def remove_old_feed_items():
     app.logger.info('deleted %d feed items', count)
 
 
+def _send_email_or_log(user, template, **ctx):
+    try:
+        body = template.render(
+            email_sender=app.config['DEFAULT_EMAIL_SOURCE'],
+            assets=app.config.get('ASSETS_URL', ''),
+            user=user,
+            **ctx
+        )
+        subject = TITLE_RE.search(body).group(1)
+        email.send_email(user.email, subject, body, format='html')
+    except Exception as e:
+        app.logger.error("Problem sending email to user %s: %s", user.id, e)
+
+
 def create_registration_emails(date_from=None, date_to=None):
     registration_window = User.query.filter(User.email != '')
     if date_from:
@@ -437,20 +458,83 @@ def create_registration_emails(date_from=None, date_to=None):
     if date_to:
         registration_window = registration_window.filter(User.date_joined < date_to)
 
-    subject = 'Welcome to Rockpack'
     template = email.env.get_template('welcome.html')
     for user in registration_window:
-        try:
-            body = template.render(
-                subject=subject,
-                username=user.username,
-                email=user.email,
-                email_sender=app.config['DEFAULT_EMAIL_SOURCE'],
-                assets=app.config.get('ASSETS_URL', '')
-            )
-            email.send_email(user.email, subject, body, format='html')
-        except Exception as e:
-            app.logger.error("Problem sending registration email for user.id '%s': %s", user.id, str(e))
+        _send_email_or_log(user, template)
+
+
+def _reactivation_feed_context(user, date_from):
+    ctx = {}
+    videos_per_channel = app.config.get('REACTIVATION_VIDEOS_PER_CHANNEL', 2)
+    max_channels = app.config.get('REACTIVATION_MAX_CHANNELS', 3)
+    feed = UserContentFeed.query.filter(
+        UserContentFeed.user == user.id,
+        UserContentFeed.date_added > date_from,
+    )
+
+    # Get most recent channels with a least 2 videos in user's feed
+    video_channels = dict(
+        feed.filter(
+            UserContentFeed.video_instance.isnot(None)
+        ).group_by(
+            UserContentFeed.channel
+        ).order_by(
+            desc(func.count() > videos_per_channel),
+            desc(func.max(UserContentFeed.date_added))
+        ).limit(max_channels).values(UserContentFeed.channel, func.count())
+    )
+    for channel, video_count in video_channels.items():
+        videos = list(
+            VideoInstance.query.join(
+                UserContentFeed,
+                (UserContentFeed.video_instance == VideoInstance.id) &
+                (UserContentFeed.user == user.id) &
+                (UserContentFeed.channel == channel)
+            ).
+            order_by(desc(UserContentFeed.date_added)).
+            limit(videos_per_channel)
+        )
+        if videos:
+            ctx.setdefault('video_data', []).append(
+                (videos[0].video_channel, video_count, videos))
+
+    # Get recently created channels from feed (that haven't been used above)
+    feed_channels = feed.filter(UserContentFeed.video_instance.is_(None))
+    new_channels = list(Channel.query.filter(
+        Channel.id.in_(feed_channels.with_entities(UserContentFeed.channel)),
+        Channel.id.notin_(video_channels)).limit(max_channels))
+    if new_channels:
+        ctx['new_channels'] = new_channels
+
+    return ctx
+
+
+def create_reactivation_emails(date_from=None, date_to=None):
+    # select users who became inactive N days ago
+    listid = app.config.get('REACTIVATION_EMAIL_LISTID', 1)
+    delta = timedelta(days=app.config.get('REACTIVATION_THRESHOLD_DAYS', 7))
+    window = [d - delta for d in date_from, date_to]
+    inactivity_window = UserAccountEvent.query.group_by(UserAccountEvent.user).\
+        having(func.max(UserAccountEvent.event_date).between(*window)).\
+        with_entities(UserAccountEvent.user)
+    excluded_users = UserFlag.query.filter(
+        UserFlag.flag.in_(('bouncing', 'unsub%d' % listid))).with_entities(UserFlag.user)
+    inactive_users = User.query.filter(
+        User.email != '',
+        User.id.in_(inactivity_window),
+        User.id.notin_(excluded_users))
+
+    tracking_params = app.config.get('REACTIVATION_EMAIL_TRACKING_PARAMS')
+    with url_tracking_context(tracking_params):
+        template = email.env.get_template('reactivation.html')
+        for user in inactive_users:
+            ctx = _reactivation_feed_context(user, date_from)
+            if ctx:
+                ctx.update(
+                    unsubscribe_token=create_unsubscribe_token(listid, user.id),
+                    **tracking_params
+                )
+                _send_email_or_log(user, template, **ctx)
 
 
 def _post_facebook_story(user, object_type, object_id, token, action, explicit=False):
@@ -607,8 +691,15 @@ def update_user_content_feed(date_from, date_to):
 @manager.cron_command(interval=300)
 @job_control
 def send_registration_emails(date_from, date_to):
-    """Send an email based on a template."""
+    """Send welcome emails to recently registered users."""
     create_registration_emails(date_from, date_to)
+
+
+@manager.cron_command(interval=900)
+@job_control
+def send_reactivation_emails(date_from, date_to):
+    """Send email to users who haven't been active recently."""
+    create_reactivation_emails(date_from, date_to)
 
 
 @manager.cron_command(interval=60)

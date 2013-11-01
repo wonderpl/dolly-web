@@ -38,12 +38,12 @@ FACEBOOK_APP_ID = '573323026048639'
 FACEBOOK_APP_SECRET = _decrypt('0\xa9\xf4=)\xa9\x0cC#\xda \xa2\xe1.\xf8)R\x04\xf4\x9b\x0c\xb9x\x0f\xc1\xb7\xd5\xfb=\xfb\xef\xc1')
 FACEBOOK_APP_NAMESPACE = 'dolly-dev'
 
-SERVER_NAME = 'dev.rockpack.com'
-SECURE_SUBDOMAIN = 'secure'
-ADMIN_SUBDOMAIN = 'dolly'
-DEFAULT_SUBDOMAIN = 'lb'
-API_SUBDOMAIN = 'api'
-SHARE_SUBDOMAIN = 'share'
+#SERVER_NAME = 'dev.rockpack.com'
+#SECURE_SUBDOMAIN = 'secure'
+#ADMIN_SUBDOMAIN = 'dolly'
+#DEFAULT_SUBDOMAIN = 'lb'
+#API_SUBDOMAIN = 'api'
+#SHARE_SUBDOMAIN = 'share'
 
 AUTH_HEADER_SANITY_CHECK = True
 

@@ -70,4 +70,5 @@ class ShareLink(db.Model):
             ShareLink.increment_click_count(self.id)
         return {'url': url,
                 'channel': channelid,
-                'video': params.get('video', None)}
+                'video': params.get('video', None),
+                'user': self.user}

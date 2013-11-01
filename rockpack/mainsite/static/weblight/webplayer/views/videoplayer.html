@@ -1,11 +1,8 @@
 <div ng-controller="VideoCtrl" id="lightbox">
-  <!--<div id="embedOverlay" ng-show="showEmbed == true">-->
-    <!--<textarea><iframe src='http://myrockpack.com/embed/chnStCl-CqTt2IpqspxqUWmQ/' width='430' height='242' scrolling='no' seamless frameborder=0></textarea>-->
-  <!--</div>-->
   <div id="overlayheader">
     <div class="wrapper">
       <a id="logo" href="/#"><img ng-src="((assets_url))/assets/weblight/images/logo.png"></a>
-      <a id="appstore" href="https://itunes.apple.com/app/rockpack/id660697542?mt=8&ls=1"><img ng-src="((assets_url))/assets/weblight/images/appstoreheader.png"></a>
+      <a id="appstore" href="((itunesLink))"><img ng-src="((assets_url))/assets/weblight/images/appstoreheader.png"></a>
     </div>
   </div>
   <div id="playercontainer" ng-mouseover="mouseOver()" ng-mouseout="mouseOut()">
@@ -17,7 +14,7 @@
     </div>
     <div id="player"></div>
     <div class="visible-desktop" id="pause" ng-class="{play: playerState=='2', 'hideOverlay': hideOverlay && playerState=='1'}" ng-click="pausePlay()"></div>
-    <div class="visible-desktop" id="scrubber" ng-click="seekTo($event)" ng-mouseover="mouseOver()" ng-class="{'hideOverlay': hideOverlay && playerState=='1'}"">
+    <div class="visible-desktop" id="scrubber" ng-click="seekTo($event)" ng-mouseover="mouseOver()" ng-class="{'hideOverlay': hideOverlay && playerState=='1'}">
     <div id="currentPosition" ng-style="{'width': currentPosition*100 +'%'}"></div>
     <div id="loadedData"></div>
   </div>
@@ -28,7 +25,7 @@
     <p>
       You’ll find thousands of packs – collections of videos from across the web to browse, watch and share with friends. <span class="bold">Anyone can create, everyone can enjoy.</span>
     </p>
-    <div class="lowerdownloadbtn"><a href="https://itunes.apple.com/app/rockpack/id660697542?mt=8&ls=1" class="rockpack-button">GET THE APP</a></div>
+    <div class="lowerdownloadbtn"><a href="((itunesLink))" class="rockpack-button">GET THE APP</a></div>
     <p class="visible-desktop">
       Download the free Rockpack app on your iPhone or iPad.
     </p>

@@ -36,11 +36,12 @@ GOOGLE_ANALYTICS_ACCOUNT = 'UA-39188851-2'
 
 # For app store links
 ITUNES_APP_ID = '660697542'
+ITUNES_APP_LINK = 'https://itunes.apple.com/app/rockpack/id%s?mt=8&ls=1' % ITUNES_APP_ID
+
+HELP_SITE_LINK = 'http://help.rockpack.com/'
 
 # For iOS app deeplinking
 ROCKPACK_IOS_URL_SCHEME = 'rockpack'
-
-INTERSTITIAL_ITUNES_LINK = True
 
 ELASTICSEARCH_URL = None
 
@@ -89,6 +90,7 @@ BRAND_PROFILE_IMAGES = dict(
     ipad=(927, 385),
 )
 
+ASSETS_URL = '/static'
 ASSETS_MANIFEST = 'file'
 ASSETS_CACHE = False
 ASSETS_AUTO_BUILD = False
@@ -114,6 +116,9 @@ SHARE_MESSAGE_MAP = dict(
         message_facebook=u"I found this great pack of videos on Rockpack",
     ),
 )
+
+# Keep as True until app is updated to use /ws/complete/all/ instead.
+USE_ALL_TERMS_FOR_VIDEO_COMPLETE = True
 
 RECOMMENDER_CATEGORY_BOOSTS = dict(
     gender={
@@ -222,6 +227,8 @@ RECOMMENDER_CATEGORY_BOOSTS = dict(
 DEFAULT_AVATAR = ''
 
 DEFAULT_EMAIL_SOURCE = 'rockpack <noreply@rockpack.com>'
+
+REACTIVATION_EMAIL_TRACKING_PARAMS = dict(utm_medium='email', utm_campaign='react')
 
 SQS_REGION = 'eu-west-1'
 SQS_CRON_QUEUE = 'mainsite-cron'

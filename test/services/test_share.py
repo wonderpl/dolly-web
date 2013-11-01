@@ -3,7 +3,7 @@ from urlparse import urlparse
 from mock import patch
 from flask import json
 from test import base
-from test.test_decorators import skip_if_dolly
+from test.test_decorators import skip_if_dolly, skip_unless_config
 from test.test_helpers import get_auth_header
 from test.fixtures import ChannelData, VideoInstanceData
 from rockpack.mainsite import app
@@ -86,7 +86,7 @@ class TestShare(base.RockPackTestCase):
             r = client.get(urlparse(data['resource_url']).path + '?umts=foo')
             self.assertIn('umts=foo', r.headers['Location'])
 
-        self.app.config['SHARE_REDIRECT_PASSTHROUGH_PARAMS'] = None
+        self.app.config['SHARE_REDIRECT_PASSTHROUGH_PARAMS'] = []
 
     def test_channel_share_email(self):
         with patch('rockpack.mainsite.core.email.send_email') as send_email:
@@ -118,20 +118,20 @@ class TestShare(base.RockPackTestCase):
                 self.assertIn(('email', recipient),
                               [(f['external_system'], f['email']) for f in friends])
 
-    if app.config.get('TEST_SHARE_EMAIL'):
-        def test_share_email_wo_patch(self):
-            with self.app.test_client() as client:
-                userid = self.create_test_user(avatar='avatar').id
-                for object_type, object_id in [
-                        ('channel', ChannelData.channel1.id),
-                        ('video_instance', VideoInstanceData.video_instance1.id)]:
-                    r = client.post(
-                        '/ws/share/email/',
-                        data=json.dumps(dict(
-                            object_type=object_type,
-                            object_id=object_id,
-                            email=app.config['TEST_SHARE_EMAIL'],
-                        )),
-                        content_type='application/json',
-                        headers=[get_auth_header(userid)])
-                    self.assertEquals(r.status_code, 204, r.data)
+    @skip_unless_config('TEST_SHARE_EMAIL')
+    def test_share_email_wo_patch(self):
+        with self.app.test_client() as client:
+            userid = self.create_test_user(avatar='avatar').id
+            for object_type, object_id in [
+                    ('channel', ChannelData.channel1.id),
+                    ('video_instance', VideoInstanceData.video_instance1.id)]:
+                r = client.post(
+                    '/ws/share/email/',
+                    data=json.dumps(dict(
+                        object_type=object_type,
+                        object_id=object_id,
+                        email=app.config['TEST_SHARE_EMAIL'],
+                    )),
+                    content_type='application/json',
+                    headers=[get_auth_header(userid)])
+                self.assertEquals(r.status_code, 204, r.data)
