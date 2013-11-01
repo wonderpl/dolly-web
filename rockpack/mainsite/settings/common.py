@@ -90,6 +90,7 @@ BRAND_PROFILE_IMAGES = dict(
     ipad=(927, 385),
 )
 
+ASSETS_URL = '/static'
 ASSETS_MANIFEST = 'file'
 ASSETS_CACHE = False
 ASSETS_AUTO_BUILD = False
