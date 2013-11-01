@@ -80,6 +80,35 @@ def init_messages(commands):
             _write_message(command, datetime.utcnow())
 
 
+def clean_messages():
+    queue = _get_queue()
+    attributes = queue.get_attributes('All')
+    message_count = sum(int(attributes['ApproximateNumberOfMessages' + a])
+                        for a in ('', 'Delayed', 'NotVisible'))
+
+    messages = []
+    commands = set()
+    while True:
+        new_messages = queue.get_messages(10, 60)
+        if not new_messages:
+            break
+        for message in new_messages:
+            messages.append(message)
+            command = message.get_body()['command']
+            if command in commands:
+                app.logger.warning('Deleting duplicate command: %s', command)
+                message.delete()
+            else:
+                commands.add(command)
+
+    if not len(messages) == message_count:
+        app.logger.warning('Failed to read %d messages', message_count - len(messages))
+
+    diff = set(manager.get_cron_commands().keys()) - commands
+    if diff:
+        app.logger.warning('Missing commands: %s', ', '.join(diff))
+
+
 if __name__ == '__main__':
     # uwsgi mule will execute here
 

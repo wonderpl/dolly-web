@@ -131,6 +131,12 @@ def seed_cron_queue(commands=None):
     init_messages(commands and commands.split(','))
 
 
+@manager.command
+def clean_cron_queue():
+    from rockpack.mainsite.cron_sqs_processor import clean_messages
+    clean_messages()
+
+
 def run(*args):
     init_app()
     if args:
