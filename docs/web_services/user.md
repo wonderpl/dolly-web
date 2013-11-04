@@ -8,6 +8,44 @@ spec for further detail.
 User
 ====
 
+### Get all users
+
+```http
+GET /ws/users/?size=SIZE HTTP/1.1
+Authorization: Bearer TOKEN
+```
+
+Get list of users.
+
+Responds with basic user information.
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+Cache-Control: public, max-age=60
+
+{
+  "user": {
+    "items": [
+      {
+        "avatar_thumbnail_url": "http://path/to/avatar/medium.jpg",
+        "categories": [ ],
+        "description": null,
+        "display_name": "display name",
+        "id": "userid",
+        "position": 0,
+        "profile_cover_url": "",
+        "resource_url": "http://path/to/user/",
+        "username": "username"
+      }
+    ],
+    "total": 19289
+  }
+}
+```
+
+### Get user
+
 Get data for a specific user.
 
 ```http
@@ -27,6 +65,7 @@ Cache-Control: public, max-age=60
 {
   "id": "userid",
   "username": "username",
+  "categories": [123, 456],
   "display_name": "display name",
   "avatar_thumbnail_url": "http://path/to/avatar/small.jpg",
   "profile_cover_url": "",
@@ -59,6 +98,7 @@ Parameter      | Required? | Value               | Description
 :------------- | :-------- | :------------------ | :----------
 data           | no        | Data section names  | The names of data sections to be returned directly in the response. Default: `channels`.
 size           | no        | Data item page size | Number of data items to return - 100 by default
+category (dolly) | no      | Category ID         | Filter on category from a channel owned by a user
 
 If the `data` parameter is specified then the data associated with each resource given will be included directly in the response.
 The supported resource names are `channels`, `subscriptions`, `external_accounts`, `flags` & `activity`.
