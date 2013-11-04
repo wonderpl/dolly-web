@@ -12,7 +12,7 @@ from rockpack.mainsite.services.video.models import Channel, VideoInstance
 from rockpack.mainsite.services.user.api import save_video_activity
 from rockpack.mainsite.services.user.models import EXTERNAL_SYSTEM_NAMES, User
 from rockpack.mainsite.services.search.api import VIDEO_INSTANCE_PREFIX
-from rockpack.mainsite.services.oauth.models import ExternalFriend
+from rockpack.mainsite.services.oauth.models import ExternalFriend, ExternalToken
 from rockpack.mainsite.services.oauth.api import email_validator
 from .models import ShareLink
 
@@ -46,8 +46,13 @@ def send_share_email(recipient, user, object_type, object, link):
     )
     email.send_email(recipient, subject, body, format='html')
 
-    try:
-        recipient_user = User.query.filter(User.email.ilike(recipient.lower())).one()
+    recipient_user = User.query.join(
+        ExternalToken,
+        ExternalToken.user == User.id
+    ).filter(
+        User.email.ilike(recipient.lower())
+    ).first()
+    if recipient_user:
         token = get_apns_token(recipient_user.id)
         if token:
             msg_func = {'video': lambda video_instance: video_instance.resource_url,
@@ -57,8 +62,6 @@ def send_share_email(recipient, user, object_type, object, link):
             push_message_args = [user.display_name]
             deeplink_url = msg_func[object_type_name]
             complex_push_notification(token, push_message, push_message_args, url=deeplink_url)
-    except NoResultFound:
-        pass
 
 
 class ShareForm(Form):

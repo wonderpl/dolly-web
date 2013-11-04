@@ -66,7 +66,7 @@ def repack_message(repacker, channel):
     )
 
 
-def unavailble_video_in_channel_message(channel):
+def unavailable_video_in_channel_message(channel):
     return channel.owner, 'unavilable', dict(
         channel=dict(
             id=channel.id,
@@ -188,7 +188,7 @@ def send_push_notifications(user):
         badge=count, id=notification.id, url=deeplink_url)
 
 
-def create_unavailable_notification(date_from=None, date_to=None, user_notifications=None):
+def create_unavailable_notifications(date_from=None, date_to=None, user_notifications=None):
     activity_window = readonly_session.query(VideoInstance, Video, Channel).join(
         Video,
         Video.id == VideoInstance.video
@@ -206,7 +206,7 @@ def create_unavailable_notification(date_from=None, date_to=None, user_notificat
         activity_window = activity_window.filter(Video.date_updated < date_to)
 
     for video_instance, video, channel in activity_window:
-        user, message_type, message = unavailble_video_in_channel_message(channel)
+        user, message_type, message = unavailable_video_in_channel_message(channel)
         notification = UserNotification(
             user=user,
             date_created=video.date_updated,
@@ -669,7 +669,7 @@ def update_user_notifications(date_from, date_to):
     create_new_activity_notifications(date_from, date_to, user_notifications)
     create_new_registration_notifications(date_from, date_to, user_notifications)
     create_new_repack_notifications(date_from, date_to, user_notifications)
-    create_unavailable_notification(date_from, date_to, user_notifications)
+    create_unavailable_notifications(date_from, date_to, user_notifications)
     remove_old_notifications()
     # apns needs the notification ids, so we need to
     # commit first before we continue
