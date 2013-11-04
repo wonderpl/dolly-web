@@ -119,6 +119,14 @@ def _process_apns_broadcast(users, alert, url=None):
     for tokens in izip_longest(*[(t for u, t in users)] * 100, fillvalue=None):
         _send_apns_message('batch', filter(None, set(tokens)), message)
 
+def _add_user_notification(user, date_created, message_type, message_body):
+    UserNotification(
+        user=user,
+        date_created=date_created,
+        message_type=message_type,
+        message=json.dumps(message_body, separators=(',', ':')),
+    ).add()
+
 
 def complex_push_notification(token, push_message, push_message_args, badge=None, id=None, url=None):
     message = dict(
@@ -207,13 +215,7 @@ def create_unavailable_notifications(date_from=None, date_to=None, user_notifica
 
     for video_instance, video, channel in activity_window:
         user, message_type, message = unavailable_video_in_channel_message(channel)
-        notification = UserNotification(
-            user=user,
-            date_created=video.date_updated,
-            message_type=message_type,
-            message=json.dumps(message, separators=(',', ':')),
-        )
-        UserNotification.query.session.add(notification)
+        _add_user_notification(user, video.date_updated, message_type, message)
         if user_notifications is not None:
             user_notifications.setdefault(user, None)
 
@@ -245,13 +247,7 @@ def create_new_repack_notifications(date_from=None, date_to=None, user_notificat
     for video_instance, packer, packer_channel, repacker_channel, repacker in activity_window:
         user, type, body = repack_message(repacker, repacker_channel)
 
-        notification = UserNotification(
-            user=packer,
-            date_created=video_instance.date_added,
-            message_type=type,
-            message=json.dumps(body, separators=(',', ':')),
-        )
-        UserNotification.query.session.add(notification)
+        _add_user_notification(packer, video_instance.date_added, type, body)
         if user_notifications is not None:
             user_notifications.setdefault(user, None)
 
@@ -285,13 +281,7 @@ def create_new_activity_notifications(date_from=None, date_to=None, user_notific
                     if user == activity.user:
                         # Don't send notifications to self
                         continue
-                    notification = UserNotification(
-                        user=user,
-                        date_created=activity.date_actioned,
-                        message_type=type,
-                        message=json.dumps(body, separators=(',', ':')),
-                    )
-                    UserNotification.query.session.add(notification)
+                    _add_user_notification(user, activity.date_actioned, type, body)
                     if user_notifications is not None:
                         user_notifications.setdefault(user, None)
 
@@ -317,13 +307,7 @@ def create_new_registration_notifications(date_from=None, date_to=None, user_not
                 avatar_thumbnail_url=user.avatar.url,
                 display_name=user.display_name,
             ))
-            notification = UserNotification(
-                user=friend,
-                date_created=user.date_joined,
-                message_type='joined',
-                message=json.dumps(message, separators=(',', ':')),
-            )
-            UserNotification.query.session.add(notification)
+            _add_user_notification(friend, user.date_joined, 'joined', message)
             if user_notifications is not None:
                 user_notifications.setdefault(friend, None)
 
