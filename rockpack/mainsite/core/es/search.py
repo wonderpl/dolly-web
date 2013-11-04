@@ -544,6 +544,7 @@ class UserSearch(EntitySearch):
                 profile_cover_url=urljoin(IMAGE_CDN, user.profile_cover_url) if user.profile_cover_url else '',
                 description=user.description,
                 position=position,
+                categories=getattr(user, 'category', []) or []
             )
             if user.brand:
                 u.update(

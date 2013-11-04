@@ -236,6 +236,10 @@ user_mapping = {
             "type": "boolean",
             "null_value": False,
         },
+        "category": {
+            "type": "string",
+            "index": "not_analyzed"
+        }
     }
 }
 

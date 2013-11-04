@@ -183,6 +183,10 @@ class DBImport(object):
                 done += 1
             self.conn.flush_bulk(forced=True)
 
+    def import_user_categories(self):
+        from rockpack.mainsite.core.es.api import update_user_categories
+        update_user_categories()
+
     def import_dolly_repin_counts(self):
         from rockpack.mainsite.services.video.models import VideoInstance
 

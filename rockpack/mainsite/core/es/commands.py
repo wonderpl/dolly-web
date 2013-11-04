@@ -9,7 +9,7 @@ def timer(func):
     def wrapper(*args, **kwargs):
         start = time.time()
         func(*args, **kwargs)
-        app.logger.info('Ran import_video_repins in %fs', time.time() - start)
+        app.logger.info('Ran %s in %fs', func.func_name, time.time() - start)
     return wrapper
 
 @manager.command
@@ -21,3 +21,8 @@ def import_video_repins():
 @timer
 def import_video_repin_owners():
     helpers.DBImport().import_dolly_video_owners()
+
+@manager.command
+@timer
+def import_user_categories():
+    helpers.DBImport().import_user_categories()
