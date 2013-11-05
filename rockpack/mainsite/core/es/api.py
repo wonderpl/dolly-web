@@ -755,11 +755,36 @@ def es_update_channel_videos(extant=[], deleted=[], async=app.config.get('ASYNC_
     for (channel_id, video_title) in video_details:
         channel_map.setdefault(channel_id, []).append(video_title)
 
-    for channel_id, video_titles in channel_map.iteritems():
+    # Reset channel catgegory
+    from rockpack.mainsite.services.video.models import Channel
+    query = readonly_session.query(
+        VideoInstance.category, Channel.id
+    ).join(
+        Channel, Channel.id == VideoInstance.channel
+    ).filter(
+        Channel.id.in_(channel_ids)
+    ).order_by(Channel.id)
+
+    category_map = {}
+    for instance_cat, channel_id in query:
+        channel_cat_counts = category_map.setdefault(channel_id, {})
+        current_count = channel_cat_counts.setdefault(instance_cat, 0)
+        channel_cat_counts[instance_cat] = current_count + 1
+
+    # Update the channels
+    for channel_id in set(category_map.keys() + channel_map.keys()):
         ec = ESChannel.updater(bulk=True)
         ec.set_document_id(channel_id)
-        ec.add_field('video_terms', video_titles)
-        ec.add_field('video_count', len(video_titles))
+        video_titles = channel_map.get(channel_id, None)
+        if video_titles:
+            ec.add_field('video_terms', video_titles)
+            ec.add_field('video_count', len(video_titles))
+        potential_cats = category_map.get(channel_id, None)
+        if potential_cats:
+            ec.add_field(
+                'category',
+                max(((count, cat) for cat, count in potential_cats.items()))
+            )
         ec.update()
     ESChannel.flush()
 
