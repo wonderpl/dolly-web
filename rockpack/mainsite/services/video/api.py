@@ -205,11 +205,16 @@ class VideoWS(WebService):
             data, total = get_local_videos(self.get_locale(), self.get_page(), star_order=True, **request.args)
             return dict(videos=dict(items=data, total=total))
 
-        category = request.args.get('category')
         location = request.args.get('location')
         date_order = request.args.get('date_order')
         if app.config.get('DOLLY'):
             date_order = 'desc'
+        category = request.args.get('category')
+        if category:
+            try:
+                int(category)
+            except ValueError:
+                abort(400)
 
         vs = VideoSearch(self.get_locale())
         offset, limit = self.get_page()

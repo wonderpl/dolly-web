@@ -757,7 +757,13 @@ class UserWS(WebService):
             offset, limit = self.get_page()
             u = es_search.UserSearch()
             u.set_paging(offset, limit)
-            u.add_term('category', request.args.get('category', None))
+            category = request.args.get('category', None)
+            if category:
+                try:
+                    int(category)
+                except ValueError:
+                    abort(400)
+            u.add_term('category', category)
             return dict(user=dict(items=u.users(), total=u.total))
 
     @expose_ajax('/<userid>/', cache_age=600, secure=False)
