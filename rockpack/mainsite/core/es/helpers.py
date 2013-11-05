@@ -323,6 +323,27 @@ class DBImport(object):
             bulk=True
         )
 
+    def import_average_category(self):
+        from rockpack.mainsite.services.video.models import VideoInstance, Channel
+
+        query = readonly_session.query(VideoInstance.category, Channel.id).join(Channel, Channel.id == VideoInstance.channel).order_by(Channel.id)
+
+        category_map = {}
+        for instance_cat, channel_id in query:
+            channel_cat_counts = category_map.setdefault(channel_id, {})
+            current_count = channel_cat_counts.setdefault(instance_cat, 0)
+            channel_cat_counts[instance_cat] = current_count + 1
+
+        for channel_id, c_map in category_map.iteritems():
+            ec = ESChannel.updater(bulk=True)
+            ec.set_document_id(channel_id)
+            ec.add_field(
+                'category',
+                max(((count, cat) for cat, count in c_map.items()))
+            )
+            ec.update()
+        self.conn.flush_bulk(forced=True)
+
     def import_video_channel_terms(self):
         from rockpack.mainsite.services.video.models import VideoInstance, Channel, Video
 
