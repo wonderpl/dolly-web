@@ -521,6 +521,10 @@ class VideoSearch(EntitySearch, CategoryMixin, MediaSortMixin):
 
     def videos(self, with_channels=False, with_stars=False):
         if not self._video_results:
+            if app.config.get('DOLLY'):
+                # Ensure videos aren't displayed that have
+                # a date_added in the future
+                self._exclusion_filters.append(filters.filter_by_date_added())
             r = self.results()
             self._video_results = self._format_results(r, with_channels=with_channels, with_stars=with_stars)
         return self._video_results

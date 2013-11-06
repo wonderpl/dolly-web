@@ -15,6 +15,11 @@ def locale_filter(entity):
     return pyes.CustomFiltersScoreQuery.Filter(pyes.MatchAllFilter(), script=script)
 
 
+def filter_by_date_added():
+    script = "(time() > doc['date_added'].date.getMillis()) ? 1 : 0"
+    return pyes.ScriptFilter(script)
+
+
 def country_restriction(country):
     script = """
         (doc['country_restriction.allow'].empty ? 1 : (doc['country_restriction.allow'].values.contains("{country}") ? 1 : 0))
