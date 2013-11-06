@@ -476,6 +476,8 @@ class DBImport(object):
                 channel_dict.setdefault(id, {})
                 channel_dict[id]['share_link_video'] = [count, _normalised(count, q_max, q_min)]
                 val = channel_shares.get(id, 0)
+                if 'None' in channel_share_vals:
+                    continue
                 channel_dict[id]['norm_share_link_channel'] = channel_dict[id].setdefault('norm_share_link_channel', 0) + _normalised(count + val, q_max + channel_share_vals[0], q_min + channel_share_vals[1])
 
             print 'video shares done'
