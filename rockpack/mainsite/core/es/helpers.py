@@ -102,7 +102,7 @@ class DBImport(object):
             ec.flush_bulk()
             print 'finished in', time.time() - start, 'seconds'
 
-    def import_videos(self):
+    def import_videos(self, prefix=None):
         from rockpack.mainsite.services.video.models import Channel, Video, VideoInstanceLocaleMeta, VideoInstance
 
         with app.test_request_context():
@@ -121,6 +121,9 @@ class DBImport(object):
             ).filter(
                 Video.visible == True, Channel.public == True
             )
+
+            if prefix:
+                query = query.filter(VideoInstance.id.like(prefix.replace('_', '\\_') + '%'))
 
             total = query.count()
             print 'importing {} videos'.format(total)
