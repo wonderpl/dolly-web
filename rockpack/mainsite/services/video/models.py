@@ -359,9 +359,9 @@ class Channel(db.Model):
 
     resource_url = property(get_resource_url)
 
-    def add_videos(self, videos, tags=None):
+    def add_videos(self, videos, tags=None, date_added=None):
         instances = [VideoInstance(channel=self.id, video=getattr(v, 'id', v),
-                                   category=self.category, tags=tags) for v in videos]
+                                   category=self.category, tags=tags, date_added=date_added) for v in videos]
         existing = dict(VideoInstance.query.filter_by(channel=self.id).values('video', 'id'))
         self.query.session.add_all(i for i in instances if i.video not in existing)
 
