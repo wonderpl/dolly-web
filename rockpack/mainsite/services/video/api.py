@@ -230,8 +230,8 @@ class VideoWS(WebService):
 
         return dict(videos={'items': videos}, total=total)
 
-    @expose_ajax('/<video_id>/starring_users/')
-    def video_starring_users(self, video_id, cache_age=3600):
+    @expose_ajax('/<video_id>/starring_users/', cache_age=3600)
+    def video_starring_users(self, video_id):
         query = readonly_session.query(UserActivity.user).join(
             models.VideoInstance,
             models.VideoInstance.id == UserActivity.object_id

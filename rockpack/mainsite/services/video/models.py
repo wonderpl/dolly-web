@@ -6,12 +6,12 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import relationship, aliased, lazyload
 from flask.ext.sqlalchemy import models_committed
 from rockpack.mainsite.core.dbapi import db, defer_except
+from rockpack.mainsite.core.es import api as es_api
 from rockpack.mainsite.core.es.api import es_update_channel_videos
 from rockpack.mainsite.helpers.db import add_base64_pk, add_video_pk, insert_new_only, ImageType, BoxType
 from rockpack.mainsite.helpers.urls import url_for
 from rockpack.mainsite.services.user.models import User
 from rockpack.mainsite import app
-from rockpack.mainsite.core.es import api as es_api
 
 
 class Locale(db.Model):
@@ -515,9 +515,8 @@ def _video_insert(mapper, connection, target):
 @event.listens_for(Video, 'after_update')
 def _video_update(mapper, connection, target):
     if not target.visible:
-        from rockpack.mainsite.core.es.api import ESVideo
         ids = VideoInstance.query.filter_by(video=target.id).values('id')
-        ESVideo.delete(ids)
+        es_api.ESVideo.delete(ids)
 
 
 @models_committed.connect_via(app)
