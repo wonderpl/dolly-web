@@ -44,6 +44,7 @@ ACTION_COLUMN_VALUE_MAP = dict(
     unstar=('star_count', -1),
     subscribe=('subscriber_count', 1),
     unsubscribe=('subscriber_count', -1),
+    subscribe_all=('subscriber_count', 1),
 )
 
 
@@ -189,6 +190,31 @@ def save_channel_activity(userid, action, channelid, locale):
         ).add()
     if app.config['MYRRIX_URL'] and action == 'open':
         recommender.record_activity(userid, channelid)
+
+
+@commit_on_success
+def save_owner_activity(userid, action, ownerid, locale):
+    ownerid = User.query.filter_by(is_active=True, id=ownerid).value('id')
+    if not ownerid:
+        abort(400, message=_('Invalid user id'))
+    UserActivity(
+        user=userid,
+        action=action,
+        object_type='user',
+        object_id=ownerid,
+        tracking_code=request.args.get('tracking_code'),
+    ).add()
+
+    if action == 'subscribe_all':
+        channels = [
+            c for c, in Channel.query.filter_by(
+                owner=ownerid, deleted=False, public=True
+            ).filter(Channel.id.notin_(
+                Subscription.query.filter_by(user=userid).with_entities(Subscription.channel)
+            )).values(Channel.id)
+        ]
+        if channels:
+            _create_user_subscriptions(userid, channels, locale)
 
 
 @commit_on_success
@@ -349,6 +375,25 @@ def user_subscriptions(userid, locale, paging):
     return dict(items=items, total=total)
 
 
+@commit_on_success
+def _create_user_subscriptions(userid, channels, locale=None):
+    subscriptions = []
+    for channelid in channels:
+        subscriptions.append(Subscription(user=userid, channel=channelid).add())
+        save_channel_activity(userid, 'subscribe', channelid, locale)
+
+    # Add some recent videos from this channel into the users feed
+    UserContentFeed.query.session.add_all(
+        UserContentFeed(user=userid, channel=channelid, video_instance=id, date_added=date_added)
+        for id, channelid, date_added in VideoInstance.query.filter(
+            VideoInstance.channel.in_(channels),
+            VideoInstance.date_added > SUBSCRIPTION_VIDEO_FEED_THRESHOLD,
+        ).limit(10).values('id', 'channel', 'date_added')
+    )
+
+    return subscriptions
+
+
 def user_channels(userid, locale, paging, tracking_prefix='ownprofile'):
     channels = Channel.query.options(lazyload('owner_rel'), lazyload('category_rel')).\
         filter_by(owner=userid, deleted=False)
@@ -382,6 +427,7 @@ def user_activity(userid, locale, paging):
         recently_viewed=ids['view'],
         recently_starred=list(set(ids['star']) - set(ids['unstar'])),
         subscribed=list(set(ids['subscribe']) - set(ids['unsubscribe'])),
+        user_subscribed=list(set(ids['subscribe_all'])),
     )
 
 
@@ -953,7 +999,10 @@ class UserWS(WebService):
         form = ActivityForm(csrf_enabled=False)
         if not form.validate():
             abort(400, form_errors=form.errors)
-        if form.object_type.data == 'channel':
+        if form.object_type.data == 'user':
+            save_owner_activity(
+                userid, form.action.data, form.object_id.data, self.get_locale())
+        elif form.object_type.data == 'channel':
             save_channel_activity(
                 userid, form.action.data, form.object_id.data, self.get_locale())
         else:
@@ -1186,7 +1235,7 @@ class UserWS(WebService):
     @expose_ajax('/<userid>/subscriptions/', methods=['POST'])
     @check_authorization(self_auth=True)
     def post_subscriptions(self, userid):
-        endpoint, args = url_to_endpoint(request.json or '')
+        endpoint, args = url_to_endpoint(str(request.json))
         if endpoint not in ('userws.owner_channel_info', 'userws.channel_info'):
             abort(400, message=_('Invalid channel url'))
         channelid = args['channelid']
@@ -1194,14 +1243,7 @@ class UserWS(WebService):
             abort(400, message=_('Channel not found'))
         if Subscription.query.filter_by(user=userid, channel=channelid).count():
             abort(400, message=_('Already subscribed'))
-        subs = Subscription(user=userid, channel=channelid).save()
-        # Add some recent videos from this channel into the users feed
-        UserContentFeed.query.session.add_all(
-            UserContentFeed(user=userid, channel=channelid, video_instance=id, date_added=date_added)
-            for id, date_added in VideoInstance.query.filter_by(channel=channelid).
-            filter(VideoInstance.date_added > SUBSCRIPTION_VIDEO_FEED_THRESHOLD).
-            limit(10).values('id', 'date_added'))
-        save_channel_activity(userid, 'subscribe', channelid, self.get_locale())
+        subs = _create_user_subscriptions(userid, [channelid], self.get_locale())[0]
         return ajax_create_response(subs)
 
     @expose_ajax('/<userid>/subscriptions/<channelid>/')

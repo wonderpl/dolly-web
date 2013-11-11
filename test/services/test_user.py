@@ -438,6 +438,29 @@ class TestUserContent(base.RockPackTestCase):
             self.assertEquals(first['category'], 2)
             self.assertIn('cat-2-1.40', first['tracking_code'])
 
+    def test_subscribe_all(self):
+        with self.app.test_client() as client:
+            self.app.test_request_context().push()
+            user = self.create_test_user().id
+            owner = self.create_test_user().id
+            r = client.post(
+                '/ws/{}/activity/'.format(user),
+                data=json.dumps(dict(
+                    action='subscribe_all',
+                    object_type='user',
+                    object_id=owner,
+                )),
+                content_type='application/json',
+                headers=[get_auth_header(user)])
+            self.assertEquals(r.status_code, 204)
+
+            r = client.get(
+                '/ws/{}/activity/'.format(user),
+                headers=[get_auth_header(user)])
+            activity = json.loads(r.data)
+            self.assertIn(owner, activity['user_subscribed'])
+            self.assertGreater(len(activity['subscribed']), 0)
+
     def test_subscription_notification(self):
         with self.app.test_client() as client:
             self.app.test_request_context().push()

@@ -872,8 +872,8 @@ Content-Type: application/json
 
 Parameter      | Required? | Value                                  | Description
 :------------- | :-------- | :------------------------------------- | :----------
-action         | yes       | `star`¦`unstar`¦`view`¦`select`¦`open` | Specifies the action type
-object_type    | yes       | `channel`¦`video_instance`             | The type of object
+action         | yes       | `star`¦`unstar`¦`view`¦`select`¦`open`¦`subscribe_all` | Specifies the action type
+object_type    | yes       | `user`¦`channel`¦`video_instance`      | The type of object
 object_id      | yes       | string                                 | The id of the object that was acted upon
 locale         | no        | IETF language tag                      | The action will be recorded for the given locale
 tracking_code  | no        | string                                 | The value for the last retrieved tracking_code
@@ -901,7 +901,8 @@ Cache-Control: private, max-age=60
 {
  "recently_viewed": [ "video instance id", "..." ],
  "recently_starred": [ "video id", "..." ],
- "subscribed": [ "channel id", "..." ]
+ "subscribed": [ "channel id", "..." ],
+ "user_subscribed": [ "user id", "..." ]
 }
 ```
 
@@ -1245,6 +1246,8 @@ Content-Type: application/json
  "id": "ID"
 }
 ```
+
+To subscribe to all channels owned by a specific user POST to the activity service.
 
 ### Unsubscribe
 
