@@ -92,9 +92,8 @@ def _update_video_related_channel_meta(channel_ids):
             ec.add_field('video_count', len(video_titles))
         potential_cats = category_map.get(channel_id, None)
         if potential_cats:
-            ec.add_field(
-                'category',
-                max(((count, cat) for cat, count in potential_cats.items()))
-            )
+            cat = next(cat for cat, count in potential_cats.items() if count >= sum(potential_cats.values()) * 0.6)
+            if cat:
+                ec.add_field('category', cat)
         ec.update()
     api.ESChannel.flush()

@@ -9,9 +9,9 @@ from rockpack.mainsite.core.dbapi import readonly_session, db, commit_on_success
 from rockpack.mainsite.core.webservice import WebService, expose_ajax
 from rockpack.mainsite.core.oauth.decorators import check_authorization
 from rockpack.mainsite.core.es import use_elasticsearch, filters
-from rockpack.mainsite.core.es.search import VideoSearch, ChannelSearch, UserSearch
+from rockpack.mainsite.core.es.search import VideoSearch, ChannelSearch
 from rockpack.mainsite.services.video import models
-from rockpack.mainsite.services.user.models import UserActivity
+from rockpack.mainsite.services.user.models import UserActivity, User
 
 
 def _filter_by_category(query, type, category_id):
@@ -232,36 +232,43 @@ class VideoWS(WebService):
 
     @expose_ajax('/<video_id>/starring_users/', cache_age=3600)
     def video_starring_users(self, video_id):
-        query = readonly_session.query(UserActivity.user).join(
+        users = User.query.join(
+            UserActivity,
+            UserActivity.user == User.id
+        ).join(
             models.VideoInstance,
             models.VideoInstance.id == UserActivity.object_id
         ).filter(
             UserActivity.object_type == 'video_instance',
             UserActivity.action == 'star',
             models.VideoInstance.video == video_id
-        )
-        user_ids = [_ for _ in query]
-        if not user_ids:
-            abort(404)
+        ).order_by(UserActivity.date_actioned.desc())
 
-        u = UserSearch()
-        u.add_id(user_ids)
-        u.set_paging(*self.get_page())
-        users = u.users()
+        total = users.count()
+        offset, limit = self.get_page()
+        users = users.offset(offset).limit(limit)
+        items = []
 
-        if not users:
-            abort(404)
-        return dict(users=dict(items=users, total=len(users)))
+        for position, user in enumerate(users, offset):
+            items.append(dict(
+                position=position,
+                id=user.id,
+                resource_url=user.get_resource_url(),
+                display_name=user.display_name,
+                avatar_thumbnail_url=user.avatar.url,
+            ))
+        return dict(users={'items': items}, total=total)
 
     @expose_ajax('/<video_id>/channels/')
     def video_channels(self, video_id, cache_age=3600):
         v = VideoSearch(self.get_locale())
         v.add_term('video.id', video_id)
-        v.set_paging(0, 5)
+        v.set_paging(*self.get_page(default_size=5))
         videos = v.videos()
         if not videos:
             abort(404)
-        return [v['channel_title'] for v in videos]
+        title_items = [{'title': v['channel_title']} for v in videos]
+        return {'channels': {'items': title_items, 'total': v.total}}
 
     @expose_ajax('/players/', cache_age=7200)
     def players(self):
