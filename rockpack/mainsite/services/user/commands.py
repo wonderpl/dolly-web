@@ -67,7 +67,7 @@ def repack_message(repacker, channel):
 
 
 def unavailable_video_in_channel_message(channel):
-    return channel.owner, 'unavilable', dict(
+    return channel.owner, 'unavailable', dict(
         channel=dict(
             id=channel.id,
             resource_url=channel.get_resource_url(True),
