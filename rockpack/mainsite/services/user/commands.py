@@ -431,6 +431,8 @@ def _send_email_or_log(user, template, **ctx):
         )
         subject = TITLE_RE.search(body).group(1)
         email.send_email(user.email, subject, body, format='html')
+        app.logger.info("Sent %s email to user %s <%s>",
+            template.name[:-5], user.id, user.email)
     except Exception as e:
         app.logger.error("Problem sending email to user %s: %s", user.id, e)
 
@@ -504,6 +506,7 @@ def create_reactivation_emails(date_from=None, date_to=None):
     excluded_users = UserFlag.query.filter(
         UserFlag.flag.in_(('bouncing', 'unsub%d' % listid))).with_entities(UserFlag.user)
     inactive_users = User.query.filter(
+        User.is_active == True,
         User.email != '',
         User.id.in_(inactivity_window),
         User.id.notin_(excluded_users))
@@ -512,7 +515,7 @@ def create_reactivation_emails(date_from=None, date_to=None):
     with url_tracking_context(tracking_params):
         template = email.env.get_template('reactivation.html')
         for user in inactive_users:
-            ctx = _reactivation_feed_context(user, date_from)
+            ctx = _reactivation_feed_context(user, window[0])
             if ctx:
                 ctx.update(
                     unsubscribe_token=create_unsubscribe_token(listid, user.id),

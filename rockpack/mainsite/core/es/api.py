@@ -197,6 +197,13 @@ class ESObject(object):
         ESObjectIndexer.flush()
 
 
+class ESUser(ESObject):
+
+    _type = 'user'
+
+    #TODO: add insert mapper
+
+
 class ESVideo(ESObject):
 
     _type = 'video'
@@ -552,11 +559,49 @@ def add_user_to_index(user, bulk=False, refresh=False, no_check=False):
     return add_to_index(data, mappings.USER_INDEX, mappings.USER_TYPE, id=user.id, bulk=bulk, refresh=refresh)
 
 
+def update_user_categories(user_ids=[]):
+    from rockpack.mainsite.services.video.models import Channel
+
+    query = readonly_session.query(Channel.category, Channel.owner).filter(
+            Channel.public.is_(True),
+            Channel.visible.is_(True),
+            Channel.deleted.is_(False)).order_by(Channel.owner)
+
+    if user_ids:
+        query = query.filter(Channel.owner.in_(user_ids))
+
+    category_map = {}
+
+    for category, owner in query:
+        if category is not None:
+            category_map.setdefault(owner, []).append(category)
+
+    this_user = ''
+    cat_list = []
+
+    for user, category in category_map.iteritems():
+        if this_user != user:
+            if this_user:
+                eu = ESUser.updater(bulk=True)
+                eu.set_document_id(this_user)
+                eu.add_field('category', list(set(cat_list)))
+                eu.update()
+            # reset
+            this_user = user
+            cat_list = []
+
+        cat_list.extend(category)
+
+    es_connection.flush_bulk(forced=True)
+
+
 def add_channel_to_index(channel, bulk=False, no_check=False):
     if not use_elasticsearch():
         return
     es_channel = ESChannel.inserter(bulk=bulk)
     es_channel.insert(channel.id, channel)
+
+    update_user_categories(user_ids=[channel.owner])
 
 
 def update_channel_to_index(channel, no_check=False):
@@ -602,6 +647,8 @@ def update_channel_to_index(channel, no_check=False):
                 add_channel_to_index(channel)
             except Exception, e:
                 app.logger.error('Failed to insert channel after failed update with: %s', str(e))
+
+    update_user_categories(user_ids=[channel.owner])
 
 
 def add_video_to_index(video_instance, bulk=False, no_check=False):
@@ -727,6 +774,11 @@ def remove_channel_from_index(channel_id):
         pass
     else:
         ESVideo.delete_channel_videos(channel_id)
+
+    from rockpack.mainsite.services.video.models import Channel
+    user_id = readonly_session.query(Channel.owner).filter(Channel.id == channel_id).first()
+    if user_id:
+        update_user_categories(user_ids=[user_id[0]])
 
 
 def remove_video_from_index(video_id):

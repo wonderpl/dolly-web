@@ -102,7 +102,7 @@ class DBImport(object):
             ec.flush_bulk()
             print 'finished in', time.time() - start, 'seconds'
 
-    def import_videos(self):
+    def import_videos(self, prefix=None):
         from rockpack.mainsite.services.video.models import Channel, Video, VideoInstanceLocaleMeta, VideoInstance
 
         with app.test_request_context():
@@ -121,6 +121,9 @@ class DBImport(object):
             ).filter(
                 Video.visible == True, Channel.public == True
             )
+
+            if prefix:
+                query = query.filter(VideoInstance.id.like(prefix.replace('_', '\\_') + '%'))
 
             total = query.count()
             print 'importing {} videos'.format(total)
@@ -182,6 +185,10 @@ class DBImport(object):
                 self.print_percent_complete(done, total)
                 done += 1
             self.conn.flush_bulk(forced=True)
+
+    def import_user_categories(self):
+        from rockpack.mainsite.core.es.api import update_user_categories
+        update_user_categories()
 
     def import_dolly_repin_counts(self):
         from rockpack.mainsite.services.video.models import VideoInstance
@@ -472,6 +479,9 @@ class DBImport(object):
                 channel_dict.setdefault(id, {})
                 channel_dict[id]['share_link_video'] = [count, _normalised(count, q_max, q_min)]
                 val = channel_shares.get(id, 0)
+                # We may get None returned in the data
+                if 'None' in channel_share_vals:
+                    channel_share_vals = [0, 0]
                 channel_dict[id]['norm_share_link_channel'] = channel_dict[id].setdefault('norm_share_link_channel', 0) + _normalised(count + val, q_max + channel_share_vals[0], q_min + channel_share_vals[1])
 
             print 'video shares done'

@@ -204,6 +204,9 @@ def update_channel_promotions():
 @manager.cron_command(interval=86400)
 @commit_on_success
 def import_google_movies():
+    freshold = datetime.now() - timedelta(days=app.config.get('GOOGLE_MOVIE_FRESHOLD', 120))
+    year_format = re.compile(' \((20\d\d)\)')
+
     for channelid, location in app.config['GOOGLE_MOVIE_LOCATIONS']:
         start = 0
         video_ids = set()
@@ -223,8 +226,17 @@ def import_google_movies():
         feed_ids = [('videos', id) for id in video_ids - existing]
         if feed_ids:
             playlist = batch_query(feed_ids, playlist='Googlemovietrailers/uploads')
-            added = Video.add_videos(playlist.videos, 1)
-            channel.add_videos(playlist.videos)
+            videos = []
+            for video in playlist.videos:
+                year_match = year_format.search(video.title)
+                if video.date_published > freshold and (
+                        not year_match or int(year_match.group(1)) >= freshold.year):
+                    videos.append(video)
+                else:
+                    app.logger.debug('Skipped import of trailer "%s" (%s)',
+                                     video.title, video.date_published)
+            added = Video.add_videos(videos, 1)
+            channel.add_videos(videos)
             app.logger.info('Added %d trailers to "%s"', added, channel.title)
 
 

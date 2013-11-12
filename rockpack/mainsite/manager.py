@@ -1,5 +1,6 @@
 import sys
 import logging
+from sqlalchemy import func
 from flask.ext.script import Manager as BaseManager
 from flask.ext.assets import ManageAssets
 from rockpack.mainsite import app, init_app
@@ -68,7 +69,7 @@ def init_es(rebuild=False, map_only=False):
 
 
 @manager.command
-def import_to_es(channels_only=False, videos_only=False, users_only=False, stars_only=False, restrictions_only=False, lshares_only=False, terms_for_channel_only=False):
+def import_to_es(channels_only=False, videos_only=False, users_only=False, stars_only=False, restrictions_only=False, lshares_only=False, terms_for_channel_only=False, prefix=None):
     """Import data into elasticsearch from the db"""
     # NOTE: change this to be sensible
     from rockpack.mainsite.core.es import helpers
@@ -93,9 +94,19 @@ def import_to_es(channels_only=False, videos_only=False, users_only=False, stars
     if not (videos_only or users_only):
         i.import_channels()
     if not (channels_only or users_only):
-        i.import_videos()
+        i.import_videos(prefix)
     if not (channels_only or videos_only):
         i.import_users()
+
+
+@manager.command
+def print_model_shards(length=3, video=False, channel=False):
+    if channel:
+        from rockpack.mainsite.services.video.models import Channel as model
+    else:
+        from rockpack.mainsite.services.video.models import VideoInstance as model
+    for shard, in model.query.distinct().values(func.substring(model.id, 1, length)):
+        print shard
 
 
 @manager.command

@@ -36,7 +36,7 @@ class Video(AdminView):
     column_formatters = dict(thumbnail=_format_video_thumbnail)
     column_filters = ('id', 'source_listid', 'sources', 'date_added', 'visible')
     column_searchable_list = ('title',)
-    form_excluded_columns = ('date_updated', 'date_published', 'instances', 'restrictions')
+    form_excluded_columns = ('date_updated', 'instances', 'restrictions')
     inline_models = (models.VideoThumbnail,)
 
 
