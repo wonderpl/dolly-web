@@ -1,3 +1,4 @@
+import os
 import sys
 import logging
 from datetime import datetime
@@ -80,6 +81,29 @@ def syncdb(options):
     """Create all db tables"""
     from rockpack.mainsite.core import dbapi
     dbapi.sync_database()
+
+
+@manager.command
+def dbshell(slave=False):
+    """Run psql for the mainsite database."""
+    from sqlalchemy import create_engine
+    dburl = app.config['SLAVE_DATABASE_URL' if slave else 'DATABASE_URL']
+    engine = create_engine(dburl)
+    assert engine.dialect.name == 'postgresql'
+    args, env = ['psql'], {'PATH': '/usr/bin'}
+    if engine.url.username:
+        args += ['-U', engine.url.username]
+    if engine.url.host:
+        args.extend(['-h', engine.url.host])
+    if engine.url.port:
+        args.extend(['-p', str(engine.url.port)])
+    if engine.url.password:
+        env['PGPASSWORD'] = engine.url.password
+    args += [engine.url.database]
+    try:
+        os.execvpe(args[0], args, env)
+    except OSError, e:
+        print >>sys.stderr, '%s: %s' % (args[0], e.args[1])
 
 
 @manager.command
