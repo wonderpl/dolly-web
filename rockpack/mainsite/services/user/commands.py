@@ -119,6 +119,7 @@ def _process_apns_broadcast(users, alert, url=None):
     for tokens in izip_longest(*[(t for u, t in users)] * 100, fillvalue=None):
         _send_apns_message('batch', filter(None, set(tokens)), message)
 
+
 def _add_user_notification(user, date_created, message_type, message_body):
     UserNotification(
         user=user,
@@ -244,10 +245,10 @@ def create_new_repack_notifications(date_from=None, date_to=None, user_notificat
     if date_to:
         activity_window = activity_window.filter(VideoInstance.date_added < date_to)
 
-    for video_instance, packer, packer_channel, repacker_channel, repacker in activity_window:
+    for video_instance, packer_channel, repacker_channel, repacker in activity_window:
         user, type, body = repack_message(repacker, repacker_channel)
 
-        _add_user_notification(packer, video_instance.date_added, type, body)
+        _add_user_notification(packer_channel.packer, video_instance.date_added, type, body)
         if user_notifications is not None:
             user_notifications.setdefault(user, None)
 
