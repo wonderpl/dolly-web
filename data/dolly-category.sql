@@ -38,7 +38,9 @@ insert into category (parent, id, name) values
 	(6, 62, 'fitness'),
 	(6, 63, 'health'),
 	(6, 64, 'sports'),
-	(6, 65, 'yoga-meditation');
+	(6, 65, 'yoga-meditation'),
+	(null, 9, 'other'),
+	(9, 99, 'other');
 
 insert into category_translation (category, locale, name) values
 	(1,  'en-us', 'Top'),
@@ -77,4 +79,6 @@ insert into category_translation (category, locale, name) values
 	(62, 'en-us', 'Fitness'),
 	(63, 'en-us', 'Health'),
 	(64, 'en-us', 'Sports'),
-	(65, 'en-us', 'Yoga and Meditation');
+	(65, 'en-us', 'Yoga and Meditation'),
+	(9,  'en-us', 'Other'),
+	(99, 'en-us', 'Other');
