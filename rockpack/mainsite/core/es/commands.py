@@ -26,3 +26,8 @@ def import_video_repin_owners():
 @timer
 def import_user_categories():
     helpers.DBImport().import_user_categories()
+
+@manager.command
+@timer
+def import_average_category():
+    helpers.DBImport().import_average_category()

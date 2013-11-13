@@ -171,7 +171,7 @@ class WebService(object):
         requested = request.args.get('locale')
         return requested if requested in locales else locales[0]
 
-    def get_page(self):
+    def get_page(self, default_size=''):
         """Check request for valid start & size args."""
         try:
             start = max(0, int(request.args.get('start', '')))
@@ -180,7 +180,7 @@ class WebService(object):
         try:
             size = max(0, min(self.max_page_size, int(request.args.get('size', ''))))
         except ValueError:
-            size = self.default_page_size
+            size = default_size if default_size else self.default_page_size
         return start, size
 
 

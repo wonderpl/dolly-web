@@ -11,6 +11,7 @@ from rockpack.mainsite.core.oauth.decorators import check_authorization
 from rockpack.mainsite.core.es import use_elasticsearch, filters
 from rockpack.mainsite.core.es.search import VideoSearch, ChannelSearch
 from rockpack.mainsite.services.video import models
+from rockpack.mainsite.services.user.models import UserActivity, User
 
 
 def _filter_by_category(query, type, category_id):
@@ -228,6 +229,46 @@ class VideoWS(WebService):
         total = vs.total
 
         return dict(videos={'items': videos}, total=total)
+
+    @expose_ajax('/<video_id>/starring_users/', cache_age=3600)
+    def video_starring_users(self, video_id):
+        users = User.query.join(
+            UserActivity,
+            UserActivity.user == User.id
+        ).join(
+            models.VideoInstance,
+            models.VideoInstance.id == UserActivity.object_id
+        ).filter(
+            UserActivity.object_type == 'video_instance',
+            UserActivity.action == 'star',
+            models.VideoInstance.video == video_id
+        ).order_by(UserActivity.date_actioned.desc())
+
+        total = users.count()
+        offset, limit = self.get_page()
+        users = users.offset(offset).limit(limit)
+        items = []
+
+        for position, user in enumerate(users, offset):
+            items.append(dict(
+                position=position,
+                id=user.id,
+                resource_url=user.get_resource_url(),
+                display_name=user.display_name,
+                avatar_thumbnail_url=user.avatar.url,
+            ))
+        return dict(users={'items': items}, total=total)
+
+    @expose_ajax('/<video_id>/channels/')
+    def video_channels(self, video_id, cache_age=3600):
+        v = VideoSearch(self.get_locale())
+        v.add_term('video.id', video_id)
+        v.set_paging(*self.get_page(default_size=5))
+        videos = v.videos()
+        if not videos:
+            abort(404)
+        title_items = [{'title': v['channel_title']} for v in videos]
+        return {'channels': {'items': title_items, 'total': v.total}}
 
     @expose_ajax('/players/', cache_age=7200)
     def players(self):

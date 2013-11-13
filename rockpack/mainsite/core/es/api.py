@@ -4,9 +4,7 @@ import datetime
 import pyes
 from ast import literal_eval
 from urlparse import urlparse
-from sqlalchemy import func
 from sqlalchemy.orm import joinedload
-from sqlalchemy.orm import aliased
 from . import mappings
 from . import es_connection
 from . import use_elasticsearch
@@ -672,20 +670,21 @@ def es_update_channel_videos(extant=[], deleted=[], async=app.config.get('ASYNC_
         from rockpack.mainsite.video_update_sqs_processor import _write_message
         return _write_message(dict(extant=extant, deleted=deleted))
 
-    from rockpack.mainsite.services.video.models import VideoInstance, Video
+    from rockpack.mainsite.services.video import models
+    from . import update
 
     channel_ids = []
     video_ids = []
 
     # XXX: This is a nasty hack to allow the VideoInstance query to proceed
     # when this is called from sqlalchemy's after_commit signal
-    if VideoInstance.query.session.transaction._state.name == 'COMMITTED':
-        VideoInstance.query.session.transaction._state = None
+    if models.VideoInstance.query.session.transaction._state.name == 'COMMITTED':
+        models.VideoInstance.query.session.transaction._state = None
 
-    all_instances = VideoInstance.query.filter(
-        VideoInstance.id.in_(extant)
+    all_instances = models.VideoInstance.query.filter(
+        models.VideoInstance.id.in_(extant)
     ).options(
-        joinedload(VideoInstance.video_channel)
+        joinedload(models.VideoInstance.video_channel)
     )
 
     # Run through the instance data and get
@@ -704,64 +703,8 @@ def es_update_channel_videos(extant=[], deleted=[], async=app.config.get('ASYNC_
     if deleted:
         ESVideo.delete(deleted)
 
-    # Re-calculate most influential
-    child = aliased(VideoInstance, name='child')
-    query = readonly_session.query(
-        VideoInstance.id,
-        VideoInstance.video,
-        child.source_channel,
-        func.count(VideoInstance.id)
-    ).outerjoin(
-        child,
-        (VideoInstance.video == child.video) &
-        (VideoInstance.channel == child.source_channel)
-    ).filter(
-        VideoInstance.video.in_(video_ids)
-    ).group_by(VideoInstance.id, VideoInstance.video, child.source_channel)
-
-    instance_counts = {}
-    influential_index = {}
-
-    for _id, video, source_channel, count in query.yield_per(6000):
-        # Set the count for the video instance
-        instance_counts[(_id, video)] = count
-        # If the count is higher for the same video that
-        # the previous instance, mark this instance as the
-        # influential one for this video
-        i_id, i_count = influential_index.get(video, [None, 0])
-
-        # Count will always be at least 1
-        # but should really be zero if no children
-        if not source_channel and count == 1:
-            count = 0
-        if (count > i_count) or\
-                (count == i_count) and not source_channel:
-            influential_index.update({video: (_id, count,)})
-
-    for (_id, video), count in instance_counts.iteritems():
-        ev = ESVideo.updater(bulk=True)
-        ev.set_document_id(_id)
-        ev.add_field('child_instance_count', count)
-        ev.add_field('most_influential', True if influential_index.get(video, '')[0] == _id else False)
-        ev.update()
-    ESVideo.flush()
-
-    # Reset video terms on channel
-    video_details = readonly_session.query(VideoInstance.channel, Video.title).join(
-        Video,
-        VideoInstance.video == Video.id
-    ).filter(VideoInstance.channel.in_(channel_ids))
-    channel_map = {}
-    for (channel_id, video_title) in video_details:
-        channel_map.setdefault(channel_id, []).append(video_title)
-
-    for channel_id, video_titles in channel_map.iteritems():
-        ec = ESChannel.updater(bulk=True)
-        ec.set_document_id(channel_id)
-        ec.add_field('video_terms', video_titles)
-        ec.add_field('video_count', len(video_titles))
-        ec.update()
-    ESChannel.flush()
+    update._update_most_influential_video(video_ids)
+    update._update_video_related_channel_meta(channel_ids)
 
 
 def remove_channel_from_index(channel_id):

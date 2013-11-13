@@ -28,6 +28,7 @@ class ImportForm(form.BaseForm):
                              validators=[wtf.validators.Required()])
     id = wtf.TextField(validators=[wtf.validators.Required()])
     category = form.Select2Field(coerce=int, default=-1)
+    date_added = wtf.DateField(validators=[wtf.validators.Optional()], widget=form.DatePickerWidget())
     tags = wtf.TextField(validators=[wtf.validators.Optional()])
     cover = wtf.FileField(validators=[wtf.validators.Optional()])
     cover_url = wtf.TextField(validators=[wtf.validators.Optional(), wtf.validators.URL()])
@@ -112,7 +113,7 @@ class ImportView(AuthenticatedView):
             self.record_action('created', channel)
         else:
             channel = Channel.query.get_or_404(channelid)
-        channel.add_videos(form.import_data.videos, form.tags.data)
+        channel.add_videos(form.import_data.videos, form.tags.data, date_added=form.date_added.data)
         self.record_action('imported', channel, '%d videos' % count)
         push_config = form.import_data.push_config
         if push_config and channel.id:
