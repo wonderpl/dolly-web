@@ -18,7 +18,7 @@ from rockpack.mainsite.helpers.urls import url_tracking_context
 from rockpack.mainsite.services.oauth import facebook
 from rockpack.mainsite.services.base.models import JobControl
 from rockpack.mainsite.services.oauth.models import ExternalFriend, ExternalToken
-from rockpack.mainsite.services.video.models import Channel, VideoInstance
+from rockpack.mainsite.services.video.models import Channel, VideoInstance, Video
 from rockpack.mainsite.services.share.models import ShareLink
 from .models import (
     User, UserActivity, UserAccountEvent, UserNotification, UserContentFeed,
@@ -42,6 +42,32 @@ def activity_user(activity):
 def subscribe_message(activity, channel):
     return channel.owner, 'subscribed', dict(
         user=activity_user(activity),
+        channel=dict(
+            id=channel.id,
+            resource_url=channel.get_resource_url(True),
+            thumbnail_url=channel.cover.thumbnail_medium,
+        )
+    )
+
+
+def repack_message(repacker, channel):
+    return channel.owner, 'repack', dict(
+        user=dict(
+            id=repacker.id,
+            resource_url=repacker.get_resource_url(),
+            display_name=repacker.display_name,
+            avatar_thumbnail_url=repacker.avatar.thumbnail_medium,
+        ),
+        channel=dict(
+            id=channel.id,
+            resource_url=channel.resource_url,
+            thumbnail_url=channel.cover.thumbnail_medium,
+        )
+    )
+
+
+def unavailable_video_in_channel_message(channel):
+    return channel.owner, 'unavailable', dict(
         channel=dict(
             id=channel.id,
             resource_url=channel.get_resource_url(True),
@@ -93,18 +119,48 @@ def _process_apns_broadcast(users, alert, url=None):
     for tokens in izip_longest(*[(t for u, t in users)] * 100, fillvalue=None):
         _send_apns_message('batch', filter(None, set(tokens)), message)
 
+def _add_user_notification(user, date_created, message_type, message_body):
+    UserNotification(
+        user=user,
+        date_created=date_created,
+        message_type=message_type,
+        message=json.dumps(message_body, separators=(',', ':')),
+    ).add()
 
-def send_push_notifications(user):
+
+def complex_push_notification(token, push_message, push_message_args, badge=None, id=None, url=None):
+    message = dict(
+        alert={
+            "loc-key": push_message,
+            "loc-args": push_message_args
+        }
+    )
+    if badge is not None:
+        message.update({'badge': badge})
+    if id is not None:
+        message.update({'id': id})
+    if url is not None:
+        message.update({'url': url})
+    return _send_apns_message(token.user, token.external_token, message)
+
+
+def get_apns_token(user_id):
     try:
-        try:
-            user_id = user.id
-        except:
-            user_id = user
-        token = ExternalToken.query.filter(
+        return ExternalToken.query.filter(
             ExternalToken.external_system == 'apns',
             ExternalToken.external_token != 'INVALID',
             ExternalToken.user == user_id).one()
     except NoResultFound:
+        return
+
+
+def send_push_notifications(user):
+    try:
+        user_id = user.id
+    except:
+        user_id = user
+    token = get_apns_token(user_id)
+    if not token:
         return
 
     notifications = UserNotification.query.filter_by(date_read=None, user=user_id).order_by('id desc')
@@ -121,23 +177,79 @@ def send_push_notifications(user):
     elif notification.message_type == 'joined':
         key = 'user'
         push_message = "Your Facebook friend %@ has joined Rockpack"
+    elif notification.message_type == 'repack':
+        key = 'channel'
+        push_message = "%@ has re-packed one of your videos"
+    elif notification.message_type == 'unavailable':
+        key = 'channel'
+        push_message = "One of your videos is no longer available"
     else:
         key = 'video'
         push_message = "%@ has liked your video"
-    push_message_args = [data['user']['display_name']]
+    try:
+        push_message_args = [data['user']['display_name']]
+    except KeyError:
+        push_message_args = []
     deeplink_url = _apns_url(data[key]['resource_url'])
 
-    message = dict(
-        alert={
-            "loc-key": push_message,
-            "loc-args": push_message_args,
-        },
-        badge=count,
-        id=notification.id,
-        url=deeplink_url,
-    )
+    return complex_push_notification(token, push_message, push_message_args,
+        badge=count, id=notification.id, url=deeplink_url)
 
-    return _send_apns_message(token.user, token.external_token, message)
+
+def create_unavailable_notifications(date_from=None, date_to=None, user_notifications=None):
+    activity_window = readonly_session.query(VideoInstance, Video, Channel).join(
+        Video,
+        Video.id == VideoInstance.video
+    ).join(
+        Channel,
+        Channel.id == VideoInstance.channel
+    ).options(
+        joinedload(Channel.owner_rel)
+    ).filter(
+        Video.visible == False
+    )
+    if date_from:
+        activity_window = activity_window.filter(Video.date_updated >= date_from)
+    if date_to:
+        activity_window = activity_window.filter(Video.date_updated < date_to)
+
+    for video_instance, video, channel in activity_window:
+        user, message_type, message = unavailable_video_in_channel_message(channel)
+        _add_user_notification(user, video.date_updated, message_type, message)
+        if user_notifications is not None:
+            user_notifications.setdefault(user, None)
+
+
+def create_new_repack_notifications(date_from=None, date_to=None, user_notifications=None):
+    packer_channel = aliased(Channel, name="source_channel")
+    packer_user = aliased(User, name="packer_user")
+    repacker_channel = aliased(Channel, name="repacker_channel")
+    repacker_user = aliased(User, name="repacker_user")
+
+    activity_window = readonly_session.query(VideoInstance, packer_channel, repacker_channel, repacker_user).join(
+        packer_channel,
+        packer_channel.id == VideoInstance.source_channel
+    ).join(
+        packer_user,
+        packer_user.id == packer_channel.owner
+    ).join(
+        repacker_channel,
+        repacker_channel.id == VideoInstance.channel
+    ).join(
+        repacker_user,
+        repacker_user.id == repacker_channel.owner
+    )
+    if date_from:
+        activity_window = activity_window.filter(VideoInstance.date_added >= date_from)
+    if date_to:
+        activity_window = activity_window.filter(VideoInstance.date_added < date_to)
+
+    for video_instance, packer, packer_channel, repacker_channel, repacker in activity_window:
+        user, type, body = repack_message(repacker, repacker_channel)
+
+        _add_user_notification(packer, video_instance.date_added, type, body)
+        if user_notifications is not None:
+            user_notifications.setdefault(user, None)
 
 
 def create_new_activity_notifications(date_from=None, date_to=None, user_notifications=None):
@@ -169,13 +281,7 @@ def create_new_activity_notifications(date_from=None, date_to=None, user_notific
                     if user == activity.user:
                         # Don't send notifications to self
                         continue
-                    notification = UserNotification(
-                        user=user,
-                        date_created=activity.date_actioned,
-                        message_type=type,
-                        message=json.dumps(body, separators=(',', ':')),
-                    )
-                    UserNotification.query.session.add(notification)
+                    _add_user_notification(user, activity.date_actioned, type, body)
                     if user_notifications is not None:
                         user_notifications.setdefault(user, None)
 
@@ -201,13 +307,7 @@ def create_new_registration_notifications(date_from=None, date_to=None, user_not
                 avatar_thumbnail_url=user.avatar.url,
                 display_name=user.display_name,
             ))
-            notification = UserNotification(
-                user=friend,
-                date_created=user.date_joined,
-                message_type='joined',
-                message=json.dumps(message, separators=(',', ':')),
-            )
-            UserNotification.query.session.add(notification)
+            _add_user_notification(friend, user.date_joined, 'joined', message)
             if user_notifications is not None:
                 user_notifications.setdefault(friend, None)
 
@@ -286,18 +386,25 @@ def create_new_channel_feed_items(date_from, date_to):
         join(ExternalFriend, (ExternalFriend.external_system == ExternalToken.external_system) &
                              (ExternalFriend.external_uid == ExternalToken.external_uid))
     for query, U in (sub_channels, Subscription), (friend_channels, ExternalFriend):
-        UserContentFeed.query.session.add_all(
-            UserContentFeed(user=user, channel=channel, date_added=date_published)
-            for user, channel, date_published in
             # use outerjoin to filter existing records
-            query.outerjoin(
-                UserContentFeed,
-                (UserContentFeed.user == U.user) &
-                (UserContentFeed.channel == Channel.id) &
-                (UserContentFeed.video_instance == None)).
-            filter(UserContentFeed.id == None).
-            distinct().values(U.user, Channel.id, Channel.date_published)
-        )
+        q = query.outerjoin(
+            UserContentFeed,
+            (UserContentFeed.user == U.user) &
+            (UserContentFeed.channel == Channel.id) &
+            (UserContentFeed.video_instance == None)
+        ).filter(
+            UserContentFeed.id == None
+        ).distinct().values(U.user, Channel.id, Channel.date_published)
+        for user, channel, date_published in q:
+            UserContentFeed.query.session.add(
+                UserContentFeed(user=user, channel=channel, date_added=date_published)
+            )
+            token = get_apns_token(user)
+            if token:
+                push_message = '%@ has added a new channel'
+                push_message_args = [user.display_name()]
+                deeplink_url = channel.get_resource_url(True)
+                complex_push_notification(token, push_message, push_message_args, url=deeplink_url)
 
 
 def remove_old_feed_items():
@@ -548,6 +655,8 @@ def update_user_notifications(date_from, date_to):
     user_notifications = {}
     create_new_activity_notifications(date_from, date_to, user_notifications)
     create_new_registration_notifications(date_from, date_to, user_notifications)
+    create_new_repack_notifications(date_from, date_to, user_notifications)
+    create_unavailable_notifications(date_from, date_to, user_notifications)
     remove_old_notifications()
     # apns needs the notification ids, so we need to
     # commit first before we continue
