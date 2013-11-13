@@ -35,6 +35,7 @@ class User(db.Model):
     avatar = Column(ImageType('AVATAR'), nullable=False)
     gender = Column(Enum(*GENDERS, name='gender_enum'), nullable=True)
     is_active = Column(Boolean, nullable=False, server_default='true', default=True)
+    subscriber_count = Column(Integer, nullable=False, server_default='0', default=0)
     refresh_token = Column(String(1024), nullable=False)
     username_updated = Column(Boolean, nullable=False, server_default='false', default=False)
     date_joined = Column(DateTime(), nullable=False, default=func.now())

@@ -236,6 +236,10 @@ user_mapping = {
             "type": "boolean",
             "null_value": False,
         },
+        "subscriber_count": {
+            "type": "integer",
+            "null_value": 0
+        },
         "category": {
             "type": "string",
             "index": "not_analyzed"

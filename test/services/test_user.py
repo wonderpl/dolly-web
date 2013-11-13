@@ -461,6 +461,11 @@ class TestUserContent(base.RockPackTestCase):
             self.assertIn(owner, activity['user_subscribed'])
             self.assertGreater(len(activity['subscribed']), 0)
 
+            r = client.get('/ws/{}/'.format(owner),
+                           headers=[get_auth_header(owner)])
+            user_data = json.loads(r.data)
+            self.assertGreater(user_data['subscriber_count'], 0)
+
     def test_subscription_notification(self):
         with self.app.test_client() as client:
             self.app.test_request_context().push()

@@ -553,6 +553,7 @@ def add_user_to_index(user, bulk=False, refresh=False, no_check=False):
         description=user.description,
         site_url=user.site_url,
         brand=user.brand,
+        subscriber_count=user.subscriber_count,
     )
     return add_to_index(data, mappings.USER_INDEX, mappings.USER_TYPE, id=user.id, bulk=bulk, refresh=refresh)
 

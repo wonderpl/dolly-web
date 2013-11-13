@@ -126,19 +126,23 @@ def get_or_create_video_records(instance_ids):
     return [existing_ids[id] for id in instance_id_order]
 
 
-@commit_on_success
-def save_video_activity(userid, action, instance_id, locale):
+def _get_action_incrementer(action):
     try:
         column, value = ACTION_COLUMN_VALUE_MAP[action]
     except KeyError:
         abort(400, message=_('Invalid action'))
+    incr = lambda m: {getattr(m, column): getattr(m, column) + value}
+    return column, value, incr
 
+
+@commit_on_success
+def save_video_activity(userid, action, instance_id, locale):
+    column, value, incr = _get_action_incrementer(action)
     video_id = get_or_create_video_records([instance_id])[0][0]
     activity = dict(user=userid, action=action,
                     object_type='video_instance', object_id=instance_id, locale=locale)
     if not UserActivity.query.filter_by(**activity).count():
         # Increment value on each of instance, video, & locale meta
-        incr = lambda m: {getattr(m, column): getattr(m, column) + value}
         updated = Video.query.filter_by(id=video_id).update(incr(Video))
         assert updated
         if not instance_id.startswith(search_api.VIDEO_INSTANCE_PREFIX):
@@ -168,11 +172,7 @@ def save_video_activity(userid, action, instance_id, locale):
 @commit_on_success
 def save_channel_activity(userid, action, channelid, locale):
     """Update channel with subscriber, view, or star count changes."""
-    try:
-        column, value = ACTION_COLUMN_VALUE_MAP[action]
-    except KeyError:
-        abort(400, message=_('Invalid action'))
-    incr = lambda m: {getattr(m, column): getattr(m, column) + value}
+    column, value, incr = _get_action_incrementer(action)
     # Update channel record:
     updated = Channel.query.filter_by(id=channelid).update(incr(Channel))
     if not updated:
@@ -194,8 +194,9 @@ def save_channel_activity(userid, action, channelid, locale):
 
 @commit_on_success
 def save_owner_activity(userid, action, ownerid, locale):
-    ownerid = User.query.filter_by(is_active=True, id=ownerid).value('id')
-    if not ownerid:
+    column, value, incr = _get_action_incrementer(action)
+    updated = User.query.filter_by(is_active=True, id=ownerid).update(incr(User))
+    if not updated:
         abort(400, message=_('Invalid user id'))
     UserActivity(
         user=userid,
@@ -784,6 +785,7 @@ def _base_user_info(user):
         avatar_thumbnail_url=user.avatar.url,
         profile_cover_url=user.get_profile_cover().url,
         description=user.description,
+        subscriber_count=user.subscriber_count,
     )
     if user.brand:
         data.update(

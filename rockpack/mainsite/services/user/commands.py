@@ -4,7 +4,7 @@ import urlparse
 from itertools import izip_longest, groupby
 from datetime import datetime, timedelta
 from flask import json
-from sqlalchemy import func, text, between, case, desc
+from sqlalchemy import func, text, between, case, desc, distinct
 from sqlalchemy.orm import joinedload, contains_eager, aliased
 from sqlalchemy.orm.exc import NoResultFound
 from rockpack.mainsite import app
@@ -783,6 +783,21 @@ def init_recommender():
 @job_control
 def update_recommender(date_from, date_to):
     _post_activity_to_recommender(date_from, date_to)
+
+
+@manager.cron_command(interval=900)
+@job_control
+def update_user_subscriber_counts(date_from=None, date_to=None):
+    """Update subscriber_count on users."""
+    users = User.query.join(
+        Channel,
+        (Channel.owner == User.id) & (Channel.date_updated.between(date_from, date_to)))
+    for user in users.distinct():
+        # Each user done seperately so that the ES signal kicks in
+        user.subscriber_count = Subscription.query.join(
+            Channel,
+            (Channel.id == Subscription.channel) & (Channel.owner == user.id)
+        ).value(func.count(distinct(Subscription.user)))
 
 
 @manager.cron_command(interval=900)

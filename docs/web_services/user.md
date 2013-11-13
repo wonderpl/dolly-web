@@ -76,6 +76,7 @@ Cache-Control: public, max-age=60
   "avatar_thumbnail_url": "http://path/to/avatar/small.jpg",
   "profile_cover_url": "",
   "description": "Description of user",
+  "subscriber_count": 123,
   "brand": True,
   "site_url": "http://link/to/external/site",
   "channels": {
@@ -128,6 +129,7 @@ Cache-Control: private
  "avatar_thumbnail_url": "http://path/to/avatar.img",
  "profile_cover_url": "",
  "description": null,
+ "subscriber_count": 0,
  "date_of_birth": "1900-01-21",
  "subscriptions": {
   "resource_url": "https://path/to/subscriptions/resource/base/url/",
