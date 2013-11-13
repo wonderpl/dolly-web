@@ -29,6 +29,7 @@ from rockpack.mainsite.services.oauth.api import (
 from rockpack.mainsite.services.oauth.models import ExternalFriend, ExternalToken
 from rockpack.mainsite.services.cover_art.models import UserCoverArt, RockpackCoverArt
 from rockpack.mainsite.services.cover_art import api as cover_api
+from rockpack.mainsite.services.video.models import Source
 from rockpack.mainsite.services.video import api as video_api
 from rockpack.mainsite.services.search import api as search_api
 from .models import (
@@ -81,9 +82,8 @@ def get_or_create_video_records(instance_ids):
         except (AttributeError, ValueError):  # not a string
             try:
                 source, source_videoid = instance_id
-                source = ['rockpack', 'youtube'].index(source)  # TODO: use db mapping
                 assert len(source_videoid)
-                add(external_instance_ids, (source, source_videoid))
+                add(external_instance_ids, (Source.label_to_id(source), source_videoid))
             except (TypeError, ValueError, AssertionError):
                 invalid.append(instance_id)
     if invalid:

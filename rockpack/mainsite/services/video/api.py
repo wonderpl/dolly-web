@@ -121,7 +121,7 @@ def video_dict(instance):
         date_added=instance.date_added.isoformat(),
         video=dict(
             id=video.id,
-            source=['rockpack', 'youtube'][video.source],    # TODO: read source map from db
+            source=models.Source.id_to_label(video.source),
             source_id=video.source_videoid,
             source_username=video.source_username,
             duration=video.duration,

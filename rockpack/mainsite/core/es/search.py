@@ -6,6 +6,7 @@ from . import exceptions
 from . import filters
 from rockpack.mainsite import app
 from rockpack.mainsite.helpers.urls import url_for
+from rockpack.mainsite.services.video.models import Source
 
 
 DEFAULT_FILTERS = []  # [filters.locale_filter]
@@ -476,7 +477,7 @@ class VideoSearch(EntitySearch, CategoryMixin, MediaSortMixin):
                     id=v.video.id,
                     view_count=sum(l['view_count'] for l in v['locales'].values()),
                     star_count=sum(l['star_count'] for l in v['locales'].values()),
-                    source=['rockpack', 'youtube'][v.video.source],
+                    source=Source.id_to_label(v.video.source),
                     source_id=v.video.source_id,
                     source_username=v.video.source_username,
                     duration=v.video.duration,

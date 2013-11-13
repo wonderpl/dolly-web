@@ -109,7 +109,21 @@ class Source(db.Model):
 
     @classmethod
     def get_form_choices(cls):
-        return cls.query.values(cls.id, cls.label)
+        return cls.get_sources().iteritems()
+
+    @classmethod
+    def get_sources(cls):
+        if not hasattr(cls, '_sources'):
+            cls._sources = dict(cls.query.values(cls.id, cls.label))
+        return cls._sources
+
+    @classmethod
+    def id_to_label(cls, id):
+        return cls.get_sources().get(id, id)
+
+    @classmethod
+    def label_to_id(cls, label):
+        return next((i for i, l in Source.get_sources().iteritems() if l == label), label)
 
 
 class Video(db.Model):

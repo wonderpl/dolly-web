@@ -4,6 +4,7 @@ from rockpack.mainsite import app
 from rockpack.mainsite.admin.video_views import category_list
 from rockpack.mainsite.core.es.search import ChannelSearch, VideoSearch
 from rockpack.mainsite.core.es import filters
+from rockpack.mainsite.services.video.models import Source
 from .base import AuthenticatedView
 
 
@@ -42,7 +43,7 @@ class RankingView(AuthenticatedView):
             c['thumbnail_url'] = video.video.thumbnail_url
             c['explanation'] = video.__dict__['_meta']['explanation']
             c['duration'] = video.video.duration
-            c['source'] = ['rockpack', 'youtube'][video.video.source]
+            c['source'] = Source.id_to_label(video.video.source)
             c['source_id'] = video.video.source_id
             c['subscriber_count'] = video.subscriber_count
             c['gbcount'] = video.locales['en-gb']['view_count']
