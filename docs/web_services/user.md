@@ -11,7 +11,7 @@ User
 ### Get all users
 
 ```http
-GET /ws/users/?size=SIZE HTTP/1.1
+GET /ws/users/?locale=LOCALE&start=START&size=SIZE&category=CATEGORY HTTP/1.1
 Authorization: Bearer TOKEN
 ```
 
@@ -22,7 +22,7 @@ Responds with basic user information.
 ```http
 HTTP/1.1 200 OK
 Content-Type: application/json
-Cache-Control: public, max-age=60
+Cache-Control: public, max-age=3600
 
 {
   "user": {
@@ -43,6 +43,13 @@ Cache-Control: public, max-age=60
   }
 }
 ```
+
+Parameter      | Required? | Value               | Description
+:------------- | :-------- | :------------------ | :----------
+locale         | yes       | IETF language tag   | Bias result list for the specified locale
+start          | no        | 0-based integer     | Used for paging through the result items
+size           | no        | Integer             | Number of users to return - 100 by default
+category       | no        | Category ID         | Filter on category from a channel owned by a user
 
 ### Get user
 
@@ -65,7 +72,6 @@ Cache-Control: public, max-age=60
 {
   "id": "userid",
   "username": "username",
-  "categories": [123, 456],
   "display_name": "display name",
   "avatar_thumbnail_url": "http://path/to/avatar/small.jpg",
   "profile_cover_url": "",
@@ -98,7 +104,6 @@ Parameter      | Required? | Value               | Description
 :------------- | :-------- | :------------------ | :----------
 data           | no        | Data section names  | The names of data sections to be returned directly in the response. Default: `channels`.
 size           | no        | Data item page size | Number of data items to return - 100 by default
-category (dolly) | no      | Category ID         | Filter on category from a channel owned by a user
 
 If the `data` parameter is specified then the data associated with each resource given will be included directly in the response.
 The supported resource names are `channels`, `subscriptions`, `external_accounts`, `flags` & `activity`.
