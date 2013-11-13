@@ -5,62 +5,52 @@ from datetime import datetime, timedelta
 import pyes
 from sqlalchemy import func, text, TIME, distinct, or_
 from rockpack.mainsite import app
-from rockpack.mainsite.manager import manager
+from rockpack.mainsite.manager import manager, job_control
 from rockpack.mainsite.core.es import mappings, api
 from rockpack.mainsite.core.es import es_connection, helpers
 from rockpack.mainsite.core.dbapi import commit_on_success
 from rockpack.mainsite.core.youtube import batch_query, _parse_datetime
 from rockpack.mainsite.helpers.http import get_external_resource
-from rockpack.mainsite.services.base.models import JobControl
 from rockpack.mainsite.services.user.models import Subscription, UserActivity
 from rockpack.mainsite.services.video.models import (
     Channel, ChannelLocaleMeta, ChannelPromotion, Video, VideoInstance, PlayerErrorReport)
 
 
-@commit_on_success
-def set_update_frequency(time_from=None, time_to=None):
-    # For each channel, select average number of video instances per week
-    # for last 4 weeks and only if added a day after the channel was created
+@manager.cron_command(interval=900)
+@job_control
+def update_channel_stats(date_from=None, date_to=None):
+    """Update frequency stats columns on channel."""
     interval_weeks = app.config.get('UPDATE_FREQUENCY_INTERVAL_WEEKS', 4)
-    freq = VideoInstance.query.\
-        with_entities(func.count('*') / float(interval_weeks)).\
-        filter(VideoInstance.channel == Channel.id).\
-        filter(VideoInstance.date_added > func.now() - text("interval '%d weeks'" % interval_weeks)).\
-        filter(VideoInstance.date_added > Channel.date_added + text("interval '1 day'"))
+    updates = dict(
+        (stats_field,
+         # Select averate numbers of items per week
+         src_model.query.with_entities(func.count() / float(interval_weeks)).
+         # Look at only last N weeks and only if added a day after the channel was created
+         filter(
+             src_model.channel == Channel.id,
+             date_added > func.now() - text("interval '%d weeks'" % interval_weeks),
+             date_added > Channel.date_added + text("interval '1 day'")
+         ).as_scalar())
+        for stats_field, src_model, date_added in (
+            (Channel.update_frequency, VideoInstance, VideoInstance.date_added),
+            (Channel.subscriber_frequency, Subscription, Subscription.date_created),
+        )
+    )
+    updates[Channel.date_updated] = Channel.date_updated  # override column onupdate
 
     channels = Channel.query
-    if time_from and time_to:
-        channels = channels.filter(func.cast(Channel.date_added, TIME).between(time_from, time_to))
-    channels.update(
-        {
-            Channel.update_frequency: freq.as_scalar(),
-            Channel.date_updated: Channel.date_updated,     # override column onupdate
-        }, False)
+    if date_from and date_to:
+        # Update only those channels created within the time window.
+        # All channels should be updated within a 24 hour period.
+        channels = channels.filter(func.cast(Channel.date_added, TIME).between(
+            date_from.time(), date_to.time()))
+    channels.update(updates, False)
 
 
-@commit_on_success
-def set_subscription_update_frequency(time_from=None, time_to=None):
-    # For each channel, select average number of subscriptions per week
-    # for last 4 weeks and only if added a day after the channel was created
-    interval_weeks = app.config.get('UPDATE_FREQUENCY_INTERVAL_WEEKS', 4)
-    freq = Subscription.query.\
-        with_entities(func.count('*') / float(interval_weeks)).\
-        filter(Subscription.channel == Channel.id).\
-        filter(Subscription.date_created > func.now() - text("interval '%d weeks'" % interval_weeks)).\
-        filter(Subscription.date_created > Channel.date_added + text("interval '1 day'"))
-
-    channels = Channel.query
-    if time_from and time_to:
-        channels = channels.filter(func.cast(Channel.date_added, TIME).between(time_from, time_to))
-    channels.update(
-        {
-            Channel.subscriber_frequency: freq.as_scalar(),
-            Channel.date_updated: Channel.date_updated,     # override column onupdate
-        }, False)
-
-
-@commit_on_success
-def set_channel_view_count(time_from=None, time_to=None):
+@manager.cron_command(interval=3600)
+@job_control
+def update_channel_view_counts(time_from=None, time_to=None):
+    """Update view counts for channel."""
     # For each channel, select the total number of users
     # who've made 1 or more actions on a channel per hour
     session = ChannelLocaleMeta.query.session
@@ -124,53 +114,10 @@ def update_video_channel_terms():
     app.logger.info('Ran import_video_channel_terms in %ds', time.time() - start)
 
 
-@manager.cron_command(interval=3600)
-def update_channel_view_counts():
-    """Update view counts for channel."""
-    JOB_NAME = 'update_channel_view_stats'
-    job_control = JobControl.query.get(JOB_NAME)
-    now = datetime.now()
-    if not job_control:
-        job_control = JobControl(job=JOB_NAME)
-        job_control.last_run = now - timedelta(hours=1)
-    app.logger.info('%s: from %s to %s', JOB_NAME, job_control.last_run, now)
-
-    set_channel_view_count(job_control.last_run)
-    job_control.last_run = now
-    job_control.save()
-
-
 @manager.cron_command(interval=900)
-def update_channel_stats():
-    """Update statistics for channels."""
-    job_control = JobControl.query.get('update_channel_stats')
-    now = datetime.now()
-    app.logger.info('update_channel_stats: from %s to %s', job_control.last_run, now)
-
-    set_update_frequency(job_control.last_run.time(), now.time())
-
-    job_control.last_run = now
-    job_control.save()
-
-
-@manager.cron_command(interval=900)
-def update_subscriber_stats():
-    """Update statistics for channel."""
-    JOB_NAME = 'update_subscriber_stats'
-    job_control = JobControl.query.get(JOB_NAME)
-    now = datetime.now()
-    if not job_control:
-        job_control = JobControl(job=JOB_NAME)
-        job_control.last_run = now
-    app.logger.info('%s: from %s to %s', JOB_NAME, job_control.last_run, now)
-
-    set_subscription_update_frequency(job_control.last_run.time(), now.time())
-
-    job_control.last_run = now
-    job_control.save()
-
-
-def update_channel_promo_activity():
+@job_control
+def update_channel_promotions(date_from=None, date_to=None):
+    """ Update promotion data for channels in ES """
     # Push everything to es. Promotion data
     # will get updated during insert
     promo_channels = Channel.query.filter_by(public=True, deleted=False).join(
@@ -181,24 +128,6 @@ def update_channel_promo_activity():
         es_channel.add_field(channel.id, channel.promotion_map())
         es_channel.update()
     es_channel.flush_bulk()
-
-
-@manager.cron_command(interval=900)
-def update_channel_promotions():
-    """ Update promotion data for channels in ES """
-    JOB_NAME = 'update_channel_promotions'
-    job_control = JobControl.query.get(JOB_NAME)
-    now = datetime.now()
-    if not job_control:
-        job_control = JobControl(job=JOB_NAME)
-        job_control.last_run = now
-
-    app.logger.info('%s: from %s to %s', JOB_NAME, job_control.last_run, now)
-
-    update_channel_promo_activity()
-
-    job_control.last_run = now
-    job_control.save()
 
 
 @manager.cron_command(interval=86400)
@@ -241,26 +170,16 @@ def import_google_movies():
 
 
 @manager.cron_command(interval=900)
-def check_video_player_errors():
+@job_control
+def check_video_player_errors(date_from=None, date_to=None):
     """Scan player error records and check that videos are still available."""
-    JOB_NAME = 'check_video_player_errors'
-    job_control = JobControl.query.get(JOB_NAME)
-    now = datetime.now()
-    if not job_control:
-        job_control = JobControl(job=JOB_NAME)
-        job_control.last_run = now
-    app.logger.info('%s: from %s to %s', JOB_NAME, job_control.last_run, now)
-
     error_videos = set(v[0] for v in PlayerErrorReport.query.filter(
-        PlayerErrorReport.date_updated.between(job_control.last_run, now)).
+        PlayerErrorReport.date_updated.between(date_from, date_to)).
         join(VideoInstance, VideoInstance.id == PlayerErrorReport.video_instance).
         values('video'))
     if error_videos:
         video_qs = Video.query.filter(Video.id.in_(error_videos))
-        get_youtube_video_data(video_qs, now)
-
-    job_control.last_run = now
-    job_control.save()
+        get_youtube_video_data(video_qs, date_to)
 
 
 @manager.command

@@ -10,7 +10,8 @@ from test.test_decorators import skip_if_dolly
 from test.test_helpers import get_auth_header
 from test.services.test_user_flows import BaseUserTestCase
 from rockpack.mainsite import app
-from rockpack.mainsite.services.video.commands import set_channel_view_count, update_channel_promo_activity
+from rockpack.mainsite.services.base.models import JobControl
+from rockpack.mainsite.services.video.commands import update_channel_view_counts, update_channel_promotions
 from rockpack.mainsite.core.es import use_elasticsearch
 from rockpack.mainsite.services.video import models
 from rockpack.mainsite.services.user.models import UserActivity
@@ -74,15 +75,14 @@ class ChannelViewCountPopulation(base.RockPackTestCase):
                 locale=this_locale
             ).save()
 
-            end = datetime.now()
-            set_channel_view_count(begin, end)
+            JobControl(job='update_channel_view_counts', last_run=begin).save()
+            update_channel_view_counts()
 
             meta = models.ChannelLocaleMeta.query.filter(
                 models.ChannelLocaleMeta.locale == this_locale,
                 models.ChannelLocaleMeta.channel == channel_id).first()
 
             self.assertEquals(meta.view_count, 2)
-            begin = datetime.now()
 
             UserActivity(
                 user=user4_id,
@@ -92,8 +92,7 @@ class ChannelViewCountPopulation(base.RockPackTestCase):
                 object_id=channel_id,
                 locale=this_locale).save()
 
-            end = datetime.now()
-            set_channel_view_count(begin, end)
+            update_channel_view_counts()
 
             self.assertEquals(meta.view_count, 3)
 
@@ -115,7 +114,7 @@ class ChannelPromotionTest(base.RockPackTestCase):
                     position=1
                 ).save()
 
-                update_channel_promo_activity()
+                update_channel_promotions()
                 user = self.create_test_user()
 
                 time.sleep(2)

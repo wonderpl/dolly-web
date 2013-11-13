@@ -1,11 +1,15 @@
 import sys
 import logging
+from datetime import datetime
+from functools import wraps
 from sqlalchemy import func
 from flask.ext.script import Manager as BaseManager
 from flask.ext.assets import ManageAssets
 from rockpack.mainsite import app, init_app
+from rockpack.mainsite.core.dbapi import commit_on_success
 from rockpack.mainsite.helpers.db import resize_and_upload
 from rockpack.mainsite.helpers.http import get_external_resource
+from rockpack.mainsite.services.base.models import JobControl
 
 
 class Manager(BaseManager):
@@ -29,6 +33,26 @@ class Manager(BaseManager):
         return super(Manager, self).handle(prog, name, args)
 
 manager = Manager(app)
+
+
+def job_control(f):
+    """Wrap the given function to ensure the input data is limited to a specific interval."""
+    @wraps(f)
+    @commit_on_success
+    def wrapper():
+        now = datetime.utcnow()
+        job_name = f.__name__
+        job_control = JobControl.query.get(job_name)
+        if not job_control:
+            job_control = JobControl(job=job_name, last_run=now).add()
+        app.logger.info('%s: from %s to %s', job_name, job_control.last_run, now)
+
+        f(job_control.last_run, now)
+
+        # XXX: If the cron function throws an exception then last_run is not saved
+        # and the job will be retried next time, including the same interval.
+        job_control.last_run = now
+    return wrapper
 
 
 @manager.command

@@ -2,21 +2,19 @@ import time
 import re
 import urlparse
 from itertools import izip_longest, groupby
-from functools import wraps
 from datetime import datetime, timedelta
 from flask import json
 from sqlalchemy import func, text, between, case, desc
 from sqlalchemy.orm import joinedload, contains_eager, aliased
 from sqlalchemy.orm.exc import NoResultFound
 from rockpack.mainsite import app
-from rockpack.mainsite.manager import manager
+from rockpack.mainsite.manager import manager, job_control
 from rockpack.mainsite.core.dbapi import commit_on_success, db, readonly_session
 from rockpack.mainsite.core import email
 from rockpack.mainsite.core.token import create_unsubscribe_token
 from rockpack.mainsite.core.apns import push_client
 from rockpack.mainsite.helpers.urls import url_tracking_context
 from rockpack.mainsite.services.oauth import facebook
-from rockpack.mainsite.services.base.models import JobControl
 from rockpack.mainsite.services.oauth.models import ExternalFriend, ExternalToken
 from rockpack.mainsite.services.video.models import Channel, VideoInstance, Video
 from rockpack.mainsite.services.share.models import ShareLink
@@ -193,7 +191,8 @@ def send_push_notifications(user):
         push_message_args = []
     deeplink_url = _apns_url(data[key]['resource_url'])
 
-    return complex_push_notification(token, push_message, push_message_args,
+    return complex_push_notification(
+        token, push_message, push_message_args,
         badge=count, id=notification.id, url=deeplink_url)
 
 
@@ -433,7 +432,7 @@ def _send_email_or_log(user, template, **ctx):
         subject = TITLE_RE.search(body).group(1)
         email.send_email(user.email, subject, body, format='html')
         app.logger.info("Sent %s email to user %s <%s>",
-            template.name[:-5], user.id, user.email)
+                        template.name[:-5], user.id, user.email)
     except Exception as e:
         app.logger.error("Problem sending email to user %s: %s", user.id, e)
 
@@ -588,26 +587,6 @@ def send_facebook_adds(date_from, date_to):
     action = app.config['FACEBOOK_APP_NAMESPACE'] + ':add'
     for user, object_id, token in activity:
         _post_facebook_story(user, 'video_instance', object_id, token, action, explicit=True)
-
-
-def job_control(f):
-    """Wrap the given function to ensure the input data is limited to a specific interval."""
-    @wraps(f)
-    @commit_on_success
-    def wrapper():
-        now = datetime.utcnow()
-        job_name = f.__name__
-        job_control = JobControl.query.get(job_name)
-        if not job_control:
-            job_control = JobControl(job=job_name, last_run=now).add()
-        app.logger.info('%s: from %s to %s', job_name, job_control.last_run, now)
-
-        f(job_control.last_run, now)
-
-        # XXX: If the cron function throws an exception then last_run is not saved
-        # and the job will be retried next time, including the same interval.
-        job_control.last_run = now
-    return wrapper
 
 
 def _invalidate_apns_tokens():
