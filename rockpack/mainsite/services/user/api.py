@@ -889,14 +889,14 @@ class UserWS(WebService):
     @check_authorization(self_auth=True)
     def change_user_password(self, userid):
         data = request.json
-        if not isinstance(data, dict) or not data.get('old') or not data.get('new'):
+        if not isinstance(data, dict) or data.get('old') is None or not data.get('new'):
             abort(400, message=[_('Both old and new passwords must be supplied.')])
 
-        new_p = data.get('new')
-        old_p = data.get('old')
+        new_p = data['new']
+        old_p = data['old']
 
         user = g.authorized.user
-        if not user.check_password(old_p):
+        if not ((user.password_hash == old_p == '') or user.check_password(old_p)):
             abort(400, message=[_('Old password is incorrect.')])
 
         form = RockRegistrationForm(formdata=MultiDict([('password', new_p)]), csrf_enabled=False)

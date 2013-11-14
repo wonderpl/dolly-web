@@ -273,6 +273,19 @@ class TestProfileEdit(base.RockPackTestCase):
             data = json.loads(r.data)
             self.assertEquals(data['message'], ["Old password is incorrect."])
 
+    def test_empty_password(self):
+        with self.app.test_client() as client:
+            user1 = self.create_test_user(password='testing')
+            user2 = self.create_test_user(password=None)
+            for userid, status in ((user1.id, 400), (user2.id, 200)):
+                r = client.put(
+                    '/ws/{}/{}/'.format(userid, 'password'),
+                    data=json.dumps(dict(old='', new='rockpack')),
+                    content_type='application/json',
+                    headers=[get_auth_header(userid)],
+                )
+                self.assertEquals(r.status_code, status)
+
     def test_failed_password(self):
         with self.app.test_client() as client:
             new_user = self.create_test_user()

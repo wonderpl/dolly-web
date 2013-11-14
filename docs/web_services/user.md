@@ -214,7 +214,9 @@ See the Registration section of [oauth documentation](oauth.md) for a comprehens
 
 ### Change password
 
-Change a users password. The old password must be supplied to validate the change.
+Change a users password. The old password must be supplied to validate the change, except if
+the user has never been assigned a password (e.g. logged in with Facebook), in which case an
+empty string is accepted.
 
 ```http
 PUT /ws/USERID/password/ HTTP/1.1
