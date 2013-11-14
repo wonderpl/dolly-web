@@ -17,7 +17,7 @@
         document.getElementById('loader').src = '{{ protocol_url }}';
         redirectLink = '{{ config.ITUNES_APP_LINK }}';
       }
-      window.setTimeout(function () { console.log('location.replace', redirectLink); }, 1);
+      window.setTimeout(function () { location.replace(redirectLink); }, 1);
     </script>
   </body>
 </html>
