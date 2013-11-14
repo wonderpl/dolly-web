@@ -247,7 +247,7 @@ def create_new_repack_notifications(date_from=None, date_to=None, user_notificat
     for video_instance, packer_channel, repacker_channel, repacker in activity_window:
         user, type, body = repack_message(repacker, repacker_channel)
 
-        _add_user_notification(packer_channel.packer, video_instance.date_added, type, body)
+        _add_user_notification(packer_channel.owner, video_instance.date_added, type, body)
         if user_notifications is not None:
             user_notifications.setdefault(user, None)
 
