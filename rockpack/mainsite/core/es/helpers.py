@@ -531,6 +531,6 @@ class DBImport(object):
                 total += 1
                 self.print_percent_complete(done, i_total)
                 done += 1
-            ec.flush_bulk()
+            ESChannel.flush()
 
         print '%s total updates in two passesfinished in' % total, time.time() - start, 'seconds (%s channels not in es)' % missing
