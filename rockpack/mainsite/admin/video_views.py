@@ -1,7 +1,7 @@
 from datetime import datetime
 import wtforms as wtf
 from flask import request
-from flask.ext.admin.form import BaseForm, DateTimePickerWidget
+from flask.ext.admin.form import BaseForm, DateTimePickerWidget, RenderTemplateWidget
 from flask.ext.admin.model.fields import AjaxSelectField
 from flask.ext.admin.model.typefmt import Markup
 from flask.ext.admin.model.form import InlineFormAdmin
@@ -92,7 +92,10 @@ class Category(AdminView):
     column_list = ('name', 'parent_category', 'parent')
     column_filters = ('parent', 'name')
     column_searchable_list = ('name',)
-    form_columns = ('name', )
+    form_columns = ('name', 'colour')
+    form_args = dict(colour={'widget': RenderTemplateWidget('admin/colour_field.html')})
+
+    edit_template = 'admin/category_edit.html'
 
     inline_models = (
         ChildCategoryFormAdmin(models.Category),

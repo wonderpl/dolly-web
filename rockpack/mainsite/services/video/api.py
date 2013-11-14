@@ -324,4 +324,6 @@ class CategoryWS(WebService):
                 else:
                     info['sub_categories'] = children[cat.id]
                     items.append(info)
+                if cat.colour:
+                    info['colour'] = cat.colour
         return dict(categories=dict(items=items))

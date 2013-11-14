@@ -25,6 +25,7 @@ Cache-Control: public, max-age=3600
    {
     "id": 1,
     "name": "Music",
+    "colour": "#00ff00",
     "priority": 100,
     "sub_categories": [
      {
@@ -51,6 +52,9 @@ A nagative priority denotes categories that should be hidden from the user inter
 
 If a sub-category is labelled `default` then it should be used as the assigned category
 if the user selects the respective parent category.
+
+The `colour` field is optional and will be returned only if a value is specified in the
+underlying datasource.
 
 ### Videos
 

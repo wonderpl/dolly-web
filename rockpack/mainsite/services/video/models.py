@@ -39,8 +39,8 @@ class Category(db.Model):
 
     id = Column(Integer, primary_key=True)
     name = Column(String(32), nullable=False)
-
     parent = Column(ForeignKey('category.id'), nullable=True)
+    colour = Column(String(8))
 
     parent_category = relationship('Category', remote_side=[id], backref='children')
     translations = relationship('CategoryTranslation', backref='category_rel')
