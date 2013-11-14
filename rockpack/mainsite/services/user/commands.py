@@ -249,7 +249,7 @@ def create_new_repack_notifications(date_from=None, date_to=None, user_notificat
 
         _add_user_notification(packer_channel.owner, video_instance.date_added, type, body)
         if user_notifications is not None:
-            user_notifications.setdefault(user, None)
+            user_notifications.setdefault(packer_channel.owner, None)
 
 
 def create_new_activity_notifications(date_from=None, date_to=None, user_notifications=None):
