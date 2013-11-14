@@ -1,7 +1,15 @@
 import wtforms as wtf
-from rockpack.mainsite.admin.models import AdminView
 from rockpack.mainsite.services.user import models
 from rockpack.mainsite.services.oauth import models as auth_models
+from rockpack.mainsite.admin.models import AdminView
+from rockpack.mainsite.admin.auth.models import AdminUser
+
+
+class AdminUserView(AdminView):
+    model = AdminUser
+
+    column_list = ('username', 'email')
+    form_excluded_columns = ('adminrole',)
 
 
 class UserView(AdminView):

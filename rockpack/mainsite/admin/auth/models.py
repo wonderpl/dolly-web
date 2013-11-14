@@ -18,8 +18,8 @@ class AdminUser(db.Model):
     __tablename__ = 'adminuser'
 
     id = Column(Integer, primary_key=True)
-    username = Column(String(254))
-    email = Column(String(254))
+    username = Column(String(254), unique=True, nullable=False)
+    email = Column(String(254), unique=True, nullable=False)
     token = Column(String(254))
 
     adminrole = relationship('AdminRole', backref='users')

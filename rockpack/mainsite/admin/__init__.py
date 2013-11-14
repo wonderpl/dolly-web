@@ -14,6 +14,7 @@ def setup_admin(app):
     for v in video_views.admin_views():
         admin.add_view(v)
 
+    admin.add_view(user_views.AdminUserView(name='Admin Users', endpoint='admin_user', category='Users'))
     admin.add_view(user_views.UserView(name='Users', endpoint='user', category='Users'))
     admin.add_view(user_views.ExternalTokenView(name='External Accounts', endpoint='external_accounts', category='Users'))
     admin.add_view(user_views.BroadcastMessageView(name='Broadcast Messages', endpoint='broadcast', category='Users'))
