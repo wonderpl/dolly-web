@@ -56,7 +56,7 @@ def send_share_email(recipient, user, object_type, object, link):
         token = get_apns_token(recipient_user.id)
         if token:
             msg_func = {'video': lambda video_instance: video_instance.resource_url,
-                    'channel': lambda channel: channel.cover.thumbnail_medium}
+                    'pack': lambda channel: channel.cover.thumbnail_medium}
 
             push_message = '%@ shared a ' + object_type_name + ' with you'
             push_message_args = [user.display_name]
