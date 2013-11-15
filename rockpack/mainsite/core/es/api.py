@@ -11,7 +11,7 @@ from . import use_elasticsearch
 from . import exceptions
 from rockpack.mainsite import app
 from rockpack.mainsite.helpers.db import ImageType
-from rockpack.mainsite.core.dbapi import readonly_session
+from rockpack.mainsite.core.dbapi import db
 
 logger = logging.getLogger(__name__)
 
@@ -558,16 +558,15 @@ def add_user_to_index(user, bulk=False, refresh=False, no_check=False):
     return add_to_index(data, mappings.USER_INDEX, mappings.USER_TYPE, id=user.id, bulk=bulk, refresh=refresh)
 
 
-def update_user_categories(user_ids=[]):
+def update_user_categories(user_ids):
     from rockpack.mainsite.services.video.models import Channel
 
-    query = readonly_session.query(Channel.category, Channel.owner).filter(
-            Channel.public.is_(True),
-            Channel.visible.is_(True),
-            Channel.deleted.is_(False)).order_by(Channel.owner)
-
-    if user_ids:
-        query = query.filter(Channel.owner.in_(user_ids))
+    query = db.session.query(Channel.category, Channel.owner).filter(
+        Channel.public.is_(True),
+        Channel.visible.is_(True),
+        Channel.deleted.is_(False),
+        Channel.owner.in_(user_ids)
+    ).order_by(Channel.owner)
 
     category_map = {}
 
@@ -647,7 +646,7 @@ def update_channel_to_index(channel, no_check=False):
             except Exception, e:
                 app.logger.error('Failed to insert channel after failed update with: %s', str(e))
 
-    update_user_categories(user_ids=[channel.owner])
+    update_user_categories([channel.owner])
 
 
 def add_video_to_index(video_instance, bulk=False, no_check=False):
@@ -720,9 +719,9 @@ def remove_channel_from_index(channel_id):
         ESVideo.delete_channel_videos(channel_id)
 
     from rockpack.mainsite.services.video.models import Channel
-    user_id = readonly_session.query(Channel.owner).filter(Channel.id == channel_id).first()
+    user_id = db.session.query(Channel.owner).filter(Channel.id == channel_id).first()
     if user_id:
-        update_user_categories(user_ids=[user_id[0]])
+        update_user_categories([user_id[0]])
 
 
 def remove_video_from_index(video_id):
