@@ -87,6 +87,7 @@ def clean_messages():
                         for a in ('', 'Delayed', 'NotVisible'))
 
     messages = []
+    manager_commands = set(manager.get_cron_commands().keys())
     commands = set()
     while True:
         new_messages = queue.get_messages(10, 60)
@@ -95,7 +96,10 @@ def clean_messages():
         for message in new_messages:
             messages.append(message)
             command = message.get_body()['command']
-            if command in commands:
+            if command not in manager_commands:
+                app.logger.warning('Deleting unknown command: %s', command)
+                message.delete()
+            elif command in commands:
                 app.logger.warning('Deleting duplicate command: %s', command)
                 message.delete()
             else:
@@ -104,7 +108,7 @@ def clean_messages():
     if not len(messages) == message_count:
         app.logger.warning('Failed to read %d messages', message_count - len(messages))
 
-    diff = set(manager.get_cron_commands().keys()) - commands
+    diff = manager_commands - commands
     if diff:
         app.logger.warning('Missing commands: %s', ', '.join(diff))
 
