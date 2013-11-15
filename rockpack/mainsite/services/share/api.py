@@ -2,7 +2,6 @@ from datetime import datetime
 import wtforms as wtf
 from flask import abort, g
 from flask.ext.wtf import Form
-from sqlalchemy.orm.exc import NoResultFound
 from rockpack.mainsite import app
 from rockpack.mainsite.core import email
 from rockpack.mainsite.core.webservice import WebService, expose_ajax, ajax_create_response
@@ -55,12 +54,13 @@ def send_share_email(recipient, user, object_type, object, link):
     if recipient_user:
         token = get_apns_token(recipient_user.id)
         if token:
-            msg_func = {'video': lambda video_instance: video_instance.resource_url,
-                    'pack': lambda channel: channel.cover.thumbnail_medium}
-
+            msg_func = {
+                'video_instance': lambda video_instance: video_instance.resource_url,
+                'channel': lambda channel: channel.cover.thumbnail_medium,
+            }
             push_message = '%@ shared a ' + object_type_name + ' with you'
             push_message_args = [user.display_name]
-            deeplink_url = msg_func[object_type_name]
+            deeplink_url = msg_func[object_type]
             complex_push_notification(token, push_message, push_message_args, url=deeplink_url)
 
 
