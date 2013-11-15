@@ -51,17 +51,18 @@ def send_share_email(recipient, user, object_type, object, link):
     ).filter(
         User.email.ilike(recipient.lower())
     ).first()
-    if recipient_user:
-        token = get_apns_token(recipient_user.id)
-        if token:
-            msg_func = {
-                'video_instance': lambda video_instance: video_instance.resource_url,
-                'channel': lambda channel: channel.cover.thumbnail_medium,
-            }
-            push_message = '%@ shared a ' + object_type_name + ' with you'
-            push_message_args = [user.display_name]
-            deeplink_url = msg_func[object_type]
-            complex_push_notification(token, push_message, push_message_args, url=deeplink_url)
+    # FIXME: deeplink_url needs to be fixed to use shortened resource_url
+    #if recipient_user:
+    #    token = get_apns_token(recipient_user.id)
+    #    if token:
+    #        msg_func = {
+    #            'video_instance': lambda video_instance: video_instance.resource_url,
+    #            'channel': lambda channel: channel.cover.thumbnail_medium,
+    #        }
+    #        push_message = '%@ shared a ' + object_type_name + ' with you'
+    #        push_message_args = [user.display_name]
+    #        deeplink_url = msg_func[object_type]
+    #        complex_push_notification(token, push_message, push_message_args, url=deeplink_url)
 
 
 class ShareForm(Form):
