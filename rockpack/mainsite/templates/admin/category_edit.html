@@ -2,12 +2,12 @@
 
 {% block head %}
 {{ super() }}
-<link href="//mjaalnir.github.io/bootstrap-colorpicker/css/bootstrap-colorpicker.css" rel="stylesheet">
+<link href="{{ config.ASSETS_URL }}/assets/admin/bootstrap-colorpicker/css/bootstrap-colorpicker.css" rel="stylesheet">
 {% endblock %}
 
 {% block tail %}
 {{ super() }}
-<script src="//mjaalnir.github.io/bootstrap-colorpicker/js/bootstrap-colorpicker.js"></script>
+<script src="{{ config.ASSETS_URL }}/assets/admin/bootstrap-colorpicker/js/bootstrap-colorpicker.js"></script>
 <script>
   $('.colorpicker-component').colorpicker();
 </script>

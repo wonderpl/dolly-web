@@ -1,4 +1,4 @@
-<div class="input-append colorpicker-component" {% if field.data %}data-color="{{ field.data }}"{% endif %} data-color-format="hex">
+<div class="input-append color colorpicker-component" {% if field.data %}data-color="{{ field.data }}"{% endif %} data-color-format="hex">
   <input id="{{ field.name }}" type="text" value="{{ field.data|default('', True) }}" name="{{ field.name }}" readonly class="form-control" />
   <span class="add-on"><i {% if field.data %}style="background-color: {{ field.data }}"{% endif %}></i></span>
 </div>
