@@ -1,14 +1,14 @@
 from sqlalchemy import func
 from sqlalchemy.orm import aliased
 from rockpack.mainsite.services.video import models
-from rockpack.mainsite.core.dbapi import readonly_session
+from rockpack.mainsite.core.dbapi import db
 from . import api
 
 
 def _update_most_influential_video(video_ids):
     # Re-calculate most influential
     child = aliased(models.VideoInstance, name='child')
-    query = readonly_session.query(
+    query = db.session.query(
         models.VideoInstance.id,
         models.VideoInstance.video,
         child.source_channel,
@@ -51,7 +51,7 @@ def _update_most_influential_video(video_ids):
 
 def _video_terms_channel_mapping(channel_ids, channel_map={}):
     """ Get all the video terms for a channel """
-    video_details = readonly_session.query(models.VideoInstance.channel, models.Video.title).join(
+    video_details = db.session.query(models.VideoInstance.channel, models.Video.title).join(
         models.Video,
         models.VideoInstance.video == models.Video.id
     ).filter(models.VideoInstance.channel.in_(channel_ids))
@@ -63,7 +63,7 @@ def _category_channel_mapping(channel_ids, category_map={}):
     """ Get the categories belonging to videos
         on a channel """
     # Reset channel catgegory
-    query = readonly_session.query(
+    query = db.session.query(
         models.VideoInstance.category, models.VideoInstance.channel
     ).filter(
         models.VideoInstance.channel.in_(channel_ids)
