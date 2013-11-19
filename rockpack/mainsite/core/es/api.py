@@ -681,11 +681,14 @@ def es_update_channel_videos(extant=[], deleted=[], async=app.config.get('ASYNC_
     if models.VideoInstance.query.session.transaction._state.name == 'COMMITTED':
         models.VideoInstance.query.session.transaction._state = None
 
-    all_instances = models.VideoInstance.query.filter(
-        models.VideoInstance.id.in_(extant)
-    ).options(
-        joinedload(models.VideoInstance.video_channel)
-    )
+    if extant:
+        all_instances = models.VideoInstance.query.filter(
+            models.VideoInstance.id.in_(extant)
+        ).options(
+            joinedload(models.VideoInstance.video_channel)
+        )
+    else:
+        all_instances = []
 
     # Run through the instance data and get
     # the channel and video ids from the
