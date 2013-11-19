@@ -59,11 +59,8 @@ class User(db.Model):
         return 'User(id={u.id!r}, username={u.username!r})'.format(u=self)
 
     @classmethod
-    def get_form_choices(cls, prefix=None):
-        q = cls.query
-        if prefix:
-            q = q.filter(cls.username.ilike(prefix + '%'))
-        return q.values(cls.id, cls.username)
+    def get_form_choices(cls):
+        return cls.query.values(cls.id, cls.username)
 
     @classmethod
     def get_from_credentials(cls, username, password):
@@ -133,10 +130,10 @@ class User(db.Model):
         if not username_exists(source_name):
             return source_name
 
-        user = cls.query.filter(
-            cls.username.like('{}%'.format(source_name))
-        ).order_by("username desc").limit(1).first()
-        match = re.findall(r"[a-zA-Z]+|\d+", user.username if user else source_name)
+        username = cls.query.filter(
+            func.lower(cls.username).like('{}%'.format(source_name))
+        ).order_by("username desc").limit(1).value('username')
+        match = re.findall(r"[a-zA-Z]+|\d+", username or source_name)
 
         try:
             postfix_number = int(match[-1])

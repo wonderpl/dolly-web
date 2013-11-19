@@ -2,6 +2,7 @@ import re
 import pyes
 from functools import wraps
 from flask import request, json, abort, Response
+from sqlalchemy import func
 from urllib2 import HTTPError
 from werkzeug.datastructures import ImmutableMultiDict
 from requests.exceptions import RequestException
@@ -164,7 +165,7 @@ class SearchWS(WebService):
             us.add_text('display_name', search_term)
             return dict(users=dict(items=us.users(), total=us.total))
 
-        users = User.query.filter(User.username.ilike(search_term))
+        users = User.query.filter(func.lower(User.username).like(search_term))
         count = users.count()
         items = []
         for user in users.limit(limit).offset(offset):
@@ -215,16 +216,16 @@ class CompleteWS(WebService):
     def complete_channel_terms(self, extra_terms=None):
         # Use same javascript format as google complete for the sake of
         # consistency with /complete/videos
-        query = request.args.get('q', '')
+        query = request.args.get('q', '').lower()
 
         username_terms = list(
-            User.query.filter(User.username.ilike('%s%%' % query)).
+            User.query.filter(func.lower(User.username).like('%s%%' % query)).
             filter_by(is_active=True).
             join(Channel).group_by(User.id).
             order_by('count(*) desc').limit(10).values('username'))
 
         channel_terms = list(
-            Channel.query.filter(Channel.title.ilike('%s%%' % query)).
+            Channel.query.filter(func.lower(Channel.title).like('%s%%' % query)).
             filter_by(deleted=False, public=True, visible=True).
             order_by('subscriber_count desc').limit(10).values('title'))
 
@@ -249,9 +250,9 @@ class CompleteWS(WebService):
             next((n for n in names if n.lower().startswith(query)), names[0])
             for names in
             User.query.filter_by(is_active=True).filter(
-                User.username.ilike('%s%%' % query) |
-                User.first_name.ilike('%s%%' % query) |
-                User.last_name.ilike('%s%%' % query)
+                func.lower(User.username).like('%s%%' % query) |
+                func.lower(User.first_name).like('%s%%' % query) |
+                func.lower(User.last_name).like('%s%%' % query)
             ).join(Channel).group_by(User.id).
             order_by('count(*) desc').limit(10).
             values('username', 'first_name', 'last_name')

@@ -1,5 +1,6 @@
 from datetime import datetime
 import wtforms as wtf
+from sqlalchemy import func
 from flask import abort, g
 from flask.ext.wtf import Form
 from rockpack.mainsite import app
@@ -49,7 +50,7 @@ def send_share_email(recipient, user, object_type, object, link):
         ExternalToken,
         ExternalToken.user == User.id
     ).filter(
-        User.email.ilike(recipient.lower())
+        func.lower(User.email) == recipient.lower()
     ).first()
     # FIXME: deeplink_url needs to be fixed to use shortened resource_url
     #if recipient_user:

@@ -2,6 +2,7 @@ import wtforms as wtf
 from flask import request, abort
 from flask.ext.wtf import Form
 from collections import defaultdict
+from sqlalchemy import func
 from sqlalchemy.orm import contains_eager, lazyload, joinedload
 from sqlalchemy.sql.expression import desc
 from rockpack.mainsite import app
@@ -75,7 +76,8 @@ def get_db_channels(locale, paging, add_tracking=None, **filters):
     if filters.get('category'):
         channels = _filter_by_category(channels, models.Channel, filters['category'])
     if filters.get('query'):
-        channels = channels.filter(models.Channel.title.ilike('%%%s%%' % filters['query']))
+        channels = channels.filter(func.lower(models.Channel.title).
+                                   like('%%%s%%' % filters['query'].lower()))
 
     if filters.get('date_order'):
         channels = channels.order_by(desc(models.Channel.date_added))
@@ -261,14 +263,14 @@ class VideoWS(WebService):
 
     @expose_ajax('/<video_id>/channels/')
     def video_channels(self, video_id, cache_age=3600):
-        v = VideoSearch(self.get_locale())
-        v.add_term('video.id', video_id)
-        v.set_paging(*self.get_page(default_size=5))
-        videos = v.videos()
+        vs = VideoSearch(self.get_locale())
+        vs.add_term('video.id', video_id)
+        vs.set_paging(*self.get_page(default_size=5))
+        videos = vs.videos()
         if not videos:
             abort(404)
         title_items = [{'title': v['channel_title']} for v in videos]
-        return {'channels': {'items': title_items, 'total': v.total}}
+        return {'channels': {'items': title_items, 'total': vs.total}}
 
     @expose_ajax('/players/', cache_age=7200)
     def players(self):

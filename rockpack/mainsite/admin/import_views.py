@@ -4,6 +4,7 @@ from datetime import date
 from cStringIO import StringIO
 from werkzeug import MultiDict
 import wtforms as wtf
+from sqlalchemy import func
 from flask import request, url_for, redirect, flash, jsonify
 from flask.ext import login
 from flask.ext.admin import expose, form
@@ -129,7 +130,7 @@ class ImportView(AuthenticatedView):
         site_url = 'http://www.youtube.com/%s' % username
         # check for existing user & channel
         matches = list(
-            Channel.query.filter(Channel.title.like('YouTube Channel:%')).
+            Channel.query.filter(func.lower(Channel.title).like('youtube channel:%')).
             join(User, (User.id == Channel.owner) &
                        (User.site_url == site_url) &
                        (User.username == username)).
@@ -236,13 +237,15 @@ class ImportView(AuthenticatedView):
 
     @expose('/users.js')
     def users(self):
-        prefix = request.args.get('prefix', '')
         exact_name = request.args.get('exact_name', '')
         if exact_name:
             return jsonify(User.query.filter(User.username == exact_name).values(User.id, User.username))
-        if not re.match('^\w+$', prefix):
-            prefix = None
-        return jsonify(User.get_form_choices(prefix=prefix))
+        prefix = request.args.get('prefix', '').lower()
+        if prefix and re.match('^\w+$', prefix):
+            return jsonify(User.query.filter(
+                func.lower(User.username).like(prefix + '%')
+            ).values(User.id, User.username))
+        return []
 
     @expose('/channels.js')
     def channels(self):
@@ -251,20 +254,19 @@ class ImportView(AuthenticatedView):
             if not re.match('^[\w-]+$', user):
                 user = None
             return jsonify(Channel.get_form_choices(owner=user))
-        prefix = request.args.get('prefix', '')
         exact_name = request.args.get('exact_name', '')
         if exact_name:
             channels = list(Channel.query.filter(Channel.title == exact_name).values(Channel.id, Channel.title))
             if not channels:
                 channels = list(Channel.query.filter(Channel.id == exact_name).values(Channel.id, Channel.title))
             return jsonify(channels)
-        if prefix:
-            if not re.match('^[!&#\w ]+$', prefix):
-                prefix = None
+        prefix = request.args.get('prefix', '').lower()
+        if prefix and re.match('^[!&#\w ]+$', prefix):
             return jsonify(Channel.query.filter(
                 Channel.deleted == False,
                 Channel.public == True,
-                Channel.title.ilike(prefix + '%')).values(Channel.id, Channel.title))
+                func.lower(Channel.title).like(prefix + '%')
+            ).values(Channel.id, Channel.title))
         return []
 
     @expose('/video.js')
@@ -272,7 +274,7 @@ class ImportView(AuthenticatedView):
         vid = request.args.get('vid', '')
         if request.args.get('instance_id'):
             return jsonify(VideoInstance.query.join(Video).filter(VideoInstance.id == request.args.get('instance_id')).values(VideoInstance.video, Video.title))
-        return jsonify(Video.query.filter(Video.id.ilike(vid + '%')).values(Video.id, Video.title))
+        return jsonify(Video.query.filter(Video.id.like(vid + '%')).values(Video.id, Video.title))
 
     @expose('/tags.js')
     def tags(self):
