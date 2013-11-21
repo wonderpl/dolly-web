@@ -107,7 +107,7 @@ def update_channel_rank():
     app.logger.info('Ran update_channel_rank in %ds', time.time() - start)
 
 
-@manager.cron_command(interval=3600)
+@manager.command
 def update_video_channel_terms():
     start = time.time()
     helpers.DBImport().import_video_channel_terms()
