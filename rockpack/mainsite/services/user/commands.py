@@ -180,10 +180,10 @@ def send_push_notifications(user):
         key = 'user'
         push_message = "Your Facebook friend %@ has joined Rockpack"
     elif notification.message_type == 'repack':
-        key = 'channel'
+        key = 'video'
         push_message = "%@ has re-packed one of your videos"
     elif notification.message_type == 'unavailable':
-        key = 'channel'
+        key = 'video'
         push_message = "One of your videos is no longer available"
     else:
         key = 'video'
