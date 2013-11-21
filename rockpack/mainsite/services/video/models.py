@@ -6,8 +6,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import relationship, aliased, lazyload
 from flask.ext.sqlalchemy import models_committed
 from rockpack.mainsite.core.dbapi import db, defer_except
-from rockpack.mainsite.core.es import api as es_api
-from rockpack.mainsite.core.es.api import es_update_channel_videos
+from rockpack.mainsite.core.es import use_elasticsearch, api as es_api
 from rockpack.mainsite.helpers.db import add_base64_pk, add_video_pk, insert_new_only, ImageType, BoxType
 from rockpack.mainsite.helpers.urls import url_for
 from rockpack.mainsite.services.user.models import User
@@ -528,7 +527,7 @@ def _video_insert(mapper, connection, target):
 
 @event.listens_for(Video, 'after_update')
 def _video_update(mapper, connection, target):
-    if not target.visible:
+    if use_elasticsearch() and not target.visible:
         ids = VideoInstance.query.filter_by(video=target.id).values('id')
         es_api.ESVideo.delete(ids)
 
@@ -543,7 +542,7 @@ def on_models_committed(sender, changes):
             else:
                 updated_videos.append(obj.id)
     if updated_videos or deleted_videos:
-        es_update_channel_videos(updated_videos, deleted_videos)
+        es_api.es_update_channel_videos(updated_videos, deleted_videos)
 
 
 @event.listens_for(ChannelLocaleMeta, 'after_insert')

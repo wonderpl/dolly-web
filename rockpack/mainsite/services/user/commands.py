@@ -27,66 +27,69 @@ from .models import (
 TITLE_RE = re.compile('<title>([^<]+)</title>')
 
 
-def activity_user(activity):
+def _notification_user_info(user):
     # NOTE: This will store full image urls in database
     return dict(
-        id=activity.actor.id,
-        resource_url=activity.actor.get_resource_url(),
-        display_name=activity.actor.display_name,
-        avatar_thumbnail_url=activity.actor.avatar.thumbnail_medium,
+        id=user.id,
+        resource_url=user.get_resource_url(),
+        display_name=user.display_name,
+        avatar_thumbnail_url=user.avatar.thumbnail_medium,
+    )
+
+
+def _notification_channel_info(channel, own=True):
+    return dict(
+        id=channel.id,
+        resource_url=channel.get_resource_url(own),
+        title=channel.title,
+        thumbnail_url=channel.cover.thumbnail_medium,
+    )
+
+
+def _notification_video_info(video_instance, channel):
+    return dict(
+        id=video_instance.id,
+        resource_url=video_instance.resource_url,
+        thumbnail_url=video_instance.default_thumbnail,
+        channel=dict(
+            id=channel.id,
+            resource_url=channel.get_resource_url(True),
+        )
     )
 
 
 def subscribe_message(activity, channel):
     return channel.owner, 'subscribed', dict(
-        user=activity_user(activity),
-        channel=dict(
-            id=channel.id,
-            resource_url=channel.get_resource_url(True),
-            thumbnail_url=channel.cover.thumbnail_medium,
-        )
-    )
-
-
-def repack_message(repacker, channel):
-    return channel.owner, 'repack', dict(
-        user=dict(
-            id=repacker.id,
-            resource_url=repacker.get_resource_url(),
-            display_name=repacker.display_name,
-            avatar_thumbnail_url=repacker.avatar.thumbnail_medium,
-        ),
-        channel=dict(
-            id=channel.id,
-            resource_url=channel.resource_url,
-            thumbnail_url=channel.cover.thumbnail_medium,
-        )
-    )
-
-
-def unavailable_video_in_channel_message(channel):
-    return channel.owner, 'unavailable', dict(
-        channel=dict(
-            id=channel.id,
-            resource_url=channel.get_resource_url(True),
-            thumbnail_url=channel.cover.thumbnail_medium,
-        )
+        user=_notification_user_info(activity.actor),
+        channel=_notification_channel_info(channel),
     )
 
 
 def star_message(activity, video_instance):
     channel = video_instance.video_channel
     return channel.owner, 'starred', dict(
-        user=activity_user(activity),
-        video=dict(
-            id=video_instance.id,
-            resource_url=video_instance.resource_url,
-            thumbnail_url=video_instance.default_thumbnail,
-            channel=dict(
-                id=channel.id,
-                resource_url=channel.get_resource_url(True),
-            )
-        )
+        user=_notification_user_info(activity.actor),
+        video=_notification_video_info(video_instance, channel),
+    )
+
+
+def repack_message(repacker, channel, video_instance):
+    return channel.owner, 'repack', dict(
+        user=_notification_user_info(repacker),
+        video=_notification_video_info(video_instance, channel),
+    )
+
+
+def unavailable_video_message(channel, video_instance):
+    return channel.owner, 'unavailable', dict(
+        user=_notification_user_info(channel.owner_rel),
+        video=_notification_video_info(video_instance, channel),
+    )
+
+
+def joined_message(friend, user):
+    return friend, 'joined', dict(
+        user=_notification_user_info(user),
     )
 
 
@@ -214,7 +217,7 @@ def create_unavailable_notifications(date_from=None, date_to=None, user_notifica
         activity_window = activity_window.filter(Video.date_updated < date_to)
 
     for video_instance, video, channel in activity_window:
-        user, message_type, message = unavailable_video_in_channel_message(channel)
+        user, message_type, message = unavailable_video_message(channel, video_instance)
         _add_user_notification(user, video.date_updated, message_type, message)
         if user_notifications is not None:
             user_notifications.setdefault(user, None)
@@ -245,7 +248,7 @@ def create_new_repack_notifications(date_from=None, date_to=None, user_notificat
         activity_window = activity_window.filter(VideoInstance.date_added < date_to)
 
     for video_instance, packer_channel, repacker_channel, repacker in activity_window:
-        user, type, body = repack_message(repacker, repacker_channel)
+        user, type, body = repack_message(repacker, repacker_channel, video_instance)
 
         _add_user_notification(packer_channel.owner, video_instance.date_added, type, body)
         if user_notifications is not None:
@@ -301,13 +304,8 @@ def create_new_registration_notifications(date_from=None, date_to=None, user_not
             filter_by(external_system=token.external_system, external_uid=token.external_uid).\
             values(ExternalFriend.user)
         for friend, in friends:
-            message = dict(user=dict(
-                id=user.id,
-                resource_url=user.resource_url,
-                avatar_thumbnail_url=user.avatar.url,
-                display_name=user.display_name,
-            ))
-            _add_user_notification(friend, user.date_joined, 'joined', message)
+            friend, message_type, message = joined_message(friend, user)
+            _add_user_notification(friend, user.date_joined, message_type, message)
             if user_notifications is not None:
                 user_notifications.setdefault(friend, None)
 

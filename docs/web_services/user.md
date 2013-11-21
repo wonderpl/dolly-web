@@ -931,11 +931,13 @@ Each notification item in the list has a `message_type` and `message` data.  The
 contains a `user` record representing the user who's action triggered the notification and a
 content record representing the video or channel that was acted upon.
 
-Message Type | Content Record | Description
-:----------- | :------------- | :----------
-`subscribed` | `channel`      | Message contains channel thumbnail and resource url
-`starred`    | `video`        | Message contains video thumbnail and channel resource url
-`joined`     |                | Message contains user record only
+Message Type  | Content Record | Description
+:------------ | :------------- | :----------
+`subscribed`  | `channel`      | Message contains data on the channel to which the user subscribed
+`starred`     | `video`        | Message contains data for the video which was starred
+`joined`      |                | Message contains user record only
+`repack`      | `video`        | Message contains data for the video which was created from the users
+`unavailable` | `video`        | Message contains data for the video which is no longer available
 
 ```http
 HTTP/1.1 200 OK
@@ -944,7 +946,7 @@ Cache-Control: private, max-age=60
 
 {
  "notifications": {
-  "total": 3,
+  "total": 5,
   "items": [
    {
     "id": 1,
@@ -953,8 +955,9 @@ Cache-Control: private, max-age=60
     "read": false,
     "message": {
      "video": {
-      "thumbnail_url": "http://i.ytimg.com/vi/m04evx91lh8/mqdefault.jpg",
       "id": "VIDEOINSTANCEID",
+      "resource_url": "http://path/to/video/resource/url/",
+      "thumbnail_url": "http://i.ytimg.com/vi/m04evx91lh8/mqdefault.jpg",
       "channel": {
        "resource_url": "http://path/to/channel/resource/url/",
        "id": "CHANNELID"
@@ -975,9 +978,10 @@ Cache-Control: private, max-age=60
     "read": true,
     "message": {
      "channel": {
+      "id": "CHANNELID",
       "resource_url": "http://path/to/channel/resource/url/",
-      "thumbnail_url": "http://path/to/channel/cover.jpg",
-      "id": "CHANNELID"
+      "title": "a channel",
+      "thumbnail_url": "http://path/to/channel/cover.jpg"
      },
      "user": {
       "id": "USERID",
@@ -988,7 +992,7 @@ Cache-Control: private, max-age=60
     }
    },
    {
-    "id": 2,
+    "id": 3,
     "message_type": "joined",
     "read": false,
     "date_created": "2013-07-11T17:48:29.932114",

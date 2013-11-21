@@ -17,6 +17,7 @@ from rockpack.mainsite.services.oauth.models import ExternalToken, ExternalFrien
 from rockpack.mainsite.services.user.models import (
     User, UserActivity, UserAccountEvent, UserFlag, UserNotification, UserContentFeed, Subscription)
 from rockpack.mainsite.services.user import commands as cron_cmds
+from rockpack.mainsite.services.user.api import add_videos_to_channel
 
 
 class TestAPNS(base.RockPackTestCase):
@@ -478,6 +479,108 @@ class TestUserContent(base.RockPackTestCase):
                            headers=[get_auth_header(owner)])
             user_data = json.loads(r.data)
             self.assertGreater(user_data['subscriber_count'], 0)
+
+    def test_activity_notifications(self):
+        with self.app.test_client() as client:
+            self.app.test_request_context().push()
+            user = self.create_test_user().id
+            owner = self.create_test_user().id
+            channel = Channel.query.filter_by(owner=owner).first()
+            video = channel.add_videos([VideoData.video1.id])[0]
+
+            UserActivity(user=user, action='subscribe',
+                         object_type='channel', object_id=channel.id).save()
+            UserActivity(user=user, action='star',
+                         object_type='video_instance', object_id=video.id).save()
+            cron_cmds.create_new_activity_notifications()
+            UserNotification.query.session.commit()
+
+            r = client.get(
+                '/ws/{}/notifications/'.format(owner),
+                headers=[get_auth_header(owner)])
+            self.assertEquals(r.status_code, 200)
+
+            notifications = json.loads(r.data)['notifications']['items']
+            self.assertEquals(len(notifications), 2)
+            for notification in notifications:
+                self.assertFalse(notification['read'])
+                self.assertIn(notification['message_type'], ('subscribed', 'starred'))
+                message = notification['message']
+                self.assertEquals(message['user']['id'], user)
+                if notification['message_type'] == 'subscribed':
+                    self.assertEquals(message['channel']['id'], channel.id)
+                    self.assertEquals(message['channel']['resource_url'], channel.resource_url)
+                else:
+                    self.assertEquals(message['video']['id'], video.id)
+                    self.assertEquals(message['video']['channel']['id'], channel.id)
+
+    def test_repack_notifications(self):
+        with self.app.test_client() as client:
+            self.app.test_request_context().push()
+            user1 = self.create_test_user()
+            user2 = self.create_test_user()
+            channel1 = user1.channels[0]
+            channel2 = user2.channels[0]
+            video1 = channel1.add_videos([VideoData.video1.id])[0]
+
+            Channel.query.session.commit()
+            add_videos_to_channel(channel2, [video1.id], None)
+            cron_cmds.create_new_repack_notifications()
+            UserNotification.query.session.commit()
+
+            r = client.get(
+                '/ws/{}/notifications/'.format(user1.id),
+                headers=[get_auth_header(user1.id)])
+            self.assertEquals(r.status_code, 200)
+
+            notification, = json.loads(r.data)['notifications']['items']
+            self.assertEquals(notification['message_type'], 'repack')
+            self.assertEquals(notification['message']['user']['id'], user2.id)
+            self.assertEquals(notification['message']['video']['channel']['id'], channel2.id)
+
+    def test_unavailable_notifications(self):
+        with self.app.test_client() as client:
+            self.app.test_request_context().push()
+            user = self.create_test_user()
+            video = user.channels[0].add_videos([VideoData.video1.id])[0]
+            UserNotification.query.session.commit()
+            video.video_rel.visible = False
+            UserNotification.query.session.commit()
+            cron_cmds.create_unavailable_notifications()
+            UserNotification.query.session.commit()
+
+            r = client.get(
+                '/ws/{}/notifications/'.format(user.id),
+                headers=[get_auth_header(user.id)])
+            self.assertEquals(r.status_code, 200)
+            print json.dumps(json.loads(r.data), indent=True)
+
+            notification, = json.loads(r.data)['notifications']['items']
+            self.assertEquals(notification['message_type'], 'unavailable')
+            self.assertEquals(notification['message']['user']['id'], user.id)
+            self.assertEquals(notification['message']['video']['id'], video.id)
+
+    def test_registration_notifications(self):
+        with self.app.test_client() as client:
+            self.app.test_request_context().push()
+            user1 = self.create_test_user().id
+            user2 = self.create_test_user().id
+            ExternalFriend(user=user1, external_system='facebook', external_uid='u2',
+                           name='u2', avatar_url='').save()
+            ExternalToken(user=user2, external_system='facebook', external_uid='u2',
+                          external_token='xxx').save()
+
+            cron_cmds.create_new_registration_notifications()
+            UserNotification.query.session.commit()
+
+            r = client.get(
+                '/ws/{}/notifications/'.format(user1),
+                headers=[get_auth_header(user1)])
+            self.assertEquals(r.status_code, 200)
+
+            notification, = json.loads(r.data)['notifications']['items']
+            self.assertEquals(notification['message_type'], 'joined')
+            self.assertEquals(notification['message']['user']['id'], user2)
 
     def test_subscription_notification(self):
         with self.app.test_client() as client:
