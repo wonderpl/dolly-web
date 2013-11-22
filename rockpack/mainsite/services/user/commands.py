@@ -94,6 +94,8 @@ def joined_message(friend, user):
 
 
 def _apns_url(url):
+    if '/video/' in url:    # strip video resource suffix
+        url = url[:-32]
     return urlparse.urlparse(url).path.lstrip('/ws/')
 
 
