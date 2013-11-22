@@ -239,7 +239,9 @@ def create_new_repack_notifications(date_from=None, date_to=None, user_notificat
         packer_user.id == packer_channel.owner
     ).join(
         repacker_channel,
-        repacker_channel.id == VideoInstance.channel
+        (repacker_channel.id == VideoInstance.channel) &
+        (repacker_channel.favourite == False) &
+        (repacker_channel.public == True)
     ).join(
         repacker_user,
         repacker_user.id == repacker_channel.owner

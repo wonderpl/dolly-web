@@ -520,7 +520,8 @@ class TestUserContent(base.RockPackTestCase):
             user1 = self.create_test_user()
             user2 = self.create_test_user()
             channel1 = user1.channels[0]
-            channel2 = user2.channels[0]
+            channel2 = Channel.create(owner=user2.id, title='new', description='',
+                                      cover='comic', category=1)
             video1 = channel1.add_videos([VideoData.video1.id])[0]
 
             Channel.query.session.commit()
