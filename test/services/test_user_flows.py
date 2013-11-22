@@ -180,7 +180,7 @@ class CuratingUserTestCase(BaseUserTestCase):
         self.register_user()
 
         # Select first search term suggestion
-        search_terms = self.get(self.urls['video_search_terms'], dict(q='tes'))
+        search_terms = self.get(self.urls['video_search_terms'], dict(q='test'))
         search_term = json.loads(search_terms[19:-1])[1][0][0]
 
         # Get first 5 results for search term

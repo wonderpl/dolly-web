@@ -38,8 +38,8 @@ def _youtube_feed_requests(feed, id, params=None, content=None):
         response.raise_for_status()
     except Exception, e:
         if hasattr(e, 'response'):
-            log.error('youtube request failed (%d): %s',
-                      e.response.status_code, e.response.text)
+            log.error('youtube request failed for %s/%s: %d: %s',
+                      feed, id, e.response.status_code, e.response.text)
         raise
     try:
         return response.json()
