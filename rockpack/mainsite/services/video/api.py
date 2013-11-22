@@ -30,6 +30,7 @@ def channel_dict(channel, position=None, with_owner=True, owner_url=False, add_t
         id=channel.id,
         resource_url=channel.get_resource_url(owner_url),
         title=channel.title,
+        description=channel.description,
         subscriber_count=channel.subscriber_count,
         category=channel.category,
         date_published=channel.date_published and channel.date_published.isoformat(),
@@ -53,8 +54,6 @@ def channel_dict(channel, position=None, with_owner=True, owner_url=False, add_t
         ch_data['public'] = channel.public
     if position is not None:
         ch_data['position'] = position
-    if app.config.get('SHOW_CHANNEL_DESCRIPTION', False):
-        ch_data['description'] = channel.description
     if app.config.get('SHOW_OLD_CHANNEL_COVER_URLS', True):
         for k in 'thumbnail_large', 'thumbnail_small', 'background':
             ch_data['cover_%s_url' % k] = getattr(channel.cover, k)
