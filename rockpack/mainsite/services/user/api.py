@@ -790,7 +790,7 @@ def _base_user_info(user):
         display_name=user.display_name,
         avatar_thumbnail_url=user.avatar.url,
         profile_cover_url=user.get_profile_cover().url,
-        description=user.description,
+        description=user.description or "",
         subscriber_count=user.subscriber_count,
     )
     if user.brand:

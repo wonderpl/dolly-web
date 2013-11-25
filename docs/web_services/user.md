@@ -30,7 +30,7 @@ Cache-Control: public, max-age=3600
       {
         "avatar_thumbnail_url": "http://path/to/avatar/medium.jpg",
         "categories": [ ],
-        "description": null,
+        "description": "",
         "display_name": "display name",
         "id": "userid",
         "position": 0,
@@ -128,7 +128,7 @@ Cache-Control: private
  "gender": null,
  "avatar_thumbnail_url": "http://path/to/avatar.img",
  "profile_cover_url": "",
- "description": null,
+ "description": "",
  "subscriber_count": 0,
  "date_of_birth": "1900-01-21",
  "subscriptions": {
