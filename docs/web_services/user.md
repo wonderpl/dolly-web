@@ -881,7 +881,7 @@ Content-Type: application/json
 
 Parameter      | Required? | Value                                  | Description
 :------------- | :-------- | :------------------------------------- | :----------
-action         | yes       | `star`¦`unstar`¦`view`¦`select`¦`open`¦`subscribe_all` | Specifies the action type
+action         | yes       | `star`¦`unstar`¦`view`¦<br>`select`¦`open`¦<br>`subscribe_all`¦`unsubscribe_all` | Specifies the action type
 object_type    | yes       | `user`¦`channel`¦`video_instance`      | The type of object
 object_id      | yes       | string                                 | The id of the object that was acted upon
 locale         | no        | IETF language tag                      | The action will be recorded for the given locale

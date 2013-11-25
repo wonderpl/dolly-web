@@ -480,6 +480,53 @@ class TestUserContent(base.RockPackTestCase):
             user_data = json.loads(r.data)
             self.assertGreater(user_data['subscriber_count'], 0)
 
+    def test_unsubscribe_all(self):
+        with self.app.test_client() as client:
+            self.app.test_request_context().push()
+            user = self.create_test_user().id
+            owner = self.create_test_user().id
+            channels = [i for i, in Channel.query.filter_by(owner=owner).values('id')]
+
+            r = client.post(
+                '/ws/{}/activity/'.format(user),
+                data=json.dumps(dict(
+                    action='subscribe_all',
+                    object_type='user',
+                    object_id=owner,
+                )),
+                content_type='application/json',
+                headers=[get_auth_header(user)])
+            self.assertEquals(r.status_code, 204)
+
+            r = client.get(
+                '/ws/{}/'.format(user),
+                query_string=dict(data=['activity', 'subscriptions']),
+                headers=[get_auth_header(user)])
+            user_data = json.loads(r.data)
+            self.assertListEqual([owner], user_data['activity']['user_subscribed'])
+            self.assertListEqual(channels, user_data['activity']['subscribed'])
+            self.assertListEqual(channels, [c['id'] for c in user_data['subscriptions']['items']])
+
+            r = client.post(
+                '/ws/{}/activity/'.format(user),
+                data=json.dumps(dict(
+                    action='unsubscribe_all',
+                    object_type='user',
+                    object_id=owner,
+                )),
+                content_type='application/json',
+                headers=[get_auth_header(user)])
+            self.assertEquals(r.status_code, 204)
+
+            r = client.get(
+                '/ws/{}/'.format(user),
+                query_string=dict(data=['activity', 'subscriptions']),
+                headers=[get_auth_header(user)])
+            user_data = json.loads(r.data)
+            self.assertListEqual([], user_data['activity']['user_subscribed'])
+            self.assertListEqual([], user_data['activity']['subscribed'])
+            self.assertListEqual([], [c['id'] for c in user_data['subscriptions']['items']])
+
     def test_activity_notifications(self):
         with self.app.test_client() as client:
             self.app.test_request_context().push()

@@ -46,6 +46,7 @@ ACTION_COLUMN_VALUE_MAP = dict(
     subscribe=('subscriber_count', 1),
     unsubscribe=('subscriber_count', -1),
     subscribe_all=('subscriber_count', 1),
+    unsubscribe_all=('subscriber_count', -1),
 )
 
 
@@ -216,6 +217,16 @@ def save_owner_activity(userid, action, ownerid, locale):
         ]
         if channels:
             _create_user_subscriptions(userid, channels, locale)
+    if action == 'unsubscribe_all':
+        subscriptions = _user_subscriptions_query(userid).join(
+            Channel, (Channel.id == Subscription.channel) & (Channel.owner == ownerid))
+        channel_ids = [c for c, in subscriptions.values(Channel.id)]
+        subscriptions.delete()
+        UserContentFeed.query.filter(
+            UserContentFeed.user == userid,
+            UserContentFeed.channel.in_(channel_ids)).delete(False)
+        for channel in channel_ids:
+            save_channel_activity(userid, 'unsubscribe', channel, locale)
 
 
 @commit_on_success
@@ -431,7 +442,7 @@ def user_activity(userid, locale, paging):
         recently_viewed=ids['view'],
         recently_starred=list(set(ids['star']) - set(ids['unstar'])),
         subscribed=list(set(ids['subscribe']) - set(ids['unsubscribe'])),
-        user_subscribed=list(set(ids['subscribe_all'])),
+        user_subscribed=list(set(ids['subscribe_all']) - set(ids['unsubscribe_all'])),
     )
 
 
