@@ -346,9 +346,9 @@ def _update_token(external_user, user):
 def _mark_read_notifications(userid, id_list):
     unread = UserNotification.query.filter_by(user=userid, date_read=None)
     unread_count = unread.count()
-    marked_read = unread.filter(
-        UserNotification.id.in_(id_list)
-    ).update({UserNotification.date_read: func.now()}, False)
+    if id_list:
+        unread = unread.filter(UserNotification.id.in_(id_list))
+    marked_read = unread.update({UserNotification.date_read: func.now()}, False)
 
     if marked_read and marked_read == unread_count:
         _apns_mark_unread(userid)

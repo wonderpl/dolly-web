@@ -1033,6 +1033,7 @@ Cache-Control: private, max-age=60
 ### Mark read
 
 Post a list of message ids to mark as read.
+If the list is empty then all unread messages will be marked.
 
 ```http
 POST /ws/oCRwcy5MRIiWmsJjvbFbHA/notifications/ HTTP/1.1
