@@ -54,7 +54,7 @@ class UserCoverArtView(AdminModelView):
 
     def update_model(self, form, model):
         prev_cover = model.cover.path
-        success = super(UserCoverArt, self).update_model(form, model)
+        success = super(UserCoverArtView, self).update_model(form, model)
         if success and isinstance(form.cover.data, basestring):
             # Update channels that refer to this cover
             models.Channel.query.filter_by(owner=model.owner, cover=prev_cover).update(
