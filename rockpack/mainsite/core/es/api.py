@@ -36,6 +36,8 @@ class ESObjectIndexer(object):
         },
     }
 
+    index_alias = 'dolly' if app.config.get('DOLLY') else 'rockpack'
+
     class InvalidIndexingType(Exception):
         pass
 

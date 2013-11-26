@@ -31,3 +31,7 @@ def import_user_categories():
 @timer
 def import_average_category():
     helpers.DBImport().import_average_category()
+
+@manager.command
+def migrate_index(doc_type):
+    helpers.ESAliasing.migrate_alias(doc_type)

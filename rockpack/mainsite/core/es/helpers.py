@@ -3,7 +3,7 @@ import time
 from datetime import datetime, timedelta
 from itertools import groupby
 from flask import json
-from pyes.exceptions import ElasticSearchException
+import pyes
 from sqlalchemy import distinct, func
 from sqlalchemy.orm import aliased
 from sqlalchemy.orm import joinedload
@@ -46,6 +46,112 @@ class Indexing(object):
     def create_all_mappings(self):
         for index in self.indexes.keys():
             self.create_mapping(index)
+
+
+class ESAliasing:
+
+    @staticmethod
+    def index_prefix_for_doc_type(doc_type):
+        prefix = 'dolly' if app.config.get('DOLLY') else 'rockpack'
+        return prefix + '_' + doc_type
+
+    @staticmethod
+    def build_new_index_name(name_part):
+        """ Builds a name from the current time in seconds since epoch,
+            the name_part and site name.
+            E.g. if name_part = 'channel'
+                    index_name = rockpack_channel_1385124160 """
+        index_prefix = ESAliasing.index_prefix_for_doc_type(name_part)
+        timestamp = datetime.utcnow().strftime("%s")
+        return '%s_%s' % (index_prefix, timestamp)
+
+    @staticmethod
+    def get_mapping_for_alias(alias):
+        return ESObjectIndexer.indexes[alias]['mapping']
+
+    @staticmethod
+    def new_index_for_type(doc_type, mapping):
+        index_name = ESAliasing.build_new_index_name(doc_type)
+        es_connection.create_index(index_name)
+        es_connection.put_mapping(doc_type=doc_type, mapping=mapping, indices=[index_name])
+        return index_name
+
+    @staticmethod
+    def migrate_alias(doc_type):
+        """ Creates a new index with the mapping specified
+            in the mappings file and reassigns the current
+            alias to the new index """
+
+        def prompt(msg):
+            val = raw_input(msg)
+            if val in 'Nn':
+                sys.exit(1)
+            if val in 'Yy':
+                return True
+            return False
+
+        # Get the current alias name e.g. rockpack, dolly
+        this_alias = ESObjectIndexer.index_alias
+
+        # Get the mapping for the doc_type in question
+        mapping = ESAliasing.get_mapping_for_alias(doc_type)
+
+        # Get all the indices assigned to the alias
+        # (hopefully should just be one)
+        try:
+            indices = es_connection.get_alias(this_alias)
+        except pyes.exceptions.IndexMissingException:
+            app.logger.error("No indices for alias '%s'", this_alias)
+            return
+
+        # Prefix we'll use to identify indices for the alias
+        index_prefix = this_alias + '_' + doc_type
+
+        # From the index list returned for the current alias,
+        # find all the ones that match the prefix (again, we
+        # should just find one)
+        existing_index = [i for i in indices if i.startswith(index_prefix)]
+
+        # If we get more than one, break out and leave
+        # to be handled manually by admin
+        if not existing_index:
+            app.logger.error("No indices matching prefix '%s' found for alias '%s'", index_prefix, this_alias)
+            return
+        elif len(existing_index) > 1:
+            app.logger.error("Unexpected number of indices (%s) for alias '%s'", len(existing_index), this_alias)
+            app.logger.info('Indices found: ' + ', '.join(indices))
+            return
+
+        existing_index = existing_index[0]
+
+        new_index = ''
+        try:
+            # Now make the new index
+            new_index = ESAliasing.new_index_for_type(doc_type, mapping)
+
+            # Reindex
+            reindex_query = {"query": {"match_all": {}}}
+            reindex_list = [new_index, doc_type, existing_index, doc_type]
+            app.logger.info('Re-indexing %s/%s to %s/%s', *reindex_list)
+            es_connection.reindex(*([json.dumps(reindex_query)] + reindex_list))
+
+            # Reassign alias
+            app.logger.info('Re-assigning alias to new index')
+            add_command = ('add', new_index, this_alias, {})
+            remove_command = ('remove', existing_index, this_alias, {})
+            es_connection.change_aliases([add_command, remove_command])
+        except Exception, e:
+            app.logger.error('Alias swap failed. Rolling back migration due to %s from %s', str(e), type(e))
+            app.logger.error('Deleting new index %s (existing index %s unaffected)', new_index, existing_index)
+            if new_index.strip():
+                es_connection.delete_index(new_index)
+            return
+
+        while(1):
+            if prompt("Delete old index? "):
+                if prompt("You sure you want to do that? "):
+                    es_connection.delete_index(existing_index)
+                    break
 
 
 class DBImport(object):
@@ -372,7 +478,7 @@ class DBImport(object):
                     c_id,
                     'ctx._source.video_terms = %s' % json.dumps(terms_list)
                 )
-            except ElasticSearchException, e:
+            except pyes.exceptions.ElasticSearchException, e:
                 print e
             total += 1
 

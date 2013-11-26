@@ -1,5 +1,5 @@
+import pyes
 from flask import request
-from pyes import ES
 from rockpack.mainsite import app
 
 
@@ -15,6 +15,24 @@ if es_url:
         update_connection_pool(app.config.get('ELASTICSEARCH_CONNECTION_POOL_MAXSIZE', 4))
 
 
+def pyes_reindex(self, doc, index, doc_type, search_index, search_type):
+    """ Requires https://github.com/karussell/elasticsearch-reindex installed
+        on instance where the target command is to be run
+
+        Reindexes an index from another index ie. get data from
+        http://localhost:9200/search_index/search_type/ and insert data in to this index"""
+
+    query_params = dict(searchIndex=search_index,
+        searchType=search_type)
+
+    path = pyes.utils.make_path(index, doc_type, '_reindex')
+    try:
+        return self._send_request('PUT', path, doc, params=query_params)
+    except pyes.exceptions.ElasticSearchException, e:
+        # Ignore this - pyes doesn't like that ES returns '' on a 200
+        pass
+
+
 def use_elasticsearch():
     return es_url and not (request and request.args.get('_es') == 'false')
 
@@ -23,7 +41,9 @@ def get_es_connection():
     """ Connection handler for elastic search """
     if not es_url:
         return None
-    return ES(es_url)
+    return pyes.ES(es_url)
 
 
+# Monkey patch reindex capability on to the ES()
+pyes.ES.reindex = pyes_reindex
 es_connection = get_es_connection()
