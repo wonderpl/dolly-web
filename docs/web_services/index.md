@@ -11,6 +11,53 @@ rockpack web services
 
 [Content sharing services](share.md)
 
+### Common Response Codes
+
+Code | Description
+:--- | :----------
+200  | OK
+201  | Used when a new resource has been created.  The response should include a `Location` header with the new resource url.
+400  | There was an issue with the data (url query param or request body) passed to the server. See discussion below.
+401  | The credentials in the `Authorization` header were invalid.
+403  | The user has been authenticated but doesn't have access to this resource.
+404  | Not found
+405  | The method used (GET, POST, etc) isn't allowed for this resource.
+500  | Something messed up on the server side. Worth retrying such requests.
+503  | The backend service is down, hopefully temporarily. Try again.
+504  | Timeout from backend service. Try again.
+
+### Error Responses
+
+There are two general formats to `400` error responses.
+
+When sending a single piece of data the response json will include a single error message in the `message` field.
+
+```http
+HTTP/1.1 400 BAD REQUEST
+Content-Type: application/json
+
+{
+ "error": "invalid_request",
+ "message": "Some error message goes here."
+}
+```
+
+If the error response relates to form-like data then the response json will include a `form_errors` field,
+which will  map form field names to a list of related error messages.
+
+```http
+HTTP/1.1 400 BAD REQUEST
+Content-Type: application/json
+
+{
+ "error": "invalid_request",
+ "form_errors": {
+  "field1": [ "Error message #1.", "Error message #2." ],
+  "field2": [ "Another error message." ]
+ }
+}
+```
+
 ## Service discovery
 
 ```http
@@ -82,39 +129,22 @@ Note that there is a very small performance penalty for looking up the location 
 should not be used on every request.
 
 
-## Common Response Codes
+## Feedback
 
-Code | Description
-:--- | :----------
-200  | OK
-201  | Used when a new resource has been created.  The response should include a `Location` header with the new resource url.
-400  | There was an issue with the data (url query param or request body) passed to the server. See discussion below.
-401  | The credentials in the `Authorization` header were invalid.
-403  | The user has been authenticated but doesn't have access to this resource.
-404  | Not found
-405  | The method used (GET, POST, etc) isn't allowed for this resource.
-500  | Something messed up on the server side. Worth retrying such requests.
-503  | The backend service is down, hopefully temporarily. Try again.
-504  | Timeout from backend service. Try again.
-
-### Error Responses
-
-There are two general formats to `400` error responses.
-
-When sending a single piece of data the response json will include a single error message in the `message` field.
+Send a `POST` request to `/ws/feedback/` with a message and optional score to submit user feedback.
 
 ```http
-HTTP/1.1 400 BAD REQUEST
+POST /ws/feedback/ HTTP/1.1
+Authorization: Bearer TOKEN
 Content-Type: application/json
 
 {
- "error": "invalid_request",
- "message": "Some error message goes here."
+ "message": "feedback message string",
+ "score": 5
 }
 ```
 
-If the error response relates to form-like data then the response json will include a `form_errors` field,
-which will  map form field names to a list of related error messages.
+A `form_errors` mapping will be returned if there's an error with the request.
 
 ```http
 HTTP/1.1 400 BAD REQUEST
@@ -123,8 +153,14 @@ Content-Type: application/json
 {
  "error": "invalid_request",
  "form_errors": {
-  "field1": [ "Error message #1.", "Error message #2." ],
-  "field2": [ "Another error message." ]
+  "message": ["Field cannot be longer than 1024 characters."],
+  "score": ["Number must be between 0 and 9."]
  }
 }
+```
+
+No content is returned on success.
+
+```http
+HTTP/1.1 204 NO CONTENT
 ```
