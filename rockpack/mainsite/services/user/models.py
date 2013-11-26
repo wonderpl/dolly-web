@@ -314,6 +314,21 @@ class Subscription(db.Model):
     resource_url = property(get_resource_url)
 
 
+class UserSubscriptionRecommendation(db.Model):
+    __tablename__ = 'user_subscription_recommendation'
+
+    id = Column(Integer, primary_key=True)
+    user = Column(ForeignKey('user.id'), nullable=False)
+    category = Column(ForeignKey('category.id'), nullable=False)
+    priority = Column(Integer, nullable=False, default='1')
+    filter = Column(String(1024))
+
+    user_rel = relationship('User')
+    category_rel = relationship('Category')
+
+    # TODO: Refactor filter properties & methods from BroadcastMessage to base class or mixin
+
+
 class BroadcastMessage(db.Model):
     __tablename__ = 'broadcast_message'
 

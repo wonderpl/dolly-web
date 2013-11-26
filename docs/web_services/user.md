@@ -1552,6 +1552,47 @@ Cache-Control: private, max-age=3600
 }
 ```
 
+User Recommendations
+====================
+
+Returns a list of channel owners which the current user is suggested to subscribe to.
+
+```http
+GET /ws/USERID/user_recommendations/?locale=LOCALE&start=START&size=SIZE HTTP/1.1
+Authorization: Bearer TOKEN
+```
+
+Parameter      | Required? | Value             | Description
+:------------- | :-------- | :---------------- | :----------
+locale         | yes       | IETF language tag | Results may be biased for the given locale
+start          | no        | 0-based integer   | Used for paging through the result items
+size           | no        | item page size    | Number of content items to return - 100 by default
+
+The response lists user items, including the assigned category and the profile description.
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+Cache-Control: private, max-age=3600
+
+{
+ "users": {
+  "total": 1,
+  "items": [
+   {
+    "position": 0,
+    "category": 122,
+    "id": "USERID",
+    "resource_url": "http://path/to/user/",
+    "display_name": "USERNAME",
+    "avatar_thumbnail_url": "http://path/to/avatar/medium.jpg",
+    "description": "some desc"
+   }
+  ]
+ }
+}
+```
+
 Friends
 =======
 

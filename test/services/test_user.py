@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 from mock import patch
 from test import base
 from test.assets import AVATAR_IMG_PATH
-from test.fixtures import ChannelData, VideoData, VideoInstanceData
+from test.fixtures import UserData, ChannelData, VideoData, VideoInstanceData, CategoryData
 from test.test_decorators import skip_unless_config
 from test.test_helpers import get_auth_header
 from test.test_helpers import get_client_auth_header
@@ -15,7 +15,8 @@ from rockpack.mainsite.services.video.models import Channel
 from rockpack.mainsite.services.oauth.api import ExternalUser
 from rockpack.mainsite.services.oauth.models import ExternalToken, ExternalFriend
 from rockpack.mainsite.services.user.models import (
-    User, UserActivity, UserAccountEvent, UserFlag, UserNotification, UserContentFeed, Subscription)
+    User, UserActivity, UserAccountEvent, UserFlag, UserNotification,
+    UserContentFeed, UserSubscriptionRecommendation, Subscription)
 from rockpack.mainsite.services.user import commands as cron_cmds
 from rockpack.mainsite.services.user.api import add_videos_to_channel
 
@@ -451,6 +452,23 @@ class TestUserContent(base.RockPackTestCase):
             first = channels[0]
             self.assertEquals(first['category'], 2)
             self.assertIn('cat-2-1.40', first['tracking_code'])
+
+    def test_user_recommendations(self):
+        UserSubscriptionRecommendation(
+            user=UserData.test_user_a.id,
+            category=CategoryData.Music.id,
+        ).save()
+        with self.app.test_client() as client:
+            user = self.create_test_user()
+            r = client.get(
+                '/ws/{}/user_recommendations/'.format(user.id),
+                headers=[get_auth_header(user.id)])
+            self.assertEquals(r.status_code, 200)
+            users = json.loads(r.data)['users']['items']
+            self.assertListEqual([UserData.test_user_a.id], [u['id'] for u in users])
+            # Recommended users should have description & category fields:
+            self.assertIn('description', users[0])
+            self.assertIn('category', users[0])
 
     def test_subscribe_all(self):
         with self.app.test_client() as client:

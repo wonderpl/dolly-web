@@ -34,7 +34,7 @@ from rockpack.mainsite.services.video import api as video_api
 from rockpack.mainsite.services.search import api as search_api
 from .models import (
     User, UserActivity, UserContentFeed, UserNotification, UserInterest,
-    Subscription, UserFlag, VISIBLE_USER_FLAGS)
+    Subscription, UserFlag, UserSubscriptionRecommendation, VISIBLE_USER_FLAGS)
 
 
 ACTION_COLUMN_VALUE_MAP = dict(
@@ -767,6 +767,30 @@ def _channel_recommendations(userid, locale, paging):
         locale, paging, None, cat_boosts, prefix_boosts, add_tracking, enable_promotion=False)
 
 
+def _user_recommendations(userid, locale, paging):
+    recs = UserSubscriptionRecommendation.query.join(User).\
+        options(contains_eager(UserSubscriptionRecommendation.user_rel)).\
+        filter(UserSubscriptionRecommendation.priority >= 0, User.is_active == True)
+
+    total = recs.count()
+    offset, limit = paging
+    recs = recs.order_by('priority desc').offset(offset).limit(limit)
+    items = []
+    for position, rec in enumerate(recs, offset):
+        user = rec.user_rel
+        # TODO: check rec.filter
+        items.append(dict(
+            position=position,
+            id=user.id,
+            resource_url=user.get_resource_url(),
+            display_name=user.display_name,
+            avatar_thumbnail_url=user.avatar.url,
+            description=user.description,
+            category=rec.category,
+        ))
+    return items, total
+
+
 def _channel_videos(channelid, locale, paging, own=False):
     # Nasty hack to ensure that old iOS app version get all videos for a users
     # own channel and doesn't try to request more.
@@ -1306,6 +1330,12 @@ class UserWS(WebService):
     def channel_recommendations(self, userid):
         items, total = _channel_recommendations(userid, self.get_locale(), self.get_page())
         return dict(channels=dict(items=items, total=total))
+
+    @expose_ajax('/<userid>/user_recommendations/', cache_age=3600, cache_private=True)
+    @check_authorization(self_auth=True)
+    def user_recommendations(self, userid):
+        items, total = _user_recommendations(userid, self.get_locale(), self.get_page())
+        return dict(users=dict(items=items, total=total))
 
     @expose_ajax('/<userid>/external_accounts/', cache_age=60, cache_private=True)
     @check_authorization(self_auth=True)

@@ -63,6 +63,18 @@ class UserCoverArtView(AdminModelView):
         return success
 
 
+class UserSubscriptionRecommendationView(AdminModelView):
+    model = models.UserSubscriptionRecommendation
+
+    column_list = ('user_rel', 'category_rel', 'priority')
+    column_filters = ('category',)
+    column_searchable_list = (models.User.username,)
+
+    form_ajax_refs = dict(
+        user_rel={'fields': (models.User.username,)},
+    )
+
+
 class ExternalTokenView(AdminModelView):
     model = auth_models.ExternalToken
 
