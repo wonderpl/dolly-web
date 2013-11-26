@@ -5,10 +5,21 @@ from flask import request
 from flask.ext.admin import expose
 from rockpack.mainsite import app
 from rockpack.mainsite.core.dbapi import readonly_session
-from .base import AuthenticatedView
+from .base import AdminView
 
 
-class ContentStatsView(AuthenticatedView):
+class StatsView(AdminView):
+
+    def __init__(self, *args, **kwargs):
+        name = self.__class__.__name__
+        if name.endswith('StatsView'):
+            name = name[:-9]
+        kwargs.setdefault('name', name)
+        kwargs.setdefault('endpoint', 'stats/%s' % name.lower())
+        super(StatsView, self).__init__(*args, **kwargs)
+
+
+class ContentStatsView(StatsView):
     @expose('/')
     def index(self):
         from rockpack.mainsite.services.video import models
@@ -75,7 +86,7 @@ class ContentStatsView(AuthenticatedView):
         )
 
 
-class AppStatsView(AuthenticatedView):
+class AppStatsView(StatsView):
     @expose('/')
     def index(self):
         from gviz_data_table import Table
@@ -108,7 +119,7 @@ class AppStatsView(AuthenticatedView):
         return self.render('admin/app_stats.html', **ctx)
 
 
-class ActivityStatsView(AuthenticatedView):
+class ActivityStatsView(StatsView):
     @expose('/')
     def index(self):
         from gviz_data_table import Table
@@ -132,7 +143,7 @@ class ActivityStatsView(AuthenticatedView):
         return self.render('admin/activity_stats.html', activity_data=table.encode())
 
 
-class RetentionStatsView(AuthenticatedView):
+class RetentionStatsView(StatsView):
     @expose('/')
     def index(self):
         from gviz_data_table import Table

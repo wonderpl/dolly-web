@@ -5,10 +5,9 @@ from flask.ext.admin.form import BaseForm, DateTimePickerWidget, RenderTemplateW
 from flask.ext.admin.model.fields import AjaxSelectField
 from flask.ext.admin.model.typefmt import Markup
 from flask.ext.admin.model.form import InlineFormAdmin
-from flask.ext.admin.contrib.sqla.ajax import create_ajax_loader
-from rockpack.mainsite.admin.models import AdminView
 from rockpack.mainsite.services.video import models
 from rockpack.mainsite.services.cover_art import models as coverart_models
+from .base import AdminModelView
 
 
 def _format_video_thumbnail(view, context, video, name):
@@ -28,8 +27,7 @@ class VideoInstanceLocaleMetaFormAdmin(InlineFormAdmin):
     form_columns = ('id', 'locale_rel')
 
 
-class Video(AdminView):
-    model_name = 'video'
+class VideoView(AdminModelView):
     model = models.Video
 
     column_list = ('title', 'date_updated', 'thumbnail', 'visible')
@@ -40,16 +38,16 @@ class Video(AdminView):
     inline_models = (models.VideoThumbnail,)
 
 
-class VideoThumbnail(AdminView):
-    model_name = 'video_thumbnail'
+class VideoThumbnailView(AdminModelView):
+    inline_model = True
     model = models.VideoThumbnail
 
     column_filters = ('video_rel',)
 
 
-class VideoInstanceLocaleMeta(AdminView):
+class VideoInstanceLocaleMetaView(AdminModelView):
+    inline_model = True
     model = models.VideoInstanceLocaleMeta
-    model_name = model.__tablename__
 
     column_filters = ('video_instance_rel', 'locale_rel',)
     form_ajax_refs = dict(
@@ -57,8 +55,7 @@ class VideoInstanceLocaleMeta(AdminView):
     )
 
 
-class VideoInstance(AdminView):
-    model_name = 'video_instance'
+class VideoInstanceView(AdminModelView):
     model = models.VideoInstance
 
     column_list = ('video_rel', 'video_channel', 'date_added', 'category_rel', 'thumbnail')
@@ -72,8 +69,7 @@ class VideoInstance(AdminView):
     #inline_models = (VideoInstanceLocaleMetaFormAdmin(models.VideoInstanceLocaleMeta),)
 
 
-class Source(AdminView):
-    model_name = 'source'
+class SourceView(AdminModelView):
     model = models.Source
 
 
@@ -85,8 +81,7 @@ class CategoryTranslationFormAdmin(InlineFormAdmin):
     pass
 
 
-class Category(AdminView):
-    model_name = 'category'
+class CategoryView(AdminModelView):
     model = models.Category
 
     column_list = ('name', 'parent_category', 'parent')
@@ -102,23 +97,21 @@ class Category(AdminView):
         CategoryTranslationFormAdmin(models.CategoryTranslation))
 
     def scaffold_filters(self, name):
-        filters = super(Category, self).scaffold_filters(name)
+        filters = super(CategoryView, self).scaffold_filters(name)
         # Allow filtering by "parent is NULL":
         if name == 'parent':
             filters[0].clean = lambda v: None if v == '' else v
         return filters
 
 
-class CategoryTranslation(AdminView):
-    model_name = models.CategoryTranslation.__tablename__
+class CategoryTranslationView(AdminModelView):
     model = models.CategoryTranslation
 
     column_searchable_list = ('name',)
     column_filters = ('locale', 'name', 'category_rel')
 
 
-class Locale(AdminView):
-    model_name = 'locale'
+class LocaleView(AdminModelView):
     model = models.Locale
 
     column_list = ('id', 'name')
@@ -134,8 +127,7 @@ def _format_channel_video_count(view, context, channel, name):
     return Markup('{}'.format(count))
 
 
-class Channel(AdminView):
-    model_name = 'channel'
+class ChannelView(AdminModelView):
     model = models.Channel
 
     column_auto_select_related = True
@@ -205,7 +197,7 @@ class ChannelPromotionForm(BaseForm):
 
     def __init__(self, *args, **kwargs):
         super(ChannelPromotionForm, self).__init__(*args, **kwargs)
-        self.channel_rel.loader = ChannelPromotion()._form_ajax_refs['channel_rel']
+        self.channel_rel.loader = ChannelPromotionView()._form_ajax_refs['channel_rel']
         self.category.choices = category_list()
         self.locale.choices = [(l.id, l.name) for l in models.Locale.query.all()]
 
@@ -261,8 +253,7 @@ class ChannelPromotionForm(BaseForm):
         return True
 
 
-class ChannelPromotion(AdminView):
-    model_name = 'channel_promotion'
+class ChannelPromotionView(AdminModelView):
     model = models.ChannelPromotion
 
     form = ChannelPromotionForm
@@ -276,9 +267,8 @@ class ChannelPromotion(AdminView):
     column_filters = ('channel_rel', 'category_rel', 'locale_rel', 'position', 'date_added', 'date_updated', 'date_start', 'date_end')
 
 
-class RockpackCoverArt(AdminView):
+class RockpackCoverArtView(AdminModelView):
     model = coverart_models.RockpackCoverArt
-    model_name = coverart_models.RockpackCoverArt.__tablename__
 
     column_list = ('locale_rel', 'cover.url', 'category_rel')
     column_filters = ('locale_rel', 'category_rel')
@@ -288,59 +278,18 @@ class RockpackCoverArt(AdminView):
     create_template = 'admin/cover_art_create.html'
 
 
-class UserCoverArt(AdminView):
-    model = coverart_models.UserCoverArt
-    model_name = coverart_models.UserCoverArt.__tablename__
-
-    column_list = ('owner_rel', 'cover.url', 'date_created')
-    column_filters = ('owner_rel',)
-
-    form_ajax_refs = dict(
-        owner_rel={'fields': (models.User.username,)},
-    )
-
-    edit_template = 'admin/cover_art_edit.html'
-    create_template = 'admin/cover_art_create.html'
-
-    def update_model(self, form, model):
-        prev_cover = model.cover.path
-        success = super(UserCoverArt, self).update_model(form, model)
-        if success and isinstance(form.cover.data, basestring):
-            # Update channels that refer to this cover
-            models.Channel.query.filter_by(owner=model.owner, cover=prev_cover).update(
-                dict(cover=model.cover.path, cover_aoi=model.cover_aoi))
-            self.session.commit()
-        return success
-
-
-class ChannelLocaleMeta(AdminView):
-    model_name = 'channel_locale_meta'
+class ChannelLocaleMetaView(AdminModelView):
+    inline_model = True
     model = models.ChannelLocaleMeta
 
     column_filters = ('channel_rel', 'channel_locale')
 
 
-class ContentReport(AdminView):
-    model_name = 'content_report'
+class ContentReportView(AdminModelView):
     model = models.ContentReport
 
     column_filters = ('date_created', 'reviewed', 'object_type')
 
 
-class ExternalCategoryMap(AdminView):
-    model_name = 'external_category_map'
+class ExternalCategoryMapView(AdminModelView):
     model = models.ExternalCategoryMap
-
-
-registered = [
-    Video, VideoInstance,
-    Source, Category, CategoryTranslation, Locale, RockpackCoverArt,
-    UserCoverArt, Channel, ChannelPromotion,
-    ContentReport, ExternalCategoryMap]
-
-
-def admin_views():
-    for v in registered:
-        yield v(name=v.__name__,
-                endpoint=v.model_name,
-                category='Content',)

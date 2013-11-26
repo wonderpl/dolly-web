@@ -20,7 +20,7 @@ from rockpack.mainsite.services.cover_art.models import UserCoverArt
 from rockpack.mainsite.services.user.models import User
 from rockpack.mainsite.services.oauth.api import RockRegistrationForm
 from .models import AdminLogRecord
-from .base import AuthenticatedView
+from .base import AdminView
 
 
 class ImportForm(form.BaseForm):
@@ -92,7 +92,7 @@ class UserForm(RockRegistrationForm):
             raise ValidationError('No file chosen')
 
 
-class ImportView(AuthenticatedView):
+class ImportView(AdminView):
 
     @commit_on_success
     def _import_videos(self, form):
