@@ -64,7 +64,7 @@ def test():
 
 
 @manager.command
-def recreate_db(options):
+def recreate_db():
     """Drops and re-creates database"""
     from rockpack import mainsite
     from rockpack.mainsite.core import dbapi
@@ -77,7 +77,7 @@ def recreate_db(options):
 
 
 @manager.command
-def syncdb(options):
+def syncdb():
     """Create all db tables"""
     from rockpack.mainsite.core import dbapi
     dbapi.sync_database()
