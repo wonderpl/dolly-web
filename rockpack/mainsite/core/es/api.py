@@ -20,23 +20,21 @@ class ESObjectIndexer(object):
 
     indexes = {
         'channel': {
-            'index': mappings.CHANNEL_INDEX,
+            'index': mappings.INDEX,
             'type': mappings.CHANNEL_TYPE,
             'mapping': mappings.channel_mapping
         },
         'video': {
-            'index': mappings.VIDEO_INDEX,
+            'index': mappings.INDEX,
             'type': mappings.VIDEO_TYPE,
             'mapping': mappings.video_mapping
         },
         'user': {
-            'index': mappings.USER_INDEX,
+            'index': mappings.INDEX,
             'type': mappings.USER_TYPE,
             'mapping': mappings.user_mapping
         },
     }
-
-    index_alias = 'dolly' if app.config.get('DOLLY') else 'rockpack'
 
     class InvalidIndexingType(Exception):
         pass

@@ -52,16 +52,18 @@ class ESAliasing:
 
     @staticmethod
     def index_prefix_for_doc_type(doc_type):
-        prefix = 'dolly' if app.config.get('DOLLY') else 'rockpack'
-        return prefix + '_' + doc_type
+        index = ESObjectIndexer.indexes[doc_type]['index']
+        # Sanity check
+        real_doc_type = ESObjectIndexer.indexes[doc_type]['type']
+        return index + '_' + real_doc_type
 
     @staticmethod
-    def build_new_index_name(name_part):
+    def build_new_index_name(doc_type):
         """ Builds a name from the current time in seconds since epoch,
             the name_part and site name.
             E.g. if name_part = 'channel'
                     index_name = rockpack_channel_1385124160 """
-        index_prefix = ESAliasing.index_prefix_for_doc_type(name_part)
+        index_prefix = ESAliasing.index_prefix_for_doc_type(doc_type)
         timestamp = datetime.utcnow().strftime("%s")
         return '%s_%s' % (index_prefix, timestamp)
 
@@ -75,6 +77,96 @@ class ESAliasing:
         es_connection.create_index(index_name)
         es_connection.put_mapping(doc_type=doc_type, mapping=mapping, indices=[index_name])
         return index_name
+
+
+class Aliasing(object):
+
+    conn = es_connection
+
+    def __init__(self, doc_type):
+        self.doc_type = doc_type
+
+        # Get the current index alias name for the real index e.g. rockpack, dolly
+        self.alias = ESObjectIndexer.indexes[doc_type]['index']
+
+        # Get the mapping for the doc_type in question
+        self.mapping = ESObjectIndexer.indexes[doc_type]['mapping']
+
+        # Prefix we'll use to identify indices for the alias
+        self.prefix = self.alias + '_' + doc_type
+
+    @classmethod
+    def get_indices_for(cls, alias):
+        """ Get all the indices assigned to `alias` """
+        try:
+            indices = cls.conn.get_alias(alias)
+        except pyes.exceptions.IndexMissingException:
+            raise exceptions.IndexMissing("No indices for alias '%s'", alias)
+        else:
+            return indices
+
+    @classmethod
+    def generate_new_index_name(cls, prefix):
+        """ Builds a name from the current time
+            in seconds since epoch and the index prefix
+            e.g. rockpack_channel_1385124160 """
+
+        timestamp = datetime.utcnow().strftime("%s")
+        return '%s_%s' % (prefix, timestamp)
+
+    @classmethod
+    def reindex(cls, source_index, source_type, target_index, target_type):
+        """ Takes a source index/type and reindexes to a target source/type """
+        reindex_query = {"query": {"match_all": {}}}
+        reindex_list = [target_index, target_type, source_index, source_type]
+        app.logger.info('Re-indexing %s/%s to %s/%s', *reindex_list)
+        cls.conn.reindex(*([json.dumps(reindex_query)] + reindex_list))
+
+    @classmethod
+    def reassign(cls, alias, source_index, target_index):
+        """ Takes a source index and reassigns the
+            associated alias to the target index (add/delete op) """
+        app.logger.info('Re-assigning alias to new index')
+        add_command = ('add', target_index, alias, {})
+        remove_command = ('remove', source_index, alias, {})
+        cls.conn.change_aliases([add_command, remove_command])
+
+    @classmethod
+    def delete_index(cls, index):
+        cls.conn.delete_index(index)
+
+    def get_current_index(self):
+        # From the index list returned for the current alias,
+        # find all the ones that match the prefix (again, we
+        # should just find one)
+        indices = self.get_indices_for(self.alias)
+        existing_index = [i for i in indices if i.startswith(self.prefix)]
+
+        # If we get more than one, break out and leave
+        # to be handled manually by admin
+        if not existing_index:
+            raise exceptions.ExpectedIndex("No indices matching prefix '%s' found for alias '%s'" % (self.prefix, self.alias))
+        elif len(existing_index) > 1:
+            raise exceptions.MultipleIndicesFound("Unexpected number of indices (%s) for alias '%s'" % (len(existing_index), self.alias))
+
+        return existing_index[0]
+
+    def create_new_index(self):
+        index_name = self.generate_new_index_name(self.prefix)
+        es_connection.create_index(index_name)
+        es_connection.put_mapping(doc_type=self.doc_type, mapping=self.mapping, indices=[index_name])
+        return index_name
+
+    def reindex_to(self, target):
+        """ Helper method to reindex `self.doc_type`from the
+            existing index info stored with `self` in to a new index. """
+
+        self.reindex(self.get_current_index(), self.doc_type, target, self.doc_type)
+
+    def reassign_to(self, target):
+        self.reassign(self.alias, self.get_current_index(), target)
+
+class ESMigration(object):
 
     @staticmethod
     def migrate_alias(doc_type):
@@ -90,67 +182,25 @@ class ESAliasing:
                 return True
             return False
 
-        # Get the current alias name e.g. rockpack, dolly
-        this_alias = ESObjectIndexer.index_alias
-
-        # Get the mapping for the doc_type in question
-        mapping = ESAliasing.get_mapping_for_alias(doc_type)
-
-        # Get all the indices assigned to the alias
-        # (hopefully should just be one)
-        try:
-            indices = es_connection.get_alias(this_alias)
-        except pyes.exceptions.IndexMissingException:
-            app.logger.error("No indices for alias '%s'", this_alias)
-            return
-
-        # Prefix we'll use to identify indices for the alias
-        index_prefix = this_alias + '_' + doc_type
-
-        # From the index list returned for the current alias,
-        # find all the ones that match the prefix (again, we
-        # should just find one)
-        existing_index = [i for i in indices if i.startswith(index_prefix)]
-
-        # If we get more than one, break out and leave
-        # to be handled manually by admin
-        if not existing_index:
-            app.logger.error("No indices matching prefix '%s' found for alias '%s'", index_prefix, this_alias)
-            return
-        elif len(existing_index) > 1:
-            app.logger.error("Unexpected number of indices (%s) for alias '%s'", len(existing_index), this_alias)
-            app.logger.info('Indices found: ' + ', '.join(indices))
-            return
-
-        existing_index = existing_index[0]
+        aliasing = Aliasing(doc_type)
 
         new_index = ''
         try:
-            # Now make the new index
-            new_index = ESAliasing.new_index_for_type(doc_type, mapping)
-
-            # Reindex
-            reindex_query = {"query": {"match_all": {}}}
-            reindex_list = [new_index, doc_type, existing_index, doc_type]
-            app.logger.info('Re-indexing %s/%s to %s/%s', *reindex_list)
-            es_connection.reindex(*([json.dumps(reindex_query)] + reindex_list))
-
-            # Reassign alias
-            app.logger.info('Re-assigning alias to new index')
-            add_command = ('add', new_index, this_alias, {})
-            remove_command = ('remove', existing_index, this_alias, {})
-            es_connection.change_aliases([add_command, remove_command])
+            old_index = aliasing.get_current_index()
+            new_index = aliasing.create_new_index()
+            aliasing.reindex_to(new_index)
+            aliasing.reassign_to(new_index)
         except Exception, e:
             app.logger.error('Alias swap failed. Rolling back migration due to %s from %s', str(e), type(e))
-            app.logger.error('Deleting new index %s (existing index %s unaffected)', new_index, existing_index)
             if new_index.strip():
-                es_connection.delete_index(new_index)
+                app.logger.error('Deleting new index %s (existing index %s unaffected)', new_index, old_index)
+                aliasing.delete_index(old_index)
             return
 
         while(1):
             if prompt("Delete old index? "):
                 if prompt("You sure you want to do that? "):
-                    es_connection.delete_index(existing_index)
+                    aliasing.delete_index(old_index)
                     break
 
 
@@ -376,7 +426,7 @@ class DBImport(object):
                         str(list(set([u.encode('utf8') for v, u in group]))[:5])
                     )
                     ec.update()
-                except ElasticSearchException:
+                except pyes.exceptions.ElasticSearchException:
                     missing += 1
                 done += 1
                 self.print_percent_complete(done, total)
@@ -411,7 +461,7 @@ class DBImport(object):
                             instance_id,
                             "ctx._source.country_restriction.%s = %s" % (relationship, str(countries),)
                         )
-                    except ElasticSearchException, e:
+                    except pyes.exceptions.ElasticSearchException, e:
                         missing += 1
 
                     total += 1

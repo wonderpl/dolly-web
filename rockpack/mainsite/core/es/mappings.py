@@ -1,15 +1,6 @@
 from rockpack.mainsite import app
 
-if app.config.get('DOLLY', False):
-    # Dolly uses a single index for
-    # all of the types below
-    CHANNEL_INDEX = 'dolly'
-    VIDEO_INDEX = 'dolly'
-    USER_INDEX = 'dolly'
-else:
-    CHANNEL_INDEX = 'channels'
-    VIDEO_INDEX = 'videos'
-    USER_INDEX = 'users'
+INDEX = 'dolly' if app.config.get('DOLLY', False) else 'rockpack'
 
 CHANNEL_TYPE = 'channel'
 VIDEO_TYPE = 'video'
