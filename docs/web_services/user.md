@@ -742,6 +742,9 @@ Content-Type: application/json
      "id": "Tr3dHIt5_K9qdG",
      "title": "Star Trek Into Darkness - Extra Footage Japanese Teaser (HD)",
      "date_added": "2012-12-06T08:28:05.000Z",
+     "category": 124,
+     "child_instance_count": 0,
+     "channel_title": "Trending and featured",
      "video": {
       "id": "RP000001TWSWZX4WH7EFFE44AUBVWI6OXALNKFTP",
       "source": "youtube",
@@ -755,6 +758,44 @@ Content-Type: application/json
  }
 }
 ```
+
+### Individual Video
+
+Get a single video instance
+
+```http
+GET /ws/USERID/channels/CID/videos/INSTANCEID/ HTTP/1.1
+```
+
+Returns a single video instance
+
+
+```http
+HTTP/1.1 200 OK
+Cache-Control: public, max-age=60
+Content-Type: application/json
+
+
+    {
+     "position": 0,
+     "id": "Tr3dHIt5_K9qdG",
+     "title": "Star Trek Into Darkness - Extra Footage Japanese Teaser (HD)",
+     "date_added": "2012-12-06T08:28:05.000Z",
+     "category": 124,
+     "child_instance_count": 0,
+     "channel_title": "Trending and featured",
+     "video": {
+      "id": "RP000001TWSWZX4WH7EFFE44AUBVWI6OXALNKFTP",
+      "source": "youtube",
+      "source_id": "BrHlQUXFzfw",
+      "source_username": "yt user",
+      "thumbnail_url": "http://i.ytimg.com/vi/BrHlQUXFzfw/0.jpg",
+      "star_count": "4455"
+     }
+    }
+
+```
+
 
 ### Update
 
