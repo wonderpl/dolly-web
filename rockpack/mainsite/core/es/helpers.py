@@ -116,6 +116,10 @@ class ESMigration(object):
             aliasing.reindex_to(new_index)
             aliasing.integrity_check(old_index, new_index, aliasing.doc_type)
             aliasing.reassign_to(new_index)
+            # Final reindex to catch any missed imports
+            # But lets give it some time to settle first
+            time.sleep(2)
+            aliasing.reindex_to(new_index, with_version=True)
         except Exception, e:
             app.logger.error('Alias swap failed. Rolling back migration because %s from %s', str(e), type(e))
             if new_index.strip():

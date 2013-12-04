@@ -89,12 +89,12 @@ class Aliasing(object):
         return '%s_%s' % (prefix, timestamp)
 
     @classmethod
-    def reindex(cls, source_index, source_type, target_index, target_type):
+    def reindex(cls, source_index, source_type, target_index, target_type, with_version=False):
         """ Takes a source index/type and reindexes to a target source/type """
         reindex_query = {"query": {"match_all": {}}}
         reindex_list = [target_index, target_type, source_index, source_type]
         app.logger.info('Re-indexing %s/%s to %s/%s', *reindex_list)
-        cls.conn.reindex(*([json.dumps(reindex_query)] + reindex_list))
+        cls.conn.reindex(*([json.dumps(reindex_query)] + reindex_list), with_version=with_version)
 
     @classmethod
     def assign(cls, alias, target_index):
@@ -123,11 +123,12 @@ class Aliasing(object):
         self.conn.put_mapping(doc_type=self.doc_type, mapping=self.mapping, indices=[index_name])
         return index_name
 
-    def reindex_to(self, target):
+    def reindex_to(self, target, with_version=False):
         """ Helper method to reindex `self.doc_type`from the
             existing index info stored with `self` in to a new index. """
 
-        self.reindex(self.get_current_index(self.doc_type), self.doc_type, target, self.doc_type)
+        self.reindex(self.get_current_index(self.doc_type), self.doc_type,
+            target, self.doc_type, with_version=with_version)
 
     def reassign_to(self, target):
         self.reassign(self.alias, self.get_current_index(self.doc_type), target)

@@ -15,7 +15,7 @@ if es_url:
         update_connection_pool(app.config.get('ELASTICSEARCH_CONNECTION_POOL_MAXSIZE', 4))
 
 
-def pyes_reindex(self, doc, index, doc_type, search_index, search_type):
+def pyes_reindex(self, doc, index, doc_type, search_index, search_type, with_version=False):
     """ Requires https://github.com/karussell/elasticsearch-reindex installed
         on instance where the target command is to be run
 
@@ -24,7 +24,7 @@ def pyes_reindex(self, doc, index, doc_type, search_index, search_type):
 
     query_params = dict(searchIndex=search_index,
         searchType=search_type,
-        withVersion=True)
+        withVersion=with_version)
 
     path = pyes.utils.make_path(index, doc_type, '_reindex')
     try:
