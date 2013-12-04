@@ -4,6 +4,7 @@ from . import mappings
 from . import es_connection
 from . import exceptions
 from . import filters
+from rockpack.mainsite.core.es.api import ESObjectIndexer
 from rockpack.mainsite import app
 from rockpack.mainsite.helpers.urls import url_for
 from rockpack.mainsite.services.video.models import Source
@@ -150,7 +151,7 @@ class EntitySearch(object):
         return result
 
     def get_index_name(self):
-        return getattr(mappings, self.entity.upper() + '_INDEX')
+        return ESObjectIndexer.indexes[self.entity.lower()]['index']
 
     def get_type_name(self):
         return getattr(mappings, self.entity.upper() + '_TYPE')

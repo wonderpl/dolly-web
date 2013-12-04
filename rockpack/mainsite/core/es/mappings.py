@@ -1,10 +1,14 @@
 from rockpack.mainsite import app
 
-INDEX = 'dolly' if app.config.get('DOLLY', False) else 'rockpack'
+app_prefix = 'dolly' if app.config.get('DOLLY', False) else 'rockpack'
 
 CHANNEL_TYPE = 'channel'
 VIDEO_TYPE = 'video'
 USER_TYPE = 'user'
+
+CHANNEL_INDEX = app_prefix + '_channel'
+VIDEO_INDEX = app_prefix + '_video'
+USER_INDEX = app_prefix + '_user'
 
 locale_count_dict = {
     "properties": {

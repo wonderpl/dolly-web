@@ -24,3 +24,7 @@ class ExpectedIndex(Exception):
 
 class MultipleIndicesFound(Exception):
     pass
+
+
+class IntegrityError(Exception):
+    pass
