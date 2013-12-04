@@ -57,6 +57,10 @@ CLIENT_IDS = ROCKPACK_APP_CLIENT_ID, ROCKPACK_JS_CLIENT_ID
 
 IGNORE_ACCESS_TOKEN = False
 
+OOYALA_PLAYER_ID = 'a6fbe9091fbb4adaa7a28ad75d4d4031'
+OOYALA_API_KEY = 'YzYW8xOshpVwePawyVliU0L_tBj_.yPTX2'
+OOYALA_SECRET = 'xxx'
+
 # The "Mozilla Gecko" seems to be necessary for the gdata api to encode with gzip!
 USER_AGENT = 'rockpack/%s (Mozilla Gecko)' % VERSION
 

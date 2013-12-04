@@ -18,3 +18,4 @@ requests>=1.1.0
 pyes>=0.20.1
 apns-client
 gdata==2.0.17
+#git+git://github.com/ooyala/python-v2-sdk.git@05dd28ee2f903572831716dabd5a3c4b47691cde

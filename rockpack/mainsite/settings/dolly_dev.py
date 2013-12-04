@@ -13,6 +13,8 @@ DATABASE_URL = 'postgresql://mainsite:%s@db1/dolly' % DB_PASSWORD
 GOOGLE_CONSUMER_KEY = '981375550038-dbckr7s2hb5rsaohj9j4fhl0cbu4col7.apps.googleusercontent.com'
 GOOGLE_CONSUMER_SECRET = _decrypt('d3So=\x9e\xa7\x02\x97\xd5`\x1a\xae\x8f\xc5\xd1\xc3D\x07\x8fr"\xa1\x81')
 
+OOYALA_SECRET = _decrypt('UE\xec\x0c\xfe\x00\x0c\x84\xa1\x88\xf3<\xbc\x19</\x18s4\x8a\xa5#\xec\x0e\x89\xa3\xb7\x15\xc0i\xaeS~\x8f#5\xc4\xea\xab\x96')
+
 #ASSETS_URL = '//dolly.dev.rockpack.com/static'
 IMAGE_CDN = 'http://media.dolly.dev.rockpack.com'
 S3_BUCKET = 'media.dolly.dev.rockpack.com'

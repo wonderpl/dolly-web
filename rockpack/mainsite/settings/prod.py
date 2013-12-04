@@ -12,6 +12,8 @@ SLAVE_DATABASE_URL = DATABASE_URL.replace('db1', 'db2')
 GOOGLE_CONSUMER_KEY = '981375550038-9kntj6ktabchpfouhvi8hpq082j7m3rd.apps.googleusercontent.com'
 GOOGLE_CONSUMER_SECRET = _decrypt('\xb1u#\xfd-\xbf\xb3\xcb\xf7\xfc1~\xc2m&I\xab\x93+\xc0%\x9eOB')
 
+OOYALA_SECRET = _decrypt('\x9eA\xca\x87\x83\xe0\xdf\r\x82H<\xb6\x8a\x87\xb4 B\xb5\xb5\x82$\x06x\xd2\xe5>P\x82\xb1^\x91J\xa9\xcb]\x89L\x92\xc4i')
+
 ASSETS_URL = '//d1ndbcg4lpnkzx.cloudfront.net/static'
 IMAGE_CDN = 'http://media.us.rockpack.com'
 S3_BUCKET = 'media.us.rockpack.com'

@@ -11,7 +11,7 @@ from flask.ext.admin import expose, form
 from wtforms.validators import ValidationError
 from rockpack.mainsite import requests
 from rockpack.mainsite.core.dbapi import commit_on_success, db
-from rockpack.mainsite.core import youtube
+from rockpack.mainsite.core import youtube, ooyala
 from rockpack.mainsite.helpers.db import resize_and_upload
 from rockpack.mainsite.services.pubsubhubbub.api import subscribe
 from rockpack.mainsite.services.video.models import (
@@ -57,25 +57,33 @@ class ImportForm(form.BaseForm):
                 return
             UserCoverArt(cover=self.cover.data, owner=self.user.data).save()
 
+        source_label = Source.id_to_label(self.source.data)
+
         if self.commit.data:
             # channel & category is required before commit
             if self.category.data == -1:
                 self.category.errors = ['Please select a category']
                 return
-            if not self.channel.data and self.user.data:
+            if not self.channel.data and (source_label != 'youtube' or self.user.data):
                 self.channel.errors = ['Please select a channel']
                 return
 
-        if self.source.data == 1:   # youtube
+        if source_label == 'youtube':
             get_data = getattr(youtube, 'get_%s_data' % self.type.data)
-            try:
-                # get all data only if we are ready to commit
-                self.import_data = get_data(self.id.data, self.commit.data)
-            except Exception, ex:
-                logging.exception('Unable to import %s: %s', self.type.data, self.id.data)
-                self._errors = {'__all__': 'Internal error: %r' % ex}
-            else:
-                return True
+        elif source_label == 'ooyala' and self.type.data == 'video':
+            get_data = ooyala.get_video_data
+        else:
+            self._errors = {'__all__': 'Unsupported source'}
+            return
+
+        try:
+            # get all data only if we are ready to commit
+            self.import_data = get_data(self.id.data, self.commit.data)
+        except Exception, ex:
+            logging.exception('Unable to import %s: %s', self.type.data, self.id.data)
+            self._errors = {'__all__': 'Internal error: %r' % ex}
+        else:
+            return True
 
 
 class UserForm(RockRegistrationForm):
@@ -116,7 +124,7 @@ class ImportView(AdminView):
             channel = Channel.query.get_or_404(channelid)
         channel.add_videos(form.import_data.videos, form.tags.data, date_added=form.date_added.data)
         self.record_action('imported', channel, '%d videos' % count)
-        push_config = form.import_data.push_config
+        push_config = getattr(form.import_data, 'push_config', None)
         if push_config and channel.id:
             try:
                 subscribe(push_config.hub, push_config.topic, channel.id)
