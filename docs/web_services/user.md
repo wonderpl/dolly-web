@@ -91,6 +91,9 @@ Cache-Control: public, max-age=60
         "cover": {
           "thumbnail_url": "http://path/to/channel/cover.jpg",
           "aoi": [0, 0, 1, 1],
+        },
+        "videos": {
+          "total": 123
         }
       }
     ]
@@ -1247,6 +1250,9 @@ Content-Type: application/json
     "cover": {
       "thumbnail_url": "http://path/to/channel/cover.jpg",
       "aoi": [0, 0, 1, 1],
+    },
+    "videos": {
+      "total": 123
     },
     "owner": {
      "id": "qC3ZtYRqQNCAUzrsIeWmUg",

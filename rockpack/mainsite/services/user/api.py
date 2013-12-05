@@ -376,17 +376,30 @@ def _user_subscriptions_query(userid):
     return Subscription.query.filter_by(user=userid)
 
 
-def user_subscriptions(userid, locale, paging):
+def user_subscriptions(userid, locale, paging, own=True):
     subscriptions = _user_subscriptions_query(userid)
-    if not subscriptions.count():
+    total = subscriptions.count()
+    if not total:
         return dict(items=[], total=0)
-    subs = {s[0]: s[1] for s in subscriptions.values('channel', 'date_created')}
-    items, total = video_api.get_db_channels(locale, paging, channels=subs.keys())
+    offset, limit = paging
+    subs = dict(subscriptions.order_by('date_created desc').
+                offset(offset).limit(limit).values('channel', 'date_created'))
+
+    if not own and use_elasticsearch():
+        cs = es_search.ChannelSearch(locale)
+        cs.add_id(subs.keys())
+        items = cs.channels(with_owners=True)
+    else:
+        items = video_api.get_db_channels(
+            locale, paging, channels=subs.keys(), with_video_counts=True)[0]
+
     items = [item for date, item in
              sorted([(subs[i['id']], i) for i in items], reverse=True)]
-    for item in items:
+    for position, item in enumerate(items):
+        item['position'] = position
         item['subscription_resource_url'] =\
             url_for('userws.delete_subscription_item', userid=userid, channelid=item['id'])
+
     return dict(items=items, total=total)
 
 
@@ -409,16 +422,31 @@ def _create_user_subscriptions(userid, channels, locale=None):
     return subscriptions
 
 
-def user_channels(userid, locale, paging, tracking_prefix='ownprofile'):
+def user_channels(userid, locale, paging, own=True):
+    add_tracking = partial(_add_tracking, prefix='ownprofile' if own else 'profile')
+
     channels = Channel.query.options(lazyload('owner_rel'), lazyload('category_rel')).\
         filter_by(owner=userid, deleted=False)
+    if not own:
+        channels = channels.filter_by(public=True)
+
     total = channels.count()
     offset, limit = paging
-    channels = channels.order_by('favourite desc', 'date_added desc').\
-        offset(offset).limit(limit)
-    items = [video_api.channel_dict(c, p, with_owner=False, owner_url=True,
-                                    add_tracking=partial(_add_tracking, prefix=tracking_prefix))
-             for p, c in enumerate(channels)]
+    channels = channels.outerjoin(
+        VideoInstance,
+        VideoInstance.channel == Channel.id
+    ).order_by(
+        Channel.favourite.desc(),
+        Channel.date_added.desc() if own else Channel.date_updated.desc(),
+    ).with_entities(Channel, func.count()).group_by(Channel.id)
+
+    items = [
+        video_api.channel_dict(channel, position, with_owner=False, owner_url=own,
+                               video_count=video_count, add_tracking=add_tracking)
+        for position, (channel, video_count) in
+        enumerate(channels.offset(offset).limit(limit), offset)
+    ]
+
     return dict(items=items, total=total)
 
 
@@ -876,12 +904,8 @@ class UserWS(WebService):
             user['channels']['total'] = ch.total
         else:
             user = _base_user_info(User.query.get_or_404(userid))
-            channels = [video_api.channel_dict(c, p, owner_url=False,
-                                               with_owner=False, add_tracking=add_tracking)
-                        for p, c in enumerate(Channel.query.options(lazyload('category_rel')).
-                        filter_by(owner=userid, deleted=False, public=True).
-                        order_by('favourite desc', 'channel.date_updated desc'))]
-            user['channels'] = dict(items=channels, total=len(channels))
+            user['channels'] =\
+                user_channels(userid, self.get_locale(), self.get_page(), own=False)
         return user
 
     @expose_ajax('/<userid>/', cache_private=True)
@@ -1272,8 +1296,10 @@ class UserWS(WebService):
             abort(404)
 
     @expose_ajax('/<userid>/subscriptions/')
+    @check_authorization(abort_on_fail=False)
     def get_subscriptions(self, userid):
-        return dict(channels=user_subscriptions(userid, self.get_locale(), self.get_page()))
+        return dict(channels=user_subscriptions(
+            userid, self.get_locale(), self.get_page(), own=g.authorized.userid == userid))
 
     @expose_ajax('/<userid>/subscriptions/', methods=['POST'])
     @check_authorization(self_auth=True)

@@ -2,7 +2,7 @@ import wtforms as wtf
 from flask import request, abort
 from flask.ext.wtf import Form
 from collections import defaultdict
-from sqlalchemy import func
+from sqlalchemy import func, null
 from sqlalchemy.orm import contains_eager, lazyload, joinedload
 from sqlalchemy.sql.expression import desc
 from rockpack.mainsite import app
@@ -25,7 +25,7 @@ def _filter_by_category(query, type, category_id):
     return query.filter(type.category.in_(cat_ids))
 
 
-def channel_dict(channel, position=None, with_owner=True, owner_url=False, add_tracking=None):
+def channel_dict(channel, position=None, with_owner=True, owner_url=False, video_count=None, add_tracking=None):
     ch_data = dict(
         id=channel.id,
         resource_url=channel.get_resource_url(owner_url),
@@ -54,6 +54,8 @@ def channel_dict(channel, position=None, with_owner=True, owner_url=False, add_t
         ch_data['public'] = channel.public
     if position is not None:
         ch_data['position'] = position
+    if video_count is not None:
+        ch_data['videos'] = dict(total=video_count)
     if app.config.get('SHOW_OLD_CHANNEL_COVER_URLS', True):
         for k in 'thumbnail_large', 'thumbnail_small', 'background':
             ch_data['cover_%s_url' % k] = getattr(channel.cover, k)
@@ -62,13 +64,14 @@ def channel_dict(channel, position=None, with_owner=True, owner_url=False, add_t
     return ch_data
 
 
-def get_db_channels(locale, paging, add_tracking=None, **filters):
+def get_db_channels(locale, paging, with_video_counts=False, add_tracking=None, **filters):
     channels = models.Channel.query.filter_by(public=True, deleted=False).\
+        join(models.User).\
         outerjoin(
             models.ChannelLocaleMeta,
             ((models.ChannelLocaleMeta.channel == models.Channel.id) &
             (models.ChannelLocaleMeta.locale == locale))).\
-        options(lazyload('category_rel'))
+        options(lazyload('category_rel'), contains_eager(models.Channel.owner_rel))
 
     if filters.get('channels'):
         channels = channels.filter(models.Channel.id.in_(filters['channels']))
@@ -81,11 +84,24 @@ def get_db_channels(locale, paging, add_tracking=None, **filters):
     if filters.get('date_order'):
         channels = channels.order_by(desc(models.Channel.date_added))
 
+    if with_video_counts:
+        channels = channels.outerjoin(
+            models.VideoInstance,
+            models.VideoInstance.channel == models.Channel.id
+        ).with_entities(models.Channel, func.count()).\
+            group_by(models.Channel.id, models.User.id)
+    else:
+        channels = channels.with_entities(models.Channel, null())
+
     total = channels.count()
     offset, limit = paging
-    channels = channels.offset(offset).limit(limit)
-    items = [channel_dict(channel, position, add_tracking=add_tracking)
-             for position, channel in enumerate(channels, offset)]
+    items = [
+        channel_dict(channel, position,
+                     video_count=video_count,
+                     add_tracking=add_tracking)
+        for position, (channel, video_count) in
+        enumerate(channels.offset(offset).limit(limit), offset)
+    ]
 
     return items, total
 
