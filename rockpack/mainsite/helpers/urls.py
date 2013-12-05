@@ -10,8 +10,9 @@ from rockpack.mainsite import app
 http_only_domains = []
 if 'SERVER_NAME' in app.config:
     http_only_domains.append(app.config['SERVER_NAME'])
-if 'SHARE_SUBDOMAIN' in app.config:
-    http_only_domains.append('.'.join([app.config['SHARE_SUBDOMAIN'], app.config['SERVER_NAME']]))
+for _domain in 'API_SUBDOMAIN', 'SHARE_SUBDOMAIN':
+    if _domain in app.config:
+        http_only_domains.append('.'.join([app.config[_domain], app.config['SERVER_NAME']]))
 
 
 @contextmanager
