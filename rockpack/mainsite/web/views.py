@@ -188,7 +188,7 @@ def _rockpack_protocol_url(url):
         url = '{}://-/channels/{}/{}'.format(
             app.config['ROCKPACK_IOS_URL_SCHEME'],
             channel_match.group(),
-            'video/{}/'.format(video_match.group()) if video_match else '')
+            'video/{}/'.format(video_match.group()) if 0 and video_match else '')
     return url
 
 

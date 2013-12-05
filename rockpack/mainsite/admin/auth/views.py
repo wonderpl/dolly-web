@@ -1,6 +1,6 @@
 from flask import redirect, url_for, session, current_app, make_response
 from flask.ext.login import login_user, logout_user
-from ..models import AdminView
+from ..base import AdminModelView
 from .user import User
 from . import models, google_oauth
 
@@ -35,7 +35,7 @@ def oauth_callback(response, access_token):
         response = google_oauth.get('https://www.googleapis.com/oauth2/v1/userinfo?alt=json', access_token=access_token).response
         if response.status_code != 200:
             current_app.logger.error('Failed to retrieve userinfo with: %s', response.content)
-            return 'Error fetching userinfo', 500 
+            return 'Error fetching userinfo', 500
         email = response.json().get('email')
         user = User.register_token(access_token, email)
         if not user:
@@ -48,26 +48,21 @@ def oauth_callback(response, access_token):
     return redirect(url_for('admin.index'))
 
 
-class RoleView(AdminView):
-    model_name = 'role'
+class RoleView(AdminModelView):
     model = models.Role
 
 
-class RolePermissionView(AdminView):
-    model_name = 'role_permission'
+class RolePermissionView(AdminModelView):
     model = models.RolePermissions
 
 
-class PermissionView(AdminView):
-    model_name = 'permission'
+class PermissionView(AdminModelView):
     model = models.Permission
 
 
-class AdminRoleView(AdminView):
-    model_name = 'admin_role'
+class AdminRoleView(AdminModelView):
     model = models.AdminRole
 
 
-class AdminUserView(AdminView):
+class AdminUserView(AdminModelView):
     model = models.AdminUser
-    model_name = models.AdminUser.__tablename__

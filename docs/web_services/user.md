@@ -30,7 +30,7 @@ Cache-Control: public, max-age=3600
       {
         "avatar_thumbnail_url": "http://path/to/avatar/medium.jpg",
         "categories": [ ],
-        "description": null,
+        "description": "",
         "display_name": "display name",
         "id": "userid",
         "position": 0,
@@ -128,7 +128,7 @@ Cache-Control: private
  "gender": null,
  "avatar_thumbnail_url": "http://path/to/avatar.img",
  "profile_cover_url": "",
- "description": null,
+ "description": "",
  "subscriber_count": 0,
  "date_of_birth": "1900-01-21",
  "subscriptions": {
@@ -742,6 +742,9 @@ Content-Type: application/json
      "id": "Tr3dHIt5_K9qdG",
      "title": "Star Trek Into Darkness - Extra Footage Japanese Teaser (HD)",
      "date_added": "2012-12-06T08:28:05.000Z",
+     "category": 124,
+     "child_instance_count": 0,
+     "channel_title": "Trending and featured",
      "video": {
       "id": "RP000001TWSWZX4WH7EFFE44AUBVWI6OXALNKFTP",
       "source": "youtube",
@@ -755,6 +758,44 @@ Content-Type: application/json
  }
 }
 ```
+
+### Individual Video
+
+Get a single video instance
+
+```http
+GET /ws/USERID/channels/CID/videos/INSTANCEID/ HTTP/1.1
+```
+
+Returns a single video instance
+
+
+```http
+HTTP/1.1 200 OK
+Cache-Control: public, max-age=60
+Content-Type: application/json
+
+
+    {
+     "position": 0,
+     "id": "Tr3dHIt5_K9qdG",
+     "title": "Star Trek Into Darkness - Extra Footage Japanese Teaser (HD)",
+     "date_added": "2012-12-06T08:28:05.000Z",
+     "category": 124,
+     "child_instance_count": 0,
+     "channel_title": "Trending and featured",
+     "video": {
+      "id": "RP000001TWSWZX4WH7EFFE44AUBVWI6OXALNKFTP",
+      "source": "youtube",
+      "source_id": "BrHlQUXFzfw",
+      "source_username": "yt user",
+      "thumbnail_url": "http://i.ytimg.com/vi/BrHlQUXFzfw/0.jpg",
+      "star_count": "4455"
+     }
+    }
+
+```
+
 
 ### Update
 
@@ -881,7 +922,7 @@ Content-Type: application/json
 
 Parameter      | Required? | Value                                  | Description
 :------------- | :-------- | :------------------------------------- | :----------
-action         | yes       | `star`¦`unstar`¦`view`¦`select`¦`open`¦`subscribe_all` | Specifies the action type
+action         | yes       | `star`¦`unstar`¦`view`¦<br>`select`¦`open`¦<br>`subscribe_all`¦`unsubscribe_all` | Specifies the action type
 object_type    | yes       | `user`¦`channel`¦`video_instance`      | The type of object
 object_id      | yes       | string                                 | The id of the object that was acted upon
 locale         | no        | IETF language tag                      | The action will be recorded for the given locale
@@ -1033,6 +1074,7 @@ Cache-Control: private, max-age=60
 ### Mark read
 
 Post a list of message ids to mark as read.
+If the list is empty then all unread messages will be marked.
 
 ```http
 POST /ws/oCRwcy5MRIiWmsJjvbFbHA/notifications/ HTTP/1.1
@@ -1545,6 +1587,47 @@ Cache-Control: private, max-age=3600
      "avatar_thumbnail_url": "https://path/to/avatar/small.jpg"
     },
     "subscriber_count": 119
+   }
+  ]
+ }
+}
+```
+
+User Recommendations
+====================
+
+Returns a list of channel owners which the current user is suggested to subscribe to.
+
+```http
+GET /ws/USERID/user_recommendations/?locale=LOCALE&start=START&size=SIZE HTTP/1.1
+Authorization: Bearer TOKEN
+```
+
+Parameter      | Required? | Value             | Description
+:------------- | :-------- | :---------------- | :----------
+locale         | yes       | IETF language tag | Results may be biased for the given locale
+start          | no        | 0-based integer   | Used for paging through the result items
+size           | no        | item page size    | Number of content items to return - 100 by default
+
+The response lists user items, including the assigned category and the profile description.
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+Cache-Control: private, max-age=3600
+
+{
+ "users": {
+  "total": 1,
+  "items": [
+   {
+    "position": 0,
+    "category": 122,
+    "id": "USERID",
+    "resource_url": "http://path/to/user/",
+    "display_name": "USERNAME",
+    "avatar_thumbnail_url": "http://path/to/avatar/medium.jpg",
+    "description": "some desc"
    }
   ]
  }

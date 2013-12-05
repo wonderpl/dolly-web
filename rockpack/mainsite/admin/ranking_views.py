@@ -5,10 +5,10 @@ from rockpack.mainsite.admin.video_views import category_list
 from rockpack.mainsite.core.es.search import ChannelSearch, VideoSearch
 from rockpack.mainsite.core.es import filters
 from rockpack.mainsite.services.video.models import Source
-from .base import AuthenticatedView
+from .base import AdminView
 
 
-class RankingView(AuthenticatedView):
+class RankingView(AdminView):
 
     @expose('/locale/<locale>/<channelid>/', ('GET',))
     def channel_videos(self, locale, channelid):

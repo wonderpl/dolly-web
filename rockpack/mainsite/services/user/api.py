@@ -34,7 +34,7 @@ from rockpack.mainsite.services.video import api as video_api
 from rockpack.mainsite.services.search import api as search_api
 from .models import (
     User, UserActivity, UserContentFeed, UserNotification, UserInterest,
-    Subscription, UserFlag, VISIBLE_USER_FLAGS)
+    Subscription, UserFlag, UserSubscriptionRecommendation, VISIBLE_USER_FLAGS)
 
 
 ACTION_COLUMN_VALUE_MAP = dict(
@@ -46,6 +46,7 @@ ACTION_COLUMN_VALUE_MAP = dict(
     subscribe=('subscriber_count', 1),
     unsubscribe=('subscriber_count', -1),
     subscribe_all=('subscriber_count', 1),
+    unsubscribe_all=('subscriber_count', -1),
 )
 
 
@@ -216,6 +217,16 @@ def save_owner_activity(userid, action, ownerid, locale):
         ]
         if channels:
             _create_user_subscriptions(userid, channels, locale)
+    if action == 'unsubscribe_all':
+        subscriptions = _user_subscriptions_query(userid).join(
+            Channel, (Channel.id == Subscription.channel) & (Channel.owner == ownerid))
+        channel_ids = [c for c, in subscriptions.values(Channel.id)]
+        subscriptions.delete()
+        UserContentFeed.query.filter(
+            UserContentFeed.user == userid,
+            UserContentFeed.channel.in_(channel_ids)).delete(False)
+        for channel in channel_ids:
+            save_channel_activity(userid, 'unsubscribe', channel, locale)
 
 
 @commit_on_success
@@ -304,6 +315,9 @@ def _notification_list(userid, paging):
             read=bool(notification.date_read),
         ) for notification in notifications
         if not typefilter or notification.message_type in typefilter]
+    for item in items:
+        if 'video' in item['message']:
+            item['message']['video']['id'] = None
     return items, total
 
 
@@ -343,9 +357,9 @@ def _update_token(external_user, user):
 def _mark_read_notifications(userid, id_list):
     unread = UserNotification.query.filter_by(user=userid, date_read=None)
     unread_count = unread.count()
-    marked_read = unread.filter(
-        UserNotification.id.in_(id_list)
-    ).update({UserNotification.date_read: func.now()}, False)
+    if id_list:
+        unread = unread.filter(UserNotification.id.in_(id_list))
+    marked_read = unread.update({UserNotification.date_read: func.now()}, False)
 
     if marked_read and marked_read == unread_count:
         _apns_mark_unread(userid)
@@ -428,7 +442,7 @@ def user_activity(userid, locale, paging):
         recently_viewed=ids['view'],
         recently_starred=list(set(ids['star']) - set(ids['unstar'])),
         subscribed=list(set(ids['subscribe']) - set(ids['unsubscribe'])),
-        user_subscribed=list(set(ids['subscribe_all'])),
+        user_subscribed=list(set(ids['subscribe_all']) - set(ids['unsubscribe_all'])),
     )
 
 
@@ -753,6 +767,30 @@ def _channel_recommendations(userid, locale, paging):
         locale, paging, None, cat_boosts, prefix_boosts, add_tracking, enable_promotion=False)
 
 
+def _user_recommendations(userid, locale, paging):
+    recs = UserSubscriptionRecommendation.query.join(User).\
+        options(contains_eager(UserSubscriptionRecommendation.user_rel)).\
+        filter(UserSubscriptionRecommendation.priority >= 0, User.is_active == True)
+
+    total = recs.count()
+    offset, limit = paging
+    recs = recs.order_by('priority desc').offset(offset).limit(limit)
+    items = []
+    for position, rec in enumerate(recs, offset):
+        user = rec.user_rel
+        # TODO: check rec.filter
+        items.append(dict(
+            position=position,
+            id=user.id,
+            resource_url=user.get_resource_url(),
+            display_name=user.display_name,
+            avatar_thumbnail_url=user.avatar.url,
+            description=user.description,
+            category=rec.category,
+        ))
+    return items, total
+
+
 def _channel_videos(channelid, locale, paging, own=False):
     # Nasty hack to ensure that old iOS app version get all videos for a users
     # own channel and doesn't try to request more.
@@ -787,7 +825,7 @@ def _base_user_info(user):
         display_name=user.display_name,
         avatar_thumbnail_url=user.avatar.url,
         profile_cover_url=user.get_profile_cover().url,
-        description=user.description,
+        description=user.description or "",
         subscriber_count=user.subscriber_count,
     )
     if user.brand:
@@ -1292,6 +1330,12 @@ class UserWS(WebService):
     def channel_recommendations(self, userid):
         items, total = _channel_recommendations(userid, self.get_locale(), self.get_page())
         return dict(channels=dict(items=items, total=total))
+
+    @expose_ajax('/<userid>/user_recommendations/', cache_age=3600, cache_private=True)
+    @check_authorization(self_auth=True)
+    def user_recommendations(self, userid):
+        items, total = _user_recommendations(userid, self.get_locale(), self.get_page())
+        return dict(users=dict(items=items, total=total))
 
     @expose_ajax('/<userid>/external_accounts/', cache_age=60, cache_private=True)
     @check_authorization(self_auth=True)

@@ -10,7 +10,6 @@ rauth==0.4.17
 Flask-Script==0.5.3
 Flask-Assets==0.8
 boto>=2.7.0
-#PIL or Pillow==1.7.8
 git+git://github.com/StartTheShift/pyoauth2.git@94b1e8e5bfe0a1aa220f1645c810ab2f609db281
 alembic==0.5.0
 raven==3.1.17
@@ -19,7 +18,4 @@ requests>=1.1.0
 pyes>=0.20.1
 apns-client
 gdata==2.0.17
-#Needed for testing & deployment only:
-#pytest==2.4.2
-#fixture==1.4
-#cssmin==0.1.4
+#git+git://github.com/ooyala/python-v2-sdk.git@05dd28ee2f903572831716dabd5a3c4b47691cde

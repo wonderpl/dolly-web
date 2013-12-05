@@ -1,10 +1,14 @@
-from flask import request, g, json
+import wtforms as wtf
+from flask import request, g, json, abort
+from flask.ext.wtf import Form
 from rockpack.mainsite import app
 from rockpack.mainsite.helpers import get_country_code_from_address
 from rockpack.mainsite.helpers.urls import url_for
-from rockpack.mainsite.core.webservice import WebService, expose_ajax, ajax_create_response
+from rockpack.mainsite.helpers.db import get_column_validators
+from rockpack.mainsite.core.webservice import WebService, expose_ajax
 from rockpack.mainsite.core.oauth.decorators import check_authorization
-from .models import SessionRecord
+from rockpack.mainsite.core.email import send_email
+from .models import SessionRecord, FeedbackRecord
 
 
 def _discover_response():
@@ -27,6 +31,12 @@ def _discover_response():
         user_search=url_for('searchws.search_users'),
         base_api=url_for('basews.discover'),
     )
+
+
+class FeedbackForm(Form):
+    message = wtf.TextField(validators=get_column_validators(FeedbackRecord, 'message'))
+    score = wtf.IntegerField(validators=[wtf.validators.Optional(),
+                                         wtf.validators.number_range(0, 9)])
 
 
 class BaseWS(WebService):
@@ -64,3 +74,17 @@ class BaseWS(WebService):
             user=g.authorized.userid,
             value=value,
         ).save()
+
+    @expose_ajax('/feedback/', methods=['POST'], secure=True)
+    @check_authorization()
+    def post_feedback(self):
+        form = FeedbackForm(csrf_enabled=False)
+        if not form.validate():
+            abort(400, form_errors=form.errors)
+        FeedbackRecord(
+            user=g.authorized.userid,
+            message=form.message.data,
+            score=form.score.data,
+        ).save()
+        message = "Score: %(score)s\n\n%(message)s" % form.data
+        send_email(app.config['FEEDBACK_RECIPIENT'], 'Feedback', message)

@@ -57,6 +57,10 @@ CLIENT_IDS = ROCKPACK_APP_CLIENT_ID, ROCKPACK_JS_CLIENT_ID
 
 IGNORE_ACCESS_TOKEN = False
 
+OOYALA_PLAYER_ID = 'a6fbe9091fbb4adaa7a28ad75d4d4031'
+OOYALA_API_KEY = 'YzYW8xOshpVwePawyVliU0L_tBj_.yPTX2'
+OOYALA_SECRET = 'xxx'
+
 # The "Mozilla Gecko" seems to be necessary for the gdata api to encode with gzip!
 USER_AGENT = 'rockpack/%s (Mozilla Gecko)' % VERSION
 
@@ -227,6 +231,8 @@ RECOMMENDER_CATEGORY_BOOSTS = dict(
 DEFAULT_AVATAR = ''
 
 DEFAULT_EMAIL_SOURCE = 'rockpack <noreply@rockpack.com>'
+
+FEEDBACK_RECIPIENT = 'feedback@rockpack.com'
 
 REACTIVATION_EMAIL_TRACKING_PARAMS = dict(utm_medium='email', utm_campaign='react')
 

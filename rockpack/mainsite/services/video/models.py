@@ -163,18 +163,30 @@ class Video(db.Model):
         return 'Video(id={v.id!r}, source_videoid={v.source_videoid!r})'.format(v=self)
 
     @property
+    def source_label(self):
+        if not hasattr(self, '_source_label'):
+            self._source_label = Source.id_to_label(self.source)
+        return self._source_label
+
+    @property
     def default_thumbnail(self):
         # Short-circuit for youtube to avoid join:
-        if self.source == 1:
+        if self.source_label == 'youtube':
             return 'http://i.ytimg.com/vi/%s/mqdefault.jpg' % self.source_videoid
-        for thumb in self.thumbnails:
-            if 'default.jpg' in thumb.url:
-                return thumb.url
+        # TODO: Denormalise this?
+        for width, url in sorted((t.width, t.url) for t in self.thumbnails):
+            if width >= 320:
+                return url
 
     @property
     def player_link(self):
-        # TODO: Use data from source
-        return 'http://www.youtube.com/watch?v=' + self.source_videoid
+        if self.source_label == 'youtube':
+            return 'http://www.youtube.com/watch?v=' + self.source_videoid
+        elif self.source_label == 'ooyala':
+            return 'http://player.ooyala.com/iframe.html?options[autoplay]=true&pbid=%s&ec=%s' % (
+                app.config['OOYALA_PLAYER_ID'], self.source_videoid)
+        else:
+            return ''
 
     @classmethod
     def add_videos(cls, videos, source):

@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 from mock import patch
 from test import base
 from test.assets import AVATAR_IMG_PATH
-from test.fixtures import ChannelData, VideoData, VideoInstanceData
+from test.fixtures import UserData, ChannelData, VideoData, VideoInstanceData, CategoryData
 from test.test_decorators import skip_unless_config
 from test.test_helpers import get_auth_header
 from test.test_helpers import get_client_auth_header
@@ -15,7 +15,8 @@ from rockpack.mainsite.services.video.models import Channel
 from rockpack.mainsite.services.oauth.api import ExternalUser
 from rockpack.mainsite.services.oauth.models import ExternalToken, ExternalFriend
 from rockpack.mainsite.services.user.models import (
-    User, UserActivity, UserAccountEvent, UserFlag, UserNotification, UserContentFeed, Subscription)
+    User, UserActivity, UserAccountEvent, UserFlag, UserNotification,
+    UserContentFeed, UserSubscriptionRecommendation, Subscription)
 from rockpack.mainsite.services.user import commands as cron_cmds
 from rockpack.mainsite.services.user.api import add_videos_to_channel
 
@@ -452,6 +453,23 @@ class TestUserContent(base.RockPackTestCase):
             self.assertEquals(first['category'], 2)
             self.assertIn('cat-2-1.40', first['tracking_code'])
 
+    def test_user_recommendations(self):
+        UserSubscriptionRecommendation(
+            user=UserData.test_user_a.id,
+            category=CategoryData.Music.id,
+        ).save()
+        with self.app.test_client() as client:
+            user = self.create_test_user()
+            r = client.get(
+                '/ws/{}/user_recommendations/'.format(user.id),
+                headers=[get_auth_header(user.id)])
+            self.assertEquals(r.status_code, 200)
+            users = json.loads(r.data)['users']['items']
+            self.assertListEqual([UserData.test_user_a.id], [u['id'] for u in users])
+            # Recommended users should have description & category fields:
+            self.assertIn('description', users[0])
+            self.assertIn('category', users[0])
+
     def test_subscribe_all(self):
         with self.app.test_client() as client:
             self.app.test_request_context().push()
@@ -479,6 +497,53 @@ class TestUserContent(base.RockPackTestCase):
                            headers=[get_auth_header(owner)])
             user_data = json.loads(r.data)
             self.assertGreater(user_data['subscriber_count'], 0)
+
+    def test_unsubscribe_all(self):
+        with self.app.test_client() as client:
+            self.app.test_request_context().push()
+            user = self.create_test_user().id
+            owner = self.create_test_user().id
+            channels = [i for i, in Channel.query.filter_by(owner=owner).values('id')]
+
+            r = client.post(
+                '/ws/{}/activity/'.format(user),
+                data=json.dumps(dict(
+                    action='subscribe_all',
+                    object_type='user',
+                    object_id=owner,
+                )),
+                content_type='application/json',
+                headers=[get_auth_header(user)])
+            self.assertEquals(r.status_code, 204)
+
+            r = client.get(
+                '/ws/{}/'.format(user),
+                query_string=dict(data=['activity', 'subscriptions']),
+                headers=[get_auth_header(user)])
+            user_data = json.loads(r.data)
+            self.assertListEqual([owner], user_data['activity']['user_subscribed'])
+            self.assertListEqual(channels, user_data['activity']['subscribed'])
+            self.assertListEqual(channels, [c['id'] for c in user_data['subscriptions']['items']])
+
+            r = client.post(
+                '/ws/{}/activity/'.format(user),
+                data=json.dumps(dict(
+                    action='unsubscribe_all',
+                    object_type='user',
+                    object_id=owner,
+                )),
+                content_type='application/json',
+                headers=[get_auth_header(user)])
+            self.assertEquals(r.status_code, 204)
+
+            r = client.get(
+                '/ws/{}/'.format(user),
+                query_string=dict(data=['activity', 'subscriptions']),
+                headers=[get_auth_header(user)])
+            user_data = json.loads(r.data)
+            self.assertListEqual([], user_data['activity']['user_subscribed'])
+            self.assertListEqual([], user_data['activity']['subscribed'])
+            self.assertListEqual([], [c['id'] for c in user_data['subscriptions']['items']])
 
     def test_activity_notifications(self):
         with self.app.test_client() as client:
@@ -511,7 +576,7 @@ class TestUserContent(base.RockPackTestCase):
                     self.assertEquals(message['channel']['id'], channel.id)
                     self.assertEquals(message['channel']['resource_url'], channel.resource_url)
                 else:
-                    self.assertEquals(message['video']['id'], video.id)
+                    self.assertEquals(message['video']['id'], None)  # video.id)
                     self.assertEquals(message['video']['channel']['id'], channel.id)
 
     def test_repack_notifications(self):
@@ -520,7 +585,8 @@ class TestUserContent(base.RockPackTestCase):
             user1 = self.create_test_user()
             user2 = self.create_test_user()
             channel1 = user1.channels[0]
-            channel2 = user2.channels[0]
+            channel2 = Channel.create(owner=user2.id, title='new', description='',
+                                      cover='comic', category=1)
             video1 = channel1.add_videos([VideoData.video1.id])[0]
 
             Channel.query.session.commit()
@@ -558,7 +624,7 @@ class TestUserContent(base.RockPackTestCase):
             notification, = json.loads(r.data)['notifications']['items']
             self.assertEquals(notification['message_type'], 'unavailable')
             self.assertEquals(notification['message']['user']['id'], user.id)
-            self.assertEquals(notification['message']['video']['id'], video.id)
+            self.assertEquals(notification['message']['video']['id'], None)  # video.id)
 
     def test_registration_notifications(self):
         with self.app.test_client() as client:

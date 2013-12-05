@@ -550,7 +550,7 @@ class UserSearch(EntitySearch):
                 resource_url=urljoin(BASE_URL, user.resource_url),
                 avatar_thumbnail_url=urljoin(IMAGE_CDN, user.avatar_thumbnail_url) if user.avatar_thumbnail_url else '',
                 profile_cover_url=urljoin(IMAGE_CDN, user.profile_cover_url) if user.profile_cover_url else '',
-                description=user.description,
+                description=user.description or "",
                 subscriber_count=user.subscriber_count,
                 #categories=getattr(user, 'category', []) or []
             )

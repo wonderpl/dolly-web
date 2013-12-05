@@ -92,14 +92,19 @@ Cache-Control: public, max-age=3600
           "view_count": "4536",
           "star_count": "4455"
         },
+        "category": 124,
         "date_added": "2012-12-06T08:28:05.000Z",
         "position": 0,
         "id": "Tr3dHIt5_K9qdG",
+        "child_instance_count": 0,
+        "channel_title": "Trending and featured",
         "channel": {
           "id": "UCRX7UEyE8kp35mPrgC2sosA",
           "resource_url": "http://base/ws/USERID/channels/CHANNELID/",
           "title": "Trending and featured",
           "subscriber_count": 113,
+          "description": "A channel description",
+          "ecommerce_url": "http://path/to/external/resource/",
           "cover": {
             "thumbnail_url": "http://path/to/channel/cover.jpg",
             "aoi": [0, 0, 1, 1],
@@ -107,7 +112,14 @@ Cache-Control: public, max-age=3600
           "owner": {
             "avatar_thumbnail_url": "http://path/to/avatar/small.jpg",
             "id": "Tr3dHIt5_K9qdGtR",
-            "display_name": "joblomovienetwork"
+            "display_name": "joblomovienetwork",
+            "resource_url": "http://base/ws/USERID/",
+            "subscriber_count": 0,
+            "description": "some things about me",
+            "profile_cover_url": "http://path/to/cover.jpg"
+          },
+          "videos": {
+            "total": 238
           }
         }
       }
