@@ -56,23 +56,23 @@ class ESObjectIndexer(object):
         try:
             return es_connection.index(
                 data,
-                self.indexes[self.indexing_type]['index'],
-                self.indexes[self.indexing_type]['type'],
+                self.index,
+                self.doc_type,
                 id=document_id,
                 bulk=self.bulk
             )
         except Exception, e:
             app.logger.exception(
                 "Failed to insert record to index '%s' with id '%s' with: %s",
-                self.indexes[self.indexing_type]['index'],
+                self.get_index(self.indexing_type),
                 document_id,
                 str(e))
 
     def update(self, document_id, data):
         try:
             return es_connection.update(
-                self.indexes[self.indexing_type]['index'],
-                self.indexes[self.indexing_type]['type'],
+                self.index,
+                self.doc_type,
                 document_id,
                 script=data,
                 bulk=self.bulk
@@ -94,12 +94,27 @@ class ESObjectIndexer(object):
     def delete_by_query(self, query):
         try:
             es_connection.delete_by_query(
-                self.indexes[self.indexing_type]['index'],
-                self.indexes[self.indexing_type]['type'],
+                self.index,
+                self.doc_type,
                 query
             )
         except pyes.exceptions.NotFoundException, e:
             raise exceptions.DocumentMissingException(e)
+
+    def refresh(self):
+        es_connection.indices.refresh(self.index)
+
+    @classmethod
+    def get_index(cls, doc_type):
+        return cls.indexes[doc_type]['index']
+
+    @classmethod
+    def get_type(cls, doc_type):
+        return cls.indexes[doc_type]['type']
+
+    @classmethod
+    def get_mapping(cls, doc_type):
+        return cls.indexes[doc_type]['mapping']
 
     @staticmethod
     def flush():
@@ -107,8 +122,17 @@ class ESObjectIndexer(object):
             to ensure the entire group of documents are inserted/updated """
         es_connection.flush_bulk(forced=True)
 
-    def refresh(self):
-        es_connection.indices.refresh(self.indexes[self.indexing_type]['index'])
+    @property
+    def index(self):
+        return self.get_index(self.indexing_type)
+
+    @property
+    def doc_type(self):
+        return self.get_type(self.indexing_type)
+
+    @property
+    def mapping(self):
+        return self.get_mapping(self.indexing_type)
 
 
 class ESInserter(object):
@@ -555,7 +579,13 @@ def add_user_to_index(user, bulk=False, refresh=False, no_check=False):
         brand=user.brand,
         subscriber_count=user.subscriber_count,
     )
-    return add_to_index(data, mappings.USER_INDEX, mappings.USER_TYPE, id=user.id, bulk=bulk, refresh=refresh)
+    return add_to_index(
+        data,
+        mappings.USER_INDEX,
+        mappings.USER_TYPE,
+        id=user.id,
+        bulk=bulk,
+        refresh=refresh)
 
 
 def update_user_categories(user_ids):

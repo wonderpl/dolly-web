@@ -110,10 +110,10 @@ def dbshell(slave=False):
 def init_es(rebuild=False, map_only=False):
     """Initialise elasticsearch indexes"""
     from rockpack.mainsite.core.es import helpers
-    i = helpers.Indexing()
-    if not map_only:
-        i.create_all_indexes(rebuild=rebuild)
-    i.create_all_mappings()
+    if map_only:
+        helpers.Indexing.create_all_mappings()
+    else:
+        helpers.Indexing.create_all_indexes(rebuild=rebuild)
 
 
 @manager.command

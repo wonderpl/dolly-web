@@ -1,19 +1,14 @@
 from rockpack.mainsite import app
 
-if app.config.get('DOLLY', False):
-    # Dolly uses a single index for
-    # all of the types below
-    CHANNEL_INDEX = 'dolly'
-    VIDEO_INDEX = 'dolly'
-    USER_INDEX = 'dolly'
-else:
-    CHANNEL_INDEX = 'channels'
-    VIDEO_INDEX = 'videos'
-    USER_INDEX = 'users'
+app_prefix = 'dolly' if app.config.get('DOLLY', False) else 'rockpack'
 
 CHANNEL_TYPE = 'channel'
 VIDEO_TYPE = 'video'
 USER_TYPE = 'user'
+
+CHANNEL_INDEX = app_prefix + '_channel'
+VIDEO_INDEX = app_prefix + '_video'
+USER_INDEX = app_prefix + '_user'
 
 locale_count_dict = {
     "properties": {

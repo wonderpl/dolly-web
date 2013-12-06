@@ -12,3 +12,19 @@ class InvalidTermCondition(Exception):
 
 class DocumentMissingException(Exception):
     pass
+
+
+class IndexMissing(Exception):
+    pass
+
+
+class ExpectedIndex(Exception):
+    pass
+
+
+class MultipleIndicesFound(Exception):
+    pass
+
+
+class IntegrityError(Exception):
+    pass

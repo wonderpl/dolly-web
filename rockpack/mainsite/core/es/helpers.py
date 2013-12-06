@@ -3,7 +3,7 @@ import time
 from datetime import datetime, timedelta
 from itertools import groupby
 from flask import json
-from pyes.exceptions import ElasticSearchException
+import pyes
 from sqlalchemy import distinct, func
 from sqlalchemy.orm import aliased
 from sqlalchemy.orm import joinedload
@@ -12,47 +12,138 @@ from . import exceptions
 from rockpack.mainsite import app
 from rockpack.mainsite.core.dbapi import readonly_session
 from rockpack.mainsite.core.es import es_connection
+from rockpack.mainsite.core.es import migration
 from rockpack.mainsite.core.es.api import ESObjectIndexer, ESVideo, ESChannel, ESVideoAttributeMap
 
 
 class Indexing(object):
 
-    def __init__(self):
+    def __init__(self, doc_type):
         self.conn = es_connection
+        self.indexer = ESObjectIndexer(doc_type)
+        self.doc_type = doc_type
 
-        self.indexes = ESObjectIndexer.indexes
+    @classmethod
+    def delete_indices_for(cls, alias):
+        for index in migration.Aliasing.get_base_indices_for(alias):
+            migration.Aliasing.delete_index(index)
 
-    def delete_index(self, index):
-        app.logger.debug('deleting %s index %s', index, self.indexes[index]['index'])
-        self.conn.indices.delete_index_if_exists(self.indexes[index]['index'])
+    def create_index(self, rebuild=False):
+        if not self.doc_type.strip():
+            return
 
-    def create_index(self, index, rebuild=False):
-        if rebuild:
-            self.delete_index(index)
-        app.logger.debug('creating %s index %s', index, self.indexes[index]['index'])
-        self.conn.indices.create_index(self.indexes[index]['index'])
+        aliasing = migration.Aliasing(self.doc_type)
+        try:
+            current_index = aliasing.current_index()
+            app.logger.info('index for %s already exists', self.doc_type)
+        except:
+            app.logger.info('creating new index for %s', self.doc_type)
+            index_name = aliasing.create_new_index()
+            aliasing.assign(aliasing.alias, index_name)
+        else:
+            if rebuild:
+                app.logger.info('rebuilding index for %s', self.doc_type)
+                aliasing.delete_index(current_index)
+                index_name = aliasing.create_new_index()
+                aliasing.assign(aliasing.alias, index_name)
 
-    def create_all_indexes(self, rebuild=False):
-        for index in self.indexes.keys():
-            self.create_index(index, rebuild)
-
-    def create_mapping(self, index):
+    def create_mapping(self):
         self.conn.indices.put_mapping(
-            self.indexes[index]['type'],
-            self.indexes[index]['mapping'],
-            [self.indexes[index]['index']])
-        self.conn.indices.refresh(self.indexes[index]['index'])
+            self.indexer.doc_type,
+            self.indexer.mapping,
+            [self.indexer.index])
+        self.conn.indices.refresh(self.indexer.index)
 
-    def create_all_mappings(self):
-        for index in self.indexes.keys():
-            self.create_mapping(index)
+    @classmethod
+    def create_all_indexes(cls, rebuild=False):
+        for doc_type in ESObjectIndexer.indexes.keys():
+            cls(doc_type).create_index(rebuild)
+
+    @classmethod
+    def create_all_mappings(cls):
+        for doc_type in ESObjectIndexer.indexes.keys():
+            cls(doc_type).create_mapping()
+
+
+class ESAliasing:
+
+    @staticmethod
+    def index_prefix_for_doc_type(doc_type):
+        index = ESObjectIndexer.indexes[doc_type]['index']
+        # Sanity check
+        real_doc_type = ESObjectIndexer.indexes[doc_type]['type']
+        return index + '_' + real_doc_type
+
+    @staticmethod
+    def build_new_index_name(doc_type):
+        """ Builds a name from the current time in seconds since epoch,
+            the name_part and site name.
+            E.g. if name_part = 'channel'
+                    index_name = rockpack_channel_1385124160 """
+        index_prefix = ESAliasing.index_prefix_for_doc_type(doc_type)
+        timestamp = datetime.utcnow().strftime("%s")
+        return '%s_%s' % (index_prefix, timestamp)
+
+    @staticmethod
+    def get_mapping_for_alias(alias):
+        return ESObjectIndexer.indexes[alias]['mapping']
+
+    @classmethod
+    def new_index_for_type(cls, doc_type, mapping):
+        index_name = cls.build_new_index_name(doc_type)
+        es_connection.create_index(index_name)
+        es_connection.put_mapping(doc_type=doc_type, mapping=mapping, indices=[index_name])
+        return index_name
+
+
+class ESMigration(object):
+
+    @staticmethod
+    def migrate_alias(doc_type):
+        """ Creates a new index with the mapping specified
+            in the mappings file and reassigns the current
+            alias to the new index """
+
+        def prompt(msg):
+            val = raw_input(msg)
+            if val in 'Nn':
+                sys.exit(1)
+            if val in 'Yy':
+                return True
+            return False
+
+        aliasing = migration.Aliasing(doc_type)
+
+        new_index = ''
+        try:
+            old_index = aliasing.current_index()
+            new_index = aliasing.create_new_index()
+            aliasing.reindex_to(new_index)
+            aliasing.integrity_check(old_index, new_index, aliasing.doc_type)
+            aliasing.reassign_to(new_index)
+            # Final reindex to catch any missed imports
+            # But lets give it some time to settle first
+            time.sleep(2)
+            aliasing.reindex_to(new_index, with_version=True)
+        except Exception, e:
+            app.logger.error('Alias swap failed. Rolling back migration because %s from %s', str(e), type(e))
+            if new_index.strip():
+                app.logger.error('Deleting new index %s (existing index %s unaffected)', new_index, old_index)
+                aliasing.delete_index(new_index)
+            return
+        else:
+            while(1):
+                if prompt("Delete old index? "):
+                    if prompt("You sure you want to do that? "):
+                        aliasing.delete_index(old_index)
+                        break
 
 
 class DBImport(object):
 
     def __init__(self):
         self.conn = es_connection
-        self.indexing = Indexing()
+        self.indexing = ESObjectIndexer.indexes
 
     def print_percent_complete(self, current, total):
         n = round(current / float(total) * 100, 1)
@@ -270,7 +361,7 @@ class DBImport(object):
                         str(list(set([u.encode('utf8') for v, u in group]))[:5])
                     )
                     ec.update()
-                except ElasticSearchException:
+                except pyes.exceptions.ElasticSearchException:
                     missing += 1
                 done += 1
                 self.print_percent_complete(done, total)
@@ -289,7 +380,6 @@ class DBImport(object):
 
             potential = VideoInstance.query.join(Channel, VideoInstance.channel == Channel.id).join(Video, Video.id == VideoInstance.video).filter(Video.visible == True, Channel.public == True).count()
 
-            indexing = Indexing()
             total = 0
             missing = 0
             start = time.time()
@@ -300,12 +390,12 @@ class DBImport(object):
 
                     try:
                         self.conn.partial_update(
-                            indexing.indexes['video']['index'],
-                            indexing.indexes['video']['type'],
+                            self.indexing['video']['index'],
+                            self.indexing['video']['type'],
                             instance_id,
                             "ctx._source.country_restriction.%s = %s" % (relationship, str(countries),)
                         )
-                    except ElasticSearchException, e:
+                    except pyes.exceptions.ElasticSearchException, e:
                         missing += 1
 
                     total += 1
@@ -316,8 +406,8 @@ class DBImport(object):
 
     def _partial_update(self, index, id, script, params=None):
         self.conn.update(
-            self.indexing.indexes[index]['index'],
-            self.indexing.indexes[index]['type'],
+            self.indexing[index]['index'],
+            self.indexing[index]['type'],
             id,
             script=script,
             bulk=True
@@ -372,7 +462,7 @@ class DBImport(object):
                     c_id,
                     'ctx._source.video_terms = %s' % json.dumps(terms_list)
                 )
-            except ElasticSearchException, e:
+            except pyes.exceptions.ElasticSearchException, e:
                 print e
             total += 1
 
