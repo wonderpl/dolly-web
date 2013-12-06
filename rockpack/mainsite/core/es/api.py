@@ -16,7 +16,6 @@ from rockpack.mainsite.core.dbapi import db
 logger = logging.getLogger(__name__)
 
 
-
 class ESObjectIndexer(object):
 
     indexes = {
@@ -582,7 +581,7 @@ def add_user_to_index(user, bulk=False, refresh=False, no_check=False):
     )
     return add_to_index(
         data,
-        ESObjectIndexer(mappings.USER_TYPE).index_base_name,
+        mappings.USER_INDEX,
         mappings.USER_TYPE,
         id=user.id,
         bulk=bulk,

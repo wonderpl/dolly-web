@@ -35,9 +35,8 @@ class BaseUserTestCase(RockPackTestCase):
         if self.app.config.get('ELASTICSEARCH_URL'):
             from rockpack.mainsite.core.es import helpers
 
-            i = helpers.Indexing()
-            i.create_all_indexes(rebuild=True)
-            i.create_all_mappings()
+            helpers.Indexing.create_all_indexes(rebuild=True)
+            helpers.Indexing.create_all_mappings()
 
             i = helpers.DBImport()
             i.import_channels()

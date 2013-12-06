@@ -15,9 +15,8 @@ def pytest_configure(config):
     if app.config.get('ELASTICSEARCH_URL'):
         from rockpack.mainsite.core.es import helpers
 
-        i = helpers.Indexing()
-        i.create_all_indexes(rebuild=True)
-        i.create_all_mappings()
+        helpers.Indexing.create_all_indexes(rebuild=True)
+        helpers.Indexing.create_all_mappings()
 
     if 'sqlite:' in app.config['DATABASE_URL']:
         connection = dbapi.db.engine.raw_connection().connection
@@ -47,7 +46,6 @@ def pytest_unconfigure(config):
     from rockpack.mainsite import app
     if app.config.get('ELASTICSEARCH_URL'):
         from rockpack.mainsite.core.es import helpers
-        i = helpers.Indexing()
-        i.delete_index('channel')
-        i.delete_index('video')
-        i.delete_index('user')
+        helpers.Indexing.delete_indices_for('test_channels')
+        helpers.Indexing.delete_indices_for('test_videos')
+        helpers.Indexing.delete_indices_for('test_users')

@@ -23,6 +23,11 @@ class Indexing(object):
         self.indexer = ESObjectIndexer(doc_type)
         self.doc_type = doc_type
 
+    @classmethod
+    def delete_indices_for(cls, alias):
+        for index in migration.Aliasing.get_base_indices_for(alias):
+            migration.Aliasing.delete_index(index)
+
     def create_index(self, rebuild=False):
         if not self.doc_type.strip():
             return
