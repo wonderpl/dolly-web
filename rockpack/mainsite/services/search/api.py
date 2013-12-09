@@ -221,13 +221,17 @@ class CompleteWS(WebService):
             User.query.filter(func.lower(User.username).like('%s%%' % query)).
             filter_by(is_active=True).
             join(Channel).group_by(User.id).
-            order_by('count(*) desc').limit(10).values('username'))
-
+            order_by('count(*) desc').limit(10).values(User.id, User.username, User.avatar))
+	
+	username_terms = [(uname, ['user', uid, uname, avatar.url]) for uid, uname, avatar in username_terms]
+	
         channel_terms = list(
             Channel.query.filter(func.lower(Channel.title).like('%s%%' % query)).
             filter_by(deleted=False, public=True, visible=True).
-            order_by('subscriber_count desc').limit(10).values('title'))
+            order_by('subscriber_count desc').limit(10).values(Channel.id, 'title'))
 
+	channel_terms = [(title[0], ['channel']) for cid, title in channel_terms]
+	extra_terms = [(term[0], ['native']) for term in extra_terms]
         # For each term source, add up to 3 at the top and then fill with
         # remaining sources, if any
         terms = []
@@ -238,7 +242,7 @@ class CompleteWS(WebService):
                 terms = terms[:c] + src[:10 - min(c, len(terms))]
                 i += 3
 
-        result = json.dumps((query, [(t[0], 0) for t in terms], {}))
+        result = json.dumps((query, [(t[0], t[1]) for t in terms], {}))
         return Response('window.google.ac.h(%s)' % result, mimetype='text/javascript')
 
     @expose_ajax('/users/', cache_age=86400)
