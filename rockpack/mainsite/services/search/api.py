@@ -83,7 +83,6 @@ class SearchWS(WebService):
             vs.set_paging(offset=start, limit=size)
             for video in vs.videos():
                 video['video']['source_view_count'] = video['video']['view_count']
-                video['video']['source_date_uploaded'] = video['date_added']
                 del video['video']['star_count']
                 del video['public']
                 del video['video']['view_count']
