@@ -57,7 +57,7 @@ ACTIVITY_OBJECT_TYPE_MAP = dict(
     video_instance=VideoInstance,
 )
 
-SUBSCRIPTION_VIDEO_FEED_THRESHOLD = func.now() - text("interval '1 day'")
+SUBSCRIPTION_VIDEO_FEED_THRESHOLD = func.now() - text("interval '7 day'")
 
 
 @commit_on_success
@@ -416,7 +416,7 @@ def _create_user_subscriptions(userid, channels, locale=None):
         for id, channelid, date_added in VideoInstance.query.filter(
             VideoInstance.channel.in_(channels),
             VideoInstance.date_added > SUBSCRIPTION_VIDEO_FEED_THRESHOLD,
-        ).limit(10).values('id', 'channel', 'date_added')
+        ).order_by('date_added desc').limit(10).values('id', 'channel', 'date_added')
     )
 
     return subscriptions
