@@ -344,3 +344,20 @@ class CategoryWS(WebService):
                 if cat.colour:
                     info['colour'] = cat.colour
         return dict(categories=dict(items=items))
+
+
+class MoodWS(WebService):
+
+    endpoint = '/moods'
+
+    @expose_ajax('/', cache_age=3600)
+    def mood_list(self):
+        # TODO: Using category for now - replace with mood data model
+        items = [
+            dict(id=str(id), name=name.capitalize())
+            for id, name in
+            models.Category.query.join(models.VideoInstance).
+            filter(models.Category.parent.is_(None)).distinct().order_by('category').
+            values('category', 'name')
+        ]
+        return dict(moods=dict(items=items))

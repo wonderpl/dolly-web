@@ -56,6 +56,36 @@ if the user selects the respective parent category.
 The `colour` field is optional and will be returned only if a value is specified in the
 underlying datasource.
 
+### Moods
+
+```http
+GET /ws/moods/?locale=LOCALE HTTP/1.1
+```
+
+Parameter      | Required? | Value             | Description
+:------------- | :-------- | :---------------- | :----------
+locale         | yes       | IETF language tag | Specifies the locale for the moods
+
+
+Returns the list of all moods.
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+Cache-Control: public, max-age=3600
+
+{
+ "moods": {
+  "items": [
+   {
+    "id": "MOODID",
+    "name": "Mood Title"
+   }
+  ]
+ }
+}
+```
+
 ### Videos
 
 Browse latest popular videos.

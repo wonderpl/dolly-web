@@ -819,6 +819,23 @@ def _user_recommendations(userid, locale, paging):
     return items, total
 
 
+def _video_recommendations(userid, locale, paging):
+    location = request.args.get('location')
+    mood = request.args.get('mood')
+    if use_elasticsearch():
+        vs = es_search.VideoSearch(locale)
+        if mood:
+            # TODO: use mood tags here instead
+            vs.add_term('category', mood)
+        if location:
+            vs.check_country_allowed(location.upper())
+        vs.random_sort()
+        vs.set_paging(*paging)
+        return vs.videos(with_channels=True), vs.total
+    else:
+        return [], 0
+
+
 def _channel_videos(channelid, locale, paging, own=False):
     # Nasty hack to ensure that old iOS app version get all videos for a users
     # own channel and doesn't try to request more.
@@ -1356,6 +1373,12 @@ class UserWS(WebService):
     def channel_recommendations(self, userid):
         items, total = _channel_recommendations(userid, self.get_locale(), self.get_page())
         return dict(channels=dict(items=items, total=total))
+
+    @expose_ajax('/<userid>/video_recommendations/', cache_age=3600, cache_private=True)
+    @check_authorization(self_auth=True)
+    def video_recommendations(self, userid):
+        items, total = _video_recommendations(userid, self.get_locale(), self.get_page())
+        return dict(videos=dict(items=items, total=total))
 
     @expose_ajax('/<userid>/user_recommendations/', cache_age=3600, cache_private=True)
     @check_authorization(self_auth=True)

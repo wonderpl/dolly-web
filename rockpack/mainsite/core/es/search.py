@@ -78,7 +78,7 @@ class EntitySearch(object):
         self._must_not_terms = []
 
         self._query_params = {"track_scores": True}
-        self._sorting = []
+        self._sort = {}
         self._results = {}  # cache results
 
     def _add_term_occurs(self, term, occurs):
@@ -134,7 +134,12 @@ class EntitySearch(object):
 
     def _es_search(self):
         query = self._construct_query()
-        search_query = pyes.Search(query, start=self.paging[0], size=self.paging[1])
+        search_query = pyes.Search(
+            query,
+            start=self.paging[0],
+            size=self.paging[1],
+            sort=self._sort
+        )
         explain = False
         if app.config.get('DEBUG'):
             explain = True
@@ -201,6 +206,16 @@ class EntitySearch(object):
                 order = 'desc'
             self.add_sort('date_added', order)
 
+    def random_sort(self):
+        self._sort = {
+            '_script': {
+                'order': 'asc',
+                'params': {},
+                'script': 'Math.random()',
+                'type': 'number',
+            }
+        }
+
     def set_paging(self, offset=0, limit=100):
         if limit == -1:
             limit = 1000
@@ -211,12 +226,6 @@ class EntitySearch(object):
             return self._results
         self._results = self._es_search()
         return self._results
-
-    @property
-    def sorting(self):
-        if not self._sorting:
-            return None
-        return ','.join(self._sorting)
 
     @property
     def total(self):

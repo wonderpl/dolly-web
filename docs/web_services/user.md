@@ -1599,6 +1599,81 @@ Cache-Control: private, max-age=3600
 }
 ```
 
+Video Recommendations
+=====================
+
+Returns a list of videos associated with the specified mood.
+
+```http
+GET /ws/USERID/user_recommendations/?locale=LOCALE&start=START&size=SIZE&location=COUNTRY&mood=MOOD HTTP/1.1
+Authorization: Bearer TOKEN
+```
+
+Parameter      | Required? | Value             | Description
+:------------- | :-------- | :---------------- | :----------
+mood           | yes       | Mood identifier   | As returned by `/ws/moods/`
+locale         | yes       | IETF language tag | Results may be biased for the given locale
+location       | yes       | Country code      | Filters out videos not available in this country
+start          | no        | 0-based integer   | Used for paging through the result items
+size           | no        | item page size    | Number of content items to return - 100 by default
+
+The response lists video items, including channel & owner detail.
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+Cache-Control: private, max-age=3600
+
+{
+ "videos": {
+  "total": 4016,
+  "items": [
+   {
+    "position": 0,
+    "id": "VIDEOINSTANCEID",
+    "date_added": "2013-06-25T13:28:38.781004",
+    "category": 124,
+    "title": "video title",
+    "video": {
+     "id": "RP000001Q63OS5R7533TLTRCZVZGH4EZ6FF3QJ2P",
+     "source": "youtube",
+     "source_id": "u1dRP5j_r3I",
+     "source_username": "philcollins",
+     "thumbnail_url": "http://i.ytimg.com/vi/u1dRP5j_r3I/mqdefault.jpg",
+     "view_count": 0,
+     "star_count": 0,
+     "duration": 171
+    },
+    "channel": {
+     "id": "CHANNELID",
+     "resource_url": "http://path/to/channel/resource/",
+     "category": 124,
+     "description": "...",
+     "subscriber_count": 195,
+     "title": "Channel title",
+     "date_published": "2013-06-25T13:28:23.701379",
+     "ecommerce_url": "",
+     "cover": {
+      "thumbnail_url": "http://path/to/channel/cover.jpg",
+      "aoi": null
+     },
+     "owner": {
+      "id": "USERID",
+      "resource_url": "http://path/to/channel/owner/resource/",
+      "username": "username",
+      "display_name": "Display Name",
+      "description": "",
+      "avatar_thumbnail_url": "http://path/to/avatar/image.jpg",
+      "profile_cover_url": "",
+      "subscriber_count": null
+     }
+    }
+   }
+  ]
+ }
+}
+```
+
 User Recommendations
 ====================
 
