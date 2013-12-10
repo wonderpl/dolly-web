@@ -23,7 +23,8 @@ from rockpack.mainsite.helpers.forms import naughty_word_validator
 from rockpack.mainsite.helpers.urls import url_for, url_to_endpoint
 from rockpack.mainsite.helpers.db import gen_videoid, get_column_validators, get_box_value
 from rockpack.mainsite.services.video.models import (
-    Channel, ChannelLocaleMeta, Video, VideoInstance, VideoInstanceLocaleMeta, Category, ContentReport)
+    Channel, ChannelLocaleMeta, Category, ContentReport,
+    Video, VideoInstance, VideoInstanceLocaleMeta, VideoInstanceComment)
 from rockpack.mainsite.services.oauth.api import (
     RockRegistrationForm, ExternalTokenManager, ExternalRegistrationForm, record_user_event)
 from rockpack.mainsite.services.oauth.models import ExternalFriend, ExternalToken
@@ -589,6 +590,11 @@ class ActivityForm(Form):
         return success
 
 
+class CommentForm(Form):
+    comment = wtf.TextField(validators=[naughty_word_validator] +
+                            get_column_validators(VideoInstanceComment, 'comment'))
+
+
 class ContentReportForm(Form):
     object_type = wtf.SelectField(choices=ACTIVITY_OBJECT_TYPE_MAP.items())
     object_id = wtf.StringField(validators=[wtf.validators.Required()])
@@ -834,6 +840,30 @@ def _video_recommendations(userid, locale, paging):
         return vs.videos(with_channels=True), vs.total
     else:
         return [], 0
+
+
+def _video_instance_comments(videoid, locale, paging):
+    comments = VideoInstanceComment.query.filter_by(video_instance=videoid)
+    total = comments.count()
+    offset, limit = paging
+    comments = comments.join(User).options(contains_eager('user_rel')).\
+        order_by('date_added desc').offset(offset).limit(limit)
+    items = [
+        dict(
+            position=position,
+            resource_url=comment.resource_url,
+            comment=comment.comment,
+            date_added=comment.date_added.isoformat(),
+            user=dict(
+                id=comment.user_rel.id,
+                resource_url=comment.user_rel.get_resource_url(),
+                display_name=comment.user_rel.display_name,
+                avatar_thumbnail_url=comment.user_rel.avatar.url,
+            )
+        )
+        for position, comment in enumerate(comments, offset)
+    ]
+    return items, total
 
 
 def _channel_videos(channelid, locale, paging, own=False):
@@ -1275,6 +1305,40 @@ class UserWS(WebService):
     def channel_video_instance(self, userid, channelid, videoid):
         instance = VideoInstance.query.filter_by(id=videoid, channel=channelid).first_or_404()
         return video_api.video_dict(instance)
+
+    @expose_ajax('/<userid>/channels/<channelid>/videos/<videoid>/comments/', cache_age=600)
+    def video_instance_comments(self, userid, channelid, videoid):
+        items, total = _video_instance_comments(videoid, self.get_locale(), self.get_page())
+        return dict(comments=dict(items=items, total=total))
+
+    @expose_ajax('/<userid>/channels/<channelid>/videos/<videoid>/comments/', methods=('PUT', 'POST'))
+    @check_authorization()
+    def post_video_instance_comments(self, userid, channelid, videoid):
+        form = CommentForm(csrf_enabled=False)
+        if not form.validate():
+            abort(400, form_errors=form.errors)
+        try:
+            VideoInstanceComment(
+                comment=form.comment.data,
+                video_instance=videoid,
+                user=g.authorized.userid,
+            ).save()
+        except IntegrityError:
+            # video instance doesn't exist
+            abort(404)
+
+    @expose_ajax('/<userid>/channels/<channelid>/videos/<videoid>/comments/<commentid>/')
+    def video_instance_comment_item(self, userid, channelid, videoid, commentid):
+        comment = VideoInstanceComment.query.get_or_404(commentid)
+        return dict(comment=comment.comment, date_added=comment.date_added)
+
+    @expose_ajax('/<userid>/channels/<channelid>/videos/<videoid>/comments/<commentid>/', methods=('DELETE',))
+    @check_authorization()
+    @commit_on_success
+    def delete_video_instance_comment_item(self, userid, channelid, videoid, commentid):
+        comment = VideoInstanceComment.query.filter_by(id=commentid, user=g.authorized.userid)
+        if not comment.delete():
+            abort(404)
 
     @expose_ajax('/<userid>/channels/<channelid>/subscribers/', cache_age=600)
     def channel_subscribers(self, userid, channelid):

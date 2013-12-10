@@ -1605,7 +1605,7 @@ Video Recommendations
 Returns a list of videos associated with the specified mood.
 
 ```http
-GET /ws/USERID/user_recommendations/?locale=LOCALE&start=START&size=SIZE&location=COUNTRY&mood=MOOD HTTP/1.1
+GET /ws/USERID/video_recommendations/?locale=LOCALE&start=START&size=SIZE&location=COUNTRY&mood=MOOD HTTP/1.1
 Authorization: Bearer TOKEN
 ```
 
@@ -1888,6 +1888,89 @@ Content-Type: application/json
  "error": "Not Found"
 }
 ```
+
+Comments
+========
+
+### Get
+
+To list the comments associated with a video instance `GET` the comments resource.
+
+```http
+GET /ws/USERID/channels/CHANNELID/videos/VIDEOINSTANCEID/comments/?start=START&size=SIZE HTTP/1.1
+```
+
+Parameter      | Required? | Value             | Description
+:------------- | :-------- | :---------------- | :----------
+start          | no        | 0-based integer   | Used for paging through the result items
+size           | no        | item page size    | Number of comments to return - 100 by default
+
+The results will be ordered with the most recent first.
+
+```http
+HTTP/1.1 200 OK
+Cache-Control: public, max-age=600
+Content-Type: application/json
+
+{
+ "comments": {
+  "total": 1,
+  "items": [
+   {
+    "position": 0,
+    "resource_url": "http://path/to/comment/resource/",
+    "comment": "I like this video",
+    "date_added": "2013-12-10T18:15:57.319368",
+    "user": {
+     "id": "USERID",
+     "resource_url": "http://path/to/user/resource/",
+     "display_name": "User Name",
+     "avatar_thumbnail_url": "http://path/to/avatar/image.jpg"
+    }
+   }
+  ]
+ }
+}
+```
+
+### Post
+
+Publish a new comment by `POST`ing to the comments resource.
+
+```http
+POST /ws/USERID/channels/CHANNELID/videos/VIDEOINSTANCEID/comments/ HTTP/1.1
+Authorization: Bearer TOKEN
+Content-Type: application/json
+
+{
+ "comment": "I like this video"
+}
+```
+
+On success a `204` will be returned and on error a `400` with a `form_errors` field.
+
+```http
+HTTP/1.1 400 BAD REQUEST
+Content-Type: application/json
+
+{
+ "error": "invalid_request",
+ "form_errors": {
+  "comment": [ "Mind your language!" ]
+ }
+}
+```
+
+### Delete
+
+To remove a comment `DELETE` the comment resource.
+
+```http
+DELETE /ws/USERID/channels/CHANNELID/videos/VIDEOINSTANCEID/comments/COMMENTID/ HTTP/1.1
+Authorization: Bearer TOKEN
+```
+
+A `204` will be returned on success.
 
 Content Report
 ==============

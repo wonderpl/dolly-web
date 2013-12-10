@@ -206,25 +206,6 @@ class Video(db.Model):
         return count
 
 
-class VideoInstanceLocaleMeta(db.Model):
-
-    __tablename__ = 'video_instance_locale_meta'
-    __table_args__ = (
-        UniqueConstraint('locale', 'video_instance'),
-    )
-
-    id = Column(CHAR(24), primary_key=True)
-
-    video_instance = Column(ForeignKey('video_instance.id', ondelete='CASCADE'), nullable=False)
-    view_count = Column(Integer, nullable=False, server_default='0')
-    star_count = Column(Integer, nullable=False, server_default='0')
-    date_added = Column(DateTime(), nullable=False, default=func.now())
-    date_updated = Column(DateTime(), nullable=False, default=func.now(), onupdate=func.now())
-    locale = Column(ForeignKey('locale.id'), nullable=False)
-
-    locale_rel = relationship('Locale', backref='videoinstancelocalemetas')
-
-
 class VideoRestriction(db.Model):
 
     __tablename__ = 'video_restriction'
@@ -233,6 +214,21 @@ class VideoRestriction(db.Model):
     video = Column(ForeignKey('video.id'), nullable=False, index=True)
     relationship = Column(String(16), nullable=False)
     country = Column(String(16), nullable=False)
+
+
+class VideoThumbnail(db.Model):
+
+    __tablename__ = 'video_thumbnail'
+
+    id = Column(CHAR(24), primary_key=True)
+    url = Column(String(1024), nullable=False)
+    width = Column(Integer, nullable=False)
+    height = Column(Integer, nullable=False)
+
+    video = Column(ForeignKey('video.id', ondelete='CASCADE'), nullable=False, index=True)
+
+    def __unicode__(self):
+        return '({}x{}) {}'.format(self.width, self.height, self.url)
 
 
 class VideoInstance(db.Model):
@@ -281,19 +277,44 @@ class VideoInstance(db.Model):
         return VideoInstanceLocaleMeta(video_instance=self.id, locale=locale).save()
 
 
-class VideoThumbnail(db.Model):
+class VideoInstanceLocaleMeta(db.Model):
 
-    __tablename__ = 'video_thumbnail'
+    __tablename__ = 'video_instance_locale_meta'
+    __table_args__ = (
+        UniqueConstraint('locale', 'video_instance'),
+    )
 
     id = Column(CHAR(24), primary_key=True)
-    url = Column(String(1024), nullable=False)
-    width = Column(Integer, nullable=False)
-    height = Column(Integer, nullable=False)
 
-    video = Column(ForeignKey('video.id', ondelete='CASCADE'), nullable=False, index=True)
+    video_instance = Column(ForeignKey('video_instance.id', ondelete='CASCADE'), nullable=False)
+    view_count = Column(Integer, nullable=False, server_default='0')
+    star_count = Column(Integer, nullable=False, server_default='0')
+    date_added = Column(DateTime(), nullable=False, default=func.now())
+    date_updated = Column(DateTime(), nullable=False, default=func.now(), onupdate=func.now())
+    locale = Column(ForeignKey('locale.id'), nullable=False)
 
-    def __unicode__(self):
-        return '({}x{}) {}'.format(self.width, self.height, self.url)
+    locale_rel = relationship('Locale', backref='videoinstancelocalemetas')
+
+
+class VideoInstanceComment(db.Model):
+
+    __tablename__ = 'video_instance_comment'
+
+    id = Column(Integer, primary_key=True)
+    video_instance = Column(ForeignKey('video_instance.id', ondelete='CASCADE'), nullable=False)
+    user = Column(ForeignKey('user.id'), nullable=False)
+    comment = Column(String(120), nullable=False, server_default='')
+    date_added = Column(DateTime(), nullable=False, default=func.now())
+
+    user_rel = relationship(User, innerjoin=True)
+
+    def get_resource_url(self):
+        return url_for('userws.video_instance_comment_item',
+                       userid='-',
+                       channelid='-',
+                       videoid=self.video_instance,
+                       commentid=self.id)
+    resource_url = property(get_resource_url)
 
 
 class Channel(db.Model):
