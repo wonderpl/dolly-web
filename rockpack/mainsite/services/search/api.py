@@ -217,20 +217,19 @@ class CompleteWS(WebService):
         # consistency with /complete/videos
         query = request.args.get('q', '').lower()
 
-        username_terms = list(
+        username_terms = [(uname, ['user', uid, uname, avatar.url]) for uid, uname, avatar in list(
             User.query.filter(func.lower(User.username).like('%s%%' % query)).
             filter_by(is_active=True).
             join(Channel).group_by(User.id).
-            order_by('count(*) desc').limit(10).values(User.id, User.username, User.avatar))
+            order_by('count(*) desc').limit(10).values(User.id, User.username, User.avatar))]
 	
-	username_terms = [(uname, ['user', uid, uname, avatar.url]) for uid, uname, avatar in username_terms]
 	
-        channel_terms = list(
+        channel_terms = [(title[0], ['channel']) for cid, title in list(
             Channel.query.filter(func.lower(Channel.title).like('%s%%' % query)).
             filter_by(deleted=False, public=True, visible=True).
-            order_by('subscriber_count desc').limit(10).values(Channel.id, 'title'))
+            order_by('subscriber_count desc').limit(10).values(Channel.id, 'title'))]
 
-	channel_terms = [(title[0], ['channel']) for cid, title in channel_terms]
+	
 	extra_terms = [(term[0], ['native']) for term in extra_terms]
         # For each term source, add up to 3 at the top and then fill with
         # remaining sources, if any
