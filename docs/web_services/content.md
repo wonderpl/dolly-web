@@ -159,6 +159,37 @@ Cache-Control: public, max-age=3600
 }
 ```
 
+# Starring Users
+
+Get a list of users who have favourited a particular video
+
+```http
+GET /ws/vidoes/VIDEOID/starring_users/ HTTP/1.1
+```
+
+Parameter      | Required? | Value             | Description
+:------------- | :-------- | :---------------- | :----------
+start          | no        | 0-based integer   | Used for paging through the result items
+size           | no        | Result page size  | Number of items to return - max 50.
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+Cache-Control: public, max-age=3600
+
+{
+ "total": 1,
+ "users": [
+  {
+   "id": "Unique user id",
+   "resource_url": "http://base/ws/USERID/",
+   "display_name": "User display name",
+   "avatar_thumbnail_url": "https://path/to/avatar/small.jpg"
+  }
+ ]
+}
+```
+
 ### Channels
 
 Browse latest popular channels.
