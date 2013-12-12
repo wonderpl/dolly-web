@@ -476,6 +476,7 @@ class VideoSearch(EntitySearch, CategoryMixin, MediaSortMixin):
         channel_list = []
 
         for pos, v in enumerate(videos, self.paging[0]):
+            published = v.video.date_published
             video = dict(
                 id=v.id,
                 title=v.title,
@@ -490,7 +491,7 @@ class VideoSearch(EntitySearch, CategoryMixin, MediaSortMixin):
                     source=Source.id_to_label(v.video.source),
                     source_id=v.video.source_id,
                     source_username=v.video.source_username,
-                    source_date_uploaded=v.video.date_published.isoformat(),
+                    source_date_uploaded=published.isoformat() if hasattr(published, 'isoformat') else published,
                     duration=v.video.duration,
                     thumbnail_url=urljoin(app.config.get('IMAGE_CDN', ''), v.video.thumbnail_url) if v.video.thumbnail_url else '',
                 ),

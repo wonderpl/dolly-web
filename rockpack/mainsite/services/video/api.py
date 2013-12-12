@@ -280,12 +280,12 @@ class VideoWS(WebService):
     def video_channels(self, video_id, cache_age=3600):
         vs = VideoSearch(self.get_locale())
         vs.add_term('video.id', video_id)
+        vs.add_sort('child_instance_count')
         vs.set_paging(*self.get_page(default_size=5))
-        videos = vs.videos()
+        videos = vs.videos(with_channels=True)
         if not videos:
             abort(404)
-        title_items = [{'title': v['channel_title']} for v in videos]
-        return {'channels': {'items': title_items, 'total': vs.total}}
+        return {'channels': {'items': [v['channel'] for v in videos], 'total': vs.total}}
 
     @expose_ajax('/players/', cache_age=7200)
     def players(self):

@@ -302,15 +302,6 @@ channel_mapping = {
         "thumbnail_url": {
             "type": "string",
             "index": "not_analyzed"},
-        "cover_thumbnail_small_url": {
-            "type": "string",
-            "index": "not_analyzed"},
-        "cover_thumbnail_large_url": {
-            "type": "string",
-            "index": "not_analyzed"},
-        "cover_background_url": {
-            "type": "string",
-            "index": "not_analyzed"},
         "resource_url": {
             "type": "string",
             "index": "not_analyzed"},

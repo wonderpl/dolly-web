@@ -288,11 +288,6 @@ class ESChannel(ESObject):
             video_count=mapped.video_count
         )
 
-        if app.config.get('SHOW_OLD_CHANNEL_COVER_URLS', True):
-            data['cover_thumbnail_large_url'] = mapped.cover_thumbnail_large_url
-            data['cover_thumbnail_small_url'] = mapped.cover_thumbnail_small_url
-            data['cover_background_url'] = mapped.cover_background_url
-
         return data
 
 
@@ -518,18 +513,6 @@ class ESChannelAttributeMap:
             thumbnail_url=urlparse(convert_image_path(self.channel, 'cover', 'CHANNEL').url).path,
             aoi=aoi
         )
-
-    @property
-    def cover_thumbnail_large_url(self):
-        return self.generate_cover_url('thumbnail_large')
-
-    @property
-    def cover_thumbnail_small_url(self):
-        return self.generate_cover_url('thumbnail_small')
-
-    @property
-    def cover_background_url(self):
-        return self.generate_cover_url('background')
 
     @property
     def keywords(self):
