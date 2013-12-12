@@ -439,7 +439,7 @@ def user_channels(userid, locale, paging, own=True):
     ).order_by(
         Channel.favourite.desc(),
         Channel.date_added.desc() if own else Channel.date_updated.desc(),
-    ).with_entities(Channel, func.count()).group_by(Channel.id)
+    ).with_entities(Channel, func.count(VideoInstance.id)).group_by(Channel.id)
 
     items = [
         video_api.channel_dict(channel, position, with_owner=False, owner_url=own,

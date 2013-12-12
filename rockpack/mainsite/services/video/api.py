@@ -88,7 +88,7 @@ def get_db_channels(locale, paging, with_video_counts=False, add_tracking=None, 
         channels = channels.outerjoin(
             models.VideoInstance,
             models.VideoInstance.channel == models.Channel.id
-        ).with_entities(models.Channel, func.count()).\
+        ).with_entities(models.Channel, func.count(models.VideoInstance.id)).\
             group_by(models.Channel.id, models.User.id)
     else:
         channels = channels.with_entities(models.Channel, null())
