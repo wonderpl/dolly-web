@@ -1396,7 +1396,7 @@ class UserWS(WebService):
         subs = _create_user_subscriptions(userid, [channelid], self.get_locale())[0]
         return ajax_create_response(subs)
 
-    @expose_ajax('/<userid>/subscriptions/<channelid>/')
+    @expose_ajax('/<userid>/subscriptions/<channelid>/', cache_age=30, cache_private=True)
     @check_authorization(self_auth=True)
     def redirect_subscription_item(self, userid, channelid):
         channel = Channel.query.filter_by(id=channelid, deleted=False).first_or_404()
