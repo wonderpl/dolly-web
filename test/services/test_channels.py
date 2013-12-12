@@ -348,11 +348,11 @@ class ChannelCreateTestCase(base.RockPackTestCase):
             )
             self.assertEquals(200, r.status_code)
 
-            # test duplicate title
+            # test duplicate title (with change in case)
             r = client.post(
                 '/ws/{}/channels/'.format(user.id),
                 data=json.dumps(dict(
-                    title=new_title,
+                    title=new_title.upper(),
                     description='test channel for user {}'.format(user.id),
                     category=1,
                     cover='',
@@ -361,7 +361,6 @@ class ChannelCreateTestCase(base.RockPackTestCase):
                 content_type='application/json',
                 headers=[get_auth_header(user.id)]
             )
-
             self.assertEquals(400, r.status_code)
             self.assertEquals('Duplicate title.', json.loads(r.data)['form_errors']['title'][0])
 
