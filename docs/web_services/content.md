@@ -190,9 +190,9 @@ Cache-Control: public, max-age=3600
 }
 ```
 
-### Instance Channel Titles
+### Video Channels (Appears In)
 
-Returns a list of the channel titles other instances of the same video belong to
+Returns a list of the channel titles for other instances of the same video
 
 ```http
 GET /ws/vidoes/VIDEOID/channels/ HTTP/1.1
@@ -212,7 +212,33 @@ Cache-Control: public, max-age=3600
  "channels": {
   "items": [
    {
-    "title": "This is a channel title"
+    "position": 0,
+    "id": "Unique channel id",
+    "resource_url": "http://base/ws/USERID/channels/CHANNELID/",
+    "title": "Channel title",
+    "category": 123,
+    "description": "channel desc",
+    "public": true,
+    "date_published": "2013-12-01T12:00:00",
+    "ecommerce_url": "",
+    "favourites": false,
+    "cover": {
+      "thumbnail_url": "http://path/to/channel/cover.jpg",
+      "aoi": [0, 0, 1, 1]
+    },
+    "owner": {
+     "id": "Unique user id",
+     "resource_url": "http://base/ws/USERID/",
+     "display_name": "User display name",
+     "description": "something about me",
+     "avatar_thumbnail_url": "https://path/to/avatar/small.jpg",
+     "profile_cover_url": "https://path/to/avatar/small.jpg",
+    },
+    "tracking_code": "some opaque string",
+    "subscriber_count": 119,
+    "videos": {
+     "total": 44
+    }
    }
   ],
   "total": 1
