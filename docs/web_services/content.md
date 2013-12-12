@@ -159,7 +159,7 @@ Cache-Control: public, max-age=3600
 }
 ```
 
-# Starring Users
+### Starring Users
 
 Get a list of users who have favourited a particular video
 
@@ -189,6 +189,37 @@ Cache-Control: public, max-age=3600
  ]
 }
 ```
+
+### Instance Channel Titles
+
+Returns a list of the channel titles other instances of the same video belong to
+
+```http
+GET /ws/vidoes/VIDEOID/channels/ HTTP/1.1
+```
+
+Parameter      | Required? | Value             | Description
+:------------- | :-------- | :---------------- | :----------
+start          | no        | 0-based integer   | Used for paging through the result items
+size           | no        | Result page size  | Number of items to return - max 50.
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+Cache-Control: public, max-age=3600
+
+{
+ "channels": {
+  "items": [
+   {
+    "title": "This is a channel title"
+   }
+  ],
+  "total": 1
+ }
+}
+```
+
 
 ### Channels
 
