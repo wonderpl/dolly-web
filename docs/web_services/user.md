@@ -1296,6 +1296,7 @@ Content-Type: application/json
 ```
 
 If the subscription is created a `201` with the new resource url will be returned.
+A `204` will be returned if the user is already subscribed to the specified channel.
 
 ```http
 HTTP/1.1 201 CREATED

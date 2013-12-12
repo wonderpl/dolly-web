@@ -1392,7 +1392,7 @@ class UserWS(WebService):
         if not Channel.query.filter_by(id=channelid, deleted=False).count():
             abort(400, message=_('Channel not found'))
         if Subscription.query.filter_by(user=userid, channel=channelid).count():
-            abort(400, message=_('Already subscribed'))
+            return  # fail silently if already subscribed
         subs = _create_user_subscriptions(userid, [channelid], self.get_locale())[0]
         return ajax_create_response(subs)
 
