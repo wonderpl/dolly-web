@@ -468,7 +468,6 @@ def user_activity(userid, locale, paging):
     ids = dict((key, action_object_list(userid, key, UserWS.max_page_size))
                for key in ACTION_COLUMN_VALUE_MAP)
     return dict(
-        recently_viewed=ids['view'],
         recently_starred=list(set(ids['star']) - set(ids['unstar'])),
         subscribed=list(set(ids['subscribe']) - set(ids['unsubscribe'])),
         user_subscribed=list(set(ids['subscribe_all']) - set(ids['unsubscribe_all'])),

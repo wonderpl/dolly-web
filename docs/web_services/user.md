@@ -938,7 +938,7 @@ Content-Type: application/json
 
 ### Retrieve
 
-Get list of item identifies associated with recent activity: views, stars & subscriptions.
+Get list of item identifies associated with recent activity: starred videos and channel & user subscriptions.
 Useful for changing the UI of items from other WS responses.
 
 ```http
@@ -952,7 +952,6 @@ Content-Type: application/json
 Cache-Control: private, max-age=60
 
 {
- "recently_viewed": [ "video instance id", "..." ],
  "recently_starred": [ "video id", "..." ],
  "subscribed": [ "channel id", "..." ],
  "user_subscribed": [ "user id", "..." ]

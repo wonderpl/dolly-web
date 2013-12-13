@@ -123,15 +123,14 @@ class BrowsingUserTestCase(BaseUserTestCase):
                 channel_detail = self.get(channel['resource_url'])
                 for video in channel_detail['videos']['items']:
                     self.post(self.urls['activity'],
-                              dict(action='view', video_instance=video['id']),
+                              dict(action='star', video_instance=video['id']),
                               token=self.token)
                     viewed_videos.append(video['id'])
 
         # confirm activity was recorded
         self.assertGreater(len(viewed_videos), 0)
         activity = self.get(self.urls['activity'], token=self.token)
-        #self.assertListEqual(viewed_videos, activity['recently_viewed'])
-        self.assertEquals([], list(set(viewed_videos).difference(activity['recently_viewed'])))
+        self.assertEquals([], list(set(viewed_videos).difference(activity['recently_starred'])))
 
 
 class SubscribingUserTestCase(BaseUserTestCase):
