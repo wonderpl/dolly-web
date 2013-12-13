@@ -15,7 +15,7 @@ GOOGLE_CONSUMER_SECRET = _decrypt('d3So=\x9e\xa7\x02\x97\xd5`\x1a\xae\x8f\xc5\xd
 
 OOYALA_SECRET = _decrypt('UE\xec\x0c\xfe\x00\x0c\x84\xa1\x88\xf3<\xbc\x19</\x18s4\x8a\xa5#\xec\x0e\x89\xa3\xb7\x15\xc0i\xaeS~\x8f#5\xc4\xea\xab\x96')
 
-#ASSETS_URL = '//dolly.dev.rockpack.com/static'
+ASSETS_URL = '//d252x220uigqir.cloudfront.net/static'
 IMAGE_CDN = 'http://media.dev.wonderplc.com'
 S3_BUCKET = 'media.dev.wonderplc.com'
 
@@ -40,12 +40,12 @@ FACEBOOK_APP_ID = '573323026048639'
 FACEBOOK_APP_SECRET = _decrypt('0\xa9\xf4=)\xa9\x0cC#\xda \xa2\xe1.\xf8)R\x04\xf4\x9b\x0c\xb9x\x0f\xc1\xb7\xd5\xfb=\xfb\xef\xc1')
 FACEBOOK_APP_NAMESPACE = 'dolly-dev'
 
-#SERVER_NAME = 'dev.rockpack.com'
-#SECURE_SUBDOMAIN = 'secure'
-#ADMIN_SUBDOMAIN = 'dolly'
-#DEFAULT_SUBDOMAIN = 'lb'
-#API_SUBDOMAIN = 'api'
-#SHARE_SUBDOMAIN = 'share'
+SERVER_NAME = 'dev.wonderplc.com'
+SECURE_SUBDOMAIN = 'secure'
+ADMIN_SUBDOMAIN = 'secure'
+DEFAULT_SUBDOMAIN = 'lb'
+API_SUBDOMAIN = 'api'
+SHARE_SUBDOMAIN = 'share'
 
 AUTH_HEADER_SANITY_CHECK = True
 
