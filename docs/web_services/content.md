@@ -164,7 +164,7 @@ Cache-Control: public, max-age=3600
 Get a list of users who have favourited a particular video
 
 ```http
-GET /ws/vidoes/VIDEOID/starring_users/ HTTP/1.1
+GET /ws/videos/VIDEOID/starring_users/ HTTP/1.1
 ```
 
 Parameter      | Required? | Value             | Description
@@ -195,7 +195,7 @@ Cache-Control: public, max-age=3600
 Returns a list of the channel titles for other instances of the same video
 
 ```http
-GET /ws/vidoes/VIDEOID/channels/ HTTP/1.1
+GET /ws/videos/VIDEOID/channels/ HTTP/1.1
 ```
 
 Parameter      | Required? | Value             | Description
