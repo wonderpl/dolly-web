@@ -219,10 +219,10 @@ def save_owner_activity(userid, action, ownerid, locale):
         if channels:
             _create_user_subscriptions(userid, channels, locale)
     if action == 'unsubscribe_all':
-        subscriptions = _user_subscriptions_query(userid).join(
-            Channel, (Channel.id == Subscription.channel) & (Channel.owner == ownerid))
-        channel_ids = [c for c, in subscriptions.values(Channel.id)]
-        subscriptions.delete()
+        subscriptions = _user_subscriptions_query(userid).filter(Subscription.channel.in_(
+            Channel.query.filter_by(owner=ownerid).with_entities(Channel.id)))
+        channel_ids = [c for c, in subscriptions.values(Subscription.channel)]
+        subscriptions.delete(False)
         UserContentFeed.query.filter(
             UserContentFeed.user == userid,
             UserContentFeed.channel.in_(channel_ids)).delete(False)
