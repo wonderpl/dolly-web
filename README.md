@@ -36,6 +36,13 @@ Run dev server with:
 0. Create ssh tunnels: `ssh -L 45432:localhost:5432 -L 49200:localhost:9200 -N dev.rockpack.com`
 0. Update config: `echo -e "DATABASE_URL = 'postgresql://mainsite:mainsite@localhost:45432/rockpack'\nELASTICSEARCH_URL = 'http://localhost:49200'" >>rockpack/mainsite/settings/local.py`
 
+Test
+----
+
+Run unit tests with [pytest](http://pytest.org/latest/usage.html)
+
+    py.test -x
+
 Build
 -----
 
