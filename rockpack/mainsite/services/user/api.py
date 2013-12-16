@@ -60,6 +60,9 @@ ACTIVITY_OBJECT_TYPE_MAP = dict(
 
 SUBSCRIPTION_VIDEO_FEED_THRESHOLD = func.now() - text("interval '7 day'")
 
+# Needs to be overriden to support sqlite tests
+ACTIVITY_LAST_ACTION_COMPARISON = "(array_agg(action order by id desc))[1] = '%s'"
+
 
 @commit_on_success
 def get_or_create_video_records(instance_ids):
@@ -366,13 +369,6 @@ def _mark_read_notifications(userid, id_list):
         _apns_mark_unread(userid)
 
 
-def action_object_list(user, action, limit):
-    query = UserActivity.query.filter_by(user=user, action=action).\
-        order_by(desc('id')).limit(limit)
-    id_list = zip(*query.values('object_id'))
-    return id_list[0] if id_list else []
-
-
 def _user_subscriptions_query(userid):
     return Subscription.query.filter_by(user=userid)
 
@@ -464,13 +460,24 @@ def user_external_accounts(userid, locale, paging):
     return dict(items=items, total=len(items))
 
 
+def _action_object_list(user, action, anti_action=None, limit=1000):
+    if not anti_action:
+        anti_action = 'un' + action
+    # Return the list of object ids where the last action was positive
+    query = UserActivity.query.filter(
+        UserActivity.user == user,
+        UserActivity.action.in_((action, anti_action))
+    ).group_by('object_type', 'object_id').having(
+        text(ACTIVITY_LAST_ACTION_COMPARISON % action)
+    ).order_by(func.max(UserActivity.id).desc()).limit(limit)
+    return [id for id, in query.values('object_id')]
+
+
 def user_activity(userid, locale, paging):
-    ids = dict((key, action_object_list(userid, key, UserWS.max_page_size))
-               for key in ACTION_COLUMN_VALUE_MAP)
     return dict(
-        recently_starred=list(set(ids['star']) - set(ids['unstar'])),
-        subscribed=list(set(ids['subscribe']) - set(ids['unsubscribe'])),
-        user_subscribed=list(set(ids['subscribe_all']) - set(ids['unsubscribe_all'])),
+        recently_starred=_action_object_list(userid, 'star'),
+        subscribed=_action_object_list(userid, 'subscribe'),
+        user_subscribed=_action_object_list(userid, 'subscribe_all'),
     )
 
 

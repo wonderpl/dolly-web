@@ -545,6 +545,29 @@ class TestUserContent(base.RockPackTestCase):
             self.assertListEqual([], user_data['activity']['subscribed'])
             self.assertListEqual([], [c['id'] for c in user_data['subscriptions']['items']])
 
+    def test_activity_duplicates(self):
+        with self.app.test_client() as client:
+            user = self.create_test_user().id
+            instance_id = VideoInstanceData.video_instance1.id
+            for action in 'star', 'unstar', 'star', 'unstar':
+                r = client.post(
+                    '/ws/{}/activity/'.format(user),
+                    data=json.dumps(dict(
+                        action=action,
+                        object_type='video_instance',
+                        object_id=instance_id,
+                    )),
+                    content_type='application/json',
+                    headers=[get_auth_header(user)])
+                self.assertEquals(r.status_code, 204)
+
+                r = client.get(
+                    '/ws/{}/activity/'.format(user),
+                    headers=[get_auth_header(user)])
+                self.assertItemsEqual(
+                    json.loads(r.data)['recently_starred'],
+                    [instance_id] if action == 'star' else [])
+
     def test_activity_notifications(self):
         with self.app.test_client() as client:
             self.app.test_request_context().push()

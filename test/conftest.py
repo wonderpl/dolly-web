@@ -30,6 +30,7 @@ def pytest_configure(config):
         from rockpack.mainsite.services.user import api
         from sqlalchemy import text
         api.SUBSCRIPTION_VIDEO_FEED_THRESHOLD = text("datetime('now')")
+        api.ACTIVITY_LAST_ACTION_COMPARISON = "action = '%s'"
 
     dbapi.sync_database(drop_all=True)
 
