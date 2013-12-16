@@ -7,6 +7,9 @@ from mock import patch
 from rockpack.mainsite.core.es import migration, use_elasticsearch
 
 
+PATCH_ALIAS = PATCH_INDEX_PREFIX = 'test_index'
+
+
 @pytest.mark.skipif(not use_elasticsearch(), reason="requires elasticsearch")
 class MigrationTestCase(unittest.TestCase):
 
@@ -15,7 +18,7 @@ class MigrationTestCase(unittest.TestCase):
         self.aliasing = migration.Aliasing('channel')
 
         # override settings
-        self.aliasing.alias = 'test_index'
+        self.aliasing.alias = PATCH_ALIAS
         self.aliasing.mapping = {
             "properties": {
                 "title": {
@@ -24,7 +27,7 @@ class MigrationTestCase(unittest.TestCase):
                 }
             }
         }
-        self.aliasing.index_prefix = 'test_index'
+        self.aliasing.index_prefix = PATCH_INDEX_PREFIX
 
         self.index_names = []
 
@@ -43,11 +46,11 @@ class MigrationTestCase(unittest.TestCase):
         self.index_names.append(i)
         return i
 
+    @patch('rockpack.mainsite.core.es.api.ESObjectIndexer.aliases', dict(test=PATCH_ALIAS))
     @patch('rockpack.mainsite.core.es.api.ESObjectIndexer.get_index')
     def test_create_index(self, get_index):
-
         # ensure we can get the correct alias in calls
-        get_index.return_value = self.aliasing.alias
+        get_index.return_value = PATCH_ALIAS
 
         # create index
         new_index = self._new_index()

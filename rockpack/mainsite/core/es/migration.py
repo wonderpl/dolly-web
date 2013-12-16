@@ -20,16 +20,17 @@ class Aliasing(object):
         self.doc_type = doc_type
 
         # Get the current index alias name for the real index e.g. rockpack, dolly
-        self.alias = api.ESObjectIndexer.get_index(doc_type)
+        self.alias = api.ESObjectIndexer.get_alias(doc_type)
 
         # Get the mapping for the doc_type in question
         self.mapping = api.ESObjectIndexer.get_mapping(doc_type)
 
-        self.index_prefix = self.get_base_index_prefix(self.doc_type)
+        self.index_prefix = self.get_base_index_prefix(self.alias)
 
     @classmethod
-    def get_base_index_prefix(cls, doc_type):
+    def get_base_index_prefix(cls, alias):
         """ Base index prefix is just the current index alias """
+        doc_type = next(iter([key for key, a in api.ESObjectIndexer.aliases.items() if a == alias]))
         return api.ESObjectIndexer.get_index(doc_type)
 
     @classmethod
@@ -43,7 +44,7 @@ class Aliasing(object):
             return indices
 
     @classmethod
-    def get_current_index(cls, doc_type):
+    def get_current_index(cls, alias):
         """ From the indices returned for the current `alias`,
             find all the ones that match the prefix (again, we
             should just find one) """
@@ -51,9 +52,8 @@ class Aliasing(object):
         def func(x, y):
             return x if int(x.split('_')[2]) > int(y.split('_')[2]) else y
 
-        alias = api.ESObjectIndexer.get_index(doc_type)
         indices = cls.get_base_indices_for(alias)
-        prefix = cls.get_base_index_prefix(doc_type)
+        prefix = cls.get_base_index_prefix(alias)
         existing_indices = [i for i in indices if i.startswith(prefix)]
 
         if not existing_indices:
@@ -115,7 +115,7 @@ class Aliasing(object):
         cls.conn.delete_index(index)
 
     def current_index(self):
-        return self.get_current_index(self.doc_type)
+        return self.get_current_index(self.alias)
 
     def create_new_index(self):
         index_name = self.generate_new_index_name(self.index_prefix)
@@ -127,8 +127,8 @@ class Aliasing(object):
         """ Helper method to reindex `self.doc_type`from the
             existing index info stored with `self` in to a new index. """
 
-        self.reindex(self.get_current_index(self.doc_type), self.doc_type,
+        self.reindex(self.get_current_index(self.alias), self.doc_type,
             target, self.doc_type, with_version=with_version)
 
     def reassign_to(self, target):
-        self.reassign(self.alias, self.get_current_index(self.doc_type), target)
+        self.reassign(self.alias, self.get_current_index(self.alias), target)

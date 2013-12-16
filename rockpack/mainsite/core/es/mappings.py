@@ -6,9 +6,9 @@ CHANNEL_TYPE = 'channel'
 VIDEO_TYPE = 'video'
 USER_TYPE = 'user'
 
-CHANNEL_INDEX = app_prefix + '_channel'
-VIDEO_INDEX = app_prefix + '_video'
-USER_INDEX = app_prefix + '_user'
+CHANNEL_ALIAS = CHANNEL_INDEX = app_prefix + '_channel'
+VIDEO_ALIAS = VIDEO_INDEX = app_prefix + '_video'
+USER_ALIAS = USER_INDEX = app_prefix + '_user'
 
 locale_count_dict = {
     "properties": {

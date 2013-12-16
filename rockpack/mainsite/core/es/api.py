@@ -36,6 +36,12 @@ class ESObjectIndexer(object):
         },
     }
 
+    aliases = {
+        'channel': mappings.CHANNEL_ALIAS,
+        'video': mappings.VIDEO_ALIAS,
+        'user': mappings.USER_ALIAS
+    }
+
     class InvalidIndexingType(Exception):
         pass
 
@@ -115,6 +121,10 @@ class ESObjectIndexer(object):
     @classmethod
     def get_mapping(cls, doc_type):
         return cls.indexes[doc_type]['mapping']
+
+    @classmethod
+    def get_alias(cls, doc_type):
+        return cls.aliases[doc_type]
 
     @staticmethod
     def flush():

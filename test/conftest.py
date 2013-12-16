@@ -1,8 +1,8 @@
 def pytest_configure(config):
     from rockpack.mainsite.core.es import mappings
-    mappings.CHANNEL_INDEX = 'test_channels'
-    mappings.VIDEO_INDEX = 'test_videos'
-    mappings.USER_INDEX = 'test_users'
+    mappings.CHANNEL_ALIAS = mappings.CHANNEL_INDEX = 'test_channel'
+    mappings.VIDEO_ALIAS = mappings.VIDEO_INDEX = 'test_video'
+    mappings.USER_ALIAS = mappings.USER_INDEX = 'test_user'
 
     from rockpack.mainsite import app, init_app
 
@@ -46,6 +46,6 @@ def pytest_unconfigure(config):
     from rockpack.mainsite import app
     if app.config.get('ELASTICSEARCH_URL'):
         from rockpack.mainsite.core.es import helpers
-        helpers.Indexing.delete_indices_for('test_channels')
-        helpers.Indexing.delete_indices_for('test_videos')
-        helpers.Indexing.delete_indices_for('test_users')
+        helpers.Indexing.delete_indices_for('test_channel')
+        helpers.Indexing.delete_indices_for('test_video')
+        helpers.Indexing.delete_indices_for('test_user')
