@@ -699,8 +699,10 @@ class TestUserContent(base.RockPackTestCase):
         with self.app.test_client() as client:
             self.app.test_request_context().push()
             user = self.create_test_user()
-            video_instance = VideoInstanceData.video_instance1
-            owner = Channel.query.get(video_instance.channel).owner
+            owner = self.create_test_user()
+            video_instance = owner.channels[0].add_videos([VideoData.video1.id])[0]
+            User.query.session.commit()
+
             r = client.post(
                 '/ws/{}/activity/'.format(user.id),
                 data=json.dumps(dict(action='star', video_instance=video_instance.id)),
@@ -715,7 +717,7 @@ class TestUserContent(base.RockPackTestCase):
             cron_cmds.create_new_activity_notifications()
             UserNotification.query.session.commit()
             notification = UserNotification.query.filter_by(
-                user=owner, message_type='starred').one()
+                user=owner.id, message_type='starred').one()
             message = json.loads(notification.message)
             self.assertEquals(message['user']['id'], user.id)
             self.assertEquals(message['video']['id'], video_instance.id)
