@@ -308,7 +308,7 @@ class VideoInstanceComment(db.Model):
 
     user_rel = relationship(User, innerjoin=True)
 
-    def get_resource_url(self):
+    def get_resource_url(self, own=False):
         return url_for('userws.video_instance_comment_item',
                        userid='-',
                        channelid='-',

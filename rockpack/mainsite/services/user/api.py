@@ -1318,7 +1318,7 @@ class UserWS(WebService):
         if not form.validate():
             abort(400, form_errors=form.errors)
         try:
-            VideoInstanceComment(
+            comment = VideoInstanceComment(
                 comment=form.comment.data,
                 video_instance=videoid,
                 user=g.authorized.userid,
@@ -1326,8 +1326,11 @@ class UserWS(WebService):
         except IntegrityError:
             # video instance doesn't exist
             abort(404)
+        else:
+            return ajax_create_response(comment)
 
     @expose_ajax('/<userid>/channels/<channelid>/videos/<videoid>/comments/<commentid>/')
+    @check_authorization()
     def video_instance_comment_item(self, userid, channelid, videoid, commentid):
         comment = VideoInstanceComment.query.get_or_404(commentid)
         return dict(comment=comment.comment, date_added=comment.date_added)

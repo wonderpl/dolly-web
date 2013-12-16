@@ -1948,7 +1948,19 @@ Content-Type: application/json
 }
 ```
 
-On success a `204` will be returned and on error a `400` with a `form_errors` field.
+On success a `201` will be returned.
+
+```http
+HTTP/1.1 201 CREATED
+Content-Type: application/json
+
+{
+ "id": COMMENTID,
+ "resource_url": "http://path/to/comment/resource/"
+}
+```
+
+On error a `400` with a `form_errors` field will be returned.
 
 ```http
 HTTP/1.1 400 BAD REQUEST
