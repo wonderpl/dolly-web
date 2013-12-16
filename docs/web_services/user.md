@@ -1919,6 +1919,7 @@ Content-Type: application/json
   "items": [
    {
     "position": 0,
+    "id": COMMENTID,
     "resource_url": "http://path/to/comment/resource/",
     "comment": "I like this video",
     "date_added": "2013-12-10T18:15:57.319368",

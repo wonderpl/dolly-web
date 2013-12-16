@@ -851,6 +851,7 @@ def _video_instance_comments(videoid, locale, paging):
     items = [
         dict(
             position=position,
+            id=comment.id,
             resource_url=comment.resource_url,
             comment=comment.comment,
             date_added=comment.date_added.isoformat(),
