@@ -257,7 +257,8 @@ class ESVideo(ESObject):
             country_restriction=mapped.country_restriction(),
             child_instance_count=mapped.child_instance_count,
             most_influential=mapped.most_influential,
-            owner=mapped.owner
+            owner=mapped.owner,
+            comments=mapped.comments()
         )
 
     @classmethod
@@ -338,6 +339,14 @@ class ESVideoAttributeMap:
                 countries['deny'].append(r.country)
 
         return countries
+
+    def get_comments(self):
+        from rockpack.mainsite.services.video.models import VideoInstanceComment
+        d = dict(
+            counts=VideoInstanceComment.query
+            .filter_by(video_instance=self.video_instance.id).count()
+        )
+        return d
 
     def video_stars(self):
         from rockpack.mainsite.services.user.models import UserActivity
@@ -430,6 +439,12 @@ class ESVideoAttributeMap:
                 allow=[],
                 deny=[])
         return self.get_country_restrictions()
+
+    def comments(self, empty=False):
+        if empty:
+            return dict(
+                count=0)
+        return self.get_comments()
 
 
 class ESChannelAttributeMap:
