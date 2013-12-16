@@ -542,6 +542,9 @@ Cache-Control: public, max-age=60
      "id": "Tr3dHIt5_K9qdG",
      "title": "Star Trek Into Darkness - Extra Footage Japanese Teaser (HD)",
      "date_added": "2012-12-06T08:28:05.000Z",
+     "comments": {
+      "count": 0
+     },
      "video": {
       "id": "RP000001TWSWZX4WH7EFFE44AUBVWI6OXALNKFTP",
       "source": "youtube",
@@ -748,6 +751,9 @@ Content-Type: application/json
      "category": 124,
      "child_instance_count": 0,
      "channel_title": "Trending and featured",
+     "comments": {
+      "count": 0
+     },
      "video": {
       "id": "RP000001TWSWZX4WH7EFFE44AUBVWI6OXALNKFTP",
       "source": "youtube",
@@ -787,6 +793,9 @@ Content-Type: application/json
      "category": 124,
      "child_instance_count": 0,
      "channel_title": "Trending and featured",
+     "comments": {
+      "count": 0
+     },
      "video": {
       "id": "RP000001TWSWZX4WH7EFFE44AUBVWI6OXALNKFTP",
       "source": "youtube",
@@ -1353,6 +1362,9 @@ Cache-Control: private, max-age=60
     "id": "viYMCzy5ZwQ_6HWBhaIcWI5g",
     "title": "I Wasn't Talking To You",
     "date_added": "2013-02-20T22:57:08.197668+00:00",
+    "comments": {
+     "count": 0
+    },
     "video": {
      "id": "RP000001ZALXK3ETZHWTCI6MVJSOBRVZY5KNL7DK",
      "source": "youtube",
@@ -1423,6 +1435,9 @@ Cache-Control: private, max-age=60
     "id": "VIDEOINSTANCEID",
     "date_added": "2013-06-04T15:15:11.963565",
     "title": "Video title",
+    "comments": {
+     "count": 0
+    },
     "video": {
      "id": "RP000001XDPBVMXPADH6X7XA3FHBMJWD75QCIDSX",
      "source": "youtube",

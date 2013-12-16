@@ -35,6 +35,9 @@ Cache-Control: public, max-age=300
         "id": "Svi0xYzZY-01-hg64Qofzoyo",
         "title": "video title",
         "channel_title": "A channel title",
+        "comments": {
+          "count": 0
+        },
         "owner": {
           "id": "ziCAgGxbRpW-HNYTloYkQg",
           "username": "littlejimmy",

@@ -126,6 +126,9 @@ Cache-Control: public, max-age=3600
         "date_added": "2012-12-06T08:28:05.000Z",
         "position": 0,
         "id": "Tr3dHIt5_K9qdG",
+        "comments": {
+          "count": 0
+        },
         "child_instance_count": 0,
         "channel_title": "Trending and featured",
         "channel": {

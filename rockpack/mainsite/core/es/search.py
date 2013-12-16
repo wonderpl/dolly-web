@@ -499,6 +499,13 @@ class VideoSearch(EntitySearch, CategoryMixin, MediaSortMixin):
                 owner=v.owner,
                 child_instance_count=getattr(v, 'child_instance_count', 0)
             )
+            if app.config.get('DOLLY'):
+                video.update({
+                    "comments": {
+                        "count": getattr(v.comments, 'count', 0)
+                    }
+                })
+
             if with_stars:
                 video['recent_user_stars'] = v.get('recent_user_stars', [])
             if v.category:

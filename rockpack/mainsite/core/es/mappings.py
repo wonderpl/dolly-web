@@ -115,6 +115,14 @@ if app.config.get('DOLLY', False):
             "most_influential": {
                 "type": "boolean",
                 "null_value": False
+            },
+            "comments": {
+                "properties": {
+                    "count": {
+                        "type": "integer",
+                        "null_value": 0
+                    }
+                }
             }
         }
     }
