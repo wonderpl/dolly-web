@@ -56,9 +56,7 @@ class CompleteTestCase(RockPackTestCase):
         result = self._complete('videos', prefix)
         
         for r in result:
-            t = r[0]
-            m = r[1]
-            self.assertEquals(t[:len(prefix)], prefix)
+            self.assertEquals(r[0][:len(prefix)], prefix)
 
     def test_complete_users(self):
         username = UserData.test_user_a.username
