@@ -54,7 +54,10 @@ class CompleteTestCase(RockPackTestCase):
     def test_complete_videos(self):
         prefix = 'th'
         result = self._complete('videos', prefix)
-        for t, m in result:
+        
+        for r in result:
+            t = r[0]
+            m = r[1]
             self.assertEquals(t[:len(prefix)], prefix)
 
     def test_complete_users(self):
@@ -72,9 +75,15 @@ class CompleteTestCase(RockPackTestCase):
         self.app.config['COMPLETE_ALL_TYPES_THRESHOLD'] = 0
         result = self._complete('all', 'test')
         terms = zip(*result)[0]
+        data = zip(*result)[1]
         self.assertGreater(terms, 3)
         # users first
-        self.assertEquals(terms[0], UserData.test_user_a.username)
+        self.assertEquals(terms[0], UserData.test_user_a.username) # test_user_1
+		# data type for user
+        
+        self.assertEquals(data[0][0], 'user')
+        self.assertEquals(data[0][1], UserData.test_user_a.id)
+        self.assertEquals(data[0][2], UserData.test_user_a.username)
         # then channels
         self.assertRegexpMatches(terms[1], '^test_[0-9a-f]{32}$')
         # then some videos

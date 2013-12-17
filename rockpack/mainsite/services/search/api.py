@@ -224,13 +224,13 @@ class CompleteWS(WebService):
             order_by('count(*) desc').limit(10).values(User.id, User.username, User.avatar))]
 	
 	
-        channel_terms = [(title[0], ['channel']) for cid, title in list(
+        channel_terms = [(title, ['channel', cid]) for cid, title in list(
             Channel.query.filter(func.lower(Channel.title).like('%s%%' % query)).
             filter_by(deleted=False, public=True, visible=True).
             order_by('subscriber_count desc').limit(10).values(Channel.id, 'title'))]
 
 	
-	extra_terms = [(term[0], ['native']) for term in extra_terms]
+	extra_terms = [(term[0], ['native']) for term in extra_terms or []]
         # For each term source, add up to 3 at the top and then fill with
         # remaining sources, if any
         terms = []
