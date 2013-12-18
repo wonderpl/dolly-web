@@ -62,11 +62,11 @@ class AuthMixin(object):
         return self.is_authenticated()
 
 
-class AdminView(BaseView, AuthMixin):
+class AdminView(AuthMixin, BaseView):
     pass
 
 
-class AdminModelView(ModelView, AuthMixin):
+class AdminModelView(AuthMixin, ModelView):
 
     model = None
 
