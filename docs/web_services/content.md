@@ -127,7 +127,7 @@ Cache-Control: public, max-age=3600
         "position": 0,
         "id": "Tr3dHIt5_K9qdG",
         "comments": {
-          "count": 0
+          "total": 0
         },
         "child_instance_count": 0,
         "channel_title": "Trending and featured",

@@ -503,7 +503,7 @@ class VideoSearch(EntitySearch, CategoryMixin, MediaSortMixin):
             if app.config.get('DOLLY'):
                 video.update({
                     "comments": {
-                        "count": getattr(v.comments, 'count', 0)
+                        "total": getattr(v.comments, 'count', 0)
                     }
                 })
 

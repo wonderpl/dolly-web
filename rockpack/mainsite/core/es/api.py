@@ -442,8 +442,7 @@ class ESVideoAttributeMap:
 
     def comments(self, empty=False):
         if empty:
-            return dict(
-                count=0)
+            return dict(count=0)
         return self.get_comments()
 
 

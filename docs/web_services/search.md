@@ -38,7 +38,7 @@ Cache-Control: public, max-age=300
          "id": "chOq1ZEUv3WHsQuMDu8oBrOQ"
         },
         "comments": {
-          "count": 0
+          "total": 0
         },
         "owner": {
           "id": "ziCAgGxbRpW-HNYTloYkQg",
