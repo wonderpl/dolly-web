@@ -1313,7 +1313,7 @@ class UserWS(WebService):
         instance = VideoInstance.query.filter_by(id=videoid, channel=channelid).first_or_404()
         return video_api.video_dict(instance)
 
-    @expose_ajax('/<userid>/channels/<channelid>/videos/<videoid>/comments/', cache_age=600)
+    @expose_ajax('/<userid>/channels/<channelid>/videos/<videoid>/comments/', cache_age=60)
     def video_instance_comments(self, userid, channelid, videoid):
         items, total = _video_instance_comments(videoid, self.get_locale(), self.get_page())
         return dict(comments=dict(items=items, total=total))
