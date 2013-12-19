@@ -6,13 +6,14 @@ from urlparse import urlsplit
 from mock import patch
 from test import base
 from test.fixtures import RockpackCoverArtData, VideoInstanceData, VideoData, ChannelData
-from test.test_decorators import skip_if_dolly
+from test.test_decorators import skip_if_dolly, skip_if_rockpack, skip_unless_config
 from test.test_helpers import get_auth_header
 from test.services.test_user_flows import BaseUserTestCase
 from rockpack.mainsite import app
 from rockpack.mainsite.services.base.models import JobControl
 from rockpack.mainsite.services.video.commands import update_channel_view_counts, update_channel_promotions
 from rockpack.mainsite.core.es import use_elasticsearch
+from rockpack.mainsite.core.es.search import VideoSearch
 from rockpack.mainsite.services.video import models
 from rockpack.mainsite.services.user.models import UserActivity
 
@@ -709,6 +710,88 @@ class ChannelVideoTestCase(base.RockPackTestCase):
                 (VideoData.video2.id, 0),
                 (VideoData.video1.id, 1),
             ])
+
+    @skip_if_rockpack
+    @skip_unless_config('ELASTICSEARCH_URL')
+    def test_video_comments(self):
+        with app.test_request_context():
+            user_id = self.create_test_user().id
+            with self.app.test_client() as client:
+                # create new channel
+                r = client.post(
+                    '/ws/{}/channels/'.format(user_id),
+                    data=json.dumps(dict(
+                        title='test',
+                        description='test',
+                        category='',
+                        cover='',
+                        public=True,
+                    )),
+                    content_type='application/json',
+                    headers=[get_auth_header(user_id)]
+                )
+                self.assertEquals(r.status_code, 201)
+                channel_id = json.loads(r.data)['id']
+
+                # add videos
+                r = client.put(
+                    '/ws/{}/channels/{}/videos/'.format(user_id, channel_id),
+                    data=json.dumps([
+                        VideoInstanceData.video_instance1.id,
+                        VideoInstanceData.video_instance2.id,
+                    ]),
+                    content_type='application/json',
+                    headers=[get_auth_header(user_id)]
+                )
+                self.assertEquals(r.status_code, 204)
+
+                # add comment
+                instance_data = dict(userid=user_id, channelid=channel_id)
+
+                r = client.get('/ws/{userid}/channels/{channelid}/'.format(**instance_data),
+                    content_type='application/json',
+                    headers=[get_auth_header(user_id)])
+
+                instance_data['videoid'] = json.loads(r.data)['videos']['items'][0]['id']
+
+                r = client.post(
+                    '/ws/{userid}/channels/{channelid}/videos/{videoid}/comments/'.format(**instance_data),
+                    data=json.dumps(dict(comment="this is a comment")),
+                    content_type='application/json',
+                    headers=[get_auth_header(user_id)]
+                )
+                self.assertEquals(r.status_code, 201)
+
+                self.wait_for_es()
+
+                v = VideoSearch('en-gb')
+                v.add_id(instance_data['videoid'])
+                instance = v.videos()[0]
+                self.assertEquals(instance['comments']['total'], 1)
+
+                # delete comment
+                r = client.get(
+                    '/ws/{userid}/channels/{channelid}/videos/{videoid}/comments/'.format(**instance_data),
+                    content_type='application/json',
+                    headers=[get_auth_header(user_id)]
+                )
+
+                comment_id = json.loads(r.data)['comments']['items'][0]['id']
+                instance_data.update({'commentid': comment_id})
+
+                r = client.delete(
+                    '/ws/{userid}/channels/{channelid}/videos/{videoid}/comments/{commentid}/'.format(**instance_data),
+                    content_type='application/json',
+                    headers=[get_auth_header(user_id)]
+                )
+
+                self.wait_for_es()
+
+                v = VideoSearch('en-gb')
+                v.add_id(instance_data['videoid'])
+                instance = v.videos()[0]
+                self.assertEquals(instance['comments']['total'], 0)
+
 
     def test_channel_source(self):
         user_id = self.create_test_user().id

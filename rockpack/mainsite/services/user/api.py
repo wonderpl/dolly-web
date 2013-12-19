@@ -16,7 +16,7 @@ from rockpack.mainsite.core.webservice import WebService, expose_ajax, ajax_crea
 from rockpack.mainsite.core.oauth.decorators import check_authorization
 from rockpack.mainsite.core.youtube import get_video_data
 from rockpack.mainsite.core.es import use_elasticsearch, search as es_search
-from rockpack.mainsite.core.es.api import es_update_channel_videos
+from rockpack.mainsite.core.es.api import es_update_channel_videos, ESVideo
 from rockpack.mainsite.core import recommender
 from rockpack.mainsite.helpers import lazy_gettext as _
 from rockpack.mainsite.helpers.forms import naughty_word_validator
@@ -139,6 +139,17 @@ def _get_action_incrementer(action):
     incr = lambda m: {getattr(m, column): getattr(m, column) + value}
     return column, value, incr
 
+
+def _update_video_comment_count(videoid):
+    try:
+        ev = ESVideo.updater()
+        ev.set_document_id(videoid)
+        ev.add_field(
+            'comments.count',
+            VideoInstanceComment.query.filter_by(video_instance=videoid).count())
+        ev.update()
+    except Exception, e:
+        app.logger.error(str(e))
 
 @commit_on_success
 def save_video_activity(userid, action, instance_id, locale):
@@ -1334,6 +1345,7 @@ class UserWS(WebService):
             # video instance doesn't exist
             abort(404)
         else:
+            _update_video_comment_count(videoid)
             return ajax_create_response(comment)
 
     @expose_ajax('/<userid>/channels/<channelid>/videos/<videoid>/comments/<commentid>/')
@@ -1349,6 +1361,8 @@ class UserWS(WebService):
         comment = VideoInstanceComment.query.filter_by(id=commentid, user=g.authorized.userid)
         if not comment.delete():
             abort(404)
+        else:
+            _update_video_comment_count(videoid)
 
     @expose_ajax('/<userid>/channels/<channelid>/subscribers/', cache_age=600)
     def channel_subscribers(self, userid, channelid):
