@@ -159,8 +159,7 @@ def save_video_activity(userid, action, instance_id, locale):
                     object_type='video_instance', object_id=instance_id, locale=locale)
     if not UserActivity.query.filter_by(**activity).count():
         # Increment value on each of instance, video, & locale meta
-        updated = Video.query.filter_by(id=video_id).update(incr(Video))
-        assert updated
+        Video.query.filter_by(id=video_id, visible=True).update(incr(Video))
         if not instance_id.startswith(search_api.VIDEO_INSTANCE_PREFIX):
             updated = VideoInstance.query.filter_by(id=instance_id).update(incr(VideoInstance))
             if updated:
