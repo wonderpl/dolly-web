@@ -90,7 +90,9 @@ def dbshell(slave=False):
     dburl = app.config['SLAVE_DATABASE_URL' if slave else 'DATABASE_URL']
     engine = create_engine(dburl)
     assert engine.dialect.name == 'postgresql'
-    args, env = ['psql'], {'PATH': '/usr/bin:/bin'}
+    env = os.environ
+    env['PATH'] = '/usr/bin:/bin'
+    args = ['psql']
     if engine.url.username:
         args += ['-U', engine.url.username]
     if engine.url.host:
