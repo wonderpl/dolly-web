@@ -34,9 +34,11 @@ Cache-Control: public, max-age=300
         "category": 124,
         "id": "Svi0xYzZY-01-hg64Qofzoyo",
         "title": "video title",
-        "channel_title": "A channel title",
+        "channel": {
+         "id": "chOq1ZEUv3WHsQuMDu8oBrOQ"
+        },
         "comments": {
-          "count": 0
+          "total": 0
         },
         "owner": {
           "id": "ziCAgGxbRpW-HNYTloYkQg",

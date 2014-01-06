@@ -467,22 +467,23 @@ class VideoSearch(EntitySearch, CategoryMixin, MediaSortMixin):
         """ Adds channel information to each video """
         for video in videos:
             try:
-                video['channel'] = channels[video['channel']]
+                video['channel'] = channels[video['channel']['id']]
             except KeyError:
                 app.logger.warning("Missing channel '%s' during mapping", video['channel'])
 
     def _format_results(self, videos, with_channels=True, with_stars=False):
         vlist = []
-        channel_list = []
+        channel_list = set()
 
         for pos, v in enumerate(videos, self.paging[0]):
             published = v.video.date_published
             video = dict(
                 id=v.id,
+                channel=dict(id=v.channel),
                 title=v.title,
                 date_added=_format_datetime(v.date_added),
                 public=v.public,
-                channel_title=v.channel_title,
+                #channel_title=v.channel_title, # Used any more?
                 category='',
                 video=dict(
                     id=v.video.id,
@@ -502,7 +503,7 @@ class VideoSearch(EntitySearch, CategoryMixin, MediaSortMixin):
             if app.config.get('DOLLY'):
                 video.update({
                     "comments": {
-                        "count": getattr(v.comments, 'count', 0)
+                        "total": getattr(v.comments, 'count', 0)
                     }
                 })
 
@@ -510,9 +511,8 @@ class VideoSearch(EntitySearch, CategoryMixin, MediaSortMixin):
                 video['recent_user_stars'] = v.get('recent_user_stars', [])
             if v.category:
                 video['category'] = max(v.category) if isinstance(v.category, list) else v.category
-            if with_channels:
-                video['channel'] = v.channel
-                channel_list.append(v.channel)
+
+            channel_list.add(v.channel)
             vlist.append(video)
 
         if with_channels and channel_list:

@@ -16,7 +16,7 @@ from rockpack.mainsite.core.webservice import WebService, expose_ajax, ajax_crea
 from rockpack.mainsite.core.oauth.decorators import check_authorization
 from rockpack.mainsite.core.youtube import get_video_data
 from rockpack.mainsite.core.es import use_elasticsearch, search as es_search
-from rockpack.mainsite.core.es.api import es_update_channel_videos
+from rockpack.mainsite.core.es.api import es_update_channel_videos, ESVideo
 from rockpack.mainsite.core import recommender
 from rockpack.mainsite.helpers import lazy_gettext as _
 from rockpack.mainsite.helpers.forms import naughty_word_validator
@@ -140,6 +140,17 @@ def _get_action_incrementer(action):
     return column, value, incr
 
 
+def _update_video_comment_count(videoid):
+    try:
+        ev = ESVideo.updater()
+        ev.set_document_id(videoid)
+        ev.add_field(
+            'comments.count',
+            VideoInstanceComment.query.filter_by(video_instance=videoid).count())
+        ev.update()
+    except Exception, e:
+        app.logger.error(str(e))
+
 @commit_on_success
 def save_video_activity(userid, action, instance_id, locale):
     column, value, incr = _get_action_incrementer(action)
@@ -148,8 +159,7 @@ def save_video_activity(userid, action, instance_id, locale):
                     object_type='video_instance', object_id=instance_id, locale=locale)
     if not UserActivity.query.filter_by(**activity).count():
         # Increment value on each of instance, video, & locale meta
-        updated = Video.query.filter_by(id=video_id).update(incr(Video))
-        assert updated
+        Video.query.filter_by(id=video_id, visible=True).update(incr(Video))
         if not instance_id.startswith(search_api.VIDEO_INSTANCE_PREFIX):
             updated = VideoInstance.query.filter_by(id=instance_id).update(incr(VideoInstance))
             if updated:
@@ -1313,7 +1323,7 @@ class UserWS(WebService):
         instance = VideoInstance.query.filter_by(id=videoid, channel=channelid).first_or_404()
         return video_api.video_dict(instance)
 
-    @expose_ajax('/<userid>/channels/<channelid>/videos/<videoid>/comments/', cache_age=600)
+    @expose_ajax('/<userid>/channels/<channelid>/videos/<videoid>/comments/', cache_age=60)
     def video_instance_comments(self, userid, channelid, videoid):
         items, total = _video_instance_comments(videoid, self.get_locale(), self.get_page())
         return dict(comments=dict(items=items, total=total))
@@ -1334,6 +1344,7 @@ class UserWS(WebService):
             # video instance doesn't exist
             abort(404)
         else:
+            _update_video_comment_count(videoid)
             return ajax_create_response(comment)
 
     @expose_ajax('/<userid>/channels/<channelid>/videos/<videoid>/comments/<commentid>/')
@@ -1349,6 +1360,8 @@ class UserWS(WebService):
         comment = VideoInstanceComment.query.filter_by(id=commentid, user=g.authorized.userid)
         if not comment.delete():
             abort(404)
+        else:
+            _update_video_comment_count(videoid)
 
     @expose_ajax('/<userid>/channels/<channelid>/subscribers/', cache_age=600)
     def channel_subscribers(self, userid, channelid):

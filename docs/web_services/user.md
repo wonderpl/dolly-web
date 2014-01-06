@@ -543,7 +543,7 @@ Cache-Control: public, max-age=60
      "title": "Star Trek Into Darkness - Extra Footage Japanese Teaser (HD)",
      "date_added": "2012-12-06T08:28:05.000Z",
      "comments": {
-      "count": 0
+      "total": 0
      },
      "video": {
       "id": "RP000001TWSWZX4WH7EFFE44AUBVWI6OXALNKFTP",
@@ -752,7 +752,7 @@ Content-Type: application/json
      "child_instance_count": 0,
      "channel_title": "Trending and featured",
      "comments": {
-      "count": 0
+      "total": 0
      },
      "video": {
       "id": "RP000001TWSWZX4WH7EFFE44AUBVWI6OXALNKFTP",
@@ -778,34 +778,31 @@ GET /ws/USERID/channels/CID/videos/INSTANCEID/ HTTP/1.1
 
 Returns a single video instance
 
-
 ```http
 HTTP/1.1 200 OK
 Cache-Control: public, max-age=60
 Content-Type: application/json
 
-
-    {
-     "position": 0,
-     "id": "Tr3dHIt5_K9qdG",
-     "title": "Star Trek Into Darkness - Extra Footage Japanese Teaser (HD)",
-     "date_added": "2012-12-06T08:28:05.000Z",
-     "category": 124,
-     "child_instance_count": 0,
-     "channel_title": "Trending and featured",
-     "comments": {
-      "count": 0
-     },
-     "video": {
-      "id": "RP000001TWSWZX4WH7EFFE44AUBVWI6OXALNKFTP",
-      "source": "youtube",
-      "source_id": "BrHlQUXFzfw",
-      "source_username": "yt user",
-      "thumbnail_url": "http://i.ytimg.com/vi/BrHlQUXFzfw/0.jpg",
-      "star_count": "4455"
-     }
-    }
-
+{
+ "position": 0,
+ "id": "Tr3dHIt5_K9qdG",
+ "title": "Star Trek Into Darkness - Extra Footage Japanese Teaser (HD)",
+ "date_added": "2012-12-06T08:28:05.000Z",
+ "category": 124,
+ "child_instance_count": 0,
+ "channel_title": "Trending and featured",
+ "comments": {
+  "total": 0
+ },
+ "video": {
+  "id": "RP000001TWSWZX4WH7EFFE44AUBVWI6OXALNKFTP",
+  "source": "youtube",
+  "source_id": "BrHlQUXFzfw",
+  "source_username": "yt user",
+  "thumbnail_url": "http://i.ytimg.com/vi/BrHlQUXFzfw/0.jpg",
+  "star_count": "4455"
+ }
+}
 ```
 
 
@@ -1363,7 +1360,7 @@ Cache-Control: private, max-age=60
     "title": "I Wasn't Talking To You",
     "date_added": "2013-02-20T22:57:08.197668+00:00",
     "comments": {
-     "count": 0
+     "total": 0
     },
     "video": {
      "id": "RP000001ZALXK3ETZHWTCI6MVJSOBRVZY5KNL7DK",
@@ -1436,7 +1433,7 @@ Cache-Control: private, max-age=60
     "date_added": "2013-06-04T15:15:11.963565",
     "title": "Video title",
     "comments": {
-     "count": 0
+     "total": 0
     },
     "video": {
      "id": "RP000001XDPBVMXPADH6X7XA3FHBMJWD75QCIDSX",
