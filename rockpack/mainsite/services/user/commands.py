@@ -387,8 +387,12 @@ def create_new_channel_feed_items(date_from, date_to):
         join(ExternalToken, ExternalToken.user == Channel.owner).\
         join(ExternalFriend, (ExternalFriend.external_system == ExternalToken.external_system) &
                              (ExternalFriend.external_uid == ExternalToken.external_uid))
+
+    notification_groups = {}
+    owners = {}
+
     for query, U in (sub_channels, Subscription), (friend_channels, ExternalFriend):
-            # use outerjoin to filter existing records
+        # use outerjoin to filter existing records
         q = query.outerjoin(
             UserContentFeed,
             (UserContentFeed.user == U.user) &
@@ -401,13 +405,21 @@ def create_new_channel_feed_items(date_from, date_to):
             UserContentFeed.query.session.add(
                 UserContentFeed(user=user, channel=channel, date_added=date_published)
             )
-            # FIXME: need to do this in bulk
-            #token = get_apns_token(user)
-            #if token:
-            #    push_message = '%@ has added a new channel'
-            #    push_message_args = [user.display_name()]
-            #    deeplink_url = channel.get_resource_url(True)
-            #    complex_push_notification(token, push_message, push_message_args, url=deeplink_url)
+            token = get_apns_token(user)
+            if token:
+                notification_groups.setdefault(channel, []).append(token)
+                owners.setdefault(channel, user)
+
+    for channel, tokens in notification_groups.iteritems():
+        message = dict(
+            alert={
+                "loc-key": '%@ has added a new channel',
+                "loc-args": [owners[channel].display_name()]
+            },
+            url=_apns_url(channel.resource_url)
+        )
+        for tokengrp in izip_longest(*[iter(tokens)] * 100, fillvalue=None):
+            _send_apns_message('batch', filter(None, set(tokengrp)), message)
 
 
 def remove_old_feed_items():
