@@ -382,7 +382,10 @@ def create_new_channel_feed_items(date_from, date_to):
         Channel.date_published.between(date_from, date_to))
     sub_channels = new_channels.\
         join(SubChannel, Channel.owner == SubChannel.owner).\
-        join(Subscription, Subscription.channel == SubChannel.id)
+        join(Subscription, Subscription.channel == SubChannel.id).\
+        outerjoin(
+            ExternalToken,
+            ExternalToken.user == SubChannel.owner)
     friend_channels = new_channels.\
         join(ExternalToken, ExternalToken.user == Channel.owner).\
         join(ExternalFriend, (ExternalFriend.external_system == ExternalToken.external_system) &
