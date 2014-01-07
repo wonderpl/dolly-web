@@ -404,7 +404,16 @@ class TestUserContent(base.RockPackTestCase):
             # Run cron commands
             date_from, date_to = datetime(2012, 1, 1), datetime(2020, 1, 1)
             cron_cmds.create_new_video_feed_items(date_from, date_to)
-            cron_cmds.create_new_channel_feed_items(date_from, date_to)
+
+            def _new_send(obj, message):
+                # simulate success
+                print message
+                return apnsclient.Result(message)
+
+            import apnsclient
+            with patch.object(apnsclient.APNs, 'send', _new_send):
+                # FIXME: how the hell do I get what it was called with?
+                cron_cmds.create_new_channel_feed_items(date_from, date_to)
             #cron_cmds.update_video_feed_item_stars(date_from, date_to)
             User.query.session.commit()
 

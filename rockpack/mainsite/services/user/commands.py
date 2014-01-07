@@ -389,7 +389,7 @@ def create_new_channel_feed_items(date_from, date_to):
                              (ExternalFriend.external_uid == ExternalToken.external_uid))
 
     notification_groups = {}
-    owners = {}
+    channelmeta = {}
 
     for query, U in (sub_channels, Subscription), (friend_channels, ExternalFriend):
         # use outerjoin to filter existing records
@@ -400,10 +400,6 @@ def create_new_channel_feed_items(date_from, date_to):
             (UserContentFeed.video_instance == None)
         ).filter(
             UserContentFeed.id == None
-        ).outerjoin(
-            ExternalToken,
-            (ExternalToken.external_system == 'apns') &
-            (ExternalToken.user == UserContentFeed.user)
         ).distinct().values(U.user, Channel.id, Channel.date_published, ExternalToken.external_token)
 
         for user, channel, date_published, token in q:
@@ -412,19 +408,10 @@ def create_new_channel_feed_items(date_from, date_to):
             )
             notification_groups.setdefault(channel, []).append((user, token))
 
-        # Get the User and Channel objects for the newly created channel,
-        # then get the display_name and resource from the above
-        # so they're available to lookup when sending the bulk messages for each channel
-        users = query.join(
-            User,
-            Channel.owner == User.id
-        ).with_entities(User, Channel)
-
-        for user, channel in users:
-            owners.setdefault(channel.id, (user.display_name(), channel.resource_url))
+        channelmeta = dict((c.id, (c.owner_rel.display_name, c.resource_url)) for c in new_channels)
 
     for channel, users in notification_groups.iteritems():
-        display_name, channel_resource_url = owners[channel]
+        display_name, channel_resource_url = channelmeta[channel]
         alert = {
             "loc-key": '%@ has added a new channel',
             "loc-args": [display_name]
