@@ -400,26 +400,36 @@ def create_new_channel_feed_items(date_from, date_to):
             (UserContentFeed.video_instance == None)
         ).filter(
             UserContentFeed.id == None
-        ).distinct().values(U.user, Channel.id, Channel.date_published)
-        for user, channel, date_published in q:
+        ).outerjoin(
+            ExternalToken,
+            (ExternalToken.external_system == 'apns') &
+            (ExternalToken.user == UserContentFeed.user)
+        ).distinct().values(U.user, Channel.id, Channel.date_published, ExternalToken.external_token)
+
+        for user, channel, date_published, token in q:
             UserContentFeed.query.session.add(
                 UserContentFeed(user=user, channel=channel, date_added=date_published)
             )
-            token = get_apns_token(user)
-            if token:
-                notification_groups.setdefault(channel, []).append(token)
-                owners.setdefault(channel, user)
+            notification_groups.setdefault(channel, []).append((user, token))
 
-    for channel, tokens in notification_groups.iteritems():
-        message = dict(
-            alert={
-                "loc-key": '%@ has added a new channel',
-                "loc-args": [owners[channel].display_name()]
-            },
-            url=_apns_url(channel.resource_url)
-        )
-        for tokengrp in izip_longest(*[iter(tokens)] * 100, fillvalue=None):
-            _send_apns_message('batch', filter(None, set(tokengrp)), message)
+        # Get the User and Channel objects for the newly created channel,
+        # then get the display_name and resource from the above
+        # so they're available to lookup when sending the bulk messages for each channel
+        users = query.join(
+            User,
+            Channel.owner == User.id
+        ).with_entities(User, Channel)
+
+        for user, channel in users:
+            owners.setdefault(channel.id, (user.display_name(), channel.resource_url))
+
+    for channel, users in notification_groups.iteritems():
+        display_name, channel_resource_url = owners[channel]
+        alert = {
+            "loc-key": '%@ has added a new channel',
+            "loc-args": [display_name]
+        }
+        _process_apns_broadcast(users, alert, url=channel_resource_url)
 
 
 def remove_old_feed_items():
