@@ -238,7 +238,8 @@ class DBImport(object):
                     recent_user_stars=mapped.recent_user_stars(empty=True),
                     country_restriction=mapped.country_restriction(empty=True),
                     comments=mapped.comments(empty=True),
-                    child_instance_count=mapped.child_instance_count
+                    child_instance_count=mapped.child_instance_count,
+                    tags=mapped.tags
                 )
                 ev.manager.indexer.insert(v.id, rep)
 

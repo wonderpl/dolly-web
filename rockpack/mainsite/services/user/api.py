@@ -151,6 +151,7 @@ def _update_video_comment_count(videoid):
     except Exception, e:
         app.logger.error(str(e))
 
+
 @commit_on_success
 def save_video_activity(userid, action, instance_id, locale):
     column, value, incr = _get_action_incrementer(action)
@@ -847,8 +848,7 @@ def _video_recommendations(userid, locale, paging):
     if use_elasticsearch():
         vs = es_search.VideoSearch(locale)
         if mood:
-            # TODO: use mood tags here instead
-            vs.add_term('category', mood)
+            vs.add_term('tags', 'mood-' + mood)
         if location:
             vs.check_country_allowed(location.upper())
         vs.random_sort()
