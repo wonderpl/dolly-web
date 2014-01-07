@@ -16,8 +16,8 @@ GOOGLE_CONSUMER_SECRET = _decrypt('?\xacR[\xb5N\xe3P\xd4\xea\x85\x1e\x89\xd08o\x
 OOYALA_SECRET = _decrypt('\x10\xa2u\xb8\xc5\xae\x86\x07!\r\xfe\x12l}\xdb~Z\x0ekOI\x9f\x8f\xb9\x8e\xc9\xb7\xc4!\xea~H<\xbf\xde\xcb\xb3\x12~\xa2')
 
 #ASSETS_URL = '//d1ndbcg4lpnkzx.cloudfront.net/static'
-IMAGE_CDN = 'http://media.dolly.us.rockpack.com'
-S3_BUCKET = 'media.dolly.us.rockpack.com'
+IMAGE_CDN = 'http://media.us.wonderpl.com'
+S3_BUCKET = 'media.us.wonderpl.com'
 
 SENTRY_USER = _decrypt('t\x0e\x82\x02\xcc\xbf\x8d\x02<d\xf5\xd8\xdc\x96(fJ\xb0\\v!\x9b].g\xcd\xbc\xc2 lt\xff')
 SENTRY_PASSWORD = _decrypt('v\xb6a:\x0b\xb2\x88\x18z\xcc\xe1N\xe2N\xf5\x19\xe8\xfcXq\xe2\x9c;\xe0S\x8eg\n\xa9\x03\x97\r')
@@ -36,15 +36,15 @@ SQS_REGION = 'us-east-1'
 
 #USE_GEVENT = True
 
-ADMIN_NAME = 'Dolly Admin'
+ADMIN_NAME = 'Wonder Place Admin'
 
 FACEBOOK_APP_ID = '517447921656577'
 FACEBOOK_APP_SECRET = _decrypt('#>d\xb3\ri\xc5\x07*\xb7\x99\xb05\x0f8\x19\x03\xff1\xb3Id\xab=\x13\xc9\xcfQD\x0c\xd2G')
-FACEBOOK_APP_NAMESPACE = 'dollyns'
+FACEBOOK_APP_NAMESPACE = 'wonderpl'
 
-SERVER_NAME = 'rockpack.com'
+SERVER_NAME = 'wonderpl.com'
 SECURE_SUBDOMAIN = 'secure'
-ADMIN_SUBDOMAIN = 'dolly'
+ADMIN_SUBDOMAIN = 'admin'
 DEFAULT_SUBDOMAIN = 'lb.us'
 API_SUBDOMAIN = 'api'
 SHARE_SUBDOMAIN = 'share'
