@@ -382,20 +382,19 @@ def create_new_channel_feed_items(date_from, date_to):
         Channel.date_published.between(date_from, date_to))
     sub_channels = new_channels.\
         join(SubChannel, Channel.owner == SubChannel.owner).\
-        join(Subscription, Subscription.channel == SubChannel.id).\
-        outerjoin(
-            ExternalToken,
-            ExternalToken.user == SubChannel.owner)
+        join(Subscription, Subscription.channel == SubChannel.id)
     friend_channels = new_channels.\
         join(ExternalToken, ExternalToken.user == Channel.owner).\
         join(ExternalFriend, (ExternalFriend.external_system == ExternalToken.external_system) &
                              (ExternalFriend.external_uid == ExternalToken.external_uid))
 
+    channelmeta = dict((c.id, (c.owner_rel.display_name, c.resource_url)) for c in new_channels)
     notification_groups = {}
-    channelmeta = {}
 
     for query, U in (sub_channels, Subscription), (friend_channels, ExternalFriend):
         # use outerjoin to filter existing records
+        ExtAlias = aliased(ExternalToken, name="external_apns")
+
         q = query.outerjoin(
             UserContentFeed,
             (UserContentFeed.user == U.user) &
@@ -403,15 +402,17 @@ def create_new_channel_feed_items(date_from, date_to):
             (UserContentFeed.video_instance == None)
         ).filter(
             UserContentFeed.id == None
-        ).distinct().values(U.user, Channel.id, Channel.date_published, ExternalToken.external_token)
+        ).outerjoin(
+            ExtAlias,
+            (ExtAlias.external_system == 'apns') &
+            (ExtAlias.user == UserContentFeed.user)
+        ).distinct().values(U.user, Channel.id, Channel.date_published, ExtAlias.external_token)
 
         for user, channel, date_published, token in q:
             UserContentFeed.query.session.add(
                 UserContentFeed(user=user, channel=channel, date_added=date_published)
             )
-            notification_groups.setdefault(channel, []).append((user, token))
-
-        channelmeta = dict((c.id, (c.owner_rel.display_name, c.resource_url)) for c in new_channels)
+            notification_groups.setdefault(channel, set()).add((user, token))
 
     for channel, users in notification_groups.iteritems():
         display_name, channel_resource_url = channelmeta[channel]

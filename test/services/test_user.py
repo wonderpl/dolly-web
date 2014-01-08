@@ -396,6 +396,8 @@ class TestUserContent(base.RockPackTestCase):
             # Create a new channel owner by a friend
             ExternalFriend(user=user1, external_system='facebook', external_uid='u3',
                            name='u3', avatar_url='').save()
+            ExternalFriend(user=user2, external_system='facebook', external_uid='u3',
+                           name='u3', avatar_url='').save()
             ExternalToken(user=user3, external_system='facebook', external_uid='u3',
                           external_token='u3u3').save()
             u3new = Channel(owner=user3, title='u3new', description='', cover='',
@@ -405,15 +407,13 @@ class TestUserContent(base.RockPackTestCase):
             date_from, date_to = datetime(2012, 1, 1), datetime(2020, 1, 1)
             cron_cmds.create_new_video_feed_items(date_from, date_to)
 
-            def _new_send(obj, message):
-                # simulate success
-                print message
-                return apnsclient.Result(message)
-
-            import apnsclient
-            with patch.object(apnsclient.APNs, 'send', _new_send):
+            #import apnsclient
+            with patch.object(cron_cmds, '_process_apns_broadcast') as mock_method:
                 # FIXME: how the hell do I get what it was called with?
                 cron_cmds.create_new_channel_feed_items(date_from, date_to)
+            self.assertEquals(mock_method.call_count, 2)
+            self.assertEquals(len(list(mock_method.mock_calls[0])[1][0]), 2, 'should be 2 tokens for apns')
+            self.assertEquals(len(list(mock_method.mock_calls[1])[1][0]), 1, 'should be 1 token for apns')
             #cron_cmds.update_video_feed_item_stars(date_from, date_to)
             User.query.session.commit()
 
