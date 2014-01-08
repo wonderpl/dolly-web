@@ -390,11 +390,10 @@ def create_new_channel_feed_items(date_from, date_to):
 
     channelmeta = dict((c.id, (c.owner_rel.display_name, c.resource_url)) for c in new_channels)
     notification_groups = {}
+    notify_users = {}
 
     for query, U in (sub_channels, Subscription), (friend_channels, ExternalFriend):
         # use outerjoin to filter existing records
-        ExtAlias = aliased(ExternalToken, name="external_apns")
-
         q = query.outerjoin(
             UserContentFeed,
             (UserContentFeed.user == U.user) &
@@ -402,25 +401,30 @@ def create_new_channel_feed_items(date_from, date_to):
             (UserContentFeed.video_instance == None)
         ).filter(
             UserContentFeed.id == None
-        ).outerjoin(
-            ExtAlias,
-            (ExtAlias.external_system == 'apns') &
-            (ExtAlias.user == UserContentFeed.user)
-        ).distinct().values(U.user, Channel.id, Channel.date_published, ExtAlias.external_token)
+        ).distinct().values(U.user, Channel.id, Channel.date_published)
 
-        for user, channel, date_published, token in q:
+        for user, channel, date_published in q:
             UserContentFeed.query.session.add(
                 UserContentFeed(user=user, channel=channel, date_added=date_published)
             )
-            notification_groups.setdefault(channel, set()).add((user, token))
+            notification_groups.setdefault(channel, set()).add(user)
+            notify_users.update({user: None})
+
+    map(lambda u:
+            notify_users.update({u[0]: u[1]}),
+            ExternalToken.query.filter(
+                ExternalToken.external_system == 'apns', ExternalToken.user.in_(notify_users.keys())
+            ).values(ExternalToken.user, ExternalToken.external_token))
 
     for channel, users in notification_groups.iteritems():
+        tokens = []
+        map(lambda u: tokens.append([u, notify_users.get(u, None)]), users)
         display_name, channel_resource_url = channelmeta[channel]
         alert = {
             "loc-key": '%@ has added a new channel',
             "loc-args": [display_name]
         }
-        _process_apns_broadcast(users, alert, url=channel_resource_url)
+        _process_apns_broadcast(tokens, alert, url=channel_resource_url)
 
 
 def remove_old_feed_items():
