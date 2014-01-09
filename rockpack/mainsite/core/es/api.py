@@ -574,6 +574,9 @@ def add_user_to_index(user, bulk=False, refresh=False, no_check=False):
         cover = convert_image_path(user, 'brand_profile_cover', 'BRAND_PROFILE')
     else:
         cover = convert_image_path(user, 'profile_cover', 'PROFILE')
+
+    from rockpack.mainsite.services.user.models import Subscription
+
     data = dict(
         id=user.id,
         avatar_thumbnail_url=urlpath(convert_image_path(user, 'avatar', 'AVATAR').url),
@@ -585,6 +588,7 @@ def add_user_to_index(user, bulk=False, refresh=False, no_check=False):
         site_url=user.site_url,
         brand=user.brand,
         subscriber_count=user.subscriber_count,
+        subscription_count=Subscription.query.filter_by(user=user.id).count()
     )
     return add_to_index(
         data,
@@ -593,6 +597,19 @@ def add_user_to_index(user, bulk=False, refresh=False, no_check=False):
         id=user.id,
         bulk=bulk,
         refresh=refresh)
+
+
+def update_user_subscription_count(userid):
+    from rockpack.mainsite.services.user.models import Subscription
+    subscription_count=Subscription.query.filter_by(user=userid).count()
+    try:
+        es_connection.partial_update(
+            ESObjectIndexer.indexes['user']['index'],
+            ESObjectIndexer.indexes['user']['type'],
+            userid,
+            "ctx._source.subscription_count = %s" % subscription_count)
+    except pyes.exceptions.ElasticSearchException:
+        logger.warning('Could not update subscription count for %s' % str(userid))
 
 
 def update_user_categories(user_ids):
