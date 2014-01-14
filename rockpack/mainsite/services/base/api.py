@@ -8,6 +8,7 @@ from rockpack.mainsite.helpers.db import get_column_validators
 from rockpack.mainsite.core.webservice import WebService, expose_ajax
 from rockpack.mainsite.core.oauth.decorators import check_authorization
 from rockpack.mainsite.core.email import send_email
+from rockpack.mainsite.services.user.api import _user_recommendations
 from .models import SessionRecord, FeedbackRecord
 
 
@@ -88,3 +89,8 @@ class BaseWS(WebService):
         ).save()
         message = "Score: %(score)s\n\n%(message)s" % form.data
         send_email(app.config['FEEDBACK_RECIPIENT'], 'Feedback', message)
+
+    @expose_ajax('/example_users/', cache_age=3600, secure=False)
+    def example_users(self):
+        items, total = _user_recommendations(None, self.get_locale(), self.get_page())
+        return dict(users=dict(items=items, total=total))

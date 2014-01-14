@@ -502,6 +502,23 @@ class TestUserContent(base.RockPackTestCase):
             self.assertIn('description', users[0])
             self.assertIn('category', users[0])
 
+    def test_example_users(self):
+        UserSubscriptionRecommendation(
+            user=UserData.test_user_a.id,
+            category=CategoryData.Music.id,
+        ).save()
+        with self.app.test_client() as client:
+            user = self.create_test_user()
+            r = client.get(
+                '/ws/example_users/',
+                headers=[get_auth_header(user.id)])
+            self.assertEquals(r.status_code, 200)
+            users = json.loads(r.data)['users']['items']
+            self.assertListEqual([UserData.test_user_a.id], [u['id'] for u in users])
+            # Recommended users should have description & category fields:
+            self.assertIn('description', users[0])
+            self.assertIn('category', users[0])
+
     def test_subscribe_all(self):
         with self.app.test_client() as client:
             self.app.test_request_context().push()
