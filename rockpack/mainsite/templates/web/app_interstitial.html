@@ -12,10 +12,10 @@
       ga.
         create('{{ config.GOOGLE_ANALYTICS_ACCOUNT }}').
         send('event', 'interstitial', 'click', isiOS ? 'ios' : '');
-      var redirectLink = '{{ redirect_url }}';
+      var redirectLink = '{{ redirect_url|safe }}';
       if (isiOS) {
         document.getElementById('loader').src = '{{ protocol_url }}';
-        redirectLink = '{{ config.ITUNES_APP_LINK }}';
+        redirectLink = '{{ config.ITUNES_APP_LINK|safe }}&ct=inter';
       }
       window.setTimeout(function () { location.replace(redirectLink); }, 1);
     </script>
