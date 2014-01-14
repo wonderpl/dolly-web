@@ -72,6 +72,14 @@
   <script src="/admin/static/admin/js/form.js"></script>
   {% include 'admin/rockpack-tags.js' %}
   <script>
+      var urlparse = function(ident) {
+          var subs = location.search.substring(1).split('&')
+          for (var i = 0; i < subs.length; i++) {
+              var sub = subs[i].split('=');
+              if (sub[0] == ident) { return sub[1]; }
+          }
+          return ""
+    };
     $(function () {
       // hide the channel description unless we create a new one
       var channelGroups = $('#channel_description, #cover_url, #cover')
@@ -113,7 +121,11 @@
         dropdownCssClass: 'bigdrop'
       }).on('change', function (e) {
         channelField.select2('data', {});
-      });
+    });
+
+    if ($('#user').val() != "" && urlparse('user') != "") {
+        $('#user').select2('data', {'id': $('#user').val(), 'text': urlparse('user')});
+    }
 
       channelField.select2({
         quietMillis: 1000,
@@ -132,10 +144,14 @@
         },
         width: 'element',
         dropdownCssClass: 'bigdrop'
-      });
+      });;
+
+    if ($('#channel').val() != "" && urlparse('channeltitle') != "") {
+        $('#channel').select2('data', {'id': $('#channel').val(), 'text': urlparse('channeltitle')});
+    }
 
       categoryField.select2('focus');
-    });
+    })
   </script>
   <style>
     .add-new {

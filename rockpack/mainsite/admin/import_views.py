@@ -214,6 +214,31 @@ class ImportView(AdminView):
         ctx['user_form'] = user_form
         ctx['form'] = form
 
+        # pre-populate from parameters
+        if request.args.get('tag'):
+            form.tags.data = request.args.get('tag')
+
+        if request.args.get('user'):
+            user = list(User.query.filter(User.username==request.args.get('user')).values('id', 'username'))
+            if user:
+                form.user.data = user[0][0]
+            else:
+                form.user.data = ""
+
+            if request.args.get('channeltitle'):
+                channel = list(Channel.query.filter(
+                    Channel.title==request.args.get('channeltitle'),
+                    Channel.owner==form.user.data).values('id', 'title'))
+                if channel:
+                    form.channel.data = channel[0][0]
+                else:
+                    form.channel.data = '_new:' + request.args.get('channeltitle')
+
+        if request.args.get('categoryname'):
+            for choice in form.category.choices:
+                if choice[1] == request.args.get('categoryname'):
+                    form.category.data = choice[0]
+
         if 'source' in data:
             if form.commit.data and not form.user.data:
                 if user_form.username.data:
