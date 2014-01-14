@@ -216,7 +216,7 @@ class ImportView(AdminView):
 
         # pre-populate from parameters
         if request.args.get('tag'):
-            form.tags.data = request.args.get('tag')
+            form.tags.data = ','.join(request.args.getlist('tag'))
 
         if request.args.get('user'):
             user = list(User.query.filter(User.username==request.args.get('user')).values('id', 'username'))
