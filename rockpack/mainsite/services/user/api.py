@@ -329,9 +329,6 @@ def _notification_list(userid, paging):
             read=bool(notification.date_read),
         ) for notification in notifications
         if not typefilter or notification.message_type in typefilter]
-    for item in items:
-        if 'video' in item['message']:
-            item['message']['video']['id'] = None
     return items, total
 
 
