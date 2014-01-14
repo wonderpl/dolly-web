@@ -508,7 +508,7 @@ class VideoSearch(EntitySearch, CategoryMixin, MediaSortMixin):
                     id = v.owner.resource_url.lstrip('/').split('/')[1],
                     display_name = v.owner.display_name,
                     resource_url = urljoin(BASE_URL, v.owner.resource_url),
-                    avatar = urljoin(IMAGE_CDN, v.owner.avatar)
+                    avatar_thumbnail_url = urljoin(IMAGE_CDN, v.owner.avatar) if v.owner.avatar else ''
                 )
             if v.owner and v.channel:
                 video['channel']['resource_url'] = urljoin(BASE_URL, url_for('userws.channel_info', userid=video['owner']['id'], channelid=v.channel))
