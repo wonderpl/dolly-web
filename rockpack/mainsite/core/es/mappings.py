@@ -38,7 +38,10 @@ locale_count_dict = {
 if app.config.get('DOLLY', False):
     video_mapping = {
         "properties": {
-            "id": {"type": "string"},
+            "id": {
+                "type": "string",
+                "index": "not_analyzed"
+            },
             "date_added": {"type": "date"},
             "title": {
                 "type": "string",
@@ -123,6 +126,16 @@ if app.config.get('DOLLY', False):
                         "null_value": 0
                     }
                 }
+            },
+            "link_url": {
+                "type": "string",
+                "index": "not_analyzed",
+                "null_value": ""
+            },
+            "link_title": {
+                "type": "string",
+                "index": "not_analyzed",
+                "null_value": ""
             }
         }
     }

@@ -148,6 +148,9 @@ class Video(db.Model):
     rockpack_curated = Column(Boolean, nullable=False, server_default='false', default=False)
     visible = Column(Boolean(), nullable=False, server_default='true', default=True)
 
+    link_url = Column(String(2048), nullable=True)
+    link_title = Column(String(1024), nullable=True)
+
     thumbnails = relationship('VideoThumbnail', backref='video_rel',
                               passive_deletes=True,
                               cascade="all, delete-orphan")
@@ -560,9 +563,17 @@ def _video_insert(mapper, connection, target):
 
 @event.listens_for(Video, 'after_update')
 def _video_update(mapper, connection, target):
-    if use_elasticsearch() and not target.visible:
-        ids = VideoInstance.query.filter_by(video=target.id).values('id')
-        es_api.ESVideo.delete(ids)
+    if use_elasticsearch():
+        instance_ids = [x[0] for x in VideoInstance.query.filter_by(video=target.id).values('id')]
+        if not target.visible:
+            es_api.ESVideo.delete(instance_ids)
+        else:
+            # we need to update changes to link_url. unfortunately
+            # we can't be sure the field has changed so instead
+            # just update the video instances whenever a video change
+            # is made (should not be very often)
+            async = app.config.get('ASYNC_ES_VIDEO_UPDATES', False)
+            es_api.es_update_channel_videos(extant=instance_ids, async=async)
 
 
 @models_committed.connect_via(app)

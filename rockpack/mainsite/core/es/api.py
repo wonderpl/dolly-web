@@ -258,7 +258,9 @@ class ESVideo(ESObject):
             child_instance_count=mapped.child_instance_count,
             most_influential=mapped.most_influential,
             owner=mapped.owner,
-            comments=mapped.comments()
+            comments=mapped.comments(),
+            link_url=mapped.link_url,
+            link_title=mapped.link_title
         )
 
     @classmethod
@@ -427,6 +429,14 @@ class ESVideoAttributeMap:
         # Default to True so that it automatically
         # shows up in search
         return True
+
+    @property
+    def link_url(self):
+        return self.video_instance.video_rel.link_url
+
+    @property
+    def link_title(self):
+        return self.video_instance.video_rel.link_title
 
     def recent_user_stars(self, empty=False):
         if empty:
