@@ -502,13 +502,6 @@ class TestUserContent(base.RockPackTestCase):
             self.assertIn('description', users[0])
             self.assertIn('category', users[0])
 
-    def test_example_users(self):
-        UserSubscriptionRecommendation(
-            user=UserData.test_user_a.id,
-            category=CategoryData.Music.id,
-        ).save()
-        with self.app.test_client() as client:
-            user = self.create_test_user()
             r = client.get(
                 '/ws/example_users/',
                 headers=[get_auth_header(user.id)])
