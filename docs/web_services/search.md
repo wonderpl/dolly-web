@@ -35,20 +35,18 @@ Cache-Control: public, max-age=300
         "id": "Svi0xYzZY-01-hg64Qofzoyo",
         "title": "video title",
         "channel": {
-         "id": "chOq1ZEUv3WHsQuMDu8oBrOQ"
+         "id": "chOq1ZEUv3WHsQuMDu8oBrOQ",
+         "title": "A channel title",
+         "resource_url": "http://base/ws/USERID/channels/CHANNELID/"
         },
         "comments": {
           "total": 0
         },
         "owner": {
           "id": "ziCAgGxbRpW-HNYTloYkQg",
-          "username": "littlejimmy",
           "display_name": "Jimmy Wales",
           "avatar_thumbnail_url": "http://path/to/avatar/small.jpg",
           "resource_url": "http://dev.rockpack.com/ws/ziCAgGxbRpW-HNYTloYkQg/",
-          "subscriber_count": 0,
-          "profile_cover_url": "http://path/to/cover.jpg",
-          "description": "something about me"
         },
         "video": {
           "id": "RP000001PXGLP4XTKU4VDFO37XZKEBMURKPOB6RQ",
