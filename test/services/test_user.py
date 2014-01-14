@@ -599,7 +599,7 @@ class TestUserContent(base.RockPackTestCase):
                     self.assertEquals(message['channel']['id'], channel.id)
                     self.assertEquals(message['channel']['resource_url'], channel.resource_url)
                 else:
-                    self.assertEquals(message['video']['id'], None)  # video.id)
+                    self.assertEquals(message['video']['id'], video.id)
                     self.assertEquals(message['video']['channel']['id'], channel.id)
 
     def test_repack_notifications(self):
@@ -647,7 +647,7 @@ class TestUserContent(base.RockPackTestCase):
             notification, = json.loads(r.data)['notifications']['items']
             self.assertEquals(notification['message_type'], 'unavailable')
             self.assertEquals(notification['message']['user']['id'], user.id)
-            self.assertEquals(notification['message']['video']['id'], None)  # video.id)
+            self.assertEquals(notification['message']['video']['id'], video.id)
 
     def test_registration_notifications(self):
         with self.app.test_client() as client:
