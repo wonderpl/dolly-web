@@ -563,17 +563,9 @@ def _video_insert(mapper, connection, target):
 
 @event.listens_for(Video, 'after_update')
 def _video_update(mapper, connection, target):
-    if use_elasticsearch():
+    if use_elasticsearch() and not target.visible:
         instance_ids = [x[0] for x in VideoInstance.query.filter_by(video=target.id).values('id')]
-        if not target.visible:
-            es_api.ESVideo.delete(instance_ids)
-        else:
-            # we need to update changes to link_url. unfortunately
-            # we can't be sure the field has changed so instead
-            # just update the video instances whenever a video change
-            # is made (should not be very often)
-            async = app.config.get('ASYNC_ES_VIDEO_UPDATES', False)
-            es_api.es_update_channel_videos(extant=instance_ids, async=async)
+        es_api.ESVideo.delete(instance_ids)
 
 
 @models_committed.connect_via(app)
