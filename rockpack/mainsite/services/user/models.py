@@ -75,23 +75,28 @@ class User(db.Model):
             if password is None or user.check_password(password):
                 return user
 
+    @classmethod
+    def get_display_name(cls, username, first_name, last_name, display_fullname=True):
+        # XXX: Needs to be more general?
+        if first_name and display_fullname:
+            return u'%s %s' % (first_name, last_name)
+        else:
+            return username
+
+    @property
+    def display_name(self):
+        return self.get_display_name(
+            self.username, self.first_name, self.last_name, self.display_fullname)
+
+    @property
+    def brand(self):
+        return bool(self.brand_profile_cover)
+
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
 
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
-
-    @property
-    def display_name(self):
-        # XXX: Needs to be more general?
-        if self.first_name and self.display_fullname:
-            return u'%s %s' % (self.first_name, self.last_name)
-        else:
-            return self.username
-
-    @property
-    def brand(self):
-        return bool(self.brand_profile_cover)
 
     def get_profile_cover(self):
         return self.brand_profile_cover or self.profile_cover
