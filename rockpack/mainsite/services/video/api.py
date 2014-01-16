@@ -352,12 +352,5 @@ class MoodWS(WebService):
 
     @expose_ajax('/', cache_age=3600)
     def mood_list(self):
-        # TODO: Using category for now - replace with mood data model
-        items = [
-            dict(id=str(id), name=name.capitalize())
-            for id, name in
-            models.Category.query.join(models.VideoInstance).
-            filter(models.Category.parent.is_(None)).distinct().order_by('category').
-            values('category', 'name')
-        ]
+        items = map(lambda m: dict(id=str(m.id), name=m.name.capitalize()), models.Mood.query.all())
         return dict(moods=dict(items=items))
