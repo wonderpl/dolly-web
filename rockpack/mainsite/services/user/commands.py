@@ -409,7 +409,7 @@ def create_new_channel_feed_items(date_from, date_to):
             notify_users.update({user: None})
 
     map(lambda u:
-            notify_users.update({u[0]: u[1]}),
+            notify_users.update({[0]: [1]}),
             ExternalToken.query.filter(
                 ExternalToken.external_system == 'apns', ExternalToken.user.in_(notify_users.keys())
             ).values(ExternalToken.user, ExternalToken.external_token))
