@@ -1,4 +1,4 @@
-"""empty message
+"""add mood table
 
 Revision ID: 4a8edac4fed
 Revises: 4bc3d359669d
