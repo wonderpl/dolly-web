@@ -151,6 +151,7 @@ def _update_video_comment_count(videoid):
     except Exception, e:
         app.logger.error(str(e))
 
+
 @commit_on_success
 def save_video_activity(userid, action, instance_id, locale):
     column, value, incr = _get_action_incrementer(action)
@@ -998,6 +999,7 @@ class UserWS(WebService):
                     info[key].update(get_user_data(user.id, self.get_locale(), self.get_page()))
         info['subscriptions']['updates'] = url_for('userws.recent_videos', userid=userid)
         info['notifications'].update(unread_count=_notification_unread_count(userid))
+        info['subscription_count'] = _user_subscriptions_query(userid).count()
         return info
 
     @expose_ajax('/<userid>/display_fullname/', methods=('PUT',))
