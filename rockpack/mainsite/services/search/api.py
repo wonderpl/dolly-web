@@ -12,8 +12,9 @@ from rockpack.mainsite.core import youtube
 from rockpack.mainsite.helpers.db import gen_videoid
 from rockpack.mainsite.services.video.api import get_db_channels
 from rockpack.mainsite.services.video.models import Channel, User
-from rockpack.mainsite.core.es.search import ChannelSearch, VideoSearch, UserSearch, MUST
 from rockpack.mainsite.core.es import use_elasticsearch, filters
+from rockpack.mainsite.core.es.search import (
+    ChannelSearch, VideoSearch, UserSearch, SuggestionSearch, MUST)
 
 
 VIDEO_INSTANCE_PREFIX = 'Svi0xYzZY'
@@ -189,6 +190,10 @@ class CompleteWS(WebService):
         query = request.args.get('q', '')
         if not query:
             abort(400)
+        if app.config.get('DOLLY') and use_elasticsearch():
+            terms = SuggestionSearch().completion_suggestions(query)
+            result = json.dumps((query, [(t, 0) for t in terms], {}))
+            return Response('window.google.ac.h(%s)' % result, mimetype='text/javascript')
         result = youtube.complete(query)
         if len(query) >= 4:
             try:
@@ -217,20 +222,22 @@ class CompleteWS(WebService):
         # consistency with /complete/videos
         query = request.args.get('q', '').lower()
 
-        username_terms = [(uname, ['user', uid, uname, avatar.url]) for uid, uname, avatar in list(
+        username_terms = [
+            (uname, ('user', uid, uname, avatar.url))
+            for uid, uname, avatar in
             User.query.filter(func.lower(User.username).like('%s%%' % query)).
             filter_by(is_active=True).
             join(Channel).group_by(User.id).
-            order_by('count(*) desc').limit(10).values(User.id, User.username, User.avatar))]
-	
-	
-        channel_terms = [(title, ['channel', cid]) for cid, title in list(
+            order_by('count(*) desc').limit(10).values(User.id, User.username, User.avatar)
+        ]
+
+        channel_terms = [
+            (title, ('channel', cid)) for cid, title in
             Channel.query.filter(func.lower(Channel.title).like('%s%%' % query)).
             filter_by(deleted=False, public=True, visible=True).
-            order_by('subscriber_count desc').limit(10).values(Channel.id, 'title'))]
+            order_by('subscriber_count desc').limit(10).values(Channel.id, 'title')
+        ]
 
-	
-	extra_terms = [(term[0], ['native']) for term in extra_terms or []]
         # For each term source, add up to 3 at the top and then fill with
         # remaining sources, if any
         terms = []

@@ -330,9 +330,6 @@ def _notification_list(userid, paging):
             read=bool(notification.date_read),
         ) for notification in notifications
         if not typefilter or notification.message_type in typefilter]
-    for item in items:
-        if 'video' in item['message']:
-            item['message']['video']['id'] = None
     return items, total
 
 
@@ -1583,3 +1580,42 @@ class UserWS(WebService):
     def post_friends(self, userid):
         # placeholder
         abort(501)
+
+    @expose_ajax('/<userid>/search_suggestions/', cache_age=600, cache_private=True)
+    @check_authorization(self_auth=True)
+    def get_search_suggestions(self, userid):
+        query = request.args.get('q', '').lower()
+        size = 10
+
+        video_items = set()
+
+        user_items = [
+            dict(
+                term=next((n for n in record[:3] if n.lower().startswith(query)), record[0]),
+                type='user',
+                id=record[3],
+                display_name=User.get_display_name(*record[:3]),
+                username=record[0],
+                avatar_thumbnail_url=record[4].url,
+            )
+            for record in
+            User.query.filter_by(is_active=True).filter(
+                func.lower(User.username).like('%s%%' % query) |
+                func.lower(User.first_name).like('%s%%' % query) |
+                func.lower(User.last_name).like('%s%%' % query)
+            ).join(Channel).group_by(User.id).
+            order_by('count(*) desc').limit(size).
+            values(User.username, User.first_name, User.last_name, User.id, User.avatar)
+        ]
+
+        # For each source, add up to 3 at the top and then fill with
+        # remaining sources, if any
+        items = []
+        i = 0
+        for src in user_items, video_items:
+            if src:
+                c = max(i, size - len(src))
+                items = items[:c] + src[:size - min(c, len(items))]
+                i += 3
+
+        return dict(suggestions=dict(items=items, total=len(items)))

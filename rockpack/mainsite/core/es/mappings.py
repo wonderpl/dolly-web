@@ -1,14 +1,12 @@
 from rockpack.mainsite import app
 
-app_prefix = 'dolly' if app.config.get('DOLLY', False) else 'rockpack'
+_prefix = 'dolly_' if app.config.get('DOLLY') else 'rockpack_'
+_g = globals()
+for i in 'channel', 'video', 'user', 'suggest':
+    _g[i.upper() + '_TYPE'] = i
+    _g[i.upper() + '_ALIAS'] = _prefix + i
+    _g[i.upper() + '_INDEX'] = _prefix + i
 
-CHANNEL_TYPE = 'channel'
-VIDEO_TYPE = 'video'
-USER_TYPE = 'user'
-
-CHANNEL_ALIAS = CHANNEL_INDEX = app_prefix + '_channel'
-VIDEO_ALIAS = VIDEO_INDEX = app_prefix + '_video'
-USER_ALIAS = USER_INDEX = app_prefix + '_user'
 
 locale_count_dict = {
     "properties": {
@@ -336,6 +334,17 @@ channel_mapping = {
                     "null_value": 0.0
                 }
             }
+        }
+    }
+}
+
+suggest_mapping = {
+    "properties": {
+        "completion": {
+            "type": "completion",
+            "index_analyzer": "simple",
+            "search_analyzer": "simple",
+            "payloads": True
         }
     }
 }

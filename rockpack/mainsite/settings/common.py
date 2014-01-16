@@ -35,8 +35,9 @@ GOOGLE_DEVELOPER_KEY = 'AIzaSyAIV4F5dpvDltQpE9CAWipWN57zuT_EIq4'
 GOOGLE_ANALYTICS_ACCOUNT = 'UA-39188851-2'
 
 # For app store links
+PHG_AFFILIATE_TOKEN = '11ls25'
 ITUNES_APP_ID = '660697542'
-ITUNES_APP_LINK = 'https://itunes.apple.com/app/rockpack/id%s?mt=8&ls=1' % ITUNES_APP_ID
+ITUNES_APP_LINK = 'https://itunes.apple.com/app/rockpack/id%s?mt=8&ls=1&at=%s' % (ITUNES_APP_ID, PHG_AFFILIATE_TOKEN)
 
 HELP_SITE_LINK = 'http://help.rockpack.com/'
 

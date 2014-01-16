@@ -54,7 +54,7 @@ class BaseTransaction(object):
         if 'secure' in parsed_url.hostname:
             headers.append(('X-Forwarded-Proto', 'https'))
         start = time.time()
-        response = requests.request(method, url, params=params, data=data, headers=headers)
+        response = requests.request(method, url, params=params, data=data, headers=dict(headers))
         service_name = method.upper() + '-' +\
             re.sub('/[\w-]{22,24}', '/X', parsed_url.path).strip('/').replace('/', '-')
         #assert str(service_name) not in self.custom_timers, self.custom_timers

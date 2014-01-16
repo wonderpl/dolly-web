@@ -368,10 +368,28 @@ class TestUserContent(base.RockPackTestCase):
     @skip_unless_config('ELASTICSEARCH_URL')
     def test_content_feed(self):
         with self.app.test_client() as client:
+
+            def _add_apns_token(userid):
+                token = uuid.uuid4().hex
+                system = 'apns'
+                client.post(
+                    '/ws/{}/external_accounts/'.format(userid),
+                    data=json.dumps(dict(external_system=system, external_token=token)),
+                    content_type='application/json',
+                    headers=[get_auth_header(userid)],
+                )
+                return token
+
             self.app.test_request_context().push()
+
             user1 = self.create_test_user().id
+            user1_token = _add_apns_token(user1)
+
             user2 = self.create_test_user().id
+            user2_token = _add_apns_token(user2)
+
             user3 = self.create_test_user().id
+            user3_token = _add_apns_token(user3)
 
             # Create new channel with a few videos and subscribe user
             channel1 = Channel.query.filter_by(owner=user1).one()
@@ -396,6 +414,8 @@ class TestUserContent(base.RockPackTestCase):
             # Create a new channel owner by a friend
             ExternalFriend(user=user1, external_system='facebook', external_uid='u3',
                            name='u3', avatar_url='').save()
+            ExternalFriend(user=user2, external_system='facebook', external_uid='u3',
+                           name='u3', avatar_url='').save()
             ExternalToken(user=user3, external_system='facebook', external_uid='u3',
                           external_token='u3u3').save()
             u3new = Channel(owner=user3, title='u3new', description='', cover='',
@@ -404,7 +424,19 @@ class TestUserContent(base.RockPackTestCase):
             # Run cron commands
             date_from, date_to = datetime(2012, 1, 1), datetime(2020, 1, 1)
             cron_cmds.create_new_video_feed_items(date_from, date_to)
-            cron_cmds.create_new_channel_feed_items(date_from, date_to)
+
+            with patch.object(cron_cmds, '_process_apns_broadcast') as mock_method:
+                cron_cmds.create_new_channel_feed_items(date_from, date_to)
+
+            tokens = [user1_token, user2_token, user3_token]
+            for user, token in list(mock_method.mock_calls[0])[1][0]:
+                self.assertIn(token, tokens)
+
+            for user, token in list(mock_method.mock_calls[1])[1][0]:
+                self.assertIn(token, tokens)
+
+            self.assertEquals(mock_method.call_count, 2)
+
             #cron_cmds.update_video_feed_item_stars(date_from, date_to)
             User.query.session.commit()
 
@@ -462,6 +494,16 @@ class TestUserContent(base.RockPackTestCase):
             user = self.create_test_user()
             r = client.get(
                 '/ws/{}/user_recommendations/'.format(user.id),
+                headers=[get_auth_header(user.id)])
+            self.assertEquals(r.status_code, 200)
+            users = json.loads(r.data)['users']['items']
+            self.assertListEqual([UserData.test_user_a.id], [u['id'] for u in users])
+            # Recommended users should have description & category fields:
+            self.assertIn('description', users[0])
+            self.assertIn('category', users[0])
+
+            r = client.get(
+                '/ws/example_users/',
                 headers=[get_auth_header(user.id)])
             self.assertEquals(r.status_code, 200)
             users = json.loads(r.data)['users']['items']
@@ -599,7 +641,7 @@ class TestUserContent(base.RockPackTestCase):
                     self.assertEquals(message['channel']['id'], channel.id)
                     self.assertEquals(message['channel']['resource_url'], channel.resource_url)
                 else:
-                    self.assertEquals(message['video']['id'], None)  # video.id)
+                    self.assertEquals(message['video']['id'], video.id)
                     self.assertEquals(message['video']['channel']['id'], channel.id)
 
     def test_repack_notifications(self):
@@ -647,7 +689,7 @@ class TestUserContent(base.RockPackTestCase):
             notification, = json.loads(r.data)['notifications']['items']
             self.assertEquals(notification['message_type'], 'unavailable')
             self.assertEquals(notification['message']['user']['id'], user.id)
-            self.assertEquals(notification['message']['video']['id'], None)  # video.id)
+            self.assertEquals(notification['message']['video']['id'], video.id)
 
     def test_registration_notifications(self):
         with self.app.test_client() as client:

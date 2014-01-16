@@ -94,8 +94,6 @@ def joined_message(friend, user):
 
 
 def _apns_url(url):
-    if '/video/' in url:    # strip video resource suffix
-        url = url[:-32]
     return urlparse.urlparse(url).path.lstrip('/ws/')
 
 
@@ -387,8 +385,13 @@ def create_new_channel_feed_items(date_from, date_to):
         join(ExternalToken, ExternalToken.user == Channel.owner).\
         join(ExternalFriend, (ExternalFriend.external_system == ExternalToken.external_system) &
                              (ExternalFriend.external_uid == ExternalToken.external_uid))
+
+    channelmeta = dict((c.id, (c.owner_rel.display_name, c.resource_url)) for c in new_channels)
+    notification_groups = {}
+    notify_users = {}
+
     for query, U in (sub_channels, Subscription), (friend_channels, ExternalFriend):
-            # use outerjoin to filter existing records
+        # use outerjoin to filter existing records
         q = query.outerjoin(
             UserContentFeed,
             (UserContentFeed.user == U.user) &
@@ -397,17 +400,29 @@ def create_new_channel_feed_items(date_from, date_to):
         ).filter(
             UserContentFeed.id == None
         ).distinct().values(U.user, Channel.id, Channel.date_published)
+
         for user, channel, date_published in q:
             UserContentFeed.query.session.add(
                 UserContentFeed(user=user, channel=channel, date_added=date_published)
             )
-            # FIXME: need to do this in bulk
-            #token = get_apns_token(user)
-            #if token:
-            #    push_message = '%@ has added a new channel'
-            #    push_message_args = [user.display_name()]
-            #    deeplink_url = channel.get_resource_url(True)
-            #    complex_push_notification(token, push_message, push_message_args, url=deeplink_url)
+            notification_groups.setdefault(channel, set()).add(user)
+            notify_users.update({user: None})
+
+    map(lambda u:
+            notify_users.update({[0]: [1]}),
+            ExternalToken.query.filter(
+                ExternalToken.external_system == 'apns', ExternalToken.user.in_(notify_users.keys())
+            ).values(ExternalToken.user, ExternalToken.external_token))
+
+    for channel, users in notification_groups.iteritems():
+        tokens = []
+        map(lambda u: tokens.append([u, notify_users.get(u, None)]), users)
+        display_name, channel_resource_url = channelmeta[channel]
+        alert = {
+            "loc-key": '%@ has added a new channel',
+            "loc-args": [display_name]
+        }
+        _process_apns_broadcast(tokens, alert, url=channel_resource_url)
 
 
 def remove_old_feed_items():

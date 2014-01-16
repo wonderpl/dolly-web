@@ -34,12 +34,18 @@ class ESObjectIndexer(object):
             'type': mappings.USER_TYPE,
             'mapping': mappings.user_mapping
         },
+        'search_suggestion': {
+            'index': mappings.SUGGEST_INDEX,
+            'type': mappings.SUGGEST_TYPE,
+            'mapping': mappings.suggest_mapping
+        },
     }
 
     aliases = {
         'channel': mappings.CHANNEL_ALIAS,
         'video': mappings.VIDEO_ALIAS,
-        'user': mappings.USER_ALIAS
+        'user': mappings.USER_ALIAS,
+        'search_suggestion': mappings.SUGGEST_ALIAS,
     }
 
     class InvalidIndexingType(Exception):
@@ -53,7 +59,7 @@ class ESObjectIndexer(object):
                                 before being flushed to es.
                                 A final manual flush needs to be
                                 performed at the end """
-        if _type not in ('channel', 'video', 'user'):
+        if _type not in self.indexes:
             raise self.InvalidIndexingType('%s is not a valid index type' % _type)
         self.indexing_type = _type
         self.bulk = bulk
@@ -301,6 +307,23 @@ class ESChannel(ESObject):
         )
 
         return data
+
+
+class ESSearchSuggestion(ESObject):
+
+    _type = 'search_suggestion'
+
+    def insert_mapper(self, item):
+        completion = dict(
+            input=[item.query],
+            output=item.query,
+            weight=item.weight,
+            payload=dict(
+                type=item.type,
+                id=item.id,
+            )
+        )
+        return dict(completion=completion)
 
 
 def locale_dict_from_object(metas):

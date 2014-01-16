@@ -37,11 +37,11 @@
 
     <script type="text/javascript">
       var channel_data = {{ channel_data|tojson|safe }},
-          assets_url = '{{config.ASSETS_URL}}',
-          selected_video = {{selected_video|tojson|safe}},
+          assets_url = '{{ config.ASSETS_URL }}',
+          selected_video = {{ selected_video|tojson|safe }},
           full_path = '/',
-          itunesLink = '{{config.ITUNES_APP_LINK}}',
-          apiUrls = {{api_urls|safe}}
+          itunesLink = '{{ config.ITUNES_APP_LINK|safe }}&ct={% if selected_video %}video{% else %}channel{% endif %}',
+          apiUrls = {{ api_urls|safe }}
 
     </script>
 

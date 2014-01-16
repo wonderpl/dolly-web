@@ -4,16 +4,16 @@ from datetime import datetime, timedelta
 from itertools import groupby
 from flask import json
 import pyes
-from sqlalchemy import distinct, func
-from sqlalchemy.orm import aliased
-from sqlalchemy.orm import joinedload
+from sqlalchemy import distinct, func, literal
+from sqlalchemy.orm import aliased, joinedload
 from . import api
 from . import exceptions
 from rockpack.mainsite import app
 from rockpack.mainsite.core.dbapi import readonly_session
 from rockpack.mainsite.core.es import es_connection
 from rockpack.mainsite.core.es import migration
-from rockpack.mainsite.core.es.api import ESObjectIndexer, ESVideo, ESChannel, ESVideoAttributeMap
+from rockpack.mainsite.core.es.api import (
+    ESObjectIndexer, ESVideo, ESChannel, ESSearchSuggestion, ESVideoAttributeMap)
 
 
 class Indexing(object):
@@ -192,6 +192,21 @@ class DBImport(object):
                 count += 1
             ec.flush_bulk()
             print 'finished in', time.time() - start, 'seconds'
+
+    def import_search_suggestions(self):
+        from rockpack.mainsite.services.video.models import Video
+
+        with app.test_request_context():
+            inserter = ESSearchSuggestion.inserter(bulk=True)
+            videos = Video.query.filter_by(visible=True).with_entities(
+                Video.id,
+                literal('video').label('type'),
+                Video.title.label('query'),
+                Video.star_count.label('weight'),
+            )
+            for video in videos.yield_per(6000):
+                inserter.insert(video.id, video)
+            inserter.flush_bulk()
 
     def import_videos(self, prefix=None):
         from rockpack.mainsite.services.video.models import Channel, Video, VideoInstanceLocaleMeta, VideoInstance

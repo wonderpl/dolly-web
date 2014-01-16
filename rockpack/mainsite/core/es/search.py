@@ -155,6 +155,12 @@ class EntitySearch(object):
             pp(result.search.serialize())
         return result
 
+    def completion_suggestions(self, text, size=10, field='completion'):
+        completion = dict(field=field, size=size)
+        suggest = pyes.Suggest({'_': {'text': text, 'completion': completion}})
+        result = self._conn.suggest_from_object(suggest, self.get_index_name(), raw=True)
+        return [r['text'] for r in result['_'][0]['options']]
+
     def get_index_name(self):
         return ESObjectIndexer.indexes[self.entity.lower()]['index']
 
@@ -474,16 +480,19 @@ class VideoSearch(EntitySearch, CategoryMixin, MediaSortMixin):
     def _format_results(self, videos, with_channels=True, with_stars=False):
         vlist = []
         channel_list = set()
+        IMAGE_CDN = app.config.get('IMAGE_CDN', '')
+        BASE_URL = url_for('basews.discover')
 
         for pos, v in enumerate(videos, self.paging[0]):
             published = v.video.date_published
             video = dict(
                 id=v.id,
-                channel=dict(id=v.channel),
+                channel=dict(
+                    id=v.channel,
+                    title=v.channel_title),
                 title=v.title,
                 date_added=_format_datetime(v.date_added),
                 public=v.public,
-                #channel_title=v.channel_title, # Used any more?
                 category='',
                 video=dict(
                     id=v.video.id,
@@ -500,6 +509,16 @@ class VideoSearch(EntitySearch, CategoryMixin, MediaSortMixin):
                 owner=v.owner,
                 child_instance_count=getattr(v, 'child_instance_count', 0)
             )
+            if v.owner:
+                video['owner'] = dict(
+                    id=v.owner.resource_url.lstrip('/').split('/')[1],
+                    display_name=v.owner.display_name,
+                    resource_url=urljoin(BASE_URL, v.owner.resource_url),
+                    avatar_thumbnail_url=urljoin(IMAGE_CDN, v.owner.avatar) if v.owner.avatar else ''
+                )
+            if v.owner and v.channel:
+                video['channel']['resource_url'] = urljoin(BASE_URL, url_for('userws.channel_info', userid=video['owner']['id'], channelid=v.channel))
+
             if app.config.get('DOLLY'):
                 video.update({
                     "comments": {
@@ -585,3 +604,9 @@ class UserSearch(EntitySearch):
         if not self._user_results:
             self._user_results = self._format_results(self.results())
         return self._user_results
+
+
+class SuggestionSearch(EntitySearch):
+
+    def __init__(self):
+        super(SuggestionSearch, self).__init__('search_suggestion')
