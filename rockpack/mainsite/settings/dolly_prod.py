@@ -49,13 +49,13 @@ DEFAULT_SUBDOMAIN = 'lb.us'
 API_SUBDOMAIN = 'api'
 SHARE_SUBDOMAIN = 'share'
 
-#GOOGLE_ANALYTICS_ACCOUNT = 'UA-38220268-5'
-#
-#APNS_PUSH_TYPE = 'push_production'
-#APNS_FEEDBACK_TYPE = 'feedback_production'
-#APNS_CERT_NAME = 'apns-prod.pem'
-#APNS_PASSPHRASE = _decrypt('\xff\x15\x15\x97\xb2;{\x9a\xe8\x18')
-#
+GOOGLE_ANALYTICS_ACCOUNT = 'UA-46520786-2'
+
+APNS_PUSH_TYPE = 'push_production'
+APNS_FEEDBACK_TYPE = 'feedback_production'
+APNS_CERT_NAME = 'apns-dolly-prod.pem'
+APNS_PASSPHRASE = _decrypt('\x1dd\xdf\xce\xe0\x10\x170sP')
+
 #ITUNES_CONNECT_VENDORID = '85709520'
 #ITUNES_CONNECT_APPLEID = 'bot@rockpack.com'
 #ITUNES_CONNECT_PASSWORD = _decrypt('\xaf\x11\x0e\xce\r&a\xd0mV')

@@ -47,6 +47,11 @@ DEFAULT_SUBDOMAIN = 'lb'
 API_SUBDOMAIN = 'api'
 SHARE_SUBDOMAIN = 'share'
 
+GOOGLE_ANALYTICS_ACCOUNT = 'UA-46534300-2'
+
+APNS_CERT_NAME = 'apns-dolly-dev.pem'
+APNS_PASSPHRASE = 'wonder'
+
 AUTH_HEADER_SANITY_CHECK = True
 
 SQS_CRON_QUEUE = 'dolly-mainsite-cron'
