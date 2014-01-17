@@ -1,0 +1,17 @@
+
+<header ng-controller="HeaderCtrl" ng-class="{ toggled: toggled }">
+    <div class="inner">
+      <a href="/#/" class="logo"></a>
+      <nav>
+        <ul class="f-sans">
+          <li><a href="/#/our-content" ng-class="{ active: currentpage == '/our-content' }">Our Content</a></li><!--
+          --><li><a href="/#/our-categories" ng-class="{ active: currentpage == '/our-categories' }">Our Categories</a></li><!--
+          --><li><a href="/#/upload" ng-class="{ active: currentpage == '/upload' }">Upload</a></li><!--
+          --><li><a href="/#/partners" ng-class="{ active: currentpage == '/partners' }">Partners</a></li><!--
+          --><li><a href="/#/about-us" ng-class="{ active: currentpage == '/about-us' }">About Us</a></li>
+        </ul>
+      </nav>
+      <a href="#" class="app-store-link"></a>
+      <a class="nav-toggle icon-reorder desktop-hidden" ng-click="navToggle()"></a>
+    </div>
+  </header>

@@ -1,0 +1,250 @@
+(function(w,d,ng,ns,m) {
+
+    'use strict';
+
+    var app = ng.module(ns + '.' + m /* module name */,
+                       [ns + '.services',
+                        ns + '.directives'] /* module dependencies */);
+
+    app.controller('MainCtrl', ['$scope', '$http', '$timeout', '$debug', function($scope, $http, $timeout, $debug) {
+        
+        var $log = $debug(ns, m, 'MainCtrl');
+
+        $http({
+            method: 'GET',
+            url: '/data/data.json'
+        }).then(function(response) {
+            $timeout(function() {
+                $scope.$apply(function() {
+                    $scope.data = response.data;
+                    $scope.$emit('data_loaded');
+                });
+            });
+        });
+
+    }]);
+
+    app.controller('ViewCtrl', ['$rootScope', '$scope', '$debug', '$element', '$templateCache', '$compile', '$timeout', '$sanitize', '$twitter', function($rootScope, $scope, $debug, $element, $templateCache, $compile, $timeout, $sanitize, $twitter) {
+        
+        var $log = $debug(ns, m, 'ViewCtrl'),
+            $scp;
+
+        $scope.currentView = '';
+        $scope.currentParams = {};
+        $scope.currentHash = 'home/vehicles';
+        
+        $scope.$on('route_change', function(ev, route, params, hash) {
+            $log(route, params, hash);
+            if ($scope.$root.$$phase !== '$apply') {
+                $scope.$apply(function() {
+                    if ($scope.currentView === route && route === 'vehicles/type' || route === 'vehicles/model' && params.name && params.name === $scope.currentParams.name) {
+                        updateView(route, params, hash);
+                    } else {
+                        buildView(route, params, hash);
+                    }
+                    $scope.currentView = route;
+                    $scope.currentParams = params;
+                    $scope.currentHash = hash;
+                });
+            }
+        });
+
+        function updateView(route, params, hash) {
+            if (route === 'vehicles/model') {
+                $timeout(function() {
+                    $scp.$apply(function() {
+                        $scp.showInfo = params.section && params.section === 'info' ? true : false;
+                        $scp.showGallery = params.section && params.section === 'gallery' ? true : false;
+                        $scp.galleryItem = parseInt(params.item, 10) || 1;
+                    });
+
+                    $scope.$apply(function() {
+                        $scope.currentParams = params;
+                        $scope.currentHash = hash;
+                    });
+                });
+            }
+        }
+
+        function buildView(route, params, hash) {
+            $timeout(function() {
+                var template = $templateCache.get(route + '.html');
+
+                switch (route) {
+                    case 'vehicles/type':
+                        var filter = {};
+                        if ('filter' in params) filter.filter = params.filter;
+                        $scp = ng.extend($scope.$new(), $scope.data, filter);
+                        break;
+                    case 'vehicles/model':
+                        $scp = ng.extend($scope.$new(), $scope.data['vehicles'][params.name], {
+                            showInfo : params.section && params.section === 'info' ? true : false,
+                            showGallery : params.section && params.section === 'gallery' ? true : false,
+                            galleryItem : parseInt(params.item, 10) || 1,
+                            shareGalleryItem : function($e) {
+                                $e.preventDefault();
+                                w.open('https://www.facebook.com/sharer/sharer.php?u=http://amguk-stg.hdlfb.co.uk/' + this.currentHash, 'Share', 'width=500,height=280,menubar=no,toolbar=no,location=no,scrollbars=no');
+                            }
+                        });
+                        break;
+                    case 'news':
+                        var obj = {
+                            newsItem : parseInt(params.item, 10) || 1,
+                            showTwitter : params.item && params.item === 'twitter'
+                        };
+                        obj.showNews = !obj.showTwitter ? (params.item ? true : false) : false;
+
+                        $scp = ng.extend($scope.$new(), $scope.data[route], obj);
+                        break;
+                    default:
+                        $scp = ng.extend($scope.$new(), $scope.data[route][params.section]);
+                        break;
+                }
+
+                var tmpl = $compile($sanitize(template))($scp);
+                var crnt = ng.element($element[0].children[0]);
+                $element.html('').append(tmpl);
+
+                if ($scp.showTwitter) {
+                    $timeout( function() {
+                        $twitter.widgets();
+                    });
+                }
+
+            });
+        }
+    }]);
+
+
+    app.controller('NavCtrl', ['$rootScope', '$scope', '$debug', '$element', '$templateCache', '$compile', '$timeout', '$sanitize', function($rootScope, $scope, $debug, $element, $templateCache, $compile, $timeout, $sanitize) {
+
+        var $log = $debug(ns, m, 'NavCtrl'),
+            $scp = $scope.$new(),
+            setup = false,
+            template,
+            tmpl,
+            rte;
+
+        $scope.visibleNav = 'primary';
+        $scope.showNavToggle = false;
+        $scope.currentHash = 'home/vehicles';
+
+
+        function showNav(nav) {
+            return nav === $scope.visibleNav ? true : false;
+        }
+
+        $scope.toggleNav = function() {
+            $timeout(function() {
+                $scope.$apply(function() {
+                    $scope.visibleNav = $scope.visibleNav === 'primary' ? (rte === 'vehicles/type' ? 'type' : (rte === 'news' ? 'news' : 'class') ) : 'primary';
+                });
+            });
+        };
+
+        $scope.$on('route_change', function(ev, route, params, hash) {
+            $log(route, params, hash);
+
+            if (!setup) {
+                setup = true;
+                $timeout(function() {
+                    template = $templateCache.get('navigation.html');
+                    $scp = ng.extend($scp, $scope.data, {
+                        showNav : showNav,
+                        filteredClass : $scope.data['vehicles'],
+                        currentFilter : 'a',
+                        applyFilter : function(val) {
+                            $timeout(function() {
+                                $scp.$apply(function() {
+                                    $scp.currentFilter = val.toLowerCase();
+                                });
+                            });
+                        }
+                    });
+                    tmpl = $compile($sanitize(template))($scp);
+                    $element.append(tmpl);
+
+                    $timeout(function() {
+                        var $chover = ng.element($element[0].querySelector('.class-hover'));
+                        var $all = ng.element($element[0].querySelector('.class li:first-child'));
+                        $all.bind('mouseover', function() {
+                            $chover.addClass('un-hover');
+                        });
+                        $all.bind('mouseout', function() {
+                            $chover.removeClass('un-hover');
+                        });
+                    });
+                    
+
+                    $scp.$watch('currentFilter', function(nV) {
+                        $timeout(function() {
+                            $scp.$apply(function() {
+                                $scp.filteredClass = (function() {
+                                    var arr = [];
+                                    ng.forEach($scope.data['vehicles'], function(obj, slug) {
+                                        if (obj.class === nV) arr.push(obj);
+                                    });
+                                    return arr;
+                                })();
+                            });
+                        });
+                    });
+                });
+            }
+
+            var nav;
+
+            switch (route) {
+                case 'vehicles/type':
+                    nav = 'type';
+                    break;
+                case 'vehicles/model':
+                    nav = 'class';
+                    break;
+                case 'news':
+                    nav = 'news';
+                    break;
+                default:
+                    nav = 'primary';
+                    break;
+            }
+
+            rte = route;
+
+            $timeout(function() {
+                $scope.$apply(function() {
+                    $scope.visibleNav = nav;
+                    $scope.showNavToggle = nav === 'primary' ? false : true;
+                    $scope.currentHash = '#' + hash;
+                });
+            });
+
+        });
+
+    }]);
+
+    app.controller('GridCtrl', [ '$scope', '$element', '$timeout', '$debug', function($scope, $element, $timeout, $debug) {
+
+        var $log = $debug(ns, m, 'GridCtrl');
+
+        $scope.$on('route_change', function(ev, route, params, hash) {
+            $log(route, params, hash);
+
+            if ('filter' in params) {
+                $element.find('li').removeClass('filtered');
+                ng.element($element[0].querySelectorAll('[data-type=' + params.filter + ']')).addClass('filtered');
+            } else {
+                $element.find('li').addClass('filtered');
+            }
+        });
+
+        if ($scope.$parent.filter) {
+            $timeout(function() {
+                $element.find('li').removeClass('filtered');
+                ng.element($element[0].querySelectorAll('[data-type=' + $scope.$parent.filter + ']')).addClass('filtered');
+            });
+        }
+    }]);
+
+
+})(window,document,window.angular,'amg','controllers');

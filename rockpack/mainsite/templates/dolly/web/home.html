@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:ng="http://angularjs.org">
+<head>
+  <meta content="IE=edge,chrome=1" http-equiv="X-UA-Compatible">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Rockpack</title>
+  <meta name="description" content="Create, share and subscribe to personalized video channels with Rockpack app. Rockpack is available on iPhone and iPad">
+  <meta name="apple-itunes-app" content="app-id={{ config.ITUNES_APP_ID }}">
+  <meta name="twitter:card" content="app">
+  <meta name="twitter:app:id:iphone" content="{{ config.ITUNES_APP_ID }}">
+  <meta name="twitter:app:id:ipad" content="{{ config.ITUNES_APP_ID }}">
+  <link rel="shortcut icon" href="{{ config.ASSETS_URL }}/root/favicon.ico" />
+
+  <!--[if lt IE 9]>
+  <script src="{{config.ASSETS_URL}}/assets/vendor/js-no-compile/html5.js"></script>
+  <![endif]-->
+
+  <!--[if lte IE 8]>
+  <script>
+    document.createElement('header');
+    document.createElement('footer');
+    document.createElement('section');
+    document.createElement('nav');
+    document.createElement('ng-include');
+    document.createElement('ng-pluralize');
+    document.createElement('ng-view');
+    document.createElement('ng-animate');
+    document.createElement('ng:include');
+    document.createElement('ng:pluralize');
+    document.createElement('ng:view');
+    document.createElement('ng:animate');
+  </script>
+  <script src="{{config.ASSETS_URL}}/assets/vendor/js-no-compile/json2.js"></script>
+  <![endif]-->
+
+  <script>
+    var tag = document.createElement('script');
+    tag.src = "//www.youtube.com/iframe_api";
+    var firstScriptTag = document.getElementsByTagName('script')[0];
+    firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+  </script>
+
+  <!--<link href='http://fonts.googleapis.com/css?family=Lato:100,300,400,700' rel='stylesheet' type='text/css'>-->
+  <link href='http://fonts.googleapis.com/css?family=Lato:400,700' rel='stylesheet' type='text/css'>
+  <link href='http://fonts.googleapis.com/css?family=Montserrat' rel='stylesheet' type='text/css'>
+  <link type="text/css" rel="stylesheet" href="http://fast.fonts.net/cssapi/bf3bd3cb-8e2d-45b3-82f0-7b308ec41ba5.css"/>
+  {% assets filters="less,cssmin", output="gen/dolly_css.%(version)s.css", depends="assets/dolly/partials/_*.less", "assets/dolly/front.less" %}
+  <link rel="stylesheet" href="{{ ASSET_URL }}"/>
+  {% endassets %}
+
+  <script src="https://maps.googleapis.com/maps/api/js?v=3.exp&sensor=false"></script>
+  
+  {% assets filters="rjsmin", output="gen/dolly-lib.%(version)s.js",
+  "assets/vendor/js/jquery-1.10.1.min.js", "assets/vendor/js/angular.js" %}
+  <script type="text/javascript" src="{{ ASSET_URL }}"></script>
+  {% endassets %}
+
+  {% 
+    assets filters="rjsmin", output="gen/dolly.%(version)s.js",
+    "dolly/vendor/tween.js",
+    "dolly/app.js",
+    "dolly/controllers/controllers.js",  
+    "dolly/directives/directives.js",  
+    "dolly/services/services.js",  
+    "dolly/filters/filters.js"
+  %}
+  <script type="text/javascript" src="{{ ASSET_URL }}"></script>
+  {% endassets %}
+
+  <!--<script src="/static/dolly/vendor/tween.js"></script>
+  <script src="/static/dolly/app.js"></script>
+  <script src="/static/dolly/controllers/controllers.js"></script>
+  <script src="/static/dolly/directives/directives.js"></script>
+  <script src="/static/dolly/services/services.js"></script>
+  <script src="/static/dolly/filters/filters.js"></script>-->
+
+  {% assets filters="fronttemplate, rjsmin", output="gen/dolly-templates.%(version)s.js",
+  "dolly/views/our-content.html", "dolly/views/our-categories.html", "dolly/views/about-us.html", "dolly/views/upload.html", "dolly/views/partners.html", "dolly/views/home.html" %}
+  <script type="text/javascript" src="{{ ASSET_URL }}"></script>
+  {% endassets %}
+
+  <script type="text/javascript">
+    var injectorUrl = '{{injectorUrl}}',
+        itunesLink = '{{config.ITUNES_APP_LINK}}',
+        assets_url = '{{config.ASSETS_URL}}',
+        top_channels = {{top_channels|tojson|safe}};
+  </script>
+
+</head>
+<body id="ng-app" ng-app="contentApp" ng-controller="MainCtrl" ng-class="{ toggled: toggled }">
+
+<div id="wrapper">
+  
+  {% include 'dolly/web/partials/header.html' %}
+  
+  <ng-view ng-animate="'animate'"></ng-view>
+  
+  {% include 'dolly/web/partials/footer.html' %}
+
+</div>
+
+
+{% include 'dolly/web/ga.html' %}
+
+</body>
+</html>

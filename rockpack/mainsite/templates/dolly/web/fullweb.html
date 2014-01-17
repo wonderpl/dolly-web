@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en" id="ng-app" ng-app="WebApp" xmlns:ng="http://angularjs.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Rockpack</title>
+    <meta name="description" content="Create, share and subscribe to personalized video channels with Rockpack app. Rockpack is available on iPhone and iPad">
+    <meta name="apple-itunes-app" content="app-id={{ config.ITUNES_APP_ID }}">
+    <meta name="fragment" content="!" />
+    <!--[if lt IE 9]>
+      <script src="{{config.ASSETS_URL}}/assets/vendor/js-no-compile/html5.js"></script>
+    <![endif]-->
+
+    <!--[if lte IE 8]>
+      <script>
+        document.createElement('ng-include');
+        document.createElement('ng-pluralize');
+        document.createElement('ng-view');
+        document.createElement('ng:include');
+        document.createElement('ng:pluralize');
+        document.createElement('ng:view');
+      </script>
+      <script src="{{config.ASSETS_URL}}/assets/vendor/js-no-compile/json2.js"></script>
+    <![endif]-->
+
+  {% assets "fullwebVendorCss" %}
+  <link rel="stylesheet" href="{{ ASSET_URL }}"/>
+  {% endassets %}
+
+  {% assets "fullwebCss" %}
+  <link rel="stylesheet" href="{{ ASSET_URL }}"/>
+  {% endassets %}
+
+  <script>
+    var tag = document.createElement('script');
+    tag.src = "//www.youtube.com/iframe_api";
+    var firstScriptTag = document.getElementsByTagName('script')[0];
+    firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+    var  assets_url = '{{config.ASSETS_URL}}';
+  </script>
+
+  {% assets "fullwebVendorJS" %}
+  <script type="text/javascript" src="{{ ASSET_URL }}"></script>
+  {% endassets %}
+
+  <script type="text/javascript">
+    window.apiUrls = jQuery.parseJSON('{{api_urls|safe}}');
+  </script>
+
+  {% assets "fullwebJS" %}
+  <script type="text/javascript" src="{{ ASSET_URL }}"></script>
+  {% endassets %}
+
+  {% assets "fullwebTemplates" %}
+  <script type="text/javascript" src="{{ ASSET_URL }}"></script>
+  {% endassets %}
+
+</head>
+
+<body ng-controller="AppCtrl" id="WebApp" ng-class="{aside: asideOpen}">
+  <div id="fb-root"></div>
+  <script>
+    window.fbAsyncInit = function() {
+      // init the FB JS SDK
+      FB.init({
+        appId      : '{{config.FACEBOOK_APP_ID}}',                        // App ID from the app dashboard
+        channelUrl : '/static/assets/channel.html', // Channel file for x-domain comms
+        status     : true,                                 // Check Facebook Login status
+        xfbml      : true                                  // Look for social plugins on the page
+      });
+
+      // Additional initialization code such as adding Event Listeners goes here
+    };
+
+    // Load the SDK asynchronously
+    (function(d, s, id){
+      var js, fjs = d.getElementsByTagName(s)[0];
+      if (d.getElementById(id)) {return;}
+      js = d.createElement(s); js.id = id;
+      js.src = "//connect.facebook.net/en_US/all.js";
+      fjs.parentNode.insertBefore(js, fjs);
+    }(document, 'script', 'facebook-jssdk'));
+  </script>
+  <div ng-style="{width: contentWidth}">
+    <div ng-include src="'header.html'"></div>
+    <div ng-include src="'videoPlayer.html'"></div>
+
+    <div ng-include src="'videoShare.html'"></div>
+    <div class="ng-view contentwrapper"></div>
+  </div>
+  <div ng-include src="'aside.html'"></div>
+  <message-handler></message-handler>
+</body>
+</html>

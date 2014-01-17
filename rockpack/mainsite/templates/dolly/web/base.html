@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>rockpack</title>
+
+  {% assets filters="cssmin", output="gen/front.%(version)s.css", "assets/vendor/css/bootstrap.css", "assets/vendor/css/bootstrap-responsive.css" %}
+  <link rel="stylesheet" href="{{ ASSET_URL }}"/>
+  {% endassets %}
+
+  {% assets filters="less", output="gen/general.%(version)s.css", "assets/general/css/general.less" %}
+  <link rel="stylesheet" href="{{ ASSET_URL }}"/>
+  {% endassets %}
+
+</head>
+
+<body >
+  {% include 'web/header.html' %}
+  <div class="wrapper">
+    <div class="content">
+      {% block content %}
+      {% endblock %}
+    </div>
+  </div>
+  {% include 'web/footer.html' %}
+  {% include 'web/ga.html' %}
+  <script>ga('send', 'pageview');</script>
+</body>
+</html>
