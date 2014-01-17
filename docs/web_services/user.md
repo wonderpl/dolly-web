@@ -36,7 +36,8 @@ Cache-Control: public, max-age=3600
         "position": 0,
         "profile_cover_url": "",
         "resource_url": "http://path/to/user/",
-        "username": "username"
+        "username": "username",
+        "subscription_count": 0
       }
     ],
     "total": 19289
@@ -77,6 +78,7 @@ Cache-Control: public, max-age=60
   "profile_cover_url": "",
   "description": "Description of user",
   "subscriber_count": 123,
+  "subscription_count": 0,
   "brand": True,
   "site_url": "http://link/to/external/site",
   "channels": {
@@ -133,6 +135,7 @@ Cache-Control: private
  "profile_cover_url": "",
  "description": "",
  "subscriber_count": 0,
+ "subscription_count": 0,
  "date_of_birth": "1900-01-21",
  "subscriptions": {
   "resource_url": "https://path/to/subscriptions/resource/base/url/",

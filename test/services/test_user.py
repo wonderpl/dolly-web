@@ -444,6 +444,7 @@ class TestUserContent(base.RockPackTestCase):
             self.wait_for_es()
             r = client.get('/ws/{}/content_feed/'.format(user1),
                            headers=[get_auth_header(user1)])
+
             self.assertEquals(r.status_code, 200)
             data = json.loads(r.data)['content']
             self.assertEquals(data['total'], len(c1instances) + 2)
@@ -466,6 +467,12 @@ class TestUserContent(base.RockPackTestCase):
             self.assertNotIn(u2old, itemids)
             self.assertIn(u2new, itemids)
             self.assertIn(u3new, itemids)
+
+            # check subscription count is being generated
+            self.wait_for_es()
+            r = client.get('/ws/{}/'.format(user1),
+               headers=[get_auth_header(user1)])
+            self.assertGreater(json.loads(r.data)['subscription_count'], 0)
 
     @skip_unless_config('ELASTICSEARCH_URL')
     def test_channel_recommendations(self):
@@ -736,6 +743,16 @@ class TestUserContent(base.RockPackTestCase):
             message = json.loads(notification.message)
             self.assertEquals(message['user']['id'], user.id)
             self.assertEquals(message['channel']['id'], channel.id)
+
+            # check subscription count is being generated
+            self.wait_for_es()
+            user2 = self.create_test_user()
+
+            r = client.get('/ws/{}/'.format(user.id),
+                content_type='application/json',
+                headers=[get_auth_header(user2.id)])
+            self.assertGreater(json.loads(r.data)['subscription_count'], 0)
+
 
     def test_star_notification(self):
         with self.app.test_client() as client:

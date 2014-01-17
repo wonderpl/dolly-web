@@ -16,7 +16,7 @@ from rockpack.mainsite.core.webservice import WebService, expose_ajax, ajax_crea
 from rockpack.mainsite.core.oauth.decorators import check_authorization
 from rockpack.mainsite.core.youtube import get_video_data
 from rockpack.mainsite.core.es import use_elasticsearch, search as es_search
-from rockpack.mainsite.core.es.api import es_update_channel_videos, ESVideo
+from rockpack.mainsite.core.es.api import es_update_channel_videos, ESVideo, update_user_subscription_count
 from rockpack.mainsite.core import recommender
 from rockpack.mainsite.helpers import lazy_gettext as _
 from rockpack.mainsite.helpers.forms import naughty_word_validator
@@ -995,6 +995,7 @@ class UserWS(WebService):
                     info[key].update(get_user_data(user.id, self.get_locale(), self.get_page()))
         info['subscriptions']['updates'] = url_for('userws.recent_videos', userid=userid)
         info['notifications'].update(unread_count=_notification_unread_count(userid))
+        info['subscription_count'] = _user_subscriptions_query(userid).count()
         return info
 
     @expose_ajax('/<userid>/display_fullname/', methods=('PUT',))
@@ -1414,6 +1415,7 @@ class UserWS(WebService):
         if Subscription.query.filter_by(user=userid, channel=channelid).count():
             return  # fail silently if already subscribed
         subs = _create_user_subscriptions(userid, [channelid], self.get_locale())[0]
+        update_user_subscription_count(userid)
         return ajax_create_response(subs)
 
     @expose_ajax('/<userid>/subscriptions/<channelid>/', cache_age=30, cache_private=True)
@@ -1428,6 +1430,7 @@ class UserWS(WebService):
     def delete_subscription_item(self, userid, channelid):
         if not _user_subscriptions_query(userid).filter_by(channel=channelid).delete():
             abort(404)
+        update_user_subscription_count(userid)
         # Remove any videos from this channel from the users feed
         UserContentFeed.query.filter_by(user=userid, channel=channelid).delete()
         save_channel_activity(userid, 'unsubscribe', channelid, self.get_locale())
