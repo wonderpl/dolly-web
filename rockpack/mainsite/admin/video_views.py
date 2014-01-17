@@ -303,3 +303,7 @@ class ContentReportView(AdminModelView):
 
 class ExternalCategoryMapView(AdminModelView):
     model = models.ExternalCategoryMap
+
+
+class MoodView(AdminModelView):
+    model = models.Mood

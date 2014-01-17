@@ -99,6 +99,7 @@ class Mood(db.Model):
 
     id = Column(Integer, primary_key=True)
     name = Column(String(32), nullable=False)
+    display_name = Column(String(32), nullable=False)
 
 
 class Source(db.Model):

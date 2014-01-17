@@ -352,5 +352,11 @@ class MoodWS(WebService):
 
     @expose_ajax('/', cache_age=3600)
     def mood_list(self):
-        items = map(lambda m: dict(id=str(m.id), name=m.name.capitalize()), models.Mood.query.all())
+        items = map(
+            lambda m: dict(
+                id=str(m.id),
+                name=m.name,
+                display_name=m.display_name.capitalize()
+            ),
+            models.Mood.query.all())
         return dict(moods=dict(items=items))
