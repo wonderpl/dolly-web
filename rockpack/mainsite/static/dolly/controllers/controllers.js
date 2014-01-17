@@ -20,6 +20,19 @@
         	$timeout(function(){
         		$rootScope.$apply(function(){
         			$rootScope.toggled = false;
+
+                    var body = d.documentElement.scrollTop ? d.documentElement : d.body;
+                    body.scrollTop = 0;
+                    
+                    //     from = body.scrollTop,
+                    //     to = 0
+
+                    // var tween = new TWEEN.Tween( { y: from } )
+                    // .to( { y: to }, 600 )
+                    // .easing( TWEEN.Easing.Cubic.Out )
+                    // .onUpdate( function () {
+                    //     body.scrollTop = this.y;
+                    // }).start();
         		});
         	});
         });

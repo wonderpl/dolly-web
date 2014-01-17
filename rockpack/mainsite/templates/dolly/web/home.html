@@ -51,10 +51,20 @@
 
   <script src="https://maps.googleapis.com/maps/api/js?v=3.exp&sensor=false"></script>
   
-  {% assets filters="rjsmin", output="gen/dolly-lib.%(version)s.js",
-  "assets/vendor/js/jquery-1.10.1.min.js", "assets/vendor/js/angular.js" %}
-  <script type="text/javascript" src="{{ ASSET_URL }}"></script>
-  {% endassets %}
+  {# 
+    assets filters="rjsmin", output="gen/dolly-lib.%(version)s.js",
+    "assets/vendor/js/jquery-1.10.1.min.js", 
+    "dolly/vendor/angular/angular.js",
+    "dolly/vendor/angular/angular-route.js",
+    "dolly/vendor/angular/angular-animate.js"
+  #}
+  <!--<script type="text/javascript" src="{{ ASSET_URL }}"></script>-->
+  {# endassets #}
+
+  <script src="/static/assets/vendor/js/jquery-1.10.1.min.js"></script>
+  <script src="/static/dolly/vendor/angular/angular.js"></script>
+  <script src="/static/dolly/vendor/angular/angular-route.js"></script>
+  <script src="/static/dolly/vendor/angular/angular-animate.js"></script>
 
   {% 
     assets filters="rjsmin", output="gen/dolly.%(version)s.js",
@@ -94,7 +104,7 @@
   
   {% include 'dolly/web/partials/header.html' %}
   
-  <ng-view ng-animate="'animate'"></ng-view>
+  <div ng-view class="view-animate"></div>
   
   {% include 'dolly/web/partials/footer.html' %}
 
