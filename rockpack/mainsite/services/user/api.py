@@ -1415,7 +1415,8 @@ class UserWS(WebService):
         if Subscription.query.filter_by(user=userid, channel=channelid).count():
             return  # fail silently if already subscribed
         subs = _create_user_subscriptions(userid, [channelid], self.get_locale())[0]
-        update_user_subscription_count(userid)
+        if use_elasticsearch:
+            update_user_subscription_count(userid)
         return ajax_create_response(subs)
 
     @expose_ajax('/<userid>/subscriptions/<channelid>/', cache_age=30, cache_private=True)
@@ -1430,7 +1431,8 @@ class UserWS(WebService):
     def delete_subscription_item(self, userid, channelid):
         if not _user_subscriptions_query(userid).filter_by(channel=channelid).delete():
             abort(404)
-        update_user_subscription_count(userid)
+        if use_elasticsearch:
+            update_user_subscription_count(userid)
         # Remove any videos from this channel from the users feed
         UserContentFeed.query.filter_by(user=userid, channel=channelid).delete()
         save_channel_activity(userid, 'unsubscribe', channelid, self.get_locale())
