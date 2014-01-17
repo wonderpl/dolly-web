@@ -29,7 +29,7 @@
 					map: scope.map,
 					title: 'Hello World!',
 					icon: {
-						url: '/static/assets/front/img/map-marker.png',
+						url: '/static/assets/dolly/img/map-marker.png',
 						origin: new google.maps.Point(0,0),
 						anchor: new google.maps.Point(75,75),
 						size: new google.maps.Size(150, 150)

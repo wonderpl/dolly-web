@@ -2,7 +2,6 @@
 /* 	Global styles
 /* ======================================= */
 
-
 * {
 	-webkit-box-sizing: border-box;
 	-moz-box-sizing: border-box;
@@ -58,6 +57,71 @@ a {
 	display: block;
 	width: 100%;
 	position: relative;
+
+	&.base {
+		h1 {
+			text-align: center;
+			margin: 0 0 32px 0;
+		}
+
+		h2, h3, p, li {
+			text-align: left;
+			font-family: 'Lato', sans-serif;
+			font-style: normal;
+			font-weight: 400;
+			width: 90%;
+			display: block;
+			margin: 0 auto 12px auto;
+		}
+
+		p {
+			
+		}
+
+		ul, ol {
+			padding: 0 0 0 22px;
+			width: 90%;
+			display: block;
+			margin: 0 auto 12px auto;
+
+			p, h3, li, ul, ol {
+				margin: 0 0 12px 0;
+			}
+
+			ol, ul {
+				li {
+					list-style-type: upper-roman;
+				}
+			}
+		}
+
+		li {
+			display: list-item;
+			list-style-type: disc;
+			margin: 0 0 12px 0;
+			line-height: 26px;
+		}
+
+		ol li {
+			list-style-type: lower-alpha;
+		}
+
+		table {
+			display: block;
+			width: 90%;
+			margin: 0 auto 22px auto;
+			text-align: center;
+			text-align: left;
+			font-family: 'Lato', sans-serif;
+			font-style: normal;
+			font-weight: 400;
+
+			tbody, tr {
+				display: block;
+				width: 100%;
+			}
+		}
+	}
 }
 
 .inner {

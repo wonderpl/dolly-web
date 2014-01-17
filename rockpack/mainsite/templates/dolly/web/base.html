@@ -1,29 +1,54 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta content="IE=edge,chrome=1" http-equiv="X-UA-Compatible">
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>rockpack</title>
+  <title>Rockpack</title>
+  <meta name="description" content="Create, share and subscribe to personalized video channels with Rockpack app. Rockpack is available on iPhone and iPad">
 
-  {% assets filters="cssmin", output="gen/front.%(version)s.css", "assets/vendor/css/bootstrap.css", "assets/vendor/css/bootstrap-responsive.css" %}
+  <!--[if lte IE 8]>
+  <script>
+    document.createElement('header');
+    document.createElement('footer');
+    document.createElement('section');
+    document.createElement('nav');
+  </script>
+  <![endif]-->
+
+
+  <link rel="shortcut icon" href="{{ config.ASSETS_URL }}/root/favicon.ico" />
+
+  <link href='http://fonts.googleapis.com/css?family=Lato:400,700' rel='stylesheet' type='text/css'>
+  <link href='http://fonts.googleapis.com/css?family=Montserrat' rel='stylesheet' type='text/css'>
+  <link type="text/css" rel="stylesheet" href="http://fast.fonts.net/cssapi/bf3bd3cb-8e2d-45b3-82f0-7b308ec41ba5.css"/>
+  {% assets filters="less,cssmin", output="gen/dolly_css.%(version)s.css", depends="assets/dolly/partials/_*.less", "assets/dolly/front.less" %}
   <link rel="stylesheet" href="{{ ASSET_URL }}"/>
   {% endassets %}
-
-  {% assets filters="less", output="gen/general.%(version)s.css", "assets/general/css/general.less" %}
-  <link rel="stylesheet" href="{{ ASSET_URL }}"/>
+  
+  {% assets filters="rjsmin", output="gen/dolly-static-lib.%(version)s.js", "assets/vendor/js/jquery-1.10.1.min.js" %}
+  <script type="text/javascript" src="{{ ASSET_URL }}"></script>
   {% endassets %}
+
+  {% assets filters="rjsmin", output="gen/dolly.static.%(version)s.js", "dolly/static.js" %}
+  <script type="text/javascript" src="{{ ASSET_URL }}"></script>
+  {% endassets %}
+
+  <script type="text/javascript">
+    var assets_url = '{{config.ASSETS_URL}}'
+  </script>
 
 </head>
 
 <body >
-  {% include 'web/header.html' %}
+  {% include 'dolly/web/partials/header-static.html' %}
   <div class="wrapper">
     <div class="content">
       {% block content %}
       {% endblock %}
     </div>
   </div>
-  {% include 'web/footer.html' %}
+  {% include 'dolly/web/partials/footer.html' %}
   {% include 'web/ga.html' %}
   <script>ga('send', 'pageview');</script>
 </body>
