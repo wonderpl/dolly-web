@@ -464,6 +464,8 @@ class ESVideoAttributeMap:
 
     @property
     def tags(self):
+        if not self.video_instance.tags:
+            return []
         return map(unicode.strip, filter(None, self.video_instance.tags.split(',')))
 
     def recent_user_stars(self, empty=False):
