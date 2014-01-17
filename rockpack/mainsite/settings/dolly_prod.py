@@ -34,7 +34,7 @@ ENABLE_TIMINGS = True
 
 SQS_REGION = 'us-east-1'
 
-#USE_GEVENT = True
+ENABLED_LOCALES = ('en-us',)
 
 ADMIN_NAME = 'Wonder Place Admin'
 

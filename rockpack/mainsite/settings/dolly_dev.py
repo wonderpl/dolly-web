@@ -32,7 +32,7 @@ STATSD_HOST = 'admin'
 
 ENABLE_TIMINGS = True
 
-#USE_GEVENT = True
+ENABLED_LOCALES = ('en-us',)
 
 ADMIN_NAME = 'Wonder Place Admin'
 
