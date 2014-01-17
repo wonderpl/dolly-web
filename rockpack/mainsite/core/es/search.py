@@ -155,6 +155,12 @@ class EntitySearch(object):
             pp(result.search.serialize())
         return result
 
+    def completion_suggestions(self, text, size=10, field='completion'):
+        completion = dict(field=field, size=size)
+        suggest = pyes.Suggest({'_': {'text': text, 'completion': completion}})
+        result = self._conn.suggest_from_object(suggest, self.get_index_name(), raw=True)
+        return [r['text'] for r in result['_'][0]['options']]
+
     def get_index_name(self):
         return ESObjectIndexer.indexes[self.entity.lower()]['index']
 
@@ -507,10 +513,10 @@ class VideoSearch(EntitySearch, CategoryMixin, MediaSortMixin):
             )
             if v.owner:
                 video['owner'] = dict(
-                    id = v.owner.resource_url.lstrip('/').split('/')[1],
-                    display_name = v.owner.display_name,
-                    resource_url = urljoin(BASE_URL, v.owner.resource_url),
-                    avatar_thumbnail_url = urljoin(IMAGE_CDN, v.owner.avatar) if v.owner.avatar else ''
+                    id=v.owner.resource_url.lstrip('/').split('/')[1],
+                    display_name=v.owner.display_name,
+                    resource_url=urljoin(BASE_URL, v.owner.resource_url),
+                    avatar_thumbnail_url=urljoin(IMAGE_CDN, v.owner.avatar) if v.owner.avatar else ''
                 )
             if v.owner and v.channel:
                 video['channel']['resource_url'] = urljoin(BASE_URL, url_for('userws.channel_info', userid=video['owner']['id'], channelid=v.channel))
@@ -600,3 +606,9 @@ class UserSearch(EntitySearch):
         if not self._user_results:
             self._user_results = self._format_results(self.results())
         return self._user_results
+
+
+class SuggestionSearch(EntitySearch):
+
+    def __init__(self):
+        super(SuggestionSearch, self).__init__('search_suggestion')

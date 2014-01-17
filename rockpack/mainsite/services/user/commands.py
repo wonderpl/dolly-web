@@ -408,11 +408,10 @@ def create_new_channel_feed_items(date_from, date_to):
             notification_groups.setdefault(channel, set()).add(user)
             notify_users.update({user: None})
 
-    map(lambda u:
-            notify_users.update({u[0]: u[1]}),
-            ExternalToken.query.filter(
-                ExternalToken.external_system == 'apns', ExternalToken.user.in_(notify_users.keys())
-            ).values(ExternalToken.user, ExternalToken.external_token))
+    [notify_users.update({user: token}) for user, token in
+        ExternalToken.query.filter(
+            ExternalToken.external_system == 'apns', ExternalToken.user.in_(notify_users.keys())
+        ).values(ExternalToken.user, ExternalToken.external_token)]
 
     for channel, users in notification_groups.iteritems():
         tokens = []

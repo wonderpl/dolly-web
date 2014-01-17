@@ -12,8 +12,9 @@ from rockpack.mainsite.core import youtube
 from rockpack.mainsite.helpers.db import gen_videoid
 from rockpack.mainsite.services.video.api import get_db_channels
 from rockpack.mainsite.services.video.models import Channel, User
-from rockpack.mainsite.core.es.search import ChannelSearch, VideoSearch, UserSearch, MUST
 from rockpack.mainsite.core.es import use_elasticsearch, filters
+from rockpack.mainsite.core.es.search import (
+    ChannelSearch, VideoSearch, UserSearch, SuggestionSearch, MUST)
 
 
 VIDEO_INSTANCE_PREFIX = 'Svi0xYzZY'
@@ -189,6 +190,10 @@ class CompleteWS(WebService):
         query = request.args.get('q', '')
         if not query:
             abort(400)
+        if app.config.get('DOLLY') and use_elasticsearch():
+            terms = SuggestionSearch().completion_suggestions(query)
+            result = json.dumps((query, [(t, 0) for t in terms], {}))
+            return Response('window.google.ac.h(%s)' % result, mimetype='text/javascript')
         result = youtube.complete(query)
         if len(query) >= 4:
             try:

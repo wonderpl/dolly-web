@@ -16,7 +16,8 @@ def render(template=None):
             if not isinstance(response, tuple):
                 response = (response,)
             if template:
-                response = (render_template(template, **(response[0] or {})),) + response[1:]
+                prefix = 'dolly/' if app.config.get('DOLLY') else ''
+                response = (render_template(prefix + template, **(response[0] or {})),) + response[1:]
             return Response(*response)
         return wrapper
     return decorator
