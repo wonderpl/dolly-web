@@ -967,6 +967,7 @@ class UserWS(WebService):
             user = _base_user_info(User.query.get_or_404(userid))
             user['channels'] =\
                 user_channels(userid, self.get_locale(), self.get_page(), own=False)
+            user['subscription_count'] = _user_subscriptions_query(userid).count()
         return user
 
     @expose_ajax('/<userid>/', cache_private=True)
