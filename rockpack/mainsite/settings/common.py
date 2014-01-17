@@ -42,7 +42,7 @@ ITUNES_APP_LINK = 'https://itunes.apple.com/app/rockpack/id%s?mt=8&ls=1&at=%s' %
 HELP_SITE_LINK = 'http://help.rockpack.com/'
 
 # For iOS app deeplinking
-ROCKPACK_IOS_URL_SCHEME = 'rockpack'
+IOS_APP_URL_SCHEME = 'rockpack'
 
 ELASTICSEARCH_URL = None
 

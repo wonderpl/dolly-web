@@ -186,7 +186,7 @@ def _rockpack_protocol_url(url):
     if channel_match:
         video_match = re.search('vi[\w-]{22}', url)
         url = '{}://-/channels/{}/{}'.format(
-            app.config['ROCKPACK_IOS_URL_SCHEME'],
+            app.config['IOS_APP_URL_SCHEME'],
             channel_match.group(),
             'video/{}/'.format(video_match.group()) if video_match else '')
     return url
