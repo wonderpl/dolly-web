@@ -24,7 +24,7 @@ SENTRY_PASSWORD = _decrypt('v\xb6a:\x0b\xb2\x88\x18z\xcc\xe1N\xe2N\xf5\x19\xe8\x
 SENTRY_DSN = 'https://%s:%s@sentry.dev.rockpack.com/4' % (SENTRY_USER, SENTRY_PASSWORD)
 SENTRY_ENABLE_LOGGING = 30  # logging.WARNING
 
-#ELASTICSEARCH_URL = 'http://localhost:9200'
+ELASTICSEARCH_URL = 'http://localhost:9200'
 
 ASYNC_ES_VIDEO_UPDATES = True
 
