@@ -127,7 +127,7 @@ def update_channel_promotions(date_from=None, date_to=None):
         es_channel.set_document_id(channel.id)
         es_channel.add_field(channel.id, channel.promotion_map())
         es_channel.update()
-    es_channel.flush_bulk()
+    api.ESChannel.flush()
 
 
 @manager.cron_command(interval=86400)
