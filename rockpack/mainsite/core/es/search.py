@@ -507,7 +507,9 @@ class VideoSearch(EntitySearch, CategoryMixin, MediaSortMixin):
                 ),
                 position=pos,
                 owner=v.owner,
-                child_instance_count=getattr(v, 'child_instance_count', 0)
+                child_instance_count=getattr(v, 'child_instance_count', 0),
+                link_url=v.link_url,
+                link_title=v.link_title
             )
             if v.owner:
                 video['owner'] = dict(

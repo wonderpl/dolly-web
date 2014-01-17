@@ -265,6 +265,8 @@ class ESVideo(ESObject):
             most_influential=mapped.most_influential,
             owner=mapped.owner,
             comments=mapped.comments(),
+            link_url=mapped.link_url,
+            link_title=mapped.link_title,
             tags=mapped.tags
         )
 
@@ -451,6 +453,14 @@ class ESVideoAttributeMap:
         # Default to True so that it automatically
         # shows up in search
         return True
+
+    @property
+    def link_url(self):
+        return self.video_instance.video_rel.link_url
+
+    @property
+    def link_title(self):
+        return self.video_instance.video_rel.link_title
 
     @property
     def tags(self):

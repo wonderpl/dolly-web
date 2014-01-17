@@ -254,6 +254,8 @@ class DBImport(object):
                     country_restriction=mapped.country_restriction(empty=True),
                     comments=mapped.comments(empty=True),
                     child_instance_count=mapped.child_instance_count,
+                    link_url=mapped.link_url,
+                    link_title=mapped.link_title,
                     tags=mapped.tags
                 )
                 ev.manager.indexer.insert(v.id, rep)
