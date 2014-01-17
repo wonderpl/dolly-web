@@ -37,7 +37,13 @@ Cache-Control: public, max-age=300
         "channel": {
          "id": "chOq1ZEUv3WHsQuMDu8oBrOQ",
          "title": "A channel title",
-         "resource_url": "http://base/ws/USERID/channels/CHANNELID/"
+         "resource_url": "http://base/ws/USERID/channels/CHANNELID/",
+         "owner": {
+            "id": "ziCAgGxbRpW-HNYTloYkQg",
+            "display_name": "Jimmy Wales",
+            "avatar_thumbnail_url": "http://path/to/avatar/small.jpg",
+            "resource_url": "http://dev.rockpack.com/ws/ziCAgGxbRpW-HNYTloYkQg/",
+         },
         },
         "comments": {
           "total": 0
