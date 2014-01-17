@@ -275,6 +275,16 @@ class VideoData(DataSet):
         date_published = datetime(2013, 1, 1, 0, 0, 0)
 
 
+class MoodData(DataSet):
+    class mood1:
+        id = 1
+        name = 'indifferent'
+
+    class mood2:
+        id = 2
+        name = 'misanthropic'
+
+
 class VideoInstanceData(DataSet):
     class video_instance1:
         id = 'viw4MLuit1R5WAB4LSQDUo7Q'
@@ -348,6 +358,7 @@ def install(*args):
             'ChannelLocaleMetaData': video_models.ChannelLocaleMeta,
             'VideoData': video_models.Video,
             'VideoInstanceData': video_models.VideoInstance,
+            'MoodData': video_models.Mood,
         },
         engine=db.engine)
 

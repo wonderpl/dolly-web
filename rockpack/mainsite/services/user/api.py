@@ -845,8 +845,7 @@ def _video_recommendations(userid, locale, paging):
     if use_elasticsearch():
         vs = es_search.VideoSearch(locale)
         if mood:
-            # TODO: use mood tags here instead
-            vs.add_term('category', mood)
+            vs.add_term('tags', 'mood-' + mood)
         if location:
             vs.check_country_allowed(location.upper())
         vs.random_sort()

@@ -121,6 +121,11 @@ if app.config.get('DOLLY', False):
                         "null_value": 0
                     }
                 }
+            },
+            "tags": {
+                "type": "string",
+                "index": "not_analyzed",
+                "null_value": []
             }
         }
     }

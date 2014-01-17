@@ -93,6 +93,14 @@ class ExternalCategoryMap(db.Model):
     source = Column(ForeignKey('source.id'), nullable=False)
 
 
+class Mood(db.Model):
+
+    __tablename__ = 'mood'
+
+    id = Column(Integer, primary_key=True)
+    name = Column(String(32), nullable=False)
+
+
 class Source(db.Model):
     __tablename__ = 'source'
 
