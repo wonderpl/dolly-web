@@ -9,5 +9,5 @@ class MoodService(base.RockPackTestCase):
                 content_type='application/json')
 
             moods = json.loads(r.data)['moods']['items']
-            self.assertIn(dict(id=u'1', name=u'Indifferent'), moods)
-            self.assertIn(dict(id=u'2', name=u'Misanthropic'), moods)
+            self.assertIn(dict(id=u'1', name=u'indifferent', display_name=u'Indifferent'), moods)
+            self.assertIn(dict(id=u'2', name=u'misanthropic', display_name=u'Misanthropic'), moods)
