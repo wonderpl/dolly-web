@@ -21,8 +21,8 @@
         		$rootScope.$apply(function(){
         			$rootScope.toggled = false;
 
-                    var body = d.documentElement.scrollTop ? d.documentElement : d.body;
-                    body.scrollTop = 0;
+                    var b = d.documentElement.scrollTop ? d.documentElement : d.body;
+                    b.scrollTop = 0;
                     
                     //     from = body.scrollTop,
                     //     to = 0
@@ -58,6 +58,10 @@
     }]);
 
     app.controller('PageCtrl', ['$scope', function($scope){
+
+    }]);
+
+    app.controller('WebLiteController', ['$scope', function($scope){
 
     }]);
 

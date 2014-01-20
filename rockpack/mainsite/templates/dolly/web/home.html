@@ -30,6 +30,8 @@
     document.createElement('ng:pluralize');
     document.createElement('ng:view');
     document.createElement('ng:animate');
+    document.createElement('wonderplayer');
+    document.createElement('webliteplayer');
   </script>
   <script src="{{config.ASSETS_URL}}/assets/vendor/js-no-compile/json2.js"></script>
   <![endif]-->
@@ -50,6 +52,7 @@
   {% endassets %}
 
   <script src="https://maps.googleapis.com/maps/api/js?v=3.exp&sensor=false"></script>
+  <script src='//player.ooyala.com/v3/c8b3075569864056bc02b97568d17127?platform=html5-priority'></script>
   
   {# 
     assets filters="rjsmin", output="gen/dolly-lib.%(version)s.js",
@@ -66,7 +69,7 @@
   <script src="/static/dolly/vendor/angular/angular-route.js"></script>
   <script src="/static/dolly/vendor/angular/angular-animate.js"></script>
 
-  {% 
+  {# 
     assets filters="rjsmin", output="gen/dolly.%(version)s.js",
     "dolly/vendor/tween.js",
     "dolly/app.js",
@@ -74,16 +77,17 @@
     "dolly/directives/directives.js",  
     "dolly/services/services.js",  
     "dolly/filters/filters.js"
-  %}
+  #}
   <script type="text/javascript" src="{{ ASSET_URL }}"></script>
-  {% endassets %}
+  {# endassets #}
 
-  <!--<script src="/static/dolly/vendor/tween.js"></script>
+  <script src="/static/dolly/vendor/tween.js"></script>
   <script src="/static/dolly/app.js"></script>
   <script src="/static/dolly/controllers/controllers.js"></script>
   <script src="/static/dolly/directives/directives.js"></script>
   <script src="/static/dolly/services/services.js"></script>
-  <script src="/static/dolly/filters/filters.js"></script>-->
+  <script src="/static/dolly/filters/filters.js"></script>
+  <script src="/static/dolly/video-module.js"></script>
 
   {% assets filters="fronttemplate, rjsmin", output="gen/dolly-templates.%(version)s.js",
   "dolly/views/our-content.html", "dolly/views/our-categories.html", "dolly/views/about-us.html", "dolly/views/upload.html", "dolly/views/partners.html", "dolly/views/home.html" %}
@@ -109,7 +113,6 @@
   {% include 'dolly/web/partials/footer.html' %}
 
 </div>
-
 
 {% include 'dolly/web/ga.html' %}
 
