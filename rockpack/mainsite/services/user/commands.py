@@ -421,7 +421,8 @@ def create_new_channel_feed_items(date_from, date_to):
             "loc-key": '%@ has added a new channel',
             "loc-args": [display_name]
         }
-        _process_apns_broadcast(tokens, alert, url=channel_resource_url)
+        if tokens:
+            _process_apns_broadcast(tokens, alert, url=channel_resource_url)
 
 
 def remove_old_feed_items():
