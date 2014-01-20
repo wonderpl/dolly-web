@@ -266,7 +266,7 @@ class DBImport(object):
             ev.flush_bulk()
             print 'finished in', time.time() - start, 'seconds'
 
-    def import_dolly_video_owners(self):
+    def import_dolly_video_owners(self, prefix=None):
         """ Import all the owner attributes of
             a video instance belonging to a channel """
 
@@ -281,6 +281,9 @@ class DBImport(object):
                 Channel.public == True,
                 Channel.visible == True,
                 Channel.deleted == False)
+
+            if prefix:
+                channels = channels.filter(Channel.id.like(prefix.replace('_', '\\_') + '%'))
 
             total = channels.count()
             done = 1

@@ -18,9 +18,8 @@ def import_video_repins():
     helpers.DBImport().import_dolly_repin_counts()
 
 @manager.command
-@timer
-def import_video_repin_owners():
-    helpers.DBImport().import_dolly_video_owners()
+def import_video_repin_owners(prefix=None):
+    helpers.DBImport().import_dolly_video_owners(prefix)
 
 @manager.command
 @timer

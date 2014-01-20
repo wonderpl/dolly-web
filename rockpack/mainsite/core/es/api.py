@@ -215,7 +215,19 @@ class ESObject(object):
                 prefix += " = %s;" % json.dumps(val, ensure_ascii=False, cls=DateEncoder)
             return prefix
 
-        return construct_update_string('ctx._source.%s' % field, value)
+        # Some fields can't be accessed with dot-notation (en-gb, you bastard) so we need
+        # to check whether we're trying to set every value for a nested field object or
+        # just an individual one.
+        # We'll check the mapping for that field and get all the dict keys that it has.
+        # If the value dict passed in here contains all the keys, we'll assume an overwrite.
+        # If there is a mismatch, we'll assume only particular nested fields are being
+        # changed and used bracket-notation set them.
+        if not "." in field and isinstance(value, dict):
+            for k in self.indexer.mapping['properties'][field]['properties'].keys():
+                if k not in value.keys():
+                    return construct_update_string('ctx._source.%s' % field, value)
+
+        return 'ctx._source.%s=%s;' % (field, json.dumps(value, ensure_ascii=False, cls=DateEncoder))
 
     @classmethod
     def inserter(cls, bulk=False):
