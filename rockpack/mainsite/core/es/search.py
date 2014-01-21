@@ -504,12 +504,12 @@ class VideoSearch(EntitySearch, CategoryMixin, MediaSortMixin):
                     source_date_uploaded=published.isoformat() if hasattr(published, 'isoformat') else published,
                     duration=v.video.duration,
                     thumbnail_url=urljoin(app.config.get('IMAGE_CDN', ''), v.video.thumbnail_url) if v.video.thumbnail_url else '',
+                    link_url=v.link_url,
+                    link_title=v.link_title
                 ),
                 position=pos,
                 owner=v.owner,
-                child_instance_count=getattr(v, 'child_instance_count', 0),
-                link_url=v.link_url,
-                link_title=v.link_title
+                child_instance_count=getattr(v, 'child_instance_count', 0)
             )
             if v.owner:
                 video['channel'].update(

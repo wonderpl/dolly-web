@@ -122,9 +122,9 @@ Cache-Control: public, max-age=3600
           "thumbnail_url": "http://i.ytimg.com/vi/BrHlQUXFzfw/0.jpg",
           "view_count": "4536",
           "star_count": "4455"
+          "link_url": "http://path/to/external/resource",
+          "link_title": "text for link_url"
         },
-        "link_url": "http://path/to/external/resource",
-        "link_title": "text for link_url",
         "category": 124,
         "date_added": "2012-12-06T08:28:05.000Z",
         "position": 0,
