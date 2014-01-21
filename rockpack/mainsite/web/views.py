@@ -54,12 +54,16 @@ def welcome_email():
     from rockpack.mainsite.core.email import env
     return env.get_template('welcome.html').render(web=True)
 
-
-@expose_web('/', 'web/home.html', cache_age=3600)
-def homepage():
-    api_urls = json.dumps(ws_request('/ws/'))
-    channels = ws_request('/ws/channels/', size=8)
-    return dict(api_urls=api_urls, injectorUrl=url_for('injector'), top_channels=channels)
+if app.config.get('PRELAUNCH'):
+    @expose_web('/', 'web/coming-soon.html', cache_age=3600)
+    def homepage():
+        pass
+else:
+    @expose_web('/', 'web/home.html', cache_age=3600)
+    def homepage():
+        api_urls = json.dumps(ws_request('/ws/'))
+        channels = ws_request('/ws/channels/', size=8)
+        return dict(api_urls=api_urls, injectorUrl=url_for('injector'), top_channels=channels)
 
 if app.config.get('SECURE_SUBDOMAIN'):
     app.add_url_rule('/', 'secure_home_redirect',

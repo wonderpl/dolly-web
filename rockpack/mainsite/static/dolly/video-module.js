@@ -341,22 +341,20 @@ OO.plugin("WonderUIModule", function (OO) {
         if ( _.mousedown === true ) {
             _.prevent(e);
             var pos = e.touches[0] || e.changedTouches[0],
+                target = e.srcElement || e.target,
                 x = pos.pageX,
-                percentage;
+                percentage,
+                scrubtype = target.className.replace('scrubber-trans ','');
 
             clearTimeout( _.seekTimeout );
             _.seekTimeout = setTimeout(function(){
-                percentage = pos.pageX - _.elements.scrubber.getBoundingClientRect().left;
-                percentage = ((percentage / _.elements.scrubber.clientWidth ) * 100 );
-
-                if ( percentage >= 0 && percentage <= 100 ) {
-                    _.seek( (_.duration / 100) * percentage );
-                    _.elements.scrubber_progress.style.width = percentage + '%';
-                    _.elements.scrubber_handle.style.left = percentage + '%';    
-                } else {
-                    _.scrubUp();
+                percentage = pos.pageX - target.getBoundingClientRect().left;
+                percentage = ((percentage / target.clientWidth ) * 100 );
+                if ( scrubtype === 'vid' ) {
+                    _.scrubVid(percentage);
+                } else if ( scrubtype === 'vol' ) {
+                    _.scrubVol(percentage);
                 }
-                
             },10);
 
             return false;

@@ -54,13 +54,12 @@
   <link rel="stylesheet" href="{{ ASSET_URL }}"/>
   {% endassets %}
 
-  
+  <!-- Conditional stylesheet for IE8 and below -->
   {% assets filters="less,cssmin", output="gen/dolly_ie_css.%(version)s.css", depends="assets/dolly/partials/_*.less", "assets/dolly/ie.less" %}
   <!--[if lt IE 9]>
     <link rel="stylesheet" href="{{ ASSET_URL }}"/>
   <![endif]-->
   {% endassets %}
-  
 
   <script src="https://maps.googleapis.com/maps/api/js?v=3.exp&sensor=false"></script>
   <script src='//player.ooyala.com/v3/c8b3075569864056bc02b97568d17127?platform=html5-priority'></script>
