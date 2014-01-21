@@ -279,12 +279,12 @@ class MoodData(DataSet):
     class mood1:
         id = 1
         name = 'indifferent'
-        display_name = 'indifferent'
+        display_name = 'Indifferent'
 
     class mood2:
         id = 2
         name = 'misanthropic'
-        display_name = 'misanthropic'
+        display_name = 'Misanthropic'
 
 
 class VideoInstanceData(DataSet):

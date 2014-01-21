@@ -354,9 +354,8 @@ class MoodWS(WebService):
     def mood_list(self):
         items = map(
             lambda m: dict(
-                id=str(m.id),
-                name=m.name,
-                display_name=m.display_name.capitalize()
+                id=m.name,
+                name=m.display_name
             ),
             models.Mood.query.all())
         return dict(moods=dict(items=items))

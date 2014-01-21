@@ -79,8 +79,7 @@ Cache-Control: public, max-age=3600
   "items": [
    {
     "id": "MOODID",
-    "name": "angry-misanthrope",
-    "display_name": "Not A Happy Bunny"
+    "name": "Not A Happy Bunny"
    }
   ]
  }
