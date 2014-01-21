@@ -1,5 +1,12 @@
 
 
-<div ng-controller="WebLiteController">
+<div ng-controller="WebLiteController" id="web-lite-wrapper">
+	<div class="top centered">
+		<div class="avatar">
+			<img ng-src="(( user.picture ))" alt="">
+		</div>
+		<h3 class="f-sans"><span class="strong">(( user.name.first )) (( user.name.last )) </span>shared this with you</h3>
+		
+	</div>
 	<webliteplayer id="wonderplayer" data-video="h0bWV4ZzoD6fbrEsXxER_4qi8vjO_l9a"></webliteplayer>
 </div>

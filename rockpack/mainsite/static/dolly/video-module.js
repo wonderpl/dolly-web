@@ -94,6 +94,7 @@ OO.plugin("WonderUIModule", function (OO) {
         _.mb.subscribe(OO.EVENTS.PLAYER_CREATED, 'wonder', _.onPlayerCreate);
         _.mb.subscribe(OO.EVENTS.PLAYHEAD_TIME_CHANGED, 'wonder', _.onTimeUpdate);
         _.mb.subscribe(OO.EVENTS.CONTENT_TREE_FETCHED, 'wonder', _.onContentReady);
+        _.mb.subscribe(OO.EVENTS.VOLUME_CHANGED, 'wonder', _.onVolumeChanged);
         _.mb.subscribe(OO.EVENTS.PLAYED, 'wonder', _.onPlayed);
         _.mb.subscribe(OO.EVENTS.PAUSE, 'wonder', _.onPause);
         _.mb.subscribe(OO.EVENTS.PLAY, 'wonder', _.onPlay);
@@ -166,7 +167,7 @@ OO.plugin("WonderUIModule", function (OO) {
         _.info = content;
         _.elements.poster.getElementsByTagName('img')[0].src = content.promo || content.promo_image;
         _.elements.loader.className = '';
-        _.elements.poster.getElementsByTagName('span')[0].innerHTML = _.info.title;
+        _.elements.poster.getElementsByTagName('span')[0].innerHTML = (_.info.title.replace(/_/g,' '));
         _.duration = content.duration;
     };
     
@@ -207,6 +208,24 @@ OO.plugin("WonderUIModule", function (OO) {
         }
     };
 
+    _.onVolumeChanged = function (e, vol) {
+        _.volume = vol;
+        
+        if ( vol <= 0.2 ) {
+            _.removeClass( _.elements.volumebutton, 'medium' );
+            _.addClass( _.elements.volumebutton, 'mute' );
+        } else if ( vol > 0.2 && vol <= 0.65 ) {
+            _.removeClass( _.elements.volumebutton, 'mute' );    
+            _.addClass( _.elements.volumebutton, 'medium' );
+        } else {
+            _.removeClass( _.elements.volumebutton, 'mute' );
+            _.removeClass( _.elements.volumebutton, 'medium' );
+        }
+        
+        _.elements.scrubber_progress_vol.style.width = ( vol * 100 ) + '%';
+        _.elements.scrubber_handle_vol.style.left = ( vol * 100 ) + '%';
+    };
+
     _.onPlayed = function () {
         _.state.playing = false;
         _.removeClass(_.elements.playbutton, 'hidden');
@@ -216,7 +235,8 @@ OO.plugin("WonderUIModule", function (OO) {
         _.hideLoader();
     };
 
-    _.togglePlay = function () {
+    _.togglePlay = function (e) {
+        _.prevent(e);
         if ( _.state.playing === true ) {
             _.pause();
         } else {
@@ -242,7 +262,7 @@ OO.plugin("WonderUIModule", function (OO) {
         if ( _.volume > 0 ) {
             _.mb.publish(OO.EVENTS.CHANGE_VOLUME,0);
         } else {
-            _.mb.publish(OO.EVENTS.CHANGE_VOLUME,0.5);
+            _.mb.publish(OO.EVENTS.CHANGE_VOLUME,1);
         }
         // if ( _.hasClass( _.elements.volumebutton, 'vol-high' ) ) {
         //     _.mb.publish(OO.EVENTS.CHANGE_VOLUME,.5);
@@ -257,6 +277,7 @@ OO.plugin("WonderUIModule", function (OO) {
     };
 
     _.rewind = function (e) {
+        _.prevent(e);
         if ( (_.time-30) >= 0 && _.time !== 0 ) {
             _.seek(_.time-30);
         } else {
@@ -271,6 +292,7 @@ OO.plugin("WonderUIModule", function (OO) {
     };
 
     _.fullscreen = function (e) {
+        _.prevent(e);
         if ( _.state.fullscreen === false ) {
             _.mb.publish(OO.EVENTS.FULLSCREEN_CHANGED);
             _.attemptFullscreen(_.elements.wrapper);
@@ -366,8 +388,6 @@ OO.plugin("WonderUIModule", function (OO) {
 
     _.scrubVol = function(percentage) {
         _.mb.publish(OO.EVENTS.CHANGE_VOLUME, percentage/100);
-        _.elements.scrubber_progress_vol.style.width = percentage + '%';
-        _.elements.scrubber_handle_vol.style.left = percentage + '%';
     };
 
     _.showLoader = function () {

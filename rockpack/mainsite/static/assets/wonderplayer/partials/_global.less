@@ -168,10 +168,10 @@ body, html {
 			outline: none;
 			font-size: 32px;
 			position: absolute;
-			-webkit-transition: color 0.15s ease-out;
-			-moz-transition: color 0.15s ease-out;
-			-o-transition: color 0.15s ease-out;
-			transition: color 0.15s ease-out;
+			-webkit-transition: color 0.15s ease-out, font-size 0.15s ease-out, top 0.15s ease-out;
+			-moz-transition: color 0.15s ease-out, font-size 0.15s ease-out, top 0.15s ease-out;
+			-o-transition: color 0.15s ease-out, font-size 0.15s ease-out, top 0.15s ease-out;
+			transition: color 0.15s ease-out, font-size 0.15s ease-out, top 0.15s ease-out;
 
 			&:hover, &:focus, &:active {
 				color: @lavender;
@@ -196,12 +196,31 @@ body, html {
 			&.wonder-volume {
 				left: 47.5%;
 				top: 14px;
+				-webkit-transform: translate3d(0,0,0);
+				-webkit-backface-visibility: none;
 				// @include icon;
 
 				&:before {
 					font-family: 'wonderplayer';
 					content: "\e608";
 				}
+
+				&.mute {
+					font-size: 18px;
+					top: 22px;
+				}
+
+				&.medium {
+					font-size: 24px;
+					top: 18px;
+				}
+
+				// &.mute {
+				// 	&:before {
+				// 		font-family: 'wonderplayer';
+				// 		content: "\e609";		
+				// 	}
+				// }
 
 				// &.vol-high:before {
 				// 	content: "\e605";
