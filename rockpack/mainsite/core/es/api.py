@@ -71,8 +71,7 @@ class ESObjectIndexer(object):
                 self.index,
                 self.doc_type,
                 id=document_id,
-                bulk=self.bulk
-            )
+                bulk=self.bulk)
         except Exception, e:
             app.logger.exception(
                 "Failed to insert record to index '%s' with id '%s' with: %s",
@@ -431,7 +430,12 @@ class ESVideoAttributeMap:
 
     @property
     def category(self):
-        return self.video_instance.category
+        primary_cat = self.video_instance.category
+        cat_tags = [tag[4:] for tag in self.tags if tag.startswith('cat-')]
+        if cat_tags:
+            from rockpack.mainsite.services.video.models import Category
+            return [primary_cat] + [cat[0] for cat in Category.query.filter(Category.name.in_(cat_tags)).values('id')]
+        return primary_cat
 
     @property
     def date_added(self):
@@ -653,7 +657,7 @@ def add_user_to_index(user, bulk=False, refresh=False, no_check=False):
 
 def update_user_subscription_count(userid):
     from rockpack.mainsite.services.user.models import Subscription
-    subscription_count=Subscription.query.filter_by(user=userid).count()
+    subscription_count = Subscription.query.filter_by(user=userid).count()
     try:
         es_connection.partial_update(
             ESObjectIndexer.indexes['user']['index'],

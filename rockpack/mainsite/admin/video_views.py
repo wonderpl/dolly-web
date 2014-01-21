@@ -78,6 +78,11 @@ class VideoInstanceView(AdminModelView):
     )
     #inline_models = (VideoInstanceLocaleMetaFormAdmin(models.VideoInstanceLocaleMeta),)
 
+    def after_model_change(self, form, model, is_created):
+        if use_elasticsearch():
+            es_video = es_api.ESVideo.inserter()
+            es_video.insert(model.id, model)
+
 
 class SourceView(AdminModelView):
     model = models.Source
