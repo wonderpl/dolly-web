@@ -1,0 +1,14 @@
+
+
+<h1>Browse (( owner.display_name|firstName))'s channel</h1>
+
+<ul class="channel-list">
+	<li ng-repeat="video in videos.items">
+		<a href="/channel/-/(( channel_data.id ))/?video=(( video.id ))" ng-click="changeVideo($event, $index)">
+			<img ng-src="(( video.video.thumbnail_url ))" />
+			<span>(( video.title ))</span>
+		</a>
+	</li>
+</ul>
+
+<div class="clear"></div>

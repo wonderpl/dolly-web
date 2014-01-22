@@ -1,114 +1,65 @@
 <!DOCTYPE html>
-<html lang="en" id="ng-app" ng-app="Weblight" xmlns:ng="http://angularjs.org">
-<head prefix="og: http://ogp.me/ns# {{ config.FACEBOOK_APP_NAMESPACE }}: http://ogp.me/ns/apps/{{ config.FACEBOOK_APP_NAMESPACE }}#">
+<html lang="en">
+<head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="HandheldFriendly" content="True">
-  <meta http-equiv="cleartype" content="on">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Rockpack</title>
 
-  {% include 'web/meta_social.html' %}
-
-  <!--[if lt IE 9]>
-  <script src="{{config.ASSETS_URL}}/assets/vendor/js-no-compile/html5.js"></script>
-  <style type="text/css">
-    .gradient {
-      filter: none;
-    }
-  </style>
-  <![endif]-->
-
-  <!--[if lte IE 8]>
-  <script type="text/javascript">
-    document.createElement('ng-include');
-    document.createElement('ng-pluralize');
-    document.createElement('ng-view');
-    document.createElement('ng:include');
-    document.createElement('ng:pluralize');
-    document.createElement('ng:view');
-  </script>
-  <script src="{{config.ASSETS_URL}}/assets/vendor/js-no-compile/json2.js"></script>
-  <![endif]-->
-
-  <script type="text/javascript">
-    var channel_data = {{ channel_data|tojson|safe }},
-    assets_url = '{{config.ASSETS_URL}}',
-            selected_video = {{selected_video|tojson|safe}},
-    full_path = '/',
-            apiUrls = {{api_urls|safe}}
-
-  </script>
-
-  {% assets filters="cssmin", output="gen/vendor-weblight.%(version)s.css", "assets/vendor/css/bootstrap.css" %}
+  {% 
+  	assets filters="less,cssmin", 
+  	output="gen/wonderplayer_css.%(version)s.css", 
+  	depends="assets/wonderplayer/partials/_*.less", 
+  	"assets/wonderplayer/main.less" 
+  %}
   <link rel="stylesheet" href="{{ ASSET_URL }}"/>
   {% endassets %}
 
-  {% assets  output="gen/weblightlib.%(version)s.js", "assets/vendor/js/jquery-1.10.1.min.js", "assets/vendor/js/lodash.js", "assets/vendor/js/angular.js", "assets/vendor/js/ng-infinite-scroll.js"%}
-  <script type="text/javascript" src="{{ ASSET_URL }}"></script>
-  {% endassets %}
-
-
-  {% assets filters="less, cssmin", output="gen/embed.%(version)s.css", "assets/weblight/css/embed.less" %}
+  {% 
+  	assets filters="less,cssmin", 
+  	output="gen/front_css.%(version)s.css", 
+  	depends="assets/dolly/partials/_*.less", 
+  	"assets/front/front.less" 
+  %}
   <link rel="stylesheet" href="{{ ASSET_URL }}"/>
   {% endassets %}
 
-  {% assets filters="coffeescript", output="gen/embed.%(version)s.js", "weblight/embed/app.coffee",
-  "weblight/embed/controllers/VideoCtrl.coffee", "weblight/embed/controllers/ChannelCtrl.coffee", "weblight/embed/services/ContentService.coffee" %}
-  <script type="text/javascript" src="{{ ASSET_URL }}"></script>
-  {% endassets %}
+  <script src='//player.ooyala.com/v3/c8b3075569864056bc02b97568d17127?platform=html5-priority'></script>
 
-  {% assets filters="weblighttemplates", output="gen/embed-templates.%(version)s.js",
-  "weblight/embed/views/channel.html" %}
+  {# 
+  	assets filters="rjsmin", 
+  	output="gen/front-embed.%(version)s.js",
+  	"dolly/video-module.js" 
+  #}
   <script type="text/javascript" src="{{ ASSET_URL }}"></script>
-  {% endassets %}
+  {# endassets #}
 
-  <script>
-    var tag = document.createElement('script');
-    tag.src = "//www.youtube.com/iframe_api";
-    var firstScriptTag = document.getElementsByTagName('script')[0];
-    firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+  <script src="/static/dolly/video-module.js"></script>
+
+  <script type="text/javascript">
+  	var videoData = {{ video_data|tojson }},
+  	    ooyalaPlayerId = "{{ config.OOYALA_PLAYER_ID }}";
   </script>
 
 </head>
-<body ng-class="currentPage" id="app">
-  <div id="fb-root"></div>
-  <script>
-    window.fbAsyncInit = function() {
-      // init the FB JS SDK
-      FB.init({
-        appId      : '{{config.FACEBOOK_APP_ID}}',                        // App ID from the app dashboard
-        channelUrl : '/static/assets/channel.html', // Channel file for x-domain comms
-        status     : true,                                 // Check Facebook Login status
-        xfbml      : true                                  // Look for social plugins on the page
-      });
+<body>
 
-      // Additional initialization code such as adding Event Listeners goes here
-    };
+	<div id='ooyalaplayer'></div>
+	<script>
+		console.log(videoData);
+		OO.ready(function() { 
+			window.wonder = OO.Player.create(
+				'ooyalaplayer', videoData.video.source_id,
+				{
+					flashParams: { hide: 'all' },
+					wmode: 'opaque',
+					autoplay: false,
+					layout: 'chromeless'
+				} 
+			); 
+		});
+	</script>
 
-    // Load the SDK asynchronously
-    (function(d, s, id){
-      var js, fjs = d.getElementsByTagName(s)[0];
-      if (d.getElementById(id)) {return;}
-      js = d.createElement(s); js.id = id;
-      js.src = "//connect.facebook.net/en_US/all.js";
-      fjs.parentNode.insertBefore(js, fjs);
-    }(document, 'script', 'facebook-jssdk'));
-  </script>
-
-<div class="wrapper">
-  <div id="playercontainer" ng-mouseover="mouseOver()" ng-mouseout="mouseOut()" ng-controller="VideoCtrl" ng-class="{active: currVideo}">
-    <a href="/" class="logo" target="_blank" ng-class="{'hideOverlay': hideOverlay  && playerState=='1'}"></a>
-    <div id="player"></div>
-    <div id="close" ng-click="close()" ng-class="{'hideOverlay': hideOverlay  && playerState=='1'}"></div>
-    <div id="prev" ng-class="{'hideOverlay': hideOverlay  && playerState=='1'}" ng-click="prev()"></div>
-    <div id="next" ng-class="{'hideOverlay': hideOverlay  && playerState=='1'}" ng-click="next()"></div>
-    <div id="pause" ng-class="{play: playerState=='2', 'hideOverlay': hideOverlay && playerState=='1'}" ng-click="pausePlay()"></div>
-    <div id="scrubber" ng-click="seekTo($event)" ng-mouseover="mouseOver()" ng-class="{'hideOverlay': hideOverlay && playerState=='1'}">
-      <div id="currentPosition" ng-style="{'width': currentPosition*100 +'%'}"></div>
-      <div id="loadedData"></div>
-    </div>
-  </div>
-  <div ng-include="'channel.html'" id="channel"></div>
-</div>
-{% include 'web/ga.html' %}
 </body>
 </html>
+
+

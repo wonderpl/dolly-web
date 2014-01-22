@@ -1320,7 +1320,7 @@ class UserWS(WebService):
 
     @expose_ajax('/<userid>/channels/<channelid>/videos/<videoid>/')
     def channel_video_instance(self, userid, channelid, videoid):
-        instance = VideoInstance.query.filter_by(id=videoid, channel=channelid).first_or_404()
+        instance = VideoInstance.query.filter_by(id=videoid).first_or_404()
         return video_api.video_dict(instance)
 
     @expose_ajax('/<userid>/channels/<channelid>/videos/<videoid>/comments/', cache_age=60)

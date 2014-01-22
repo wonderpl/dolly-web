@@ -61,17 +61,17 @@
 
     }]);
 
-    app.controller('WebLiteController', ['$scope', '$http', '$timeout', function($scope, $http, $timeout){
+    // app.controller('WebLiteController', ['$scope', '$http', '$timeout', function($scope, $http, $timeout){
 
-        $http({method: 'get', url: 'http://api.randomuser.me'}).success(function(data,status,headers,config){
-            $timeout(function(){
-                $scope.$apply(function(){
-                    console.log(data.results[0].user);
-                    $scope.user = data.results[0].user;
-                });
-            });
-        });
+    //     $http({method: 'get', url: 'http://api.randomuser.me'}).success(function(data,status,headers,config){
+    //         $timeout(function(){
+    //             $scope.$apply(function(){
+    //                 console.log(data.results[0].user);
+    //                 $scope.user = data.results[0].user;
+    //             });
+    //         });
+    //     });
 
-    }]);
+    // }]);
 
 })(window,document,window.angular,'contentApp','controllers');

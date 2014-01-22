@@ -24,7 +24,7 @@
         $routeProvider.when('/web-lite', {templateUrl: 'web-lite.html', resolve: { trackingCode: function (GATrackingService) { return GATrackingService.push(); }}});
     }]);
 
-    app.run(['$timeout', '$rootScope', 'animLoop', function($timeout, $rootScope, animLoop) {
+    app.run(['$timeout', '$rootScope', 'animLoop' , function($timeout, $rootScope, animLoop) {
         $rootScope.assets_url = window.assets_url;
 
         // Initialise our animLoop service, and add our TWEEN loop

@@ -39,17 +39,19 @@ OO.plugin("WonderUIModule", function (OO) {
         mousedown: false,
         scrubbed: false,
         seekTimeout: undefined,
-        loaderTimeout: undefined
+        loaderTimeout: undefined,
+        loaded: false
     };
 
     // This section contains the HTML content to be used as the UI
     // '<a href="#" class="rewind wonder-rewind icon-ccw"></a>' +
+    // '<span class="f-thin f-uppercase"></span>' +
     var wonder_template = 
-        '<div id="wonder-poster">' +
+        '<div id="wonder-poster" class="loading">' +
             '<img src="/static/assets/wonderplayer/img/trans.png" alt="" id="wonder-poster" class="blur"/>' +
-            '<span class="f-thin f-uppercase"></span>' +
+            '<table width="100%" height="100%" cellpadding="0" cellspacing="0"><tr><td width="100%" height="100%" align="center" valign="middle">Your video is loading</td></tr></table>' +
         '</div>' +
-        '<a href="#" id="wonder-loader" class="show"></a>' + 
+        '<a href="#" id="wonder-loader" class="show f-sans f-uppercase"><span>Your video is loading</span></a>' + 
         '<div id="wonder-controls">' + 
             '<a href="#" class="play wonder-play player-icon-play"></a>' + 
             '<a href="#" class="pause wonder-pause player-icon-pause hidden"></a>' + 
@@ -64,7 +66,6 @@ OO.plugin("WonderUIModule", function (OO) {
             '<div class="scrubber-target vid">' +
                 '<img src="/static/assets/wonderplayer/img/trans.png" class="scrubber-trans vid" width="100%" height="100%" />' +
             '</div>' +
-
             '<div class="scrubber vol">' +
                 '<div class="scrubber-progress vol"></div>' +
                 '<a href="#" class="scrubber-handle vol player-icon-circle"></a>' +
@@ -72,7 +73,6 @@ OO.plugin("WonderUIModule", function (OO) {
             '<div class="scrubber-target vol">' +
                 '<img src="/static/assets/wonderplayer/img/trans.png" class="scrubber-trans vol" width="100%" height="100%" />' +
             '</div>' +
-
         '</div>';
 
     // Constructor
@@ -90,6 +90,10 @@ OO.plugin("WonderUIModule", function (OO) {
             fullscreen: false
         };
 
+        if ( window.navigator.userAgent.toLowerCase().indexOf('ipad') !== -1 ) {
+            _.ipad = true;
+        }
+
         // Initial listeners
         _.mb.subscribe(OO.EVENTS.PLAYER_CREATED, 'wonder', _.onPlayerCreate);
         _.mb.subscribe(OO.EVENTS.PLAYHEAD_TIME_CHANGED, 'wonder', _.onTimeUpdate);
@@ -100,8 +104,8 @@ OO.plugin("WonderUIModule", function (OO) {
         _.mb.subscribe(OO.EVENTS.PLAY, 'wonder', _.onPlay);
         _.mb.subscribe(OO.EVENTS.PLAYER_EMBEDDED, 'wonder', _.hideLoader);
 
-        window.wonderPlayer = this;
-        window.wonder = _;
+        // window.wonderPlayer = this;
+        // window.wonder = _;
     };
 
     /*  Message bus event subscriber callbacks
@@ -115,8 +119,6 @@ OO.plugin("WonderUIModule", function (OO) {
         _.playerElem = document.getElementById(elementId);
         _.playerElem.parentNode.insertBefore(_.wrapper, _.playerElem);
         _.wrapper.insertBefore(_.playerElem, document.getElementById('wonder-poster'));
-
-
         // Cache our UI elements
         _.elements.wrapper = document.getElementById('wonder-wrapper');
         _.elements.controls = document.getElementById('wonder-controls');
@@ -136,8 +138,10 @@ OO.plugin("WonderUIModule", function (OO) {
         _.elements.scrubber_trans = document.querySelectorAll('.scrubber-trans');
 
         // Scrubber specific elements
+        _.elements.scrubber_vid = document.querySelector('.scrubber.vid');
         _.elements.scrubber_progress_vid = document.querySelector('.scrubber-progress.vid');
         _.elements.scrubber_handle_vid = document.querySelector('.scrubber-handle.vid');
+        _.elements.scrubber_vol = document.querySelector('.scrubber.vol');
         _.elements.scrubber_progress_vol = document.querySelector('.scrubber-progress.vol');
         _.elements.scrubber_handle_vol = document.querySelector('.scrubber-handle.vol');
 
@@ -146,15 +150,17 @@ OO.plugin("WonderUIModule", function (OO) {
         _.listen(_.elements.pausebutton, 'click', _.pause);
         _.listen(_.elements.fullscreenbutton, 'click', _.fullscreen);
         _.listen(_.elements.volumebutton, 'click', _.volume);
-        _.listen(_.elements.loader, 'click', _.togglePlay);
+        
 
         if ( _.isTouchDevice() ) {
-            _.addClass(_.elements.controls, 'touch');
+            _.addClass(_.elements.controls, 'show');
+            _.listen(_.elements.loader, 'touchend', _.toggleControls);
             _.listen(_.elements.scrubber_trans, 'touchmove', _.scrubTouch);
             _.listen(_.elements.scrubber_trans, 'touchstart', _.scrubDown);
             _.listen(_.elements.scrubber_trans, 'touchleave', _.scrubUp);
             _.listen(_.elements.scrubber_trans, 'touchend', _.scrubUp);
         } else {
+            _.listen(_.elements.loader, 'click', _.togglePlay);
             _.listen(_.elements.scrubber_trans, 'mousemove', _.scrubMouse);
             _.listen(_.elements.scrubber_trans, 'mousedown', _.scrubDown);
             _.listen(_.elements.scrubber_trans, 'mouseup', _.scrubUp);
@@ -167,13 +173,28 @@ OO.plugin("WonderUIModule", function (OO) {
         _.info = content;
         _.elements.poster.getElementsByTagName('img')[0].src = content.promo || content.promo_image;
         _.elements.loader.className = '';
-        _.elements.poster.getElementsByTagName('span')[0].innerHTML = (_.info.title.replace(/_/g,' '));
+        _.elements.poster.getElementsByTagName('td')[0].innerHTML = (_.info.title.replace(/_/g,' '));
         _.duration = content.duration;
+        _.loaded = true;
+        _.removeClass( _.elements.poster, 'loading' );
+        if ( document.getElementsByTagName('video').length > 0 ) {
+            _.elements.video = document.getElementsByTagName('video')[0];
+            _.listen( _.elements.video, 'loadedmetadata', function(e){
+                console.log('video meta data loaded');
+            });
+
+            _.listen( _.elements.video, 'webkitendfullscreen', function(e) {
+                _.mb.publish(OO.EVENTS.PAUSE);
+            });            
+                
+        }
     };
     
     _.onTimeUpdate = function (event, time, duration, buffer, seekrange) {
         _.time = time;
         _.duration = duration;
+
+        // console.log(_.time);
 
         if ( _.state.playing === false ) {
             _.displayTime = _.getTime(_.duration);
@@ -237,11 +258,26 @@ OO.plugin("WonderUIModule", function (OO) {
 
     _.togglePlay = function (e) {
         _.prevent(e);
-        if ( _.state.playing === true ) {
-            _.pause();
-        } else {
-            _.play();
+        if ( _.loaded === true ) {
+            if ( _.state.playing === true ) {
+                _.pause();
+            } else {
+                _.play();
+            }    
         }
+    };
+
+    _.toggleControls = function (e) {
+        _.prevent(e);
+
+        if ( _.hasClass( _.elements.controls, 'show' ) ) {
+            _.removeClass( _.elements.controls, 'show' );
+            _.addClass( _.elements.controls, 'hide' );
+        } else {
+            _.removeClass( _.elements.controls, 'show' );
+            _.addClass( _.elements.controls, 'show' );
+        }
+        
     };
 
     /*  UI listener callbacks
@@ -249,39 +285,37 @@ OO.plugin("WonderUIModule", function (OO) {
 
     _.play = function (e) {
         _.prevent(e);
-        _.mb.publish(OO.EVENTS.PLAY);
+        if ( _.loaded === true ) {
+            _.mb.publish(OO.EVENTS.PLAY);    
+        }
     };
 
     _.pause = function (e) {
         _.prevent(e);
-        _.mb.publish(OO.EVENTS.PAUSE);
+        if ( _.loaded === true ) {
+            _.mb.publish(OO.EVENTS.PAUSE);    
+        }
     };
 
     _.volume = function (e) {
         _.prevent(e);
-        if ( _.volume > 0 ) {
-            _.mb.publish(OO.EVENTS.CHANGE_VOLUME,0);
-        } else {
-            _.mb.publish(OO.EVENTS.CHANGE_VOLUME,1);
+        if ( _.loaded === true ) {
+            if ( _.volume > 0 ) {
+                _.mb.publish(OO.EVENTS.CHANGE_VOLUME,0);
+            } else {
+                _.mb.publish(OO.EVENTS.CHANGE_VOLUME,1);
+            }    
         }
-        // if ( _.hasClass( _.elements.volumebutton, 'vol-high' ) ) {
-        //     _.mb.publish(OO.EVENTS.CHANGE_VOLUME,.5);
-        //     _.elements.volumebutton.className = _.elements.volumebutton.className.replace('vol-high','vol-medium');
-        // } else if ( _.hasClass( _.elements.volumebutton, 'vol-medium' ) ) {
-        //     _.mb.publish(OO.EVENTS.CHANGE_VOLUME,.2);
-        //     _.elements.volumebutton.className = _.elements.volumebutton.className.replace('vol-medium','vol-low');
-        // } else if ( _.hasClass( _.elements.volumebutton, 'vol-low' ) ) {
-        //     _.mb.publish(OO.EVENTS.CHANGE_VOLUME,1);
-        //     _.elements.volumebutton.className = _.elements.volumebutton.className.replace('vol-low','vol-high');
-        // }
     };
 
     _.rewind = function (e) {
         _.prevent(e);
-        if ( (_.time-30) >= 0 && _.time !== 0 ) {
-            _.seek(_.time-30);
-        } else {
-            _.seek(0);
+        if ( _.loaded === true ) {
+            if ( (_.time-30) >= 0 && _.time !== 0 ) {
+                _.seek(_.time-30);
+            } else {
+                _.seek(0);
+            }    
         }
     };
 
@@ -294,10 +328,17 @@ OO.plugin("WonderUIModule", function (OO) {
     _.fullscreen = function (e) {
         _.prevent(e);
         if ( _.state.fullscreen === false ) {
-            _.mb.publish(OO.EVENTS.FULLSCREEN_CHANGED);
-            _.attemptFullscreen(_.elements.wrapper);
-            _.addClass(_.elements.wrapper, 'fullscreen');
-            _.state.fullscreen = true;
+
+            if ( _.ipad === true ) {
+                _.elements.video.webkitEnterFullscreen();
+                _.state.fullscreen = true;
+            } else {
+                _.mb.publish(OO.EVENTS.FULLSCREEN_CHANGED);
+                _.attemptFullscreen(_.elements.wrapper);
+                _.addClass(_.elements.wrapper, 'fullscreen');
+                _.state.fullscreen = true;
+            }
+
         } else {
             if(document.exitFullscreen) {
                 document.exitFullscreen();
@@ -314,7 +355,7 @@ OO.plugin("WonderUIModule", function (OO) {
     };
 
     _.scrubMouse = function(e) {
-        if ( _.mousedown === true ) {
+        if ( _.mousedown === true && _.loaded === true ) {
             _.prevent(e);
 
             var x = e.clientX,
@@ -324,13 +365,29 @@ OO.plugin("WonderUIModule", function (OO) {
 
             clearTimeout( _.seekTimeout );
             _.seekTimeout = setTimeout(function(){
-                percentage = x - target.getBoundingClientRect().left;
-                percentage = ((percentage/target.clientWidth ) * 100 );
+                
                 if ( scrubtype === 'vid' ) {
-                    _.scrubVid(percentage);
+                    percentage = x - _.elements.scrubber_vid.getBoundingClientRect().left;
+                    percentage = ((percentage/_.elements.scrubber_vid.getBoundingClientRect().width) * 100 );                    
+                    if ( percentage <= 0 ) {
+                        _.scrubVid(0);                        
+                    } else if ( percentage >= 100 ) {
+                        _.scrubVid(100);
+                    } else {
+                        _.scrubVid(percentage);    
+                    }
                 } else if ( scrubtype === 'vol' ) {
-                    _.scrubVol(percentage);
+                    percentage = x - _.elements.scrubber_vol.getBoundingClientRect().left;
+                    percentage = ((percentage/_.elements.scrubber_vol.getBoundingClientRect().width) * 100 );                    
+                    if ( percentage <= 0 ) {
+                        _.scrubVol(0);                        
+                    } else if ( percentage >= 100 ) {
+                        _.scrubVol(100);
+                    } else {
+                        _.scrubVol(percentage);    
+                    }
                 }
+
             },10);
             
             return false;
@@ -338,7 +395,7 @@ OO.plugin("WonderUIModule", function (OO) {
     };
 
     _.scrubTouch = function(e) {
-        if ( _.mousedown === true ) {
+        if ( _.mousedown === true && _.loaded === true ) {
             _.prevent(e);
             var pos = e.touches[0] || e.changedTouches[0],
                 target = e.srcElement || e.target,
@@ -410,7 +467,7 @@ OO.plugin("WonderUIModule", function (OO) {
             if ( _.state.playing === true ) {
                 _.elements.loader.className = 'show';
             }
-        }, 250);
+        }, 350);
     };
 
     /*  Utility Functions
@@ -418,6 +475,8 @@ OO.plugin("WonderUIModule", function (OO) {
 
     // Find the right method, call on correct element
     _.attemptFullscreen = function(el) {
+
+
         if(el.requestFullscreen) {
             el.requestFullscreen();
         } else if(el.mozRequestFullScreen) {
@@ -426,9 +485,11 @@ OO.plugin("WonderUIModule", function (OO) {
             el.webkitRequestFullscreen();
         } else if(el.msRequestFullscreen) {
             el.msRequestFullscreen();
-        } 
-        // else if (el.getElementsByTagName('video')[0].webkitEnterFullscreen){
-            // el.getElementsByTagName('video')[0].webkitEnterFullscreen();
+        }
+        // else if (el.getElementsByTagName('video').length > 0 ) {
+        //     if ( el.getElementsByTagName('video').webkitEnterFullscreen){
+        //         el.getElementsByTagName('video')[0].webkitEnterFullscreen();
+        //     }
         // }
     };
 
@@ -446,6 +507,14 @@ OO.plugin("WonderUIModule", function (OO) {
             }
         };
     };
+
+    _.toggleClass = function( el, cl ) {
+        if ( _.hasClass( el, cl ) === true ) {
+            _.removeClass( el, cl );
+        } else {
+            _.addClass( el, cl );
+        }
+    }
 
     // If class is present, remove it
     _.removeClass = function ( el, cl ) {

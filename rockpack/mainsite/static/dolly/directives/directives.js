@@ -72,28 +72,24 @@
 	}]);
 
 
-	app.directive('webliteplayer', ['$timeout', function($timeout){
-		return {
-			priority: 100,
-			restrict: 'AE',
-			link: function( scope, elem, attrs ) {
-
-				console.log('LINKING');
-
-				scope.player = OO.ready(function() { 
-					OO.Player.create(
-						'wonderplayer', attrs.video,
-						{
-							flashParams: { hide: 'all' },
-							wmode: 'opaque',
-							autoplay: false,
-							layout: 'chromeless'
-						} 
-					); 
-				});
-
-			}
-		}
-	}]);
+	// app.directive('webliteplayer', ['$timeout', function($timeout){
+	// 	return {
+	// 		priority: 100,
+	// 		restrict: 'AE',
+	// 		link: function( scope, elem, attrs ) {
+	// 			scope.player = OO.ready(function() { 
+	// 				window.wonder = OO.Player.create( 'wonderplayer', attrs.video,
+	// 					{
+	// 						flashParams: { hide: 'all' },
+	// 						wmode: 'opaque',
+	// 						autoplay: false,
+	// 						layout: 'chromeless'
+	// 					} 
+	// 				); 
+	// 			});
+	// 		}
+	// 	}
+	// }]);
+	
 
 })(window,document,window.angular,'contentApp','directives');

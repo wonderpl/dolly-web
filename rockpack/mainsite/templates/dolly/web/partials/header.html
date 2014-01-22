@@ -2,7 +2,7 @@
 <header ng-controller="HeaderCtrl" ng-class="{ toggled: toggled }">
   <div class="inner">
     <a href="/#/" class="logo"></a>
-    <nav>
+    <nav ng-show="!weblite" ng-cloak>
       <ul class="f-sans">
         <li><a href="/#/our-content" ng-class="{ active: currentpage == '/our-content' }">Our Content</a></li><!--
         --><li><a href="/#/our-categories" ng-class="{ active: currentpage == '/our-categories' }">Our Categories</a></li><!--

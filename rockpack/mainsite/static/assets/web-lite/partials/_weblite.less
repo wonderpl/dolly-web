@@ -1,0 +1,138 @@
+
+
+#wrapper {
+	display: block;
+	width: 90%;
+	margin: 0 auto 32px auto;
+}
+
+#wonder-wrapper {
+	margin: 0 auto 30px auto;
+}
+
+.web-lite-wrapper {
+	display: block;
+	position: relative;
+
+	.top {
+		display: block;
+		position: relative;
+		max-width: 400px;
+		width: 100%;
+		margin: 0px auto 22px auto;
+		text-align: center;
+
+		.avatar {
+			display: block;
+			width: 60px;
+			margin: 0 auto 16px auto;
+			overflow: hidden;
+			-webkit-border-radius: 200px;
+			-moz-border-radius: 200px;
+			-o-border-radius: 200px;
+			border-radius: 200px;
+			background: @lilac;
+
+			img {
+				display: block;
+				width: 100%;
+			}
+		}
+
+		h3 {
+			font-size: 16px;
+
+			span {
+				font-size: 24px;	
+			}
+		}
+	}
+
+	.bottom {
+		display: block;
+		padding: 0 0 42px 0;
+
+		h4 {
+			padding: 0 6%;
+			margin: 0 auto 32px auto;
+			width: 100%;
+			max-width: 640px;
+		}
+
+		a.download {
+			display: block;
+			padding:  6px 12px;
+			margin: 0 auto 16px auto;
+			width: 120px;
+			border: 1px solid @grey;
+			-webkit-border-radius: 200px;
+			-moz-border-radius: 200px;
+			-o-border-radius: 200px;
+			border-radius: 200px;
+			color: @grey;
+			-webkit-transition: background .1s ease-out, color .1s ease-out;
+
+			&:hover, &:active, &:focus {
+				background: @lilac;
+				color: #fff;
+				border-color: @lilac;
+			}
+		}
+
+		.interactive {
+
+			a {
+				display: -moz-inline-stack;
+				display: inline-block;
+				vertical-align: middle;
+				*vertical-align: auto;
+				zoom: 1;
+				*display: inline;
+				vertical-align: top;
+				width: 35px;
+				height: 35px;
+				background: #999999;
+				text-align: center;
+				color: #fff;
+				padding: 6px 0 0 0;
+				font-size: 25px;
+				-webkit-border-radius: 100px;
+				-moz-border-radius: 100px;
+				border-radius: 100px;
+				margin: 6px;
+				-webkit-transition: background .1s ease-out;
+
+				&:hover, &:active, &:focus {
+					color: #fff;
+					background: @lilac;
+				}
+			}
+		}
+	}
+}
+
+.channel-list {
+	display: block;
+	width: 100%;
+	padding: 0 0 26px 0;
+
+	li {
+		display: block;
+		float: left;
+		margin: 0 26px 26px 0;
+		max-width: 220px;
+		position: relative;
+
+		img {
+			display: block;
+			width: 100%;
+		}
+
+		span {
+			position: absolute;
+			left: 16px;
+			bottom: 16px;
+			color: #fff;
+		}
+	}
+}
