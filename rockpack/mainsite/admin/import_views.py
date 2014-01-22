@@ -219,16 +219,16 @@ class ImportView(AdminView):
             form.tags.data = ','.join(request.args.getlist('tag'))
 
         if request.args.get('user'):
-            user = list(User.query.filter(User.username==request.args.get('user')).values('id', 'username'))
+            user = list(User.query.filter_by(username=request.args.get('user')).values('id', 'username'))
             if user:
                 form.user.data = user[0][0]
             else:
                 form.user.data = ""
 
             if request.args.get('channeltitle'):
-                channel = list(Channel.query.filter(
-                    Channel.title==request.args.get('channeltitle'),
-                    Channel.owner==form.user.data).values('id', 'title'))
+                channel = list(Channel.query.filter_by(
+                    title=request.args.get('channeltitle'),
+                    owner=form.user.data).values('id', 'title'))
                 if channel:
                     form.channel.data = channel[0][0]
                 else:
