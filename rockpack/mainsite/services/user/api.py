@@ -829,6 +829,7 @@ def _user_recommendations(userid, locale, paging):
         # TODO: check rec.filter
         items.append(dict(
             position=position,
+            priority=rec.priority,
             id=user.id,
             resource_url=user.get_resource_url(),
             display_name=user.display_name,
