@@ -25,7 +25,7 @@ Content-Type: application/json
 Cache-Control: public, max-age=3600
 
 {
-  "user": {
+  "users": {
     "items": [
       {
         "avatar_thumbnail_url": "http://path/to/avatar/medium.jpg",

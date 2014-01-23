@@ -943,7 +943,7 @@ class UserWS(WebService):
                 except ValueError:
                     abort(400)
             u.add_term('category', category)
-            return dict(user=dict(items=u.users(), total=u.total))
+            return dict(users=dict(items=u.users(), total=u.total))
 
     @expose_ajax('/<userid>/', cache_age=600, secure=False)
     def user_info(self, userid):
