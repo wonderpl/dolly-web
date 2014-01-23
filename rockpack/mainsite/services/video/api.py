@@ -6,8 +6,9 @@ from sqlalchemy import func, null
 from sqlalchemy.orm import contains_eager, lazyload, joinedload
 from sqlalchemy.sql.expression import desc
 from rockpack.mainsite import app
+from rockpack.mainsite.core import ooyala
 from rockpack.mainsite.core.dbapi import readonly_session, db, commit_on_success
-from rockpack.mainsite.core.webservice import WebService, expose_ajax
+from rockpack.mainsite.core.webservice import WebService, expose_ajax, secure_view
 from rockpack.mainsite.core.oauth.decorators import check_authorization
 from rockpack.mainsite.core.es import use_elasticsearch, filters
 from rockpack.mainsite.core.es.search import VideoSearch, ChannelSearch
@@ -361,3 +362,33 @@ class MoodWS(WebService):
             ),
             models.Mood.query.all())
         return dict(moods=dict(items=items))
+
+
+class OoyalaWS(WebService):
+
+    endpoint = '/ooyala'
+
+    @expose_ajax('/callback')
+    @secure_view()
+    @commit_on_success
+    def callback(self):
+        videoid = request.args['embedCode']
+        if models.Video.query.filter_by(source_videoid=videoid).count():
+            return
+        try:
+            data = ooyala.get_video_data(videoid, fetch_metadata=True)
+        except Exception, e:
+            if hasattr(e, 'response') and e.response.status_code == 404:
+                abort(404)
+            raise
+        models.Video.add_videos(data.videos, models.Source.label_to_id('ooyala'))
+        meta = data.videos[0].meta
+        if 'channel' in meta:
+            channel = models.Channel.query.get(meta['channel'])
+            try:
+                category = models.Category.query.filter_by(
+                    id=meta['category']).value('id')
+            except Exception:
+                category = None
+            channel.add_videos(data.videos, category=category)
+            app.logger.debug('Added ooyala video "%s" to "%s"', videoid, channel.id)

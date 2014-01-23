@@ -19,6 +19,8 @@ OOYALA_SECRET = _decrypt('\x10\xa2u\xb8\xc5\xae\x86\x07!\r\xfe\x12l}\xdb~Z\x0ekO
 IMAGE_CDN = 'http://media.us.wonderpl.com'
 S3_BUCKET = 'media.us.wonderpl.com'
 
+VIDEO_S3_BUCKET = 'video.us.wonderpl.com'
+
 SENTRY_USER = _decrypt('t\x0e\x82\x02\xcc\xbf\x8d\x02<d\xf5\xd8\xdc\x96(fJ\xb0\\v!\x9b].g\xcd\xbc\xc2 lt\xff')
 SENTRY_PASSWORD = _decrypt('v\xb6a:\x0b\xb2\x88\x18z\xcc\xe1N\xe2N\xf5\x19\xe8\xfcXq\xe2\x9c;\xe0S\x8eg\n\xa9\x03\x97\r')
 SENTRY_DSN = 'https://%s:%s@sentry.dev.rockpack.com/4' % (SENTRY_USER, SENTRY_PASSWORD)

@@ -210,6 +210,16 @@ def clean_cron_queue():
     clean_messages()
 
 
+@manager.option('--channel')
+@manager.option('--user')
+@manager.option('--name')
+@manager.option('--category')
+@manager.command
+def import_video(s3path, **options):
+    from rockpack.mainsite.core.ooyala import create_asset
+    create_asset(s3path, options)
+
+
 def run(*args):
     init_app()
     if args:

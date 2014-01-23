@@ -8,17 +8,15 @@ jpeg_policy = {
 }
 
 
+def s3connection():
+    return boto.connect_s3(app.config['AWS_ACCESS_KEY'], app.config['AWS_SECRET_KEY'])
+
+
 class S3Uploader(object):
 
     def __init__(self):
-        self.conn = self._connection()
+        self.conn = s3connection()
         self.bucket = self.conn.get_bucket(app.config['S3_BUCKET'])
-
-    @staticmethod
-    def _connection():
-        return boto.connect_s3(
-            app.config['AWS_ACCESS_KEY'],
-            app.config['AWS_SECRET_KEY'])
 
     def exists(self, name):
         if self.bucket.get_key(name):

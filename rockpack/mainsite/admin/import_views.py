@@ -122,7 +122,12 @@ class ImportView(AdminView):
             self.record_action('created', channel)
         else:
             channel = Channel.query.get_or_404(channelid)
-        channel.add_videos(form.import_data.videos, form.tags.data, date_added=form.date_added.data)
+        channel.add_videos(
+            form.import_data.videos,
+            form.tags.data,
+            category=form.category.data,
+            date_added=form.date_added.data
+        )
         self.record_action('imported', channel, '%d videos' % count)
         push_config = getattr(form.import_data, 'push_config', None)
         if push_config and channel.id:
