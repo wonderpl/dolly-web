@@ -668,15 +668,17 @@ def update_user_subscription_count(userid):
         logger.warning('Could not update subscription count for %s' % str(userid))
 
 
-def update_user_categories(user_ids):
+def update_user_categories(user_ids=None):
     from rockpack.mainsite.services.video.models import Channel
 
     query = db.session.query(Channel.category, Channel.owner).filter(
         Channel.public.is_(True),
         Channel.visible.is_(True),
-        Channel.deleted.is_(False),
-        Channel.owner.in_(user_ids)
+        Channel.deleted.is_(False)
     ).order_by(Channel.owner)
+
+    if user_ids:
+        query = query.filter(Channel.owner.in_(user_ids))
 
     category_map = {}
 
