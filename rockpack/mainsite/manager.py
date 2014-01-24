@@ -214,6 +214,7 @@ def clean_cron_queue():
 @manager.option('--user')
 @manager.option('--name')
 @manager.option('--category')
+@manager.option('--label')
 @manager.command
 def import_video(s3path, **options):
     from rockpack.mainsite.core.ooyala import create_asset

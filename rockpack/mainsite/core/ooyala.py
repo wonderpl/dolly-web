@@ -80,19 +80,29 @@ def create_asset(s3path, metadata):
     asset = dict(
         asset_type='video',
         file_name=file_name,
-        name=metadata.pop('name', os.path.splitext(file_name)[0].capitalize()),
+        name=metadata.pop('name', None) or os.path.splitext(file_name)[0].capitalize(),
         file_size=file_size,
         chunk_size=chunk_size,
     )
     response = _ooyala_feed('assets', data=json.dumps(asset))
     assetid = response['embed_code']
-    _ooyala_feed('assets', assetid, 'metadata',
-                 method='patch', data=json.dumps(metadata))
-    uploading_urls = _ooyala_feed('assets', assetid, 'uploading_urls')
+
+    # set label and metadata
+    labelname = metadata.pop('label', None)
+    if labelname:
+        idmap = dict((l['name'], l['id']) for l in _ooyala_feed('labels')['items'])
+        if labelname in idmap:
+            labelid = idmap[labelname]
+        else:
+            labelid = _ooyala_feed('labels', data=json.dumps(dict(name=labelname)))['id']
+        _ooyala_feed('assets', assetid, 'labels', labelid, method='put')
+    if metadata:
+        _ooyala_feed('assets', assetid, 'metadata',
+                     method='patch', data=json.dumps(metadata))
 
     # copy video data from s3 to ooyala
     range = -1, -1
-    for upload_url in uploading_urls:
+    for upload_url in _ooyala_feed('assets', assetid, 'uploading_urls'):
         range = range[1] + 1, min(range[1] + chunk_size, file_size - 1)
         buf = key.get_contents_as_string(headers={'Range': 'bytes=%d-%d' % range})
         response = requests.put(upload_url, buf)
