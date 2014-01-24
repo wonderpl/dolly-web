@@ -327,7 +327,7 @@ class CategoryWS(WebService):
 
     endpoint = '/categories'
 
-    @expose_ajax('/', cache_age=30)     # XXX: CHANGEME BACK TO 3600
+    @expose_ajax('/', cache_age=3600)
     def category_list(self):
         translations = dict((c.category, (c.name, c.priority)) for c in
                             models.CategoryTranslation.query.filter_by(locale=self.get_locale()))
