@@ -125,6 +125,11 @@ def injector():
     return dict(iframe_url=url_for('bookmarklet')), 200, {'Content-Type': 'application/javascript'}
 
 
+@expose_web('/hints', 'web/hints.html', cache_age=3600)
+def hints():
+    return {}
+
+
 @expose_web('/tos', 'web/terms.html', cache_age=3600)
 def terms():
     return {}
