@@ -14,7 +14,7 @@ from rockpack.mainsite.core.dbapi import commit_on_success
 from rockpack.mainsite.core.token import create_access_token
 from rockpack.mainsite.core.email import send_email, env as email_env
 from rockpack.mainsite.core.oauth.decorators import check_client_authorization
-from rockpack.mainsite.core.webservice import WebService, expose_ajax
+from rockpack.mainsite.core.webservice import WebService, expose_ajax, secure_view
 from rockpack.mainsite.services.user.models import User, UserAccountEvent, username_exists, GENDERS
 from rockpack.mainsite.services.video.models import Locale
 from . import facebook, models
@@ -497,3 +497,13 @@ class ResetWS(WebService):
         record_user_event(user.username, 'password reset requested', user=user, commit=True)
         # TODO: move to offline process
         send_password_reset(user)
+
+
+class FacebookWS(WebService):
+
+    endpoint = '/facebook'
+
+    @expose_ajax('/deauth-callback', methods=['GET', 'POST'])
+    @secure_view()
+    def deauth_callback(self):
+        app.logger.warning('Got facebook deauth: %s', request.form)
