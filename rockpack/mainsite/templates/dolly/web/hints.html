@@ -1,31 +1,44 @@
 <!DOCTYPE html>
-<html>
-  <head>
+<html lang="en">
+<head>
+    <meta content="IE=edge,chrome=1" http-equiv="X-UA-Compatible">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>Wonder PL - Hints</title>
     <style>
       body { width: 22em; }
     </style>
+
+    <link href='http://fonts.googleapis.com/css?family=Lato:400,700' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Montserrat' rel='stylesheet' type='text/css'>
+    <link type="text/css" rel="stylesheet" href="http://fast.fonts.net/cssapi/bf3bd3cb-8e2d-45b3-82f0-7b308ec41ba5.css"/>
+    {% assets filters="less,cssmin", output="gen/dolly_css.%(version)s.css", depends="assets/dolly/partials/_*.less", "assets/dolly/front.less" %}
+    <link rel="stylesheet" href="{{ ASSET_URL }}"/>
+    {% endassets %}
   </head>
   <body>
-    <ul>
-      <li>
-        When watching a video swiping right or left will load the next of previous video.
-      </li>
-      <li>
-        Double tapping the screen, while a video is playing will make it go full-screen.
-      </li>
-      <li>
-        Double tapping the screen while a video is full screen will take it back to normal size
-      </li>
-      <li>
-        Take the mood-minder for a spin. Flicking the screen will spin the wheel to a random mood.
-      </li>
-      <li>
-        Give yourself a face, tap edit in Profile, then tap the larger of the two upload circles and take a photo
-      </li>
-      <li>
-        Brighten up your profile by uploading a beautiful picture. Just tap edit in profile then tap on the small upload circle.
-      </li>
-    </ul>
+    <div id="hints-wrapper">
+      <a href="#" class="cancel">Cancel</a>
+      <ul class="f-sans">
+        <li>
+          When watching a video swiping right or left will load the next of previous video.
+        </li>
+        <li>
+          Double tapping the screen, while a video is playing will make it go full-screen.
+        </li>
+        <li>
+          Double tapping the screen while a video is full screen will take it back to normal size
+        </li>
+        <li>
+          Take the mood-minder for a spin. Flicking the screen will spin the wheel to a random mood.
+        </li>
+        <li>
+          Give yourself a face, tap edit in Profile, then tap the larger of the two upload circles and take a photo
+        </li>
+        <li>
+          Brighten up your profile by uploading a beautiful picture. Just tap edit in profile then tap on the small upload circle.
+        </li>
+      </ul>
+    </div>
   </body>
 </html>
