@@ -43,7 +43,7 @@ class User(db.Model):
     display_fullname = Column(Boolean, nullable=False, server_default='true', default=True)
     profile_cover = Column(ImageType('PROFILE'))
     brand_profile_cover = Column(ImageType('BRAND_PROFILE'))
-    description = Column(String(50))
+    description = Column(String(75))
     site_url = Column(String(1024))
 
     locale = Column(ForeignKey('locale.id'), nullable=False, server_default='')
