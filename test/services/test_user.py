@@ -1,4 +1,5 @@
 import json
+import time
 import uuid
 import cgi
 import urlparse
@@ -654,6 +655,7 @@ class TestUserContent(base.RockPackTestCase):
     def test_no_comment_mention_no_notifications(self):
         with self.app.test_client() as client:
             start = datetime.now()
+            time.sleep(2)
 
             self.app.test_request_context().push()
             user1 = self.create_test_user()
@@ -683,9 +685,11 @@ class TestUserContent(base.RockPackTestCase):
                 headers=[get_auth_header(user1.id)])
 
             user_notifications = {}
-            cron_cmds.create_commmenter_notification(user_notifications=user_notifications)
+            cron_cmds.create_commmenter_notification(date_from=start, user_notifications=user_notifications)
             UserNotification.query.session.commit()
-            self.assertEquals(UserNotification.query.count(), 0)
+
+            self.assertEquals(UserNotification.query.filter(UserNotification.date_created>=start).count(), 0)
+
             with patch.object(cron_cmds, '_send_apns_message') as mock_method:
                 for user in user_notifications.keys():
                     cron_cmds.send_push_notifications(user2)
@@ -695,6 +699,7 @@ class TestUserContent(base.RockPackTestCase):
     def test_comment_mention_notifications(self):
         with self.app.test_client() as client:
             start = datetime.now()
+            time.sleep(2)
 
             self.app.test_request_context().push()
             user1 = self.create_test_user()
@@ -724,8 +729,9 @@ class TestUserContent(base.RockPackTestCase):
                 headers=[get_auth_header(user1.id)])
 
             user_notifications = {}
-            cron_cmds.create_commmenter_notification(user_notifications=user_notifications)
+            cron_cmds.create_commmenter_notification(date_from=start, user_notifications=user_notifications)
             UserNotification.query.session.commit()
+
             with patch.object(cron_cmds, '_send_apns_message') as mock_method:
                 for user in user_notifications.keys():
                     cron_cmds.send_push_notifications(user2)

@@ -1344,7 +1344,8 @@ class UserWS(WebService):
             # video instance doesn't exist
             abort(404)
         else:
-            _update_video_comment_count(videoid)
+            if use_elasticsearch():
+                _update_video_comment_count(videoid)
             return ajax_create_response(comment)
 
     @expose_ajax('/<userid>/channels/<channelid>/videos/<videoid>/comments/<commentid>/')
@@ -1360,7 +1361,7 @@ class UserWS(WebService):
         comment = VideoInstanceComment.query.filter_by(id=commentid, user=g.authorized.userid)
         if not comment.delete():
             abort(404)
-        else:
+        elif use_elasticsearch():
             _update_video_comment_count(videoid)
 
     @expose_ajax('/<userid>/channels/<channelid>/subscribers/', cache_age=600)

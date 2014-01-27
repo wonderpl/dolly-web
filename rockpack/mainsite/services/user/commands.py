@@ -351,14 +351,15 @@ def create_commmenter_notification(date_from=None, date_to=None, user_notificati
             commented_on_users.setdefault(username.lower(), []).append((user, video_instance, channel, comment.date_added,))
 
     # Now find all the valid users
-    valid_users = User.query.filter(func.lower(User.username).in_(commented_on_users.keys()))
+    if commented_on_users:
+        valid_users = User.query.filter(func.lower(User.username).in_(commented_on_users.keys()))
 
-    for user in valid_users:
-        for commenter, video_instance, channel, date_added in commented_on_users.get(user.username.lower()):
-            type, body = comment_mention_message(commenter, channel, video_instance)
-            _add_user_notification(user.id, date_added, type, body)
-            if user_notifications is not None:
-                user_notifications.setdefault(user.id, None)
+        for user in valid_users:
+            for commenter, video_instance, channel, date_added in commented_on_users.get(user.username.lower()):
+                type, body = comment_mention_message(commenter, channel, video_instance)
+                _add_user_notification(user.id, date_added, type, body)
+                if user_notifications is not None:
+                    user_notifications.setdefault(user.id, None)
 
 
 def remove_old_notifications():
