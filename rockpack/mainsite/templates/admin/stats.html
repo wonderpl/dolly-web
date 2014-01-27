@@ -4,6 +4,7 @@
     {% if not current_user.is_authenticated() %}
     <a href="{{ url_for('login') }}">Sign in with your Google ID</a>
     {% else %}
+    {% if is_dolly == False %}
     <p>
     <h4>Channel overview</h4>
     <ul>
@@ -12,6 +13,7 @@
         <li>{{ total_channels_today}} all channels added today</li>
     </ul>
     </p>
+    {% endif %}
     <p>
     <h4>Channel filters</h4>
     <ul>
@@ -28,10 +30,11 @@
     <table>
     <tr><th align="left">Category</th><th align="left">Sub-Category</th><th>Video Count</th><tr>
         {% for v in cat_group %}
-    <tr><td style="padding-right:20px">{{ v[1] }}</td><td style="padding-right:20px">{{ v[2] }}</td><td style="padding-right:20px">{{ v[3] }}</td></tr>
+    <tr><td style="padding-right:20px">{{ v[1] }}</td><td style="padding-right:20px">{{ v[0] }}</td><td style="padding-right:20px">{{ v[2] }}</td></tr>
     {% endfor %}
     </table>
 
+    {% if is_dolly == False %}
     <h4>Channel Count Per Sub-Category</h4>
     <ul>
         <li>{{ channel_count }} sub categories with visible/public channels</li>
@@ -42,6 +45,7 @@
     <tr><td style="padding-right:20px">{{ v[1] }}</td><td style="padding-right:20px">{{ v[2] }}</td><td align="right">{{ v[3] }}</td></tr>
     {% endfor %}
     </table>
+    {% endif %}
 
     {% endif %}
 </div>

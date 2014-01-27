@@ -27,62 +27,66 @@ class ContentStatsView(StatsView):
 
         public = channels.join(models.ChannelLocaleMeta).filter(
             models.ChannelLocaleMeta.visible == True, models.Channel.public == True)
-        parent = aliased(models.Category)
-        cat_group = readonly_session.query(
-            models.VideoInstanceLocaleMeta.locale,
-            parent.name,
-            models.Category.name,
-            func.count(models.VideoInstanceLocaleMeta.id)
-        ).join(models.VideoInstance, models.Video).filter(
-            models.Category.parent == parent.id,
-            models.VideoInstance.category == models.Category.id
-        ).filter(
-            models.Category.parent != 1,
-            models.Video.visible == True
-        ).filter_by(
-        ).group_by(
-            models.Category.parent_category,
-            models.Category.name,
-            parent.name,
-            models.VideoInstanceLocaleMeta.locale
-        ).order_by(parent.name.desc())
-        cat_count = cat_group.count()
 
-        channel_group = readonly_session.query(
-            models.ChannelLocaleMeta.locale,
+        parent = aliased(models.Category)
+
+        cat_group = readonly_session.query(
+            models.Category.name, # order is important
             parent.name,
-            models.Category.name,
-            func.count(models.ChannelLocaleMeta.id)
-        ).filter(
-            models.Category.parent == parent.id,
-            models.Channel.category == models.Category.id
+            func.count(models.VideoInstance.id)
+        ).join(models.VideoInstance).filter(
+            models.Category.parent == parent.id
         ).filter(
             models.Category.parent != 1
-        ).join(
-            models.Channel, models.Channel.id == models.ChannelLocaleMeta.channel
-        ).filter(
-            models.Channel.public == True
         ).group_by(
-            models.Category.parent_category,
-            models.Category.name,
             parent.name,
-            models.ChannelLocaleMeta.locale
-        ).order_by(parent.name.desc())
-        channel_count = channel_group.count()
+            models.Category.name
+        ).order_by(parent.name, models.Category.name)
 
-        channels_today = channels.filter(
-            models.Channel.date_added >= datetime.now().strftime('%Y-%m-%d')).count()
+        cat_count = cat_group.count()
+
+        kwargs = dict(now=datetime.now().strftime('%Y-%m-%d'),
+            cat_group=cat_group.all(),
+            cat_count=cat_count,
+            is_dolly=app.config.get('DOLLY'))
+
+        if not app.config.get('DOLLY'):
+            channel_group = readonly_session.query(
+                models.ChannelLocaleMeta.locale,
+                parent.name,
+                models.Category.name,
+                func.count(models.ChannelLocaleMeta.id)
+            ).filter(
+                models.Category.parent == parent.id,
+                models.Channel.category == models.Category.id
+            ).filter(
+                models.Category.parent != 1
+            ).join(
+                models.Channel, models.Channel.id == models.ChannelLocaleMeta.channel
+            ).filter(
+                models.Channel.public == True
+            ).group_by(
+                models.Category.parent_category,
+                models.Category.name,
+                parent.name,
+                models.ChannelLocaleMeta.locale
+            ).order_by(parent.name.desc())
+            channel_count = channel_group.count()
+
+            channels_today = channels.filter(
+                models.Channel.date_added >= datetime.now().strftime('%Y-%m-%d')).count()
+
+            kwargs.update(dict(
+                total_channels=channels.count(),
+                total_channels_today=channels_today,
+                public_channels=public.count(),
+                channels_today=channels_today,
+                channel_group=channel_group.all(),
+                channel_count=channel_count))
 
         return self.render(
             'admin/stats.html',
-            now=datetime.now().strftime('%Y-%m-%d'),
-            total_channels=channels.count(),
-            total_channels_today=channels_today,
-            public_channels=public.count(),
-            cat_group=cat_group.all(),
-            cat_count=cat_count,
-            channel_group=channel_group.all(),
-            channel_count=channel_count,
+            **kwargs
         )
 
 
