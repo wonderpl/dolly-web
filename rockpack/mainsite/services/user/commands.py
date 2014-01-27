@@ -16,7 +16,7 @@ from rockpack.mainsite.core.apns import push_client
 from rockpack.mainsite.helpers.urls import url_tracking_context
 from rockpack.mainsite.services.oauth import facebook
 from rockpack.mainsite.services.oauth.models import ExternalFriend, ExternalToken
-from rockpack.mainsite.services.video.models import Channel, VideoInstance, Video
+from rockpack.mainsite.services.video.models import Channel, VideoInstanceComment, VideoInstance, Video
 from rockpack.mainsite.services.share.models import ShareLink
 from .models import (
     User, UserActivity, UserAccountEvent, UserNotification, UserContentFeed,
@@ -77,6 +77,13 @@ def repack_message(repacker, channel, video_instance):
     return channel.owner, 'repack', dict(
         user=_notification_user_info(repacker),
         video=_notification_video_info(video_instance, channel),
+    )
+
+
+def comment_mention_message(commenter, channel, video_instance):
+    return 'comment_mention', dict(
+        user=_notification_user_info(commenter),
+        video=_notification_video_info(video_instance, channel)
     )
 
 
@@ -185,6 +192,9 @@ def send_push_notifications(user):
     elif notification.message_type == 'unavailable':
         key = 'video'
         push_message = "One of your videos is no longer available"
+    elif notification.message_type == 'comment_mention':
+        key = 'video'
+        push_message = "%@ has mentioned you in a comment"
     else:
         key = 'video'
         push_message = "%@ has liked your video"
@@ -310,6 +320,45 @@ def create_new_registration_notifications(date_from=None, date_to=None, user_not
             _add_user_notification(friend, user.date_joined, message_type, message)
             if user_notifications is not None:
                 user_notifications.setdefault(friend, None)
+
+
+def create_commmenter_notification(date_from=None, date_to=None, user_notifications=None):
+    comments = VideoInstanceComment.query.join(
+        User, User.id == VideoInstanceComment.user
+    ).join(
+        VideoInstance, VideoInstance.id == VideoInstanceComment.video_instance
+    ).join(
+        Channel, Channel.id == VideoInstance.channel
+    ).with_entities(
+        VideoInstanceComment, User, VideoInstance, Channel
+    ).filter(VideoInstanceComment.comment.like('%@%'))
+
+    if date_from:
+        comments = comments.filter(VideoInstanceComment.date_added >= date_from)
+    if date_to:
+        comments = comments.filter(VideoInstanceComment.date_added < date_to)
+
+    # username -> video_instance
+    commented_on_users = {}
+
+    COMMENTEE_RE = re.compile('@(\w+)')
+
+    # We're going to check the usernames from the regex in one go
+    # instead of one by one, so collate them all here first
+    for comment, user, video_instance, channel in comments:
+        usernames = COMMENTEE_RE.findall(comment.comment)
+        for username in usernames:
+            commented_on_users.setdefault(username.lower(), []).append((user, video_instance, channel, comment.date_added,))
+
+    # Now find all the valid users
+    valid_users = User.query.filter(func.lower(User.username).in_(commented_on_users.keys()))
+
+    for user in valid_users:
+        for commenter, video_instance, channel, date_added in commented_on_users.get(user.username.lower()):
+            type, body = comment_mention_message(commenter, channel, video_instance)
+            _add_user_notification(user.id, date_added, type, body)
+            if user_notifications is not None:
+                user_notifications.setdefault(user.id, None)
 
 
 def remove_old_notifications():
@@ -655,6 +704,7 @@ def update_user_notifications(date_from, date_to):
     create_new_registration_notifications(date_from, date_to, user_notifications)
     create_new_repack_notifications(date_from, date_to, user_notifications)
     create_unavailable_notifications(date_from, date_to, user_notifications)
+    create_commmenter_notification(date_from, date_to, user_notifications)
     remove_old_notifications()
     # apns needs the notification ids, so we need to
     # commit first before we continue

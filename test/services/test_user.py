@@ -651,6 +651,58 @@ class TestUserContent(base.RockPackTestCase):
                     self.assertEquals(message['video']['id'], video.id)
                     self.assertEquals(message['video']['channel']['id'], channel.id)
 
+    def test_comment_mention_notifications(self):
+        with self.app.test_client() as client:
+            start = datetime.now()
+
+            self.app.test_request_context().push()
+            user1 = self.create_test_user()
+            user2 = self.create_test_user()
+
+            token = uuid.uuid4().hex
+            system = 'apns'
+            r = client.post(
+                '/ws/{}/external_accounts/'.format(user2.id),
+                data=json.dumps(dict(external_system=system, external_token=token)),
+                content_type='application/json',
+                headers=[get_auth_header(user2.id)],
+            )
+
+            channel1 = user1.channels[0]
+            channel2 = Channel.create(owner=user2.id, title='new', description='',
+                                      cover='comic', category=1)
+            video1 = channel1.add_videos([VideoData.video1.id])[0]
+
+            Channel.query.session.commit()
+            add_videos_to_channel(channel2, [video1.id], None)
+
+            message = 'a message for @{}'.format(user2.username)
+
+            r = client.post('/ws/{}/channels/{}/videos/{}/comments/'.format(user1.id, channel1.id, video1.id),
+                data=dict(comment=message),
+                headers=[get_auth_header(user1.id)])
+
+            user_notifications = {}
+            cron_cmds.create_commmenter_notification(user_notifications=user_notifications)
+            UserNotification.query.session.commit()
+            with patch.object(cron_cmds, '_send_apns_message') as mock_method:
+                for user in user_notifications.keys():
+                    cron_cmds.send_push_notifications(user2)
+
+
+            self.assertEquals(mock_method.mock_calls[0][1][2]['alert']['loc-args'][0], 'Alexia Barrichello')
+            self.assertEquals(mock_method.mock_calls[0][1][2]['alert']['loc-key'], '%@ has mentioned you in a comment')
+
+            r = client.get(
+                '/ws/{}/notifications/'.format(user2.id),
+                headers=[get_auth_header(user2.id)])
+            self.assertEquals(r.status_code, 200)
+
+            notification, = json.loads(r.data)['notifications']['items']
+            self.assertEquals(notification['message_type'], 'comment_mention')
+            self.assertEquals(notification['message']['user']['id'], user1.id)
+            self.assertEquals(notification['message']['video']['channel']['id'], channel1.id)
+
     def test_repack_notifications(self):
         with self.app.test_client() as client:
             self.app.test_request_context().push()
