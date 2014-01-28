@@ -1,19 +1,29 @@
 from cStringIO import StringIO
 from werkzeug import FileStorage
 from functools import wraps
-from flask import request
+from flask import request, Response
 from rockpack.mainsite import requests
 
 
-def add_response_headers(headers={}, cache_max_age=None, cache_private=False):
+def add_response_headers(headers=None, cache_max_age=None, cache_private=False):
     """This decorator adds the headers passed in to the response"""
     def decorator(f):
         @wraps(f)
         def func(*args, **kwargs):
             resp = f(*args, **kwargs)
-            h = resp.headers
-            for header, value in headers.items():
-                h[header] = value
+            try:
+                # assume response instance
+                resp.headers
+            except AttributeError:
+                # try wrapping string
+                try:
+                    resp = Response(resp)
+                except Exception:
+                    # give up
+                    return resp
+            if headers:
+                for header, value in headers.items():
+                    resp.headers.add(header, value)
             if '_nc' in request.args:
                 resp.cache_control.no_cache = True
             else:
@@ -31,8 +41,9 @@ def add_response_headers(headers={}, cache_max_age=None, cache_private=False):
     return decorator
 
 
-def cache_for(seconds=None, private=False):
-    return add_response_headers(cache_max_age=seconds, cache_private=private)
+def cache_for(seconds=None, private=False, vary=None):
+    headers = {'Vary': vary} if vary else {}
+    return add_response_headers(headers, cache_max_age=seconds, cache_private=private)
 
 
 def get_external_resource(url):

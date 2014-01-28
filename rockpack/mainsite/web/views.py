@@ -239,8 +239,8 @@ if app.config.get('SHARE_SUBDOMAIN'):
         return redirect(url_for('share_redirect', linkid=linkid), 301)
 
 
-@cache_for(seconds=86400, private=True)
 @app.route('/s', subdomain=app.config.get('SHARE_SUBDOMAIN'))
+@cache_for(seconds=86400, private=True, vary='User-Agent')
 def share_redirect_root():
     channel, video = request.args.get('c'), request.args.get('v')
     if not channel:
@@ -252,8 +252,8 @@ def share_redirect_root():
     return _share_redirect(locals())
 
 
-@cache_for(seconds=86400, private=True)
 @app.route('/s/<linkid>', subdomain=app.config.get('SHARE_SUBDOMAIN'))
+@cache_for(seconds=86400, private=True, vary='User-Agent')
 def share_redirect(linkid):
     link = ShareLink.query.get_or_404(linkid)
     social_bot = any(ua in request.user_agent.string.lower()
