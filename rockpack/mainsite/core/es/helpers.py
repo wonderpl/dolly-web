@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 from itertools import groupby
 from flask import json
 import pyes
+from decimal import DivisionByZero
 from sqlalchemy import distinct, func, literal
 from sqlalchemy.orm import aliased, joinedload
 from . import api
@@ -176,11 +177,11 @@ class DBImport(object):
             channels = Channel.query.filter(
                 Channel.public == True,
                 Channel.deleted == False).options(
-                    joinedload(Channel.category_rel),
-                    joinedload(Channel.metas),
-                    joinedload(Channel.owner_rel),
-                    joinedload(Channel.video_instances)
-                )
+                joinedload(Channel.category_rel),
+                joinedload(Channel.metas),
+                joinedload(Channel.owner_rel),
+                joinedload(Channel.video_instances)
+            )
             print 'importing {} PUBLIC channels\r'.format(channels.count())
             start = time.time()
             ec = ESChannel.inserter(bulk=True)
@@ -501,9 +502,10 @@ class DBImport(object):
         start = time.time()
 
         def _normalised(val, max_val, min_val):
-            if val == min_val or val == 0:
+            try:
+                return (val - min_val) / (abs(max_val) - abs(min_val))
+            except (ZeroDivisionError, DivisionByZero):
                 return 0
-            return (val - min_val) / (abs(max_val) - abs(min_val))
 
         def _update_channel_id(id, val, max_val, min_val):
             print id, channel_dict.get(id), channel_dict.setdefault(id, 0), _normalised(val, max_val, min_val)
