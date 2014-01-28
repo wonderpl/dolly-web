@@ -29,3 +29,7 @@ def setup_web(app):
     if 'DEFAULT_SUBDOMAIN' in app.config and not hasattr(MapAdapter, '_get_host'):
         MapAdapter._get_host = MapAdapter.get_host
         MapAdapter.get_host = _map_adapter_get_host
+
+    if app.config.get('DOLLY'):
+        dolly_path = app.jinja_loader.searchpath[0] + '/dolly/'
+        app.jinja_loader.searchpath.insert(0, dolly_path)
