@@ -44,6 +44,7 @@ os.environ['DJANGO_SETTINGS_MODULE'] = 'none'
 SERVICES = (
     'rockpack.mainsite.services.base',
     'rockpack.mainsite.services.video',
+    'rockpack.mainsite.services.analytics',
     'rockpack.mainsite.services.cover_art',
     'rockpack.mainsite.services.user',
     'rockpack.mainsite.services.search',
