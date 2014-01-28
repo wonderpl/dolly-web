@@ -20,6 +20,6 @@ class TestBaseServices(base.RockPackTestCase):
             self.assertEquals(r.status_code, 204)
 
             self.assertEquals(send_email.call_count, 1)
-            recipient, subject, body = send_email.call_args[0]
+            recipient, body = send_email.call_args[0]
             self.assertEquals(recipient, self.app.config['FEEDBACK_RECIPIENT'])
             self.assertIn(message, body)

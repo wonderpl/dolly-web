@@ -15,6 +15,9 @@ GOOGLE_CONSUMER_SECRET = _decrypt('?\xacR[\xb5N\xe3P\xd4\xea\x85\x1e\x89\xd08o\x
 
 OOYALA_SECRET = _decrypt('\x10\xa2u\xb8\xc5\xae\x86\x07!\r\xfe\x12l}\xdb~Z\x0ekOI\x9f\x8f\xb9\x8e\xc9\xb7\xc4!\xea~H<\xbf\xde\xcb\xb3\x12~\xa2')
 
+DEFAULT_EMAIL_SOURCE = 'Wonder PL <noreply@wonderpl.com>'
+EMAIL_TEMPLATE_PATH = 'templates/dolly/email'
+
 #ASSETS_URL = '//d1ndbcg4lpnkzx.cloudfront.net/static'
 IMAGE_CDN = 'http://media.us.wonderpl.com'
 S3_BUCKET = 'media.us.wonderpl.com'

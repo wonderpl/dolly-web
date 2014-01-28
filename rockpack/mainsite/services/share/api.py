@@ -25,13 +25,12 @@ SHARE_OBJECT_TYPE_MAP = dict(
 
 OBJECT_NAME_MAP = dict(
     video_instance='video',
-    channel='pack'
+    channel='collection' if app.config.get('DOLLY') else 'pack'
 )
 
 
 def send_share_email(recipient, user, object_type, object, link):
     object_type_name = OBJECT_NAME_MAP[object_type]
-    subject = '%s shared a %s with you on Rockpack' % (user.display_name, object_type_name)
     template = email.env.get_template('share.html')
     assets_url = app.config.get('ASSETS_URL', '')
     if assets_url.startswith('//'):
@@ -45,7 +44,7 @@ def send_share_email(recipient, user, object_type, object, link):
         object=object,
         assets=assets_url,
     )
-    email.send_email(recipient, subject, body, format='html')
+    email.send_email(recipient, body)
 
     recipient_user = User.query.join(
         ExternalToken,

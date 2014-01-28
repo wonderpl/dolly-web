@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-<title>Rockpack password reset</title>
+<title>Welcome to Wonder PL</title>
 <style type="text/css">
   /* Client-specific Styles */
 #outlook a{padding:0;} /* Force Outlook to provide a "view in browser" button. */
@@ -28,7 +28,8 @@ table td{border-collapse:collapse;}
 body, #backgroundTable{
   /*@editable*/ background-color:#f7f7f7;
   font-family: Helvetica;
-  font-size: 13px;
+  font-size: 14px;
+  color: #282d33;
 }
 
   /**
@@ -64,7 +65,7 @@ body, #backgroundTable{
   * @tip Set the styling for your email's preheader text. Choose a size and color that is easy to read.
   */
 .preheaderContent div{
-  /*@editable*/ color:#1c1f21;
+  /*@editable*/ color:#282d33;
   /*@editable*/ font-family:Helvetica;
   /*@editable*/ line-height:100%;
   /*@editable*/ text-align:left;
@@ -91,7 +92,7 @@ a:link, a:visited, div a {
   * @tip Set the background color and border for your email's header area.
   * @theme header
   */
-#templateHeader{
+#templateHeader, #templateBody {
   /*@editable*/ background-color:#FFFFFF;
   /*@editable*/ border-bottom:0;
 }
@@ -102,7 +103,7 @@ a:link, a:visited, div a {
   * @tip Set the styling for your email's header text. Choose a size and color that is easy to read.
   */
 .headerContent{
-  /*@editable*/ color:#1c1f21;
+  /*@editable*/ color:#282d33;
   /*@editable*/ font-family:Helvetica;
   /*@editable*/ line-height:100%;
   /*@editable*/ padding:0;
@@ -113,6 +114,11 @@ a:link, a:visited, div a {
   * @section header link
   * @tip Set the styling for your email's header links. Choose a color that helps them stand out from your text.
   */
+.headerContent a:link, .headerContent a:visited, /* Yahoo! Mail Override */ .headerContent a .yshortcuts /* Yahoo! Mail Override */{
+  /*@editable*/ color:#336699;
+  /*@editable*/ font-weight:normal;
+  /*@editable*/ text-decoration:underline;
+}
 
 #headerImage{
   height:auto;
@@ -308,7 +314,7 @@ a:link, a:visited, div a {
               <table border="0" cellpadding="10" cellspacing="0" width="100%">
                 <tr>
                   <td>
-                    <center><img src="{{ config.ASSETS_URL }}/assets/emails/images/logo.png"></center>
+                    <center><a href="{{ config.ITUNES_APP_LINK }}&ct=welcome"><img src="{{ config.ASSETS_URL }}/assets/emails/images/logo.png" alt="Wonder PL"></a></center>
                   </td>
                 </tr>
               </table>
@@ -325,14 +331,9 @@ a:link, a:visited, div a {
               <table border="0" cellpadding="0" cellspacing="20" width="600" id="templateHeader">
                 <tr>
                   <td class="headerContent">
-                    <br /><br />
-                    Hi {{ username }},<br />                     
-                    <p><a href="{{ reset_link }}">Click here</a> to reset your password. This link will expire in 24 hours. </p>
-                    <p>Thanks!</p>
-
-                    <p>The Rockpack Team</p>
-                    <br /><br />
-                 </td>
+                    Hi {{ user.display_name }},<br />                     
+                    <p>Thank you for joining us on Wonder PL.</p>
+                  </td>
                 </tr>
               </table>
               <!-- // End Template Header \\ -->
@@ -342,10 +343,21 @@ a:link, a:visited, div a {
         <br />
         <table border="0" cellpadding="10" cellspacing="0" width="600" id="footer">
           <tr>
+            <td><img src="{{ config.ASSETS_URL }}/assets/emails/images/press.png"></td>
+          </tr>
+          <tr>
             <td>
-              <p>To ensure our emails reach your inbox please make sure to add {{ email_sender|e }}</p>
-              <p>to your address book or safe list.</p>
-              <p>You are subscribed as {{ email }}.</p>
+              <center><a href="{{ config.ITUNES_APP_LINK }}&ct=welcome"><img src="{{ config.ASSETS_URL }}/assets/emails/images/download.png" alt="download"></a></center>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <center><a href="{{ url_for('homepage') }}"><img src="{{ config.ASSETS_URL }}/assets/emails/images/logo.png" alt="Wonder PL"></a></center>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <p>To ensure our emails reach your inbox please make sure to add {{ email_sender|e }} to your address book or safe list.</p>
               <p>Your privacy is important to us, have a read to our <a href="{{ url_for('privacy') }}">privacy policy</a>.</p>
             </td>
           </tr>

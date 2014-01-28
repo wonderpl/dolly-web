@@ -154,16 +154,14 @@ def send_password_reset(user):
     token = create_access_token(user.id, '', 86400)
     url = url_for('reset_password') + '?token=' + token
     template = email_env.get_template('reset.html')
-    subject = 'Rockpack password reset'
     body = template.render(
         reset_link=url,
-        subject=subject,
         username=user.username,
         email=user.email,
         email_sender=app.config['DEFAULT_EMAIL_SOURCE'],
         assets=app.config.get('ASSETS_URL', '')
     )
-    send_email(user.email, subject, body, format='html')
+    send_email(user.email, body)
 
 
 class RockRegistrationForm(Form):

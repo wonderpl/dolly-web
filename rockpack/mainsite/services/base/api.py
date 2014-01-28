@@ -88,7 +88,7 @@ class BaseWS(WebService):
             score=form.score.data,
         ).save()
         message = "Score: %(score)s\n\n%(message)s" % form.data
-        send_email(app.config['FEEDBACK_RECIPIENT'], 'Feedback', message)
+        send_email(app.config['FEEDBACK_RECIPIENT'], message, format='text', subject='Feedback')
 
     @expose_ajax('/example_users/', cache_age=3600, secure=False)
     def example_users(self):

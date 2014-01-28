@@ -978,9 +978,9 @@ class TestEmail(base.RockPackTestCase):
         user = self.create_test_user()
         window = self._create_reactivation_email(user)
         self.assertEqual(send_email.call_count, 1)
-        recipient, subject, body = send_email.call_args[0]
+        recipient, body = send_email.call_args[0]
         self.assertEqual(recipient, user.email)
-        self.assertEqual(subject, "What's trending in your Rockpack")
+        self.assertIn("<title>What's trending in your Rockpack", body)
         self.assertIn('has added 2 videos to CHANNEL #3', body)
         self.assertIn('has added 1 videos to CHANNEL #4', body)
         self.assertIn('utm_medium=email', body)

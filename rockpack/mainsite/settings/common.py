@@ -102,6 +102,8 @@ ASSETS_MANIFEST = 'file'
 ASSETS_CACHE = False
 ASSETS_AUTO_BUILD = False
 
+EMAIL_TEMPLATE_PATH = 'static/assets/emails'
+
 # Prefix for untitled channels
 UNTITLED_CHANNEL = 'Untitled'
 

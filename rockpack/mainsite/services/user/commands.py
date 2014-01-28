@@ -23,10 +23,6 @@ from .models import (
     UserFlag, UserInterest, Subscription, BroadcastMessage)
 
 
-# Pick title from a html string
-TITLE_RE = re.compile('<title>([^<]+)</title>')
-
-
 def _notification_user_info(user):
     # NOTE: This will store full image urls in database
     return dict(
@@ -497,8 +493,7 @@ def _send_email_or_log(user, template, **ctx):
             user=user,
             **ctx
         )
-        subject = TITLE_RE.search(body).group(1)
-        email.send_email(user.email, subject, body, format='html')
+        email.send_email(user.email, body)
         app.logger.info("Sent %s email to user %s <%s>",
                         template.name[:-5], user.id, user.email)
     except Exception as e:
