@@ -226,7 +226,7 @@ class ESObject(object):
                 if k not in value.keys():
                     return construct_update_string('ctx._source.%s' % field, value)
 
-        return 'ctx._source%s=%s;' % ("['" + "','".join(field.split('.')) + "']", json.dumps(value, ensure_ascii=False, cls=DateEncoder))
+        return 'ctx._source%s=%s;' % ("['" + "']['".join(field.split('.')) + "']", json.dumps(value, ensure_ascii=False, cls=DateEncoder))
 
     @classmethod
     def inserter(cls, bulk=False):
