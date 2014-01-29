@@ -54,15 +54,22 @@ def get_video_data(id, fetch_all_videos=True, fetch_metadata=False):
     )
     video.source_date_uploaded = _parse_datetime(data['created_at'])
     video.restricted = bool(data['time_restrictions'])
-    for thumbnail in _ooyala_feed('assets', id, 'primary_preview_image')['sizes']:
-        video.thumbnails.append(
-            VideoThumbnail(
-                url=thumbnail['url'],
-                width=thumbnail['width'],
-                height=thumbnail['height']))
+    update_thumbnails(video)
     if fetch_metadata:
         video.meta = _ooyala_feed('assets', id, 'metadata')
     return Videolist(1, [video])
+
+
+def update_thumbnails(video):
+    preview_image = _ooyala_feed('assets', video.source_videoid, 'primary_preview_image')
+    video.thumbnails = [
+        VideoThumbnail(
+            url=thumbnail['url'],
+            width=thumbnail['width'],
+            height=thumbnail['height'],
+        )
+        for thumbnail in preview_image['sizes']
+    ]
 
 
 def create_asset(s3path, metadata):

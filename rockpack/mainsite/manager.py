@@ -221,6 +221,18 @@ def import_video(s3path, **options):
     create_asset(s3path, options)
 
 
+@manager.command
+def update_ooyala_thumbnails(videoid):
+    from rockpack.mainsite.services.video.models import Video
+    from rockpack.mainsite.core.ooyala import update_thumbnails
+    video = Video.query.filter_by(id=videoid, source=2).first()
+    if video:
+        update_thumbnails(video)
+        video.save()
+    else:
+        app.logger.error('Video not found')
+
+
 def run(*args):
     init_app()
     if args:
