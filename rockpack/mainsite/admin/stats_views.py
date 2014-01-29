@@ -34,7 +34,7 @@ class ContentStatsView(StatsView):
             models.Category.name, # order is important
             parent.name,
             func.count(models.VideoInstance.id)
-        ).join(models.VideoInstance).filter(
+        ).outerjoin(models.VideoInstance).filter(
             models.Category.parent == parent.id
         ).group_by(
             parent.name,
