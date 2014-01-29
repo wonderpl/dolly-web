@@ -926,7 +926,7 @@ class TestEmail(base.RockPackTestCase):
                 self.assertEquals(send_email.call_count, 1)
                 recipient, body = send_email.call_args[0]
                 self.assertEquals(user.email, recipient)
-                self.assertIn('<title>Welcome to Rockpack', body)
+                self.assertIn('<title>Welcome', body)
                 self.assertIn('Hi {}'.format(user.display_name), body)
                 self.assertIn('To ensure our emails reach your inbox please make sure to add {}'.format(
                     cgi.escape(app.config['DEFAULT_EMAIL_SOURCE'])), body)
@@ -980,7 +980,7 @@ class TestEmail(base.RockPackTestCase):
         self.assertEqual(send_email.call_count, 1)
         recipient, body = send_email.call_args[0]
         self.assertEqual(recipient, user.email)
-        self.assertIn("<title>What's trending in your Rockpack", body)
+        self.assertIn("<title>What's trending", body)
         self.assertIn('has added 2 videos to CHANNEL #3', body)
         self.assertIn('has added 1 videos to CHANNEL #4', body)
         self.assertIn('utm_medium=email', body)

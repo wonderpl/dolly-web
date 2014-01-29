@@ -162,7 +162,7 @@ class ChannelVisibleFlag(BaseUserTestCase):
                         owned_resource + 'videos/',
                         data=json.dumps([VideoInstanceData.video_instance1.id]),
                         content_type='application/json',
-                        headers=[get_auth_header(user)]
+                        headers=[get_auth_header(user['id'])]
                     )
                 else:
                     videos = self.get(self.urls['video_search'], params=params)['videos']['items']

@@ -2,7 +2,7 @@ import json
 from rockpack.mainsite.core.dbapi import db
 from ..base import RockPackTestCase
 from ..fixtures import ChannelData, VideoData, UserData
-from ..test_decorators import skip_unless_config
+from ..test_decorators import skip_unless_config, skip_if_dolly
 
 
 class SearchTestCase(RockPackTestCase):
@@ -39,6 +39,7 @@ class SearchTestCase(RockPackTestCase):
             self.assertGreater(channels['items'][0]['videos']['total'], 0)
 
 
+@skip_if_dolly
 class CompleteTestCase(RockPackTestCase):
 
     def _complete(self, type, query):
