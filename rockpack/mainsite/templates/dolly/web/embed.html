@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Rockpack</title>
+  <title>Wonder PL</title>
 
   {% 
   	assets filters="less,cssmin", 
@@ -26,7 +26,7 @@
   <![endif]-->
   {% endassets %}
 
-  <script type="text/javascript" src='//player.ooyala.com/v3/c8b3075569864056bc02b97568d17127?platform=flash-only'></script>
+  <script type="text/javascript" src='//player.ooyala.com/v3/{{ config.OOYALA_PLAYER_ID }}?platform=html5-priority'></script>
 
   {# 
   	assets filters="rjsmin", 

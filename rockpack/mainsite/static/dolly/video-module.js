@@ -412,17 +412,35 @@ OO.plugin("WonderUIModule", function (OO) {
             var pos = e.touches[0] || e.changedTouches[0],
                 target = e.srcElement || e.target,
                 x = pos.pageX,
+                y = pos.pageY,
                 percentage,
                 scrubtype = target.className.replace('scrubber-trans ','');
 
             clearTimeout( _.seekTimeout );
             _.seekTimeout = setTimeout(function(){
-                percentage = pos.pageX - target.getBoundingClientRect().left;
-                percentage = ((percentage / target.clientWidth ) * 100 );
+
                 if ( scrubtype === 'vid' ) {
-                    _.scrubVid(percentage);
+                    var rect = _.elements.scrubber_vid.getBoundingClientRect();
+                    percentage = x - rect.left;
+                    percentage = ((percentage/(rect.right - rect.left)) * 100 );                    
+                    if ( percentage <= 0 ) {
+                        _.scrubVid(0);                        
+                    } else if ( percentage >= 100 ) {
+                        _.scrubVid(100);
+                    } else {
+                        _.scrubVid(percentage);    
+                    }
                 } else if ( scrubtype === 'vol' ) {
-                    _.scrubVol(percentage);
+                    var rect = _.elements.scrubber_vol.getBoundingClientRect();
+                    percentage = y - rect.bottom;
+                    percentage = ((percentage/(rect.bottom - rect.top)) * 100 );
+                    if ( percentage <= -100 ) {
+                        _.scrubVol(100);                        
+                    } else if ( percentage >= 0 ) {
+                        _.scrubVol(0);
+                    } else {
+                        _.scrubVol(Math.abs(percentage));    
+                    }
                 }
             },10);
 
