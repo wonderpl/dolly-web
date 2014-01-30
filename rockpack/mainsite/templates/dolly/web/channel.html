@@ -32,18 +32,17 @@
     <script src="{{config.ASSETS_URL}}/assets/vendor/js-no-compile/json2.js"></script>
     <![endif]-->
 
-  {% 
-    assets filters="less,cssmin", 
+  {% assets filters="less,cssmin", 
     output="gen/wonderplayer_css.%(version)s.css", 
     depends="assets/wonderplayer/partials/_*.less", 
     "assets/wonderplayer/main.less" 
-  %}
-  <link rel="stylesheet" href="{{ ASSET_URL }}"/>
-  {% endassets %}
+  %}<link rel="stylesheet" href="{{ ASSET_URL }}"/>{% endassets %}
 
-  {% assets filters="less,cssmin", output="gen/web-lite-css.%(version)s.css", depends="assets/web-lite/partials/_*.less", "assets/web-lite/front.less" %}
-  <link rel="stylesheet" href="{{ ASSET_URL }}"/>
-  {% endassets %}
+  {% assets filters="less,cssmin", 
+    output="gen/web-lite-css.%(version)s.css", 
+    depends="assets/web-lite/partials/_*.less", 
+    "assets/web-lite/front.less" 
+  %}<link rel="stylesheet" href="{{ ASSET_URL }}"/>{% endassets %}
 
   <!-- Conditional stylesheet for IE8 and below -->
   {% assets filters="less,cssmin", output="gen/web-lite-ie-css.%(version)s.css", depends="assets/web-lite/partials/_*.less", "assets/web-lite/ie.less" %}
@@ -54,12 +53,14 @@
 
   <script src='//player.ooyala.com/v3/c8b3075569864056bc02b97568d17127?platform=html5-priority'></script>
   
-  {# 
-    assets filters="rjsmin", output="gen/web-lite-lib.%(version)s.js",
+  {# assets filters="rjsmin", output="gen/web-lite-lib.%(version)s.js",
     "assets/vendor/js/jquery-1.10.1.min.js", 
     "web-lite/vendor/angular/angular.js",
     "web-lite/vendor/angular/angular-route.js",
-    "web-lite/vendor/angular/angular-animate.js"
+    "web-lite/vendor/angular/angular-animate.js",
+    "web-lite/vendor/angular/angular-sanitize.js",
+    "dolly/video-module.js",
+    "dolly/youtube-module.js"
   #}
   <!--<script type="text/javascript" src="{{ ASSET_URL }}"></script>-->
   {# endassets #}
@@ -72,8 +73,7 @@
   <script src="/static/dolly/video-module.js"></script>
   <script src="/static/dolly/youtube-module.js"></script>
 
-  {# 
-    assets filters="rjsmin", output="gen/dolly.%(version)s.js",
+  {# assets filters="rjsmin", output="gen/dolly.%(version)s.js",
     "web-lite/vendor/tween.js",
     "web-lite/app.js",
     "web-lite/controllers/controllers.js",  
@@ -96,9 +96,7 @@
     "web-lite/views/player.html",
     "web-lite/views/channel.html",
     "web-lite/views/player-ui.html"
-  %}
-  <script type="text/javascript" src="{{ ASSET_URL }}"></script>
-  {% endassets %}
+  %}<script type="text/javascript" src="{{ ASSET_URL }}"></script>{% endassets %}
 
 
     <script type="text/javascript">

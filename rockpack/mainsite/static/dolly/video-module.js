@@ -52,10 +52,15 @@ OO.plugin("WonderUIModule", function (OO) {
             '<table width="100%" height="100%" cellpadding="0" cellspacing="0"><tr><td width="100%" height="100%" align="center" valign="middle">Your video is loading</td></tr></table>' +
         '</div>' +
         '<a href="#" id="wonder-loader" class="show f-sans f-uppercase"><span>Your video is loading</span></a>' + 
+        '<a href="#" id="wonder-play-big"></a>' + 
         '<div id="wonder-controls">' + 
             '<a href="#" class="play wonder-play player-icon-play"></a>' + 
             '<a href="#" class="pause wonder-pause player-icon-pause hidden"></a>' + 
-            '<a href="#" class="volume wonder-volume vol-high"></a>' +
+            '<a href="#" class="volume wonder-volume vol-3">' +
+                '<img class="vol-1" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAC0AAAAoCAYAAABq13MpAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAGBJREFUeNrs17EJgFAMBND/HcZacC+ntLJyo5gRxEYO3sGVgVeEQGZVjbQsIzDQ0NDQ0NDQ0NDQ0Jnoq7unodfukbge55eh+eNju3XvNLTrAQ0NDQ0NDQ0NDQ39Lo8AAwCo8wyaUULIQwAAAABJRU5ErkJggg==" />' +
+                '<img class="vol-2" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAC0AAAAoCAYAAABq13MpAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAATNJREFUeNrsmLFKA0EQhnOaQlKo4APEwkIQsRILX8BO0iZV0BfIS1ilsbC2UcFW0EJs1CdQLKxTBCs9bEzwcP2OXGBykOOu2lmYHz7YKRa+O2Z3joucc7XQslALMCZt0iZt0iZt0vPyBCewXnlnOsY9EbtJfqEPjbJ7I4/fHjGsiPoFDuBDc3tcwo+od+AWGprbI6UJz242Z5rbY5oleID9rE5gG941X3kjaItWqcNRCPf0AK5FfRjKcLkT642iA6lJeijWEayFIJ1/s0kI0rti/V00ZLRIL0JX1I/pCNEu3csO3zQXmidiSgcSMRHfoF60x6fsFlzlRvgY9jSP8S9YFfUfHMO55q+819wDtMoI+5a+h084hU24KbvRZ3sswzijUiL7a2rSJm3SJm3SJk3+BRgA8LFe4j8YonoAAAAASUVORK5CYII=" />' +
+                '<img class="vol-3" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAC0AAAAoCAYAAABq13MpAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAbhJREFUeNrs2c8rRFEUB/B53qSYaRYyVopSimTBhJRZ2diJlLAQs1IWFkr5H6xYYKOslGKNJfm5YGespPGzEDUZmeb53rq3jjtvyu6dU3PqU+dMM/U16d33zjie54WkVUVIYAUdug/WISEpdAxScA7HMCjt36MHdmAfGjiHvoc767V+uISBkp9SV4+AuTAOGe9v5WHK7zMcQhsxWLGCF/QfxDa0MQHfJLjqu+l7HKaHi7qKbIOr51togRznw2UXFsjcCPNmcBgf4w7s6auJqiw0wwPnY1x9m7OQ13ME5iTce1zDFpknISzhhmmV9LWQlBD6CJ7JLCJ0AU7InJByP31F+lYpoZ9IH5cS+oP0USmhq0j/KSV0PenfpIRuI/2NhNAqY5LMFxJCq8B1ZD6QEHqG9C9wyD10OwyTeQN+ON9Pu/r4NoucL2iCR87f9KK1eVpSgbmsEPyM6idxU2mo5vw0ntI7D1NZ6OC6QojCms/CZojj3qMSpn02TDkY47hh6oJXr7gy9oKGCvrqEYca6wlcLWk64VTCqlftp3thxHomLKpwwEHfYRk24ezfW5zyD0Xl0KXrV4ABABBpntz13cW2AAAAAElFTkSuQmCC" />' +
+            '</a>' +
             '<a href="#" class="wonder-logo"></a>' +
             '<a href="#" class="fullscreen wonder-fullscreen player-icon-fullscreen"></a>' +
             '<span class="wonder-timer">--:--</span>' +
@@ -177,16 +182,15 @@ OO.plugin("WonderUIModule", function (OO) {
         _.duration = content.duration;
         _.loaded = true;
         _.removeClass( _.elements.poster, 'loading' );
+
         if ( document.getElementsByTagName('video').length > 0 ) {
             _.elements.video = document.getElementsByTagName('video')[0];
             _.listen( _.elements.video, 'loadedmetadata', function(e){
-                console.log('video meta data loaded');
+                // console.log('video meta data loaded');
             });
-
             _.listen( _.elements.video, 'webkitendfullscreen', function(e) {
                 _.mb.publish(OO.EVENTS.PAUSE);
             });            
-                
         }
     };
     
@@ -194,11 +198,10 @@ OO.plugin("WonderUIModule", function (OO) {
         _.time = time;
         _.duration = duration;
 
-        // console.log(_.time);
 
         if ( _.state.playing === false ) {
             _.displayTime = _.getTime(_.duration);
-        } else {
+        } else {    
             _.displayTime = _.getTime(_.time);
         }
 
@@ -244,7 +247,7 @@ OO.plugin("WonderUIModule", function (OO) {
         }
         
         _.elements.scrubber_progress_vol.style.width = ( vol * 100 ) + '%';
-        _.elements.scrubber_handle_vol.style.left = ( vol * 100 ) + '%';
+        _.elements.scrubber_handle_vol.style.bottom = ( vol * 100 ) + '%';
     };
 
     _.onPlayed = function () {
@@ -300,11 +303,14 @@ OO.plugin("WonderUIModule", function (OO) {
     _.volume = function (e) {
         _.prevent(e);
         if ( _.loaded === true ) {
-            if ( _.volume > 0 ) {
-                _.mb.publish(OO.EVENTS.CHANGE_VOLUME,0);
-            } else {
-                _.mb.publish(OO.EVENTS.CHANGE_VOLUME,1);
-            }    
+
+            _.toggleClass( _.elements.scrubber_vol, 'vol-visible' );
+
+            // if ( _.volume > 0 ) {
+            //     _.mb.publish(OO.EVENTS.CHANGE_VOLUME,0);
+            // } else {
+            //     _.mb.publish(OO.EVENTS.CHANGE_VOLUME,1);
+            // }    
         }
     };
 
