@@ -1,4 +1,4 @@
-angular.module('Weblight').factory('userService', ($http) ->
+angular.module('WebLite').factory('userService', ($http) ->
 
   User = {
     fetchUser: (userID) ->

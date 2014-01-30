@@ -1,4 +1,4 @@
-window.Weblight = angular.module('Weblight', ['infinite-scroll'])
+window.WebLite = angular.module('WebLite', ['infinite-scroll'])
   
   .constant('channelData', window.channel_data)
 

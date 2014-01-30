@@ -1,4 +1,4 @@
-window.Weblight.controller('VideoCtrl', ['$scope', '$rootScope', '$routeParams', '$location', ($scope, $rootScope, $routeParams, $location) ->
+window.WebLite.controller('VideoCtrl', ['$scope', '$rootScope', '$routeParams', '$location', ($scope, $rootScope, $routeParams, $location) ->
 
   $rootScope.videoPosition = null
   $scope.currentPosition = 0

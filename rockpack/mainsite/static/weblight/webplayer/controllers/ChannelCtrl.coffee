@@ -1,4 +1,4 @@
-window.Weblight.controller('ChannelCtrl', ['$scope', '$routeParams', '$location', 'isMobile', 'channelData', ($scope, $routeParams, $location, isMobile, channelData) ->
+window.WebLite.controller('ChannelCtrl', ['$scope', '$routeParams', '$location', 'isMobile', 'channelData', ($scope, $routeParams, $location, isMobile, channelData) ->
 
   $scope.triggerEvent = (action, label) ->
     ga('send', 'event', 'uiAction', action, label)

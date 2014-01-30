@@ -1,4 +1,4 @@
-angular.module('Weblight').factory('ContentService', ($http) ->
+angular.module('WebLite').factory('ContentService', ($http) ->
 
   Content = {
 

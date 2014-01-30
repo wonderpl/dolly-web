@@ -1,4 +1,4 @@
-window.Weblight.controller('AppCtrl', ['$routeParams', 'isMobile', '$scope', '$location', '$rootScope', '$window', ($routeParams, isMobile, $scope, $location, $rootScope, $window) ->
+window.WebLite.controller('AppCtrl', ['$routeParams', 'isMobile', '$scope', '$location', '$rootScope', '$window', ($routeParams, isMobile, $scope, $location, $rootScope, $window) ->
 
   $scope.$watch((-> $location.path()), (newValue, oldValue) ->
     $scope.currentPage = newValue.substring(1)

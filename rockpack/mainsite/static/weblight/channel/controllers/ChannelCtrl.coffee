@@ -1,4 +1,4 @@
-window.Weblight.controller('ChannelCtrl', ['$scope', '$routeParams', '$location', 'isMobile', 'channelData', 'userService', 'ContentService', '$rootScope', ($scope, $routeParams, $location, isMobile, channelData, userService, ContentService, $rootScope) ->
+window.WebLite.controller('ChannelCtrl', ['$scope', '$routeParams', '$location', 'isMobile', 'channelData', 'userService', 'ContentService', '$rootScope', ($scope, $routeParams, $location, isMobile, channelData, userService, ContentService, $rootScope) ->
 
   $rootScope.channel = channelData
   $scope.page = 1

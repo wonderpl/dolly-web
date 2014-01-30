@@ -1,4 +1,4 @@
-window.Weblight.controller('ChannelCtrl', ['$scope', '$rootScope', 'ContentService', ($scope, $rootScope, ContentService) ->
+window.WebLite.controller('ChannelCtrl', ['$scope', '$rootScope', 'ContentService', ($scope, $rootScope, ContentService) ->
 
   $scope.channel = window.channel_data
   $scope.totalvideos = $scope.channel.videos.total

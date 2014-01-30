@@ -1,4 +1,4 @@
-window.Weblight.factory('ContentService', ($http) ->
+window.WebLite.factory('ContentService', ($http) ->
 
   Content = {
 
