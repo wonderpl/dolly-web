@@ -18,7 +18,7 @@ OOYALA_SECRET = _decrypt('\x10\xa2u\xb8\xc5\xae\x86\x07!\r\xfe\x12l}\xdb~Z\x0ekO
 DEFAULT_EMAIL_SOURCE = 'Wonder PL <noreply@wonderpl.com>'
 EMAIL_TEMPLATE_PATH = 'templates/dolly/email'
 
-#ASSETS_URL = '//d1ndbcg4lpnkzx.cloudfront.net/static'
+ASSETS_URL = '//d1ndbcg4lpnkzx.cloudfront.net/static'
 IMAGE_CDN = 'http://media.us.wonderpl.com'
 S3_BUCKET = 'media.us.wonderpl.com'
 
