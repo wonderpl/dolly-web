@@ -126,8 +126,8 @@
 							// scope.getOOReady().then(function(){
 							// 	newOOVideo();
 							// });
-							// elem.append('<iframe src="//player.vimeo.com/video/85134959?color=ffffff" width="100%" height="100%" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>');
-							elem.append('<iframe src="http://127.0.0.1:5000/embed/' + scope.vid.id + '/" width="100%" height="100%" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>')
+							elem.append('<iframe src="//player.vimeo.com/video/85134959?color=ffffff" width="100%" height="100%" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>');
+							// elem.append('<iframe src="http://192.168.3.104:5000/embed/' + scope.vid.id + '/" width="100%" height="100%" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>');
 							break;
 					}
 				};

@@ -5,16 +5,22 @@
 #wonder-wrapper {
 
 	#wonder-poster {
+		display: none;
 		span {
 			top: -66px;
 			font-size: 18px;
 			line-height: 24px;
+
 			
 			&:after {
 				padding: 12px 0;
 				font-size: 13px;
 			}
 		}
+	}
+
+	.wonder-play-big {
+		display: block;
 	}
 
 	#wonder-controls {
@@ -44,10 +50,7 @@
 			}
 
 			&.wonder-volume {
-				left: 64.5%;
-				top: 0px;
-				font-size: 19px;
-				display: none;
+				left: 74%;
 			}
 
 			&.wonder-rewind {
@@ -74,99 +77,51 @@
 			padding-top: 16px;
 			font-size: 13px;
 			width: 10%;
+			display: none;
 		}
 
 		// The wrappers for the scrubber bars
 		.scrubber, .scrubber-progress {
-			top: 21px;
-
 			&.vid {
+				top: 21px;
 				width: 48%;
 				left: 20%;
 			}
 
 			&.vol {
-				width: 12%;
-				left: 71%;
-				display: none;
+				left: 78%;
 			}
-			
 		}
 
 		.scrubber-progress {
-			&.vid, &.vol {
+			&.vid {
 				left: 0;
 				top: 0;
 				width: 0%;
 			}
+			&.vol {
+				left: 0;
+			}
 		}
 
 		.scrubber-target {
-			
 			&.vid {
 				width: 64%;
 				left: 13%;
 			}
-
 			&.vol {
-				width: 12%;
-				left: 71%;
-				display: none;
+				width: 75.5%;
 			}
 		}
 
-		.scrubber-progress {
-			&.vol {
-				width: 65%;
-			}
-		}
 		.scrubber-handle {
-			top: -8px;
-
 			&.vid {
+				top: -8px;
 				left: 0%;
 			}
 	
 			&.vol {
-				left: 65%;
 			}
-
-			&:hover {
-				color: #fff;
-			}
-
-			&.down {
-				color: @lavender;
-			}
-		}
-
-		.wonder-scrubber, .wonder-scrubber-progress {
-			width: 35%;
-			left: 8%;
-		}
-
-		.wonder-scrubber-target {
-			width: 35%;
-			left: 8%;
-		}
-
-		.wonder-volume-scrubber, .wonder-volume-scrubber-progress {
-			width: 10%;
-			left: 51%;
-		}
-
-		.wonder-volume-scrubber-target {
-			width: 10%;
-			left: 51%;
-			display: none;
-		}
-
-		.wonder-volume-scrubber-progress {
-			width: 65%;
-		}
-
-		.wonder-volume-scrubber-handle {
-			left: 65%;
 		}
 	}
 }

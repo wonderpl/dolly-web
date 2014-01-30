@@ -14,16 +14,19 @@
   <link rel="stylesheet" href="{{ ASSET_URL }}"/>
   {% endassets %}
 
+  <!-- Conditional stylesheet for IE8 and below -->
   {% 
-  	assets filters="less,cssmin", 
-  	output="gen/front_css.%(version)s.css", 
-  	depends="assets/dolly/partials/_*.less", 
-  	"assets/front/front.less" 
+    assets filters="less,cssmin", 
+    output="gen/wonderplayer_ie_css.%(version)s.css", 
+    depends="assets/wonderplayer/partials/_*.less", 
+    "assets/wonderplayer/ie.less" 
   %}
-  <link rel="stylesheet" href="{{ ASSET_URL }}"/>
+  <!--[if lt IE 9]>
+    <link rel="stylesheet" href="{{ ASSET_URL }}"/>
+  <![endif]-->
   {% endassets %}
 
-  <script src='//player.ooyala.com/v3/c8b3075569864056bc02b97568d17127?platform=html5-priority'></script>
+  <script type="text/javascript" src='//player.ooyala.com/v3/c8b3075569864056bc02b97568d17127?platform=flash-only'></script>
 
   {# 
   	assets filters="rjsmin", 
@@ -33,7 +36,7 @@
   <script type="text/javascript" src="{{ ASSET_URL }}"></script>
   {# endassets #}
 
-  <script src="/static/dolly/video-module.js"></script>
+  <script type="text/javascript" src="/static/dolly/video-module.js"></script>
 
   <script type="text/javascript">
   	var videoData = {{ video_data|tojson }},
@@ -44,7 +47,7 @@
 <body>
 
 	<div id='ooyalaplayer'></div>
-	<script>
+	<script type="text/javascript">
 		console.log(videoData);
 		OO.ready(function() { 
 			window.wonder = OO.Player.create(

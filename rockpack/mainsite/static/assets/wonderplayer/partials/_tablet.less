@@ -44,10 +44,8 @@
 			}
 
 			&.wonder-volume {
-				left: 64.5%;
-				top: 15px;
-				font-size: 19px;
-				display: none;
+				left: auto;
+				right: 33.5%;
 			}
 
 			&.wonder-rewind {
@@ -60,6 +58,7 @@
 				left: auto;
 				top: 6px;
 				width: 20%;
+				background-size: 100% auto;
 			}
 
 			&.wonder-fullscreen {
@@ -76,101 +75,66 @@
 			left: auto;
 			padding-top: 16px;
 			font-size: 13px;
-			width: 10%
+			width: 10%;
+			display: none;
 
 		}
 
 		// The wrappers for the scrubber bars
 		.scrubber, .scrubber-progress {
-			top: 21px;
 
 			&.vid {
-				width: 45%;
-				left: 12%;
-			}
-
-			&.vol {
-				width: 12%;
-				left: 71%;
-				display: none;
-			}
-			
-		}
-
-		.scrubber-progress {
-			&.vid, &.vol {
-				left: 0;
-				top: 0;
-				width: 0%;
-			}
-		}
-
-		.scrubber-target {
-			
-			&.vid {
+				top: 21px;
 				width: 48%;
 				left: 10%;
 			}
 
 			&.vol {
-				width: 12%;
-				left: 71%;
-				display: none;
+				left: auto;
+				right: 35%;
+			}
+			
+		}
+
+		.scrubber-progress {
+			&.vid{
+				left: 0;
+				top: 0;
+				width: 0%;
+			}
+
+			&.vol {
+				left: 0;
+				right: 0;
+			}
+		}
+
+		.scrubber-target {
+			&.vid {
+				width: 52%;
+				left: 8%;
+			}
+
+			&.vol {
+				left: auto;
+				right: 34%;
 			}
 		}
 
 		.scrubber-progress {
 			&.vol {
-				width: 65%;
+				
 			}
 		}
 		.scrubber-handle {
-			top: -8px;
 
 			&.vid {
+				top: -8px;
 				left: 0%;
 			}
-	
+
 			&.vol {
-				left: 65%;
 			}
-
-			&:hover {
-				color: #fff;
-			}
-
-			&.down {
-				color: @lavender;
-			}
-		}
-
-		.wonder-scrubber, .wonder-scrubber-progress {
-			width: 35%;
-			left: 8%;
-		}
-
-		.wonder-scrubber-target {
-			width: 35%;
-			left: 8%;
-		}
-
-		.wonder-volume-scrubber, .wonder-volume-scrubber-progress {
-			width: 10%;
-			left: 51%;
-		}
-
-		.wonder-volume-scrubber-target {
-			width: 10%;
-			left: 51%;
-			display: none;
-		}
-
-		.wonder-volume-scrubber-progress {
-			width: 65%;
-		}
-
-		.wonder-volume-scrubber-handle {
-			left: 65%;
 		}
 	}
 }

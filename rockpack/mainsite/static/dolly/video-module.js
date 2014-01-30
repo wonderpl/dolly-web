@@ -52,7 +52,7 @@ OO.plugin("WonderUIModule", function (OO) {
             '<table width="100%" height="100%" cellpadding="0" cellspacing="0"><tr><td width="100%" height="100%" align="center" valign="middle">Your video is loading</td></tr></table>' +
         '</div>' +
         '<a href="#" id="wonder-loader" class="show f-sans f-uppercase"><span>Your video is loading</span></a>' + 
-        '<a href="#" id="wonder-play-big"></a>' + 
+        '<a href="#" class="wonder-play-big"></a>' + 
         '<div id="wonder-controls">' + 
             '<a href="#" class="play wonder-play player-icon-play"></a>' + 
             '<a href="#" class="pause wonder-pause player-icon-pause hidden"></a>' + 
@@ -101,8 +101,8 @@ OO.plugin("WonderUIModule", function (OO) {
 
         // Initial listeners
         _.mb.subscribe(OO.EVENTS.PLAYER_CREATED, 'wonder', _.onPlayerCreate);
-        _.mb.subscribe(OO.EVENTS.PLAYHEAD_TIME_CHANGED, 'wonder', _.onTimeUpdate);
         _.mb.subscribe(OO.EVENTS.CONTENT_TREE_FETCHED, 'wonder', _.onContentReady);
+        _.mb.subscribe(OO.EVENTS.PLAYHEAD_TIME_CHANGED, 'wonder', _.onTimeUpdate);
         _.mb.subscribe(OO.EVENTS.VOLUME_CHANGED, 'wonder', _.onVolumeChanged);
         _.mb.subscribe(OO.EVENTS.PLAYED, 'wonder', _.onPlayed);
         _.mb.subscribe(OO.EVENTS.PAUSE, 'wonder', _.onPause);
@@ -131,6 +131,7 @@ OO.plugin("WonderUIModule", function (OO) {
         _.elements.loader = document.getElementById('wonder-loader');
         
         _.elements.playbutton = document.querySelector('.wonder-play');
+        _.elements.bigplaybutton = document.querySelector('.wonder-play-big');
         _.elements.pausebutton = document.querySelector('.wonder-pause');
         _.elements.fullscreenbutton = document.querySelector('.wonder-fullscreen');
         _.elements.volumebutton = document.querySelector('.wonder-volume');
@@ -152,10 +153,10 @@ OO.plugin("WonderUIModule", function (OO) {
 
         // // Add some UI event listeners   
         _.listen(_.elements.playbutton, 'click', _.play);
+        _.listen(_.elements.bigplaybutton, 'click', _.play);
         _.listen(_.elements.pausebutton, 'click', _.pause);
         _.listen(_.elements.fullscreenbutton, 'click', _.fullscreen);
         _.listen(_.elements.volumebutton, 'click', _.volume);
-        
 
         if ( _.isTouchDevice() ) {
             _.addClass(_.elements.controls, 'show');
@@ -175,11 +176,13 @@ OO.plugin("WonderUIModule", function (OO) {
 
     // Update content, status and duration
     _.onContentReady = function (event, content) {
+
         _.info = content;
         _.elements.poster.getElementsByTagName('img')[0].src = content.promo || content.promo_image;
         _.elements.loader.className = '';
         _.elements.poster.getElementsByTagName('td')[0].innerHTML = (_.info.title.replace(/_/g,' '));
         _.duration = content.duration;
+
         _.loaded = true;
         _.removeClass( _.elements.poster, 'loading' );
 
@@ -197,7 +200,6 @@ OO.plugin("WonderUIModule", function (OO) {
     _.onTimeUpdate = function (event, time, duration, buffer, seekrange) {
         _.time = time;
         _.duration = duration;
-
 
         if ( _.state.playing === false ) {
             _.displayTime = _.getTime(_.duration);
@@ -218,6 +220,7 @@ OO.plugin("WonderUIModule", function (OO) {
         if ( _.state.playing === false ) {
             _.addClass(_.elements.poster, 'hide');
             _.addClass(_.elements.playbutton, 'hidden');
+            _.addClass(_.elements.bigplaybutton, 'hidden');
             _.removeClass(_.elements.pausebutton, 'hidden');
             _.state.playing = true;
         }
@@ -226,6 +229,7 @@ OO.plugin("WonderUIModule", function (OO) {
     _.onPause = function () {
         if ( _.state.playing === true ) {
             _.removeClass(_.elements.playbutton, 'hidden');
+            _.removeClass(_.elements.bigplaybutton, 'hidden');
             _.addClass(_.elements.pausebutton, 'hidden');
             _.hideLoader();
             _.state.playing = false;
@@ -234,20 +238,19 @@ OO.plugin("WonderUIModule", function (OO) {
 
     _.onVolumeChanged = function (e, vol) {
         _.volume = vol;
-        
-        if ( vol <= 0.2 ) {
-            _.removeClass( _.elements.volumebutton, 'medium' );
-            _.addClass( _.elements.volumebutton, 'mute' );
-        } else if ( vol > 0.2 && vol <= 0.65 ) {
-            _.removeClass( _.elements.volumebutton, 'mute' );    
-            _.addClass( _.elements.volumebutton, 'medium' );
+
+        if ( vol === 0 ) {
+            _.elements.volumebutton.className = 'volume wonder-volume vol-0';
+        } else if ( vol > 0 && vol <= 0.33 ) {
+            _.elements.volumebutton.className = 'volume wonder-volume vol-1';
+        } else if ( vol > 0.33 && vol <= 0.65 ) {
+            _.elements.volumebutton.className = 'volume wonder-volume vol-2';
         } else {
-            _.removeClass( _.elements.volumebutton, 'mute' );
-            _.removeClass( _.elements.volumebutton, 'medium' );
+            _.elements.volumebutton.className = 'volume wonder-volume vol-3';
         }
         
-        _.elements.scrubber_progress_vol.style.width = ( vol * 100 ) + '%';
-        _.elements.scrubber_handle_vol.style.bottom = ( vol * 100 ) + '%';
+        _.elements.scrubber_progress_vol.style.height = ( vol * 100 ) + '%';
+        _.elements.scrubber_handle_vol.style.bottom = (( vol * 100 )-15) + '%';
     };
 
     _.onPlayed = function () {
@@ -365,16 +368,18 @@ OO.plugin("WonderUIModule", function (OO) {
             _.prevent(e);
 
             var x = e.clientX,
+                y = e.clientY,
                 target = e.srcElement || e.target,
                 percentage,
                 scrubtype = target.className.replace('scrubber-trans ','');
 
             clearTimeout( _.seekTimeout );
             _.seekTimeout = setTimeout(function(){
-                
+
                 if ( scrubtype === 'vid' ) {
-                    percentage = x - _.elements.scrubber_vid.getBoundingClientRect().left;
-                    percentage = ((percentage/_.elements.scrubber_vid.getBoundingClientRect().width) * 100 );                    
+                    var rect = _.elements.scrubber_vid.getBoundingClientRect();
+                    percentage = x - rect.left;
+                    percentage = ((percentage/(rect.right - rect.left)) * 100 );                    
                     if ( percentage <= 0 ) {
                         _.scrubVid(0);                        
                     } else if ( percentage >= 100 ) {
@@ -383,14 +388,15 @@ OO.plugin("WonderUIModule", function (OO) {
                         _.scrubVid(percentage);    
                     }
                 } else if ( scrubtype === 'vol' ) {
-                    percentage = x - _.elements.scrubber_vol.getBoundingClientRect().left;
-                    percentage = ((percentage/_.elements.scrubber_vol.getBoundingClientRect().width) * 100 );                    
-                    if ( percentage <= 0 ) {
-                        _.scrubVol(0);                        
-                    } else if ( percentage >= 100 ) {
-                        _.scrubVol(100);
+                    var rect = _.elements.scrubber_vol.getBoundingClientRect();
+                    percentage = y - rect.bottom;
+                    percentage = ((percentage/(rect.bottom - rect.top)) * 100 );
+                    if ( percentage <= -100 ) {
+                        _.scrubVol(100);                        
+                    } else if ( percentage >= 0 ) {
+                        _.scrubVol(0);
                     } else {
-                        _.scrubVol(percentage);    
+                        _.scrubVol(Math.abs(percentage));    
                     }
                 }
 
@@ -428,6 +434,7 @@ OO.plugin("WonderUIModule", function (OO) {
     _.scrubDown = function(e) {
         _.prevent(e);
         _.mousedown = true;
+        _.scrubMouse(e);
         _.old_time = _.time;
         _.addClass(_.elements.scrubber_handles, 'down');
     };
@@ -473,7 +480,7 @@ OO.plugin("WonderUIModule", function (OO) {
             if ( _.state.playing === true ) {
                 _.elements.loader.className = 'show';
             }
-        }, 350);
+        }, 650);
     };
 
     /*  Utility Functions
