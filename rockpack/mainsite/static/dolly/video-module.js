@@ -36,8 +36,8 @@ OO.plugin("WonderUIModule", function (OO) {
 
     var _ = {
         elements: {},
-        volume: 100,
-        newvolume: 100,
+        volume: 1,
+        newvolume: 1,
 
         played: false,
         scrubbed: false,
@@ -48,6 +48,7 @@ OO.plugin("WonderUIModule", function (OO) {
         loaderTimeout: undefined,
         volumeTimeout: undefined,
         videoTimeout: undefined,
+        interactionTimeout: undefined,
 
         videoUpdate: false,
         mousedown: false,
@@ -536,7 +537,7 @@ OO.plugin("WonderUIModule", function (OO) {
             } else {
                 _.elements.volumebutton.className = 'volume wonder-volume vol-3';
             }
-            
+            console.log(_.newvolume);
             _.elements.scrubber_progress_vol.style.height = ( _.newvolume * 100 ) + '%';
             _.elements.scrubber_handle_vol.style.bottom = (( _.newvolume * 100 )-15) + '%';
         }
