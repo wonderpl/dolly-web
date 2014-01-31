@@ -145,5 +145,5 @@ class Analytics(WebService):
         except IndexError:
             pass
 
-        data = videos_individual(video_id, request.args.get('start'), request.args.get('end', None))
+        data = videos_individual(video_id, request.args.get('start', datetime.now()), request.args.get('end', None))
         return data
