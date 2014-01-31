@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from itertools import groupby
 from flask import json
 import pyes
-from decimal import DivisionByZero
+import decimal
 from sqlalchemy import distinct, func, literal
 from sqlalchemy.orm import aliased, joinedload
 from . import api
@@ -504,7 +504,7 @@ class DBImport(object):
         def _normalised(val, max_val, min_val):
             try:
                 return (val - min_val) / (abs(max_val) - abs(min_val))
-            except (ZeroDivisionError, DivisionByZero):
+            except (ZeroDivisionError, decimal.DivisionByZero, decimal.InvalidOperation):
                 return 0
 
         def _update_channel_id(id, val, max_val, min_val):
