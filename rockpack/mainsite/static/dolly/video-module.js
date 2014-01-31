@@ -115,6 +115,7 @@ OO.plugin("WonderUIModule", function (OO) {
         // _.mb.subscribe('*', 'wonder', function(eventName){
         //     console.log(eventName);
         // });
+
         _.mb.subscribe(OO.EVENTS.PLAYER_CREATED, 'wonder', _.onPlayerCreate);
         _.mb.subscribe(OO.EVENTS.SEEKED, 'wonder', _.onSeeked);
         _.mb.subscribe(OO.EVENTS.CONTENT_TREE_FETCHED, 'wonder', _.onContentReady);
