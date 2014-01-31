@@ -160,7 +160,11 @@ def get_local_videos(loc, paging, with_channel=True, include_invisible=False, re
 
     videos = videos.join(
         models.Video, models.Video.id == models.VideoInstance.video).\
-        options(contains_eager(models.VideoInstance.video_rel))
+        options(contains_eager(models.VideoInstance.video_rel)).\
+        outerjoin(models.VideoInstanceComment, models.VideoInstanceComment.video_instance == models.VideoInstance.id).\
+        with_entities(models.VideoInstance, func.count(models.VideoInstanceComment.id)).\
+        group_by(models.VideoInstance.id, models.Video.id)
+
     if include_invisible is False:
         videos = videos.filter(models.Video.visible == True)
     if with_channel:
@@ -193,9 +197,10 @@ def get_local_videos(loc, paging, with_channel=True, include_invisible=False, re
     offset, limit = paging
     videos = videos.offset(offset).limit(limit)
     data = []
-    for position, video in enumerate(videos, offset):
+    for position, (video, comment_count) in enumerate(videos, offset):
         item = video_dict(video)
         item['position'] = position
+        item['comments'] = dict(count=comment_count)
         if with_channel:
             item['channel'] = channel_dict(video.video_channel)
         data.append(item)

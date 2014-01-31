@@ -319,6 +319,7 @@ class VideoInstanceComment(db.Model):
     date_added = Column(DateTime(), nullable=False, default=func.now())
 
     user_rel = relationship(User, innerjoin=True)
+    video_instance_rel = relationship('VideoInstance', backref='videoinstancecomments')
 
     def get_resource_url(self, own=False):
         return url_for('userws.video_instance_comment_item',
