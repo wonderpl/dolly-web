@@ -36,11 +36,23 @@ OO.plugin("WonderUIModule", function (OO) {
 
     var _ = {
         elements: {},
-        mousedown: false,
+        volume: 100,
+        newvolume: 100,
+
+        played: false,
         scrubbed: false,
+        scrubbing: false,
+        loaded: false,
+
         seekTimeout: undefined,
         loaderTimeout: undefined,
-        loaded: false
+        volumeTimeout: undefined,
+        videoTimeout: undefined,
+
+        videoUpdate: false,
+        mousedown: false,
+        mousetarget: undefined,        
+        displayTime: '--:--'
     };
 
     // This section contains the HTML content to be used as the UI
@@ -100,7 +112,11 @@ OO.plugin("WonderUIModule", function (OO) {
         }
 
         // Initial listeners
+        // _.mb.subscribe('*', 'wonder', function(eventName){
+        //     console.log(eventName);
+        // });
         _.mb.subscribe(OO.EVENTS.PLAYER_CREATED, 'wonder', _.onPlayerCreate);
+        _.mb.subscribe(OO.EVENTS.SEEKED, 'wonder', _.onSeeked);
         _.mb.subscribe(OO.EVENTS.CONTENT_TREE_FETCHED, 'wonder', _.onContentReady);
         _.mb.subscribe(OO.EVENTS.PLAYHEAD_TIME_CHANGED, 'wonder', _.onTimeUpdate);
         _.mb.subscribe(OO.EVENTS.VOLUME_CHANGED, 'wonder', _.onVolumeChanged);
@@ -108,6 +124,8 @@ OO.plugin("WonderUIModule", function (OO) {
         _.mb.subscribe(OO.EVENTS.PAUSE, 'wonder', _.onPause);
         _.mb.subscribe(OO.EVENTS.PLAY, 'wonder', _.onPlay);
         _.mb.subscribe(OO.EVENTS.PLAYER_EMBEDDED, 'wonder', _.hideLoader);
+
+        requestAnimationFrame( _.Tick );
 
         // window.wonderPlayer = this;
         // window.wonder = _;
@@ -118,18 +136,22 @@ OO.plugin("WonderUIModule", function (OO) {
 
     // Build the UI
     _.onPlayerCreate = function (event, elementId, params) {
+        
+        // Wrap the player element
         _.wrapper = document.createElement('div');
         _.wrapper.setAttribute('id','wonder-wrapper');
         _.wrapper.innerHTML = wonder_template;
         _.playerElem = document.getElementById(elementId);
         _.playerElem.parentNode.insertBefore(_.wrapper, _.playerElem);
         _.wrapper.insertBefore(_.playerElem, document.getElementById('wonder-poster'));
+
         // Cache our UI elements
         _.elements.wrapper = document.getElementById('wonder-wrapper');
         _.elements.controls = document.getElementById('wonder-controls');
         _.elements.poster = document.getElementById('wonder-poster');
         _.elements.loader = document.getElementById('wonder-loader');
         
+        // Main buttons
         _.elements.playbutton = document.querySelector('.wonder-play');
         _.elements.bigplaybutton = document.querySelector('.wonder-play-big');
         _.elements.pausebutton = document.querySelector('.wonder-pause');
@@ -158,6 +180,7 @@ OO.plugin("WonderUIModule", function (OO) {
         _.listen(_.elements.fullscreenbutton, 'click', _.fullscreen);
         _.listen(_.elements.volumebutton, 'click', _.volume);
 
+        // Decide which listeners to use for the scrubbers.
         if ( _.isTouchDevice() ) {
             _.addClass(_.elements.controls, 'show');
             _.listen(_.elements.loader, 'touchend', _.toggleControls);
@@ -200,20 +223,6 @@ OO.plugin("WonderUIModule", function (OO) {
     _.onTimeUpdate = function (event, time, duration, buffer, seekrange) {
         _.time = time;
         _.duration = duration;
-
-        if ( _.state.playing === false ) {
-            _.displayTime = _.getTime(_.duration);
-        } else {    
-            _.displayTime = _.getTime(_.time);
-        }
-
-        _.elements.timer.innerHTML = _.displayTime;
-
-        if ( _.state.playing === true && _.mousedown === false ) {
-            requestAnimationFrame(_.tick);
-        } else {
-            cancelAnimationFrame(_.tick);
-        }
     };
 
     _.onPlay = function () {
@@ -224,6 +233,11 @@ OO.plugin("WonderUIModule", function (OO) {
             _.removeClass(_.elements.pausebutton, 'hidden');
             _.state.playing = true;
         }
+
+        setTimeout( function() {
+            _.videoUpdate = true;
+        }, 200);
+        
     };
 
     _.onPause = function () {
@@ -236,34 +250,27 @@ OO.plugin("WonderUIModule", function (OO) {
         }
     };
 
-    _.onVolumeChanged = function (e, vol) {
-        _.volume = vol;
-
-        if ( vol === 0 ) {
-            _.elements.volumebutton.className = 'volume wonder-volume vol-0';
-        } else if ( vol > 0 && vol <= 0.33 ) {
-            _.elements.volumebutton.className = 'volume wonder-volume vol-1';
-        } else if ( vol > 0.33 && vol <= 0.65 ) {
-            _.elements.volumebutton.className = 'volume wonder-volume vol-2';
-        } else {
-            _.elements.volumebutton.className = 'volume wonder-volume vol-3';
+    _.onSeeked = function (e) {
+        if ( _.played === false ) {
+            _.mb.publish(OO.EVENTS.PLAY);    
         }
-        
-        _.elements.scrubber_progress_vol.style.height = ( vol * 100 ) + '%';
-        _.elements.scrubber_handle_vol.style.bottom = (( vol * 100 )-15) + '%';
     };
 
-    _.onPlayed = function () {
+    _.onVolumeChanged = function (e, vol) {
+        _.newvolume = vol;
+    };
+
+    _.onPlayed = function (e) {
         _.state.playing = false;
+        _.played = true;
         _.removeClass(_.elements.playbutton, 'hidden');
         _.addClass(_.elements.pausebutton, 'hidden');
-        cancelAnimationFrame( _.tick );
-        clearTimeout( _.loaderTimeout );
         _.hideLoader();
     };
 
     _.togglePlay = function (e) {
         _.prevent(e);
+
         if ( _.loaded === true ) {
             if ( _.state.playing === true ) {
                 _.pause();
@@ -292,6 +299,7 @@ OO.plugin("WonderUIModule", function (OO) {
     _.play = function (e) {
         _.prevent(e);
         if ( _.loaded === true ) {
+            _.played = false;
             _.mb.publish(OO.EVENTS.PLAY);    
         }
     };
@@ -331,7 +339,6 @@ OO.plugin("WonderUIModule", function (OO) {
     _.seek = function (seconds) {
         // _.elements.loader.className = 'show';
         _.mb.publish(OO.EVENTS.SEEK, seconds);
-        _.mb.publish(OO.EVENTS.PLAY);
     };
 
     _.fullscreen = function (e) {
@@ -360,6 +367,23 @@ OO.plugin("WonderUIModule", function (OO) {
             }
             _.removeClass(_.elements.wrapper, 'fullscreen');
             _.state.fullscreen = false;
+        }
+    };
+
+    // The scrubber has been clicked on
+    _.scrubDown = function(e) {
+        _.prevent(e);
+        _.mousedown = true;
+        _.scrubMouse(e);
+        _.oldtime = _.time;
+    };
+
+    // Mouse released from the scrubber ( Don't prevent default or everything will break! )
+    _.scrubUp = function(e) {
+        _.prevent(e);
+        if ( _.mousedown === true ) {
+            _.mousedown = false;
+            _.mousetarget = undefined;
         }
     };
 
@@ -442,37 +466,24 @@ OO.plugin("WonderUIModule", function (OO) {
                         _.scrubVol(Math.abs(percentage));    
                     }
                 }
+
             },10);
 
             return false;
         }
     };
 
-    // The scrubber has been clicked on
-    _.scrubDown = function(e) {
-        _.prevent(e);
-        _.mousedown = true;
-        _.scrubMouse(e);
-        _.old_time = _.time;
-        _.addClass(_.elements.scrubber_handles, 'down');
-    };
-
-    // Mouse released from the scrubber ( Don't prevent default or everything will break! )
-    _.scrubUp = function(e) {
-        _.prevent(e);
-        if ( _.mousedown === true ) {
-            _.mousedown = false;
-            _.removeClass(_.elements.scrubber_handles, 'down');            
-        }
-    };
-
     _.scrubVid = function(percentage) {
-        _.seek( (_.duration / 100) * percentage );
-        _.elements.scrubber_progress_vid.style.width = percentage + '%';
-        _.elements.scrubber_handle_vid.style.left = percentage + '%';
+        _.scrubbed = true;
+        _.mousetarget = 'vid';
+        _.videoUpdate = false;
+        _.mb.publish(OO.EVENTS.PLAY);
+        _.newtime = (_.duration / 100) * percentage;
+        _.videoPercentage = percentage;
     };
 
     _.scrubVol = function(percentage) {
+        _.mousetarget = 'vol';
         _.mb.publish(OO.EVENTS.CHANGE_VOLUME, percentage/100);
     };
 
@@ -486,19 +497,80 @@ OO.plugin("WonderUIModule", function (OO) {
         _.elements.loader.className = '';
     };
 
-    _.tick = function () {
-        var percentage = ( (_.time/_.duration) * 100 ) + '%';
-        
-        _.elements.scrubber_progress_vid.style.width = percentage;
-        _.elements.scrubber_handle_vid.style.left = percentage;
-        _.elements.loader.className = '';
+    _.ActionTick = function () {
 
-        clearTimeout( _.loaderTimeout );
-        _.loaderTimeout = setTimeout( function() {
-            if ( _.state.playing === true ) {
-                _.elements.loader.className = 'show';
+        if ( _.scrubbed === true ) {
+            clearTimeout( _.videoTimeout );
+            _.videoTimeout = setTimeout( function() {
+                _.seek( _.newtime );    
+            }, 100);
+
+            _.scrubbed = false;
+        }
+
+    };
+
+    _.UITick = function () {
+
+        if ( _.scrubbed === true ) {
+            _.elements.scrubber_progress_vid.style.width = _.videoPercentage + '%';
+            _.elements.scrubber_handle_vid.style.left = _.videoPercentage + '%';
+        } else if ( _.mousetarget !== 'vid' && _.state.playing === true && _.videoUpdate === true ) {
+            var percentage = ( (_.time/_.duration) * 100 ) + '%';        
+            _.elements.scrubber_progress_vid.style.width = percentage;
+            _.elements.scrubber_handle_vid.style.left = percentage;
+            _.hideLoader();
+        }
+
+        // Check if the volume has changed
+        if ( _.volume != _.newvolume ) {
+            _.volume = _.newvolume;
+
+            if ( _.newvolume === 0 ) {
+                _.elements.volumebutton.className = 'volume wonder-volume vol-0';
+            } else if ( _.newvolume > 0 && _.newvolume <= 0.33 ) {
+                _.elements.volumebutton.className = 'volume wonder-volume vol-1';
+            } else if ( _.newvolume > 0.33 && _.newvolume <= 0.65 ) {
+                _.elements.volumebutton.className = 'volume wonder-volume vol-2';
+            } else {
+                _.elements.volumebutton.className = 'volume wonder-volume vol-3';
             }
-        }, 650);
+            
+            _.elements.scrubber_progress_vol.style.height = ( _.newvolume * 100 ) + '%';
+            _.elements.scrubber_handle_vol.style.bottom = (( _.newvolume * 100 )-15) + '%';
+        }
+
+        // Update the time
+        if ( _.state.playing === false ) {
+            _.displayTime = _.getTime(_.duration);
+        } else {    
+            _.displayTime = _.getTime(_.time);
+        }
+        _.elements.timer.innerHTML = _.displayTime;
+
+    };
+
+    _.BufferTick = function () {
+
+        // Clear the timeout regardless
+        clearTimeout( _.loaderTimeout );
+
+        // If we are playing, set a timeout to show a loading message if this tick doesn't get called for a while.
+        if ( _.state.playing === true ) {
+            _.loaderTimeout = setTimeout( function() {
+                if ( _.state.playing === true ) {
+                    _.elements.loader.className = 'show';
+                }
+            }, 650);
+        }
+
+    };
+
+    _.Tick = function () {
+        _.BufferTick();
+        _.UITick();
+        _.ActionTick();
+        requestAnimationFrame( _.Tick );
     };
 
     /*  Utility Functions
@@ -506,8 +578,6 @@ OO.plugin("WonderUIModule", function (OO) {
 
     // Find the right method, call on correct element
     _.attemptFullscreen = function(el) {
-
-
         if(el.requestFullscreen) {
             el.requestFullscreen();
         } else if(el.mozRequestFullScreen) {
@@ -517,11 +587,6 @@ OO.plugin("WonderUIModule", function (OO) {
         } else if(el.msRequestFullscreen) {
             el.msRequestFullscreen();
         }
-        // else if (el.getElementsByTagName('video').length > 0 ) {
-        //     if ( el.getElementsByTagName('video').webkitEnterFullscreen){
-        //         el.getElementsByTagName('video')[0].webkitEnterFullscreen();
-        //     }
-        // }
     };
 
     // Returns a boolean of whether the class is present or not
