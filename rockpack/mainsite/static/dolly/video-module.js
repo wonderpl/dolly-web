@@ -55,7 +55,7 @@ OO.plugin("WonderUIModule", function (OO) {
         mousetarget: undefined,        
         displayTime: '--:--',
         time: 0,
-        duration: 100
+        duration: NaN
     };
 
     // This section contains the HTML content to be used as the UI
@@ -127,6 +127,7 @@ OO.plugin("WonderUIModule", function (OO) {
         _.mb.subscribe(OO.EVENTS.PLAYED, 'wonder', _.onPlayed);
         _.mb.subscribe(OO.EVENTS.PAUSE, 'wonder', _.onPause);
         _.mb.subscribe(OO.EVENTS.PLAY, 'wonder', _.onPlay);
+        _.mb.subscribe(OO.EVENTS.ERROR, 'wonder', _.onError);
         _.mb.subscribe(OO.EVENTS.PLAYER_EMBEDDED, 'wonder', _.hideLoader);
 
         requestAnimationFrame( _.Tick );
@@ -233,7 +234,7 @@ OO.plugin("WonderUIModule", function (OO) {
         _.elements.loader.className = '';
         _.elements.poster.getElementsByTagName('td')[0].innerHTML = (_.info.title.replace(/_/g,' '));
         _.removeClass( _.elements.poster, 'loading' );
-        _.duration = content.duration/1000;
+        _.duration = content.duration/1000 || content.time;
 
         if ( document.getElementsByTagName('video').length > 0 ) {
             _.elements.video = document.getElementsByTagName('video')[0];
@@ -248,17 +249,28 @@ OO.plugin("WonderUIModule", function (OO) {
     
     // Event fired off by the OO message bus to indicate the playhead has moved.
     _.onTimeUpdate = function (event, time, duration, buffer, seekrange) {
+        
         if ( time !== undefined ) {
             _.time = time;
         }
-        // if ( duration !== undefined ) {
-        //     _.duration = duration;    
+
+        _.loaded = true;
+        if ( _.playing === true ) {
+            _.hideLoader();
+        }
+
+        // if ( duration == NaN ) {
+        //     _.duration = duration;
         // }
-        // setTimeout( function(){
-            
-            _.loaded = true;
+
+        // setTimeout( function(){    
+        //    _.loaded = true;
         // }, 200 );
 
+    };
+
+    _.onError = function (error) {
+        alert(JSON.stringify(error));
     };
 
     // Respond to the OO Message bus Play event
@@ -412,10 +424,15 @@ OO.plugin("WonderUIModule", function (OO) {
     _.scrubDown = function(e) {
         _.prevent(e);
         if ( _.loaded === true ) {
-            _.play();
+            
+            if ( _.mousetarget === 'vid' ) {
+                _.play();
+            }
+
             _.mousedown = true;
             _.scrubMouse(e);
-            _.oldtime = _.time;            
+            _.oldtime = _.time;
+
         }
     };
 
