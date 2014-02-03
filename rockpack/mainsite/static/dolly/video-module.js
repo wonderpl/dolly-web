@@ -232,10 +232,8 @@ OO.plugin("WonderUIModule", function (OO) {
         _.elements.poster.getElementsByTagName('img')[0].src = content.promo || content.promo_image;
         _.elements.loader.className = '';
         _.elements.poster.getElementsByTagName('td')[0].innerHTML = (_.info.title.replace(/_/g,' '));
-        _.duration = content.duration;
-
-        _.loaded = true;
         _.removeClass( _.elements.poster, 'loading' );
+        _.duration = content.duration/1000;
 
         if ( document.getElementsByTagName('video').length > 0 ) {
             _.elements.video = document.getElementsByTagName('video')[0];
@@ -253,9 +251,14 @@ OO.plugin("WonderUIModule", function (OO) {
         if ( time !== undefined ) {
             _.time = time;
         }
-        if ( duration !== undefined ) {
-            _.duration = duration;    
-        }
+        // if ( duration !== undefined ) {
+        //     _.duration = duration;    
+        // }
+        // setTimeout( function(){
+            
+            _.loaded = true;
+        // }, 200 );
+
     };
 
     // Respond to the OO Message bus Play event
@@ -285,6 +288,7 @@ OO.plugin("WonderUIModule", function (OO) {
     };
 
     _.onSeeked = function (e) {
+        _.hideLoader();
         if ( _.played === false ) {
             _.mb.publish(OO.EVENTS.PLAY);    
         }
@@ -407,22 +411,25 @@ OO.plugin("WonderUIModule", function (OO) {
     // The scrubber has been clicked on
     _.scrubDown = function(e) {
         _.prevent(e);
-        _.mousedown = true;
-        _.scrubMouse(e);
-        _.oldtime = _.time;
+        if ( _.loaded === true ) {
+            _.play();
+            _.mousedown = true;
+            _.scrubMouse(e);
+            _.oldtime = _.time;            
+        }
     };
 
     // Mouse released from the scrubber ( Don't prevent default or everything will break! )
     _.scrubUp = function(e) {
         _.prevent(e);
-        
-        if ( _.mousedown === true ) {
+
+        if (  _.loaded === true && _.mousedown === true ) {
             _.mousedown = false;
-            _.mousetarget = undefined;
-            
             if ( _.mousetarget === 'vid' ) {
+                console.log(_.newtime);
                 _.play();
             } 
+            _.mousetarget = undefined;
         }
     };
 
@@ -533,7 +540,8 @@ OO.plugin("WonderUIModule", function (OO) {
     };
 
     _.hideLoader = function () {
-        clearTimeout( _.loaderTimeout );
+        console.log('hide loader called ');
+        window.clearTimeout( _.loaderTimeout );
         _.elements.loader.className = '';
     };
 
@@ -561,6 +569,7 @@ OO.plugin("WonderUIModule", function (OO) {
             clearTimeout( _.videoTimeout );
             _.videoTimeout = setTimeout( function() {
                 _.seek( _.newtime );    
+                _.time = _.newtime;
             }, 100);
 
             _.scrubbed = false;
@@ -578,7 +587,6 @@ OO.plugin("WonderUIModule", function (OO) {
             var percentage = ( (_.time/_.duration) * 100 ) + '%';        
             _.elements.scrubber_progress_vid.style.width = percentage;
             _.elements.scrubber_handle_vid.style.left = percentage;
-            _.hideLoader();
         }
 
         // Check if the volume has changed
