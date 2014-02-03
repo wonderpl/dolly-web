@@ -28,13 +28,9 @@
 
   <script type="text/javascript" src='//player.ooyala.com/v3/{{ config.OOYALA_PLAYER_ID }}?platform=html5-priority'></script>
 
-  {% 
-  	assets filters="rjsmin", 
-  	output="gen/front-embed.%(version)s.js",
-  	"dolly/video-module.js" 
-  %}
-  <script type="text/javascript" src="{{ ASSET_URL }}"></script>
-  {% endassets %}
+  
+
+  <script type="text/javascript" src="/static/dolly/video-module.js"></script>
 
   <script type="text/javascript">
   	var videoData = {{ video_data|tojson }},

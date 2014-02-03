@@ -53,7 +53,9 @@ OO.plugin("WonderUIModule", function (OO) {
         videoUpdate: false,
         mousedown: false,
         mousetarget: undefined,        
-        displayTime: '--:--'
+        displayTime: '--:--',
+        time: 0,
+        duration: 100
     };
 
     // This section contains the HTML content to be used as the UI
@@ -175,7 +177,31 @@ OO.plugin("WonderUIModule", function (OO) {
         _.elements.scrubber_progress_vol = document.querySelector('.scrubber-progress.vol');
         _.elements.scrubber_handle_vol = document.querySelector('.scrubber-handle.vol');
 
-        // // Add some UI event listeners   
+        // Listen for user interaction and show and hide the nav as necessary
+        _.listen(_.elements.wrapper, 'mousemove', _.interaction);
+        _.listen(_.elements.controls, 'mousemove', _.interaction);
+        _.listen(_.elements.wrapper, 'mousemove', _.interaction);
+        _.listen(_.elements.controls, 'mousemove', _.interaction);
+        _.listen(_.elements.poster, 'mousemove', _.interaction);
+        _.listen(_.elements.loader, 'mousemove', _.interaction);
+        _.listen(_.elements.playbutton, 'mousemove', _.interaction);
+        _.listen(_.elements.bigplaybutton, 'mousemove', _.interaction);
+        _.listen(_.elements.pausebutton, 'mousemove', _.interaction);
+        _.listen(_.elements.fullscreenbutton, 'mousemove', _.interaction);
+        _.listen(_.elements.volumebutton, 'mousemove', _.interaction);
+        _.listen(_.elements.timer, 'mousemove', _.interaction);
+        _.listen(_.elements.scrubbers, 'mousemove', _.interaction);
+        _.listen(_.elements.scrubber_handles, 'mousemove', _.interaction);
+        _.listen(_.elements.scrubber_targets, 'mousemove', _.interaction);
+        _.listen(_.elements.scrubber_trans, 'mousemove', _.interaction);
+        _.listen(_.elements.scrubber_vid, 'mousemove', _.interaction);
+        _.listen(_.elements.scrubber_progress_vid, 'mousemove', _.interaction);
+        _.listen(_.elements.scrubber_handle_vid, 'mousemove', _.interaction);
+        _.listen(_.elements.scrubber_vol, 'mousemove', _.interaction);
+        _.listen(_.elements.scrubber_progress_vol, 'mousemove', _.interaction);
+        _.listen(_.elements.scrubber_handle_vol, 'mousemove', _.interaction);
+
+        // Listen for interaction on the actual UI contols
         _.listen(_.elements.playbutton, 'click', _.play);
         _.listen(_.elements.bigplaybutton, 'click', _.play);
         _.listen(_.elements.pausebutton, 'click', _.pause);
@@ -222,11 +248,17 @@ OO.plugin("WonderUIModule", function (OO) {
         }
     };
     
+    // Event fired off by the OO message bus to indicate the playhead has moved.
     _.onTimeUpdate = function (event, time, duration, buffer, seekrange) {
-        _.time = time;
-        _.duration = duration;
+        if ( time !== undefined ) {
+            _.time = time;
+        }
+        if ( duration !== undefined ) {
+            _.duration = duration;    
+        }
     };
 
+    // Respond to the OO Message bus Play event
     _.onPlay = function () {
         if ( _.state.playing === false ) {
             _.addClass(_.elements.poster, 'hide');
@@ -241,7 +273,8 @@ OO.plugin("WonderUIModule", function (OO) {
         }, 200);
         
     };
-
+    
+    // Respond to the OO Message bus Pause event
     _.onPause = function () {
         if ( _.state.playing === true ) {
             _.removeClass(_.elements.playbutton, 'hidden');
@@ -497,6 +530,24 @@ OO.plugin("WonderUIModule", function (OO) {
     _.hideLoader = function () {
         clearTimeout( _.loaderTimeout );
         _.elements.loader.className = '';
+    };
+
+    // Show the controls
+    _.showUI = function () {
+        _.addClass( _.elements.controls, 'show' );
+        _.removeClass( _.elements.controls, 'hide' );
+    };
+
+    // A user interaction has been detected, show the UI and 
+    // set a timer to hide it again
+    _.interaction = function () {
+        _.showUI();
+        window.clearTimeout( _.interactionTimeout );
+        _.interactionTimeout = setTimeout( function() {
+            _.addClass( _.elements.controls, 'hide' );
+            _.removeClass( _.elements.controls, 'show' );
+            _.removeClass( _.elements.scrubber_vol, 'vol-visible' );
+        }, 1000 );
     };
 
     _.ActionTick = function () {
