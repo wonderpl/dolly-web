@@ -131,8 +131,8 @@ OO.plugin("WonderUIModule", function (OO) {
 
         requestAnimationFrame( _.Tick );
 
-        // window.wonderPlayer = this;
-        // window.wonder = _;
+        window.wonderPlayer = this;
+        window.wonder = _;
     };
 
     /*  Message bus event subscriber callbacks
@@ -271,7 +271,6 @@ OO.plugin("WonderUIModule", function (OO) {
         setTimeout( function() {
             _.videoUpdate = true;
         }, 200);
-        
     };
     
     // Respond to the OO Message bus Pause event
@@ -601,6 +600,26 @@ OO.plugin("WonderUIModule", function (OO) {
         }
         _.elements.timer.innerHTML = _.displayTime;
 
+        // var ww = _.ww();
+        // if ( !('width' in _) || _.width != ww ) {
+
+        //     if ( ww <= 480 ) {
+        //         // Mobile
+        //         _.elements.wrapper.className = 'mobile';
+        //     } else if ( ww > 480 && ww <= 959 ) {
+        //         // Tablet
+        //         _.elements.wrapper.className = 'tablet';
+        //     } else if ( ww >= 960 && ww <= 1023 ) {
+        //         // Desktop
+        //         _.elements.wrapper.className = 'desktop';
+        //     } else {
+        //         // Widescreen
+        //         _.elements.wrapper.className = 'widescreen';
+        //     }
+
+        // }
+        // _.width = ww;
+
     };
 
     _.BufferTick = function () {
@@ -745,19 +764,6 @@ OO.plugin("WonderUIModule", function (OO) {
         }
     };
 
-    // Used by _.listen to choose the appropriate event listener
-    _.attach = (function (ev, fn) {
-        if (window.addEventListener) {
-            return function(ev, fn) {
-                this.addEventListener(ev, fn, false);    
-            };
-        } else if (window.attachEvent) {
-            return function(ev, fn) {
-                this.attachEvent('on' + ev, fn);
-            };
-        }
-    })();
-
     _.isTouchDevice = function () {
         return 'ontouchstart' in window || 'onmsgesturechange' in window;
     };
@@ -777,6 +783,33 @@ OO.plugin("WonderUIModule", function (OO) {
             o && typeof o === "object" && o !== null && o.nodeType === 1 && typeof o.nodeName==="string"
         );
     }
+
+    // Used by _.listen to choose the appropriate event listener
+    _.attach = (function (ev, fn) {
+        if (window.addEventListener) {
+            return function(ev, fn) {
+                this.addEventListener(ev, fn, false);    
+            };
+        } else if (window.attachEvent) {
+            return function(ev, fn) {
+                this.attachEvent('on' + ev, fn);
+            };
+        }
+    })();
+
+    // Window width polyfill
+    _.ww = (function () {
+       if (typeof window.innerWidth !== 'undefined') {
+           return function() {
+               return window.innerWidth;
+           };
+       } else {
+            var b = 'clientWidth' in document.documentElement ? document.documentElement : document.body;
+            return function() {
+                return b.clientWidth;
+            };
+       }
+    })();
 
     return _.WonderUIModule;
 });
