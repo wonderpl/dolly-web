@@ -415,9 +415,14 @@ OO.plugin("WonderUIModule", function (OO) {
     // Mouse released from the scrubber ( Don't prevent default or everything will break! )
     _.scrubUp = function(e) {
         _.prevent(e);
+        
         if ( _.mousedown === true ) {
             _.mousedown = false;
             _.mousetarget = undefined;
+            
+            if ( _.mousetarget === 'vid' ) {
+                _.play();
+            } 
         }
     };
 
@@ -511,7 +516,8 @@ OO.plugin("WonderUIModule", function (OO) {
         _.scrubbed = true;
         _.mousetarget = 'vid';
         _.videoUpdate = false;
-        _.mb.publish(OO.EVENTS.PLAY);
+        _.pause();
+        // _.mb.publish(OO.EVENTS.PLAY);
         _.newtime = (_.duration / 100) * percentage;
         _.videoPercentage = percentage;
     };
@@ -567,6 +573,7 @@ OO.plugin("WonderUIModule", function (OO) {
         if ( _.scrubbed === true ) {
             _.elements.scrubber_progress_vid.style.width = _.videoPercentage + '%';
             _.elements.scrubber_handle_vid.style.left = _.videoPercentage + '%';
+            _.showLoader();
         } else if ( _.mousetarget !== 'vid' && _.state.playing === true && _.videoUpdate === true ) {
             var percentage = ( (_.time/_.duration) * 100 ) + '%';        
             _.elements.scrubber_progress_vid.style.width = percentage;
@@ -600,25 +607,25 @@ OO.plugin("WonderUIModule", function (OO) {
         }
         _.elements.timer.innerHTML = _.displayTime;
 
-        // var ww = _.ww();
-        // if ( !('width' in _) || _.width != ww ) {
+        var ww = _.ww();
+        if ( !('width' in _) || _.width != ww ) {
 
-        //     if ( ww <= 480 ) {
-        //         // Mobile
-        //         _.elements.wrapper.className = 'mobile';
-        //     } else if ( ww > 480 && ww <= 959 ) {
-        //         // Tablet
-        //         _.elements.wrapper.className = 'tablet';
-        //     } else if ( ww >= 960 && ww <= 1023 ) {
-        //         // Desktop
-        //         _.elements.wrapper.className = 'desktop';
-        //     } else {
-        //         // Widescreen
-        //         _.elements.wrapper.className = 'widescreen';
-        //     }
+            if ( ww <= 480 ) {
+                // Mobile
+                _.elements.wrapper.className = 'mobile';
+            } else if ( ww > 480 && ww <= 959 ) {
+                // Tablet
+                _.elements.wrapper.className = 'tablet';
+            } else if ( ww >= 960 && ww <= 1023 ) {
+                // Desktop
+                _.elements.wrapper.className = 'desktop';
+            } else {
+                // Widescreen
+                _.elements.wrapper.className = 'widescreen';
+            }
 
-        // }
-        // _.width = ww;
+        }
+        _.width = ww;
 
     };
 
@@ -631,7 +638,8 @@ OO.plugin("WonderUIModule", function (OO) {
         if ( _.state.playing === true ) {
             _.loaderTimeout = setTimeout( function() {
                 if ( _.state.playing === true ) {
-                    _.elements.loader.className = 'show';
+                    // _.elements.loader.className = 'show';
+                    _.showLoader();
                 }
             }, 650);
         }
