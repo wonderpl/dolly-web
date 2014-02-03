@@ -35,17 +35,18 @@
   </script>
   <script src="{{config.ASSETS_URL}}/assets/vendor/js-no-compile/json2.js"></script>
   <![endif]-->
-
+  
+<!-- 
   <script>
     var tag = document.createElement('script');
     tag.src = "//www.youtube.com/iframe_api";
     var firstScriptTag = document.getElementsByTagName('script')[0];
     firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
   </script>
+ -->
+  <script type="text/javascript" src="//use.typekit.net/twx7lpv.js"></script>
+  <script type="text/javascript">try{Typekit.load();}catch(e){}</script>
 
-  <link href='http://fonts.googleapis.com/css?family=Montserrat|Lato:400,700' rel='stylesheet' type='text/css'>
-  <link type="text/css" rel="stylesheet" href="http://fast.fonts.net/cssapi/bf3bd3cb-8e2d-45b3-82f0-7b308ec41ba5.css"/>
-  
   {% assets filters="less,cssmin", output="gen/wonderplayer_css.%(version)s.css", depends="assets/wonderplayer/partials/_*.less", "assets/wonderplayer/main.less" %}
   <link rel="stylesheet" href="{{ ASSET_URL }}"/>
   {% endassets %}
