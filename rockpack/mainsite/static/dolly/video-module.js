@@ -807,12 +807,22 @@ OO.plugin("WonderUIModule", function (OO) {
         );
     }
 
-    // _.setCookie = function ( name, val, life) {
-    //     var d = new Date();
-    //     d.setTime(d.getTime()+(life*24*60*60*1000));
-    //     var expires = "expires="+d.toGMTString();
-    //     document.cookie = name + "=" + val+ "; " + expires;
-    // }
+    _.setCookie = function ( name, val, life) {
+        var d = new Date();
+        d.setTime(d.getTime()+(life*24*60*60*1000));
+        var expires = "expires="+d.toGMTString();
+        document.cookie = name + "=" + val+ "; " + expires;
+    };
+
+    _.getCookie = function ( cname ) {
+        var name = cname + "=";
+        var ca = document.cookie.split(';');
+        for (var i=0; i<ca.length; i++) {
+            var c = ca[i].trim();
+            if (c.indexOf(name)==0) return c.substring(name.length,c.length);
+        }
+        return "";
+    };
 
     // Used by _.listen to choose the appropriate event listener
     _.attach = (function (ev, fn) {
