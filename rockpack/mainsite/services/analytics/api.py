@@ -1,10 +1,11 @@
 from datetime import datetime, timedelta
 from urlparse import urljoin
 import urllib
-from flask import request, abort
-from rockpack.mainsite.core import ooyala
+from flask import request, abort, g
 from rockpack.mainsite.helpers.urls import url_for
+from rockpack.mainsite.core import ooyala
 from rockpack.mainsite.core.webservice import WebService, expose_ajax, secure_view
+from rockpack.mainsite.core.oauth.decorators import check_authorization
 from rockpack.mainsite.services.video import models
 from rockpack.mainsite.services.user.models import User
 
@@ -88,25 +89,33 @@ def videos_individual(resource_id, start, end=None):
     return _process_individual(_videos_request('analytics', path, breakdown_by='day'))
 
 
+def ooyala_labelid_from_userid(user_id):
+    labels = _videos_request('labels')
+    for label in labels['items']:
+        if label['name'] == User.query.get(user_id).username:
+            return label['id']
+
+
 class Analytics(WebService):
 
     endpoint = '/analytics'
 
     @expose_ajax('/<user_id>/')
+    @check_authorization()
     def video_all(self, user_id):
-        labels = _videos_request('labels')
-        label_id = None
-        for label in labels['items']:
-            if label['name'] == 'Lucas Hugh':
-                label_id = label['id']
-                break
-        if not label_id:
+        if g.authorized.userid != user_id:
             abort(404)
 
         BASE_URL = url_for('basews.discover')
 
-        raw_video_data = _videos_request('labels', label_id + '/assets')
+        label_id = ooyala_labelid_from_userid(user_id)
+        if not label_id:
+            abort(404)
+
+        raw_video_data = _videos_request('labels', '%s/assets' % label_id)
+
         response_data = []
+
         for video in raw_video_data.get('items'):
             resource_url = urljoin(
                 BASE_URL,
@@ -128,22 +137,12 @@ class Analytics(WebService):
         return dict(videos=dict(items=response_data))
 
     @expose_ajax('/<user_id>/<video_id>/')
+    @check_authorization()
     def video_individual(self, user_id, video_id):
-        try:
-            video_id = [_ for _ in models.Video.query.join(
-                models.Source, models.Source.id == models.Video.source
-            ).join(
-                models.VideoInstance, models.VideoInstance.video == models.Video.id
-            ).join(
-                models.Channel,
-                (models.Channel.id == models.VideoInstance.channel) &
-                (models.Channel.owner == user_id)
-            ).filter(
-                models.VideoInstance.id == video_id,
-                models.Source.label == 'ooyala',
-            ).values(models.Video.source_videoid)][0]
-        except IndexError:
-            pass
+        if g.authorized.userid != userid:
+            abort(404)
+
+        # FIXME: check the video actually belongs to the owner
 
         data = videos_individual(video_id, request.args.get('start', datetime.now()), request.args.get('end', None))
         return data
