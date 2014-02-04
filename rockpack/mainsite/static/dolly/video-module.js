@@ -178,29 +178,31 @@ OO.plugin("WonderUIModule", function (OO) {
         _.elements.scrubber_progress_vol = document.querySelector('.scrubber-progress.vol');
         _.elements.scrubber_handle_vol = document.querySelector('.scrubber-handle.vol');
 
-        // Listen for user interaction and show and hide the nav as necessary
-        _.listen(_.elements.wrapper, 'mousemove', _.interaction);
-        _.listen(_.elements.controls, 'mousemove', _.interaction);
-        _.listen(_.elements.wrapper, 'mousemove', _.interaction);
-        _.listen(_.elements.controls, 'mousemove', _.interaction);
-        _.listen(_.elements.poster, 'mousemove', _.interaction);
-        _.listen(_.elements.loader, 'mousemove', _.interaction);
-        _.listen(_.elements.playbutton, 'mousemove', _.interaction);
-        _.listen(_.elements.bigplaybutton, 'mousemove', _.interaction);
-        _.listen(_.elements.pausebutton, 'mousemove', _.interaction);
-        _.listen(_.elements.fullscreenbutton, 'mousemove', _.interaction);
-        _.listen(_.elements.volumebutton, 'mousemove', _.interaction);
-        _.listen(_.elements.timer, 'mousemove', _.interaction);
-        _.listen(_.elements.scrubbers, 'mousemove', _.interaction);
-        _.listen(_.elements.scrubber_handles, 'mousemove', _.interaction);
-        _.listen(_.elements.scrubber_targets, 'mousemove', _.interaction);
-        _.listen(_.elements.scrubber_trans, 'mousemove', _.interaction);
-        _.listen(_.elements.scrubber_vid, 'mousemove', _.interaction);
-        _.listen(_.elements.scrubber_progress_vid, 'mousemove', _.interaction);
-        _.listen(_.elements.scrubber_handle_vid, 'mousemove', _.interaction);
-        _.listen(_.elements.scrubber_vol, 'mousemove', _.interaction);
-        _.listen(_.elements.scrubber_progress_vol, 'mousemove', _.interaction);
-        _.listen(_.elements.scrubber_handle_vol, 'mousemove', _.interaction);
+        if ( !_.isTouchDevice() ) {
+            // Listen for user interaction and show and hide the nav as necessary
+            _.listen(_.elements.wrapper, 'mousemove', _.interaction);
+            _.listen(_.elements.controls, 'mousemove', _.interaction);
+            _.listen(_.elements.wrapper, 'mousemove', _.interaction);
+            _.listen(_.elements.controls, 'mousemove', _.interaction);
+            _.listen(_.elements.poster, 'mousemove', _.interaction);
+            _.listen(_.elements.loader, 'mousemove', _.interaction);
+            _.listen(_.elements.playbutton, 'mousemove', _.interaction);
+            _.listen(_.elements.bigplaybutton, 'mousemove', _.interaction);
+            _.listen(_.elements.pausebutton, 'mousemove', _.interaction);
+            _.listen(_.elements.fullscreenbutton, 'mousemove', _.interaction);
+            _.listen(_.elements.volumebutton, 'mousemove', _.interaction);
+            _.listen(_.elements.timer, 'mousemove', _.interaction);
+            _.listen(_.elements.scrubbers, 'mousemove', _.interaction);
+            _.listen(_.elements.scrubber_handles, 'mousemove', _.interaction);
+            _.listen(_.elements.scrubber_targets, 'mousemove', _.interaction);
+            _.listen(_.elements.scrubber_trans, 'mousemove', _.interaction);
+            _.listen(_.elements.scrubber_vid, 'mousemove', _.interaction);
+            _.listen(_.elements.scrubber_progress_vid, 'mousemove', _.interaction);
+            _.listen(_.elements.scrubber_handle_vid, 'mousemove', _.interaction);
+            _.listen(_.elements.scrubber_vol, 'mousemove', _.interaction);
+            _.listen(_.elements.scrubber_progress_vol, 'mousemove', _.interaction);
+            _.listen(_.elements.scrubber_handle_vol, 'mousemove', _.interaction);    
+        }
 
         // Listen for interaction on the actual UI contols
         _.listen(_.elements.playbutton, 'click', _.play);
@@ -245,6 +247,8 @@ OO.plugin("WonderUIModule", function (OO) {
                 _.mb.publish(OO.EVENTS.PAUSE);
             });            
         }
+
+        _.loaded = true;
     };
     
     // Event fired off by the OO message bus to indicate the playhead has moved.
@@ -254,7 +258,6 @@ OO.plugin("WonderUIModule", function (OO) {
             _.time = time;
         }
 
-        _.loaded = true;
         if ( _.playing === true ) {
             _.hideLoader();
         }
@@ -443,7 +446,6 @@ OO.plugin("WonderUIModule", function (OO) {
         if (  _.loaded === true && _.mousedown === true ) {
             _.mousedown = false;
             if ( _.mousetarget === 'vid' ) {
-                console.log(_.newtime);
                 _.play();
             } 
             _.mousetarget = undefined;
@@ -509,7 +511,7 @@ OO.plugin("WonderUIModule", function (OO) {
                 if ( scrubtype === 'vid' ) {
                     var rect = _.elements.scrubber_vid.getBoundingClientRect();
                     percentage = x - rect.left;
-                    percentage = ((percentage/(rect.right - rect.left)) * 100 );                    
+                    percentage = ((percentage/(rect.right - rect.left)) * 100 );
                     if ( percentage <= 0 ) {
                         _.scrubVid(0);                        
                     } else if ( percentage >= 100 ) {
@@ -557,7 +559,6 @@ OO.plugin("WonderUIModule", function (OO) {
     };
 
     _.hideLoader = function () {
-        console.log('hide loader called ');
         window.clearTimeout( _.loaderTimeout );
         _.elements.loader.className = '';
     };
@@ -571,13 +572,15 @@ OO.plugin("WonderUIModule", function (OO) {
     // A user interaction has been detected, show the UI and 
     // set a timer to hide it again
     _.interaction = function () {
-        _.showUI();
-        window.clearTimeout( _.interactionTimeout );
-        _.interactionTimeout = setTimeout( function() {
-            _.addClass( _.elements.controls, 'hide' );
-            _.removeClass( _.elements.controls, 'show' );
-            _.removeClass( _.elements.scrubber_vol, 'vol-visible' );
-        }, 1000 );
+        if ( !_.isTouchDevice() ) {
+            _.showUI();
+            window.clearTimeout( _.interactionTimeout );
+            _.interactionTimeout = setTimeout( function() {
+                _.addClass( _.elements.controls, 'hide' );
+                _.removeClass( _.elements.controls, 'show' );
+                _.removeClass( _.elements.scrubber_vol, 'vol-visible' );
+            }, 1000 );    
+        }
     };
 
     _.ActionTick = function () {
@@ -816,6 +819,13 @@ OO.plugin("WonderUIModule", function (OO) {
             o && typeof o === "object" && o !== null && o.nodeType === 1 && typeof o.nodeName==="string"
         );
     }
+
+    // _.setCookie = function ( name, val, life) {
+    //     var d = new Date();
+    //     d.setTime(d.getTime()+(life*24*60*60*1000));
+    //     var expires = "expires="+d.toGMTString();
+    //     document.cookie = name + "=" + val+ "; " + expires;
+    // }
 
     // Used by _.listen to choose the appropriate event listener
     _.attach = (function (ev, fn) {
