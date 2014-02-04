@@ -148,4 +148,5 @@ class ImportFromYoutubeTestCase(base.RockPackTestCase):
                 r = client.post('/admin/import/', data=data)
 
                 video = Video.query.filter_by(source_videoid=self.data_video_1['id']).one()
+                self.assertEquals(4, video.category)
                 self.assertEquals(2, VideoInstance.query.filter_by(channel=channel.id).count())

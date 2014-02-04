@@ -156,6 +156,9 @@ class Video(db.Model):
     star_count = Column(Integer, nullable=False, server_default='0')
     rockpack_curated = Column(Boolean, nullable=False, server_default='false', default=False)
     visible = Column(Boolean(), nullable=False, server_default='true', default=True)
+    category = Column(ForeignKey('category.id'), nullable=True)
+
+    category_rel = relationship('Category', backref='video_rel')
 
     link_url = Column(String(2048), nullable=True)
     link_title = Column(String(1024), nullable=True)

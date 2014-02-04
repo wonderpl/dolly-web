@@ -431,6 +431,11 @@ class ESVideoAttributeMap:
     @property
     def category(self):
         primary_cat = self.video_instance.category
+
+        # For dolly ...
+        if app.config.get('DOLLY') and self.video_instance.video_rel.category:
+            primary_cat = self.video_instance.video_rel.category
+
         cat_tags = [tag[4:] for tag in self.tags if tag.startswith('cat-')]
         if cat_tags:
             from rockpack.mainsite.services.video.models import Category
