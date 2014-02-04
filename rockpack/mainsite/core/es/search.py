@@ -479,7 +479,7 @@ class VideoSearch(EntitySearch, CategoryMixin, MediaSortMixin):
                 log_cache['log_cache'] = log_cache.get(video['channel'], 0) + 1
 
         for channelid, count in log_cache.iteritems():
-            app.logger.warning("%s missing channel errors for '%s' during mapping", count channelid)
+            app.logger.warning("%s missing channel errors for '%s' during mapping", count, channelid)
 
     def _format_results(self, videos, with_channels=True, with_stars=False):
         vlist = []
