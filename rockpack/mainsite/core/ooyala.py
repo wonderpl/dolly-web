@@ -8,6 +8,7 @@ from collections import namedtuple
 from flask import json
 from rockpack.mainsite import app, requests
 from rockpack.mainsite.core.s3 import s3connection
+from rockpack.mainsite.background_sqs_processor import background_on_sqs
 from rockpack.mainsite.services.video.models import Video, VideoThumbnail
 
 
@@ -57,6 +58,7 @@ def get_video_data(id, fetch_all_videos=True, fetch_metadata=False):
     update_thumbnails(video)
     if fetch_metadata:
         video.meta = _ooyala_feed('assets', id, 'metadata')
+        video.category = video.meta.get('category', None)
     return Videolist(1, [video])
 
 
@@ -87,7 +89,7 @@ def create_asset(s3path, metadata):
     asset = dict(
         asset_type='video',
         file_name=file_name,
-        name=metadata.pop('name', None) or os.path.splitext(file_name)[0].capitalize(),
+        name=metadata.pop('title', None) or os.path.splitext(file_name)[0].capitalize(),
         file_size=file_size,
         chunk_size=chunk_size,
     )
@@ -119,3 +121,8 @@ def create_asset(s3path, metadata):
                  method='put', data=json.dumps(dict(status='uploaded')))
 
     return assetid
+
+
+@background_on_sqs
+def create_asset_in_background(s3path, metadata):
+    create_asset(s3path, metadata)

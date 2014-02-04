@@ -1,0 +1,42 @@
+{% extends 'admin/model/edit.html' %}
+{% import 'admin/lib.html' as lib with context %}
+
+{% block body %}
+  <div class="video-list">
+    <table class="table table-striped table-bordered model-list">
+      <thead>
+        <tr>
+          <th>Video</th>
+          <th>Upload Date</th>
+          <th>Size</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      {% for video in video_list %}
+      <tr>
+        <td><a href="{{ video.link }}" target="_blank">{{ video.path }}</a></td>
+        <td>{{ video.last_modified }}</td>
+        <td>{{ video.size|filesizeformat }}</td>
+        <td>
+          <a class="btn btn-success" href="./accept?video={{ video.path }}">Accept</a>
+          <button class="reject btn btn-danger" data-path="{{ video.path }}" data-loading-text="Yeah, it's shit!">Reject</button>
+        </td>
+      </tr>
+      {% endfor %}
+    </table>
+  </div>
+{% endblock %}
+
+{% block tail %}
+  {{ super() }}
+  <script>
+    $('.reject.btn').click(function () {
+        var btn = $(this);
+        btn.button('loading');
+        $.post('./reject.js', {video: btn.data('path')}).done(
+          function (data) {
+            btn.closest('tr').remove();
+          });
+    });
+  </script>
+{% endblock %}

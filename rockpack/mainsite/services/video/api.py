@@ -401,5 +401,6 @@ class OoyalaWS(WebService):
                     id=meta['category']).value('id')
             except Exception:
                 category = None
-            channel.add_videos(data.videos, category=category)
+            channel.add_videos(data.videos, category=category, tags=meta.get('tags'))
             app.logger.debug('Added ooyala video "%s" to "%s"', videoid, channel.id)
+        # TODO: Notify somebody?

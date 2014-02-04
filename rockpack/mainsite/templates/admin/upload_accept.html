@@ -1,0 +1,68 @@
+{% extends 'admin/model/edit.html' %}
+{% import 'admin/lib.html' as lib with context %}
+
+{% block body %}
+  {% if form %}
+    {% if form.errors %}
+    <div class="import_form_error error">
+      {{ form.errors.__all__ }}
+    </div>
+    {% endif %}
+      <div class="import_form">
+        <form action="" method="post" class="form-horizontal" enctype="multipart/form-data">
+          <fieldset>
+            {{ lib.render_form_fields(form) }}
+            <div class="control-group">
+              <div class="controls">
+                <input type="submit" class="btn btn-primary btn-large" value="{{ _gettext('Submit') }}" />
+              </div>
+            </div>
+          </fieldset>
+        </form>
+      </div>
+  {% endif %}
+{% endblock %}
+
+{% block tail %}
+  {{ super() }}
+  <script>
+    $(function () {
+      var userField = $('#user'),
+          channelField = $('#channel');
+
+      userField.select2({
+        minimumInputLength: 3,
+        minimumResultsForSearch: 10,
+        ajax: {
+          url: '{{ url_for("import.users") }}',
+          cache: true,
+          data: function (term, page) {
+            return {prefix: term};
+          },
+          results: function (data, page) {
+            return {results: $.map(data, function (text, id) {return {id:id, text:text}; })};
+          }
+        },
+        width: 'element'
+      });
+
+      channelField.select2({
+        ajax: {
+          url: '{{ url_for("import.channels") }}',
+          cache: true,
+          data: function (term, page) {
+            return {user: userField.val()};
+          },
+          results: function (data, page) {
+            return {results: $.map(data, function (text, id) {return {id:id, text:text}; })};
+          }
+        },
+        width: 'element'
+      });
+
+      userField.on('change', function () {
+        channelField.select2('data', {});
+      });
+    });
+  </script>
+{% endblock %}

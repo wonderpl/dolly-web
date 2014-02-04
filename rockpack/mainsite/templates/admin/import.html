@@ -81,23 +81,22 @@
           return ""
     };
     $(function () {
-      // hide the channel description unless we create a new one
-      var channelGroups = $('#channel_description, #cover_url, #cover')
+      var categoryField = $('#category'),
+          userField = $('#user'),
+          channelField = $('#channel'),
+          channelGroups = $('#channel_description, #cover_url, #cover')
           .closest('.control-group')
-          .insertAfter($('#channel').closest('.control-group'))
+          .insertAfter(channelField.closest('.control-group'))
           .not('.error').hide();
-      $('#channel').change(function () {
-          console.log
-          if ($('#channel').val().indexOf('_new') < 0) {
+
+      // hide the channel description unless we create a new one
+      channelField.change(function () {
+          if (channelField.val().indexOf('_new') < 0) {
             channelGroups.hide();
           } else {
             channelGroups.show();
           }
       });
-
-      var categoryField = $('#category'),
-          userField = $('#user'),
-          channelField = $('#channel');
 
       function dataToResults (data, page) {
         var results = $.map(data, function (text, id) {
@@ -121,11 +120,7 @@
         dropdownCssClass: 'bigdrop'
       }).on('change', function (e) {
         channelField.select2('data', {});
-    });
-
-    if ($('#user').val() != "" && urlparse('user') != "") {
-        $('#user').select2('data', {'id': $('#user').val(), 'text': urlparse('user')});
-    }
+      });
 
       channelField.select2({
         quietMillis: 1000,
@@ -146,9 +141,13 @@
         dropdownCssClass: 'bigdrop'
       });;
 
-    if ($('#channel').val() != "" && urlparse('channeltitle') != "") {
-        $('#channel').select2('data', {'id': $('#channel').val(), 'text': urlparse('channeltitle')});
-    }
+      if (userField.val() != "" && urlparse('user') != "") {
+          userField.select2('data', {'id': userField.val(), 'text': urlparse('user')});
+      }
+
+      if (channelField.val() != "" && urlparse('channeltitle') != "") {
+          channelField.select2('data', {'id': channelField.val(), 'text': urlparse('channeltitle')});
+      }
 
       categoryField.select2('focus');
     })

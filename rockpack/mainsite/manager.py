@@ -212,7 +212,7 @@ def clean_cron_queue():
 
 @manager.option('--channel')
 @manager.option('--user')
-@manager.option('--name')
+@manager.option('--title')
 @manager.option('--category')
 @manager.option('--label')
 @manager.command

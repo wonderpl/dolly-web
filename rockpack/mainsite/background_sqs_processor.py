@@ -6,6 +6,7 @@ from rockpack.mainsite.sqs_processor import SqsProcessor
 class BackgroundSqsProcessor(SqsProcessor):
 
     queue_name = app.config['SQS_BACKGROUND_QUEUE']
+    sqs_visibility_timeout = 1200
 
     def process_message(self, message):
         try:

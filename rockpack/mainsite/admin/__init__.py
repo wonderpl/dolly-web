@@ -23,7 +23,8 @@ def setup_admin(app):
                     not getattr(view, 'inline_model', False))
             ], key=lambda v: v.name))
 
-    admin.add_view(import_views.ImportView(name='Import', endpoint='import'))
+    admin.add_view(import_views.ImportView(name='Import', endpoint='import', category='Import'))
+    admin.add_view(import_views.UploadView(name='Review Uploads', endpoint='review', category='Import'))
     admin.add_view(ranking_views.RankingView(name='Ranking', endpoint='ranking'))
 
     # Need to import here to avoid import uninitialised google_oauth decorator

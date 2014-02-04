@@ -9,9 +9,10 @@ from flask import request, url_for, redirect, flash, jsonify
 from flask.ext import login
 from flask.ext.admin import expose, form
 from wtforms.validators import ValidationError
-from rockpack.mainsite import requests
+from rockpack.mainsite import app, requests
 from rockpack.mainsite.core.dbapi import commit_on_success, db
 from rockpack.mainsite.core import youtube, ooyala
+from rockpack.mainsite.core.s3 import s3connection
 from rockpack.mainsite.helpers.db import resize_and_upload
 from rockpack.mainsite.services.pubsubhubbub.api import subscribe
 from rockpack.mainsite.services.video.models import (
@@ -346,3 +347,96 @@ class ImportView(AdminView):
         c = UserCoverArt(cover=resize_and_upload(request.files['cover'], 'CHANNEL'),
                          owner=request.form.get('owner')).save()
         return jsonify({'id': str(c.cover)})
+
+
+class UploadAcceptForm(form.BaseForm):
+    path = wtf.HiddenField(validators=[wtf.validators.Required()])
+    user = wtf.TextField(validators=[wtf.validators.Required()])
+    channel = wtf.TextField(validators=[wtf.validators.Required()])
+    title = wtf.TextField(validators=[wtf.validators.Required()])
+    category = form.Select2Field(coerce=int, default=-1, validators=[wtf.validators.Required()])
+    tags = wtf.TextField()
+
+    def validate_channel(self, field):
+        if field.data:
+            owner = User.query.join(Channel).filter(
+                Channel.id == field.data).value('username')
+            if owner:
+                self.owner_username = owner
+            else:
+                raise ValidationError('Channel not found')
+
+
+class UploadView(AdminView):
+
+    path_prefix = 'upload/'
+
+    @property
+    def bucket(self):
+        if not getattr(self, '_bucket', None):
+            self._bucket = s3connection().get_bucket(
+                app.config['VIDEO_S3_BUCKET'], validate=False)
+        return self._bucket
+
+    @expose('/')
+    def index(self):
+        video_list = [
+            dict(
+                path=key.name[len(self.path_prefix):],
+                size=key.size,
+                link=key.generate_url(3600, force_http=True),
+                last_modified=key.last_modified,
+            )
+            for key in self.bucket.list(self.path_prefix)
+            if not key.name.endswith('.txt')
+        ]
+        return self.render('admin/upload_review.html', video_list=video_list)
+
+    @expose('/accept')
+    def accept_form(self):
+        path = request.args['video']
+        basename, filename = path.rsplit('/', 1)
+        meta = dict(path=path, title=filename.rsplit('.', 1)[0].replace('_', ' '))
+
+        manifest = self.bucket.get_key(self.path_prefix + basename + '/manifest.txt')
+        if manifest:
+            for line in manifest.get_contents_as_string().split('\n'):
+                if line.startswith(filename):
+                    fields = line[len(filename):].strip().split('\t')
+                    if fields:
+                        meta['title'] = fields[0]
+                    break
+
+        form = UploadAcceptForm()
+        form.category.choices = [(-1, '')] +\
+            list(Category.get_form_choices('en-us', True))
+        for field in meta:
+            if hasattr(form, field):
+                getattr(form, field).data = meta[field]
+
+        return self.render('admin/upload_accept.html', form=form)
+
+    @expose('/accept', methods=('POST',))
+    def accept_process(self):
+        form = UploadAcceptForm(request.form)
+        form.category.choices = list(Category.get_form_choices('en-us', True))
+        if form.validate():
+            metadata = dict(label=form.owner_username, **form.data)
+            dst = self._move_video(form.path.data, 'video/%s/' % form.owner_username)
+            metadata['path'] = dst
+            ooyala.create_asset_in_background(dst, metadata)
+            flash('Processing "%s"...' % form.title.data)
+            return redirect(url_for('review.index'))
+        return self.render('admin/upload_accept.html', form=form)
+
+    @expose('/reject.js', methods=('POST',))
+    def reject(self):
+        dst = self._move_video(request.form['video'], 'video/archive/')
+        return jsonify(dict(path=dst))
+
+    def _move_video(self, path, new_prefix):
+        src = self.path_prefix + path
+        dst = new_prefix + path
+        self.bucket.copy_key(dst, self.bucket.name, src)
+        self.bucket.delete_key(src)
+        return dst
