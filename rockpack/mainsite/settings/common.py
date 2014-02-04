@@ -88,12 +88,7 @@ AVATAR_IMAGES = dict(
 )
 
 PROFILE_IMAGES = dict(
-    thumbnail_medium=(320, 254),
-    ipad=(927, 502),
-)
-
-BRAND_PROFILE_IMAGES = dict(
-    thumbnail_medium=(320, 340),
+    thumbnail_medium=(320, 338),
     ipad=(927, 502),
 )
 
