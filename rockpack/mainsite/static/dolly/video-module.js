@@ -110,14 +110,16 @@ OO.plugin("WonderUIModule", function (OO) {
             fullscreen: false
         };
 
-        if ( window.navigator.userAgent.toLowerCase().indexOf('ipad') !== -1 ) {
+        _.UA = window.navigator.userAgent.toLowerCase();
+
+        // Do some user agent sniffing
+        if ( _.UA.indexOf('ipad') !== -1 ) {
             _.ipad = true;
         }
 
-        // Initial listeners
-        // _.mb.subscribe('*', 'wonder', function(eventName){
-        //     console.log(eventName);
-        // });
+        if ( _.UA.indexOf('ipad') !== -1 || _.UA.indexOf('iphone') !== -1 ) {
+            _.ios = true;
+        }
 
         _.mb.subscribe(OO.EVENTS.PLAYER_CREATED, 'wonder', _.onPlayerCreate);
         _.mb.subscribe(OO.EVENTS.SEEKED, 'wonder', _.onSeeked);
@@ -129,11 +131,7 @@ OO.plugin("WonderUIModule", function (OO) {
         _.mb.subscribe(OO.EVENTS.PLAY, 'wonder', _.onPlay);
         _.mb.subscribe(OO.EVENTS.ERROR, 'wonder', _.onError);
         _.mb.subscribe(OO.EVENTS.PLAYER_EMBEDDED, 'wonder', _.hideLoader);
-
         requestAnimationFrame( _.Tick );
-
-        window.wonderPlayer = this;
-        window.wonder = _;
     };
 
     /*  Message bus event subscriber callbacks
@@ -178,31 +176,27 @@ OO.plugin("WonderUIModule", function (OO) {
         _.elements.scrubber_progress_vol = document.querySelector('.scrubber-progress.vol');
         _.elements.scrubber_handle_vol = document.querySelector('.scrubber-handle.vol');
 
-        if ( !_.isTouchDevice() ) {
-            // Listen for user interaction and show and hide the nav as necessary
-            _.listen(_.elements.wrapper, 'mousemove', _.interaction);
-            _.listen(_.elements.controls, 'mousemove', _.interaction);
-            _.listen(_.elements.wrapper, 'mousemove', _.interaction);
-            _.listen(_.elements.controls, 'mousemove', _.interaction);
-            _.listen(_.elements.poster, 'mousemove', _.interaction);
-            _.listen(_.elements.loader, 'mousemove', _.interaction);
-            _.listen(_.elements.playbutton, 'mousemove', _.interaction);
-            _.listen(_.elements.bigplaybutton, 'mousemove', _.interaction);
-            _.listen(_.elements.pausebutton, 'mousemove', _.interaction);
-            _.listen(_.elements.fullscreenbutton, 'mousemove', _.interaction);
-            _.listen(_.elements.volumebutton, 'mousemove', _.interaction);
-            _.listen(_.elements.timer, 'mousemove', _.interaction);
-            _.listen(_.elements.scrubbers, 'mousemove', _.interaction);
-            _.listen(_.elements.scrubber_handles, 'mousemove', _.interaction);
-            _.listen(_.elements.scrubber_targets, 'mousemove', _.interaction);
-            _.listen(_.elements.scrubber_trans, 'mousemove', _.interaction);
-            _.listen(_.elements.scrubber_vid, 'mousemove', _.interaction);
-            _.listen(_.elements.scrubber_progress_vid, 'mousemove', _.interaction);
-            _.listen(_.elements.scrubber_handle_vid, 'mousemove', _.interaction);
-            _.listen(_.elements.scrubber_vol, 'mousemove', _.interaction);
-            _.listen(_.elements.scrubber_progress_vol, 'mousemove', _.interaction);
-            _.listen(_.elements.scrubber_handle_vol, 'mousemove', _.interaction);    
-        }
+        // Listen for user interaction and show and hide the nav as necessary
+        _.listen(_.elements.wrapper, 'mousemove', _.interaction);
+        _.listen(_.elements.controls, 'mousemove', _.interaction);
+        _.listen(_.elements.poster, 'mousemove', _.interaction);
+        _.listen(_.elements.loader, 'mousemove', _.interaction);
+        _.listen(_.elements.playbutton, 'mousemove', _.interaction);
+        _.listen(_.elements.bigplaybutton, 'mousemove', _.interaction);
+        _.listen(_.elements.pausebutton, 'mousemove', _.interaction);
+        _.listen(_.elements.fullscreenbutton, 'mousemove', _.interaction);
+        _.listen(_.elements.volumebutton, 'mousemove', _.interaction);
+        _.listen(_.elements.timer, 'mousemove', _.interaction);
+        _.listen(_.elements.scrubbers, 'mousemove', _.interaction);
+        _.listen(_.elements.scrubber_handles, 'mousemove', _.interaction);
+        _.listen(_.elements.scrubber_targets, 'mousemove', _.interaction);
+        _.listen(_.elements.scrubber_trans, 'mousemove', _.interaction);
+        _.listen(_.elements.scrubber_vid, 'mousemove', _.interaction);
+        _.listen(_.elements.scrubber_progress_vid, 'mousemove', _.interaction);
+        _.listen(_.elements.scrubber_handle_vid, 'mousemove', _.interaction);
+        _.listen(_.elements.scrubber_vol, 'mousemove', _.interaction);
+        _.listen(_.elements.scrubber_progress_vol, 'mousemove', _.interaction);
+        _.listen(_.elements.scrubber_handle_vol, 'mousemove', _.interaction);    
 
         // Listen for interaction on the actual UI contols
         _.listen(_.elements.playbutton, 'click', _.play);
@@ -214,7 +208,8 @@ OO.plugin("WonderUIModule", function (OO) {
         // Decide which listeners to use for the scrubbers.
         if ( _.isTouchDevice() ) {
             _.addClass(_.elements.controls, 'show');
-            _.listen(_.elements.loader, 'touchend', _.toggleControls);
+            // _.listen(_.elements.loader, 'touchend', _.toggleControls);
+            _.listen(_.elements.loader, 'touchend', _.interaction);
             _.listen(_.elements.scrubber_trans, 'touchmove', _.scrubTouch);
             _.listen(_.elements.scrubber_trans, 'touchstart', _.scrubDown);
             _.listen(_.elements.scrubber_trans, 'touchleave', _.scrubUp);
@@ -225,6 +220,11 @@ OO.plugin("WonderUIModule", function (OO) {
             _.listen(_.elements.scrubber_trans, 'mousedown', _.scrubDown);
             _.listen(_.elements.scrubber_trans, 'mouseup', _.scrubUp);
             _.listen(_.elements.scrubber_trans, 'mouseleave', _.scrubUp);
+        }
+
+        if ( 'ios' in _ ) {
+            console.log('IOS DETECTED');
+            _.addClass( _.elements.controls, 'volume-disabled' );
         }
     };
 
@@ -253,27 +253,16 @@ OO.plugin("WonderUIModule", function (OO) {
     
     // Event fired off by the OO message bus to indicate the playhead has moved.
     _.onTimeUpdate = function (event, time, duration, buffer, seekrange) {
-        
         if ( time !== undefined ) {
             _.time = time;
         }
-
         if ( _.playing === true ) {
             _.hideLoader();
         }
-
-        // if ( duration == NaN ) {
-        //     _.duration = duration;
-        // }
-
-        // setTimeout( function(){    
-        //    _.loaded = true;
-        // }, 200 );
-
     };
 
-    _.onError = function (error) {
-        alert(JSON.stringify(error));
+    _.onError = function (error, info) {
+        console.log(JSON.stringify(error, info));
     };
 
     // Respond to the OO Message bus Play event
@@ -283,12 +272,12 @@ OO.plugin("WonderUIModule", function (OO) {
             _.addClass(_.elements.playbutton, 'hidden');
             _.addClass(_.elements.bigplaybutton, 'hidden');
             _.removeClass(_.elements.pausebutton, 'hidden');
-            _.state.playing = true;
         }
 
         setTimeout( function() {
             _.videoUpdate = true;
         }, 200);
+        _.state.playing = true;
     };
     
     // Respond to the OO Message bus Pause event
@@ -333,18 +322,18 @@ OO.plugin("WonderUIModule", function (OO) {
         }
     };
 
-    _.toggleControls = function (e) {
-        _.prevent(e);
+    // _.toggleControls = function (e) {
+    //     _.prevent(e);
 
-        if ( _.hasClass( _.elements.controls, 'show' ) ) {
-            _.removeClass( _.elements.controls, 'show' );
-            _.addClass( _.elements.controls, 'hide' );
-        } else {
-            _.removeClass( _.elements.controls, 'show' );
-            _.addClass( _.elements.controls, 'show' );
-        }
+    //     if ( _.hasClass( _.elements.controls, 'show' ) ) {
+    //         _.removeClass( _.elements.controls, 'show' );
+    //         _.addClass( _.elements.controls, 'hide' );
+    //     } else {
+    //         _.removeClass( _.elements.controls, 'show' );
+    //         _.addClass( _.elements.controls, 'show' );
+    //     }
         
-    };
+    // };
 
     /*  UI listener callbacks
     /* ======================================= */
@@ -572,15 +561,13 @@ OO.plugin("WonderUIModule", function (OO) {
     // A user interaction has been detected, show the UI and 
     // set a timer to hide it again
     _.interaction = function () {
-        if ( !_.isTouchDevice() ) {
-            _.showUI();
-            window.clearTimeout( _.interactionTimeout );
-            _.interactionTimeout = setTimeout( function() {
-                _.addClass( _.elements.controls, 'hide' );
-                _.removeClass( _.elements.controls, 'show' );
-                _.removeClass( _.elements.scrubber_vol, 'vol-visible' );
-            }, 1000 );    
-        }
+        _.showUI();
+        window.clearTimeout( _.interactionTimeout );
+        _.interactionTimeout = setTimeout( function() {
+            _.addClass( _.elements.controls, 'hide' );
+            _.removeClass( _.elements.controls, 'show' );
+            _.removeClass( _.elements.scrubber_vol, 'vol-visible' );
+        }, 1000 );    
     };
 
     _.ActionTick = function () {

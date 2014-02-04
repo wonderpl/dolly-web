@@ -74,8 +74,7 @@
 		}
 
 		// The wrappers for the scrubber bars
-		.scrubber, .scrubber-progress {
-
+		.scrubber {
 			&.vid {
 				top: 15px;
 				width: 48%;
@@ -83,23 +82,8 @@
 			}
 
 			&.vol {
-				left: auto;
 				right: 33.5%;
-			}
-			
-		}
-
-		.scrubber-progress {
-			&.vid{
-				left: 0;
-				top: 0;
-				width: 0%;
-			}
-
-			&.vol {
-				left: 0;
-				right: 0;
-			}
+			}	
 		}
 
 		.scrubber-target {
@@ -114,19 +98,16 @@
 			}
 		}
 
-		.scrubber-progress {
-			&.vol {
-				
+		&.volume-disabled {
+			.scrubber {
+				&.vid {
+					width: 59%;
+				}
 			}
-		}
-		.scrubber-handle {
-
-			&.vid {
-				top: -7px;
-				left: 0%;
-			}
-
-			&.vol {
+			.scrubber-target {
+				&.vid {
+					width: 65%;
+				}
 			}
 		}
 	}

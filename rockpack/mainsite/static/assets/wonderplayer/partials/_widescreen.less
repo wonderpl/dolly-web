@@ -3,30 +3,23 @@
 /* ======================================= */
 
 #wonder-wrapper {
-
 	#wonder-controls {
-
 		a {
-
 			&.wonder-play {
 				width: 6%;
 			}
-
 			&.wonder-pause {
 				width: 6%;
 			}
-
 			&.wonder-volume {
 				left: auto;
 				right: 24.3%;
 			}
-
 			&.wonder-logo {
 				left: auto;
 				right: 6%;
 				width: 16%;
 			}
-
 			&.wonder-fullscreen {
 				width: 6%;
 			}
@@ -38,67 +31,41 @@
 		}
 
 		// The wrappers for the scrubber bars
-		.scrubber, .scrubber-progress {
-			
+		.scrubber {
 			&.vid {
 				width: 55%;
 			}
-
-			// &.vol {
-			// 	width: 7%;
-			// 	left: auto;
-			// 	right: 31%;
-			// }
-
 			&.vol {
 				right: 24.3%;
-				left: auto;
 			}
-			
-		}
-
-		.scrubber-progress {
-			&.vid {
-				left: 0px;
-				width: 100%;
-				right: auto;
-			}
-
-			&.vol {
-				left: 0;
-				right: 0;
-			}
-		}
-
-		.scrubber-handle {
-
-			// &.vol {
-			// 	left: 0%;
-			// }
 		}
 
 		.scrubber-target {
-			
 			&.vid {
 				width: 57%;
 			}
-
 			&.vol {
-				left: auto;
 				right: 24.3%;
 			}
-
-			// &.vol {
-			// 	width: 9%;
-			// 	left: auto;
-			// 	right: 30%;
-			// }
 		}
 
-		.scrubber-progress {
-			&.vol {
+		&.volume-disabled {
+			.wonder-logo {
+				right: 5%;
+			}
+			.wonder-timer {
+				left: 73.5%;
+			}
+			.scrubber {
+				&.vid {
+					width: 63%;
+				}
+			}
+			.scrubber-target {
+				&.vid {
+					width: 67%;
+				}
 			}
 		}
-
 	}
 }

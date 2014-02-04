@@ -261,7 +261,7 @@ body, html {
 		position: absolute;
 		left: 0;
 		// bottom: -38px;
-		bottom: 0 !important;
+		bottom: 0px !important;
 		width: 100%;
 		height: 38px;
 		z-index: 10000;
@@ -414,7 +414,7 @@ body, html {
 		}
 
 		// The wrappers for the scrubber bars
-		.scrubber, .scrubber-progress {
+		.scrubber {
 			display: block;
 			position: absolute;
 			margin: 0 auto;
@@ -438,7 +438,7 @@ body, html {
 				width: 8px;
 				margin: 0 13px;
 				height: 80px;
-				left: 65.5%;
+				right: 31%;
 				bottom: -120px;
 				-webkit-transition: bottom .3s ease-out .125s, opacity .18s ease-out;
 				-moz-transition: bottom .3s ease-out .125s, opacity .18s ease-out;
@@ -457,76 +457,31 @@ body, html {
 		}
 
 		.scrubber-progress {
-			&.vid {
-				left: 0;
-				top: 0;
-				width: 0%;
-			}
-
-			&.vol {
-				margin: 0;
-				bottom: 0px;
-				top: auto;
-				height: 100%;
-				left: 0px;
-				opacity: 1;
-			}
-		}
-
-		.scrubber-target {
+			-webkit-border-radius: 100px;
+			-moz-border-radius: 100px;
+			-o-border-radius: 100px;
+			border-radius: 100px;
 			display: block;
 			position: absolute;
-			margin: 0 auto;
-			z-index: 20;
-			
-			&.vid {
-				width: 47%;
-				height: 100%;
-				left: 6%;
-			}
-
-			&.vol {
-				width: 34px;
-				left: 65.5%;
-				height: 100px;
-				bottom: 50px;
-				// background: rgba(255,228,47,0.4);
-			}
-
-			img {
-				// We need to use an image here so IE8 doesn't have a cry.
-				display: block;
-				position: absolute;
-				left: 0;
-				top: 0;
-				width: 100%;
-				height: 100%;
-				-webkit-user-select: none;
-				-moz-user-select: none;
-				user-select: none;
-				cursor: pointer;
-			}
-
-			&.vol-visible {
-
-			}
-		}
-
-		.scrubber-progress {
 			background: white;
-			width: 0%;
-			left: 0;
-			top: 0;
-			right: auto;
+			z-index: 10;
 
 			&.vid {
-
+				width: 0%;
+				height: 100%;
+				left: 0px;
+				top: 0px;
+				
 			}
 
 			&.vol {
 				width: 100%;
+				height: 100%;
+				bottom: 0px;
+				left: 0px;
 			}
 		}
+
 		.scrubber-handle {
 			display: block;
 			position: absolute;
@@ -545,12 +500,61 @@ body, html {
 			}
 	
 			&.vol {
-				top: auto;
 				bottom: 0%;
 				left: -7px;
 				margin-top: -7px;
 			}
+		}
 
+		.scrubber-target {
+			display: block;
+			position: absolute;
+			margin: 0 auto;
+			z-index: 20;
+			
+			&.vid {
+				width: 47%;
+				height: 100%;
+				left: 6%;
+			}
+
+			&.vol {
+				width: 34px;
+				right: 31%;
+				height: 100px;
+				bottom: 50px;
+			}
+
+			img {
+				// We need to use an image here so IE8 doesn't have a cry.
+				display: block;
+				position: absolute;
+				left: 0;
+				top: 0;
+				width: 100%;
+				height: 100%;
+				-webkit-user-select: none;
+				-moz-user-select: none;
+				user-select: none;
+				cursor: pointer;
+			}
+		}
+
+		&.volume-disabled {
+			a.wonder-logo {
+				width: 18%;
+			}
+			a.wonder-volume {
+				display: none !important;
+			}
+			.wonder-timer {
+				left: 66%;
+			}
+			.scrubber {
+				&.vid {
+					width: 53%;
+				}
+			}
 		}
 	}
 
