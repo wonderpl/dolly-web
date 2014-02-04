@@ -143,10 +143,11 @@ class ImportFromYoutubeTestCase(base.RockPackTestCase):
                     'locale': 'en-us',
                     'category': 4,
                     'user': User.query.filter_by(username=UserData.test_user_a.username).first().id})
+                data['id'] = 'CF4KDLB7XX4'
                 data['channel'] = channel.id
 
                 r = client.post('/admin/import/', data=data)
 
-                video = Video.query.filter_by(source_videoid=self.data_video_1['id']).one()
+                video = Video.query.filter(Video.source_videoid==data['id']).one()
                 self.assertEquals(4, video.category)
                 self.assertEquals(2, VideoInstance.query.filter_by(channel=channel.id).count())
