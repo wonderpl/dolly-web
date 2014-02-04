@@ -92,6 +92,11 @@ PROFILE_IMAGES = dict(
     ipad=(927, 502),
 )
 
+BRAND_PROFILE_IMAGES = dict(
+    thumbnail_medium=(320, 338),
+    ipad=(927, 502),
+)
+
 ASSETS_URL = '/static'
 ASSETS_MANIFEST = 'file'
 ASSETS_CACHE = False
