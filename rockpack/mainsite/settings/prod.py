@@ -57,3 +57,5 @@ APNS_PASSPHRASE = _decrypt('\xff\x15\x15\x97\xb2;{\x9a\xe8\x18')
 ITUNES_CONNECT_VENDORID = '85709520'
 ITUNES_CONNECT_APPLEID = 'bot@rockpack.com'
 ITUNES_CONNECT_PASSWORD = _decrypt('\xaf\x11\x0e\xce\r&a\xd0mV')
+
+MYRRIX_URL = 'http://recommender:9400'
