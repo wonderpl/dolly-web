@@ -35,27 +35,39 @@
 OO.plugin("WonderUIModule", function (OO) {
 
     var _ = {
-        elements: {},
+        framecount: 0,
         volume: 1,
         newvolume: 1,
-
         played: false,
         scrubbed: false,
         scrubbing: false,
         loaded: false,
-
-        seekTimeout: undefined,
-        loaderTimeout: undefined,
-        volumeTimeout: undefined,
-        videoTimeout: undefined,
-        interactionTimeout: undefined,
-
-        videoUpdate: false,
         mousedown: false,
         mousetarget: undefined,        
         displayTime: '--:--',
         time: 0,
-        duration: NaN
+        duration: NaN,
+        state: {
+            playing: false,
+            fullscreen: false
+        },
+        UA: window.navigator.userAgent.toLowerCase(),
+        elements: {},
+        timers: {
+            // debounces the video scrubbing
+            seek: 0,
+            // debounces the loading
+            buffer: 0,
+            // debounces the hiding of the controls
+            interaction: 0,
+            // debounces the volume adjustment
+            vol: 0
+        }
+        // seekTimeout: undefined,
+        // loaderTimeout: undefined,
+        // volumeTimeout: undefined,
+        // videoTimeout: undefined,
+        // interactionTimeout: undefined,
     };
 
     // This section contains the HTML content to be used as the UI
@@ -79,8 +91,9 @@ OO.plugin("WonderUIModule", function (OO) {
             '<a class="wonder-logo"></a>' +
             '<a class="fullscreen wonder-fullscreen player-icon-fullscreen"></a>' +
             '<span class="wonder-timer">--:--</span>' +
-            '<div class="scrubber vid">' +
+            '<div class="scrubber vid loading">' +
                 '<div class="scrubber-progress vid"></div>' +
+                '<div class="scrubber-buffer"></div>' +
                 '<a class="scrubber-handle vid player-icon-circle"></a>' +
             '</div>' +
             '<div class="scrubber-target vid">' +
@@ -105,21 +118,9 @@ OO.plugin("WonderUIModule", function (OO) {
     // Add event listeners
     _.init = function () {
 
-        _.state = {
-            playing: false,
-            fullscreen: false
-        };
-
-        _.UA = window.navigator.userAgent.toLowerCase();
-
-        // Do some user agent sniffing
-        if ( _.UA.indexOf('ipad') !== -1 ) {
-            _.ipad = true;
-        }
-
-        if ( _.UA.indexOf('ipad') !== -1 || _.UA.indexOf('iphone') !== -1 ) {
-            _.ios = true;
-        }
+        _.ie8 = ( _.hasClass(document.querySelector('html'), 'ie8') ) ? true : false;
+        _.ipad = ( _.UA.indexOf('ipad') !== -1 ) ? true : false;
+        _.ios = ( _.UA.indexOf('ipad') !== -1 || _.UA.indexOf('iphone') !== -1 ) ? true : false;
 
         _.mb.subscribe(OO.EVENTS.PLAYER_CREATED, 'wonder', _.onPlayerCreate);
         _.mb.subscribe(OO.EVENTS.SEEKED, 'wonder', _.onSeeked);
@@ -170,6 +171,7 @@ OO.plugin("WonderUIModule", function (OO) {
 
         // Scrubber specific elements
         _.elements.scrubber_vid = document.querySelector('.scrubber.vid');
+        _.elements.scrubber_buffer = document.querySelector('.scrubber-buffer');
         _.elements.scrubber_progress_vid = document.querySelector('.scrubber-progress.vid');
         _.elements.scrubber_handle_vid = document.querySelector('.scrubber-handle.vid');
         _.elements.scrubber_vol = document.querySelector('.scrubber.vol');
@@ -222,8 +224,7 @@ OO.plugin("WonderUIModule", function (OO) {
             _.listen(_.elements.scrubber_trans, 'mouseleave', _.scrubUp);
         }
 
-        if ( 'ios' in _ ) {
-            console.log('IOS DETECTED');
+        if ( _.ios === true ) {
             _.addClass( _.elements.controls, 'volume-disabled' );
         }
     };
@@ -233,7 +234,8 @@ OO.plugin("WonderUIModule", function (OO) {
 
         _.info = content;
         _.elements.poster.getElementsByTagName('img')[0].src = content.promo || content.promo_image;
-        _.elements.loader.className = '';
+        // _.elements.loader.className = '';
+        _.hideLoader();
         _.elements.poster.getElementsByTagName('td')[0].innerHTML = (_.info.title.replace(/_/g,' '));
         _.removeClass( _.elements.poster, 'loading' );
         _.duration = content.duration/1000 || content.time;
@@ -253,11 +255,15 @@ OO.plugin("WonderUIModule", function (OO) {
     
     // Event fired off by the OO message bus to indicate the playhead has moved.
     _.onTimeUpdate = function (event, time, duration, buffer, seekrange) {
+        
+        _.buffer = buffer;
+
         if ( time !== undefined ) {
             _.time = time;
         }
-        if ( _.playing === true ) {
-            _.hideLoader();
+        if ( time !== 0 ) {
+            _.timers.buffer = 0;
+            _.hideLoader();            
         }
     };
 
@@ -273,10 +279,6 @@ OO.plugin("WonderUIModule", function (OO) {
             _.addClass(_.elements.bigplaybutton, 'hidden');
             _.removeClass(_.elements.pausebutton, 'hidden');
         }
-
-        setTimeout( function() {
-            _.videoUpdate = true;
-        }, 200);
         _.state.playing = true;
     };
     
@@ -292,7 +294,7 @@ OO.plugin("WonderUIModule", function (OO) {
     };
 
     _.onSeeked = function (e) {
-        _.hideLoader();
+        _.scrubbed = false;
         if ( _.played === false ) {
             _.mb.publish(OO.EVENTS.PLAY);    
         }
@@ -307,6 +309,7 @@ OO.plugin("WonderUIModule", function (OO) {
         _.played = true;
         _.removeClass(_.elements.playbutton, 'hidden');
         _.addClass(_.elements.pausebutton, 'hidden');
+        _.removeClass( _.elements.poster, 'hide' );
         _.hideLoader();
     };
 
@@ -356,14 +359,7 @@ OO.plugin("WonderUIModule", function (OO) {
     _.volume = function (e) {
         _.prevent(e);
         if ( _.loaded === true ) {
-
             _.toggleClass( _.elements.scrubber_vol, 'vol-visible' );
-
-            // if ( _.volume > 0 ) {
-            //     _.mb.publish(OO.EVENTS.CHANGE_VOLUME,0);
-            // } else {
-            //     _.mb.publish(OO.EVENTS.CHANGE_VOLUME,1);
-            // }    
         }
     };
 
@@ -379,14 +375,12 @@ OO.plugin("WonderUIModule", function (OO) {
     };
 
     _.seek = function (seconds) {
-        // _.elements.loader.className = 'show';
         _.mb.publish(OO.EVENTS.SEEK, seconds);
     };
 
     _.fullscreen = function (e) {
         _.prevent(e);
         if ( _.state.fullscreen === false ) {
-
             if ( _.ipad === true ) {
                 _.elements.video.webkitEnterFullscreen();
                 _.state.fullscreen = true;
@@ -396,7 +390,6 @@ OO.plugin("WonderUIModule", function (OO) {
                 _.addClass(_.elements.wrapper, 'fullscreen');
                 _.state.fullscreen = true;
             }
-
         } else {
             if(document.exitFullscreen) {
                 document.exitFullscreen();
@@ -431,7 +424,6 @@ OO.plugin("WonderUIModule", function (OO) {
     // Mouse released from the scrubber ( Don't prevent default or everything will break! )
     _.scrubUp = function(e) {
         _.prevent(e);
-
         if (  _.loaded === true && _.mousedown === true ) {
             _.mousedown = false;
             if ( _.mousetarget === 'vid' ) {
@@ -528,11 +520,10 @@ OO.plugin("WonderUIModule", function (OO) {
     };
 
     _.scrubVid = function(percentage) {
+        _.pause();
         _.scrubbed = true;
         _.mousetarget = 'vid';
-        _.videoUpdate = false;
-        _.pause();
-        // _.mb.publish(OO.EVENTS.PLAY);
+        _.timers.seek = 0;
         _.newtime = (_.duration / 100) * percentage;
         _.videoPercentage = percentage;
     };
@@ -543,14 +534,14 @@ OO.plugin("WonderUIModule", function (OO) {
     };
 
     _.showLoader = function () {
-        clearTimeout( _.loaderTimeout );
         _.addClass( _.elements.scrubber_vid, 'loading' );
+        _.addClass( _.elements.scrubber_buffer, 'hide' );
         _.elements.loader.className = 'show';
     };
 
     _.hideLoader = function () {
-        window.clearTimeout( _.loaderTimeout );
         _.removeClass( _.elements.scrubber_vid, 'loading' );
+        _.removeClass( _.elements.scrubber_buffer, 'hide' );
         _.elements.loader.className = '';
     };
 
@@ -560,30 +551,24 @@ OO.plugin("WonderUIModule", function (OO) {
         _.removeClass( _.elements.controls, 'hide' );
     };
 
+    _.hideUI = function () {
+        _.addClass( _.elements.controls, 'hide' );
+        _.removeClass( _.elements.controls, 'show' );
+        _.removeClass( _.elements.scrubber_vol, 'vol-visible' );   
+    };
+
     // A user interaction has been detected, show the UI and 
     // set a timer to hide it again
     _.interaction = function () {
         _.showUI();
-        window.clearTimeout( _.interactionTimeout );
-        _.interactionTimeout = setTimeout( function() {
-            _.addClass( _.elements.controls, 'hide' );
-            _.removeClass( _.elements.controls, 'show' );
-            _.removeClass( _.elements.scrubber_vol, 'vol-visible' );
-        }, 1000 );    
+        _.timers.interaction = 0;
     };
 
     _.ActionTick = function () {
-
-        if ( _.scrubbed === true ) {
-            clearTimeout( _.videoTimeout );
-            _.videoTimeout = setTimeout( function() {
-                _.seek( _.newtime );    
-                _.time = _.newtime;
-            }, 100);
-
-            _.scrubbed = false;
+        if ( _.timers.seek === 10 ) {
+            _.seek( _.newtime );    
+            _.time = _.newtime;
         }
-
     };
 
     _.UITick = function () {
@@ -592,7 +577,7 @@ OO.plugin("WonderUIModule", function (OO) {
             _.elements.scrubber_progress_vid.style.width = _.videoPercentage + '%';
             _.elements.scrubber_handle_vid.style.left = _.videoPercentage + '%';
             _.showLoader();
-        } else if ( _.mousetarget !== 'vid' && _.state.playing === true && _.videoUpdate === true ) {
+        } else if ( _.loaded === true && _.time !== undefined ) {
             var percentage = ( (_.time/_.duration) * 100 ) + '%';        
             _.elements.scrubber_progress_vid.style.width = percentage;
             _.elements.scrubber_handle_vid.style.left = percentage;
@@ -624,9 +609,29 @@ OO.plugin("WonderUIModule", function (OO) {
         }
         _.elements.timer.innerHTML = _.displayTime;
 
+        if ( _.timers.interaction === 60 ) {
+            _.hideUI();         
+        }
+    };
+
+    _.BufferTick = function () {
+        if ( _.state.playing === true ) {
+            _.timers.buffer++;
+        }
+        if ( _.timers.buffer === 60 ) {
+            _.showLoader();
+        }
+        if ( _.timers.buffer = 10 && _.ie8 === false ) {
+            if ( _.loaded === true && _.buffer !== undefined ) {
+                var percentage = ( (_.buffer/_.duration) * 100 ) + '%';      
+                _.elements.scrubber_buffer.style.width = percentage;            
+            }    
+        }
+    };
+
+    _.IETick = function () {
         var ww = _.ww();
         if ( !('width' in _) || _.width != ww ) {
-
             if ( ww <= 480 ) {
                 // Mobile
                 _.elements.wrapper.className = 'mobile';
@@ -640,33 +645,20 @@ OO.plugin("WonderUIModule", function (OO) {
                 // Widescreen
                 _.elements.wrapper.className = 'widescreen';
             }
-
         }
         _.width = ww;
-
-    };
-
-    _.BufferTick = function () {
-
-        // Clear the timeout regardless
-        clearTimeout( _.loaderTimeout );
-
-        // If we are playing, set a timeout to show a loading message if this tick doesn't get called for a while.
-        if ( _.state.playing === true ) {
-            _.loaderTimeout = setTimeout( function() {
-                if ( _.state.playing === true ) {
-                    // _.elements.loader.className = 'show';
-                    _.showLoader();
-                }
-            }, 650);
-        }
-
     };
 
     _.Tick = function () {
+        // Increment our timers
+        _.timers.seek++;
+        _.timers.interaction++;
+        _.framecount++;
+
         _.BufferTick();
         _.UITick();
         _.ActionTick();
+        _.IETick();
         requestAnimationFrame( _.Tick );
     };
 
@@ -789,6 +781,7 @@ OO.plugin("WonderUIModule", function (OO) {
         }
     };
 
+    // Returns true if touch events are present
     _.isTouchDevice = function () {
         return 'ontouchstart' in window || 'onmsgesturechange' in window;
     };
@@ -809,6 +802,7 @@ OO.plugin("WonderUIModule", function (OO) {
         );
     }
 
+    // Cookier setter
     _.setCookie = function ( name, val, life) {
         var d = new Date();
         d.setTime(d.getTime()+(life*24*60*60*1000));
@@ -816,6 +810,7 @@ OO.plugin("WonderUIModule", function (OO) {
         document.cookie = name + "=" + val+ "; " + expires;
     };
 
+    // Cookie getter
     _.getCookie = function ( cname ) {
         var name = cname + "=";
         var ca = document.cookie.split(';');
