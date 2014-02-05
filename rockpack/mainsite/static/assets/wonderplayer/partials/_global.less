@@ -8,15 +8,6 @@
 	box-sizing: border-box;
 }
 
-@keyframes loading {
-	0% {background-position: 0 0}
-	0% {background-position: 100% -100%}
-}
-@-webkit-keyframes loading {
-	0% {background-position: 0 -100px}
-	0% {background-position: 100% -100%}
-}
-
 body, html {
 	background: transparent;
 	border: none;
@@ -452,6 +443,18 @@ body, html {
 					background-image: linear-gradient( 45deg, transparent 45%, hsla(48,20%,90%,1) 45%, hsla(48,20%,90%,1) 55%, transparent 0 );
 					background-size: 8px 8px;
 					-webkit-animation: loading 10s linear infinite;
+					-webkit-transition: opacity .2s ease-out;
+					-moz-transition: opacity .2s ease-out;
+					-o-transition: opacity .2s ease-out;
+					transition: opacity .2s ease-out;
+					opacity: 0;
+				}	
+
+				&.loading {
+					&:after {
+						opacity: 1;
+						-webkit-animation: loading 10s linear infinite;
+					}
 				}
 			}
 

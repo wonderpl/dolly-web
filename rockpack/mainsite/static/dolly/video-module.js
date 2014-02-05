@@ -544,11 +544,13 @@ OO.plugin("WonderUIModule", function (OO) {
 
     _.showLoader = function () {
         clearTimeout( _.loaderTimeout );
+        _.addClass( _.elements.scrubber_vid, 'loading' );
         _.elements.loader.className = 'show';
     };
 
     _.hideLoader = function () {
         window.clearTimeout( _.loaderTimeout );
+        _.removeClass( _.elements.scrubber_vid, 'loading' );
         _.elements.loader.className = '';
     };
 
