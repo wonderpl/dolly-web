@@ -278,7 +278,8 @@ class ESVideo(ESObject):
             comments=mapped.comments(),
             link_url=mapped.link_url,
             link_title=mapped.link_title,
-            tags=mapped.tags
+            tags=mapped.tags,
+            is_favourite=mapped.is_favourite
         )
 
     @classmethod
@@ -488,6 +489,10 @@ class ESVideoAttributeMap:
         if not self.video_instance.tags:
             return []
         return map(unicode.strip, filter(None, self.video_instance.tags.split(',')))
+
+    @property
+    def is_favourite(self):
+        return self.video_instance.is_favourite
 
     def recent_user_stars(self, empty=False):
         if empty:

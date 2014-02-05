@@ -117,6 +117,10 @@ if app.config.get('DOLLY', False):
                 "type": "boolean",
                 "null_value": False
             },
+            "is_favourite": {
+                "type": "boolean",
+                "null_value": False
+            },
             "comments": {
                 "properties": {
                     "count": {
