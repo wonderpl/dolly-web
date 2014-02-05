@@ -62,7 +62,8 @@ AUTH_HEADER_SANITY_CHECK = True
 
 SQS_CRON_QUEUE = 'dolly-mainsite-cron'
 SQS_EMAIL_QUEUE = 'dolly-mainsite-email'
-SQS_VIDEO_UPDATE_QUEUE = 'dolly-mainsite-es'
+SQS_BACKGROUND_QUEUE = 'dolly-mainsite-background'
+SQS_ELASTICSEARCH_QUEUE = 'dolly-mainsite-es'
 
 # Mapping from share object type to message (can have formatting)
 SHARE_MESSAGE_MAP = dict(

@@ -200,14 +200,14 @@ def update_image_thumbnails(fieldname):
 @manager.command
 def seed_cron_queue(commands=None):
     """Seed the cron SQS queue with a message for the specified jobs."""
-    from rockpack.mainsite.cron_sqs_processor import init_messages
-    init_messages(commands and commands.split(','))
+    from rockpack.mainsite.cron_sqs_processor import CronSqsProcessor
+    CronSqsProcessor.init_messages(commands and commands.split(','))
 
 
 @manager.command
 def clean_cron_queue():
-    from rockpack.mainsite.cron_sqs_processor import clean_messages
-    clean_messages()
+    from rockpack.mainsite.cron_sqs_processor import CronSqsProcessor
+    CronSqsProcessor.clean_messages()
 
 
 @manager.option('--channel')

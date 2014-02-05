@@ -244,7 +244,8 @@ REACTIVATION_EMAIL_TRACKING_PARAMS = dict(utm_medium='email', utm_campaign='reac
 SQS_REGION = 'eu-west-1'
 SQS_CRON_QUEUE = 'mainsite-cron'
 SQS_EMAIL_QUEUE = 'mainsite-email'
-SQS_VIDEO_UPDATE_QUEUE = 'es-video-update'
+SQS_BACKGROUND_QUEUE = 'mainsite-background'
+SQS_ELASTICSEARCH_QUEUE = 'es-video-update'
 
 ENABLE_TIMINGS = True
 

@@ -1,130 +1,96 @@
-import os
 import time
 from datetime import datetime, timedelta
-from boto.sqs import connect_to_region
-from boto.sqs.jsonmessage import JSONMessage
-from rockpack.mainsite import app, init_app
+from rockpack.mainsite import app
 from rockpack.mainsite.manager import manager
+from rockpack.mainsite.sqs_processor import SqsProcessor
 
 
-SQS_DELAY_LIMIT = 900
-SQS_VISIBILITY_TIMEOUT = 600
+class CronSqsProcessor(SqsProcessor):
 
+    queue_name = app.config['SQS_CRON_QUEUE']
+    sqs_delay_limit = 900
 
-def _get_queue():
-    global _queue
-    if not _queue:
-        conn = connect_to_region(app.config['SQS_REGION'])
-        _queue = conn.get_queue(app.config['SQS_CRON_QUEUE'])
-        _queue.set_message_class(JSONMessage)
-    return _queue
-_queue = None
+    def process_message(self, message):
+        commands = manager.get_cron_commands()
+        try:
+            command = message['command']
+            next_run = datetime.strptime(message['next_run'][:19], '%Y-%m-%dT%H:%M:%S')
+            interval = commands[command]
+        except Exception:
+            app.logger.exception('Failed to parse message: %r', message)
+            # leave message on queue
+            return False
+        else:
+            app.logger.info('Got cron command: %s: next run %s (%ss)', command, next_run, interval)
 
+        # Check if it's time to run this command now.  Adding 10s leeway so that messages
+        # that appear after delay_seconds and close to next_run don't get postponed.
+        delta = (next_run - datetime.utcnow()).total_seconds()
+        if delta > 10:
+            # Need to wait a bit longer until next_run
+            self.write_message(command, next_run, delta)
+            return True
 
-def _write_message(command, next_run, delay_seconds=None):
-    body = dict(command=command, next_run=next_run.isoformat())
-    if delay_seconds is not None:
-        delay_seconds = min(SQS_DELAY_LIMIT, delay_seconds)
-    _get_queue().write(JSONMessage(body=body), delay_seconds)
+        start_time = time.time()
+        try:
+            manager.handle('cron', command)
+        except Exception:
+            app.logger.exception('Failed to run command: %s', command)
+            # message will re-appear on the queue after visibility timeout
+            return False
 
+        processing_time = time.time() - start_time
+        if processing_time < self.sqs_visibility_timeout:
+            # only write new message if this one was processed in time
+            self.write_message(command, datetime.utcnow() + timedelta(seconds=interval), interval)
+        else:
+            app.logger.warning('Cron command %s took %ds', command, processing_time)
 
-def process_sqs_message():
-    message = _get_queue().read(SQS_VISIBILITY_TIMEOUT)
-    if not message:
-        return
+    @classmethod
+    def write_message(cls, command, next_run, delay_seconds=None):
+        message = dict(command=command, next_run=next_run.isoformat())
+        if delay_seconds is not None:
+            delay_seconds = min(cls.sqs_delay_limit, delay_seconds)
+        super(CronSqsProcessor, cls).write_message(message, delay_seconds)
 
-    # Parse message
-    body = message.get_body()
-    commands = manager.get_cron_commands()
-    try:
-        command = body['command']
-        next_run = datetime.strptime(body['next_run'][:19], '%Y-%m-%dT%H:%M:%S')
-        interval = commands[command]
-    except Exception:
-        app.logger.exception('Failed to parse message: %r', body)
-        # leave message on queue
-        return
-    else:
-        app.logger.info('Got cron command: %s: next run %s (%ss)', command, next_run, interval)
+    @classmethod
+    def init_messages(cls, commands):
+        for command in manager.get_cron_commands():
+            if not commands or command in commands:
+                cls.write_message(command, datetime.utcnow())
 
-    # Check if it's time to run this command now.  Adding 10s leeway so that messages
-    # that appear after delay_seconds and close to next_run don't get postponed.
-    delta = (next_run - datetime.utcnow()).total_seconds()
-    if delta > 10:
-        # Need to wait a bit longer until next_run
-        _write_message(command, next_run, delta)
-        message.delete()
-        return
+    @classmethod
+    def clean_messages(cls):
+        attributes = cls.getqueue().get_attributes('All')
+        message_count = sum(int(attributes['ApproximateNumberOfMessages' + a])
+                            for a in ('', 'Delayed', 'NotVisible'))
 
-    start_time = time.time()
-    try:
-        manager.handle('cron', command)
-    except Exception:
-        app.logger.exception('Failed to run command: %s', command)
-        # message will re-appear on the queue after visibility timeout
-        return
+        messages = []
+        manager_commands = set(manager.get_cron_commands().keys())
+        commands = set()
+        while True:
+            new_messages = cls.getqueue().get_messages(10, 60)
+            if not new_messages:
+                break
+            for message in new_messages:
+                messages.append(message)
+                command = message.get_body()['command']
+                if command not in manager_commands:
+                    app.logger.warning('Deleting unknown command: %s', command)
+                    message.delete()
+                elif command in commands:
+                    app.logger.warning('Deleting duplicate command: %s', command)
+                    message.delete()
+                else:
+                    commands.add(command)
 
-    processing_time = time.time() - start_time
-    if processing_time < SQS_VISIBILITY_TIMEOUT:
-        # only write new message if this one was processed in time
-        _write_message(command, datetime.utcnow() + timedelta(seconds=interval), interval)
-    else:
-        app.logger.warning('Cron command %s took %ds', command, processing_time)
+        if not len(messages) == message_count:
+            app.logger.warning('Failed to read %d messages', message_count - len(messages))
 
-    message.delete()
-
-
-def init_messages(commands):
-    for command in manager.get_cron_commands():
-        if not commands or command in commands:
-            _write_message(command, datetime.utcnow())
-
-
-def clean_messages():
-    queue = _get_queue()
-    attributes = queue.get_attributes('All')
-    message_count = sum(int(attributes['ApproximateNumberOfMessages' + a])
-                        for a in ('', 'Delayed', 'NotVisible'))
-
-    messages = []
-    manager_commands = set(manager.get_cron_commands().keys())
-    commands = set()
-    while True:
-        new_messages = queue.get_messages(10, 60)
-        if not new_messages:
-            break
-        for message in new_messages:
-            messages.append(message)
-            command = message.get_body()['command']
-            if command not in manager_commands:
-                app.logger.warning('Deleting unknown command: %s', command)
-                message.delete()
-            elif command in commands:
-                app.logger.warning('Deleting duplicate command: %s', command)
-                message.delete()
-            else:
-                commands.add(command)
-
-    if not len(messages) == message_count:
-        app.logger.warning('Failed to read %d messages', message_count - len(messages))
-
-    diff = manager_commands - commands
-    if diff:
-        app.logger.warning('Missing commands: %s', ', '.join(diff))
+        diff = manager_commands - commands
+        if diff:
+            app.logger.warning('Missing commands: %s', ', '.join(diff))
 
 
 if __name__ == '__main__':
-    # uwsgi mule will execute here
-
-    if not app.blueprints:
-        init_app()
-
-    if 'SENTRY_DSN' in app.config:
-        from raven.contrib.flask import Sentry
-        Sentry(app, logging=app.config.get('SENTRY_ENABLE_LOGGING'))
-
-    while True:
-        if os.path.exists('/tmp/rockpack-mainsite-cron.lock'):
-            time.sleep(10)
-        else:
-            process_sqs_message()
+    CronSqsProcessor().run()

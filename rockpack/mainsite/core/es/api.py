@@ -789,8 +789,8 @@ def es_update_channel_videos(extant=[], deleted=[], async=app.config.get('ASYNC_
         return
 
     if async:
-        from rockpack.mainsite.video_update_sqs_processor import _write_message
-        return _write_message(dict(extant=extant, deleted=deleted))
+        from rockpack.mainsite.elasticsearch_sqs_processor import ElasticsearchSqsProcessor
+        return ElasticsearchSqsProcessor.write_message(dict(extant=extant, deleted=deleted))
 
     from rockpack.mainsite.services.video import models
     from . import update
