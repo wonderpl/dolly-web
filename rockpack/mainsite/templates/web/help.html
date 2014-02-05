@@ -1,0 +1,111 @@
+{% extends "web/base.html" %}
+{% block content %}
+
+  {% assets filters="less,cssmin", output="gen/front_css.%(version)s.css", "assets/front/front.less" %}
+  <link rel="stylesheet" href="{{ ASSET_URL }}"/>
+  {% endassets %}
+
+  <div id="faq" class="wrapper">
+    <h2>FAQ</h2>
+    <p>
+     If your question isn’t answered below, please email us directly at<br><a href="mailto:support@rockpack.com">support@rockpack.com</a>
+    </p>
+    <div class="container">
+      <div class="left">
+
+        <div>
+          <h3>What is Rockpack?</h3>
+          <p>Rockpack is an iOS app that makes it easy to create, share and follow video playlists called packs. You can follow packs created by friends or experts to discover the videos you find interesting. Add your favorite videos from across the web with one tap.</p>
+        </div>
+
+        <div>
+          <h3>How do I get started?</h3>
+          <p>Rockpack is currently available for iPhone and iPad. You can download Rockpack in the Apple App Store. After installing Rockpack on your device, you can sign up using an email address or sign in with Facebook. Once you are logged in, you can browse and follow packs created by other people. Whenever a video is added to a pack you&rsquo;re following, it will appear in your feed. When you see a video you like, just press the + to create a new pack or add it to an existing one.</p>
+        </div>
+
+        <div>
+          <h3>On what platform is Rockpack available?</h3>
+          <p>Rockpack is currently available for iPhone and iPad.</p>
+        </div>
+
+        <div>
+          <h3>How do I download the Rockpack app?</h3>
+          <p>You can download Rockpack in the Apple App Store.</p>
+        </div>
+
+        <div>
+          <h3>Can I upload my own videos?</h3>
+          <p>Right now you can&rsquo;t upload your videos directly to Rockpack. If you upload your videos to YouTube, however, they will be accessible on Rockpack.</p>
+        </div>
+
+        <div>
+          <h3>How can I link directly to my pack?</h3>
+          <p>
+          A pack on Rockpack cannot be viewed outside of the app unless it is shared on Twitter, Facebook or email, in which case a link for the pack will be made publicly available.
+          <br />
+          To share, just tap the share icon on any pack, and select where you want to share it to.
+          </p>
+        </div>
+
+        <div>
+          <h3>How do I choose my pack cover image? </h3>
+          <p>Your pack cover image is not only the background to your videos but also your pack thumbnail. So, it&rsquo;s always best to choose a unique and personal cover. You can upload any picture from your camera roll or choose from the covers Rockpack offers you.</p>
+        </div>
+
+        <div>
+          <h3>How do I find new packs to follow?</h3>
+          <p>The Packs page is a great way to find new packs from the Rockpack community. Just tap a category and browse the packs that might interest you. If you find a pack you like, have a look at the other packs created by that user &ndash; you might like them too! You can also search for specific users.</p>
+        </div>
+
+      </div>
+
+      <div class="right">
+
+        <div>
+          <h3>How do I find people I know on Rockpack?</h3>
+          <p>You can search for people you know on Rockpack by typing in their username in the search bar. You can also invite people to join by sharing a pack or video. Just tap the share icon on any pack page or video and select where you want to share it to.</p>
+        </div>
+
+        <div>
+          <h3>How do I share my pack?</h3>
+          <p>You can share any pack on Rockpack to Facebook or Twitter if you have connected your accounts either in logon or &lsquo;settings&rsquo;. Just tap the share icon on any pack page and select where you want to share it to.</p>
+        </div>
+
+        <div>
+          <h3>How do I sign out of my account? </h3>
+          <p>To sign out of your account, go to your &lsquo;settings&rsquo;. Scroll to the bottom and tap &ldquo;Log Out.&rdquo;</p>
+        </div>
+
+        <div>
+          <h3>How do I change my email address?</h3>
+          <p>You can change the email address on your Rockpack account by going to &lsquo;settings&rsquo;. From there you can add or change your account information, including your email address.</p>
+        </div>
+
+        <div>
+          <h3>Can I control who sees my content?</h3>
+          <p>Profiles and videos on Rockpack are public, and anyone on the service can view them. If you don&rsquo;t categorise your pack, it will remain private and no one else will be able to view it. Over time we will add more ways for you to control the visibility of your content.</p>
+        </div>
+
+        <div>
+          <h3>How do I delete a pack I created?</h3>
+          <p>
+          You can delete any pack you&rsquo;ve created. To do this, go to your profile, press and hold a pack then select the one you want to delete.
+          <br />
+          If you shared out to Twitter or Facebook as well, your Tweet or Facebook update will still appear, along with a link to the post, but the video will not play.
+          </p>
+        </div>
+
+        <div>
+          <h3>How do I report a pack on Rockpack?</h3>
+          <p>If you come across an offensive pack on Rockpack, you can report it by tapping the flag next to the user and a member of the editorial team will be notified.</p>
+        </div>
+
+        <div>
+          <h3>How do I delete my account?</h3>
+          <p>We hope you don&rsquo;t! But please contact us if you would like to.</p>
+        </div>
+
+      </div>
+    </div>
+  </div>
+{% endblock %}

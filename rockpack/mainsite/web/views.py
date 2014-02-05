@@ -130,6 +130,11 @@ def hints():
     return {}
 
 
+@expose_web('/help', 'web/help.html', cache_age=3600)
+def help():
+    return {}
+
+
 @expose_web('/tos', 'web/terms.html', cache_age=3600)
 def terms():
     return {}
