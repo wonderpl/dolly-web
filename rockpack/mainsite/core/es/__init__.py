@@ -38,7 +38,7 @@ def use_elasticsearch():
     return es_url and not (request and request.args.get('_es') == 'false')
 
 
-def get_es_connection(timeout=30):
+def get_es_connection(timeout=app.config.get('ELASTICSEARCH_TIMEOUT', 60)):
     """ Connection handler for elastic search """
     if not es_url:
         return None
