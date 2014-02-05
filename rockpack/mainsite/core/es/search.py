@@ -476,10 +476,11 @@ class VideoSearch(EntitySearch, CategoryMixin, MediaSortMixin):
             try:
                 video['channel'] = channels[video['channel']['id']]
             except KeyError:
-                log_cache['log_cache'].append(video)
+                if video['channel'] not in log_cache:
+                    log_cache.append(video['channel'])
 
         if log_cache:
-            app.logger.warning("%s missing channel errors for videos during mapping [%s ...]", str(len(log_cache)), log_cache[0])
+            app.logger.warning("Missing channels '%s' during mapping", str(log_cache))
 
     def _format_results(self, videos, with_channels=True, with_stars=False):
         vlist = []

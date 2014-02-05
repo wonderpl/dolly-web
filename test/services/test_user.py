@@ -611,6 +611,14 @@ class TestUserContent(base.RockPackTestCase):
                     headers=[get_auth_header(user)])
                 self.assertEquals(r.status_code, 204)
 
+                if action == 'star':
+                    self.assertEquals(
+                        True,
+                        Channel.query.filter(
+                            Channel.owner == user,
+                            Channel.favourite == True
+                        ).one().video_instances[0].is_favourite)
+
                 r = client.get(
                     '/ws/{}/activity/'.format(user),
                     headers=[get_auth_header(user)])
@@ -688,7 +696,7 @@ class TestUserContent(base.RockPackTestCase):
             cron_cmds.create_commmenter_notification(date_from=start, user_notifications=user_notifications)
             UserNotification.query.session.commit()
 
-            self.assertEquals(UserNotification.query.filter(UserNotification.date_created>=start).count(), 0)
+            self.assertEquals(UserNotification.query.filter(UserNotification.date_created >= start).count(), 0)
 
             with patch.object(cron_cmds, '_send_apns_message') as mock_method:
                 for user in user_notifications.keys():

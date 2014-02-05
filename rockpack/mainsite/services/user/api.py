@@ -182,7 +182,7 @@ def save_video_activity(userid, action, instance_id, locale):
                 channel.remove_videos([video_id])
             else:
                 # Return new instance here so that it can be shared
-                return channel.add_videos([video_id])[0]
+                return channel.add_videos([video_id], favourite=True)[0]
 
 
 @commit_on_success
