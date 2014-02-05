@@ -250,6 +250,8 @@ class VideoWS(WebService):
         vs.date_sort(date_order)
         if location:
             vs.check_country_allowed(location.upper())
+        if app.config.get('DOLLY'):
+            vs.add_term('is_favourite', False)
         videos = vs.videos(with_channels=True)
         total = vs.total
 

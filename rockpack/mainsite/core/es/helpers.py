@@ -257,7 +257,8 @@ class DBImport(object):
                     child_instance_count=mapped.child_instance_count,
                     link_url=mapped.link_url,
                     link_title=mapped.link_title,
-                    tags=mapped.tags
+                    tags=mapped.tags,
+                    is_favourite=mapped.is_favourite
                 )
                 ev.manager.indexer.insert(v.id, rep)
 
