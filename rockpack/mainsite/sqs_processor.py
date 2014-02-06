@@ -40,7 +40,8 @@ class SqsProcessor(object):
         # uwsgi mule will execute here
         if not app.blueprints:
             init_app()
-            app.app_context().push()
+
+        app.app_context().push()
 
         if 'SENTRY_DSN' in app.config:
             from raven.contrib.flask import Sentry
