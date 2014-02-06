@@ -10,293 +10,42 @@ body{width:100% !important;} .ReadMsgBody{width:100%;} .ExternalClass{width:100%
 body{-webkit-text-size-adjust:none;} /* Prevent Webkit platforms from changing default text sizes. */
 
   /* Reset Styles */
-body{margin:0; padding:0;}
+body{margin:0; padding:0; background-color: white;}
 img{border:0; height:auto; line-height:100%; outline:none; text-decoration:none;}
 table td{border-collapse:collapse;}
 #backgroundTable{height:100% !important; margin:0; padding:0; width:100% !important;}
 
-  /* Template Styles */
-
-  /* /\/\/\/\/\/\/\/\/\/\ STANDARD STYLING: COMMON PAGE ELEMENTS /\/\/\/\/\/\/\/\/\/\ */
-
-  /**
-  * @tab Page
-  * @section background color
-  * @tip Set the background color for your email. You may want to choose one that matches your company's branding.
-  * @theme page
-  */
 body, #backgroundTable{
-  /*@editable*/ background-color:#f7f7f7;
-  font-family: Helvetica;
+  /*background-color:#;*/
+  font-family: verdana, sans-serif;
   font-size: 14px;
-  color: #282d33;
+  color: #767472;
 }
 
-  /**
-  * @tab Page
-  * @section email border
-  * @tip Set the border for your email.
-  */
-#templateContainer{
-  /*@editable*/ border: 1px solid #DDDDDD;
+h1 {
+  font-size: 22px;
+  line-height: 24px;
+  font-weight: normal;
+  color: #767472;
 }
 
-  /**
-  * @tab Page
-  * @section heading 1
-  * @tip Set the styling for all first-level headings in your emails. These should be the largest of your headings.
-  * @style heading 1
-  */
-  /* /\/\/\/\/\/\/\/\/\/\ STANDARD STYLING: PREHEADER /\/\/\/\/\/\/\/\/\/\ */
-
-  /**
-  * @tab Header
-  * @section preheader style
-  * @tip Set the background color for your email's preheader area.
-  * @theme page
-  */
-#templatePreheader{
-  /*@editable*/ background-color:#f7f7f7;
+p {
+  font-size: 18px;
+  line-height: 24px;
+  color: #767472;
 }
 
-  /**
-  * @tab Header
-  * @section preheader text
-  * @tip Set the styling for your email's preheader text. Choose a size and color that is easy to read.
-  */
-.preheaderContent div{
-  /*@editable*/ color:#282d33;
-  /*@editable*/ font-family:Helvetica;
-  /*@editable*/ line-height:100%;
-  /*@editable*/ text-align:left;
+/*.preheaderContent div{
+  color:#282d33;
+  font-family:Helvetica;
+  line-height:100%;
+  text-align:left;
 }
-
-  /**
-  * @tab Header
-  * @section preheader link
-  * @tip Set the styling for your email's preheader links. Choose a color that helps them stand out from your text.
-  */
+*/
 a:link, a:visited, div a {
-  /*@editable*/ color:#0ba6ab;
-  /*@editable*/ font-weight:normal;
-  /*@editable*/ text-decoration:none;
-}
-
-
-
-  /* /\/\/\/\/\/\/\/\/\/\ STANDARD STYLING: HEADER /\/\/\/\/\/\/\/\/\/\ */
-
-  /**
-  * @tab Header
-  * @section header style
-  * @tip Set the background color and border for your email's header area.
-  * @theme header
-  */
-#templateHeader, #templateBody {
-  /*@editable*/ background-color:#FFFFFF;
-  /*@editable*/ border-bottom:0;
-}
-
-  /**
-  * @tab Header
-  * @section header text
-  * @tip Set the styling for your email's header text. Choose a size and color that is easy to read.
-  */
-.headerContent{
-  /*@editable*/ color:#282d33;
-  /*@editable*/ font-family:Helvetica;
-  /*@editable*/ line-height:100%;
-  /*@editable*/ padding:0;
-}
-
-  /**
-  * @tab Header
-  * @section header link
-  * @tip Set the styling for your email's header links. Choose a color that helps them stand out from your text.
-  */
-.headerContent a:link, .headerContent a:visited, /* Yahoo! Mail Override */ .headerContent a .yshortcuts /* Yahoo! Mail Override */{
-  /*@editable*/ color:#336699;
-  /*@editable*/ font-weight:normal;
-  /*@editable*/ text-decoration:underline;
-}
-
-#headerImage{
-  height:auto;
-  max-width:600px;
-}
-
-  /* /\/\/\/\/\/\/\/\/\/\ STANDARD STYLING: COLUMNS; LEFT, RIGHT /\/\/\/\/\/\/\/\/\/\ */
-
-  /**
-  * @tab Columns
-  * @section left column text
-  * @tip Set the styling for your email's left column text. Choose a size and color that is easy to read.
-  */
-.leftColumnContent{
-  /*@editable*/ background-color:#FFFFFF;
-}
-
-  /**
-  * @tab Columns
-  * @section left column text
-  * @tip Set the styling for your email's left column text. Choose a size and color that is easy to read.
-  */
-.leftColumnContent div{
-  /*@editable*/ color:#505050;
-  /*@editable*/ font-family:Helvetica;
-  /*@editable*/ line-height:150%;
-  /*@editable*/ text-align:left;
-}
-
-  /**
-  * @tab Columns
-  * @section left column link
-  * @tip Set the styling for your email's left column links. Choose a color that helps them stand out from your text.
-  */
-.leftColumnContent div a:link, .leftColumnContent div a:visited, /* Yahoo! Mail Override */ .leftColumnContent div a .yshortcuts /* Yahoo! Mail Override */{
-  /*@editable*/ color:#336699;
-  /*@editable*/ font-weight:normal;
-  /*@editable*/ text-decoration:underline;
-}
-
-.leftColumnContent img{
-  display:inline;
-  height:auto;
-}
-
-  /**
-  * @tab Columns
-  * @section right column text
-  * @tip Set the styling for your email's right column text. Choose a size and color that is easy to read.
-  */
-.rightColumnContent{
-  /*@editable*/ background-color:#FFFFFF;
-}
-
-  /**
-  * @tab Columns
-  * @section right column text
-  * @tip Set the styling for your email's right column text. Choose a size and color that is easy to read.
-  */
-.rightColumnContent div{
-  /*@editable*/ color:#505050;
-  /*@editable*/ font-family:Helvetica;
-  /*@editable*/ line-height:150%;
-  /*@editable*/ text-align:left;
-}
-
-  /**
-  * @tab Columns
-  * @section right column link
-  * @tip Set the styling for your email's right column links. Choose a color that helps them stand out from your text.
-  */
-.rightColumnContent div a:link, .rightColumnContent div a:visited, /* Yahoo! Mail Override */ .rightColumnContent div a .yshortcuts /* Yahoo! Mail Override */{
-  /*@editable*/ color:#336699;
-  /*@editable*/ font-weight:normal;
-  /*@editable*/ text-decoration:underline;
-}
-
-.rightColumnContent img{
-  display:inline;
-  height:auto;
-}
-
-#footer{
-  font-size: 11px;
-  color: #aaaaaa;
-  text-align: center;
-  line-height: 11px;
-  font-family: Helvetica;
-}
-
-
-  /* /\/\/\/\/\/\/\/\/\/\ STANDARD STYLING: FOOTER /\/\/\/\/\/\/\/\/\/\ */
-
-  /**
-  * @tab Footer
-  * @section footer style
-  * @tip Set the background color and top border for your email's footer area.
-  * @theme footer
-  */
-#templateFooter{
-  /*@editable*/ background-color:#FFFFFF;
-  /*@editable*/ border-top:0;
-}
-
-  /**
-  * @tab Footer
-  * @section footer text
-  * @tip Set the styling for your email's footer text. Choose a size and color that is easy to read.
-  * @theme footer
-  */
-.footerContent div{
-  /*@editable*/ color:#707070;
-  /*@editable*/ font-family:Helvetica;
-  /*@editable*/ line-height:125%;
-  /*@editable*/ text-align:left;
-}
-
-  /**
-  * @tab Footer
-  * @section footer link
-  * @tip Set the styling for your email's footer links. Choose a color that helps them stand out from your text.
-  */
-.footerContent div a:link, .footerContent div a:visited, /* Yahoo! Mail Override */ .footerContent div a .yshortcuts /* Yahoo! Mail Override */{
-  /*@editable*/ color:#336699;
-  /*@editable*/ font-weight:normal;
-  /*@editable*/ text-decoration:underline;
-}
-
-.footerContent img{
-  display:inline;
-}
-
-  /**
-  * @tab Footer
-  * @section social bar style
-  * @tip Set the background color and border for your email's footer social bar.
-  * @theme footer
-  */
-#social{
-  /*@editable*/ background-color:#FAFAFA;
-  /*@editable*/ border:0;
-}
-
-  /**
-  * @tab Footer
-  * @section social bar style
-  * @tip Set the background color and border for your email's footer social bar.
-  */
-#social div{
-  /*@editable*/ text-align:center;
-}
-
-  /**
-  * @tab Footer
-  * @section utility bar style
-  * @tip Set the background color and border for your email's footer utility bar.
-  * @theme footer
-  */
-#utility{
-  /*@editable*/ background-color:#FFFFFF;
-  /*@editable*/ border:0;
-}
-
-  /**
-  * @tab Footer
-  * @section utility bar style
-  * @tip Set the background color and border for your email's footer utility bar.
-  */
-#utility div{
-  /*@editable*/ text-align:center;
-}
-
-#monkeyRewards img{
-  max-width:190px;
-}
-
-.grey {
-  color: #939393;
+  color:#5850bb;
+  font-weight:normal;
+  text-decoration:none;
 }
 </style>
 </head>
@@ -305,61 +54,60 @@ a:link, a:visited, div a {
   <table border="0" cellpadding="0" cellspacing="0" height="100%" width="100%" id="backgroundTable">
     <tr>
       <td align="center" valign="top">
-        <!-- // Begin Template Preheader \\ -->
-        <table border="0" cellpadding="10" cellspacing="0" width="600" id="templatePreheader">
+        <table border="0" cellpadding="0" cellspacing="0" height="100%" width="100%" bgcolor="#f9f9f9" style="border-bottom: 1px solid #b4b4b4;">
           <tr>
-            <td valign="top" class="preheaderContent">
-
-              <!-- // Begin Module: Standard Preheader \ -->
-              <table border="0" cellpadding="10" cellspacing="0" width="100%">
+            <td align="center" valign="middle" height="120" width="598">
+              <center><img src="emails/header-logo.png" alt="Wonder Place" width="300" height="100" /></center>
+            </td> 
+          </tr>
+        </table>
+        <table border="0" cellpadding="0" cellspacing="0" height="100%" width="600" bgcolor="white">
+          <tr>
+            <td width="36" colspan="1"></td>
+            <td align="left" valign="middle" height="120" colspan="1" width="528">
+              <br/>
+              <h1><font face="verdana" size="4" color="#767472">Hello David,</font></h1>
+              <p><font face="verdana" size="3" color="#767472">Welcome to <a href="#">Wonder PL</a>, new home to the world’s best existing and original video content.</font></p>
+              <p><font face="verdana" size="3" color="#767472">Now you are here, it’s easy to make yourself at home. Begin sharing your inspiration as soon as you find it, through your own personal collections. Watch free from clutter and distraction, on the cleanest player around. Live and feel better, within our very own quality communities of Culture, Wellness, Home &amp; Family, Food, the Mind and Entertainment.</font></p>
+              <p><font face="verdana" size="3" color="#767472">And when indecision strikes, let Wonder PL’s <a href="#">Mood-Minder</a> find you the perfect video for right now, whichever way you might be feeling. Say hello to the next evolution of intelligent media.</font></p>
+              <p><font face="verdana" size="3" color="#767472">We understand how important it is to keep good company, and our select partners and curators are what makes <a href="#">Wonder PL</a> the place to be. Start following some of them today for beautiful, exclusive content at your fingertips:</font></p>
+              <p>&nbsp;</p>
+              <table border="0" cellpadding="0" cellspacing="0" width="100%" bgcolor="white">
                 <tr>
-                  <td>
-                    <center><a href="{{ config.ITUNES_APP_LINK }}&ct=welcome"><img src="{{ config.ASSETS_URL }}/assets/emails/images/logo.png" alt="Wonder PL"></a></center>
+                  <td width="176" align="center" valign="top">
+                    <img src="emails/avatar.png" width="132" height="132" />
+                    <h2><font face="verdana" size="3" color="#767472" style="font-weight: normal;">Inge Solheim</font></h2>
+                    <p><font face="verdana" size="2" color="#767472" style="line-height: 18px; font-size: 13px;">Description of the user, make me click. It needs to be alluring.</font></p>
+                  </td>
+                  <td width="176" align="center" valign="top">
+                    <img src="emails/avatar.png" width="132" height="132" />
+                    <h2><font face="verdana" size="3" color="#767472" style="font-weight: normal;">Inge Solheim</font></h2>
+                    <p><font face="verdana" size="2" color="#767472" style="line-height: 18px; font-size: 13px;">Description of the user, make me click. It needs to be alluring.</font></p>
+                  </td>
+                  <td width="176" align="center" valign="top">
+                    <img src="emails/avatar.png" width="132" height="132" />
+                    <h2><font face="verdana" size="3" color="#767472" style="font-weight: normal;">Inge Solheim</font></h2>
+                    <p><font face="verdana" size="2" color="#767472" style="line-height: 18px; font-size: 13px;">Description of the user, make me click. It needs to be alluring.</font></p>
                   </td>
                 </tr>
               </table>
-              <!-- // End Module: Standard Preheader \ -->
-
-            </td>
+              <br/>
+              <p><font face="verdana" size="3" color="#767472">You can find the answers to any more questions you might have for us here, but now we have met, rest assured we will keep you updated with upcoming releases and events, and continue to direct you to the most exclusive and exciting contemporary video content around.</font></p>
+              <p><font face="verdana" size="3" color="#767472">Until then,</font></p>
+              <p><font face="verdana" size="3" color="#767472">Fill your life with Wonder</font></p>
+              <h3>WONDER PL </h3>
+              <p>&nbsp;</p>
+            </td> 
+            <td width="36" colspan="1"></td>
           </tr>
         </table>
-        <!-- // End Template Preheader \\ -->
-        <table border="0" cellpadding="0" cellspacing="0" width="600" id="templateContainer">
+        <table border="0" cellpadding="0" cellspacing="0" height="100%" width="100%" bgcolor="#f9f9f9" style="border-bottom: 1px solid #b4b4b4;">
           <tr>
-            <td align="center" valign="top">
-              <!-- // Begin Template Header \\ -->
-              <table border="0" cellpadding="0" cellspacing="20" width="600" id="templateHeader">
-                <tr>
-                  <td class="headerContent">
-                    Hi {{ user.display_name }},<br />                     
-                    <p>Thank you for joining us on Wonder PL.</p>
-                  </td>
-                </tr>
-              </table>
-              <!-- // End Template Header \\ -->
-            </td>
-          </tr>
-        </table>
-        <br />
-        <table border="0" cellpadding="10" cellspacing="0" width="600" id="footer">
-          <tr>
-            <td><img src="{{ config.ASSETS_URL }}/assets/emails/images/press.png"></td>
-          </tr>
-          <tr>
-            <td>
-              <center><a href="{{ config.ITUNES_APP_LINK }}&ct=welcome"><img src="{{ config.ASSETS_URL }}/assets/emails/images/download.png" alt="download"></a></center>
-            </td>
-          </tr>
-          <tr>
-            <td>
-              <center><a href="{{ url_for('homepage') }}"><img src="{{ config.ASSETS_URL }}/assets/emails/images/logo.png" alt="Wonder PL"></a></center>
-            </td>
-          </tr>
-          <tr>
-            <td>
-              <p>To ensure our emails reach your inbox please make sure to add {{ email_sender|e }} to your address book or safe list.</p>
-              <p>Your privacy is important to us, have a read to our <a href="{{ url_for('privacy') }}">privacy policy</a>.</p>
-            </td>
+            <td width="20%"></td>
+            <td align="center" valign="middle" height="120" width="60%">
+              <p><font face="verdana" size="1" color="#767472">To ensure our emails reach your inbox please make sure to add Wonder PL (noreply@wonderpl.com) to your address book or safe list. You are subscribed as [[ SUBSCRIBED ADDRESS]]. Your privacy is important to us, have a read of our <a href="http://wonderpl.com/privacy/" target="_blank">privacy policy</a>.</p>
+            </td> 
+            <td width="20%"></td>
           </tr>
         </table>
       </td>

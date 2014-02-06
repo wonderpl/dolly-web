@@ -55,7 +55,7 @@ OO.plugin("WonderUIModule", function (OO) {
         UA: window.navigator.userAgent.toLowerCase(),
         elements: {},
         timers: {
-            seek: 0,
+            seek: 11,
             buffer: 0,
             interaction: 0,
             vol: 0
@@ -231,7 +231,6 @@ OO.plugin("WonderUIModule", function (OO) {
         _.elements.poster.getElementsByTagName('td')[0].innerHTML = (_.data.title.replace(/_/g,' '));
         _.removeClass( _.elements.poster, 'loading' );
         _.duration = content.duration/1000 || content.time;
-        console.log('duration: ' + _.duration );
 
         if ( document.getElementsByTagName('video').length > 0 ) {
             _.elements.video = document.getElementsByTagName('video')[0];
@@ -267,7 +266,7 @@ OO.plugin("WonderUIModule", function (OO) {
             _.hideLoader();            
         }
 
-        // console.log('time update');
+        console.log( _.time );
     };
 
     _.onError = function (error, info) {
@@ -302,7 +301,6 @@ OO.plugin("WonderUIModule", function (OO) {
     };
 
     _.onSeeked = function (e) {
-        console.log('seeked event fired');
         _.scrubbed = false;
         if ( _.played === false ) {
             _.mb.publish(OO.EVENTS.PLAY);    
@@ -384,6 +382,7 @@ OO.plugin("WonderUIModule", function (OO) {
     };
 
     _.seek = function (seconds) {
+        console.log( seconds );
         _.mb.publish(OO.EVENTS.SEEK, seconds);
     };
 
