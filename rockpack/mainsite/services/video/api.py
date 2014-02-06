@@ -1,4 +1,5 @@
 import wtforms as wtf
+import pyes
 from flask import request, abort
 from flask.ext.wtf import Form
 from collections import defaultdict
@@ -248,10 +249,13 @@ class VideoWS(WebService):
         vs.filter_category(category)
         vs.star_order_sort(request.args.get('star_order'))
         vs.date_sort(date_order)
+
         if location:
             vs.check_country_allowed(location.upper())
+
         if app.config.get('DOLLY'):
-            vs.add_term('is_favourite', False)
+            f = pyes.TermFilter(field='is_favourite', value=False)
+            vs._exclusion_filters.append(f)
         videos = vs.videos(with_channels=True)
         total = vs.total
 
