@@ -32,12 +32,12 @@
 /*  Date: Thurs 9th January 2014
 /* ======================================= */
 
-OO.plugin("WonderUIModule", function (OO) {
+(function(w,d){
 
     var _ = {
         framecount: 0,
-        volume: 1,
-        newvolume: 1,
+        currentvolume: 0,
+        newvolume: 100,
         played: false,
         scrubbed: false,
         scrubbing: false,
@@ -46,137 +46,89 @@ OO.plugin("WonderUIModule", function (OO) {
         mousetarget: undefined,        
         displayTime: '--:--',
         time: 0,
-        duration: NaN,
+        duration: 00,
         state: {
             playing: false,
             fullscreen: false
         },
-        UA: window.navigator.userAgent.toLowerCase(),
+        UA: w.navigator.userAgent.toLowerCase(),
         elements: {},
         timers: {
-            // debounces the video scrubbing
-            seek: 0,
-            // debounces the loading
+            seek: 11,
             buffer: 0,
-            // debounces the hiding of the controls
             interaction: 0,
-            // debounces the volume adjustment
             vol: 0
         }
-        // seekTimeout: undefined,
-        // loaderTimeout: undefined,
-        // volumeTimeout: undefined,
-        // videoTimeout: undefined,
-        // interactionTimeout: undefined,
     };
 
-    // This section contains the HTML content to be used as the UI
-    // '<a href="#" class="rewind wonder-rewind icon-ccw"></a>' +
-    // '<span class="f-thin f-uppercase"></span>' +
-    var wonder_template = 
-        '<div id="wonder-poster" class="loading">' +
-            '<img src="/static/assets/wonderplayer/img/trans.png" alt="" id="wonder-poster" class="blur"/>' +
-            '<table width="100%" height="100%" cellpadding="0" cellspacing="0"><tr><td width="100%" height="100%" align="center" valign="middle">Your video is loading</td></tr></table>' +
-        '</div>' +
-        '<a id="wonder-loader" class="show f-sans f-uppercase"><span>Your video is loading</span></a>' + 
-        '<a class="wonder-play-big"></a>' + 
-        '<div id="wonder-controls">' + 
-            '<a class="play wonder-play player-icon-play"></a>' + 
-            '<a class="pause wonder-pause player-icon-pause hidden"></a>' + 
-            '<a class="volume wonder-volume vol-3">' +
-                '<img class="vol-1" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAC0AAAAoCAYAAABq13MpAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAGBJREFUeNrs17EJgFAMBND/HcZacC+ntLJyo5gRxEYO3sGVgVeEQGZVjbQsIzDQ0NDQ0NDQ0NDQ0Jnoq7unodfukbge55eh+eNju3XvNLTrAQ0NDQ0NDQ0NDQ39Lo8AAwCo8wyaUULIQwAAAABJRU5ErkJggg==" />' +
-                '<img class="vol-2" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAC0AAAAoCAYAAABq13MpAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAATNJREFUeNrsmLFKA0EQhnOaQlKo4APEwkIQsRILX8BO0iZV0BfIS1ilsbC2UcFW0EJs1CdQLKxTBCs9bEzwcP2OXGBykOOu2lmYHz7YKRa+O2Z3joucc7XQslALMCZt0iZt0iZt0vPyBCewXnlnOsY9EbtJfqEPjbJ7I4/fHjGsiPoFDuBDc3tcwo+od+AWGprbI6UJz242Z5rbY5oleID9rE5gG941X3kjaItWqcNRCPf0AK5FfRjKcLkT642iA6lJeijWEayFIJ1/s0kI0rti/V00ZLRIL0JX1I/pCNEu3csO3zQXmidiSgcSMRHfoF60x6fsFlzlRvgY9jSP8S9YFfUfHMO55q+819wDtMoI+5a+h084hU24KbvRZ3sswzijUiL7a2rSJm3SJm3SJk3+BRgA8LFe4j8YonoAAAAASUVORK5CYII=" />' +
-                '<img class="vol-3" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAC0AAAAoCAYAAABq13MpAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAbhJREFUeNrs2c8rRFEUB/B53qSYaRYyVopSimTBhJRZ2diJlLAQs1IWFkr5H6xYYKOslGKNJfm5YGespPGzEDUZmeb53rq3jjtvyu6dU3PqU+dMM/U16d33zjie54WkVUVIYAUdug/WISEpdAxScA7HMCjt36MHdmAfGjiHvoc767V+uISBkp9SV4+AuTAOGe9v5WHK7zMcQhsxWLGCF/QfxDa0MQHfJLjqu+l7HKaHi7qKbIOr51togRznw2UXFsjcCPNmcBgf4w7s6auJqiw0wwPnY1x9m7OQ13ME5iTce1zDFpknISzhhmmV9LWQlBD6CJ7JLCJ0AU7InJByP31F+lYpoZ9IH5cS+oP0USmhq0j/KSV0PenfpIRuI/2NhNAqY5LMFxJCq8B1ZD6QEHqG9C9wyD10OwyTeQN+ON9Pu/r4NoucL2iCR87f9KK1eVpSgbmsEPyM6idxU2mo5vw0ntI7D1NZ6OC6QojCms/CZojj3qMSpn02TDkY47hh6oJXr7gy9oKGCvrqEYca6wlcLWk64VTCqlftp3thxHomLKpwwEHfYRk24ezfW5zyD0Xl0KXrV4ABABBpntz13cW2AAAAAElFTkSuQmCC" />' +
-            '</a>' +
-            '<a class="wonder-logo"></a>' +
-            '<a class="fullscreen wonder-fullscreen player-icon-fullscreen"></a>' +
-            '<span class="wonder-timer">--:--</span>' +
-            '<div class="scrubber vid loading">' +
-                '<div class="scrubber-progress vid"></div>' +
-                '<div class="scrubber-buffer"></div>' +
-                '<a class="scrubber-handle vid player-icon-circle"></a>' +
-            '</div>' +
-            '<div class="scrubber-target vid">' +
-                '<img src="/static/assets/wonderplayer/img/trans.png" class="scrubber-trans vid" width="100%" height="100%" />' +
-            '</div>' +
-            '<div class="scrubber vol">' +
-                '<div class="scrubber-progress vol"></div>' +
-                '<a class="scrubber-handle vol player-icon-circle"></a>' +
-            '</div>' +
-            '<div class="scrubber-target vol">' +
-                '<img src="/static/assets/wonderplayer/img/trans.png" class="scrubber-trans vol" width="100%" height="100%" />' +
-            '</div>' +
-        '</div>';
-
-    // Constructor
-    _.WonderUIModule = function (mb, id) {
-        _.mb = mb; // save message bus reference for later use
-        _.id = id;
+    _.WonderYTModule = function( elem, video, opts, data ) {
+        _.data = data;
+        console.log(data);
+        _.player = new YT.Player(elem, {
+            width: '100%',
+            height: '100%',
+            videoId: video,
+            playerVars: opts,
+            events: {
+                'onReady': _.onContentReady,
+                'onStateChange': _.onPlayerStateChange
+            }
+        });
+        window.ytplayer = _.player;
+        window.wonder = _;
         _.init();
+        return _.player;
+    };
+
+    _.onPlayerStateChange = function (state) {
+        console.log( state );
+    };
+
+    // Update content, status and duration
+    _.onContentReady = function () {
+
+        _.time = _.player.getCurrentTime();    
+        _.duration = _.data.video.duration;
+        _.elements.poster.getElementsByTagName('td')[0].innerHTML = (_.data.title.replace(/_/g,' '));
+        _.hideLoader();
+        _.removeClass( _.elements.poster, 'loading' );
+        _.loaded = true;
     };
 
     // Add event listeners
     _.init = function () {
-
-        _.ie8 = ( _.hasClass(document.querySelector('html'), 'ie8') ) ? true : false;
+        _.ie8 = ( _.hasClass(d.querySelector('html'), 'ie8') ) ? true : false;
         _.ipad = ( _.UA.indexOf('ipad') !== -1 ) ? true : false;
         _.ios = ( _.UA.indexOf('ipad') !== -1 || _.UA.indexOf('iphone') !== -1 ) ? true : false;
 
-        _.mb.subscribe(OO.EVENTS.PLAYER_CREATED, 'wonder', _.onPlayerCreate);
-        _.mb.subscribe(OO.EVENTS.SEEKED, 'wonder', _.onSeeked);
-        _.mb.subscribe(OO.EVENTS.CONTENT_TREE_FETCHED, 'wonder', _.onContentReady);
-        _.mb.subscribe(OO.EVENTS.PLAYHEAD_TIME_CHANGED, 'wonder', _.onTimeUpdate);
-        _.mb.subscribe(OO.EVENTS.VOLUME_CHANGED, 'wonder', _.onVolumeChanged);
-        _.mb.subscribe(OO.EVENTS.PLAYED, 'wonder', _.onPlayed);
-        _.mb.subscribe(OO.EVENTS.PAUSE, 'wonder', _.onPause);
-        _.mb.subscribe(OO.EVENTS.PLAY, 'wonder', _.onPlay);
-        _.mb.subscribe(OO.EVENTS.ERROR, 'wonder', _.onError);
-        _.mb.subscribe(OO.EVENTS.PLAYER_EMBEDDED, 'wonder', _.hideLoader);
-        requestAnimationFrame( _.Tick );
-    };
-
-    /*  Message bus event subscriber callbacks
-    /* ======================================= */
-
-    // Build the UI
-    _.onPlayerCreate = function (event, elementId, params) {
-        
-        // Wrap the player element
-        _.wrapper = document.createElement('div');
-        _.wrapper.setAttribute('id','wonder-wrapper');
-        _.wrapper.innerHTML = wonder_template;
-        _.playerElem = document.getElementById(elementId);
-        _.playerElem.parentNode.insertBefore(_.wrapper, _.playerElem);
-        _.wrapper.insertBefore(_.playerElem, document.getElementById('wonder-poster'));
-
         // Cache our UI elements
-        _.elements.wrapper = document.getElementById('wonder-wrapper');
-        _.elements.controls = document.getElementById('wonder-controls');
-        _.elements.poster = document.getElementById('wonder-poster');
-        _.elements.loader = document.getElementById('wonder-loader');
+        _.elements.wrapper = d.getElementById('wonder-wrapper');
+        _.elements.controls = d.getElementById('wonder-controls');
+        _.elements.poster = d.getElementById('wonder-poster');
+        _.elements.loader = d.getElementById('wonder-loader');
         
         // Main buttons
-        _.elements.playbutton = document.querySelector('.wonder-play');
-        _.elements.bigplaybutton = document.querySelector('.wonder-play-big');
-        _.elements.pausebutton = document.querySelector('.wonder-pause');
-        _.elements.fullscreenbutton = document.querySelector('.wonder-fullscreen');
-        _.elements.volumebutton = document.querySelector('.wonder-volume');
-        _.elements.timer = document.querySelector('.wonder-timer');
+        _.elements.playbutton = d.querySelector('.wonder-play');
+        _.elements.bigplaybutton = d.querySelector('.wonder-play-big');
+        _.elements.pausebutton = d.querySelector('.wonder-pause');
+        _.elements.fullscreenbutton = d.querySelector('.wonder-fullscreen');
+        _.elements.volumebutton = d.querySelector('.wonder-volume');
+        _.elements.timer = d.querySelector('.wonder-timer');
 
         // Scrubber element groups
-        _.elements.scrubbers = document.querySelectorAll('.scrubber');
-        _.elements.scrubber_handles = document.querySelectorAll('.scrubber-handle');
-        _.elements.scrubber_targets = document.querySelectorAll('.scrubber-target');
-        _.elements.scrubber_trans = document.querySelectorAll('.scrubber-trans');
+        _.elements.scrubbers = d.querySelectorAll('.scrubber');
+        _.elements.scrubber_handles = d.querySelectorAll('.scrubber-handle');
+        _.elements.scrubber_targets = d.querySelectorAll('.scrubber-target');
+        _.elements.scrubber_trans = d.querySelectorAll('.scrubber-trans');
 
         // Scrubber specific elements
-        _.elements.scrubber_vid = document.querySelector('.scrubber.vid');
-        _.elements.scrubber_buffer = document.querySelector('.scrubber-buffer');
-        _.elements.scrubber_progress_vid = document.querySelector('.scrubber-progress.vid');
-        _.elements.scrubber_handle_vid = document.querySelector('.scrubber-handle.vid');
-        _.elements.scrubber_vol = document.querySelector('.scrubber.vol');
-        _.elements.scrubber_progress_vol = document.querySelector('.scrubber-progress.vol');
-        _.elements.scrubber_handle_vol = document.querySelector('.scrubber-handle.vol');
+        _.elements.scrubber_vid = d.querySelector('.scrubber.vid');
+        _.elements.scrubber_buffer = d.querySelector('.scrubber-buffer');
+        _.elements.scrubber_progress_vid = d.querySelector('.scrubber-progress.vid');
+        _.elements.scrubber_handle_vid = d.querySelector('.scrubber-handle.vid');
+        _.elements.scrubber_vol = d.querySelector('.scrubber.vol');
+        _.elements.scrubber_progress_vol = d.querySelector('.scrubber-progress.vol');
+        _.elements.scrubber_handle_vol = d.querySelector('.scrubber-handle.vol');
 
         // Listen for user interaction and show and hide the nav as necessary
         _.listen(_.elements.wrapper, 'mousemove', _.interaction);
@@ -227,48 +179,16 @@ OO.plugin("WonderUIModule", function (OO) {
         if ( _.ios === true ) {
             _.addClass( _.elements.controls, 'volume-disabled' );
         }
-    };
 
-    // Update content, status and duration
-    _.onContentReady = function (event, content) {
-
-        _.info = content;
-        _.elements.poster.getElementsByTagName('img')[0].src = content.promo || content.promo_image;
-        // _.elements.loader.className = '';
-        _.hideLoader();
-        _.elements.poster.getElementsByTagName('td')[0].innerHTML = (_.info.title.replace(/_/g,' '));
-        _.removeClass( _.elements.poster, 'loading' );
-        _.duration = content.duration/1000 || content.time;
-
-        if ( document.getElementsByTagName('video').length > 0 ) {
-            _.elements.video = document.getElementsByTagName('video')[0];
-            _.listen( _.elements.video, 'loadedmetadata', function(e){
-                // console.log('video meta data loaded');
-            });
-            _.listen( _.elements.video, 'webkitendfullscreen', function(e) {
-                _.mb.publish(OO.EVENTS.PAUSE);
-            });            
-        }
-
-        _.loaded = true;
-    };
-    
-    // Event fired off by the OO message bus to indicate the playhead has moved.
-    _.onTimeUpdate = function (event, time, duration, buffer, seekrange) {
-        
-        _.buffer = buffer;
-
-        if ( time !== undefined ) {
-            _.time = time;
-        }
-        if ( time !== 0 ) {
-            _.timers.buffer = 0;
-            _.hideLoader();            
-        }
+        requestAnimationFrame( _.Tick );
     };
 
     _.onError = function (error, info) {
-        console.log(JSON.stringify(error, info));
+        // Info is an object with an error code
+        // e.g. { "code": "stream" }
+
+        // console.log(JSON.stringify(info));
+        // console.log(JSON.stringify(error));
     };
 
     // Respond to the OO Message bus Play event
@@ -279,6 +199,7 @@ OO.plugin("WonderUIModule", function (OO) {
             _.addClass(_.elements.bigplaybutton, 'hidden');
             _.removeClass(_.elements.pausebutton, 'hidden');
         }
+        _.hideLoader();
         _.state.playing = true;
     };
     
@@ -286,7 +207,7 @@ OO.plugin("WonderUIModule", function (OO) {
     _.onPause = function () {
         if ( _.state.playing === true ) {
             _.removeClass(_.elements.playbutton, 'hidden');
-            _.removeClass(_.elements.bigplaybutton, 'hidden');
+            // _.removeClass(_.elements.bigplaybutton, 'hidden');
             _.addClass(_.elements.pausebutton, 'hidden');
             _.hideLoader();
             _.state.playing = false;
@@ -294,13 +215,15 @@ OO.plugin("WonderUIModule", function (OO) {
     };
 
     _.onSeeked = function (e) {
+        console.log('seeked event fired');
         _.scrubbed = false;
         if ( _.played === false ) {
-            _.mb.publish(OO.EVENTS.PLAY);    
+            // _.mb.publish(OO.EVENTS.PLAY);    
+            _.onPlay();
         }
     };
 
-    _.onVolumeChanged = function (e, vol) {
+    _.onVolumeChanged = function (vol) {
         _.newvolume = vol;
     };
 
@@ -345,14 +268,18 @@ OO.plugin("WonderUIModule", function (OO) {
         _.prevent(e);
         if ( _.loaded === true ) {
             _.played = false;
-            _.mb.publish(OO.EVENTS.PLAY);    
+            _.player.playVideo();
+            // _.mb.publish(OO.EVENTS.PLAY);    
+            _.onPlay();
         }
     };
 
     _.pause = function (e) {
         _.prevent(e);
         if ( _.loaded === true ) {
-            _.mb.publish(OO.EVENTS.PAUSE);    
+            _.player.pauseVideo();
+            // _.mb.publish(OO.EVENTS.PAUSE);    
+            _.onPause();
         }
     };
 
@@ -375,17 +302,18 @@ OO.plugin("WonderUIModule", function (OO) {
     };
 
     _.seek = function (seconds) {
-        _.mb.publish(OO.EVENTS.SEEK, seconds);
+        // _.mb.publish(OO.EVENTS.SEEK, seconds);
+        _.player.seekTo( seconds );
     };
 
     _.fullscreen = function (e) {
-        _.prevent(e);
+        _.prevent(e); 
         if ( _.state.fullscreen === false ) {
             if ( _.ipad === true ) {
                 _.elements.video.webkitEnterFullscreen();
                 _.state.fullscreen = true;
             } else {
-                _.mb.publish(OO.EVENTS.FULLSCREEN_CHANGED);
+                // _.mb.publish(OO.EVENTS.FULLSCREEN_CHANGED);
                 _.attemptFullscreen(_.elements.wrapper);
                 _.addClass(_.elements.wrapper, 'fullscreen');
                 _.state.fullscreen = true;
@@ -393,6 +321,8 @@ OO.plugin("WonderUIModule", function (OO) {
         } else {
             if(document.exitFullscreen) {
                 document.exitFullscreen();
+            } else if (document.msExitFullscreen) {
+                document.msExitFullscreen();
             } else if(document.mozExitFullScreen) {
                 document.mozExitFullScreen();
             } else if(document.mozCancelFullScreen) {
@@ -530,10 +460,12 @@ OO.plugin("WonderUIModule", function (OO) {
 
     _.scrubVol = function(percentage) {
         _.mousetarget = 'vol';
-        _.mb.publish(OO.EVENTS.CHANGE_VOLUME, percentage/100);
+        _.player.setVolume(percentage);
+        _.onVolumeChanged(percentage);
     };
 
     _.showLoader = function () {
+        console.log('showing loader');
         _.addClass( _.elements.scrubber_vid, 'loading' );
         _.addClass( _.elements.scrubber_buffer, 'hide' );
         _.elements.loader.className = 'show';
@@ -572,7 +504,7 @@ OO.plugin("WonderUIModule", function (OO) {
     };
 
     _.UITick = function () {
-
+        // console.log(_.scrubbed);
         if ( _.scrubbed === true ) {
             _.elements.scrubber_progress_vid.style.width = _.videoPercentage + '%';
             _.elements.scrubber_handle_vid.style.left = _.videoPercentage + '%';
@@ -584,21 +516,21 @@ OO.plugin("WonderUIModule", function (OO) {
         }
 
         // Check if the volume has changed
-        if ( _.volume != _.newvolume ) {
-            _.volume = _.newvolume;
+        if ( _.currentvolume != _.newvolume ) {
+            _.currentvolume = _.newvolume;
 
             if ( _.newvolume === 0 ) {
                 _.elements.volumebutton.className = 'volume wonder-volume vol-0';
-            } else if ( _.newvolume > 0 && _.newvolume <= 0.33 ) {
+            } else if ( _.newvolume > 0 && _.newvolume <= 33 ) {
                 _.elements.volumebutton.className = 'volume wonder-volume vol-1';
-            } else if ( _.newvolume > 0.33 && _.newvolume <= 0.65 ) {
+            } else if ( _.newvolume > 33 && _.newvolume <= 65 ) {
                 _.elements.volumebutton.className = 'volume wonder-volume vol-2';
             } else {
                 _.elements.volumebutton.className = 'volume wonder-volume vol-3';
             }
 
-            _.elements.scrubber_progress_vol.style.height = ( _.newvolume * 100 ) + '%';
-            _.elements.scrubber_handle_vol.style.bottom = (( _.newvolume * 100 )-15) + '%';
+            _.elements.scrubber_progress_vol.style.height = ( _.newvolume ) + '%';
+            _.elements.scrubber_handle_vol.style.bottom = (( _.newvolume )-15) + '%';
         }
 
         // Update the time
@@ -649,7 +581,28 @@ OO.plugin("WonderUIModule", function (OO) {
         _.width = ww;
     };
 
+    _.YTTick = function () {
+        if ( _.loaded === true ) {
+            var time = _.player.getCurrentTime();
+
+            if ( time != _.time && _.scrubbed === true ) {
+                setTimeout( function(){
+                    _.scrubbed = false;
+                }, 150);
+            }
+            _.time = time;
+            if ( _.time !== 0 && _.time !== undefined ) {
+                _.timers.buffer = 0;
+                _.hideLoader();            
+            }       
+        }
+    };
+
     _.Tick = function () {
+
+        // Because we don't have the Ooyala message bus, we need to make our on OnTimeUpdate ticker
+        _.YTTick();
+
         // Increment our timers
         _.timers.seek++;
         _.timers.interaction++;
@@ -848,5 +801,6 @@ OO.plugin("WonderUIModule", function (OO) {
        }
     })();
 
-    return _.WonderUIModule;
-});
+    window.WonderYTModule = _.WonderYTModule;
+
+})(window,document);

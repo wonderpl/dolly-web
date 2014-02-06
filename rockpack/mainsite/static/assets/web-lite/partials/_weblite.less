@@ -1,4 +1,6 @@
 
+/* 	Web Lite player styling
+/* ======================================= */
 
 #wrapper {
 	display: block;
@@ -79,8 +81,10 @@
 		}
 
 		.interactive {
+			padding: 0 0 12px 0;
 
 			a {
+				cursor: pointer;
 				display: -moz-inline-stack;
 				display: inline-block;
 				vertical-align: middle;
@@ -105,6 +109,28 @@
 					color: #fff;
 					background: @lilac;
 				}
+			}
+		}
+
+		.embed-options {
+			display: block;
+			width: 100%;
+			padding: 0px 16px;
+			overflow: hidden;
+			max-width: 600px;
+			margin: 0 auto;
+			background: #eee;
+			background: rgba(0,0,0,0.05);
+			height: 0px;
+			-webkit-transition: height .4s ease-out, padding .4s ease-out;
+
+			&.open {
+				height: 90px;
+				padding: 16px;
+			}
+
+			#embed-link {
+				padding-right: 50px;
 			}
 		}
 	}

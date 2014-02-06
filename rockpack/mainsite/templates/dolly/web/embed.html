@@ -26,14 +26,14 @@
     depends="assets/wonderplayer/partials/_*.less", 
     "assets/wonderplayer/ie.less" 
   %}
-  <!--[if lte IE 9]>
+  <!--[if lte IE 10]>
     <link rel="stylesheet" href="{{ ASSET_URL }}"/>
   <![endif]-->
   {% endassets %}
 
   <!--<script type="text/javascript" src="//player.ooyala.com/v3/{{ config.OOYALA_PLAYER_ID }}?tweaks=android-enable-hls"></script>-->
   <script type="text/javascript" src="//player.ooyala.com/v3/8e49f5aacf724f33b534cadfc4485e6b?platform=html5-priority"></script>
-  <script type="text/javascript" src="/static/dolly/video-module.js"></script>
+  <script type="text/javascript" src="/static/web-lite/video-module.js"></script>
   <script type="text/javascript">
   	var videoData = {{ video_data|tojson }},
   	    ooyalaPlayerId = "{{ config.OOYALA_PLAYER_ID }}";

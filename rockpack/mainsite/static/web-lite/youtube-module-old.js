@@ -43,7 +43,6 @@
     };
 
     _.WonderYTModule = function( elem, video, opts ) {
-
         _.player = new YT.Player(elem, {
             width: '100%',
             height: '100%',
@@ -54,9 +53,7 @@
                 'onStateChange': _.onPlayerStateChange
             }
         });
-
         _.init();
-
         return _.player;
     };
 
@@ -74,7 +71,7 @@
     };
 
     // Add event listeners
-    _.init = function ( ) {
+    _.init = function () {
 
         _.state = {
             playing: false,

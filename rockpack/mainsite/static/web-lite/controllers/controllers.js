@@ -16,8 +16,6 @@
         $rootScope.videos = Array.prototype.slice.call( $rootScope.channel_data.videos.items );
         $rootScope.api = window.apiUrls;
 
-        console.log( $rootScope.channel_data );
-
         var shareuser = querystring.search('shareuser');
 
         if ( shareuser.length > 0 ) {
@@ -53,6 +51,32 @@
         template = $templateCache.get('player.html');
         tmpl = $compile(template)($scope);
         $this.html('').append(tmpl);
+
+        $scope.embedOptionsShowing = false;
+        $scope.toggleEmbedOptions = function(event){
+            if ( $scope.embedOptionsShowing === false ) {
+
+                var body = d.documentElement.scrollTop ? d.documentElement : d.body,
+                    from = body.scrollTop,
+                    el = event.srcElement || event.target, 
+                    target = el.getBoundingClientRect().top-12;
+
+                $scope.tween = new TWEEN.Tween( { y: from } )
+                .to( { y: target }, 600 )
+                .easing( TWEEN.Easing.Cubic.Out )
+                .onUpdate( function () {
+                    body.scrollTop = this.y;
+                }).start();
+
+                $scope.embedOptionsShowing = true;
+            } else {
+                $scope.embedOptionsShowing = false;
+            }
+        };
+
+        $scope.copyToClipboard = function(event) {
+            
+        };
 
     }]);
 

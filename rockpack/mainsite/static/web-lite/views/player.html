@@ -17,6 +17,15 @@
 	<div class="interactive">
 		<a href="#" class="wonder-icon-twitter"></a>
 		<a href="#" class="wonder-icon-facebook"></a>
-		<a href="#" class="wonder-icon-code"></a>
+		<a ng-click="toggleEmbedOptions($event)" class="wonder-icon-code"></a>
+	</div>
+	<div class="embed-options" ng-class="{ open: embedOptionsShowing }">
+		<div class="row">
+			<label>Embed code:</label>
+			<div class="input-wrapper">
+				<input id="embed-link" type="text" value="<iframe src=&quot;http://wonderpl.com/embed/((videos[currentvideo].id))/&quot; width=&quot;100%&quot; height=&quot;100%&quot; frameborder=&quot;0&quot; allowfullscreen></iframe>" class="f-sans right-rounded">	
+				<span class="copy-to-clipboard right-rounded" ng-click="copyToClipboard()"></span>
+			</div>
+		</div>
 	</div>
 </div>

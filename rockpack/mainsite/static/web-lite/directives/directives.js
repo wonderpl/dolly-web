@@ -12,8 +12,6 @@
 			restrict: 'C',
 			link: function( scope, elem, attrs ) {
 
-				console.log($location);
-
 				$rootScope.playerElem = elem;
 				scope.YTReady = false;
 				scope.OOReady = false;
@@ -78,7 +76,7 @@
 							color: 'white',
 							rel: 0,
 							iv_load_policy: 3
-						});
+						}, scope.vid);
 					});
 				}
 
@@ -129,8 +127,8 @@
 							// 	newOOVideo();
 							// });
 							// elem.append('<iframe src="//player.vimeo.com/video/85134959?color=ffffff" width="100%" height="100%" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>');
-							console.log('here');
-							console.log('<iframe src="http://' + $location.$$host + ( $location.$$port !== 80 ? ':' + $location.$$port : '' ) + '/embed/' + scope.vid.id + '/" width="100%" height="100%" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>');
+							// console.log('here');
+							// console.log('<iframe src="http://' + $location.$$host + ( $location.$$port !== 80 ? ':' + $location.$$port : '' ) + '/embed/' + scope.vid.id + '/" width="100%" height="100%" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>');
 							elem.append('<iframe src="http://' + $location.$$host + ( $location.$$port !== 80 ? ':' + $location.$$port : '' ) + '/embed/' + scope.vid.id + '/" width="100%" height="100%" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>');
 							break;
 					}

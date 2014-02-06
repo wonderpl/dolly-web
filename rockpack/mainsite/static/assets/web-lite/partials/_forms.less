@@ -1,0 +1,58 @@
+
+/* 	Forms & inputs
+/* ======================================= */
+
+label {
+	display: block;
+	font-size: 15px;
+	text-align: left;
+	margin: 0 0 8px 0;
+}
+
+input[type=text], input[type=email], input[type=password], input[type=phone] {
+	padding: 4px;
+	font-size: 13px;
+	width: 100%;
+	display: block;
+	outline: none;
+	border: 1px solid #eee;
+	position: relative;
+}
+
+.right-rounded {
+	-webkit-border-radius: 0px 3px 3px 0px;
+	-moz-border-radius: 0px 3px 3px 0px;
+	-o-border-radius: 0px 3px 3px 0px;
+	border-radius: 0px 3px 3px 0px;
+}
+
+.input-wrapper {
+	display: block;
+	position: relative; 
+
+	input {
+		z-index: 5;
+	}
+}
+
+.copy-to-clipboard {
+	z-index: 10;
+	content: '';
+	display: block;
+	position: absolute;
+	right: 0;
+	top: 0;
+	height: 100%;
+	width: 42px;
+	background: @lilac url('/static/assets/web-lite/img/embed-copy.png') center center no-repeat;
+	background-size: 16px auto;
+	cursor: pointer;
+	-webkit-transition: background-color .1s ease-out;
+	-moz-transition: background-color .1s ease-out;
+	-o-transition: background-color .1s ease-out;
+	transition: background-color .1s ease-out;
+
+	&:hover, &:active, &:focus {
+		background-color: lighten(@grey, 10%);
+	}
+}
