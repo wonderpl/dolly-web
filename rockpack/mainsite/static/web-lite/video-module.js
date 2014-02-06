@@ -114,6 +114,10 @@ OO.plugin("WonderUIModule", function (OO) {
         _.ipad = ( _.UA.indexOf('ipad') !== -1 ) ? true : false;
         _.ios = ( _.UA.indexOf('ipad') !== -1 || _.UA.indexOf('iphone') !== -1 ) ? true : false;
 
+        // _.mb.subscribe('*', 'wonder', function(eventName){
+        //     console.log(eventName);
+        // });
+
         _.mb.subscribe(OO.EVENTS.PLAYER_CREATED, 'wonder', _.onPlayerCreate);
         _.mb.subscribe(OO.EVENTS.SEEKED, 'wonder', _.onSeeked);
         _.mb.subscribe(OO.EVENTS.CONTENT_TREE_FETCHED, 'wonder', _.onContentReady);
@@ -250,24 +254,26 @@ OO.plugin("WonderUIModule", function (OO) {
         
         _.buffer = buffer;
 
-        // console.log(_.time, time);
-        if ( time != _.time && _.scrubbed === true ) {
-            setTimeout( function(){
+        if ( time === _.newtime && _.scrubbed === true ) {
+            setTimeout( function() {
                 _.scrubbed = false;
-            }, 150);
+            }, 300);
         }
 
         if ( time !== undefined ) {
             _.time = time;
         }
 
-        if ( time !== 0 && time !== undefined ) {
+        if ( time !== 0 && time !== undefined && _.scrubbed === false) {
             _.timers.buffer = 0;
             _.hideLoader();            
         }
 
-        console.log( _.time );
     };
+
+    // _.seeked = function () {
+    //     _.scrubbed = false;
+    // };
 
     _.onError = function (error, info) {
         // Info is an object with an error code
@@ -301,7 +307,7 @@ OO.plugin("WonderUIModule", function (OO) {
     };
 
     _.onSeeked = function (e) {
-        _.scrubbed = false;
+        // _.scrubbed = false;
         if ( _.played === false ) {
             _.mb.publish(OO.EVENTS.PLAY);    
         }
@@ -382,7 +388,6 @@ OO.plugin("WonderUIModule", function (OO) {
     };
 
     _.seek = function (seconds) {
-        console.log( seconds );
         _.mb.publish(OO.EVENTS.SEEK, seconds);
     };
 
@@ -544,7 +549,6 @@ OO.plugin("WonderUIModule", function (OO) {
     };
 
     _.showLoader = function () {
-        // console.log('showing loader');
         _.addClass( _.elements.scrubber_vid, 'loading' );
         _.addClass( _.elements.scrubber_buffer, 'hide' );
         _.elements.loader.className = 'show';
@@ -583,12 +587,12 @@ OO.plugin("WonderUIModule", function (OO) {
     };
 
     _.UITick = function () {
-        // console.log(_.scrubbed);
+
         if ( _.scrubbed === true ) {
             _.elements.scrubber_progress_vid.style.width = _.videoPercentage + '%';
             _.elements.scrubber_handle_vid.style.left = _.videoPercentage + '%';
             _.showLoader();
-        } else if ( _.loaded === true && _.time !== undefined ) {
+        } else if ( _.loaded === true && _.time !== undefined && _.scrubbed === false && _.timers.seek > 60 ) {
             var percentage = ( (_.time/_.duration) * 100 ) + '%';        
             _.elements.scrubber_progress_vid.style.width = percentage;
             _.elements.scrubber_handle_vid.style.left = percentage;
@@ -632,7 +636,7 @@ OO.plugin("WonderUIModule", function (OO) {
         if ( _.timers.buffer === 60 ) {
             _.showLoader();
         }
-        if ( _.timers.buffer = 10 && _.ie8 === false ) {
+        if ( _.timers.buffer === 10 && _.ie8 === false ) {
             if ( _.loaded === true && _.buffer !== undefined ) {
                 var percentage = ( (_.buffer/_.duration) * 100 ) + '%';      
                 _.elements.scrubber_buffer.style.width = percentage;            
