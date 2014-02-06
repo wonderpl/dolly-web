@@ -551,7 +551,9 @@
             _.timers.buffer++;
         }
         if ( _.timers.buffer === 60 ) {
-            _.showLoader();
+            if ( _.time !== 0 ) {
+                _.showLoader();
+            }
         }
         if ( _.timers.buffer = 10 && _.ie8 === false ) {
             if ( _.loaded === true && _.buffer !== undefined ) {
