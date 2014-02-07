@@ -56,3 +56,31 @@ loadtest/results/
 
 # Guy IDE directory
 .idea/
+
+*.svn-base
+
+rockpack/mainsite/static/dolly-analytics/controllers/.svn/all-wcprops
+
+*.tmp
+
+rockpack/mainsite/static/dolly-analytics/services/.svn/all-wcprops
+
+rockpack/mainsite/static/dolly-analytics/vendor/angular/.svn/all-wcprops
+
+rockpack/mainsite/static/dolly-analytics/vendor/angular/.svn/entries
+
+rockpack/mainsite/static/dolly-analytics/services/.svn/entries
+
+rockpack/mainsite/static/dolly-analytics/vendor/.svn/all-wcprops
+
+rockpack/mainsite/static/dolly-analytics/vendor/.svn/entries
+
+rockpack/mainsite/static/dolly-analytics/filters/.svn/entries
+
+rockpack/mainsite/static/dolly-analytics/filters/.svn/all-wcprops
+
+rockpack/mainsite/static/dolly-analytics/directives/.svn/entries
+
+rockpack/mainsite/static/dolly-analytics/directives/.svn/all-wcprops
+
+rockpack/mainsite/static/dolly-analytics/controllers/.svn/entries

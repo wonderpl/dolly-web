@@ -13,7 +13,7 @@
         $scope.data = {};
         $scope.metrics = {};
 
-        $http({method: 'get', url: 'http://127.0.0.1:5000/ws/analytics/-/?start=2014-01-23&end=2014-01-30'}).success(function(data,status,headers,config){
+        $http({method: 'get', url: 'http://127.0.0.1:5000/ws/analytics/-/'}).success(function(data,status,headers,config){
             $timeout(function(){
                 $scope.$apply(function(){
                     console.log(data);
@@ -23,7 +23,7 @@
         });
 
         $scope.loadVideo = function (url) {
-            $http({method: 'get', url: url }).success(function(data,status,headers,config){
+            $http({method: 'get', url: url + '?start=2014-01-15&end=2014-02-07' }).success(function(data,status,headers,config){
                 $timeout(function(){
                     $scope.$apply(function(){
                         console.log(data);
