@@ -237,9 +237,10 @@ header {
 		left: 0;
 		top: 0;
 		height: 100%;
-		width: 125px;
+		width: 145px;
 		z-index: 101;
-		background: transparent url('/static/assets/dolly/img/header-logo.png') center center no-repeat;
+		background: transparent url('/static/assets/dolly/img/header-logo-grey-bars-retina.png') center center no-repeat;
+		background-size: 100% auto;
 	}
 
 	nav {
@@ -511,6 +512,27 @@ header {
 			font-size: 20px;
 			line-height: 26px;
 			padding: 0 18%;
+		}
+		.wonder-box {
+			display: block;
+			margin: 32px auto;
+			max-width: 420px;
+			width: 80%;
+		}
+		.inner.phones {
+			max-width: 960px;
+
+			img {
+				width: 38%;
+				margin: 0 6%;
+				display: -moz-inline-stack;
+				display: inline-block;
+				vertical-align: middle;
+				*vertical-align: auto;
+				zoom: 1;
+				*display: inline;
+				vertical-align: top;
+			}
 		}
 	}
 }
