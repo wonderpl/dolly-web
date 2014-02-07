@@ -254,7 +254,7 @@ OO.plugin("WonderUIModule", function (OO) {
         
         _.buffer = buffer;
 
-        if ( time === _.newtime && _.scrubbed === true ) {
+        if ( _.scrubbed === true ) {
             setTimeout( function() {
                 _.scrubbed = false;
             }, 300);
@@ -265,6 +265,7 @@ OO.plugin("WonderUIModule", function (OO) {
         }
 
         if ( time !== 0 && time !== undefined && _.scrubbed === false) {
+            console.log('here');
             _.timers.buffer = 0;
             _.hideLoader();            
         }
