@@ -136,9 +136,13 @@ def commit_on_success(f):
         try:
             result = f(*args, **kwargs)
             db.session.commit()
-        except Exception:
-            db.session.rollback()
-            raise
+        except:
+            etype, evalue, traceback = sys.exc_info()
+            try:
+                db.session.rollback()
+            except:
+                pass
+            raise etype(*evalue.args), None, traceback
         else:
             return result
     return wrapper
