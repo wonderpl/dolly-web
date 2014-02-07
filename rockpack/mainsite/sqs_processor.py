@@ -41,8 +41,6 @@ class SqsProcessor(object):
         if not app.blueprints:
             init_app()
 
-        app.app_context().push()
-
         if 'SENTRY_DSN' in app.config:
             from raven.contrib.flask import Sentry
             Sentry(app, logging=app.config.get('SENTRY_ENABLE_LOGGING'))
@@ -51,4 +49,5 @@ class SqsProcessor(object):
             if os.path.exists('/tmp/sqs-%s.lock' % self.queue_name):
                 time.sleep(10)
             else:
-                self.poll()
+                with app.app_context():
+                    self.poll()
