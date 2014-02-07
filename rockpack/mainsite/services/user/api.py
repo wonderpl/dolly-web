@@ -202,7 +202,7 @@ def save_channel_activity(userid, action, channelid, locale):
             action=action,
             object_type='channel',
             object_id=channelid,
-            tracking_code=request.args.get('tracking_code'),
+            tracking_code=request.args.get('tracking_code') if request else None,
         ).add()
     if app.config['MYRRIX_URL'] and action == 'open':
         recommender.record_activity(userid, channelid)
@@ -219,7 +219,7 @@ def save_owner_activity(userid, action, ownerid, locale):
         action=action,
         object_type='user',
         object_id=ownerid,
-        tracking_code=request.args.get('tracking_code'),
+        tracking_code=request.args.get('tracking_code') if request else None,
     ).add()
 
     if action == 'subscribe_all':

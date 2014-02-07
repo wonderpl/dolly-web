@@ -5,7 +5,6 @@ from flask.ext.admin.form import BaseForm, DateTimePickerWidget, RenderTemplateW
 from flask.ext.admin.model.fields import AjaxSelectField
 from flask.ext.admin.model.typefmt import Markup
 from flask.ext.admin.model.form import InlineFormAdmin
-from rockpack.mainsite import app
 from rockpack.mainsite.services.video import models
 from rockpack.mainsite.services.cover_art import models as coverart_models
 from rockpack.mainsite.core.es import use_elasticsearch, api as es_api
@@ -44,8 +43,7 @@ class VideoView(AdminModelView):
             instance_ids = [x[0] for x in models.VideoInstance.query.filter_by(video=model.id).values('id')]
             # Force video instance updates when a video
             # is changed in the admin
-            async = app.config.get('ASYNC_ES_VIDEO_UPDATES', False)
-            es_api.es_update_channel_videos(extant=instance_ids, async=async)
+            es_api.es_update_channel_videos(extant=instance_ids)
 
 
 class VideoThumbnailView(AdminModelView):

@@ -27,6 +27,7 @@ class BaseUserTestCase(RockPackTestCase):
             DEFAULT_SUBDOMAIN='lb.us',
             API_SUBDOMAIN='api',
         )
+        self.app.teardown_request_funcs = self.old_app.teardown_request_funcs
         rockpack.mainsite.init_app()
         self.default_base_url = 'http://%(DEFAULT_SUBDOMAIN)s.%(SERVER_NAME)s' % self.app.config
         self.discovery_url = self.default_base_url + '/ws/'

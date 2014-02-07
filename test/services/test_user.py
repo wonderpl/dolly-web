@@ -22,6 +22,25 @@ from rockpack.mainsite.services.user import commands as cron_cmds
 from rockpack.mainsite.services.user.api import add_videos_to_channel
 
 
+class TestPostRegistration(base.RockPackTestCase):
+
+    def test_auto_follow(self):
+        with self.app.test_request_context():
+            editor = self.create_test_user()
+            self.app.config['AUTO_FOLLOW_USERS'] = (editor.id,)
+
+            userid = self.create_test_user().id
+
+            with self.app.test_client() as client:
+                r = client.get('/ws/{}/activity/'.format(userid),
+                               headers=[get_auth_header(userid)])
+                activity = json.loads(r.data)
+                self.assertIn(editor.id, activity['user_subscribed'])
+                self.assertIn(editor.channels[0].id, activity['subscribed'])
+
+        del self.app.config['AUTO_FOLLOW_USERS']
+
+
 class TestAPNS(base.RockPackTestCase):
 
     def test_add_device_token(self):
@@ -472,7 +491,7 @@ class TestUserContent(base.RockPackTestCase):
             # check subscription count is being generated
             self.wait_for_es()
             r = client.get('/ws/{}/'.format(user1),
-               headers=[get_auth_header(user1)])
+                           headers=[get_auth_header(user1)])
             self.assertGreater(json.loads(r.data)['subscription_count'], 0)
 
     @skip_unless_config('ELASTICSEARCH_URL')
@@ -671,7 +690,7 @@ class TestUserContent(base.RockPackTestCase):
 
             token = uuid.uuid4().hex
             system = 'apns'
-            r = client.post(
+            client.post(
                 '/ws/{}/external_accounts/'.format(user2.id),
                 data=json.dumps(dict(external_system=system, external_token=token)),
                 content_type='application/json',
@@ -688,9 +707,9 @@ class TestUserContent(base.RockPackTestCase):
 
             message = 'no message for any users'.format(user2.username)
 
-            r = client.post('/ws/{}/channels/{}/videos/{}/comments/'.format(user1.id, channel1.id, video1.id),
-                data=dict(comment=message),
-                headers=[get_auth_header(user1.id)])
+            client.post('/ws/{}/channels/{}/videos/{}/comments/'.format(user1.id, channel1.id, video1.id),
+                        data=dict(comment=message),
+                        headers=[get_auth_header(user1.id)])
 
             user_notifications = {}
             cron_cmds.create_commmenter_notification(date_from=start, user_notifications=user_notifications)
@@ -733,8 +752,8 @@ class TestUserContent(base.RockPackTestCase):
             message = 'a message for @{}'.format(user2.username)
 
             r = client.post('/ws/{}/channels/{}/videos/{}/comments/'.format(user1.id, channel1.id, video1.id),
-                data=dict(comment=message),
-                headers=[get_auth_header(user1.id)])
+                            data=dict(comment=message),
+                            headers=[get_auth_header(user1.id)])
 
             user_notifications = {}
             cron_cmds.create_commmenter_notification(date_from=start, user_notifications=user_notifications)
@@ -855,8 +874,8 @@ class TestUserContent(base.RockPackTestCase):
             user2 = self.create_test_user()
 
             r = client.get('/ws/{}/'.format(user.id),
-                content_type='application/json',
-                headers=[get_auth_header(user2.id)])
+                           content_type='application/json',
+                           headers=[get_auth_header(user2.id)])
             self.assertGreater(json.loads(r.data)['subscription_count'], 0)
 
     def test_star_notification(self):

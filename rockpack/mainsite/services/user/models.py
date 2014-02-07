@@ -6,12 +6,14 @@ from sqlalchemy import (
 from sqlalchemy.orm import relationship
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask import g
+from flask.ext.sqlalchemy import models_committed
 from rockpack.mainsite import app
 from rockpack.mainsite.core.token import create_access_token
 from rockpack.mainsite.core.dbapi import db
+from rockpack.mainsite.core.es.api import add_user_to_index
 from rockpack.mainsite.helpers.db import ImageType, add_base64_pk, resize_and_upload
 from rockpack.mainsite.helpers.urls import url_for
-from rockpack.mainsite.core.es.api import add_user_to_index
+from rockpack.mainsite.background_sqs_processor import background_on_sqs
 
 
 VISIBLE_USER_FLAGS = 'facebook_autopost_star', 'facebook_autopost_add'
@@ -386,11 +388,29 @@ def username_exists(username):
         return 'reserved'
 
 
-# XXX: Called during registration - needs to move offline
-def _es_user_insert(mapper, connection, target):
-    add_user_to_index(target)
+@background_on_sqs
+def _update_user(userid, just_registered=False):
+    user = User.query.get(userid)
+    app.logger.debug('updating user %s (new=%s): %s', userid, just_registered, user)
+    add_user_to_index(user)
+
+    if just_registered and 'AUTO_FOLLOW_USERS' in app.config:
+        locales = app.config['ENABLED_LOCALES']
+        locale = user.locale if user.locale in locales else locales[0]
+        from .api import save_owner_activity
+        for ownerid in app.config['AUTO_FOLLOW_USERS']:
+            try:
+                save_owner_activity(user.id, 'subscribe_all', ownerid, locale)
+            except Exception:
+                app.logger.warning('Unable to subscribe to %s', ownerid)
 
 
-event.listen(User, 'after_insert', _es_user_insert)
-event.listen(User, 'after_update', _es_user_insert)
-event.listen(User, 'before_insert', lambda x, y, z: add_base64_pk(x, y, z))
+@models_committed.connect_via(app)
+def on_models_committed(sender, changes):
+    for obj, change in changes:
+        if isinstance(obj, User):
+            if change in ('update', 'insert'):
+                _update_user(obj.id, just_registered=change == 'insert')
+
+
+event.listen(User, 'before_insert', lambda m, c, t: add_base64_pk(m, c, t))

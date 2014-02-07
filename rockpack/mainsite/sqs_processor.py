@@ -7,7 +7,7 @@ from rockpack.mainsite import app, init_app
 
 class SqsProcessor(object):
 
-    sqs_visibility_timeout = 600
+    sqs_visibility_timeout = app.config.get('SQS_DEFAULT_VISIBILITY_TIMEOUT', 600)
     message_class = JSONMessage
 
     # _queue is a class property shared between all instances
@@ -18,6 +18,8 @@ class SqsProcessor(object):
         if not cls._queue:
             conn = connect_to_region(app.config['SQS_REGION'])
             cls._queue = conn.get_queue(cls.queue_name)
+            if not cls._queue:
+                raise Exception('Unable to access queue: %s' % cls.queue_name)
             cls._queue.set_message_class(cls.message_class)
         return cls._queue
 

@@ -362,8 +362,10 @@ def install(*args):
             'VideoInstanceData': video_models.VideoInstance,
             'MoodData': video_models.Mood,
         },
-        engine=db.engine)
+        session=db.session,
+    )
 
     data = dbfixture.data(*args)
     with app.test_request_context():
         data.setup()
+        db.session.commit()

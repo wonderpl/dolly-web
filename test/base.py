@@ -31,8 +31,9 @@ class RockPackTestCase(unittest.TestCase):
             locale='en-us',
         )
         userdata.update(kwargs)
-        user = User.create_with_channel(**userdata)
-        self.session.commit()
+        with self.app.test_request_context():
+            user = User.create_with_channel(**userdata)
+            self.session.commit()
         return user
 
     def wait_for_es(self):

@@ -100,26 +100,26 @@ class ChannelViewCountPopulation(base.RockPackTestCase):
 
 class ChannelPromotionTest(base.RockPackTestCase):
 
+    @skip_unless_config('ELASTICSEARCH_URL')
     def test_insert(self):
-        with self.app.test_client() as client:
-            self.app.test_request_context().push()
+        user = self.create_test_user()
 
-            if use_elasticsearch():
-                now = datetime.utcnow()
-                models.ChannelPromotion(
-                    channel=ChannelData.channel1.id,
-                    date_start=now - timedelta(seconds=10),
-                    date_end=now + timedelta(seconds=30),
-                    category=0,
-                    locale='en-us',
-                    position=1
-                ).save()
+        with self.app.test_request_context():
+            now = datetime.utcnow()
+            models.ChannelPromotion(
+                channel=ChannelData.channel1.id,
+                date_start=now - timedelta(seconds=10),
+                date_end=now + timedelta(seconds=30),
+                category=0,
+                locale='en-us',
+                position=1
+            ).save()
 
-                update_channel_promotions()
-                user = self.create_test_user()
+        update_channel_promotions()
+        self.wait_for_es()
 
-                time.sleep(2)
-
+        with self.app.test_request_context():
+            with self.app.test_client() as client:
                 r = client.get(
                     '/ws/channels/',
                     content_type='application/json',
@@ -748,7 +748,8 @@ class ChannelVideoTestCase(base.RockPackTestCase):
                 # add comment
                 instance_data = dict(userid=user_id, channelid=channel_id)
 
-                r = client.get('/ws/{userid}/channels/{channelid}/'.format(**instance_data),
+                r = client.get(
+                    '/ws/{userid}/channels/{channelid}/'.format(**instance_data),
                     content_type='application/json',
                     headers=[get_auth_header(user_id)])
 
@@ -791,7 +792,6 @@ class ChannelVideoTestCase(base.RockPackTestCase):
                 v.add_id(instance_data['videoid'])
                 instance = v.videos()[0]
                 self.assertEquals(instance['comments']['total'], 0)
-
 
     def test_channel_source(self):
         user_id = self.create_test_user().id

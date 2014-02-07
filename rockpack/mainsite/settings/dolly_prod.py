@@ -31,8 +31,6 @@ SENTRY_ENABLE_LOGGING = 30  # logging.WARNING
 
 ELASTICSEARCH_URL = 'http://localhost:9200'
 
-ASYNC_ES_VIDEO_UPDATES = True
-
 STATSD_HOST = 'admin'
 
 ENABLE_TIMINGS = True
@@ -70,6 +68,8 @@ SQS_CRON_QUEUE = 'dolly-mainsite-cron'
 SQS_EMAIL_QUEUE = 'dolly-mainsite-email'
 SQS_BACKGROUND_QUEUE = 'dolly-mainsite-background'
 SQS_ELASTICSEARCH_QUEUE = 'dolly-mainsite-es'
+
+AUTO_FOLLOW_USERS = ('iOPtuNUO15f1cgMhZdDgwg',)
 
 # Mapping from share object type to message (can have formatting)
 SHARE_MESSAGE_MAP = dict(

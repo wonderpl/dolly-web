@@ -191,7 +191,7 @@ class ExternalTokenTestCase(base.RockPackTestCase):
         _get_external_data.return_value = data
         from rockpack.mainsite.services.oauth.api import ExternalUser
         expires = datetime(2020, 1, 1, 0, 0, 0)
-        eu = ExternalUser('facebook', 'xxx123', expires, 'read,write', {'meta':'data'})
+        eu = ExternalUser('facebook', 'xxx123', expires, 'read,write', {'meta': 'data'})
         user = self._new_user()
         ExternalToken.update_token(user, eu)
         self.session.commit()
@@ -349,31 +349,33 @@ class RegisterTestCase(base.RockPackTestCase):
 
     def test_successful_registration(self):
 
-        with self.app.test_client() as client:
-            self.app.test_request_context().push()
-            viewing_user = self.create_test_user().id
+        viewing_user = self.create_test_user().id
 
-            r = client.post(
-                '/ws/register/',
-                headers=[get_client_auth_header()],
-                data=dict(
-                    username='foobarbarbar',
-                    password='barbar',
-                    first_name='foo',
-                    last_name='bar',
-                    date_of_birth='2000-01-01',
-                    locale='en-us',
-                    email='foo{}@bar.com'.format(uuid.uuid4().hex)
+        with self.app.test_request_context():
+            with self.app.test_client() as client:
+                r = client.post(
+                    '/ws/register/',
+                    headers=[get_client_auth_header()],
+                    data=dict(
+                        username='foobarbarbar',
+                        password='barbar',
+                        first_name='foo',
+                        last_name='bar',
+                        date_of_birth='2000-01-01',
+                        locale='en-us',
+                        email='foo{}@bar.com'.format(uuid.uuid4().hex)
+                    )
                 )
-            )
 
-            creds = json.loads(r.data)
-            self.assertEquals(200, r.status_code)
-            self.assertNotEquals(None, creds['refresh_token'])
-            self.assertEquals(1, Channel.query.filter_by(owner=creds['user_id']).count(),
-                              'default user channel should be created')
+        creds = json.loads(r.data)
+        self.assertEquals(200, r.status_code)
+        self.assertNotEquals(None, creds['refresh_token'])
+        self.assertEquals(1, Channel.query.filter_by(owner=creds['user_id']).count(),
+                          'default user channel should be created')
 
-            self.wait_for_es()
+        self.wait_for_es()
+
+        with self.app.test_client() as client:
 
             r = client.get(
                 '/ws/{}/'.format(creds['user_id']),

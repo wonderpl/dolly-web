@@ -25,7 +25,8 @@ SENTRY_ENABLE_LOGGING = 30  # logging.WARNING
 
 ELASTICSEARCH_URL = 'http://es1:9200'
 
-ASYNC_ES_VIDEO_UPDATES = True
+SQS_BACKGROUND_QUEUE = 'mainsite-background'
+SQS_ELASTICSEARCH_QUEUE = 'es-video-update'
 
 STATSD_HOST = 'admin'
 
