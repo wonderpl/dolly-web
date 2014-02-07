@@ -1,0 +1,69 @@
+@import "partials/_normalise.less";
+
+// variables, mixins, etc
+@import "partials/_base.less";
+@import "partials/_typography.less";
+
+// default global styles
+@import "partials/_global.less";
+
+// Mobile
+@media screen and (max-width: 767px) {
+  @import "partials/_mobile.less";
+}
+
+// Tablet
+@media screen and (min-width: 768px) and (max-width: 959px) {
+  @import "partials/_tablet.less";
+}
+
+// Desktop
+@media screen and (min-width: 960px) {
+  @import "partials/_desktop.less"; 
+}
+
+// retina high density mobile devices
+@media
+  only screen and (-webkit-min-device-pixel-ratio: 1.5),
+  only screen and (-o-min-device-pixel-ratio: 3/2),
+  only screen and (min--moz-device-pixel-ratio: 1.5),
+  only screen and (min-device-pixel-ratio: 1.5)
+{
+  @import "partials/_hdpi.less";
+}
+
+
+/* Coming soon page styles */
+
+.no-padding {
+	padding: 0px;
+}
+
+.coming-soon {
+	display: block;
+	position: relative;
+	margin: 0 auto;
+	width: 100%;
+	height: 100%;
+	background: #bdbbd5; /* Old browsers */
+	background: -moz-linear-gradient(top,  #bdbbd5 1%, #e3e2ed 100%); /* FF3.6+ */
+	background: -webkit-gradient(linear, left top, left bottom, color-stop(1%,#bdbbd5), color-stop(100%,#e3e2ed)); /* Chrome,Safari4+ */
+	background: -webkit-linear-gradient(top,  #bdbbd5 1%,#e3e2ed 100%); /* Chrome10+,Safari5.1+ */
+	background: -o-linear-gradient(top,  #bdbbd5 1%,#e3e2ed 100%); /* Opera 11.10+ */
+	background: -ms-linear-gradient(top,  #bdbbd5 1%,#e3e2ed 100%); /* IE10+ */
+	background: linear-gradient(to bottom,  #bdbbd5 1%,#e3e2ed 100%); /* W3C */
+	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#bdbbd5', endColorstr='#e3e2ed',GradientType=0 ); /* IE6-9 */
+
+	img { 
+		display: block;
+		position: absolute;
+		left: 0;
+		top: 0;
+		right: 0;
+		bottom: 0;
+		margin: auto;
+		max-width: 768px;
+		width: 100%;
+		padding: 0 32px;
+	}
+}

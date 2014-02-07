@@ -144,6 +144,10 @@ def cookies():
 def privacy():
     return {}
 
+@expose_web('/dolly-analytics', 'web/dolly-analytics.html', cache_age=3600)
+def dollyanalytics():
+    return {}
+
 
 def web_channel_data(channelid, load_video=None):
     channel_data = ws_request('/ws/-/channels/%s/' % channelid, size=40)

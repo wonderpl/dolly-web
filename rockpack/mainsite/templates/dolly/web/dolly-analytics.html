@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en" xmlns:ng="http://angularjs.org">
+<head>
+  <meta charset="UTF-8">
+  <title>Dolly Analytics Prototype</title>
+
+  {% 
+    assets filters="less,cssmin", 
+    output="gen/dolly-analytics_css.%(version)s.css", 
+    depends="assets/dolly-analytics/partials/_*.less", 
+    "assets/dolly-analytics/front.less" %}
+  <link rel="stylesheet" href="{{ ASSET_URL }}"/>
+  {% endassets %}
+
+  <link href='http://fonts.googleapis.com/css?family=Lato:100,300,400,700' rel='stylesheet' type='text/css'>
+  <!-- Conditional stylesheet for IE8 and below -->
+  {% assets filters="less,cssmin", output="gen/dolly_analytics_ie_css.%(version)s.css", depends="assets/dolly-analytics/partials/_*.less", "assets/dolly-analytics/ie.less" %}
+  <!--[if lt IE 9]><link rel="stylesheet" href="{{ ASSET_URL }}"/><![endif]-->
+  {% endassets %}
+
+</head>
+<body id="ng-app" ng-app="AnalyticsApp" ng-controller="MainCtrl">
+
+  <div ng-view class="view-animate"></div>
+
+  <div id="wrapper" class="container">
+    <div class="row">
+      <h1>Dolly Analytics Prototype</h1>  
+      <ul>
+        <li ng-repeat="video in videos"><a ng-click="loadVideo( (( video.resource_url_weekly )) )">(( video.name ))</a></li>
+      </ul>
+      <div class="col-md-8" id="chart-wrapper">
+        
+      </div>
+    </div>
+  </div>
+  
+  <script type="text/ng-template" id="graph.html">
+    <highchart id="chart1" config="chartConfig"></highchart>
+  </script>
+
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+  <script src="/static/dolly-analytics/vendor/angular/angular.js"></script>
+  <script src="http://code.highcharts.com/stock/highstock.src.js"></script>
+  <script src="/static/dolly-analytics/vendor/ng-highcharts.min.js"></script>
+  <script src="/static/dolly-analytics/moment.min.js"></script>
+
+  <script src="/static/dolly-analytics/app.js"></script>
+  <script src="/static/dolly-analytics/controllers/controllers.js"></script>
+  <script src="/static/dolly-analytics/directives/directives.js"></script>
+  <script src="/static/dolly-analytics/filters/filters.js"></script>
+  <script src="/static/dolly-analytics/services/services.js"></script>
+
+</body>
+</html>
