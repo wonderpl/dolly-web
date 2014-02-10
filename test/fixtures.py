@@ -52,6 +52,11 @@ class CategoryData(DataSet):
         name = 'Rock'
         parent = 3
 
+    class Thing:
+        id = 10
+        name = 'Thing'
+        parent = 1
+
 
 class CategoryTranslationData(DataSet):
     class TV:
@@ -75,6 +80,12 @@ class CategoryTranslationData(DataSet):
     class Rock:
         id = 4
         name = 'Rock'
+        locale = LocaleData.US.id
+        category = CategoryData.Rock.id
+
+    class Rock:
+        id = 10
+        name = 'Thing'
         locale = LocaleData.US.id
         category = CategoryData.Rock.id
 

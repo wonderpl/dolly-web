@@ -49,17 +49,22 @@ def _update_most_influential_video(video_ids):
     api.ESVideo.flush()
 
 
-def _video_terms_channel_mapping(channel_ids, channel_map={}):
+def _video_terms_channel_mapping(channel_ids):
     """ Get all the video terms for a channel """
     video_details = db.session.query(models.VideoInstance.channel, models.Video.title).join(
         models.Video,
         models.VideoInstance.video == models.Video.id
     ).filter(models.VideoInstance.channel.in_(channel_ids))
+
+    channel_map = {}
+
     for (channel_id, video_title) in video_details:
         channel_map.setdefault(channel_id, []).append(video_title)
 
+    return channel_map
 
-def _category_channel_mapping(channel_ids, category_map={}):
+
+def _category_channel_mapping(channel_ids):
     """ Get the categories belonging to videos
         on a channel """
     # Reset channel catgegory
@@ -70,18 +75,18 @@ def _category_channel_mapping(channel_ids, category_map={}):
     ).order_by(models.VideoInstance.channel)
 
     category_map = {}
+
     for instance_cat, channel_id in query:
         channel_cat_counts = category_map.setdefault(channel_id, {})
         current_count = channel_cat_counts.setdefault(instance_cat, 0)
         channel_cat_counts[instance_cat] = current_count + 1
 
+    return category_map
+
 
 def _update_video_related_channel_meta(channel_ids):
-    channel_map = {}
-    category_map = {}
-
-    _video_terms_channel_mapping(channel_ids, channel_map=channel_map)
-    _category_channel_mapping(channel_ids, category_map=category_map)
+    channel_map = _video_terms_channel_mapping(channel_ids)
+    category_map = _category_channel_mapping(channel_ids)
 
     for channel_id in set(category_map.keys() + channel_map.keys()):
         ec = api.ESChannel.updater(bulk=True)
@@ -92,8 +97,17 @@ def _update_video_related_channel_meta(channel_ids):
             ec.add_field('video_count', len(video_titles))
         potential_cats = category_map.get(channel_id, None)
         if potential_cats:
-            cat = next(cat for cat, count in potential_cats.items() if count >= sum(potential_cats.values()) * 0.6)
-            if cat:
-                ec.add_field('category', cat)
+            try:
+                cat = next(cat for cat, count in potential_cats.items() if count >= sum(potential_cats.values()) * 0.6)
+            except StopIteration:
+                cat = []
+            ec.add_field('category', cat)
         ec.update()
+
+    api.update_user_categories(
+        list(
+            set([_[0] for _ in models.Channel.query.filter(models.Channel.id.in_(channel_ids)).values('owner')])
+        )
+    )
+
     api.ESChannel.flush()

@@ -4,6 +4,7 @@ import datetime
 import pyes
 from ast import literal_eval
 from urlparse import urlparse
+from sqlalchemy import func
 from sqlalchemy.orm import joinedload
 from . import mappings
 from . import es_connection
@@ -678,41 +679,61 @@ def update_user_subscription_count(userid):
         logger.warning('Could not update subscription count for %s' % str(userid))
 
 
-def update_user_categories(user_ids=None):
-    from rockpack.mainsite.services.video.models import Channel
+def condition_for_category(user, channel, video_count):
+    if not app.config.get('ENABLE_USER_CATEGORISATION_CONDITIONS'):
+        return True
 
-    query = db.session.query(Channel.category, Channel.owner).filter(
-        Channel.public.is_(True),
-        Channel.visible.is_(True),
-        Channel.deleted.is_(False)
-    ).order_by(Channel.owner)
+    if not user.profile_cover:
+        return False
+
+    if not user.avatar:
+        return False
+
+    if not user.description:
+        return False
+
+    if not channel.description:
+        return False
+
+    if video_count < app.config['USER_CATEGORISATION_VIDEO_THRESHOLD']:
+        return False
+
+    return True
+
+
+def update_user_categories(user_ids=None):
+    from rockpack.mainsite.services.video import models
+    from rockpack.mainsite.services.user.models import User
+
+    query = User.query.outerjoin(
+        models.Channel, models.Channel.owner == User.id
+    ).outerjoin(
+        models.VideoInstance, models.VideoInstance.channel == models.Channel.id
+    ).with_entities(
+        User, models.Channel, func.count(models.VideoInstance.id)
+    ).group_by(User, models.Channel).order_by(User.id)
 
     if user_ids:
-        query = query.filter(Channel.owner.in_(user_ids))
+        query = query.filter(User.id.in_(user_ids))
 
     category_map = {}
 
-    for category, owner in query:
-        if category is not None:
-            category_map.setdefault(owner, []).append(category)
+    for user, channel, video_count in query:
+        if condition_for_category(user, channel, video_count) and channel.category:
+            category_map.setdefault(user, []).append(channel.category)
+        else:
+            category_map.setdefault(user, [])
 
     this_user = ''
     cat_list = []
 
-    for user, category in category_map.iteritems():
-        if this_user != user:
-            if this_user:
-                eu = ESUser.updater(bulk=True)
-                eu.set_document_id(this_user)
-                eu.add_field('category', list(set(cat_list)))
-                eu.update()
-            # reset
-            this_user = user
-            cat_list = []
+    for user, categories in category_map.iteritems():
+        eu = ESUser.updater(bulk=True)
+        eu.set_document_id(user.id)
+        eu.add_field('category', list(set(categories)))
+        eu.update()
 
-        cat_list.extend(category)
-
-    es_connection.flush_bulk(forced=True)
+    ESUser.flush()
 
 
 def add_channel_to_index(channel, bulk=False, no_check=False):
@@ -758,7 +779,7 @@ def update_channel_to_index(channel, no_check=False):
     for field, value in data.iteritems():
         es_channel.add_field(field, value)
     try:
-        return es_channel.update()
+        es_channel.update()
     except exceptions.DocumentMissingException, e:
         # If the channel doesn't exist we need to create it
         # (likely it was private and now public).

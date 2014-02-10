@@ -110,6 +110,11 @@ UNTITLED_CHANNEL = 'Untitled'
 # Title, description, and cover image for default favourites channel
 FAVOURITE_CHANNEL = 'Favorites', 'My favorite videos', 'fav2.jpg'
 
+# Toggle to enable user categorisation conditions on and off
+ENABLE_USER_CATEGORISATION_CONDITIONS = False
+
+USER_CATEGORISATION_VIDEO_THRESHOLD = 10
+
 # Mapping from share object type to message (can have formatting)
 SHARE_MESSAGE_MAP = dict(
     video_instance=dict(

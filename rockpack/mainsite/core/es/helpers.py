@@ -14,7 +14,8 @@ from rockpack.mainsite.core.dbapi import readonly_session
 from rockpack.mainsite.core.es import es_connection
 from rockpack.mainsite.core.es import migration
 from rockpack.mainsite.core.es.api import (
-    ESObjectIndexer, ESVideo, ESChannel, ESSearchSuggestion, ESVideoAttributeMap)
+    ESObjectIndexer, ESVideo, ESChannel, ESSearchSuggestion,
+    ESVideoAttributeMap, update_user_categories)
 
 
 class Indexing(object):
@@ -302,7 +303,6 @@ class DBImport(object):
             self.conn.flush_bulk(forced=True)
 
     def import_user_categories(self):
-        from rockpack.mainsite.core.es.api import update_user_categories
         update_user_categories()
 
     def import_dolly_repin_counts(self):

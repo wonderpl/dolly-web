@@ -8,7 +8,7 @@ from mock import patch
 from test import base
 from test.assets import AVATAR_IMG_PATH
 from test.fixtures import UserData, ChannelData, VideoData, VideoInstanceData, CategoryData
-from test.test_decorators import skip_unless_config
+from test.test_decorators import skip_unless_config, skip_if_rockpack
 from test.test_helpers import get_auth_header
 from test.test_helpers import get_client_auth_header
 from rockpack.mainsite import app
@@ -384,6 +384,65 @@ class TestProfileEdit(base.RockPackTestCase):
 
 
 class TestUserContent(base.RockPackTestCase):
+
+    @skip_if_rockpack
+    def test_user_discovery(self):
+        """ User shouldn`t be visible in "discovery"
+            if criteria isn't met, ie. user shouldn't
+            have a category set """
+
+        with self.app.test_client() as client:
+            ucv_threshold = app.config['USER_CATEGORISATION_VIDEO_THRESHOLD']
+            enable_ucc = app.config['ENABLE_USER_CATEGORISATION_CONDITIONS']
+
+            app.config['USER_CATEGORISATION_VIDEO_THRESHOLD'] = 0
+            app.config['ENABLE_USER_CATEGORISATION_CONDITIONS'] = True
+
+            self.app.test_request_context().push()
+            user1 = self.create_test_user()
+            user2 = self.create_test_user()
+
+            category = 10
+
+            r = client.post(
+                '/ws/{}/channels/'.format(user1.id),
+                data=json.dumps(dict(
+                    title='a title',
+                    description='',
+                    category=category,
+                    cover='',
+                    public=True)
+                ),
+                content_type='application/json',
+                headers=[get_auth_header(user1.id)]
+            )
+            channel_id = json.loads(r.data)['id']
+            time.sleep(3)
+
+            r = client.get('/ws/users/?category=%s' % category,
+                headers=[get_auth_header(user2.id)])
+
+            self.assertFalse([1 for user in json.loads(r.data)['users']['items']
+                if user['id'] == user1.id])
+
+            user1.profile_cover = 'http://foo'
+            user1.avatar = 'http://foo'
+            user1.description = 'a description'
+
+            channel = Channel.query.get(channel_id)
+            channel.description = 'a description'
+            channel.save()
+
+            time.sleep(2)
+
+            app.config['USER_CATEGORISATION_VIDEO_THRESHOLD'] = ucv_threshold
+            app.config['ENABLE_USER_CATEGORISATION_CONDITIONS'] = enable_ucc
+
+            r = client.get('/ws/users/?category=%s' % category,
+                headers=[get_auth_header(user2.id)])
+
+            self.assertTrue([1 for user in json.loads(r.data)['users']['items']
+                if user['id'] == user1.id])
 
     @skip_unless_config('ELASTICSEARCH_URL')
     def test_content_feed(self):
