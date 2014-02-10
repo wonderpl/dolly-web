@@ -1,0 +1,143 @@
+{% macro avatar_img(avatar) -%}
+{{ avatar.thumbnail_medium|default(config.ASSETS_URL + '/assets/emails/images/davatar.png', true) }}
+{%- endmacro %}
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html;" charset="UTF-8">
+    <title>What's trending on Wonder PL</title>
+</head>
+<body style="font-family:Helvetica,arial; margin:0; padding:0;">
+
+{# table needed for gmail background (doesn't respect body background) #}
+<table style="width: 100%; background-color:#f1f1f1;"><tr><td>
+
+{# container logo #}
+
+<div style="width:600px; height: 78px; margin:0px 20px 0 20px; text-align:center; ">
+  <a href="{{ config.ITUNES_APP_LINK }}&ct=reactivation" target="_new">
+    <img src="{{ config.ASSETS_URL }}/assets/emails/images/blueLogo.png" style="margin: 15px 0; width:45px; height:46px; border:0; ">
+  </a>
+</div>
+
+{# container top #}
+<div style="float:left; width:582px; margin:0 20px; background-color: #fff; padding:20px 0px 20px 20px; color:#777; font-size:11pt; ">
+
+  <img src="{{ avatar_img(user.avatar) }}" style="float:left; margin: 0px 20px 0px 0px; width:60px; height:60px; border:0; border-bottom: 2px solid #e5e5e5;">
+
+  <div style="float:left; color:#282d33; font-size:14px; margin-top:15px; line-height:18px;">
+    <b>{{ user.display_name }}</b>,<br/>
+    We're missing you. Here is what's trending on Wonder PL:
+  </div>
+
+  {% if video_data %}
+  <div style="float:left; width:100%; ">
+
+    <div style="float:left; width:100%; margin:40px 0px 0px 0px; ">
+
+      {% for channel, count, videos in video_data %}
+
+        {% set channel_url = url_for('share_redirect_root') + '&c=' + channel.id %}
+        <div style="float:left; width:100%; margin-bottom:20px;">
+          {# Avatar #}
+          <img src="{{ avatar_img(channel.owner_rel.avatar) }}" style="float:left; margin: 0px 10px 10px 0px; width:30px; height:30px; border:0; border-bottom: 1px solid #e5e5e5; ">
+          {# channel description #}
+          <div style="float:left;  width:90%; font-size:12px; margin:8px 0px 3px 0px; line-height:18px; height:30px; ">
+            <a style="color:#282d33; text-decoration:none; font-weight:bold;" href="{{ channel_url }}">{{ channel.owner_rel.display_name }}</a>,
+            <a style="color:#999; text-decoration:none;" href="{{ channel_url }}">has added {{ count }} videos to {{ channel.title|upper }}</a>
+          </div>
+          {# pack cover #}
+          <a style="color:#999; text-decoration:none;" href="{{ channel_url }}">
+            <img src="{{ channel.cover.thumbnail_medium }}" style="float:left; margin:0px 20px 20px 0px; width:152px; height:152px; border:0; border-bottom: 2px solid #e5e5e5;">
+          </a>
+          {% for video in videos[:2] %}
+          {% set video_url = channel_url + '&v=' + video.id %}
+          <div style="float:left; margin: 0px 20px 20px 0px; height:175px; width:174px;">
+            <a href="{{ video_url }}">
+              <img src="{{ video.default_thumbnail }}" style="width:174px; border:0; border-bottom: 2px solid #e5e5e5; margin-bottom: 10px;">
+            </a>
+            <a style="float:left; color:#282d33; text-decoration:none; font-size:12px; width:174px;" href="{{ video_url }}">{{ video.video_rel.title }}</a><br/>
+            {% if video.likes %}
+            <a style="float:left; background: #fff url({{ config.ASSETS_URL }}/assets/emails/images/heart.png) no-repeat top left; background-size:20px;  width:134px; height:20px; padding-top:5px; padding-left:25px; color:#282d33; text-decoration:none; font-size:12px;" href="{{ video_url }}">{{ video.likes }}</a>
+            {% endif %}
+          </div>
+          {% endfor %}
+        </div>
+
+      {% endfor %}
+
+    </div>
+    {% endif %}
+
+    {% if new_channels %}
+    <div style="float:left; width:100%; margin:20px 0px 0px 0px; ">
+
+      {% for channel in new_channels[:3] %}
+        {% set channel_url = url_for('share_redirect_root') + '&c=' + channel.id %}
+        <div style="float:left; width:174px;  margin-right:20px;">
+          {# Avatar #}
+          <img src="{{ avatar_img(channel.owner_rel.avatar) }}" style="float:left; margin: 0px 10px 10px 0px; width:30px; height:30px; border:0; border-bottom: 1px solid #e5e5e5; ">
+          {# channel description #}
+          <div style="float:left;  width:134px; font-size:12px; margin:2px 0px 3px 0px; line-height:14px; height:30px; ">
+            <a style=" color:#282d33; text-decoration:none; font-weight:bold;" href="{{ channel_url }}">{{ channel.owner_rel.display_name }}</a>
+            <br/>
+            <a style="color:#999; text-decoration:none;" href="{{ channel_url }}">created a new pack</a>
+          </div>
+          {# pack cover #}
+          <a style="color:#999; text-decoration:none;" href="{{ channel_url }}">
+            <img src="{{ channel.cover.thumbnail_medium }}" style="float:left; margin:0px 20px 10px 0px; width:152px; height:152px; border:0; border-bottom: 2px solid #e5e5e5;">
+          </a>
+          <a style="float:left; color:#282d33; text-decoration:none; font-size:12px; width:174px; " href="{{ channel_url }}">{{ channel.title|upper }}</a>
+          <br/>
+        </div>
+
+      {% endfor %}
+
+    </div>
+    {% endif %}
+
+  </div>
+
+</div>
+
+{# Footer #}
+
+<div style="width:600px; height: 78px; margin:0px 20px 0 20px; text-align:center; ">
+
+  {# Get the app button #}
+  <div style="float:left; width:600px; margin:40px 0px 0 0px; text-align:center; ">
+    <a href="{{ config.ITUNES_APP_LINK }}&ct=reactivation" target="_new">
+      <img src="{{ config.ASSETS_URL }}/assets/emails/images/openapp.png" style="margin:0; width:169px;  border:0;  border-bottom: 2px solid #e5e5e5;">
+    </a>
+  </div>
+
+  {# Logo #}
+  <div style="float:left; width:600px; margin:40px 0px 0 0px; text-align:center; ">
+    <a href="{{ url_for('homepage') }}" target="_new">
+      <img src="{{ config.ASSETS_URL }}/assets/emails/images/logo.png" style="margin:0; width:131px;  border:0;  ">
+    </a>
+  </div>
+
+  {# Small lines #}
+  <div style="float:left; width:600px; margin:40px 0px 0px 0px; text-align:center; font-size:8pt; color:ccc; text-shadow: 1px 1px #f7f7f7;">
+    You are subscribed as {{ user.email }}.
+    <br/>
+    To unsubscribe from account emails click
+    <a href="{{ url_for('unsubscribe') }}&token={{ unsubscribe_token }}" style="color:#ccc;" target="_new">here</a>.
+  </div>
+  <div style="float:left; width:600px; margin:10px 0px 0px 0px; text-align:center; font-size:8pt; color:ccc; text-shadow: 1px 1px #f7f7f7;">
+    To ensure our emails reach your inbox please make sure to add
+    <br/>
+    {{ email_sender|e }} to your address book or safe list.
+  </div>
+  <div style="float:left; width:600px; margin:10px 0px 40px 0px; text-align:center; font-size:8pt; color:ccc; text-shadow: 1px 1px #f7f7f7;">
+    Your privacy is important to us, have a read to our
+    <a href="{{ url_for('privacy') }}" style="color:#ccc;" target="_new">privacy policy</a>.
+  </div>
+
+</div>
+
+</td></tr></table>
+
+<img src="//www.google-analytics.com/collect?v=1&tid={{ config.GOOGLE_ANALYTICS_ACCOUNT }}&cid={{ user.id }}&t=event&ec=email&ea=open&cm={{ utm_medium }}&cn={{ utm_campaign }}" height="1" width="1"/>
+</body>
+</html>
