@@ -24,6 +24,11 @@
     });
 
 
+    app.factory('touchDevice', function(){
+        return 'ontouchstart' in window || 'onmsgesturechange' in window;
+    });
+
+
     app.factory('querystring', function(){
         return {
             search: function(name){

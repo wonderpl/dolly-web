@@ -1,20 +1,22 @@
 
 
-<!-- <h1>Browse (( owner.display_name|firstName))'s channel</h1> -->
+<!-- <h3>Browse (( owner.display_name|firstName ))'s channel</h3> -->
 
-<a class="weblite-icon-left paging left"></a>
-<a class="weblite-icon-right paging right"></a>
-
-<div class="scroll-wrapper">
-	<ul class="channel-list">
-		<li ng-repeat="video in videos.items">
-			<a href="/channel/-/(( channel_data.id ))/?video=(( video.id ))" ng-click="changeVideo($event, $index)">
-				<img ng-src="(( video.video.thumbnail_url ))" />
-				<span>(( video.title ))</span>
-			</a>
-		</li>
-	</ul>
+<div class="scroll-outer-wrapper">
+	<a ng-click="page('left')" class="weblite-icon-left paging left" ng-class="{ 'disabled': currentpage == 0 }"></a>
+	<a ng-click="page('right')" class="weblite-icon-right paging right" ng-class="{ 'disabled': currentpage == items.length-1 }"></a>
+	<div class="scroll-inner-wrapper">
+		<ul class="channel-list">
+			<li ng-repeat="video in videos.items">
+				<a href="/channel/-/(( channel_data.id ))/?video=(( video.id ))" ng-click="changeVideo($event, $index)">
+					<img ng-src="(( video.video.thumbnail_url ))" />
+					<span>(( video.title ))</span>
+				</a>
+			</li>
+		</ul>
+	</div>	
 </div>
+
 
 <h4 class="f-sans">This is the enticing copy that someone has to come up with to encourage the viewer to download the app.</h4>
 <a href="#" class="download">Download Wonder</a>

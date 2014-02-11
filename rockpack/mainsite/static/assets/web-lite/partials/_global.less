@@ -41,6 +41,45 @@ a {
 	}
 }
 
+.inner {
+	display: block;
+	max-width: 1024px;
+	width: 100%;
+	height: 100%;
+	margin: 0 auto;
+	position: relative;
+	text-align: center;
+}
+
+header {
+	display: block;
+	position: relative;
+	height: 100px;
+	text-align: center;
+
+	a.logo {
+		display: block;
+		position: absolute;
+		left: 0;
+		top: 0;
+		height: 100%;
+		width: 145px;
+		z-index: 101;
+		background: transparent url('/static/assets/dolly/img/header-logo-grey-bars-retina.png') center center no-repeat;
+		background-size: 100% auto;
+	}
+
+	a.app-store-link {
+		display: block;
+		position: absolute;
+		right: 0;
+		top: 0;
+		height: 100%;
+		width: 125px;
+		background: transparent url('/static/assets/dolly/img/header-download-button.png') center center no-repeat;
+	}
+}
+
 #player {
 	position: relative;
 	z-index: 50;
@@ -77,5 +116,244 @@ a {
 		width: 100%;
 		height: 100%;
 		z-index: 500;
+	}
+}
+
+
+
+/* 	Web Lite player styling
+/* ======================================= */
+
+#wrapper {
+	display: block;
+	width: 90%;
+	margin: 0 auto 32px auto;
+}
+
+#wonder-wrapper {
+	margin: 0 auto 30px auto;
+}
+
+.web-lite-wrapper {
+	display: block;
+	position: relative;
+
+	.top {
+		display: block;
+		position: relative;
+		max-width: 400px;
+		width: 100%;
+		margin: 0px auto 22px auto;
+		text-align: center;
+
+		.avatar {
+			display: block;
+			width: 60px;
+			margin: 0 auto 16px auto;
+			overflow: hidden;
+			-webkit-border-radius: 200px;
+			-moz-border-radius: 200px;
+			-o-border-radius: 200px;
+			border-radius: 200px;
+			background: @lilac;
+
+			img {
+				display: block;
+				width: 100%;
+			}
+		}
+
+		h3 {
+			font-size: 16px;
+			span {
+				font-size: 24px;	
+			}
+		}
+	}
+
+	.bottom {
+		display: block;
+		padding: 0 0 32px 0;
+
+		.interactive {
+			padding: 0 0 12px 0;
+
+			a {
+				cursor: pointer;
+				display: -moz-inline-stack;
+				display: inline-block;
+				vertical-align: middle;
+				*vertical-align: auto;
+				zoom: 1;
+				*display: inline;
+				vertical-align: top;
+				width: 35px;
+				height: 35px;
+				background: #999999;
+				text-align: center;
+				color: #fff;
+				padding: 6px 0 0 0;
+				font-size: 25px;
+				-webkit-border-radius: 100px;
+				-moz-border-radius: 100px;
+				border-radius: 100px;
+				margin: 6px;
+				-webkit-transition: background .1s ease-out;
+
+				&:hover, &:active, &:focus {
+					color: #fff;
+					background: @lilac;
+				}
+			}
+		}
+
+		.embed-options {
+			display: block;
+			width: 100%;
+			padding: 0px 16px;
+			overflow: hidden;
+			max-width: 600px;
+			margin: 0 auto;
+			background: #eee;
+			background: rgba(0,0,0,0.05);
+			height: 0px;
+			-webkit-transition: height .4s ease-out, padding .4s ease-out;
+
+			&.open {
+				height: 90px;
+				padding: 16px;
+			}
+
+			#embed-link {
+				padding-right: 50px;
+			}
+		}
+	}
+}
+
+
+#channel {
+	max-width: 960px;
+	margin: 0 auto;
+	display: block;
+	position: relative;
+	padding: 0 0 120px 0;
+
+	h4 {
+		padding: 0 6%;
+		margin: 0 auto 32px auto;
+		width: 100%;
+		text-align: center;
+		max-width: 640px;
+	}
+
+	a.download {
+		display: block;
+		padding:  6px 12px;
+		margin: 0 auto 16px auto;
+		width: 160px;
+		text-align: center;
+		border: 1px solid @grey;
+		-webkit-border-radius: 200px;
+		-moz-border-radius: 200px;
+		-o-border-radius: 200px;
+		border-radius: 200px;
+		color: @grey;
+		-webkit-transition: background .1s ease-out, color .1s ease-out;
+
+		&:hover, &:active, &:focus {
+			background: @lilac;
+			color: #fff;
+			border-color: @lilac;
+		}
+	}
+}
+
+a.paging {
+	position: absolute;
+	top: 52px;
+	font-size: 32px;
+	color: #777782;
+	cursor: pointer;
+	padding: 0 5px;
+	&.left {
+		left: 0;	
+	}
+
+	&.right {
+		right: 0;
+	}
+
+	&.disabled {
+		color: #c9c9cd;
+		cursor: default;
+	}
+}
+
+.scroll-outer-wrapper {
+	display: block;
+	position: relative;
+	width: 100%;
+	overflow: hidden;
+}
+
+.scroll-inner-wrapper {
+	display: block;
+	position: relative;
+	width: 90%;
+	height: 160px;
+	overflow: hidden;
+	left: 5%;
+	margin: 0 0 42px 0;
+
+	&.touch {
+		overflow: auto;
+	}
+}
+
+.channel-list {
+	display: block;
+	position: absolute;
+	left: 0;
+	top: 0;
+	height: 100%;
+	overflow: hidden;
+	padding: 0 0 26px 0;
+	white-space: nowrap;
+	-webkit-transition: left .2s ease-out;
+	-moz-transition: left .2s ease-out;
+	-o-transition: left .2s ease-out;
+	transition: left .2s ease-out;
+
+	li {
+		display: -moz-inline-stack;
+		display: inline-block;
+		vertical-align: middle;
+		*vertical-align: auto;
+		zoom: 1;
+		*display: inline;
+		vertical-align: top;
+		margin: 0 26px 26px 0;
+		max-width: 220px;
+		position: relative;
+
+		img {
+			display: block;
+			width: 100%;
+
+			&:hover, &:active, &:focus {
+				opacity: 0.9;
+			}
+		}
+
+		span {
+			position: relative;
+			width: 100%;
+			display: block;
+			padding: 10px 0;
+			font-size: 13px;
+			text-align: center;
+			color: black;
+		}
 	}
 }

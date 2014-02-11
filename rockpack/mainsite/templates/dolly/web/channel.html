@@ -152,7 +152,13 @@
 
     <div id="wrapper" class="web-lite-wrapper">
       
-      {% include 'dolly/web/partials/header.html' %}
+
+      <header>
+        <div class="inner">
+          <a href="/#/" class="logo"></a>
+          <a href="#" class="app-store-link"></a>
+        </div>
+      </header>
       
       <div id="player" ng-controller="PlayerCtrl"></div>
       <div id="channel" ng-controller="ChannelCtrl"></div>

@@ -51,7 +51,7 @@
 
 	.bottom {
 		display: block;
-		padding: 0 0 42px 0;
+		padding: 0 0 32px 0;
 
 		.interactive {
 			padding: 0 0 12px 0;
@@ -152,7 +152,8 @@ a.paging {
 	top: 52px;
 	font-size: 32px;
 	color: #777782;
-
+	cursor: pointer;
+	
 	&.left {
 		left: 0;	
 	}
@@ -160,9 +161,20 @@ a.paging {
 	&.right {
 		right: 0;
 	}
+
+	&.disabled {
+		color: #c9c9cd;
+		cursor: default;
+	}
 }
 
-.scroll-wrapper {
+.scroll-outer-wrapper {
+	display: block;
+	position: relative;
+	width: 100%;
+}
+
+.scroll-inner-wrapper {
 	display: block;
 	position: relative;
 	width: 90%;
@@ -180,6 +192,10 @@ a.paging {
 	height: 100%;
 	padding: 0 0 26px 0;
 	white-space: nowrap;
+	-webkit-transition: left .2s ease-out;
+	-moz-transition: left .2s ease-out;
+	-o-transition: left .2s ease-out;
+	transition: left .2s ease-out;
 
 	li {
 		display: -moz-inline-stack;

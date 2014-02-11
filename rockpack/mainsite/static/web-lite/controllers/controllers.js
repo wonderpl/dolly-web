@@ -36,8 +36,6 @@
         } else {
             $rootScope.currentvideo = 0;
         }
-        
-        console.log($rootScope.videos[$rootScope.currentvideo]);
 
     }]);    
 
@@ -89,6 +87,9 @@
         $scp, 
         tmpl;
 
+        $scope.currentpage = 0;
+        $scope.items = $rootScope.videos.length;
+
         ng.extend($scope, $rootScope.channel_data);
         template = $templateCache.get('channel.html');
         tmpl = $compile(template)($scope);
@@ -111,9 +112,42 @@
             $timeout( function() {
                 $rootScope.$apply(function() {
                     $rootScope.currentvideo = index;
+                    $scope.currentpage = index;
                 });
             });
         };
+
+        $scope.page = function( direction ) {
+
+            switch ( direction ) {
+                case 'left':
+                    if ( $scope.currentpage > 0 ) {
+                        $timeout(function(){
+                            $scope.$apply(function(){
+                                $scope.currentpage--;    
+                            });
+                        });
+                    }
+                    break;
+
+                case 'right':
+                    console.log($scope.items);
+                    if ( $scope.currentpage < $scope.items-1 ) {
+                        $timeout(function(){
+                            $scope.$apply(function(){
+                                console.log('here');
+                                $scope.currentpage++;    
+                            });
+                        });
+                    }
+                    break;
+            }
+        };
+
+        $scope.$watch('currentpage', function(newValue, oldValue) {
+            d.querySelector('.channel-list').style.left = (-(newValue * 246)) + 'px';
+            console.log((-(newValue * 246)) + 'px');
+        });
 
     }]);
 
