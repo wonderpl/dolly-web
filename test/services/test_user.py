@@ -386,6 +386,7 @@ class TestProfileEdit(base.RockPackTestCase):
 class TestUserContent(base.RockPackTestCase):
 
     @skip_if_rockpack
+    @skip_unless_config('ELASTICSEARCH_URL')
     def test_user_discovery(self):
         """ User shouldn`t be visible in "discovery"
             if criteria isn't met, ie. user shouldn't
