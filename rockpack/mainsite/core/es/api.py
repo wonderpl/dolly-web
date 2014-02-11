@@ -720,7 +720,7 @@ def update_user_categories(user_ids=None):
     category_map = {}
 
     for user, channel, video_count in query:
-        if condition_for_category(user, channel, video_count) and channel.category:
+        if channel and channel.category and condition_for_category(user, channel, video_count):
             category_map.setdefault(user, []).append(channel.category)
         else:
             category_map.setdefault(user, [])

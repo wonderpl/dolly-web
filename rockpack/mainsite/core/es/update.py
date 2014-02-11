@@ -1,5 +1,6 @@
-from sqlalchemy import func
+from sqlalchemy import func, update
 from sqlalchemy.orm import aliased
+from rockpack.mainsite import app
 from rockpack.mainsite.services.video import models
 from rockpack.mainsite.core.dbapi import db
 from . import api
@@ -95,19 +96,27 @@ def _update_video_related_channel_meta(channel_ids):
         if video_titles:
             ec.add_field('video_terms', video_titles)
             ec.add_field('video_count', len(video_titles))
-        potential_cats = category_map.get(channel_id, None)
-        if potential_cats:
-            try:
-                cat = next(cat for cat, count in potential_cats.items() if count >= sum(potential_cats.values()) * 0.6)
-            except StopIteration:
-                cat = []
-            ec.add_field('category', cat)
+
+        # NOTE: dolly only
+        if app.config.get('DOLLY', False):
+            potential_cats = category_map.get(channel_id, None)
+            if potential_cats:
+                try:
+                    cat = next(cat for cat, count in potential_cats.items() if count >= sum(potential_cats.values()) * 0.6)
+                except StopIteration:
+                    cat = []
+
+                # Update the database and then set es
+                update(models.Channel).where(models.Channel.id == channel_id).values(category=cat)
+                ec.add_field('category', cat)
+
         ec.update()
 
-    api.update_user_categories(
-        list(
-            set([_[0] for _ in models.Channel.query.filter(models.Channel.id.in_(channel_ids)).values('owner')])
-        )
-    )
+    # NOTE: dolly only
+    if app.config.get('DOLLY', False):
+        api.update_user_categories(
+            list(
+                set([_[0] for _ in models.Channel.query.filter(
+                    models.Channel.id.in_(channel_ids)).values('owner')])))
 
     api.ESChannel.flush()
