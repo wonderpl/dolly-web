@@ -394,7 +394,7 @@ def username_exists(username):
 @background_on_sqs
 def _update_user(userid, just_registered=False):
     user = User.query.get(userid)
-    app.logger.debug('updating user %s (new=%s): %s', userid, just_registered, user)
+    #app.logger.debug('updating user %s (new=%s): %s', userid, just_registered, user)
     add_user_to_index(user)
 
     if just_registered and 'AUTO_FOLLOW_USERS' in app.config:
