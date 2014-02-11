@@ -705,13 +705,13 @@ def update_user_categories(user_ids=None):
     from rockpack.mainsite.services.video import models
     from rockpack.mainsite.services.user.models import User
 
-    query = User.query.outerjoin(
+    query = db.session.query(User.id, models.Channel.id).outerjoin(
         models.Channel, models.Channel.owner == User.id
     ).outerjoin(
         models.VideoInstance, models.VideoInstance.channel == models.Channel.id
     ).with_entities(
         User, models.Channel, func.count(models.VideoInstance.id)
-    ).group_by(User, models.Channel).order_by(User.id)
+    ).group_by(User.id, models.Channel.id).order_by(User.id)
 
     if user_ids:
         query = query.filter(User.id.in_(user_ids))
