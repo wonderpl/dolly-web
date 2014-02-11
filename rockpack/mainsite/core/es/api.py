@@ -5,7 +5,7 @@ import pyes
 from ast import literal_eval
 from urlparse import urlparse
 from sqlalchemy import func
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import joinedload, lazyload, contains_eager
 from . import mappings
 from . import es_connection
 from . import use_elasticsearch
@@ -705,12 +705,13 @@ def update_user_categories(user_ids=None):
     from rockpack.mainsite.services.video import models
     from rockpack.mainsite.services.user.models import User
 
-    query = db.session.query(User.id, models.Channel.id).outerjoin(
+    query = db.session.query(User, models.Channel, func.count(models.VideoInstance.id)).outerjoin(
         models.Channel, models.Channel.owner == User.id
     ).outerjoin(
         models.VideoInstance, models.VideoInstance.channel == models.Channel.id
-    ).with_entities(
-        User, models.Channel, func.count(models.VideoInstance.id)
+    ).options(
+        lazyload(models.Channel.category_rel),
+        contains_eager(models.Channel.category_rel)
     ).group_by(User.id, models.Channel.id).order_by(User.id)
 
     if user_ids:
