@@ -711,7 +711,7 @@ def update_user_categories(user_ids=None):
         models.VideoInstance, models.VideoInstance.channel == models.Channel.id
     ).options(
         lazyload(models.Channel.category_rel),
-        contains_eager(models.Channel.category_rel)
+        contains_eager(models.Channel.owner_rel)
     ).group_by(User.id, models.Channel.id).order_by(User.id)
 
     if user_ids:
