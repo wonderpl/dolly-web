@@ -132,11 +132,9 @@
                     break;
 
                 case 'right':
-                    console.log($scope.items);
                     if ( $scope.currentpage < $scope.items-1 ) {
                         $timeout(function(){
                             $scope.$apply(function(){
-                                console.log('here');
                                 $scope.currentpage++;    
                             });
                         });
@@ -148,7 +146,6 @@
         if ( $scope.touchDevice === false ) {
             $scope.$watch('currentpage', function(newValue, oldValue) {
                 d.querySelector('.channel-list').style.left = (-(newValue * 246)) + 'px';
-                console.log((-(newValue * 246)) + 'px');
             });    
         }
 

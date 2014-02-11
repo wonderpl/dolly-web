@@ -4,7 +4,7 @@
 
 <div class="scroll-outer-wrapper" ng-class="{ 'touch': touchDevice }">
 	<a ng-click="page('left')" class="weblite-icon-left paging left" ng-class="{ 'disabled': currentpage == 0 }"></a>
-	<a ng-click="page('right')" class="weblite-icon-right paging right" ng-class="{ 'disabled': currentpage == items.length-1 }"></a>
+	<a ng-click="page('right')" class="weblite-icon-right paging right" ng-class="{ 'disabled': currentpage == items-1 }"></a>
 	<div class="scroll-inner-wrapper">
 		<ul class="channel-list">
 			<li ng-repeat="video in videos.items">
