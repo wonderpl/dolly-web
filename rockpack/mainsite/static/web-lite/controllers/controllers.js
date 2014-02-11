@@ -89,6 +89,7 @@
 
         $scope.currentpage = 0;
         $scope.items = $rootScope.videos.length;
+        $scope.touchDevice = 'ontouchstart' in window || 'onmsgesturechange' in window;
 
         ng.extend($scope, $rootScope.channel_data);
         template = $templateCache.get('channel.html');
@@ -144,10 +145,12 @@
             }
         };
 
-        $scope.$watch('currentpage', function(newValue, oldValue) {
-            d.querySelector('.channel-list').style.left = (-(newValue * 246)) + 'px';
-            console.log((-(newValue * 246)) + 'px');
-        });
+        if ( $scope.touchDevice === false ) {
+            $scope.$watch('currentpage', function(newValue, oldValue) {
+                d.querySelector('.channel-list').style.left = (-(newValue * 246)) + 'px';
+                console.log((-(newValue * 246)) + 'px');
+            });    
+        }
 
     }]);
 
