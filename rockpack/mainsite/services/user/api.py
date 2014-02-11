@@ -263,15 +263,11 @@ def add_videos_to_channel(channel, instance_list, locale, delete_existing=False)
     videomap = get_or_create_video_records(instance_list)
     existing = dict((v.video, v) for v in
                     VideoInstance.query.filter_by(channel=channel.id).options(lazyload('video_rel')))
-
-    videoidmap = {id_:category for (id_, category) in Video.query.filter(Video.id.in_([_[0] for _ in videomap])).values('id', 'category')}
-
     added = []
     for position, (video_id, video_source) in enumerate(videomap):
         if video_id not in added:
             instance = existing.get(video_id) or \
-                VideoInstance(video=video_id, channel=channel.id,
-                    source_channel=video_source, category=videoidmap.get(video_id, None))
+                VideoInstance(video=video_id, channel=channel.id, source_channel=video_source)
             instance.position = position
             VideoInstance.query.session.add(instance)
             added.append(video_id)
@@ -281,6 +277,8 @@ def add_videos_to_channel(channel, instance_list, locale, delete_existing=False)
         deleted_video_ids = set(existing.keys()).difference([i for i, s in videomap])
         if deleted_video_ids:
             channel.remove_videos(deleted_video_ids)
+
+    channel.set_cover_fallback([v for v, s in videomap])
 
     # Set to private if videos are cleared, or public if first videos added
     if delete_existing and not added:

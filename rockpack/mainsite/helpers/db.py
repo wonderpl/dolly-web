@@ -92,6 +92,8 @@ class ImagePath(object):
         return bool(self.path)
 
     def __getattr__(self, name):
+        if self.path.startswith('http'):
+            return ImageUrl(self.path)
         if name == 'original':
             path = self.path
         else:

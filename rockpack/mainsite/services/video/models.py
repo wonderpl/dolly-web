@@ -422,6 +422,16 @@ class Channel(db.Model):
 
     resource_url = property(get_resource_url)
 
+    def set_cover_fallback(self, videos):
+        if not self.cover and app.config.get('DOLLY'):
+            try:
+                first = videos[0]
+                if isinstance(first, basestring):
+                    first = Video.query.get(first)
+                self.cover = first.default_thumbnail
+            except:
+                app.logger.exception('Unable to set cover from video: %s', self.id)
+
     def add_videos(self, videos, tags=None, category=None, date_added=None, favourite=False):
         instances = [
             VideoInstance(
@@ -436,6 +446,8 @@ class Channel(db.Model):
         ]
         existing = dict(VideoInstance.query.filter_by(channel=self.id).values('video', 'id'))
         self.query.session.add_all(i for i in instances if i.video not in existing)
+
+        self.set_cover_fallback(videos)
 
         # If ...
         # - we're currently not public
