@@ -1,5 +1,6 @@
 import re
 import uuid
+import random
 from sqlalchemy import (
     String, Column, Integer, Boolean, Date, DateTime, ForeignKey,
     Text, Enum, CHAR, PrimaryKeyConstraint, event, func)
@@ -162,6 +163,8 @@ class User(db.Model):
     @classmethod
     def create_with_channel(cls, password=None, **kwargs):
         kwargs.setdefault('avatar', app.config['DEFAULT_AVATAR'])
+        kwargs.setdefault('profile_cover',
+                          random.choice(app.config.get('DEFAULT_PROFILE_COVERS', [None])))
         kwargs.setdefault('password_hash', '')
         user = cls(**kwargs)
         if password:
