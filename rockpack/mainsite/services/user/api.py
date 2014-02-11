@@ -263,11 +263,15 @@ def add_videos_to_channel(channel, instance_list, locale, delete_existing=False)
     videomap = get_or_create_video_records(instance_list)
     existing = dict((v.video, v) for v in
                     VideoInstance.query.filter_by(channel=channel.id).options(lazyload('video_rel')))
+
+    videoidmap = {id_:category for (id_, category) in Video.query.filter(Video.id.in_([_[0] for _ in videomap])).values('id', 'category')}
+
     added = []
     for position, (video_id, video_source) in enumerate(videomap):
         if video_id not in added:
             instance = existing.get(video_id) or \
-                VideoInstance(video=video_id, channel=channel.id, source_channel=video_source)
+                VideoInstance(video=video_id, channel=channel.id,
+                    source_channel=video_source, category=videoidmap.get(video_id, None))
             instance.position = position
             VideoInstance.query.session.add(instance)
             added.append(video_id)
