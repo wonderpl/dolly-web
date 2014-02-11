@@ -37,6 +37,7 @@
             $rootScope.currentvideo = 0;
         }
         
+        console.log($rootScope.videos[$rootScope.currentvideo]);
 
     }]);    
 

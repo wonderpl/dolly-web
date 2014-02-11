@@ -34,12 +34,6 @@
     <![endif]-->
 
   {% assets filters="less,cssmin", 
-    output="gen/wonderplayer_css.%(version)s.css", 
-    depends="assets/wonderplayer/partials/_*.less", 
-    "assets/wonderplayer/main.less" 
-  %}<link rel="stylesheet" href="{{ ASSET_URL }}"/>{% endassets %}
-
-  {% assets filters="less,cssmin", 
     output="gen/web-lite-css.%(version)s.css", 
     depends="assets/web-lite/partials/_*.less", 
     "assets/web-lite/front.less" 

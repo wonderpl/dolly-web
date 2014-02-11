@@ -53,33 +53,6 @@
 		display: block;
 		padding: 0 0 42px 0;
 
-		h4 {
-			padding: 0 6%;
-			margin: 0 auto 32px auto;
-			width: 100%;
-			max-width: 640px;
-		}
-
-		a.download {
-			display: block;
-			padding:  6px 12px;
-			margin: 0 auto 16px auto;
-			width: 120px;
-			border: 1px solid @grey;
-			-webkit-border-radius: 200px;
-			-moz-border-radius: 200px;
-			-o-border-radius: 200px;
-			border-radius: 200px;
-			color: @grey;
-			-webkit-transition: background .1s ease-out, color .1s ease-out;
-
-			&:hover, &:active, &:focus {
-				background: @lilac;
-				color: #fff;
-				border-color: @lilac;
-			}
-		}
-
 		.interactive {
 			padding: 0 0 12px 0;
 
@@ -136,14 +109,86 @@
 	}
 }
 
+
+#channel {
+	max-width: 960px;
+	margin: 0 auto;
+	display: block;
+	position: relative;
+	padding: 0 0 120px 0;
+
+	h4 {
+		padding: 0 6%;
+		margin: 0 auto 32px auto;
+		width: 100%;
+		text-align: center;
+		max-width: 640px;
+	}
+
+	a.download {
+		display: block;
+		padding:  6px 12px;
+		margin: 0 auto 16px auto;
+		width: 160px;
+		text-align: center;
+		border: 1px solid @grey;
+		-webkit-border-radius: 200px;
+		-moz-border-radius: 200px;
+		-o-border-radius: 200px;
+		border-radius: 200px;
+		color: @grey;
+		-webkit-transition: background .1s ease-out, color .1s ease-out;
+
+		&:hover, &:active, &:focus {
+			background: @lilac;
+			color: #fff;
+			border-color: @lilac;
+		}
+	}
+}
+
+a.paging {
+	position: absolute;
+	top: 52px;
+	font-size: 32px;
+	color: #777782;
+
+	&.left {
+		left: 0;	
+	}
+
+	&.right {
+		right: 0;
+	}
+}
+
+.scroll-wrapper {
+	display: block;
+	position: relative;
+	width: 90%;
+	height: 124px;
+	overflow: auto;
+	left: 5%;
+	margin: 0 0 42px 0;
+}
+
 .channel-list {
 	display: block;
-	width: 100%;
+	position: absolute;
+	left: 0;
+	top: 0;
+	height: 100%;
 	padding: 0 0 26px 0;
+	white-space: nowrap;
 
 	li {
-		display: block;
-		float: left;
+		display: -moz-inline-stack;
+		display: inline-block;
+		vertical-align: middle;
+		*vertical-align: auto;
+		zoom: 1;
+		*display: inline;
+		vertical-align: top;
 		margin: 0 26px 26px 0;
 		max-width: 220px;
 		position: relative;

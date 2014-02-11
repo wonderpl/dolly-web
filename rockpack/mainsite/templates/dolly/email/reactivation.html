@@ -57,7 +57,7 @@ a:link, a:visited, div a {
         <table border="0" cellpadding="0" cellspacing="0" height="100%" width="100%" bgcolor="#f9f9f9" style="border-bottom: 1px solid #b4b4b4;">
           <tr>
             <td align="center" valign="middle" height="160" width="598">
-              <center><img src="emails/header-logo.png" alt="Wonder Place" width="259" height="85" /></center>
+              <center><img src="{{ config.ASSETS_URL }}/assets/dolly/img/emails/header-logo.png" alt="Wonder Place" width="259" height="85" /></center>
             </td> 
           </tr>
         </table>
@@ -70,20 +70,24 @@ a:link, a:visited, div a {
                   <td align="align" valign="middle" height="120" colspan="1" width="528">
                     <center>
                       <br/><br/>
-<!-- 
+                      
                       {% if user.avatar.url is defined %}
                         <img src="{{ user.avatar.url }}" style="display: block; width: 60px; height: 60px; border: none; outline: none;" border="0" width="60" height="60" />
                       {% else %}
-                        <img src="{{ config.ASSETS_URL }}/assets/emails/images/davatar.png" style="display: block; width: 60px; height: 60px; border: none; outline: none;" border="0" width="60" height="60" />
-                      {% endif %} -->
-                      <img src="emails/avatar-small.png" style="display: block; width: 60px; height: 60px; border: none; outline: none;" border="0" width="60" height="60" />
+                        <img src="{{ config.ASSETS_URL }}/assets/dolly/img/emails/avatar-small.png" style="display: block; width: 60px; height: 60px; border: none; outline: none;" border="0" width="60" height="60" />
+                      {% endif %}
+
                       <h1><font face="verdana" size="4" color="#767472">Hello {{ user.display_name }},</font></h1>
                       <p><font face="verdana" size="4" color="#767472">Have a look at what's trending on <br/>Wonder whilst you've been gone</font></p>
                       
                       <br/><br/>
 
+                      {% if video_data %}
+                      
+                      {% endif %}
+
                       <p><font face="verdana" size="4" color="#767472">David Ponsford shared a Collection <br/>with you with Wonder PL.</font></p>
-                      <p><a href="#" border="0" style="border: none; outline: none;"><img src="emails/share-placeholder.png" border="0" alt="" width="285" height="160" style="display: block; margin: 0 auto; border: none; ouline: none;" /></a></p>
+                      <p><a href="#" border="0" style="border: none; outline: none;"><img src="{{ config.ASSETS_URL }}/assets/dolly/img/emails/share-placeholder.png" border="0" alt="" width="285" height="160" style="display: block; margin: 0 auto; border: none; ouline: none;" /></a></p>
                       <p><font face="verdana" size="3" color="black">The hidden wonders of the modern world.</font></p>
                       
                       <br/><br/>

@@ -265,7 +265,6 @@ OO.plugin("WonderUIModule", function (OO) {
         }
 
         if ( time !== 0 && time !== undefined && _.scrubbed === false) {
-            console.log('here');
             _.timers.buffer = 0;
             _.hideLoader();            
         }
