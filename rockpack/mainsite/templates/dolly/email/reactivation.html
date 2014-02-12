@@ -90,7 +90,7 @@ a:link, a:visited, div a {
                           {% for video in videos[:2] %}
                             {% set video_url = channel_url + '&v=' + video.id %}
                             <p><a href="{{ video_url }}" border="0" style="border: none; outline: none;"><img src="{{ video.default_thumbnail }}" border="0" alt="" width="285" height="160" style="display: block; margin: 0 auto; border: none; ouline: none;" /></a></p>
-                            <p><font face="verdana" size="3" color="black">{{ vide.video_rel.title }}</font></p>
+                            <p><font face="verdana" size="3" color="black">{{ video.video_rel.title }}</font></p>
                           {% endfor %}
                         {% endfor %}
                       {% endif %}
@@ -102,11 +102,11 @@ a:link, a:visited, div a {
                         {% for channel in new_channels[:3] %}
                           {% set channel_url = url_for('share_redirect_root') + '&c=' + channel.id %}
             
-                            <!-- <img src="{{ avatar_img(channel.owner_rel.avatar) }}" />
-                              <a href="{{ channel_url }}">{{ channel.owner_rel.display_name }}</a>
-                              <a href="{{ channel_url }}"></a>
-                              <img src="{{ channel.cover.thumbnail_medium }}" />
-                            <a>{{ channel.title|upper }}</a> -->
+                            <!-- <img src="{# avatar_img(channel.owner_rel.avatar) #}" />
+                              <a href="{# channel_url }}">{{ channel.owner_rel.display_name #}</a>
+                              <a href="{# channel_url #}"></a>
+                              <img src="{# channel.cover.thumbnail_medium #}" />
+                            <a>{# channel.title|upper #}</a> -->
 
                             <p><font face="verdana" size="4" color="#767472">{{ channel.owner_rel.display_name }} created a new collection.</font></p>
                             <table border="0" cellpadding="0" cellspacing="0" height="100%" width="65%" bgcolor="white" style="border: 1px solid #c2c2c2;">
