@@ -1,8 +1,11 @@
+{% macro avatar_img(avatar) -%}
+{{ avatar.thumbnail_medium|default(config.ASSETS_URL + '/assets/emails/images/davatar.png', true) }}
+{%- endmacro %}
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-<title>Welcome to Wonder PL</title>
+<title>What's trending on Wonder PL</title>
 <style type="text/css">
   /* Client-specific Styles */
 #outlook a{padding:0;} /* Force Outlook to provide a "view in browser" button. */
@@ -86,12 +89,13 @@ a:link, a:visited, div a {
                         {% for channel, count, videos in video_data %}
                           {% set channel_url = url_for('share_redirect_root') + '&c=' + channel.id %}
                           <p><font face="verdana" size="4" color="#767472">{{ channel.owner_rel.display_name }} has added {{ count }} videos to {{ channel.title|upper }}</font></p>
-                          <p><a href="{{ channel_url }}" border="0" style="border: none; outline: none;"><img src="{{ channel.cover.thumbnail_medium }}" border="0" alt="" width="285" height="160" style="display: block; margin: 0 auto; border: none; ouline: none;" /></a></p>
+                          <!--<p><a href="{{ channel_url }}" border="0" style="border: none; outline: none;"><img src="{{ channel.cover.thumbnail_medium }}" border="0" alt="" width="285" height="160" style="display: block; margin: 0 auto; border: none; ouline: none;" /></a></p>-->
                           {% for video in videos[:2] %}
                             {% set video_url = channel_url + '&v=' + video.id %}
                             <p><a href="{{ video_url }}" border="0" style="border: none; outline: none;"><img src="{{ video.default_thumbnail }}" border="0" alt="" width="285" height="160" style="display: block; margin: 0 auto; border: none; ouline: none;" /></a></p>
                             <p><font face="verdana" size="3" color="black">{{ video.video_rel.title }}</font></p>
                           {% endfor %}
+                          <br/><br/>
                         {% endfor %}
                       {% endif %}
                       
@@ -112,7 +116,7 @@ a:link, a:visited, div a {
                             <table border="0" cellpadding="0" cellspacing="0" height="100%" width="65%" bgcolor="white" style="border: 1px solid #c2c2c2;">
                               <tr>
                                 <td align="center" valign="middle">
-                                  <p><font face="verdana" size="4" color="black">{{ channel.title|upper }}</font></p>
+                                  <p><a href="{{ channel_url }}"><font face="verdana" size="4" color="black">{{ channel.title|upper }}</font></a></p>
                                   <table border="0" cellpadding="0" cellspacing="0" width="100%" bgcolor="white">
                                     <tr>
                                       <td colspan="1" width="50%" height="30" align="center" valign="middle" style="border-right: 1px solid #989898;"><span><font face="verdana" size="2" color="black">12 Followers</font></span></td>
@@ -129,6 +133,7 @@ a:link, a:visited, div a {
                                 </td>
                               </tr>
                             </table>
+                            <br/><br/>
                         {% endfor %}
                       {% endif %}
 

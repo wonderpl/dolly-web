@@ -47,13 +47,15 @@
   <script type="text/javascript" src="//use.typekit.net/twx7lpv.js"></script>
   <script type="text/javascript">try{Typekit.load();}catch(e){}</script>
 
-  {% assets filters="less,cssmin", output="gen/wonderplayer_css.%(version)s.css", depends="assets/wonderplayer/partials/_*.less", "assets/wonderplayer/main.less" %}
-  <link rel="stylesheet" href="{{ ASSET_URL }}"/>
-  {% endassets %}
+  {% assets filters="less,cssmin", output="gen/wonderplayer_css.%(version)s.css", 
+    depends="assets/wonderplayer/partials/_*.less", 
+    "assets/wonderplayer/main.less"
+  %}<link rel="stylesheet" href="{{ ASSET_URL }}"/>{% endassets %}
 
-  {% assets filters="less,cssmin", output="gen/dolly_css.%(version)s.css", depends="assets/dolly/partials/_*.less", "assets/dolly/front.less" %}
-  <link rel="stylesheet" href="{{ ASSET_URL }}"/>
-  {% endassets %}
+  {% assets filters="less,cssmin", output="gen/dolly_css.%(version)s.css", 
+    depends="assets/dolly/partials/_*.less", 
+    "assets/dolly/front.less"
+  %}<link rel="stylesheet" href="{{ ASSET_URL }}"/>{% endassets %}
 
   <!-- Conditional stylesheet for IE8 and below -->
   {% assets filters="less,cssmin", output="gen/dolly_ie_css.%(version)s.css", depends="assets/dolly/partials/_*.less", "assets/dolly/ie.less" %}
@@ -63,42 +65,22 @@
   {% endassets %}
 
   <script src="https://maps.googleapis.com/maps/api/js?v=3.exp&sensor=false"></script>
-  <script src='//player.ooyala.com/v3/c8b3075569864056bc02b97568d17127?platform=html5-priority'></script>
   
-  {# 
-    assets filters="rjsmin", output="gen/dolly-lib.%(version)s.js",
+  {% assets filters="rjsmin", output="gen/dolly-lib.%(version)s.js",
     "assets/vendor/js/jquery-1.10.1.min.js", 
     "dolly/vendor/angular/angular.js",
     "dolly/vendor/angular/angular-route.js",
     "dolly/vendor/angular/angular-animate.js"
-  #}
-  <!--<script type="text/javascript" src="{{ ASSET_URL }}"></script>-->
-  {# endassets #}
+  %}<script type="text/javascript" src="{{ ASSET_URL }}"></script>{% endassets %}
 
-  <script src="/static/assets/vendor/js/jquery-1.10.1.min.js"></script>
-  <script src="/static/dolly/vendor/angular/angular.js"></script>
-  <script src="/static/dolly/vendor/angular/angular-route.js"></script>
-  <script src="/static/dolly/vendor/angular/angular-animate.js"></script>
-
-  {# 
-    assets filters="rjsmin", output="gen/dolly.%(version)s.js",
+  {% assets filters="rjsmin", output="gen/dolly.%(version)s.js",
     "dolly/vendor/tween.js",
     "dolly/app.js",
     "dolly/controllers/controllers.js",  
     "dolly/directives/directives.js",  
     "dolly/services/services.js",  
     "dolly/filters/filters.js"
-  #}
-  <!--<script type="text/javascript" src="{{ ASSET_URL }}"></script>-->
-  {# endassets #}
-
-  <script src="/static/dolly/vendor/tween.js"></script>
-  <script src="/static/dolly/app.js"></script>
-  <script src="/static/dolly/controllers/controllers.js"></script>
-  <script src="/static/dolly/directives/directives.js"></script>
-  <script src="/static/dolly/services/services.js"></script>
-  <script src="/static/dolly/filters/filters.js"></script>
-  <script src="/static/dolly/video-module.js"></script>
+  %}<script type="text/javascript" src="{{ ASSET_URL }}"></script>{% endassets %}
 
   {% assets filters="fronttemplate, rjsmin", output="gen/dolly-templates.%(version)s.js",
     "dolly/views/home.html",
