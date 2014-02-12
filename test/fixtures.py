@@ -254,6 +254,7 @@ class VideoData(DataSet):
         id = 'RP000001USUDEQUDJGLR3UZUOF5LH667PLVGHSX6'
         title = 'Primer'
         source = 1
+        category = 2
         source_videoid = '4CC60HJvZRE'
         date_published = datetime(2013, 1, 1, 0, 0, 0)
 
@@ -261,6 +262,7 @@ class VideoData(DataSet):
         id = 'RP000001UYVN6GR7DKH5HL42VVUVZ75QMD5AIXG5'
         title = 'Another 48hrs'
         source = 1
+        category = 2
         source_videoid = 'PSjsJ_dweTs'
         date_published = datetime(2013, 1, 1, 0, 0, 0)
 

@@ -31,12 +31,13 @@ class SearchTestCase(RockPackTestCase):
             channel, = owner.channels
             channel.add_videos([VideoData.video1.id])
             db.session.commit()
-            self.wait_for_es()
 
-            channels = self._search('channels', VideoData.video1.title)
-            self.assertGreater(channels['total'], 0)
-            self.assertIn(channel.id, [c['id'] for c in channels['items']])
-            self.assertGreater(channels['items'][0]['videos']['total'], 0)
+        self.wait_for_es()
+
+        channels = self._search('channels', VideoData.video1.title)
+        self.assertGreater(channels['total'], 0)
+        self.assertIn(channel.id, [c['id'] for c in channels['items']])
+        self.assertGreater(channels['items'][0]['videos']['total'], 0)
 
 
 @skip_if_dolly

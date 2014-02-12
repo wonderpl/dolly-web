@@ -679,26 +679,8 @@ class ChannelVideoTestCase(base.RockPackTestCase):
             r = client.put(
                 '/ws/{}/channels/{}/videos/'.format(user_id, channel_id),
                 data=json.dumps([
-                    VideoInstanceData.video_instance1.id,
                     VideoInstanceData.video_instance2.id,
-                ]),
-                content_type='application/json',
-                headers=[get_auth_header(user_id)]
-            )
-            self.assertEquals(r.status_code, 204)
-            positions = models.VideoInstance.query.filter_by(
-                channel=channel_id).values('video', 'position')
-            self.assertItemsEqual(positions, [
-                (VideoData.video1.id, 0),
-                (VideoData.video2.id, 1),
-            ])
-
-            # change positions
-            r = client.put(
-                '/ws/{}/channels/{}/videos/'.format(user_id, channel_id),
-                data=json.dumps([
-                    VideoInstanceData.video_instance2.id,
-                    VideoInstanceData.video_instance1.id,
+                    VideoInstanceData.video_instance3.id,
                 ]),
                 content_type='application/json',
                 headers=[get_auth_header(user_id)]
@@ -708,7 +690,30 @@ class ChannelVideoTestCase(base.RockPackTestCase):
                 channel=channel_id).values('video', 'position')
             self.assertItemsEqual(positions, [
                 (VideoData.video2.id, 0),
-                (VideoData.video1.id, 1),
+                (VideoData.video3.id, 1),
+            ])
+
+        if app.config.get('DOLLY'):
+            self.assertEquals(VideoData.video2.category,
+                models.Channel.query.get(channel_id).category)
+
+        with self.app.test_client() as client:
+            # change positions
+            r = client.put(
+                '/ws/{}/channels/{}/videos/'.format(user_id, channel_id),
+                data=json.dumps([
+                    VideoInstanceData.video_instance3.id,
+                    VideoInstanceData.video_instance2.id,
+                ]),
+                content_type='application/json',
+                headers=[get_auth_header(user_id)]
+            )
+            self.assertEquals(r.status_code, 204)
+            positions = models.VideoInstance.query.filter_by(
+                channel=channel_id).values('video', 'position')
+            self.assertItemsEqual(positions, [
+                (VideoData.video3.id, 0),
+                (VideoData.video2.id, 1),
             ])
 
     @skip_if_rockpack

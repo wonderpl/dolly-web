@@ -106,10 +106,16 @@ def _update_video_related_channel_meta(channel_ids):
                 except StopIteration:
                     cat = []
 
-                # Update the database and then set es
-                update(models.Channel).where(models.Channel.id == channel_id).values(category=cat)
+                # Update the database
+                qcat = cat or None
+                c = models.Channel.query.get(channel_id)
+                c.category = qcat
+                c.save()
+
+                # Set es field
                 ec.add_field('category', cat)
 
+        # Update the es record
         ec.update()
 
     # NOTE: dolly only
@@ -119,4 +125,5 @@ def _update_video_related_channel_meta(channel_ids):
                 set([_[0] for _ in models.Channel.query.filter(
                     models.Channel.id.in_(channel_ids)).values('owner')])))
 
+    # Final flush to clear bulk queued updates
     api.ESChannel.flush()

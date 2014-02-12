@@ -520,6 +520,7 @@ class TestUserContent(base.RockPackTestCase):
             #cron_cmds.update_video_feed_item_stars(date_from, date_to)
             User.query.session.commit()
 
+        with self.app.test_client() as client:
             # Fetch feed
             self.wait_for_es()
             r = client.get('/ws/{}/content_feed/'.format(user1),
@@ -549,6 +550,8 @@ class TestUserContent(base.RockPackTestCase):
             self.assertIn(u3new, itemids)
 
             # check subscription count is being generated
+
+        with self.app.test_client() as client:
             self.wait_for_es()
             r = client.get('/ws/{}/'.format(user1),
                            headers=[get_auth_header(user1)])

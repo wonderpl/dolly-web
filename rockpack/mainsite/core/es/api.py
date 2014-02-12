@@ -800,8 +800,10 @@ def add_video_to_index(video_instance, bulk=False, no_check=False):
     es_video = ESVideo.inserter()
     es_video.insert(video_instance.id, video_instance)
 
+from rockpack.mainsite.background_sqs_processor import background_on_sqs
 
-def es_update_channel_videos(extant=[], deleted=[], async=app.config.get('SQS_ELASTICSEARCH_QUEUE')):
+@background_on_sqs
+def es_update_channel_videos(extant=[], deleted=[]):
     """ Updates the es documents for videos belonging to channels
         extant - list of strings
         deleted - list of strings
@@ -809,10 +811,6 @@ def es_update_channel_videos(extant=[], deleted=[], async=app.config.get('SQS_EL
 
     if not use_elasticsearch() or (not extant and not deleted):
         return
-
-    if async:
-        from rockpack.mainsite.elasticsearch_sqs_processor import ElasticsearchSqsProcessor
-        return ElasticsearchSqsProcessor.write_message(dict(extant=extant, deleted=deleted))
 
     from rockpack.mainsite.services.video import models
     from . import update
