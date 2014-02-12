@@ -172,6 +172,7 @@ OO.plugin("WonderUIModule", function (OO) {
         _.elements.scrubber_progress_vid = document.querySelector('.scrubber-progress.vid');
         _.elements.scrubber_handle_vid = document.querySelector('.scrubber-handle.vid');
         _.elements.scrubber_vol = document.querySelector('.scrubber.vol');
+        _.elements.scrubber_target_vol = document.querySelector('.scrubber-target.vol');
         _.elements.scrubber_progress_vol = document.querySelector('.scrubber-progress.vol');
         _.elements.scrubber_handle_vol = document.querySelector('.scrubber-handle.vol');
 
@@ -223,13 +224,12 @@ OO.plugin("WonderUIModule", function (OO) {
             _.listen(_.elements.scrubber_trans, 'mousedown', _.scrubDown);
             _.listen(_.elements.scrubber_trans, 'mouseup', _.scrubUp);
             _.listen(_.elements.scrubber_trans, 'mouseleave', _.scrubUp);
+            
             _.listen(_.elements.controls, 'mouseleave', function(){
                 _.controlshovered = false;
-                console.log(_.controlshovered);
             });
             _.listen(_.elements.controls, 'mouseenter', function(){
-                _.controlshovered = false;
-                console.log(_.controlshovered);
+                _.controlshovered = true;
             });
         }
 
@@ -388,6 +388,7 @@ OO.plugin("WonderUIModule", function (OO) {
         _.prevent(e);
         if ( _.loaded === true ) {
             _.toggleClass( _.elements.scrubber_vol, 'vol-visible' );
+            _.toggleClass( _.elements.scrubber_target_vol, 'vol-visible' );
         }
     };
 
@@ -585,6 +586,7 @@ OO.plugin("WonderUIModule", function (OO) {
         _.addClass( _.elements.controls, 'hide' );
         _.removeClass( _.elements.controls, 'show' );
         _.removeClass( _.elements.scrubber_vol, 'vol-visible' );   
+        _.removeClass( _.elements.scrubber_target_vol, 'vol-visible' );   
     };
 
     // A user interaction has been detected, show the UI and 
@@ -641,8 +643,8 @@ OO.plugin("WonderUIModule", function (OO) {
         }
         _.elements.timer.innerHTML = _.displayTime;
 
-        if ( _.timers.interaction === 60 ) {
-            if ( _.isTouchDevice() === false ) {
+        if ( _.timers.interaction === 80 ) {
+            if ( _.isTouchDevice() === false && _.controlshovered === false ) {
                 _.hideUI();         
             }
         }
