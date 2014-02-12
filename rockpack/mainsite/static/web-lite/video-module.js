@@ -176,7 +176,6 @@ OO.plugin("WonderUIModule", function (OO) {
         _.elements.scrubber_handle_vol = document.querySelector('.scrubber-handle.vol');
 
         // Listen for user interaction and show and hide the nav as necessary
-
         if ( _.isTouchDevice() === false ) {
             _.listen(_.elements.wrapper, 'mousemove', _.interaction);
             _.listen(_.elements.controls, 'mousemove', _.interaction);
@@ -211,7 +210,7 @@ OO.plugin("WonderUIModule", function (OO) {
         // Decide which listeners to use for the scrubbers.
         if ( _.isTouchDevice() ) {
             _.addClass(_.elements.controls, 'show');
-            _.listen(_.elements.loader, 'touchstart', function(e){event.preventDefault();});
+            // _.listen(_.elements.loader, 'touchstart', function(e){event.preventDefault();});
             _.listen(_.elements.loader, 'click', _.toggleControls);
             // _.listen(_.elements.loader, 'touchend', _.interaction);
             _.listen(_.elements.scrubber_trans, 'touchmove', _.scrubTouch);
@@ -224,8 +223,14 @@ OO.plugin("WonderUIModule", function (OO) {
             _.listen(_.elements.scrubber_trans, 'mousedown', _.scrubDown);
             _.listen(_.elements.scrubber_trans, 'mouseup', _.scrubUp);
             _.listen(_.elements.scrubber_trans, 'mouseleave', _.scrubUp);
-
-            // _.listen(_.elements.controls, 'mouseleave', )
+            _.listen(_.elements.controls, 'mouseleave', function(){
+                _.controlshovered = false;
+                console.log(_.controlshovered);
+            });
+            _.listen(_.elements.controls, 'mouseenter', function(){
+                _.controlshovered = false;
+                console.log(_.controlshovered);
+            });
         }
 
         if ( _.ios === true ) {
@@ -585,8 +590,10 @@ OO.plugin("WonderUIModule", function (OO) {
     // A user interaction has been detected, show the UI and 
     // set a timer to hide it again
     _.interaction = function () {
-        _.showUI();
-        _.timers.interaction = 0;
+        if ( _.controlshovered === false ) {
+            _.showUI();
+            _.timers.interaction = 0;            
+        }
     };
 
     _.ActionTick = function () {

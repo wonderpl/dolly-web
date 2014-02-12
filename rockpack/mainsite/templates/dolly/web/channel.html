@@ -48,43 +48,23 @@
 
   <script src='//player.ooyala.com/v3/c8b3075569864056bc02b97568d17127?platform=html5-priority'></script>
   
-  {# assets filters="rjsmin", output="gen/web-lite-lib.%(version)s.js",
+  {% assets filters="rjsmin", output="gen/web-lite-lib.%(version)s.js",
     "assets/vendor/js/jquery-1.10.1.min.js", 
     "web-lite/vendor/angular/angular.js",
     "web-lite/vendor/angular/angular-route.js",
     "web-lite/vendor/angular/angular-animate.js",
     "web-lite/vendor/angular/angular-sanitize.js",
-    "web-lite/video-module.js",
     "web-lite/youtube-module.js"
-  #}
-  <!--<script type="text/javascript" src="{{ ASSET_URL }}"></script>-->
-  {# endassets #}
-  
-  <script src="/static/assets/vendor/js/jquery-1.10.1.min.js"></script>
-  <script src="/static/web-lite/vendor/angular/angular.js"></script>
-  <script src="/static/web-lite/vendor/angular/angular-route.js"></script>
-  <script src="/static/web-lite/vendor/angular/angular-animate.js"></script>
-  <script src="/static/web-lite/vendor/angular/angular-sanitize.js"></script>
-  <script src="/static/web-lite/video-module.js"></script>
-  <script src="/static/web-lite/youtube-module.js"></script>
+  %}<script type="text/javascript" src="{{ ASSET_URL }}"></script>{% endassets %}
 
-  {# assets filters="rjsmin", output="gen/dolly.%(version)s.js",
+  {% assets filters="rjsmin", output="gen/dolly.%(version)s.js",
     "web-lite/vendor/tween.js",
     "web-lite/app.js",
     "web-lite/controllers/controllers.js",  
     "web-lite/directives/directives.js",  
     "web-lite/services/services.js",
     "web-lite/filters/filters.js"
-  #}
-  <!--<script type="text/javascript" src="{{ ASSET_URL }}"></script>-->
-  {# endassets #}
-
-  <script src="/static/web-lite/vendor/tween.js"></script>
-  <script src="/static/web-lite/app.js"></script>
-  <script src="/static/web-lite/controllers/controllers.js"></script>
-  <script src="/static/web-lite/directives/directives.js"></script>
-  <script src="/static/web-lite/services/services.js"></script>
-  <script src="/static/web-lite/filters/filters.js"></script>
+  %}<script type="text/javascript" src="{{ ASSET_URL }}"></script>{% endassets %}
 
   {% assets filters="weblitetemplates, rjsmin", output="gen/weblite-templates.%(version)s.js",
     depends="web-lite/views/*.html",
