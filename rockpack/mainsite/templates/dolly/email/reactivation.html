@@ -65,7 +65,7 @@ a:link, a:visited, div a {
                     <center>
                       <br/><br/>
                       
-                      {% if user.avatar.url is defined %}
+                      {% if user.avatar %}
                         <img src="{{ user.avatar.url }}" style="display: block; width: 60px; height: 60px; border: none; outline: none;" border="0" width="60" height="60" />
                       {% else %}
                         <img src="{{ config.ASSETS_URL }}/assets/dolly/img/emails/avatar-small.png" style="display: block; width: 60px; height: 60px; border: none; outline: none;" border="0" width="60" height="60" />
@@ -103,8 +103,8 @@ a:link, a:visited, div a {
                                   <p><a href="{{ channel_url }}"><font face="verdana" size="4" color="black">{{ channel.title|upper }}</font></a></p>
                                   <table border="0" cellpadding="0" cellspacing="0" width="100%" bgcolor="white">
                                     <tr>
-                                      <td colspan="1" width="50%" height="30" align="center" valign="middle" style="border-right: 1px solid #989898;"><span><font face="verdana" size="2" color="black">12 Followers</font></span></td>
-                                      <td colspan="1" width="50%" height="30" align="center" valign="middle" style="border-left: 1px solid #989898;"><span><font face="verdana" size="2" color="black">32 Videos</font></span></td>
+                                      <td colspan="1" width="50%" height="30" align="center" valign="middle" style="border-right: 1px solid #989898;"><span><font face="verdana" size="2" color="black">{{ channel.subscriber_count }} Follower{% if channel.subscriber_count != 1 %}s{% endif %}</font></span></td>
+                                      <td colspan="1" width="50%" height="30" align="center" valign="middle" style="border-left: 1px solid #989898;"><span><font face="verdana" size="2" color="black">{{ channel.video_count }} Video{% if channel.video_count != 1 %}s{% endif %}</font></span></td>
                                     </tr>
                                     <tr>
                                       <td colspan="1" width="50%" height="12">&nbsp;</td>
@@ -136,7 +136,7 @@ a:link, a:visited, div a {
               <table border="0" cellpadding="0" cellspacing="0" height="100%" width="528" bgcolor="#f9f9f9">
                 <tr>  
                   <td align="center" valign="middle" height="120" width="100%">
-                    <p><font face="verdana" size="1" color="#767472">To ensure our emails reach your inbox please make sure to add Wonder PL ({{ config.DEFAULT_EMAIL_SOURCE|e }}) to your address book or safe list. You are subscribed as [[SUBSCRIBED ADDRESS]]. Your privacy is important to us, have a read of our <a href="http://wonderpl.com/privacy/" target="_blank">privacy policy</a>.</p>
+                    <p><font face="verdana" size="1" color="#767472">To ensure our emails reach your inbox please make sure to add {{ config.DEFAULT_EMAIL_SOURCE|e }} to your address book or safe list. You are subscribed as {{ user.email }}. Your privacy is important to us, have a read of our <a href="{{ url_for('privacy') }}" target="_blank">privacy policy</a>.</p>
                   </td> 
                 </tr>
               </table>
@@ -147,5 +147,6 @@ a:link, a:visited, div a {
     </tr>
   </table>
 </center>
+{% include "tracking_img.html" %}
 </body>
 </html>

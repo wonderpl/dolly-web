@@ -402,7 +402,7 @@ class Channel(db.Model):
             if channel.title.upper().startswith(app.config['UNTITLED_CHANNEL'].upper()):
                 return False
             if has_instances is None:
-                has_instances = VideoInstance.query.filter_by(channel=channel.id).value(func.count())
+                has_instances = channel.video_count > 0
             if not has_instances:
                 return False
             else:
@@ -415,6 +415,12 @@ class Channel(db.Model):
     @property
     def editable(self):
         return not self.favourite
+
+    @property
+    def video_count(self):
+        if not hasattr(self, '_video_count'):
+            self._video_count = VideoInstance.query.filter_by(channel=self.id).value(func.count())
+        return self._video_count
 
     def get_resource_url(self, own=False):
         view = 'userws.owner_channel_info' if own else 'userws.channel_info'

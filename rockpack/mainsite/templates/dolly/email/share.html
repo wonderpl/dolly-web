@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-<title>Welcome to Wonder PL</title>
+<title>{{ user.display_name }} shared a {{ object_type_name }} with you on Wonder PL</title>
 <style type="text/css">
   /* Client-specific Styles */
 #outlook a{padding:0;} /* Force Outlook to provide a "view in browser" button. */
@@ -104,7 +104,7 @@ a:link, a:visited, div a {
               <table border="0" cellpadding="0" cellspacing="0" height="100%" width="528" bgcolor="#f9f9f9">
                 <tr>  
                   <td align="center" valign="middle" height="120" width="100%">
-                    <p><font face="verdana" size="1" color="#767472">To ensure our emails reach your inbox please make sure to add Wonder PL ({{ config.DEFAULT_EMAIL_SOURCE|e }}) to your address book or safe list. You are subscribed as [[ SUBSCRIBED ADDRESS]]. Your privacy is important to us, have a read of our <a href="http://wonderpl.com/privacy/" target="_blank">privacy policy</a>.</p>
+                    <p><font face="verdana" size="1" color="#767472">To ensure our emails reach your inbox please make sure to add {{ config.DEFAULT_EMAIL_SOURCE|e }} to your address book or safe list. You are subscribed as {{ user.email }}. Your privacy is important to us, have a read of our <a href="{{ url_for('privacy') }}" target="_blank">privacy policy</a>.</p>
                   </td> 
                 </tr>
               </table>
@@ -115,5 +115,6 @@ a:link, a:visited, div a {
     </tr>
   </table>
 </center>
+{% include "tracking_img.html" %}
 </body>
 </html>

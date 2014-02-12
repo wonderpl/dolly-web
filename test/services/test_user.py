@@ -1014,14 +1014,14 @@ class TestEmail(base.RockPackTestCase):
                 recipient, body = send_email.call_args[0]
                 self.assertEquals(user.email, recipient)
                 self.assertIn('<title>Welcome', body)
-                self.assertIn('Hi {}'.format(user.display_name), body)
+                self.assertIn('{}'.format(user.display_name), body)
                 self.assertIn('To ensure our emails reach your inbox please make sure to add {}'.format(
                     cgi.escape(app.config['DEFAULT_EMAIL_SOURCE'])), body)
 
                 user2 = self.create_test_user(date_joined=datetime(2100, 2, 2))
                 commands.create_registration_emails(datetime(2100, 2, 1), datetime(2100, 2, 10))
                 self.assertEquals(send_email.call_count, 2)
-                self.assertIn('Hi {}'.format(user2.display_name), send_email.call_args[0][1])
+                self.assertIn('{}'.format(user2.display_name), send_email.call_args[0][1])
 
                 # Check that invalid email doesn't break
                 self.create_test_user(date_joined=datetime(2100, 3, 2), email='xxx')

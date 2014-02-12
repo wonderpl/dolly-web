@@ -135,11 +135,6 @@ class ChannelLocaleMetaFormAdmin(InlineFormAdmin):
     form_columns = ('id', 'channel_locale', 'visible')
 
 
-def _format_channel_video_count(view, context, channel, name):
-    count = models.VideoInstance.query.filter(models.VideoInstance.channel == channel.id).count()
-    return Markup('{}'.format(count))
-
-
 class ChannelView(AdminModelView):
     model = models.Channel
 
@@ -148,7 +143,6 @@ class ChannelView(AdminModelView):
     column_list = ('title', 'owner_rel', 'public', 'cover.url', 'category_rel', 'video_count', 'date_added', 'editorial_boost', 'subscriber_count')
     column_filters = ('owner', 'title', 'public', 'category_rel', 'description', 'owner_rel', 'deleted', 'date_added', 'editorial_boost', 'subscriber_count')
     column_searchable_list = ('title',)
-    column_formatters = dict(video_count=_format_channel_video_count)
 
     form_excluded_columns = ('video_instances', 'channel_promotion')
     form_ajax_refs = dict(
