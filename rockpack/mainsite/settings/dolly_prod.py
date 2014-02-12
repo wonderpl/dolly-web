@@ -73,6 +73,8 @@ SQS_ELASTICSEARCH_QUEUE = 'dolly-mainsite-es'
 
 AUTO_FOLLOW_USERS = ('iOPtuNUO15f1cgMhZdDgwg',)
 
+ENABLE_USER_CATEGORISATION_CONDITIONS = True
+
 # Mapping from share object type to message (can have formatting)
 SHARE_MESSAGE_MAP = dict(
     video_instance=dict(
