@@ -388,7 +388,7 @@ class UploadView(AdminView):
                 last_modified=key.last_modified,
             )
             for key in self.bucket.list(self.path_prefix)
-            if not key.name.endswith('.txt')
+            if not key.name.endswith('manifest.txt') and not key.name.endswith('/')
         ]
         return self.render('admin/upload_review.html', video_list=video_list)
 
