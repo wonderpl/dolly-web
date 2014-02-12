@@ -48,6 +48,9 @@ rockpack/mainsite/static/.webassets-manifest
 rockpack/mainsite/static/.webassets-cache
 rockpack/mainsite/static/gen
 
+# test email dump
+_email.*
+
 # Local sql db
 rockpack/mainsite/rockpack.db
 

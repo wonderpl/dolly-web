@@ -696,7 +696,7 @@ class ChannelVideoTestCase(base.RockPackTestCase):
         # Only run this part if es is turned on
         if app.config.get('DOLLY') and app.config.get('ELASTICSEARCH_URL'):
             self.assertEquals(VideoData.video2.category,
-                models.Channel.query.get(channel_id).category)
+                              models.Channel.query.get(channel_id).category)
 
         with self.app.test_client() as client:
             # change positions

@@ -1,12 +1,12 @@
 from flask import json
-from mock import patch
 from test import base
 from ..test_helpers import get_auth_header
+from ..test_decorators import patch_send_email
 
 
 class TestBaseServices(base.RockPackTestCase):
 
-    @patch('rockpack.mainsite.services.base.api.send_email')
+    @patch_send_email('rockpack.mainsite.services.base.api.send_email')
     def test_feedback(self, send_email):
         with self.app.test_client() as client:
             user = self.create_test_user()

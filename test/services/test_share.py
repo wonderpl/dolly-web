@@ -1,13 +1,12 @@
 import re
 from urlparse import urlparse
-from mock import patch
 from flask import json
-from test import base
-from test.test_decorators import skip_if_dolly, skip_unless_config
-from test.test_helpers import get_auth_header
-from test.fixtures import ChannelData, VideoInstanceData
 from rockpack.mainsite import app
 from rockpack.mainsite.services.video.models import Channel
+from test import base
+from ..test_decorators import skip_if_dolly, skip_unless_config, patch_send_email
+from ..test_helpers import get_auth_header
+from ..fixtures import ChannelData, VideoInstanceData
 
 
 class TestShare(base.RockPackTestCase):
@@ -88,8 +87,9 @@ class TestShare(base.RockPackTestCase):
 
         self.app.config['SHARE_REDIRECT_PASSTHROUGH_PARAMS'] = []
 
-    def test_channel_share_email(self):
-        with patch('rockpack.mainsite.core.email.send_email') as send_email:
+    @patch_send_email()
+    def test_channel_share_email(self, send_email):
+        with self.app.test_request_context():
             with self.app.test_client() as client:
                 userid = self.create_test_user().id
                 recipient = 'paulegan+unittest@rockpack.com'

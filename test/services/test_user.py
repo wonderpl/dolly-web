@@ -5,12 +5,6 @@ import cgi
 import urlparse
 from datetime import datetime, timedelta
 from mock import patch
-from test import base
-from test.assets import AVATAR_IMG_PATH
-from test.fixtures import UserData, ChannelData, VideoData, VideoInstanceData, CategoryData
-from test.test_decorators import skip_unless_config, skip_if_rockpack
-from test.test_helpers import get_auth_header
-from test.test_helpers import get_client_auth_header
 from rockpack.mainsite import app
 from rockpack.mainsite.services.video.models import Channel
 from rockpack.mainsite.services.oauth.api import ExternalUser
@@ -20,6 +14,11 @@ from rockpack.mainsite.services.user.models import (
     UserContentFeed, UserSubscriptionRecommendation, Subscription)
 from rockpack.mainsite.services.user import commands as cron_cmds
 from rockpack.mainsite.services.user.api import add_videos_to_channel
+from test import base
+from ..assets import AVATAR_IMG_PATH
+from ..fixtures import UserData, ChannelData, VideoData, VideoInstanceData, CategoryData
+from ..test_decorators import skip_unless_config, skip_if_rockpack, patch_send_email
+from ..test_helpers import get_auth_header, get_client_auth_header
 
 
 class TestPostRegistration(base.RockPackTestCase):
@@ -421,9 +420,10 @@ class TestUserContent(base.RockPackTestCase):
             time.sleep(3)
 
             r = client.get('/ws/users/?category=%s' % category,
-                headers=[get_auth_header(user2.id)])
+                           headers=[get_auth_header(user2.id)])
 
-            self.assertFalse([1 for user in json.loads(r.data)['users']['items']
+            self.assertFalse([
+                1 for user in json.loads(r.data)['users']['items']
                 if user['id'] == user1.id])
 
             user1.profile_cover = 'http://foo'
@@ -440,9 +440,10 @@ class TestUserContent(base.RockPackTestCase):
             app.config['ENABLE_USER_CATEGORISATION_CONDITIONS'] = enable_ucc
 
             r = client.get('/ws/users/?category=%s' % category,
-                headers=[get_auth_header(user2.id)])
+                           headers=[get_auth_header(user2.id)])
 
-            self.assertTrue([1 for user in json.loads(r.data)['users']['items']
+            self.assertTrue([
+                1 for user in json.loads(r.data)['users']['items']
                 if user['id'] == user1.id])
 
     @skip_unless_config('ELASTICSEARCH_URL')
@@ -1005,12 +1006,11 @@ class TestEmail(base.RockPackTestCase):
             user=user.id,
         ).save()
 
-    def test_email_registration(self):
+    @patch_send_email()
+    def test_email_registration(self, send_email):
+        from rockpack.mainsite.services.user import commands
         with self.app.test_client():
-            self.app.test_request_context().push()
-
-            from rockpack.mainsite.services.user import commands
-            with patch('rockpack.mainsite.core.email.send_email') as send_email:
+            with self.app.test_request_context():
                 user = self.create_test_user(date_joined=datetime(2100, 1, 2))
                 commands.create_registration_emails(datetime(2100, 1, 1), datetime(2100, 1, 10))
                 self.assertEquals(send_email.call_count, 1)
@@ -1062,7 +1062,7 @@ class TestEmail(base.RockPackTestCase):
 
         return window
 
-    @patch('rockpack.mainsite.core.email.send_email')
+    @patch_send_email()
     def test_email_reactivation(self, send_email):
         # check successful sending of email
         user = self.create_test_user()
@@ -1074,7 +1074,6 @@ class TestEmail(base.RockPackTestCase):
         self.assertIn('has added 2 videos to CHANNEL #3', body)
         self.assertIn('has added 1 videos to CHANNEL #4', body)
         self.assertIn('utm_medium=email', body)
-        #open('temp.html', 'wb').write(body.encode('utf8'))
 
         # check that email isn't sent to active, bouncing, or unsubscribed users
         send_email.reset_mock()
