@@ -125,6 +125,8 @@ footer {
 	width: 100%;
 	background: @lilac;
 	color: #fff;
+	position: relative;
+	z-index: 1000;
 
 	a {
 		color: #fff;
@@ -265,13 +267,14 @@ footer {
 		li {
 			display: block;
 			width: 100%;
-			margin: 0 0 32px 0;
+			max-width: 420px;
+			margin: 0 auto 32px auto;
 		}	
 	}
 }
 
 h1 {
-	padding-top: 22px;
+	padding-top: 22px 12px 0px 12px;
 	font-size: 30px;
 }
 
