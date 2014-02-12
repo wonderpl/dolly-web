@@ -6,7 +6,7 @@
         [ns + '.services',
         ns + '.directives'] /* module dependencies */);
 
-    app.controller('WebLiteCtrl', ['$scope', '$timeout','$location', '$rootScope', '$templateCache', '$sanitize', '$compile', '$http', 'querystring', 'userService', function($scope, $timeout, $location, $rootScope, $templateCache, $sanitize, $compile, $http, querystring, userService) {
+    app.controller('WebLiteCtrl', ['$scope', '$timeout','$location', '$rootScope', '$templateCache', '$sanitize', '$compile', '$http', 'querystring', 'windowResizer', function($scope, $timeout, $location, $rootScope, $templateCache, $sanitize, $compile, $http, querystring, windowResizer) {
 
         $rootScope.weblite = true;
         $rootScope.assets_url = window.assets_url;
@@ -80,12 +80,14 @@
     }]);
 
 
-    app.controller('ChannelCtrl', ['$scope', '$timeout','$location', '$rootScope', '$templateCache', '$sanitize', '$compile', function($scope, $timeout, $location, $rootScope, $templateCache, $sanitize, $compile) {
+    app.controller('ChannelCtrl', ['$scope', '$timeout','$location', '$rootScope', '$templateCache', '$sanitize', '$compile', 'windowSize', function($scope, $timeout, $location, $rootScope, $templateCache, $sanitize, $compile, windowSize ) {
 
         var $this = ng.element(d.getElementById('channel')),
         template, 
         $scp, 
         tmpl;
+
+        $rootScope.wW = windowSize.ww();
 
         $scope.currentpage = 0;
         $scope.items = $rootScope.videos.length;
@@ -143,11 +145,19 @@
             }
         };
 
-        if ( $scope.touchDevice === false ) {
+        // if ( $scope.touchDevice === false ) {
             $scope.$watch('currentpage', function(newValue, oldValue) {
                 d.querySelector('.channel-list').style.left = (-(newValue * 246)) + 'px';
             });    
-        }
+        // }
+
+        $rootScope.$watch('wW', function(newValue, oldValue){
+            if ( $scope.touchDevice === true && newValue < 768 ) {
+                d.querySelector('.scroll-outer-wrapper').scrollLeft = 0;
+                d.querySelector('.scroll-inner-wrapper').scrollLeft = 0;
+                $scope.currentpage = 0;
+            }
+        });
 
     }]);
 

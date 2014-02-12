@@ -51,3 +51,50 @@ header {
 		display: none;
 	}
 }
+
+.scroll-outer-wrapper {
+	&.touch {
+		height: 190px;
+
+		a.paging {
+			display: none;
+		}
+		.scroll-inner-wrapper {
+			width: 100%;
+			left: 0;
+			height: 190px;
+			overflow: auto;
+		}
+	}
+}
+
+footer {
+	display: block;
+	width: 100%;
+	background: @lilac;
+	color: #fff;
+	position: relative;
+	z-index: 1000;
+
+	a {
+		color: #fff;
+	}
+
+	.trim {
+		display: block;
+		
+		.left {
+			display: block;
+			width: 100%;
+			font-size: 15px;
+			padding: 6px;
+		}
+		.middle, .right {
+			padding: 3px;
+			display: inline-block;
+			vertical-align: top;
+			font-size: 11px;
+			margin: 0 0 12px 0;
+		}
+	}
+}

@@ -6,6 +6,7 @@
 	-webkit-box-sizing: border-box;
 	-moz-box-sizing: border-box;
 	box-sizing: border-box;
+	-webkit-tap-highlight-color:rgba(0,0,0,0);
 }
 
 body, html {
@@ -121,6 +122,11 @@ body, html {
 		z-index: 100;
 		color: #fff;
 		font-family: sans-serif;
+		-webkit-user-select: none;  /* Chrome all / Safari all */
+		-moz-user-select: none;     /* Firefox all */
+		-ms-user-select: none;      /* IE 10+ */
+		-o-user-select: none;
+		user-select: none;     
 
 		&:after {
 			background: black;
@@ -181,7 +187,9 @@ body, html {
 		}
 
 		&.loading {
+			pointer-events: none;
 			span {
+				pointer-events: none;
 				&:after {
 					content: 'your video is loading';
 					display: block;
@@ -214,7 +222,12 @@ body, html {
 		transition: all 0.4s ease-out;
 		filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=0);
 		opacity: 0;
-		cursor: pointer;
+		-webkit-user-select: none;  /* Chrome all / Safari all */
+		-moz-user-select: none;     /* Firefox all */
+		-ms-user-select: none;      /* IE 10+ */
+		-o-user-select: none;
+		user-select: none;     
+		-webkit-tap-highlight-color: rgba(0,0,0,0);
 
 		span {
 			position: absolute;
@@ -230,11 +243,13 @@ body, html {
 			font-size: 40px;
 			color: #fff;
 			font-family: sans-serif;
+			pointer-events: none;
 		}
 
 		&.show {
 			opacity: 1;
 			filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=1);
+			-webkit-tap-highlight-color: rgba(0,0,0,0);
 			// @include opacity(1);
 		}
 	}

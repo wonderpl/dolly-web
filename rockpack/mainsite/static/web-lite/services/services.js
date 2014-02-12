@@ -71,6 +71,29 @@
     }]);
 
 
+    app.factory('windowResizer', ['$timeout', '$rootScope', 'windowSize', 'animLoop', function($timeout, $rootScope, windowSize, animLoop) {
+
+        var wW = windowSize.ww(),
+            wH = windowSize.wh();
+
+        var resize = function(){
+            $timeout( function() {
+                $rootScope.$apply(function() {
+                    $rootScope.wW = wW;
+                    $rootScope.wH = wH;
+                })
+            });
+
+            animLoop.remove('windowResize');
+        }
+
+        w.onresize = function() {
+            wW = windowSize.ww();
+            wH = windowSize.wh();
+            animLoop.add('windowResize', resize);
+        };
+    }]);
+
     app.factory('animLoop', function(){
 
         var rafLast = 0;
@@ -167,21 +190,5 @@
 
         return pipeline;
     });
-
-    app.factory('userService', ['$rootScope', '$http', '$timeout', function($rootScope, $http, $timeout){
-        return {
-            fetchUser: function(id) {
-                $http({method: 'get', url: $rootScope.api.base_api + id }).success(function(data,status,headers,config){
-                    $timeout(function(){
-                        $rootScope.$apply(function(){
-                            console.log(data);
-                            // $rootScope.user = data.results[0].user;
-                        });
-                    });
-                });
-            }
-        }
-    }]);
-
 
 })(window,document,window.angular,'WebLite','services');

@@ -175,26 +175,30 @@ OO.plugin("WonderUIModule", function (OO) {
         _.elements.scrubber_handle_vol = document.querySelector('.scrubber-handle.vol');
 
         // Listen for user interaction and show and hide the nav as necessary
-        _.listen(_.elements.wrapper, 'mousemove', _.interaction);
-        _.listen(_.elements.controls, 'mousemove', _.interaction);
-        _.listen(_.elements.poster, 'mousemove', _.interaction);
-        _.listen(_.elements.loader, 'mousemove', _.interaction);
-        _.listen(_.elements.playbutton, 'mousemove', _.interaction);
-        _.listen(_.elements.bigplaybutton, 'mousemove', _.interaction);
-        _.listen(_.elements.pausebutton, 'mousemove', _.interaction);
-        _.listen(_.elements.fullscreenbutton, 'mousemove', _.interaction);
-        _.listen(_.elements.volumebutton, 'mousemove', _.interaction);
-        _.listen(_.elements.timer, 'mousemove', _.interaction);
-        _.listen(_.elements.scrubbers, 'mousemove', _.interaction);
-        _.listen(_.elements.scrubber_handles, 'mousemove', _.interaction);
-        _.listen(_.elements.scrubber_targets, 'mousemove', _.interaction);
-        _.listen(_.elements.scrubber_trans, 'mousemove', _.interaction);
-        _.listen(_.elements.scrubber_vid, 'mousemove', _.interaction);
-        _.listen(_.elements.scrubber_progress_vid, 'mousemove', _.interaction);
-        _.listen(_.elements.scrubber_handle_vid, 'mousemove', _.interaction);
-        _.listen(_.elements.scrubber_vol, 'mousemove', _.interaction);
-        _.listen(_.elements.scrubber_progress_vol, 'mousemove', _.interaction);
-        _.listen(_.elements.scrubber_handle_vol, 'mousemove', _.interaction);    
+
+        if ( _.isTouchDevice() === false ) {
+            _.listen(_.elements.wrapper, 'mousemove', _.interaction);
+            _.listen(_.elements.controls, 'mousemove', _.interaction);
+            _.listen(_.elements.poster, 'mousemove', _.interaction);
+            _.listen(_.elements.loader, 'mousemove', _.interaction);
+            _.listen(_.elements.playbutton, 'mousemove', _.interaction);
+            _.listen(_.elements.bigplaybutton, 'mousemove', _.interaction);
+            _.listen(_.elements.pausebutton, 'mousemove', _.interaction);
+            _.listen(_.elements.fullscreenbutton, 'mousemove', _.interaction);
+            _.listen(_.elements.volumebutton, 'mousemove', _.interaction);
+            _.listen(_.elements.timer, 'mousemove', _.interaction);
+            _.listen(_.elements.scrubbers, 'mousemove', _.interaction);
+            _.listen(_.elements.scrubber_handles, 'mousemove', _.interaction);
+            _.listen(_.elements.scrubber_targets, 'mousemove', _.interaction);
+            _.listen(_.elements.scrubber_trans, 'mousemove', _.interaction);
+            _.listen(_.elements.scrubber_vid, 'mousemove', _.interaction);
+            _.listen(_.elements.scrubber_progress_vid, 'mousemove', _.interaction);
+            _.listen(_.elements.scrubber_handle_vid, 'mousemove', _.interaction);
+            _.listen(_.elements.scrubber_vol, 'mousemove', _.interaction);
+            _.listen(_.elements.scrubber_progress_vol, 'mousemove', _.interaction);
+            _.listen(_.elements.scrubber_handle_vol, 'mousemove', _.interaction);        
+        }
+        
 
         // Listen for interaction on the actual UI contols
         _.listen(_.elements.playbutton, 'click', _.play);
@@ -206,8 +210,9 @@ OO.plugin("WonderUIModule", function (OO) {
         // Decide which listeners to use for the scrubbers.
         if ( _.isTouchDevice() ) {
             _.addClass(_.elements.controls, 'show');
-            // _.listen(_.elements.loader, 'touchend', _.toggleControls);
-            _.listen(_.elements.loader, 'touchend', _.interaction);
+            _.listen(_.elements.loader, 'touchstart', function(e){event.preventDefault();});
+            _.listen(_.elements.loader, 'click', _.toggleControls);
+            // _.listen(_.elements.loader, 'touchend', _.interaction);
             _.listen(_.elements.scrubber_trans, 'touchmove', _.scrubTouch);
             _.listen(_.elements.scrubber_trans, 'touchstart', _.scrubDown);
             _.listen(_.elements.scrubber_trans, 'touchleave', _.scrubUp);
@@ -338,18 +343,20 @@ OO.plugin("WonderUIModule", function (OO) {
         }
     };
 
-    // _.toggleControls = function (e) {
-    //     _.prevent(e);
+    _.toggleControls = function (e) {
+        _.prevent(e);
 
-    //     if ( _.hasClass( _.elements.controls, 'show' ) ) {
-    //         _.removeClass( _.elements.controls, 'show' );
-    //         _.addClass( _.elements.controls, 'hide' );
-    //     } else {
-    //         _.removeClass( _.elements.controls, 'show' );
-    //         _.addClass( _.elements.controls, 'show' );
-    //     }
+        if ( _.hasClass( _.elements.controls, 'show' ) ) {
+            _.removeClass( _.elements.controls, 'show' );
+            _.addClass( _.elements.controls, 'hide' );
+            return;
+        } else {
+            _.removeClass( _.elements.controls, 'show' );
+            _.addClass( _.elements.controls, 'show' );
+            return;
+        }
         
-    // };
+    };
 
     /*  UI listener callbacks
     /* ======================================= */
@@ -625,7 +632,9 @@ OO.plugin("WonderUIModule", function (OO) {
         _.elements.timer.innerHTML = _.displayTime;
 
         if ( _.timers.interaction === 60 ) {
-            _.hideUI();         
+            if ( _.isTouchDevice() === false ) {
+                _.hideUI();         
+            }
         }
     };
 

@@ -2,7 +2,7 @@
 
 <!-- <h3>Browse (( owner.display_name|firstName ))'s channel</h3> -->
 
-<div class="scroll-outer-wrapper" ng-class="{ 'touch': touchDevice }">
+<div class="scroll-outer-wrapper" ng-class="{ 'touch': touchDevice && ( wW < 768 ) }">
 	<a ng-click="page('left')" class="weblite-icon-left paging left" ng-class="{ 'disabled': currentpage == 0 }"></a>
 	<a ng-click="page('right')" class="weblite-icon-right paging right" ng-class="{ 'disabled': currentpage == items-1 }"></a>
 	<div class="scroll-inner-wrapper">
