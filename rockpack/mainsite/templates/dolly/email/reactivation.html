@@ -16,8 +16,6 @@ body{-webkit-text-size-adjust:none;} /* Prevent Webkit platforms from changing d
 body{margin:0; padding:0; background-color: #f9f9f9;}
 img{border:0; height:auto; line-height:100%; outline:none; text-decoration:none;}
 table td{border-collapse:collapse;}
-#backgroundTable{height:100% !important; margin:0; padding:0; width:100% !important;}
-
 body, #backgroundTable{
   /*background-color:#;*/
   font-family: verdana, sans-serif;
@@ -38,13 +36,6 @@ p {
   color: #767472;
 }
 
-/*.preheaderContent div{
-  color:#282d33;
-  font-family:Helvetica;
-  line-height:100%;
-  text-align:left;
-}
-*/
 a:link, a:visited, div a {
   color:#5850bb;
   font-weight:normal;
@@ -82,7 +73,6 @@ a:link, a:visited, div a {
 
                       <h1><font face="verdana" size="4" color="#767472">Hello {{ user.display_name }},</font></h1>
                       <p><font face="verdana" size="4" color="#767472">Have a look at what's trending on <br/>Wonder whilst you've been gone</font></p>
-                      
                       <br/><br/>
 
                       {% if video_data %}
@@ -105,12 +95,6 @@ a:link, a:visited, div a {
 
                         {% for channel in new_channels[:3] %}
                           {% set channel_url = url_for('share_redirect_root') + '&c=' + channel.id %}
-            
-                            <!-- <img src="{# avatar_img(channel.owner_rel.avatar) #}" />
-                              <a href="{# channel_url }}">{{ channel.owner_rel.display_name #}</a>
-                              <a href="{# channel_url #}"></a>
-                              <img src="{# channel.cover.thumbnail_medium #}" />
-                            <a>{# channel.title|upper #}</a> -->
 
                             <p><font face="verdana" size="4" color="#767472">{{ channel.owner_rel.display_name }} created a new collection.</font></p>
                             <table border="0" cellpadding="0" cellspacing="0" height="100%" width="65%" bgcolor="white" style="border: 1px solid #c2c2c2;">
@@ -137,37 +121,7 @@ a:link, a:visited, div a {
                         {% endfor %}
                       {% endif %}
 
-                      <!-- <p><font face="verdana" size="4" color="#767472">David Ponsford shared a Collection <br/>with you with Wonder PL.</font></p>
-                      <p><a href="#" border="0" style="border: none; outline: none;"><img src="{{ config.ASSETS_URL }}/assets/dolly/img/emails/share-placeholder.png" border="0" alt="" width="285" height="160" style="display: block; margin: 0 auto; border: none; ouline: none;" /></a></p>
-                      <p><font face="verdana" size="3" color="black">The hidden wonders of the modern world.</font></p> -->
-                      
-                      <!-- <br/><br/> -->
-                      
-<!--                       <p><font face="verdana" size="4" color="#767472">Sofia Fenichell created a new collection.</font></p>
-
-                      <table border="0" cellpadding="0" cellspacing="0" height="100%" width="65%" bgcolor="white" style="border: 1px solid #c2c2c2;">
-                        <tr>
-                          <td align="center" valign="middle">
-                            <p><font face="verdana" size="4" color="black">GARDENING TIPS</font></p>
-                            <table border="0" cellpadding="0" cellspacing="0" width="100%" bgcolor="white">
-                              <tr>
-                                <td colspan="1" width="50%" height="30" align="center" valign="middle" style="border-right: 1px solid #989898;"><span><font face="verdana" size="2" color="black">12 Followers</font></span></td>
-                                <td colspan="1" width="50%" height="30" align="center" valign="middle" style="border-left: 1px solid #989898;"><span><font face="verdana" size="2" color="black">32 Videos</font></span></td>
-                              </tr>
-                              <tr>
-                                <td colspan="1" width="50%" height="12">&nbsp;</td>
-                                <td colspan="1" width="50%" height="12">&nbsp;</td>
-                              </tr>
-                              <tr>
-                                <td colspan="2" bgcolor="cad6d6" width="100%" height="20"></td>
-                              </tr>
-                            </table>
-                          </td>
-                        </tr>
-                      </table>
- -->
                       <br/><br/><br/>
-
                     </center>
                   </td>
                   <td width="36" colspan="1"></td>
@@ -182,7 +136,7 @@ a:link, a:visited, div a {
               <table border="0" cellpadding="0" cellspacing="0" height="100%" width="528" bgcolor="#f9f9f9">
                 <tr>  
                   <td align="center" valign="middle" height="120" width="100%">
-                    <p><font face="verdana" size="1" color="#767472">To ensure our emails reach your inbox please make sure to add Wonder PL ({{ config.DEFAULT_EMAIL_SOURCE|e }}) to your address book or safe list. You are subscribed as [[ SUBSCRIBED ADDRESS]]. Your privacy is important to us, have a read of our <a href="http://wonderpl.com/privacy/" target="_blank">privacy policy</a>.</p>
+                    <p><font face="verdana" size="1" color="#767472">To ensure our emails reach your inbox please make sure to add Wonder PL ({{ config.DEFAULT_EMAIL_SOURCE|e }}) to your address book or safe list. You are subscribed as [[SUBSCRIBED ADDRESS]]. Your privacy is important to us, have a read of our <a href="http://wonderpl.com/privacy/" target="_blank">privacy policy</a>.</p>
                   </td> 
                 </tr>
               </table>
