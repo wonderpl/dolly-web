@@ -818,11 +818,6 @@ def es_update_channel_videos(extant=[], deleted=[]):
     channel_ids = []
     video_ids = []
 
-    # XXX: This is a nasty hack to allow the VideoInstance query to proceed
-    # when this is called from sqlalchemy's after_commit signal
-    if models.VideoInstance.query.session.transaction._state.name == 'COMMITTED':
-        models.VideoInstance.query.session.transaction._state = None
-
     if extant:
         all_instances = models.VideoInstance.query.filter(
             models.VideoInstance.id.in_(extant)
