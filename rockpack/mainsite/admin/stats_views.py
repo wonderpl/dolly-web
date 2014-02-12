@@ -63,7 +63,7 @@ class UserCategoriesStatsView(StatsView):
         page_size = 50
         users = search.UserSearch()
         users.add_term('category', cat_id)
-        users.set_paging(request.args.get('p', 0) * page_size, page_size - 1)
+        users.set_paging(int(request.args.get('p', 0)) * page_size, page_size - 1)
         result = users.users()
 
         from rockpack.mainsite.services.video.models import Category
@@ -78,6 +78,7 @@ class UserCategoriesStatsView(StatsView):
             Category.id == cat_id
         )
 
+        ctx['next_page'] = int(request.args.get('p', 1)) + 1
         ctx['category'] = query.one()
         ctx['single_cat'] = True
         ctx['users'] = result
