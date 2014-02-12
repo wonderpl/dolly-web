@@ -5,6 +5,7 @@ from flask import request
 from flask.ext.admin import expose
 from rockpack.mainsite import app
 from rockpack.mainsite.core.dbapi import readonly_session
+from rockpack.mainsite.core.es import search
 from .base import AdminView
 
 
@@ -17,6 +18,70 @@ class StatsView(AdminView):
         kwargs.setdefault('name', name)
         kwargs.setdefault('endpoint', 'stats/%s' % name.lower())
         super(StatsView, self).__init__(*args, **kwargs)
+
+
+class UserCategoriesStatsView(StatsView):
+    @expose('/')
+    def index(self):
+        from rockpack.mainsite.services.video.models import Category
+        ctx = {}
+
+        parent = aliased(Category)
+        cat_group = readonly_session.query(
+            Category.name, # order is important
+            parent.name,
+            Category.id
+        ).filter(
+            Category.parent == parent.id
+        ).group_by(
+            parent.name,
+            Category.name,
+            Category.id
+        ).order_by(parent.name, Category.name)
+
+        cat_map = []
+
+        for (child_name, parent_name, child_id) in cat_group:
+            users = search.UserSearch()
+            users.add_term('category', child_id)
+            users.set_paging(1,0)
+            users.users()
+            cat_map.append(
+                (parent_name,
+                child_name,
+                users.total,
+                '/admin/stats/usercategories/%s/' % child_id))
+
+        ctx['cat_map'] = cat_map
+
+        return self.render('admin/user_cat_stats.html', **ctx)
+
+    @expose('/<cat_id>/')
+    def users(self, cat_id):
+        ctx = {}
+
+        page_size = 50
+        users = search.UserSearch()
+        users.add_term('category', cat_id)
+        users.set_paging(request.args.get('p', 0) * page_size, page_size - 1)
+        result = users.users()
+
+        from rockpack.mainsite.services.video.models import Category
+
+        parent = aliased(Category)
+        query = readonly_session.query(
+            Category.name, # order is important
+            parent.name,
+            Category.id
+        ).filter(
+            Category.parent == parent.id,
+            Category.id == cat_id
+        )
+
+        ctx['category'] = query.one()
+        ctx['single_cat'] = True
+        ctx['users'] = result
+        return self.render('admin/user_cat_stats.html', **ctx)
 
 
 class ContentStatsView(StatsView):

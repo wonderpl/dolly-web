@@ -1,0 +1,39 @@
+{% extends 'admin/master.html' %}
+{% block body %}
+
+{% if single_cat %}
+<div>
+    <p>
+        <span style="font-size: 30pt">{{ category[0] }}</span><br/>
+        <span style="font-size: 16pt">{{ category[1] }}</span>
+    </p>
+    <table>
+        <tr>
+            <th style="text-align: left">User Name</th>
+            <th style="text-align: left">Link</th>
+        </tr>
+        {% for u in users %}
+        <tr>
+            <td><a href="/admin/user/?search={{ u.username }}"><img src="{{ u.avatar_thumbnail_url }}"/></a></td>
+            <td style="text-align: left"><a href="/admin/user/?search={{ u.username }}">{{ u.username }}</a></td>
+        </tr>
+        {% endfor %}
+    </table>
+</div>
+{% else %}
+<div>
+    <table>
+        <tr>
+            <th>Category Group</th>
+            <th>Category Name</th>
+            <th>Categorised Users</th>
+        </tr>
+        {% for c  in cat_map %}
+        <tr>
+            <td>{{ c[0] }}</td><td><a href="{{ c[3] }}">{{ c[1] }}</a></td><td>{{ c[2] }}</td></tr>
+        </tr>
+        {% endfor %}
+    </table>
+</div>
+{% endif %}
+{% endblock %}
