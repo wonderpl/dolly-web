@@ -1,0 +1,13 @@
+<table border="0" cellpadding="0" cellspacing="0" width="100%" bgcolor="#f9f9f9" style="border-top: 1px solid #b4b4b4;">
+  <tr>
+    <td align="center">
+      <table border="0" cellpadding="0" cellspacing="0" height="120" width="528" bgcolor="#f9f9f9">
+        <tr>  
+          <td align="center" valign="middle" height="120" width="100%">
+            <p><font face="verdana" size="1" color="#767472">To ensure our emails reach your inbox please make sure to add {{ config.DEFAULT_EMAIL_SOURCE|e }} to your address book or safe list. You are subscribed as {{ user.email }}. Your privacy is important to us, have a read of our <a style="color: #5850bb;" href="{{ url_for('privacy') }}" target="_blank"><font color="#5850bb">privacy policy</font></a>.</p>
+          </td> 
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>

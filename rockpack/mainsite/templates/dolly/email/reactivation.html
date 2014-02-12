@@ -45,20 +45,14 @@ a:link, a:visited, div a {
 </head>
 <body leftmargin="0" marginwidth="0" topmargin="0" marginheight="0" offset="0">
 <center>
-  <table border="0" cellpadding="0" cellspacing="0" height="100%" width="100%" id="backgroundTable">
+  <table border="0" cellpadding="0" cellspacing="0" width="100%" id="backgroundTable">
     <tr>
       <td align="center" valign="top">
-        <table border="0" cellpadding="0" cellspacing="0" height="100%" width="100%" bgcolor="#f9f9f9" style="border-bottom: 1px solid #b4b4b4;">
-          <tr>
-            <td align="center" valign="middle" height="160" width="598">
-              <center><img src="{{ config.ASSETS_URL }}/assets/dolly/img/emails/header-logo.png" alt="Wonder Place" width="259" height="85" /></center>
-            </td> 
-          </tr>
-        </table>
-        <table border="0" cellpadding="0" cellspacing="0" height="100%" width="100%" bgcolor="white">
+{% include "header.html" %}
+        <table border="0" cellpadding="0" cellspacing="0" width="100%" bgcolor="white">
           <tr>
             <td align="center">
-              <table border="0" cellpadding="0" cellspacing="0" height="100%" width="600" bgcolor="white">
+              <table border="0" cellpadding="0" cellspacing="0" width="600" bgcolor="white">
                 <tr>
                   <td width="36" colspan="1"></td>
                   <td align="align" valign="middle" height="120" colspan="1" width="528">
@@ -130,19 +124,7 @@ a:link, a:visited, div a {
             </td>
           </tr>
         </table>
-        <table border="0" cellpadding="0" cellspacing="0" height="100%" width="100%" bgcolor="#f9f9f9" style="border-top: 1px solid #b4b4b4;">
-          <tr>
-            <td align="center">
-              <table border="0" cellpadding="0" cellspacing="0" height="100%" width="528" bgcolor="#f9f9f9">
-                <tr>  
-                  <td align="center" valign="middle" height="120" width="100%">
-                    <p><font face="verdana" size="1" color="#767472">To ensure our emails reach your inbox please make sure to add {{ config.DEFAULT_EMAIL_SOURCE|e }} to your address book or safe list. You are subscribed as {{ user.email }}. Your privacy is important to us, have a read of our <a href="{{ url_for('privacy') }}" target="_blank">privacy policy</a>.</p>
-                  </td> 
-                </tr>
-              </table>
-            </td>
-          </tr>
-        </table>
+{% include "footer.html" %}
       </td>
     </tr>
   </table>
