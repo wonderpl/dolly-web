@@ -44,7 +44,8 @@ OO.plugin("WonderUIModule", function (OO) {
         scrubbing: false,
         loaded: false,
         mousedown: false,
-        mousetarget: undefined,        
+        mousetarget: undefined,
+        controlshovered: true,
         displayTime: '--:--',
         time: 0,
         duration: 00,
@@ -223,6 +224,8 @@ OO.plugin("WonderUIModule", function (OO) {
             _.listen(_.elements.scrubber_trans, 'mousedown', _.scrubDown);
             _.listen(_.elements.scrubber_trans, 'mouseup', _.scrubUp);
             _.listen(_.elements.scrubber_trans, 'mouseleave', _.scrubUp);
+
+            // _.listen(_.elements.controls, 'mouseleave', )
         }
 
         if ( _.ios === true ) {
