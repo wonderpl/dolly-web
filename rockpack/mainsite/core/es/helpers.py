@@ -486,6 +486,11 @@ class DBImport(object):
                     c_id,
                     'ctx._source.video_terms = %s' % json.dumps(terms_list)
                 )
+                self._partial_update(
+                    'channel',
+                    c_id,
+                    'ctx._source.video_count = %s' % len(terms_list)
+                )
             except pyes.exceptions.ElasticSearchException, e:
                 print e
             total += 1
