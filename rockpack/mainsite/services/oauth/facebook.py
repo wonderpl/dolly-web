@@ -174,6 +174,10 @@ class GraphAPI(object):
         if response and response.get("error"):
             raise GraphAPIError(response["error"]["type"],
                                 response["error"]["message"])
+        elif response and response.get("error_code"):
+            raise GraphAPIError('unknown',
+                                response.get('error_msg', ''),
+                                response['error_code'])
         return response
 
 
@@ -181,12 +185,15 @@ ERROR_CODE_RE = re.compile('\(#(\d+)\)')
 
 
 class GraphAPIError(Exception):
-    def __init__(self, type, message):
+    def __init__(self, type, message, code=None):
         Exception.__init__(self, message)
         self.type = type
+        self._error_code = code
 
     @property
     def error_code(self):
+        if self._error_code:
+            return self._error_code
         match = ERROR_CODE_RE.match(self.message)
         return match and int(match.group(1))
 
