@@ -29,9 +29,9 @@ class Manager(BaseManager):
     def get_cron_commands(self):
         return self._cron_commands
 
-    def handle(self, prog, name, args=None):
+    def handle(self, prog, args=None):
         logging.basicConfig(level=logging.INFO if app.debug else logging.WARN)
-        return super(Manager, self).handle(prog, name, args)
+        return super(Manager, self).handle(prog, args)
 
 manager = Manager(app)
 
@@ -236,6 +236,6 @@ def update_ooyala_thumbnails(videoid):
 def run(*args):
     init_app()
     if args:
-        return manager.handle(sys.argv[0], args[0], args[1:])
+        return manager.handle(sys.argv[0], args)
     else:
         return manager.run()
