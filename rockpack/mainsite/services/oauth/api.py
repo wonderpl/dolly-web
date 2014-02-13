@@ -504,4 +504,18 @@ class FacebookWS(WebService):
     @expose_ajax('/deauth-callback', methods=['GET', 'POST'])
     @secure_view()
     def deauth_callback(self):
-        app.logger.warning('Got facebook deauth: %s', request.form)
+        try:
+            data = facebook.parse_signed_cookie(
+                request.form['signed_request'],
+                app.config['FACEBOOK_APP_SECRET']
+            )
+            token = models.ExternalToken.query.filter_by(
+                external_system='facebook',
+                external_uid=data['user_id']
+            ).one()
+        except Exception:
+            app.logger.exception('Unable to parse facebook deauth: %s', request.form)
+        else:
+            token.expires = '2001-01-01'    # sometime in the past
+            token.user_rel.reset_refresh_token()
+            token.save()
