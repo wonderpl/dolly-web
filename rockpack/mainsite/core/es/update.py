@@ -19,7 +19,8 @@ def _update_most_influential_video(video_ids):
         (models.VideoInstance.video == child.video) &
         (models.VideoInstance.channel == child.source_channel)
     ).filter(
-        models.VideoInstance.video.in_(video_ids)
+        models.VideoInstance.video.in_(video_ids),
+        models.VideoInstance.is_favourite == False
     ).group_by(models.VideoInstance.id, models.VideoInstance.video, child.source_channel)
 
     instance_counts = {}
@@ -28,9 +29,9 @@ def _update_most_influential_video(video_ids):
     for _id, video, source_channel, count in query.yield_per(6000):
         # Set the count for the video instance
         instance_counts[(_id, video)] = count
-        # If the count is higher for the same video that
+        # If the count is higher for the same video than
         # the previous instance, mark this instance as the
-        # influential one for this video
+        # influential one for the video
         i_id, i_count = influential_index.get(video, [None, 0])
 
         # Count will always be at least 1
