@@ -8,7 +8,8 @@ Flask-Login>=0.2
 Flask-Rauth>=0.3.2
 rauth>=0.4.17
 Flask-Script>=0.6
-Flask-Assets>=0.8
+#Flask-Assets>=0.8
+git+git://github.com/miracle2k/flask-assets.git@d89884ec765c7040e8347063f4041f59b944236c
 boto>=2.7.0
 git+git://github.com/StartTheShift/pyoauth2.git@94b1e8e5bfe0a1aa220f1645c810ab2f609db281
 alembic>=0.5.0
