@@ -72,6 +72,16 @@ a {
 	}
 }
 
+.inline-block {
+	display: -moz-inline-stack;
+	display: inline-block;
+	vertical-align: middle;
+	*vertical-align: auto;
+	zoom: 1;
+	*display: inline;
+	vertical-align: top;
+}
+
 .section {
 	display: block;
 	width: 100%;
@@ -185,6 +195,11 @@ a {
 	&.top {
 		margin-top: 32px;
 	}
+}
+
+.centered {
+	display: block;
+	margin: 0 auto;
 }
 
 ul.anchor-nav {
@@ -319,8 +334,8 @@ footer {
 	padding:  40px 0 90px 0;
 
 	p {
-		font-size: 26px;
-		line-height: 32px;
+		font-size: 22px;
+		line-height: 28px;
 		padding: 0 15%;
 	}
 }
@@ -386,6 +401,10 @@ footer {
 			}
 		}
 	}
+}
+
+#home-partners ul li img {
+	border: none;
 }
 
 #content-partners {
@@ -522,23 +541,77 @@ footer {
 		h2 {
 			color: @headinggrey;
 		}
+
 		p.standout {
 			font-size: 20px;
 			line-height: 26px;
 			padding: 0 18%;
 		}
+
 		.wonder-box {
 			display: block;
 			margin: 32px auto;
 			max-width: 420px;
 			width: 80%;
 		}
-		.inner.phones {
-			max-width: 960px;
+
+		.inner.upload-intro-left {
+			.inline-block();
+			padding: 0 0 40px 0;
+			width: 31%;
 
 			img {
-				width: 38%;
-				margin: 0 6%;
+				display: block;
+				width: 100%;
+			}
+		}
+		
+		.inner.upload-intro-right {
+			.inline-block();
+			width: 62%;
+			padding: 100px 0 0 0;
+
+			h2, h3, p {
+				padding: 0 0 0 58px;
+				text-align: left;
+			}
+			h2 {
+				color: black;
+				font-size: 30px;
+				line-height: 36px;
+			}
+			h3 {
+				font-size: 30px;
+				line-height: 30px;
+			}
+			p {
+				text-align: left;
+				font-size: 26px;
+				line-height: 30px;
+			}
+		}
+		
+		.inner.call-to-action {
+			padding: 0 0 80px 0;
+			h2 {
+				font-size: 30px;
+				line-height: 36px;
+				color: black;	
+				padding: 0 12%;			
+			}
+		}
+		.inner.phones {
+			display: block;
+			position: relative;
+			max-width: 960px;
+
+			&.padded-bottom {
+				padding-bottom: 40px;
+			}
+
+			.inline {
+				width: 31%;
+				margin: 0 1%;
 				display: -moz-inline-stack;
 				display: inline-block;
 				vertical-align: middle;
@@ -546,6 +619,24 @@ footer {
 				zoom: 1;
 				*display: inline;
 				vertical-align: top;
+				position: relative;
+				text-align: center;
+
+				span {
+					display: block;
+					font-size: 18px;
+				}
+
+				img {
+					display: block;
+					width: 100%;
+				}
+			}
+	
+			.centered {
+				display: block;
+				width: 50%;
+				margin: 0 auto;
 			}
 		}
 	}

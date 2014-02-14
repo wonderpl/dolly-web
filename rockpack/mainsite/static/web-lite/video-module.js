@@ -190,6 +190,7 @@ OO.plugin("WonderUIModule", function (OO) {
                 '<div class="scrubber-progress vid"></div>' +
                 '<div class="scrubber-buffer"></div>' +
                 '<a class="scrubber-handle vid player-icon-circle"></a>' +
+                '<span class="scrubber-timer"></span>' +
             '</div>' +
             '<div class="scrubber-target vid">' +
                 '<img src="/static/assets/wonderplayer/img/trans.png" class="scrubber-trans vid" width="100%" height="100%" />' +
@@ -273,6 +274,8 @@ OO.plugin("WonderUIModule", function (OO) {
         _.elements.scrubber_target_vol = document.querySelector('.scrubber-target.vol');
         _.elements.scrubber_progress_vol = document.querySelector('.scrubber-progress.vol');
         _.elements.scrubber_handle_vol = document.querySelector('.scrubber-handle.vol');
+
+        _.elements.scrubber_timer = document.querySelector('.scrubber-timer');
 
         // Listen for user interaction and show and hide the nav as necessary
         if ( _.isTouchDevice() === false ) {
@@ -672,12 +675,14 @@ OO.plugin("WonderUIModule", function (OO) {
     _.showLoader = function () {
         _.addClass( _.elements.scrubber_vid, 'loading' );
         _.addClass( _.elements.scrubber_buffer, 'hide' );
+        _.addClass( _.elements.scrubber_timer, 'show' );
         _.elements.loader.className = 'show';
     };
 
     _.hideLoader = function () {
         _.removeClass( _.elements.scrubber_vid, 'loading' );
         _.removeClass( _.elements.scrubber_buffer, 'hide' );
+        _.removeClass( _.elements.scrubber_timer, 'show' );
         _.elements.loader.className = '';
     };
 
@@ -715,11 +720,15 @@ OO.plugin("WonderUIModule", function (OO) {
         if ( _.scrubbed === true ) {
             _.elements.scrubber_progress_vid.style.width = _.videoPercentage + '%';
             _.elements.scrubber_handle_vid.style.left = _.videoPercentage + '%';
+            _.elements.scrubber_timer.style.left = _.videoPercentage + '%';
+            _.elements.scrubber_timer.innerHTML = _.getTime( _.newtime );
             _.showLoader();
         } else if ( _.loaded === true && _.time !== undefined && _.scrubbed === false && _.timers.seek > 60 ) {
             var percentage = ( (_.time/_.duration) * 100 ) + '%';        
             _.elements.scrubber_progress_vid.style.width = percentage;
             _.elements.scrubber_handle_vid.style.left = percentage;
+            _.elements.scrubber_timer.style.left = percentage + '%';
+            _.elements.scrubber_timer.innerHTML = _.getTime( _.time );
         }
         
         // Check if the volume has changed

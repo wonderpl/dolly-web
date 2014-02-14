@@ -352,6 +352,14 @@ ul.anchor-nav {
 				border-top: 2px solid @lilac;	
 			}
 		}
+
+		.inner.phones {
+			.inline {
+				display: block;
+				width: 100%;
+				margin: 0 0 22px 0;
+			}
+		}
 	}
 }
 
@@ -410,4 +418,64 @@ ul.anchor-nav {
 	a.cancel {
 	}
 
+}
+
+#upload-page, #about-us-page {
+	.section {
+		.inner {
+			&.upload-intro-right, &.upload-intro-left {
+				display: block;
+				padding: 0;
+				width: 100%;
+			}
+			&.upload-intro-right {
+				padding-bottom: 0px !important;
+
+				h2, h3, p {
+					padding: 0 18px;
+					text-align: center;
+				}
+
+				h2 {
+					font-size: 24px;
+					line-height: 32px;
+				}
+
+				h3 {
+					font-size: 24px;
+					line-height: 32px;
+				}
+
+				p {
+					font-size: 20px;
+					line-height: 28px;
+				}
+			}
+			&.upload-intro-left {
+				img {
+					width: 50%;
+					margin: 0 auto 32px auto;
+				}	
+			}
+			&.call-to-action {
+				padding: 0 0 20px 0;
+				h2 {
+					font-size: 20px;
+					line-height: 28px;
+					color: black;	
+					padding: 0 18px;			
+				}
+			}
+			&.padding-bottom {
+				padding-bottom: 0px;
+			}
+			&.phones {
+				.inline {
+					img {
+						width: 50%;
+					}
+				}
+			}
+		}
+	}
 }

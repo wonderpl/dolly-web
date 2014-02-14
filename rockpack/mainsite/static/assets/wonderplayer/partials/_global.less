@@ -20,6 +20,9 @@ body, html {
 	height: 100%;
 	padding: 0;
 	margin: 0;
+	font-family: sans-serif;
+	font-weight: normal;
+	font-style: normal;
 	-webkit-font-smoothing: antialiased;
 	-moz-osx-font-smoothing: grayscale;
 }
@@ -230,6 +233,7 @@ body, html {
 		-o-user-select: none;
 		user-select: none;     
 		-webkit-tap-highlight-color: rgba(0,0,0,0);
+		cursor: pointer;
 
 		span {
 			position: absolute;
@@ -252,7 +256,6 @@ body, html {
 			opacity: 1;
 			filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=1);
 			-webkit-tap-highlight-color: rgba(0,0,0,0);
-			// @include opacity(1);
 		}
 	}
 
@@ -281,7 +284,6 @@ body, html {
 		position: absolute;
 		left: 0;
 		bottom: -38px;
-		// bottom: 0px !important;
 		width: 100%;
 		height: 38px;
 		z-index: 10000;
@@ -553,6 +555,53 @@ body, html {
 
 			&.hide {
 				display: none;
+			}
+		}
+	
+		.scrubber-timer {
+			display: block;
+			position: absolute;
+			left: 0%;
+			top: -60px;
+			width: 80px;
+			margin-left: -37px;
+			height: 28px;
+			background: black;
+			color: white;
+			text-align: center;
+			padding: 6px;
+			font-size: 14px;
+			-webkit-border-radius: 6px;
+			-moz-border-radius: 6px;
+			-o-border-radius: 6px;
+			border-radius: 6px;
+			background: rgba(0,0,0,0.9);
+			border: 1px solid rgba(0,0,0,1);
+			opacity: 0;
+			-moz-box-shadow: inset 0 1px 4px rgba(255,255,255,.3);
+   			-webkit-box-shadow: inset 0 1px 4px rgba(255,255,255,.3);
+   			box-shadow: inset 0 1px 4px rgba(255,255,255,.3);
+			-webkit-transition: opacity .1s ease-out;
+			-moz-transition: opacity .1s ease-out;
+			-o-transition: opacity .1s ease-out;
+			transition: opacity .1s ease-out;
+
+			&.show {
+				opacity: 1;
+			}
+
+			&:after {
+				content: '';
+				position: absolute;
+				left: 0;
+				right: 0;
+				margin: auto;
+				bottom: -6px;
+				width: 0; 
+				height: 0; 
+				border-left: 6px solid transparent;
+				border-right: 6px solid transparent; 
+				border-top: 6px solid black; 
 			}
 		}
 

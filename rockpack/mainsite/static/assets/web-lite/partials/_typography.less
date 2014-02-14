@@ -3,22 +3,35 @@
 /* ======================================= */
 
 .f-serif {
-	font-family:'Minion W01 Cap Regular';
+	font-family:'minion-pro', serif;
 	font-style: normal;
-	font-weight: normal;
+	font-weight: 400;
 
-	&.italic {
-		font-family:'Minion W01 It Cap';
+	&.f-italic {
+		font-family:'minion-pro';
+		font-style: italic;
 	}
 }
 
 .f-sans {
-	font-family: 'Lato', sans-serif;
+	font-family: 'proxima-nova', sans-serif;
 	font-style: normal;
 	font-weight: 400;
 
-	&.bold {
-		font-weight: 800;
+	&.f-semibold {
+		font-weight: 600;
+	}
+
+	&.f-bold {
+		font-weight: 700;
+	}
+
+	&.f-light {
+		font-weight: 300;
+	}
+
+	&.f-thin {
+		font-weight: 200;
 	}
 }
 
@@ -28,6 +41,11 @@
 
 .f-centered {
 	text-align: center;
+}
+
+.f-standout {
+	font-size: 26px;
+	line-height: 32px;
 }
 
 .f-standout {

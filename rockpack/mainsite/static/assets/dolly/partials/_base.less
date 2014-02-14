@@ -10,9 +10,13 @@
 @headinggrey: #36362f;
 @green: #74996d;
 
-// @mixin inline-block {
-// 	display: inline-block;
-// 	*vertical-align: auto;
-//     zoom: 1;
-//     *display: inline;
-// }
+.inline-block {
+	display: -moz-inline-stack;
+	display: inline-block;
+	vertical-align: middle;
+	*vertical-align: auto;
+	zoom: 1;
+	*display: inline;
+	vertical-align: top;
+}
+
