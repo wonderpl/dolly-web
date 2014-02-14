@@ -13,6 +13,7 @@ from . import exceptions
 from rockpack.mainsite import app
 from rockpack.mainsite.helpers.db import ImageType
 from rockpack.mainsite.core.dbapi import db
+from rockpack.mainsite.background_sqs_processor import background_on_sqs
 
 logger = logging.getLogger(__name__)
 
@@ -725,9 +726,6 @@ def update_user_categories(user_ids=None):
         else:
             category_map.setdefault(user, [])
 
-    this_user = ''
-    cat_list = []
-
     for user, categories in category_map.iteritems():
         eu = ESUser.updater(bulk=True)
         eu.set_document_id(user.id)
@@ -800,7 +798,6 @@ def add_video_to_index(video_instance, bulk=False, no_check=False):
     es_video = ESVideo.inserter()
     es_video.insert(video_instance.id, video_instance)
 
-from rockpack.mainsite.background_sqs_processor import background_on_sqs
 
 @background_on_sqs
 def es_update_channel_videos(extant=[], deleted=[]):
