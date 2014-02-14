@@ -18,4 +18,4 @@ blinker>=1.2
 requests>=1.1.0
 pyes==0.20.1
 apns-client
-gdata==2.0.17
+gdata>=2.0
