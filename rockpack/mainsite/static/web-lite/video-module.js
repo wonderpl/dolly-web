@@ -1,31 +1,126 @@
 
-/* ======================================= */
-/*  RequestAnimationFrame polyfill ( Courtesy of Paul Irish )
-/*  Date: Thurs 9th January 2014
-/* ======================================= */
+// /* ======================================= */
+// /*  RequestAnimationFrame polyfill ( Courtesy of Paul Irish )
+// /*  Date: Thurs 9th January 2014
+// /* ======================================= */
 
-(function() {
-    var lastTime = 0;
-    var vendors = ['webkit', 'moz'];
-    for(var x = 0; x < vendors.length && !window.requestAnimationFrame; ++x) {
-        window.requestAnimationFrame = window[vendors[x]+'RequestAnimationFrame'];
-        window.cancelAnimationFrame =
-          window[vendors[x]+'CancelAnimationFrame'] || window[vendors[x]+'CancelRequestAnimationFrame'];
+// (function() {
+//     var lastTime = 0;
+//     var vendors = ['webkit', 'moz'];
+//     for(var x = 0; x < vendors.length && !window.requestAnimationFrame; ++x) {
+//         window.requestAnimationFrame = window[vendors[x]+'RequestAnimationFrame'];
+//         window.cancelAnimationFrame =
+//           window[vendors[x]+'CancelAnimationFrame'] || window[vendors[x]+'CancelRequestAnimationFrame'];
+//     }
+//     if (!window.requestAnimationFrame)
+//         window.requestAnimationFrame = function(callback, element) {
+//             var currTime = new Date().getTime();
+//             var timeToCall = Math.max(0, 16 - (currTime - lastTime));
+//             var id = window.setTimeout(function() { callback(currTime + timeToCall); },
+//               timeToCall);
+//             lastTime = currTime + timeToCall;
+//             return id;
+//         };
+//     if (!window.cancelAnimationFrame)
+//         window.cancelAnimationFrame = function(id) {
+//             clearTimeout(id);
+//         };
+// }());
+
+
+(function(w) {
+
+    'use strict';
+
+    var _ = {
+        fps : 60,
+        rafLast : 0,
+        requestAnimFrame : (function(){
+            return  w.requestAnimationFrame         ||
+                    w.webkitRequestAnimationFrame   ||
+                    w.mozRequestAnimationFrame      ||
+                    function(callback, element) {
+                        var currTime = new Date().getTime();
+                        var timeToCall = Math.max(0, 16 - (currTime - _.rafLast));
+                        var id = w.setTimeout(function() { callback(currTime + timeToCall); }, timeToCall);
+                        _.rafLast = currTime + timeToCall;
+                        return id;
+                    };
+        })(),
+        cancelAnimFrame : (function() {
+            return  w.cancelAnimationFrame              ||
+                    w.cancelRequestAnimationFrame       ||
+                    w.webkitCancelAnimationFrame        ||
+                    w.webkitCancelRequestAnimationFrame ||
+                    w.mozCancelAnimationFrame           ||
+                    w.mozCancelRequestAnimationFrame    ||
+                    function(id) {
+                        clearTimeout(id);
+                    };
+        })()
+    };
+
+    function tick(val) {
+        var _t = cD;
+        _t.raf = _.requestAnimFrame.call(w, tick);
+        _t.now = new Date().getTime();
+        _t.delta = _t.now - _t.then;
+        if (_t.delta > _t.interval) {
+            for (var n in _t.pipeline) {
+                if (_t.pipeline.hasOwnProperty(n)) _t.pipeline[n](_t.delta);
+            }
+            _t.then = _t.now - (_t.delta % _t.interval);
+        }
     }
-    if (!window.requestAnimationFrame)
-        window.requestAnimationFrame = function(callback, element) {
-            var currTime = new Date().getTime();
-            var timeToCall = Math.max(0, 16 - (currTime - lastTime));
-            var id = window.setTimeout(function() { callback(currTime + timeToCall); },
-              timeToCall);
-            lastTime = currTime + timeToCall;
-            return id;
-        };
-    if (!window.cancelAnimationFrame)
-        window.cancelAnimationFrame = function(id) {
-            clearTimeout(id);
-        };
-}());
+
+    var Conduit = function() {
+        var _t = this;
+        _t.pipeline = {};
+        _t.then = new Date().getTime();
+        _t.now = undefined;
+        _t.raf = undefined;
+        _t.delta = undefined;
+        _t.interval = 1000 / _.fps;
+        _t.running = false;
+    };
+
+    Conduit.prototype = {
+        add : function(name, fn) {
+            this.pipeline[name] = fn;
+            return this;
+        },
+        remove : function(name) {
+            delete this.pipeline[name];
+            return this;
+        },
+        start : function(fps) {
+            if (!this.running) {
+                _.fps = fps || _.fps;
+                this.interval = 1000 / _.fps;
+                tick();
+                this.running = true;
+            }
+            return this;
+        },
+        pause : function() {
+            if (this.running) {
+                _.cancelAnimFrame.call(w, this.raf);
+                this.running = false;
+            }
+            return this;
+        },
+        setFPS : function(fps) {
+            _.fps = fps;
+            this.interval = 1000 / _.fps;
+            return this;
+        }
+    };
+
+    var cD = new Conduit();
+
+    w.Conduit = w.cD = cD;
+
+})(window);
 
 /* ======================================= */
 /*  Custom Wonder UI module for the Ooyala player
@@ -36,6 +131,8 @@ OO.plugin("WonderUIModule", function (OO) {
 
     var _ = {
         data: window.videoData,
+
+        // Status vars
         framecount: 0,
         newvolume: 1,
         currentvolume: 0,
@@ -43,33 +140,34 @@ OO.plugin("WonderUIModule", function (OO) {
         scrubbed: false,
         scrubbing: false,
         loaded: false,
-        mousedown: false,
-        mousetarget: undefined,
-        controlshovered: true,
-        displayTime: '--:--',
-        time: 0,
-        duration: 00,
         state: {
             playing: false,
             fullscreen: false
         },
-        UA: window.navigator.userAgent.toLowerCase(),
-        elements: {},
+        
+        // UI vars
+        mousedown: false,
+        mousetarget: undefined,
+        controlshovered: true,
+
+        // Timing vars
+        displayTime: '--:--',
+        time: 0,
+        duration: 00,
         timers: {
             seek: 11,
             buffer: 0,
             interaction: 0,
             vol: 0
-        }
+        },
+
+        UA: window.navigator.userAgent.toLowerCase(),
+        elements: {}
     };
 
     // This section contains the HTML content to be used as the UI
     // '<a href="#" class="rewind wonder-rewind icon-ccw"></a>' +
     // '<span class="f-thin f-uppercase"></span>' +
-    /*
-        Flicker is hapening because the loader panel is an anchor tag
-
-    */
     var wonder_template = 
         '<div id="wonder-poster" class="loading">' +
             '<img src="/static/assets/wonderplayer/img/trans.png" alt="" id="wonder-poster" class="blur"/>' +
@@ -119,10 +217,6 @@ OO.plugin("WonderUIModule", function (OO) {
         _.ipad = ( _.UA.indexOf('ipad') !== -1 ) ? true : false;
         _.ios = ( _.UA.indexOf('ipad') !== -1 || _.UA.indexOf('iphone') !== -1 ) ? true : false;
 
-        // _.mb.subscribe('*', 'wonder', function(eventName){
-        //     console.log(eventName);
-        // });
-
         _.mb.subscribe(OO.EVENTS.PLAYER_CREATED, 'wonder', _.onPlayerCreate);
         _.mb.subscribe(OO.EVENTS.SEEKED, 'wonder', _.onSeeked);
         _.mb.subscribe(OO.EVENTS.CONTENT_TREE_FETCHED, 'wonder', _.onContentReady);
@@ -133,7 +227,7 @@ OO.plugin("WonderUIModule", function (OO) {
         _.mb.subscribe(OO.EVENTS.PLAY, 'wonder', _.onPlay);
         _.mb.subscribe(OO.EVENTS.ERROR, 'wonder', _.onError);
         _.mb.subscribe(OO.EVENTS.PLAYER_EMBEDDED, 'wonder', _.hideLoader);
-        requestAnimationFrame( _.Tick );
+
     };
 
     /*  Message bus event subscriber callbacks
@@ -240,6 +334,18 @@ OO.plugin("WonderUIModule", function (OO) {
         if ( _.ios === true ) {
             _.addClass( _.elements.controls, 'volume-disabled' );
         }
+
+        Conduit.add('updateTimers', _.updateTimers);
+        Conduit.add('bufferTick', _.bufferTick);
+        if ( _.ie8 === false && _.flash === false ) {
+            Conduit.add('moveBufferBar', _.moveBufferBar);    
+        }
+        Conduit.add('uiTick', _.uiTick);
+        Conduit.add('actionTick', _.actionTick);
+        if ( _.ie8 === true ) {
+            Conduit.add('ieTick', _.ieTick);    
+        }
+        Conduit.start();
     };
 
     // Update content, status and duration
@@ -247,11 +353,12 @@ OO.plugin("WonderUIModule", function (OO) {
 
         _.info = content;
         _.elements.poster.getElementsByTagName('img')[0].src = content.promo || content.promo_image;
-        // _.elements.loader.className = '';
-        _.hideLoader();
         _.elements.poster.getElementsByTagName('td')[0].innerHTML = (_.data.title.replace(/_/g,' '));
+        _.hideLoader();
         _.removeClass( _.elements.poster, 'loading' );
         _.duration = content.duration/1000 || content.time;
+
+        _.flash = ( _.elements.wrapper.getElementsByTagName('object')[0] !== undefined );
 
         if ( document.getElementsByTagName('video').length > 0 ) {
             _.elements.video = document.getElementsByTagName('video')[0];
@@ -288,10 +395,6 @@ OO.plugin("WonderUIModule", function (OO) {
 
     };
 
-    // _.seeked = function () {
-    //     _.scrubbed = false;
-    // };
-
     _.onError = function (error, info) {
         // Info is an object with an error code
         // e.g. { "code": "stream" }
@@ -316,7 +419,6 @@ OO.plugin("WonderUIModule", function (OO) {
     _.onPause = function () {
         if ( _.state.playing === true ) {
             _.removeClass(_.elements.playbutton, 'hidden');
-            // _.removeClass(_.elements.bigplaybutton, 'hidden');
             _.addClass(_.elements.pausebutton, 'hidden');
             _.hideLoader();
             _.state.playing = false;
@@ -324,7 +426,6 @@ OO.plugin("WonderUIModule", function (OO) {
     };
 
     _.onSeeked = function (e) {
-        // _.scrubbed = false;
         if ( _.played === false ) {
             _.mb.publish(OO.EVENTS.PLAY);    
         }
@@ -602,14 +703,14 @@ OO.plugin("WonderUIModule", function (OO) {
         }
     };
 
-    _.ActionTick = function () {
+    _.actionTick = function () {
         if ( _.timers.seek === 10 ) {
             _.seek( _.newtime );    
             _.time = _.newtime;
         }
     };
 
-    _.UITick = function () {
+    _.uiTick = function () {
 
         if ( _.scrubbed === true ) {
             _.elements.scrubber_progress_vid.style.width = _.videoPercentage + '%';
@@ -654,22 +755,23 @@ OO.plugin("WonderUIModule", function (OO) {
         }
     };
 
-    _.BufferTick = function () {
+    _.bufferTick = function () {
         if ( _.state.playing === true ) {
             _.timers.buffer++;
         }
         if ( _.timers.buffer === 60 ) {
             _.showLoader();
         }
-        if ( _.timers.buffer === 10 && _.ie8 === false ) {
-            if ( _.loaded === true && _.buffer !== undefined ) {
-                var percentage = ( (_.buffer/_.duration) * 100 ) + '%';      
-                _.elements.scrubber_buffer.style.width = percentage;            
-            }    
+    };
+
+    _.moveBufferBar = function () {
+        if ( _.timers.buffer === 10 && _.loaded === true && _.buffer !== undefined ) {
+            var percentage = ( (_.buffer/_.duration) * 100 ) + '%';
+            _.elements.scrubber_buffer.style.width = percentage;            
         }
     };
 
-    _.IETick = function () {
+    _.ieTick = function () {
         var ww = _.ww();
         if ( !('width' in _) || _.width != ww ) {
             if ( ww <= 480 ) {
@@ -689,23 +791,27 @@ OO.plugin("WonderUIModule", function (OO) {
         _.width = ww;
     };
 
-    _.Tick = function () {
-        // Increment our timers
+    _.updateTimers = function () {
         _.timers.seek++;
         _.timers.interaction++;
         _.framecount++;
+    };
 
-        _.BufferTick();
-        _.UITick();
-        _.ActionTick();
-        _.IETick();
-        requestAnimationFrame( _.Tick );
+    _.Tick = function () {
+        // _.timers.seek++;
+        // _.timers.interaction++;
+        // _.framecount++;
+        // _.BufferTick();
+        // _.moveBufferBar();
+        // _.UITick();
+        // _.ActionTick();
+        // _.IETick();
+        // requestAnimationFrame( _.Tick );
     };
 
     /*  Utility Functions
     /* ======================================= */
 
-    // Find the right method, call on correct element
     _.attemptFullscreen = function(el) {
         if(el.requestFullscreen) {
             el.requestFullscreen();

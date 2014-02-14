@@ -9,37 +9,31 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Wonder PL</title>
+  <link rel="shortcut icon" href="{{ config.ASSETS_URL }}/assets/dolly/img/favicon@2x.png" />
 
-  {% 
-  	assets filters="less,cssmin", 
-  	output="gen/wonderplayer_css.%(version)s.css", 
+  {% assets filters="less,cssmin", output="gen/wonderplayer_css.%(version)s.css", 
   	depends="assets/wonderplayer/partials/_*.less", 
   	"assets/wonderplayer/main.less" 
-  %}
-  <link rel="stylesheet" href="{{ ASSET_URL }}"/>
-  {% endassets %}
+  %}<link rel="stylesheet" href="{{ ASSET_URL }}"/>{% endassets %}
 
   <!-- Conditional stylesheet for IE8 and below -->
-  {% 
-    assets filters="less,cssmin", 
-    output="gen/wonderplayer_ie_css.%(version)s.css", 
+  {% assets filters="less,cssmin", output="gen/wonderplayer_ie_css.%(version)s.css", 
     depends="assets/wonderplayer/partials/_*.less", 
     "assets/wonderplayer/ie.less" 
-  %}
-  <!--[if lte IE 10]>
-    <link rel="stylesheet" href="{{ ASSET_URL }}"/>
-  <![endif]-->
-  {% endassets %}
+  %}<!--[if lte IE 10]><link rel="stylesheet" href="{{ ASSET_URL }}"/><![endif]-->{% endassets %}
 
   <!--<script type="text/javascript" src="//player.ooyala.com/v3/{{ config.OOYALA_PLAYER_ID }}?tweaks=android-enable-hls"></script>-->
   <script type="text/javascript" src="//player.ooyala.com/v3/8e49f5aacf724f33b534cadfc4485e6b?platform=html5-priority"></script>
+<!--   {% assets filters="rjsmin", output="gen/video-module.%(version)s.js",
+    "web-lite/video-module.js"
+  %}<script type="text/javascript" src="{{ ASSET_URL }}"></script>{% endassets %} -->
+
   <script type="text/javascript" src="/static/web-lite/video-module.js"></script>
   <script type="text/javascript">
   	var videoData = {{ video_data|tojson }},
   	    ooyalaPlayerId = "{{ config.OOYALA_PLAYER_ID }}";
   </script>
   
-  <link rel="shortcut icon" href="{{ config.ASSETS_URL }}/assets/dolly/img/favicon@2x.png" />
 </head>
 <body>
 
