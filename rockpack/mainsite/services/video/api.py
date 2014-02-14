@@ -155,21 +155,29 @@ def video_dict(instance):
 
 def get_local_videos(loc, paging, with_channel=True, include_invisible=False, readonly_db=False, **filters):
     if readonly_db:
-        videos = readonly_session.query(models.VideoInstance)
+        videos = readonly_session
     else:
-        videos = db.session.query(models.VideoInstance)
+        videos = db.session
 
-    videos = videos.join(
+    videos = videos.query(
+        models.VideoInstance,
+        func.count(models.VideoInstanceComment.id)
+    ).join(
         models.Video, models.Video.id == models.VideoInstance.video).\
-        options(contains_eager(models.VideoInstance.video_rel)).\
-        outerjoin(models.VideoInstanceComment, models.VideoInstanceComment.video_instance == models.VideoInstance.id).\
-        with_entities(models.VideoInstance, func.count(models.VideoInstanceComment.id)).\
+        options(contains_eager(models.VideoInstance.video_rel)
+                ).outerjoin(models.VideoInstanceComment,
+            models.VideoInstanceComment.video_instance == models.VideoInstance.id).\
         group_by(models.VideoInstance.id, models.Video.id)
 
     if include_invisible is False:
         videos = videos.filter(models.Video.visible == True)
     if with_channel:
-        videos = videos.options(joinedload(models.VideoInstance.video_channel))
+        videos = videos.join(
+            models.Channel,
+            models.Channel.id == models.VideoInstance.channel
+        ).options(lazyload(
+            models.VideoInstance.video_channel,
+            models.Channel.category_rel))
 
     if filters.get('channel'):
         filters.setdefault('channels', [filters['channel']])
