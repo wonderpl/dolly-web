@@ -33,22 +33,20 @@
     <script src="{{config.ASSETS_URL}}/assets/vendor/js-no-compile/json2.js"></script>
     <![endif]-->
 
-  {% assets filters="less,cssmin", 
-    output="gen/web-lite-css.%(version)s.css", 
+  {% assets filters="less,cssmin", output="gen/web-lite-css.%(version)s.css", 
     depends="assets/web-lite/partials/_*.less", 
     "assets/web-lite/front.less" 
   %}<link rel="stylesheet" href="{{ ASSET_URL }}"/>{% endassets %}
 
   <!-- Conditional stylesheet for IE8 and below -->
-  {% assets filters="less,cssmin", output="gen/web-lite-ie-css.%(version)s.css", depends="assets/web-lite/partials/_*.less", "assets/web-lite/ie.less" %}
-  <!--[if lt IE 9]>
-    <link rel="stylesheet" href="{{ ASSET_URL }}"/>
-  <![endif]-->
-  {% endassets %}
+  {% assets filters="less,cssmin", output="gen/web-lite-ie-css.%(version)s.css", 
+    depends="assets/web-lite/partials/_*.less", 
+    "assets/web-lite/ie.less"
+  %}<!--[if lt IE 9]><link rel="stylesheet" href="{{ ASSET_URL }}"/><![endif]-->{% endassets %}
 
   <script src='//player.ooyala.com/v3/c8b3075569864056bc02b97568d17127?platform=html5-priority'></script>
   
-  {% assets filters="rjsmin", output="gen/web-lite-lib.%(version)s.js",
+  {% assets filters="rjsmin", output="gen/weblite-lib.%(version)s.js",
     "assets/vendor/js/jquery-1.10.1.min.js", 
     "web-lite/vendor/angular/angular.js",
     "web-lite/vendor/angular/angular-route.js",
@@ -57,7 +55,7 @@
     "web-lite/youtube-module.js"
   %}<script type="text/javascript" src="{{ ASSET_URL }}"></script>{% endassets %}
 
-  {% assets filters="rjsmin", output="gen/dolly.%(version)s.js",
+  {% assets filters="rjsmin", output="gen/weblite-app.%(version)s.js",
     "web-lite/vendor/tween.js",
     "web-lite/app.js",
     "web-lite/controllers/controllers.js",  

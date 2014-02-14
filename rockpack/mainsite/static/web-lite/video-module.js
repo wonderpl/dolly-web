@@ -66,12 +66,16 @@ OO.plugin("WonderUIModule", function (OO) {
     // This section contains the HTML content to be used as the UI
     // '<a href="#" class="rewind wonder-rewind icon-ccw"></a>' +
     // '<span class="f-thin f-uppercase"></span>' +
+    /*
+        Flicker is hapening because the loader panel is an anchor tag
+
+    */
     var wonder_template = 
         '<div id="wonder-poster" class="loading">' +
             '<img src="/static/assets/wonderplayer/img/trans.png" alt="" id="wonder-poster" class="blur"/>' +
             '<table width="100%" height="100%" cellpadding="0" cellspacing="0"><tr><td width="100%" height="100%" align="center" valign="middle">Your video is loading</td></tr></table>' +
         '</div>' +
-        '<a id="wonder-loader" class="show f-sans f-uppercase"><span>Your video is loading</span></a>' + 
+        '<div id="wonder-loader" class="show f-sans f-uppercase"><span>Your video is loading</span></div>' + 
         '<a class="wonder-play-big"></a>' + 
         '<div id="wonder-controls">' + 
             '<a class="play wonder-play player-icon-play"></a>' + 
