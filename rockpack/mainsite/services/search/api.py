@@ -80,6 +80,9 @@ class SearchWS(WebService):
                 # so we can do a proper search here
                 vs.search_terms(query)
                 vs.add_term('most_influential', True, occurs=MUST)
+                # also clear any favs from search
+                f = pyes.TermFilter(field='is_favourite', value=False)
+                vs._exclusion_filters.append(f)
             start, size = self.get_page()
             vs.set_paging(offset=start, limit=size)
             for video in vs.videos():

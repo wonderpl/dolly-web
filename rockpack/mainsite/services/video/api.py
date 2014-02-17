@@ -261,9 +261,6 @@ class VideoWS(WebService):
         if location:
             vs.check_country_allowed(location.upper())
 
-        if app.config.get('DOLLY'):
-            f = pyes.TermFilter(field='is_favourite', value=False)
-            vs._exclusion_filters.append(f)
         videos = vs.videos(with_channels=True)
         total = vs.total
 
