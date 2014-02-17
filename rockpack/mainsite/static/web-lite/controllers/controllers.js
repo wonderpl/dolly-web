@@ -16,17 +16,18 @@
         $rootScope.videos = Array.prototype.slice.call( $rootScope.channel_data.videos.items );
         $rootScope.api = window.apiUrls;
 
+        // shareuser is either the owner of the channel, or the user
+        // represented by the shareuser query string.
         var shareuser = querystring.search('shareuser');
-        console.log(shareuser);
         if ( shareuser.length > 0 ) {
             UserService.fetchUser(shareuser);
         } else {
-            $rootScope.shareuser = $rootScope.owner;
+            $rootScope.user = $rootScope.owner;
         }
 
-        // Get the array index 
+        // Get the array index
         var searchid = querystring.search( 'video' );
-
+        console.log(searchid);
         if ( searchid.length > 0 ) {
             ng.forEach( $rootScope.videos, function( el, i) {
                 if ( el.id === searchid ) {

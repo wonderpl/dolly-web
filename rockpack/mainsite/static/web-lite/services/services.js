@@ -13,7 +13,6 @@
                 $http({method: 'get', url: $rootScope.api.base_api + id }).success(function(data,status,headers,config){
                     $timeout(function(){
                         $rootScope.$apply(function(){
-                            console.log(data);
                             $rootScope.user = data;
                         });
                     });

@@ -63,7 +63,6 @@
 
     _.WonderYTModule = function( elem, video, opts, data ) {
         _.data = data;
-        console.log(data);
         _.player = new YT.Player(elem, {
             width: '100%',
             height: '100%',
@@ -89,9 +88,9 @@
 
         _.time = _.player.getCurrentTime();    
         _.duration = _.data.video.duration;
-        _.elements.poster.getElementsByTagName('td')[0].innerHTML = (_.data.title.replace(/_/g,' '));
         _.hideLoader();
         _.removeClass( _.elements.poster, 'loading' );
+        _.elements.poster.getElementsByTagName('td')[0].innerHTML = (_.data.title.replace(/_/g,' '));
         _.loaded = true;
     };
 

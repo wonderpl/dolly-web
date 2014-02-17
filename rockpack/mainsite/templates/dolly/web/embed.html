@@ -24,6 +24,7 @@
 
   <script type="text/javascript" src="//player.ooyala.com/v3/{{ config.OOYALA_PLAYER_ID }}?platform=html5-priority"></script>
   {% assets filters="rjsmin", output="gen/video-module.%(version)s.js",
+    "web-lite/conduit.js",
     "web-lite/video-module.js"
   %}<script type="text/javascript" src="{{ ASSET_URL }}"></script>{% endassets %}
 
@@ -32,7 +33,6 @@
   	var videoData = {{ video_data|tojson }},
   	    ooyalaPlayerId = "{{ config.OOYALA_PLAYER_ID }}";
   </script>
-  
 </head>
 <body>
 

@@ -14,31 +14,9 @@
 
 				$rootScope.playerElem = elem;
 				scope.YTReady = false;
-				scope.OOReady = false;
 				
 				window.onYouTubeIframeAPIReady = function () {
 					window.YTReady = true;
-				};
-
-				OO.ready(function() {
-					window.OOReady = true;
-				});
-
-				scope.getOOReady = function() {
-					var q = $q.defer();					
-
-					scope.OOReadyCheck = $interval(function( count ){
-						if ( window.OOReady === true ) {
-							scope.OOReady = true;
-							$interval.cancel(scope.OOReadyCheck);
-							$timeout(function(){
-								q.resolve();
-							});
-						}
-
-					}, 60);
-
-					return q.promise;
 				};
 
 				scope.getYTReady = function () {
@@ -66,7 +44,7 @@
 					ng.element(d.getElementById('wonder-wrapper')).append(tmpl);
 
 					$timeout(function(){
-						scope.player = new WonderYTModule('youtube-player', 'nMoVqveSem4', {
+						scope.player = new WonderYTModule('youtube-player', scope.vid.video.source_id, {
 							autoplay: 0,
 							showinfo: 0,
 							modestbranding: true,
@@ -79,19 +57,6 @@
 						}, scope.vid);
 					});
 				}
-
-				var newOOVideo = function() {
-					$timeout(function() {
-						elem.append('<div id="ooyala-player"></div>');
-						scope.player = OO.Player.create( 'ooyala-player', scope.vid.video.source_id, {
-							flashParams: { hide: 'all' },
-							wmode: 'opaque',
-							autoplay: false,
-							layout: 'chromeless'
-						});
-					});
-				};
-
 
 				$rootScope.$watch( 'currentvideo', function( newValue ) {
 					if ( newValue !== '' ) {
@@ -123,17 +88,32 @@
 							break;
 
 						case 'ooyala':
-							// scope.getOOReady().then(function(){
-							// 	newOOVideo();
-							// });
-							// elem.append('<iframe src="//player.vimeo.com/video/85134959?color=ffffff" width="100%" height="100%" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>');
-							// console.log('here');
-							// console.log('<iframe src="http://' + $location.$$host + ( $location.$$port !== 80 ? ':' + $location.$$port : '' ) + '/embed/' + scope.vid.id + '/" width="100%" height="100%" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>');
 							elem.append('<iframe src="http://' + $location.$$host + ( $location.$$port !== 80 ? ':' + $location.$$port : '' ) + '/embed/' + scope.vid.id + '/" width="100%" height="100%" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>');
 							break;
 					}
 				};
 
+			}
+		}
+	}]);
+
+	app.directive('videoThumbnail', ['$timeout', function( $timeout ){
+		return {
+			restrict: 'C',
+			link: function( scope, elem, attrs ) {
+
+				elem.bind('load', function(e) {
+					console.log('loaded');
+				});
+
+				elem.bind('error', function(e) {
+					console.log('error');
+					elem[0].src = '/static/assets/web-lite/img/thumbnail.jpg';
+				});
+
+				$timeout(function(){
+					elem[0].src = attrs.src;
+				}, 500);
 			}
 		}
 	}]);

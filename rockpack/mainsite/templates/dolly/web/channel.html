@@ -44,32 +44,43 @@
     "assets/web-lite/ie.less"
   %}<!--[if lt IE 9]><link rel="stylesheet" href="{{ ASSET_URL }}"/><![endif]-->{% endassets %}
 
-  <script src='//player.ooyala.com/v3/c8b3075569864056bc02b97568d17127?platform=html5-priority'></script>
+  {% assets filters="less,cssmin", output="gen/wonderplayer_css.%(version)s.css", 
+    depends="assets/wonderplayer/partials/_*.less", 
+    "assets/wonderplayer/main.less" 
+  %}<link rel="stylesheet" href="{{ ASSET_URL }}"/>{% endassets %}
+
+  <!-- Conditional stylesheet for IE8 and below -->
+  {% assets filters="less,cssmin", output="gen/wonderplayer_ie_css.%(version)s.css", 
+    depends="assets/wonderplayer/partials/_*.less", 
+    "assets/wonderplayer/ie.less" 
+  %}<!--[if lte IE 10]><link rel="stylesheet" href="{{ ASSET_URL }}"/><![endif]-->{% endassets %}
+
   
   {% assets filters="rjsmin", output="gen/weblite-lib.%(version)s.js",
     "assets/vendor/js/jquery-1.10.1.min.js", 
     "web-lite/vendor/angular/angular.js",
     "web-lite/vendor/angular/angular-route.js",
     "web-lite/vendor/angular/angular-animate.js",
-    "web-lite/vendor/angular/angular-sanitize.js",
-    "web-lite/youtube-module.js"
+    "web-lite/vendor/angular/angular-sanitize.js"
   %}<script type="text/javascript" src="{{ ASSET_URL }}"></script>{% endassets %}
 
-  {% assets filters="rjsmin", output="gen/weblite-app.%(version)s.js",
+  <!--{% assets filters="rjsmin", output="gen/weblite-app.%(version)s.js",
     "web-lite/vendor/tween.js",
     "web-lite/app.js",
     "web-lite/controllers/controllers.js",  
     "web-lite/directives/directives.js",  
     "web-lite/services/services.js",
     "web-lite/filters/filters.js"
-  %}<script type="text/javascript" src="{{ ASSET_URL }}"></script>{% endassets %}
+  %}<script type="text/javascript" src="{{ ASSET_URL }}"></script>{% endassets %}-->
 
-  <!--<script src="/static/web-lite/vendor/tween.js"></script>
+  <script src="/static/web-lite/vendor/tween.js"></script>
   <script src="/static/web-lite/app.js"></script>
   <script src="/static/web-lite/controllers/controllers.js"></script>  
   <script src="/static/web-lite/directives/directives.js"></script>  
   <script src="/static/web-lite/services/services.js"></script>
-  <script src="/static/web-lite/filters/filters.js"></script>-->
+  <script src="/static/web-lite/filters/filters.js"></script>
+  <script src="/static/web-lite/conduit.js"></script>
+  <script src="/static/web-lite/youtube-module.js"></script>
 
   {% assets filters="weblitetemplates, rjsmin", output="gen/weblite-templates.%(version)s.js",
     depends="web-lite/views/*.html",
