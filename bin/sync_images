@@ -37,7 +37,7 @@ def worker(prefix):
 
 prefixes = []
 for type in 'channel', 'avatar', 'profile':
-    for size in app.config[type.upper() + '_IMAGES']:
+    for size in app.config[type.upper() + '_IMAGES'].keys() + ['original']:
         prefixes.append('/'.join((app.config['IMAGE_BASE_PATH'], type, size, '')))
 
 for prefix in prefixes:
