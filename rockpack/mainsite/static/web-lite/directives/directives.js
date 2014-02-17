@@ -103,11 +103,11 @@
 			link: function( scope, elem, attrs ) {
 
 				elem.bind('load', function(e) {
-					console.log('loaded');
+					// console.log('loaded');
 				});
 
 				elem.bind('error', function(e) {
-					console.log('error');
+					// console.log('error');
 					elem[0].src = '/static/assets/web-lite/img/thumbnail.jpg';
 				});
 
