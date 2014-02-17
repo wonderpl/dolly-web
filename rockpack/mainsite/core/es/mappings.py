@@ -47,7 +47,7 @@ if app.config.get('DOLLY', False):
                 "analyzer": "snowball"
             },
             "position": {"type": "integer"},
-            "public" : { "type" : "boolean" },
+            "public": {"type": "boolean"},
             "category": {
                 "type": "integer"},
             "locales": locale_count_dict,
@@ -82,8 +82,8 @@ if app.config.get('DOLLY', False):
                 "type": "string",
                 "index": "not_analyzed"
             },
-            "recent_user_stars" : {
-                "type" : "string"
+            "recent_user_stars": {
+                "type": "string"
             },
             "country_restriction": {
                 "properties": {
