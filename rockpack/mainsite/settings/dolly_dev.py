@@ -42,7 +42,7 @@ IOS_APP_URL_SCHEME = 'wonderpldev'
 
 DEFAULT_PROFILE_COVERS = ['default%d.jpg' % i for i in range(1, 6)]
 
-FAVOURITE_CHANNEL = 'Favorites', 'My favorite videos', None
+FAVOURITE_CHANNEL = 'Favorites', 'My favorite videos', ''
 
 FACEBOOK_APP_ID = '573323026048639'
 FACEBOOK_APP_SECRET = _decrypt('0\xa9\xf4=)\xa9\x0cC#\xda \xa2\xe1.\xf8)R\x04\xf4\x9b\x0c\xb9x\x0f\xc1\xb7\xd5\xfb=\xfb\xef\xc1')
