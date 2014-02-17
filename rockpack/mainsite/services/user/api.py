@@ -956,7 +956,8 @@ class UserWS(WebService):
         add_tracking = partial(_add_tracking, prefix='profile')
         if use_elasticsearch():
             us = es_search.UserSearch()
-            us.add_id(userid)
+            us.add_id(userid, es_search.SHOULD)
+            us.add_text('username', userid)
             users = us.users()
             if not users:
                 abort(404)
