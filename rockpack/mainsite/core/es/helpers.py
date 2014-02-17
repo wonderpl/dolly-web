@@ -319,6 +319,8 @@ class DBImport(object):
                 child,
                 (VideoInstance.video == child.video) &
                 (VideoInstance.channel == child.source_channel)
+            ).filter(
+                VideoInstance.is_favourite == False
             ).group_by(VideoInstance.id, VideoInstance.video, child.source_channel)
 
             instance_counts = {}
