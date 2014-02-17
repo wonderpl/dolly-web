@@ -89,13 +89,11 @@ AVATAR_IMAGES = dict(
 
 PROFILE_IMAGES = dict(
     thumbnail_medium=(320, 338),
+    ipad_highlight=(616, 240),
     ipad=(927, 502),
 )
 
-BRAND_PROFILE_IMAGES = dict(
-    thumbnail_medium=(320, 338),
-    ipad=(927, 502),
-)
+BRAND_PROFILE_IMAGES = PROFILE_IMAGES
 
 ASSETS_URL = '/static'
 ASSETS_MANIFEST = 'file'
