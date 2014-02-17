@@ -272,16 +272,20 @@ class VideoWS(WebService):
     @expose_ajax('/<video_id>/starring_users/', cache_age=3600)
     def video_starring_users(self, video_id):
         users = User.query.join(
-            UserActivity,
-            UserActivity.user == User.id
+            models.Channel,
+            models.Channel.owner == User.id
         ).join(
             models.VideoInstance,
-            models.VideoInstance.id == UserActivity.object_id
+            models.VideoInstance.channel == models.Channel.id
+        ).join(
+            models.Video,
+            models.Video.id == models.VideoInstance.video
         ).filter(
-            UserActivity.object_type == 'video_instance',
-            UserActivity.action == 'star',
-            models.VideoInstance.video == video_id
-        ).order_by(UserActivity.date_actioned.desc())
+            models.VideoInstance.is_favourite == True,
+            models.Video.id == video_id
+        ).order_by(
+            models.VideoInstance.date_added.desc()
+        )
 
         total = users.count()
         offset, limit = self.get_page()
