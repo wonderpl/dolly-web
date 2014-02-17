@@ -305,6 +305,29 @@ class DBImport(object):
     def import_user_categories(self):
         update_user_categories()
 
+    def import_comment_counts(self):
+        from rockpack.mainsite.services.video.models import VideoInstanceComment, VideoInstance
+        from rockpack.mainsite.core.dbapi import db
+
+        counts = db.session.query(VideoInstance.id, func.count(VideoInstance.id)).join(
+            VideoInstanceComment,
+            VideoInstanceComment.video_instance == VideoInstance.id
+        ).group_by(
+            VideoInstance.id
+        )
+
+        print '%d video%s with comments' % (counts.count(), 's' if counts.count() > 1 else '')
+        print 'Processing ...'
+
+        for videoid, count in counts:
+            ev = ESVideo.updater(bulk=True)
+            ev.set_document_id(videoid)
+            ev.add_field('comments.count', count)
+            ev.update()
+        ESVideo.flush()
+
+        print 'Finished.'
+
     def import_dolly_repin_counts(self):
         from rockpack.mainsite.services.video.models import VideoInstance
 
