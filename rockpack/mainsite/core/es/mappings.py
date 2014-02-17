@@ -35,6 +35,7 @@ locale_count_dict = {
 
 if app.config.get('DOLLY', False):
     video_mapping = {
+        "dynamic": "strict",
         "properties": {
             "id": {
                 "type": "string",
@@ -228,6 +229,7 @@ else:
 
 
 user_mapping = {
+    "dynamic": "strict",
     "properties": {
         "avatar_thumbnail_url": {
             "type": "string",
@@ -276,6 +278,7 @@ user_mapping = {
 
 
 channel_mapping = {
+    "dynamic": "strict",
     "properties": {
         "id": {
             "type": "string",
@@ -360,6 +363,7 @@ channel_mapping = {
 }
 
 suggest_mapping = {
+    "dynamic": "strict",
     "properties": {
         "completion": {
             "type": "completion",
