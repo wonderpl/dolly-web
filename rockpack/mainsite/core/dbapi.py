@@ -41,8 +41,7 @@ def sync_database(drop_all=False, custom_modules=None):
     def load_modules(module):
         try:
             models.append(__import__(module + '.models', fromlist=['models']))
-        except ImportError as e:
-            #print >> sys.stderr, 'cannot import', module, ':', e
+        except ImportError:
             pass
 
     modules = custom_modules or SERVICES + zip(*REGISTER_SETUPS)[0]
@@ -136,13 +135,13 @@ def commit_on_success(f):
         try:
             result = f(*args, **kwargs)
             db.session.commit()
-        except:
+        except Exception as e:
             etype, evalue, traceback = sys.exc_info()
             try:
                 db.session.rollback()
             except:
                 pass
-            raise etype(*evalue.args), None, traceback
+            raise etype, e, traceback
         else:
             return result
     return wrapper
