@@ -6,7 +6,7 @@
         [ns + '.services',
         ns + '.directives'] /* module dependencies */);
 
-    app.controller('WebLiteCtrl', ['$scope', '$timeout','$location', '$rootScope', '$templateCache', '$sanitize', '$compile', '$http', 'querystring', 'windowResizer', function($scope, $timeout, $location, $rootScope, $templateCache, $sanitize, $compile, $http, querystring, windowResizer) {
+    app.controller('WebLiteCtrl', ['$scope', '$timeout','$location', '$rootScope', '$templateCache', '$sanitize', '$compile', '$http', 'querystring', 'windowResizer', 'UserService', function($scope, $timeout, $location, $rootScope, $templateCache, $sanitize, $compile, $http, querystring, windowResizer, UserService) {
 
         $rootScope.weblite = true;
         $rootScope.assets_url = window.assets_url;
@@ -17,9 +17,9 @@
         $rootScope.api = window.apiUrls;
 
         var shareuser = querystring.search('shareuser');
-
+        console.log(shareuser);
         if ( shareuser.length > 0 ) {
-            userService.fetchUser($rootScope.user.id);
+            UserService.fetchUser(shareuser);
         } else {
             $rootScope.shareuser = $rootScope.owner;
         }

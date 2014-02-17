@@ -64,6 +64,13 @@
     "web-lite/filters/filters.js"
   %}<script type="text/javascript" src="{{ ASSET_URL }}"></script>{% endassets %}
 
+  <!--<script src="/static/web-lite/vendor/tween.js"></script>
+  <script src="/static/web-lite/app.js"></script>
+  <script src="/static/web-lite/controllers/controllers.js"></script>  
+  <script src="/static/web-lite/directives/directives.js"></script>  
+  <script src="/static/web-lite/services/services.js"></script>
+  <script src="/static/web-lite/filters/filters.js"></script>-->
+
   {% assets filters="weblitetemplates, rjsmin", output="gen/weblite-templates.%(version)s.js",
     depends="web-lite/views/*.html",
     "web-lite/views/player.html",

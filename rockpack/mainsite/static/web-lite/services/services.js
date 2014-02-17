@@ -7,6 +7,21 @@
     var app = ng.module(ns + '.' + m /* module name */,
                        [] /* module dependencies */);
 
+    app.factory('UserService', ['$rootScope', '$http', '$timeout', function($rootScope, $http, $timeout){
+        return {
+            fetchUser: function(id) {
+                $http({method: 'get', url: $rootScope.api.base_api + id }).success(function(data,status,headers,config){
+                    $timeout(function(){
+                        $rootScope.$apply(function(){
+                            console.log(data);
+                            $rootScope.user = data;
+                        });
+                    });
+                });
+            }
+        }
+    }]);
+
 
     app.factory('$sanitize', [function() {
         return function(input) {

@@ -727,7 +727,7 @@ OO.plugin("WonderUIModule", function (OO) {
             var percentage = ( (_.time/_.duration) * 100 ) + '%';        
             _.elements.scrubber_progress_vid.style.width = percentage;
             _.elements.scrubber_handle_vid.style.left = percentage;
-            _.elements.scrubber_timer.style.left = percentage + '%';
+            _.elements.scrubber_timer.style.left = percentage;
             _.elements.scrubber_timer.innerHTML = _.getTime( _.time );
         }
         
