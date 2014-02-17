@@ -215,6 +215,7 @@ OO.plugin("WonderUIModule", function (OO) {
     _.init = function () {
 
         _.ie8 = ( _.hasClass(document.querySelector('html'), 'ie8') ) ? true : false;
+        _.ie10 = ( _.UA.indexOf('msie 1') !== -1 ) ? true : false;
         _.ipad = ( _.UA.indexOf('ipad') !== -1 ) ? true : false;
         _.ios = ( _.UA.indexOf('ipad') !== -1 || _.UA.indexOf('iphone') !== -1 ) ? true : false;
 
@@ -310,11 +311,12 @@ OO.plugin("WonderUIModule", function (OO) {
         _.listen(_.elements.volumebutton, 'click', _.volume);
 
         // Decide which listeners to use for the scrubbers.
+        // && _.hasClass( document.querySelector('html'), 'ie10' )
         if ( _.isTouchDevice() ) {
-            _.addClass(_.elements.controls, 'show');
             // _.listen(_.elements.loader, 'touchstart', function(e){event.preventDefault();});
-            _.listen(_.elements.loader, 'click', _.toggleControls);
             // _.listen(_.elements.loader, 'touchend', _.interaction);
+            _.addClass(_.elements.controls, 'show');
+            _.listen(_.elements.loader, 'click', _.toggleControls);
             _.listen(_.elements.scrubber_trans, 'touchmove', _.scrubTouch);
             _.listen(_.elements.scrubber_trans, 'touchstart', _.scrubDown);
             _.listen(_.elements.scrubber_trans, 'touchleave', _.scrubUp);
@@ -938,7 +940,8 @@ OO.plugin("WonderUIModule", function (OO) {
 
     // Returns true if touch events are present
     _.isTouchDevice = function () {
-        return 'ontouchstart' in window || 'onmsgesturechange' in window;
+        // || 'onmsgesturechange' in window
+        return 'ontouchstart' in window;
     };
 
     //Returns true if it is a DOM node
