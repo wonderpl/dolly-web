@@ -178,7 +178,7 @@ def check_video_player_errors(date_from=None, date_to=None):
         join(VideoInstance, VideoInstance.id == PlayerErrorReport.video_instance).
         values('video'))
     if error_videos:
-        video_qs = Video.query.filter(Video.id.in_(error_videos))
+        video_qs = Video.query.filter(Video.visible == True, Video.id.in_(error_videos))
         get_youtube_video_data(video_qs, date_to)
 
 
