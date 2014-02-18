@@ -13,7 +13,7 @@ body, html {
 	background: transparent;
 	border: none;
 	outline: none;
-	position: fixed;
+	position: relative;
 	left: 0;
 	top: 0;
 	width: 100%;
@@ -25,6 +25,10 @@ body, html {
 	font-style: normal;
 	-webkit-font-smoothing: antialiased;
 	-moz-osx-font-smoothing: grayscale;
+
+	&.embedded {
+		position: fixed;
+	}
 }
 
 #player {

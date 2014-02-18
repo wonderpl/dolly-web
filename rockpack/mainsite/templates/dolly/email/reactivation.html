@@ -48,42 +48,90 @@ a:link, a:visited, div a {
   <table border="0" cellpadding="0" cellspacing="0" width="100%" id="backgroundTable">
     <tr>
       <td align="center" valign="top">
-{% include "header.html" %}
+        {% include "header.html" %}
         <table border="0" cellpadding="0" cellspacing="0" width="100%" bgcolor="white">
           <tr>
             <td align="center">
-              <table border="0" cellpadding="0" cellspacing="0" width="600" bgcolor="white">
+
+              <!-- Welcome section -->
+              <table border="0" cellpadding="0" cellspacing="0" width="100%" bgcolor="white">
                 <tr>
-                  <td width="36" colspan="1"></td>
-                  <td align="align" valign="middle" height="120" colspan="1" width="528">
-                    <center>
-                      <br/><br/>
-                      
-                      {% if user.avatar %}
-                        <img src="{{ user.avatar.url }}" style="display: block; width: 60px; height: 60px; border: none; outline: none;" border="0" width="60" height="60" />
-                      {% else %}
-                        <img src="{{ config.ASSETS_URL }}/assets/dolly/img/emails/avatar-small.png" style="display: block; width: 60px; height: 60px; border: none; outline: none;" border="0" width="60" height="60" />
-                      {% endif %}
+                  <td width="20"></td>
+                  <td align="center" valign="middle" height="120" colspan="1" width="560">
 
-                      <h1><font face="verdana" size="4" color="#767472" style="font-weight: normal; font-size: 22px; line-height: 26px;">Hello {{ user.display_name }},</font></h1>
-                      <p><font face="verdana" size="4" color="#767472">Have a look at what's trending on <br/>Wonder whilst you've been gone</font></p>
-                      <br/><br/>
+                    <br/><br/>
+                    
+                    {% if user.avatar %}
+                      <img src="{{ user.avatar.url }}" style="display: block; width: 60px; height: 60px; border: none; outline: none;" border="0" width="60" height="60" />
+                    {% else %}
+                      <img src="{{ config.ASSETS_URL }}/assets/dolly/img/emails/avatar-small.png" style="display: block; width: 60px; height: 60px; border: none; outline: none;" border="0" width="60" height="60" />
+                    {% endif %}
 
-                      {% if video_data %}
-                        {% for channel, count, videos in video_data %}
-                          {% set channel_url = url_for('share_redirect_root') + '&c=' + channel.id %}
+                    <h1><font face="verdana" size="4" color="#767472" style="font-weight: normal; font-size: 22px; line-height: 26px;">Hello {{ user.display_name }},</font></h1>
+                    <p><font face="verdana" size="4" color="#767472">Have a look at what's trending on <br/>Wonder whilst you've been gone</font></p>
+
+                    <br/><br/>
+                    
+                    <!-- Horizontal Rule -->
+                    <table border="0" cellpadding="0" cellspacing="0" width="30%" height="2" bgcolor="bcbad4"><tr><td bgcolor="#bcbad4" height="2"><font size="0"></font></td></tr></table>
+
+                    <br/>
+                  </td>
+                  <td width="20"></td>
+                </tr>
+              </table>
+
+              <!-- new videos -->
+              <table border="0" cellpadding="0" cellspacing="0" width="600" bgcolor="white" colspan="5">
+                
+                    {% if video_data %}
+                      {% for channel, count, videos in video_data %}
+                        {% set channel_url = url_for('share_redirect_root') + '&c=' + channel.id %}
+                      <tr>
+                        <td colspan="5" width="600" align="center" valign="top"><br/><br/>
                           <p><font face="verdana" size="4" color="#767472">{{ channel.owner_rel.display_name }} has added {{ count }} videos to {{ channel.title|upper }}</font></p>
-                          <!--<p><a href="{{ channel_url }}" border="0" style="border: none; outline: none;"><img src="{{ channel.cover.thumbnail_medium }}" border="0" alt="" width="285" height="160" style="display: block; margin: 0 auto; border: none; ouline: none;" /></a></p>-->
-                          {% for video in videos[:2] %}
-                            {% set video_url = channel_url + '&v=' + video.id %}
-                            <p><a href="{{ video_url }}" border="0" style="border: none; outline: none;"><img src="{{ video.default_thumbnail }}" border="0" alt="" width="285" height="160" style="display: block; margin: 0 auto; border: none; ouline: none;" /></a></p>
-                            <p><font face="verdana" size="3" color="black">{{ video.video_rel.title }}</font></p>
-                          {% endfor %}
-                          <br/><br/>
+                        </td>
+                      </tr>
+                          {% if videos|length > 1 %}
+                            <tr>
+                              <td width="20" colspan="1"></td>
+                              {% for video in videos[:2] %}
+                                {% set video_url = channel_url + '&v=' + video.id %}
+                                <td width="270" valign="top" align="center" colspan="1">
+                                  <a href="{{ video_url }}" border="0" style="border: none; outline: none; width: 100%; display: block;">
+                                    <img src="{{ video.default_thumbnail }}" border="0" alt="" width="270" height="152" style="display: block; margin: 0 auto; border: none; ouline: none;" /></a>
+                                  <p style="display: block; width: 100%;"><font face="verdana" size="3" color="black">{{ video.video_rel.title }}</font></p>
+                                </td>
+                                <td width="20" colspan="1"></td>
+                              {% endfor %}
+                            </tr>
+                          {% else %}
+                          {% set video_url = channel_url + '&v=' + videos[0].id %}
+                            <tr>
+                              <td width="20" colspan="1"></td>
+                              <td width="560" valign="top" align="center" colspan="3">
+                                <a href="{{ video_url }}" border="0" style="border: none; outline: none; width: 100%; display: block;">
+                                  <img src="{{ videos[0].default_thumbnail }}" border="0" alt="" width="270" height="152" style="display: block; margin: 0 auto; border: none; ouline: none;" /></a>
+                                <p style="display: block; width: 100%;"><font face="verdana" size="3" color="black">{{ videos[0].video_rel.title }}</font></p>
+                              </td>
+                              <td width="20" colspan="1"></td>
+                            </tr>
+                          {% endif %}
                         {% endfor %}
                       {% endif %}
+
+                  </table>
+                  <table border="0" cellpadding="0" cellspacing="0" width="600" bgcolor="white">
+                    <tr>
+                      <td width="20"></td>
+                      <td width="650" align="center" valign="top">
                       
                       <br/><br/>
+
+                      <!-- Horizontal Rule -->
+                      <table border="0" cellpadding="0" cellspacing="0" width="30%" height="2" bgcolor="bcbad4"><tr><td bgcolor="#bcbad4" height="2"><font size="0"></font></td></tr></table>
+
+                      <br/>
 
                       {% if new_channels %}
 
@@ -91,7 +139,7 @@ a:link, a:visited, div a {
                           {% set channel_url = url_for('share_redirect_root') + '&c=' + channel.id %}
 
                             <p><font face="verdana" size="4" color="#767472">{{ channel.owner_rel.display_name }} created a new collection.</font></p>
-                            <table border="0" cellpadding="0" cellspacing="0" height="100%" width="65%" bgcolor="white" style="border: 1px solid #c2c2c2;">
+                            <table border="0" cellpadding="0" cellspacing="0" width="60%" bgcolor="white" style="border: 1px solid #c2c2c2;">
                               <tr>
                                 <td align="center" valign="middle">
                                   <p><a href="{{ channel_url }}"><font face="verdana" size="4" color="black">{{ channel.title|upper }}</font></a></p>
@@ -105,7 +153,7 @@ a:link, a:visited, div a {
                                       <td colspan="1" width="50%" height="12">&nbsp;</td>
                                     </tr>
                                     <tr>
-                                      <td colspan="2" bgcolor="cad6d6" width="100%" height="20"></td>
+                                      <td colspan="2" bgcolor="bcbad4" width="100%" height="20"></td>
                                     </tr>
                                   </table>
                                 </td>
@@ -115,10 +163,11 @@ a:link, a:visited, div a {
                         {% endfor %}
                       {% endif %}
 
-                      <br/><br/><br/>
-                    </center>
+                      <br/><br/>
                   </td>
-                  <td width="36" colspan="1"></td>
+                  <td width="20" colspan="1"></td>
+                </tr>
+              </table>
                 </tr>
               </table>
             </td>
