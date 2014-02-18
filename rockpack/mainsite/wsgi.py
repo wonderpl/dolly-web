@@ -2,6 +2,7 @@
 # http://code.google.com/p/modwsgi/issues/detail?id=177
 import _strptime
 
+import logging
 from werkzeug.contrib.fixers import ProxyFix
 from flask import request
 from rockpack.mainsite import app, init_app
@@ -12,7 +13,7 @@ app.wsgi_app = ProxyFix(app.wsgi_app)
 
 if 'SENTRY_DSN' in app.config:
     from raven.contrib.flask import Sentry
-    Sentry(app, logging=app.config.get('SENTRY_ENABLE_LOGGING'))
+    Sentry(app, logging=app.config.get('SENTRY_ENABLE_LOGGING'), level=logging.WARN)
 
 if 'SECURE_SUBDOMAIN' in app.config:
     def check_if_secure():

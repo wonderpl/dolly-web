@@ -1,5 +1,6 @@
 import os
 import time
+import logging
 from boto.sqs import connect_to_region
 from boto.sqs.jsonmessage import JSONMessage
 from rockpack.mainsite import app, init_app
@@ -45,7 +46,7 @@ class SqsProcessor(object):
 
         if 'SENTRY_DSN' in app.config:
             from raven.contrib.flask import Sentry
-            Sentry(app, logging=app.config.get('SENTRY_ENABLE_LOGGING'))
+            Sentry(app, logging=app.config.get('SENTRY_ENABLE_LOGGING'), level=logging.WARN)
 
         while True:
             if os.path.exists('/tmp/sqs-%s.lock' % self.queue_name):
