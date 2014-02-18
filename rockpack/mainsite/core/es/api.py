@@ -383,7 +383,7 @@ class ESVideoAttributeMap:
     def get_comments(self):
         from rockpack.mainsite.services.video.models import VideoInstanceComment
         d = dict(
-            counts=VideoInstanceComment.query
+            count=VideoInstanceComment.query
             .filter_by(video_instance=self.video_instance.id).count()
         )
         return d
