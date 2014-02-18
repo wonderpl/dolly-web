@@ -1,10 +1,9 @@
 import wtforms as wtf
-import pyes
 from flask import request, abort
 from flask.ext.wtf import Form
 from collections import defaultdict
 from sqlalchemy import func, null
-from sqlalchemy.orm import contains_eager, lazyload, joinedload
+from sqlalchemy.orm import contains_eager, lazyload
 from sqlalchemy.sql.expression import desc
 from rockpack.mainsite import app
 from rockpack.mainsite.core import ooyala
@@ -14,7 +13,7 @@ from rockpack.mainsite.core.oauth.decorators import check_authorization
 from rockpack.mainsite.core.es import use_elasticsearch, filters
 from rockpack.mainsite.core.es.search import VideoSearch, ChannelSearch
 from rockpack.mainsite.services.video import models
-from rockpack.mainsite.services.user.models import UserActivity, User
+from rockpack.mainsite.services.user.models import User
 
 
 def _filter_by_category(query, type, category_id):
@@ -164,9 +163,9 @@ def get_local_videos(loc, paging, with_channel=True, include_invisible=False, re
         func.count(models.VideoInstanceComment.id)
     ).join(
         models.Video, models.Video.id == models.VideoInstance.video).\
-        options(contains_eager(models.VideoInstance.video_rel)
-                ).outerjoin(models.VideoInstanceComment,
-            models.VideoInstanceComment.video_instance == models.VideoInstance.id).\
+        options(contains_eager(models.VideoInstance.video_rel)).\
+        outerjoin(models.VideoInstanceComment,
+                  models.VideoInstanceComment.video_instance == models.VideoInstance.id).\
         group_by(models.VideoInstance.id, models.Video.id)
 
     if include_invisible is False:
@@ -270,16 +269,12 @@ class VideoWS(WebService):
     def video_starring_users(self, video_id):
         users = User.query.join(
             models.Channel,
-            models.Channel.owner == User.id
+            (models.Channel.owner == User.id) &
+            (models.Channel.favourite == True)
         ).join(
             models.VideoInstance,
-            models.VideoInstance.channel == models.Channel.id
-        ).join(
-            models.Video,
-            models.Video.id == models.VideoInstance.video
-        ).filter(
-            models.VideoInstance.is_favourite == True,
-            models.Video.id == video_id
+            (models.VideoInstance.channel == models.Channel.id) &
+            (models.VideoInstance.video == video_id)
         ).order_by(
             models.VideoInstance.date_added.desc()
         )
