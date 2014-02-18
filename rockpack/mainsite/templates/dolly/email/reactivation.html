@@ -1,5 +1,5 @@
 {% macro avatar_img(avatar) -%}
-{{ avatar.thumbnail_medium|default(config.ASSETS_URL + '/assets/emails/images/davatar.png', true) }}
+{{ avatar.thumbnail_medium|default(config.EMAIL_ASSETS_URL + '/assets/emails/images/davatar.png', true) }}
 {%- endmacro %}
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html>
@@ -64,7 +64,7 @@ a:link, a:visited, div a {
                     {% if user.avatar %}
                       <img src="{{ user.avatar.url }}" style="display: block; width: 60px; height: 60px; border: none; outline: none;" border="0" width="60" height="60" />
                     {% else %}
-                      <img src="{{ config.ASSETS_URL }}/assets/dolly/img/emails/avatar-small.png" style="display: block; width: 60px; height: 60px; border: none; outline: none;" border="0" width="60" height="60" />
+                      <img src="{{ config.EMAIL_ASSETS_URL }}/assets/dolly/img/emails/avatar-small.png" style="display: block; width: 60px; height: 60px; border: none; outline: none;" border="0" width="60" height="60" />
                     {% endif %}
 
                     <h1><font face="verdana" size="4" color="#767472" style="font-weight: normal; font-size: 22px; line-height: 26px;">Hello {{ user.display_name }},</font></h1>

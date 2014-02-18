@@ -1,5 +1,5 @@
 {% macro avatar_img(avatar) -%}
-{{ avatar.thumbnail_medium|default(config.ASSETS_URL + '/assets/emails/images/davatar.png', true) }}
+{{ avatar.thumbnail_medium|default(config.EMAIL_ASSETS_URL + '/assets/emails/images/davatar.png', true) }}
 {%- endmacro %}
 <html>
 <head>
@@ -16,7 +16,7 @@
 
 <div style="width:600px; height: 78px; margin:0px 20px 0 20px; text-align:center; ">
   <a href="{{ config.ITUNES_APP_LINK }}&ct=reactivation" target="_new">
-    <img src="{{ config.ASSETS_URL }}/assets/emails/images/blueLogo.png" style="margin: 15px 0; width:45px; height:46px; border:0; ">
+    <img src="{{ config.EMAIL_ASSETS_URL }}/assets/emails/images/blueLogo.png" style="margin: 15px 0; width:45px; height:46px; border:0; ">
   </a>
 </div>
 
@@ -58,7 +58,7 @@
             </a>
             <a style="float:left; color:#282d33; text-decoration:none; font-size:12px; width:174px;" href="{{ video_url }}">{{ video.video_rel.title }}</a><br/>
             {% if video.likes %}
-            <a style="float:left; background: #fff url({{ config.ASSETS_URL }}/assets/emails/images/heart.png) no-repeat top left; background-size:20px;  width:134px; height:20px; padding-top:5px; padding-left:25px; color:#282d33; text-decoration:none; font-size:12px;" href="{{ video_url }}">{{ video.likes }}</a>
+            <a style="float:left; background: #fff url({{ config.EMAIL_ASSETS_URL }}/assets/emails/images/heart.png) no-repeat top left; background-size:20px;  width:134px; height:20px; padding-top:5px; padding-left:25px; color:#282d33; text-decoration:none; font-size:12px;" href="{{ video_url }}">{{ video.likes }}</a>
             {% endif %}
           </div>
           {% endfor %}
@@ -107,14 +107,14 @@
   {# Get the app button #}
   <div style="float:left; width:600px; margin:40px 0px 0 0px; text-align:center; ">
     <a href="{{ config.ITUNES_APP_LINK }}&ct=reactivation" target="_new">
-      <img src="{{ config.ASSETS_URL }}/assets/emails/images/openapp.png" style="margin:0; width:169px;  border:0;  border-bottom: 2px solid #e5e5e5;">
+      <img src="{{ config.EMAIL_ASSETS_URL }}/assets/emails/images/openapp.png" style="margin:0; width:169px;  border:0;  border-bottom: 2px solid #e5e5e5;">
     </a>
   </div>
 
   {# Logo #}
   <div style="float:left; width:600px; margin:40px 0px 0 0px; text-align:center; ">
     <a href="{{ url_for('homepage') }}" target="_new">
-      <img src="{{ config.ASSETS_URL }}/assets/emails/images/logo.png" style="margin:0; width:131px;  border:0;  ">
+      <img src="{{ config.EMAIL_ASSETS_URL }}/assets/emails/images/logo.png" style="margin:0; width:131px;  border:0;  ">
     </a>
   </div>
 

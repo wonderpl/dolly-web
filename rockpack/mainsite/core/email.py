@@ -8,6 +8,12 @@ from rockpack.mainsite.helpers.urls import url_for
 # Pick title from a html string
 TITLE_RE = re.compile('<title>([^<]+)</title>')
 
+# Force https for static images in html email (seems to be needed by yahoo mail)
+_assets_url = app.config.get('ASSETS_URL', '')
+if _assets_url.startswith('//'):
+    _assets_url = 'https:' + _assets_url
+app.config['EMAIL_ASSETS_URL'] = _assets_url
+
 
 env = Environment(loader=PackageLoader('rockpack.mainsite', app.config['EMAIL_TEMPLATE_PATH']))
 env.globals.update(config=app.config, url_for=url_for)

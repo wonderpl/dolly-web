@@ -32,10 +32,6 @@ OBJECT_NAME_MAP = dict(
 def send_share_email(recipient, user, object_type, object, link):
     object_type_name = OBJECT_NAME_MAP[object_type]
     template = email.env.get_template('share.html')
-    assets_url = app.config.get('ASSETS_URL', '')
-    if assets_url.startswith('//'):
-        # Force https for static images in html email (seems to be needed by yahoo mail)
-        assets_url = 'https:' + assets_url
     if app.config.get('DOLLY') and object_type == 'channel':
         top_videos = VideoInstance.query.filter_by(channel=object.id).limit(3)
     else:
@@ -47,7 +43,6 @@ def send_share_email(recipient, user, object_type, object, link):
         object_type_name=object_type_name,
         object=object,
         top_videos=top_videos,
-        assets=assets_url,
     )
     email.send_email(recipient, body)
 

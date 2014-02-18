@@ -69,7 +69,7 @@ a:link, a:visited, div a {
                       {% if user.avatar.url %}
                         <img src="{{ user.avatar.url }}" style="display: block; width: 60px; height: 60px; border: 3px solid #bcbad4; outline: none;" border="0" width="60" height="60" />
                       {% else %}
-                        <img src="{{ config.ASSETS_URL }}/assets/dolly/img/emails/avatar-small.png" style="display: block; width: 60px; height: 60px; border: none; outline: none;" border="0" width="60" height="60" />
+                        <img src="{{ config.EMAIL_ASSETS_URL }}/assets/dolly/img/emails/avatar-small.png" style="display: block; width: 60px; height: 60px; border: none; outline: none;" border="0" width="60" height="60" />
                       {% endif %}
 
                       <h1><font face="verdana" size="3" color="#767472" style="font-weight: normal; font-size: 20px; line-height: 28px;">{{ user.display_name }} shared a {{ object_type_name }} <br/>with you with Wonder PL.</font></h1>
