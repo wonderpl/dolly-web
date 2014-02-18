@@ -143,10 +143,10 @@ def get_box_value(value):
     return value
 
 
-def resize_and_upload(fp, cfgkey, aoi=None):
+def resize_and_upload(fp, cfgkey, aoi=None, name=None):
     """Takes file-like object and uploads thumbnails to s3."""
     uploader = imaging.ImageUploader()
-    new_name = make_id()
+    new_name = name or make_id()
 
     # Resize images
     resizer = imaging.Resizer(app.config['%s_IMAGES' % cfgkey])

@@ -171,9 +171,7 @@ def print_model_shards(length=3, video=False, channel=False):
         print shard
 
 
-@manager.command
-def update_image_thumbnails(fieldname):
-    """Re-process all images for the specified Model.field."""
+def _parse_fieldname(fieldname):
     from rockpack.mainsite.services.user import api
     try:
         model, fieldname = fieldname.split('.')
@@ -182,8 +180,14 @@ def update_image_thumbnails(fieldname):
     except Exception, e:
         print >>sys.stderr, 'Invalid field name: %s: %s' % (fieldname, e)
         sys.exit(2)
-
     cfgkey = model.__table__.columns.get(fieldname).type.cfgkey
+    return model, cfgkey
+
+
+@manager.command
+def update_image_thumbnails(fieldname):
+    """Re-process all images for the specified Model.field."""
+    model, cfgkey = _parse_fieldname(fieldname)
     for instance in model.query.filter(getattr(model, fieldname) != ''):
         try:
             data = get_external_resource(getattr(instance, fieldname).original)
@@ -195,6 +199,13 @@ def update_image_thumbnails(fieldname):
         image_path = resize_and_upload(data, cfgkey, aoi)
         setattr(instance, fieldname, image_path)
         instance.save()
+
+
+@manager.command
+def upload_default_image(fieldname, filename, name=None):
+    model, cfgkey = _parse_fieldname(fieldname)
+    with open(filename) as img:
+        resize_and_upload(img, cfgkey, name=name)
 
 
 @manager.command
