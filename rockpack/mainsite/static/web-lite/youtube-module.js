@@ -1,64 +1,45 @@
 
 /* ======================================= */
-/*  RequestAnimationFrame polyfill ( Courtesy of Paul Irish )
-/*  Date: Thurs 9th January 2014
-/* ======================================= */
-
-(function() {
-    var lastTime = 0;
-    var vendors = ['webkit', 'moz'];
-    for(var x = 0; x < vendors.length && !window.requestAnimationFrame; ++x) {
-        window.requestAnimationFrame = window[vendors[x]+'RequestAnimationFrame'];
-        window.cancelAnimationFrame =
-          window[vendors[x]+'CancelAnimationFrame'] || window[vendors[x]+'CancelRequestAnimationFrame'];
-    }
-    if (!window.requestAnimationFrame)
-        window.requestAnimationFrame = function(callback, element) {
-            var currTime = new Date().getTime();
-            var timeToCall = Math.max(0, 16 - (currTime - lastTime));
-            var id = window.setTimeout(function() { callback(currTime + timeToCall); },
-              timeToCall);
-            lastTime = currTime + timeToCall;
-            return id;
-        };
-    if (!window.cancelAnimationFrame)
-        window.cancelAnimationFrame = function(id) {
-            clearTimeout(id);
-        };
-}());
-
-/* ======================================= */
-/*  Custom Wonder UI module for the Ooyala player
+/*  UI Module for youtube videos on the Web Lite player
 /*  Date: Thurs 9th January 2014
 /* ======================================= */
 
 (function(w,d){
 
     var _ = {
+        data: window.videoData,
+
+        // Status vars
         framecount: 0,
+        newvolume: 1,
         currentvolume: 0,
-        newvolume: 100,
         played: false,
         scrubbed: false,
         scrubbing: false,
         loaded: false,
-        mousedown: false,
-        mousetarget: undefined,        
-        displayTime: '--:--',
-        time: 0,
-        duration: 00,
         state: {
             playing: false,
             fullscreen: false
         },
-        UA: w.navigator.userAgent.toLowerCase(),
-        elements: {},
+        
+        // UI vars
+        mousedown: false,
+        mousetarget: undefined,
+        controlshovered: true,
+
+        // Timing vars
+        displayTime: '--:--',
+        time: 0,
+        duration: 00,
         timers: {
             seek: 11,
             buffer: 0,
             interaction: 0,
             vol: 0
-        }
+        },
+
+        UA: window.navigator.userAgent.toLowerCase(),
+        elements: {}
     };
 
     _.WonderYTModule = function( elem, video, opts, data ) {
@@ -96,7 +77,9 @@
 
     // Add event listeners
     _.init = function () {
-        _.ie8 = ( _.hasClass(d.querySelector('html'), 'ie8') ) ? true : false;
+
+        _.ie8 = ( _.hasClass(document.querySelector('html'), 'ie8') ) ? true : false;
+        _.ie10 = ( _.UA.indexOf('msie 1') !== -1 ) ? true : false;
         _.ipad = ( _.UA.indexOf('ipad') !== -1 ) ? true : false;
         _.ios = ( _.UA.indexOf('ipad') !== -1 || _.UA.indexOf('iphone') !== -1 ) ? true : false;
 
@@ -126,30 +109,34 @@
         _.elements.scrubber_progress_vid = d.querySelector('.scrubber-progress.vid');
         _.elements.scrubber_handle_vid = d.querySelector('.scrubber-handle.vid');
         _.elements.scrubber_vol = d.querySelector('.scrubber.vol');
+        _.elements.scrubber_target_vol = d.querySelector('.scrubber-target.vol');
         _.elements.scrubber_progress_vol = d.querySelector('.scrubber-progress.vol');
         _.elements.scrubber_handle_vol = d.querySelector('.scrubber-handle.vol');
+        _.elements.scrubber_timer = document.querySelector('.scrubber-timer');
 
         // Listen for user interaction and show and hide the nav as necessary
-        _.listen(_.elements.wrapper, 'mousemove', _.interaction);
-        _.listen(_.elements.controls, 'mousemove', _.interaction);
-        _.listen(_.elements.poster, 'mousemove', _.interaction);
-        _.listen(_.elements.loader, 'mousemove', _.interaction);
-        _.listen(_.elements.playbutton, 'mousemove', _.interaction);
-        _.listen(_.elements.bigplaybutton, 'mousemove', _.interaction);
-        _.listen(_.elements.pausebutton, 'mousemove', _.interaction);
-        _.listen(_.elements.fullscreenbutton, 'mousemove', _.interaction);
-        _.listen(_.elements.volumebutton, 'mousemove', _.interaction);
-        _.listen(_.elements.timer, 'mousemove', _.interaction);
-        _.listen(_.elements.scrubbers, 'mousemove', _.interaction);
-        _.listen(_.elements.scrubber_handles, 'mousemove', _.interaction);
-        _.listen(_.elements.scrubber_targets, 'mousemove', _.interaction);
-        _.listen(_.elements.scrubber_trans, 'mousemove', _.interaction);
-        _.listen(_.elements.scrubber_vid, 'mousemove', _.interaction);
-        _.listen(_.elements.scrubber_progress_vid, 'mousemove', _.interaction);
-        _.listen(_.elements.scrubber_handle_vid, 'mousemove', _.interaction);
-        _.listen(_.elements.scrubber_vol, 'mousemove', _.interaction);
-        _.listen(_.elements.scrubber_progress_vol, 'mousemove', _.interaction);
-        _.listen(_.elements.scrubber_handle_vol, 'mousemove', _.interaction);    
+        if ( _.isTouchDevice() === false ) {
+            _.listen(_.elements.wrapper, 'mousemove', _.interaction);
+            _.listen(_.elements.controls, 'mousemove', _.interaction);
+            _.listen(_.elements.poster, 'mousemove', _.interaction);
+            _.listen(_.elements.loader, 'mousemove', _.interaction);
+            _.listen(_.elements.playbutton, 'mousemove', _.interaction);
+            _.listen(_.elements.bigplaybutton, 'mousemove', _.interaction);
+            _.listen(_.elements.pausebutton, 'mousemove', _.interaction);
+            _.listen(_.elements.fullscreenbutton, 'mousemove', _.interaction);
+            _.listen(_.elements.volumebutton, 'mousemove', _.interaction);
+            _.listen(_.elements.timer, 'mousemove', _.interaction);
+            _.listen(_.elements.scrubbers, 'mousemove', _.interaction);
+            _.listen(_.elements.scrubber_handles, 'mousemove', _.interaction);
+            _.listen(_.elements.scrubber_targets, 'mousemove', _.interaction);
+            _.listen(_.elements.scrubber_trans, 'mousemove', _.interaction);
+            _.listen(_.elements.scrubber_vid, 'mousemove', _.interaction);
+            _.listen(_.elements.scrubber_progress_vid, 'mousemove', _.interaction);
+            _.listen(_.elements.scrubber_handle_vid, 'mousemove', _.interaction);
+            _.listen(_.elements.scrubber_vol, 'mousemove', _.interaction);
+            _.listen(_.elements.scrubber_progress_vol, 'mousemove', _.interaction);
+            _.listen(_.elements.scrubber_handle_vol, 'mousemove', _.interaction);    
+        }
 
         // Listen for interaction on the actual UI contols
         _.listen(_.elements.playbutton, 'click', _.play);
@@ -160,9 +147,10 @@
 
         // Decide which listeners to use for the scrubbers.
         if ( _.isTouchDevice() ) {
+            // _.listen(_.elements.loader, 'touchstart', function(e){event.preventDefault();});
+            // _.listen(_.elements.loader, 'touchend', _.interaction);
             _.addClass(_.elements.controls, 'show');
-            // _.listen(_.elements.loader, 'touchend', _.toggleControls);
-            _.listen(_.elements.loader, 'touchend', _.interaction);
+            _.listen(_.elements.loader, 'click', _.toggleControls);
             _.listen(_.elements.scrubber_trans, 'touchmove', _.scrubTouch);
             _.listen(_.elements.scrubber_trans, 'touchstart', _.scrubDown);
             _.listen(_.elements.scrubber_trans, 'touchleave', _.scrubUp);
@@ -173,13 +161,31 @@
             _.listen(_.elements.scrubber_trans, 'mousedown', _.scrubDown);
             _.listen(_.elements.scrubber_trans, 'mouseup', _.scrubUp);
             _.listen(_.elements.scrubber_trans, 'mouseleave', _.scrubUp);
+            
+            _.listen(_.elements.controls, 'mouseleave', function(){
+                _.controlshovered = false;
+            });
+            _.listen(_.elements.controls, 'mouseenter', function(){
+                _.controlshovered = true;
+            });
         }
 
         if ( _.ios === true ) {
             _.addClass( _.elements.controls, 'volume-disabled' );
         }
 
-        requestAnimationFrame( _.Tick );
+        Conduit.add('yttick', _.ytTick);
+        Conduit.add('updateTimers', _.updateTimers);
+        Conduit.add('bufferTick', _.bufferTick);
+        if ( _.ie8 === false && _.flash === false ) {
+            Conduit.add('moveBufferBar', _.moveBufferBar);    
+        }
+        Conduit.add('uiTick', _.uiTick);
+        Conduit.add('actionTick', _.actionTick);
+        if ( _.ie8 === true ) {
+            Conduit.add('ieTick', _.ieTick);    
+        }
+        Conduit.start();
     };
 
     _.onError = function (error, info) {
@@ -464,15 +470,16 @@
     };
 
     _.showLoader = function () {
-        console.log('showing loader');
         _.addClass( _.elements.scrubber_vid, 'loading' );
         _.addClass( _.elements.scrubber_buffer, 'hide' );
+        _.addClass( _.elements.scrubber_timer, 'show' );
         _.elements.loader.className = 'show';
     };
 
     _.hideLoader = function () {
         _.removeClass( _.elements.scrubber_vid, 'loading' );
         _.removeClass( _.elements.scrubber_buffer, 'hide' );
+        _.removeClass( _.elements.scrubber_timer, 'show' );
         _.elements.loader.className = '';
     };
 
@@ -486,34 +493,41 @@
         _.addClass( _.elements.controls, 'hide' );
         _.removeClass( _.elements.controls, 'show' );
         _.removeClass( _.elements.scrubber_vol, 'vol-visible' );   
+        _.removeClass( _.elements.scrubber_target_vol, 'vol-visible' );   
     };
 
     // A user interaction has been detected, show the UI and 
     // set a timer to hide it again
     _.interaction = function () {
-        _.showUI();
-        _.timers.interaction = 0;
+        if ( _.controlshovered === false ) {
+            _.showUI();
+            _.timers.interaction = 0;            
+        }
     };
 
-    _.ActionTick = function () {
+    _.actionTick = function () {
         if ( _.timers.seek === 10 ) {
             _.seek( _.newtime );    
             _.time = _.newtime;
         }
     };
 
-    _.UITick = function () {
-        // console.log(_.scrubbed);
+    _.uiTick = function () {
+
         if ( _.scrubbed === true ) {
             _.elements.scrubber_progress_vid.style.width = _.videoPercentage + '%';
             _.elements.scrubber_handle_vid.style.left = _.videoPercentage + '%';
+            _.elements.scrubber_timer.style.left = _.videoPercentage + '%';
+            _.elements.scrubber_timer.innerHTML = _.getTime( _.newtime );
             _.showLoader();
-        } else if ( _.loaded === true && _.time !== undefined ) {
+        } else if ( _.loaded === true && _.time !== undefined && _.scrubbed === false && _.timers.seek > 60 ) {
             var percentage = ( (_.time/_.duration) * 100 ) + '%';        
             _.elements.scrubber_progress_vid.style.width = percentage;
             _.elements.scrubber_handle_vid.style.left = percentage;
+            _.elements.scrubber_timer.style.left = percentage;
+            _.elements.scrubber_timer.innerHTML = _.getTime( _.time );
         }
-
+        
         // Check if the volume has changed
         if ( _.currentvolume != _.newvolume ) {
             _.currentvolume = _.newvolume;
@@ -528,8 +542,8 @@
                 _.elements.volumebutton.className = 'volume wonder-volume vol-3';
             }
 
-            _.elements.scrubber_progress_vol.style.height = ( _.newvolume ) + '%';
-            _.elements.scrubber_handle_vol.style.bottom = (( _.newvolume )-15) + '%';
+            _.elements.scrubber_progress_vol.style.height = ( _.newvolume * 100 ) + '%';
+            _.elements.scrubber_handle_vol.style.bottom = (( _.newvolume * 100 )-15) + '%';
         }
 
         // Update the time
@@ -540,29 +554,30 @@
         }
         _.elements.timer.innerHTML = _.displayTime;
 
-        if ( _.timers.interaction === 60 ) {
-            _.hideUI();         
+        if ( _.timers.interaction === 80 ) {
+            if ( _.isTouchDevice() === false && _.controlshovered === false ) {
+                _.hideUI();         
+            }
         }
     };
 
-    _.BufferTick = function () {
+    _.bufferTick = function () {
         if ( _.state.playing === true ) {
             _.timers.buffer++;
         }
         if ( _.timers.buffer === 60 ) {
-            if ( _.time !== 0 ) {
-                _.showLoader();
-            }
-        }
-        if ( _.timers.buffer = 10 && _.ie8 === false ) {
-            if ( _.loaded === true && _.buffer !== undefined ) {
-                var percentage = ( (_.buffer/_.duration) * 100 ) + '%';      
-                _.elements.scrubber_buffer.style.width = percentage;            
-            }    
+            _.showLoader();
         }
     };
 
-    _.IETick = function () {
+    _.moveBufferBar = function () {
+        if ( _.timers.buffer === 10 && _.loaded === true && _.buffer !== undefined ) {
+            var percentage = ( (_.buffer/_.duration) * 100 ) + '%';
+            _.elements.scrubber_buffer.style.width = percentage;            
+        }
+    };
+
+    _.ieTick = function () {
         var ww = _.ww();
         if ( !('width' in _) || _.width != ww ) {
             if ( ww <= 480 ) {
@@ -582,7 +597,13 @@
         _.width = ww;
     };
 
-    _.YTTick = function () {
+    _.updateTimers = function () {
+        _.timers.seek++;
+        _.timers.interaction++;
+        _.framecount++;
+    };
+
+    _.ytTick = function () {
         if ( _.loaded === true ) {
             var time = _.player.getCurrentTime();
 
@@ -601,19 +622,19 @@
 
     _.Tick = function () {
 
-        // Because we don't have the Ooyala message bus, we need to make our on OnTimeUpdate ticker
-        _.YTTick();
+        // // Because we don't have the Ooyala message bus, we need to make our on OnTimeUpdate ticker
+        // _.YTTick();
 
-        // Increment our timers
-        _.timers.seek++;
-        _.timers.interaction++;
-        _.framecount++;
+        // // Increment our timers
+        // _.timers.seek++;
+        // _.timers.interaction++;
+        // _.framecount++;
 
-        _.BufferTick();
-        _.UITick();
-        _.ActionTick();
-        _.IETick();
-        requestAnimationFrame( _.Tick );
+        // _.BufferTick();
+        // _.UITick();
+        // _.ActionTick();
+        // _.IETick();
+        // requestAnimationFrame( _.Tick );
     };
 
     /*  Utility Functions

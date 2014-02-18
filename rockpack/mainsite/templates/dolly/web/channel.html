@@ -44,13 +44,13 @@
     "assets/web-lite/ie.less"
   %}<!--[if lt IE 9]><link rel="stylesheet" href="{{ ASSET_URL }}"/><![endif]-->{% endassets %}
 
-  {% assets filters="less,cssmin", output="gen/wonderplayer_css.%(version)s.css", 
+  {% assets filters="less,cssmin", output="gen/wonderplayer_weblite_css.%(version)s.css", 
     depends="assets/wonderplayer/partials/_*.less", 
     "assets/wonderplayer/main.less" 
   %}<link rel="stylesheet" href="{{ ASSET_URL }}"/>{% endassets %}
 
   <!-- Conditional stylesheet for IE8 and below -->
-  {% assets filters="less,cssmin", output="gen/wonderplayer_ie_css.%(version)s.css", 
+  {% assets filters="less,cssmin", output="gen/wonderplayer_weblite_ie_css.%(version)s.css", 
     depends="assets/wonderplayer/partials/_*.less", 
     "assets/wonderplayer/ie.less" 
   %}<!--[if lte IE 10]><link rel="stylesheet" href="{{ ASSET_URL }}"/><![endif]-->{% endassets %}
@@ -70,7 +70,9 @@
     "web-lite/controllers/controllers.js",  
     "web-lite/directives/directives.js",  
     "web-lite/services/services.js",
-    "web-lite/filters/filters.js"
+    "web-lite/filters/filters.js",
+    "web-lite/conduit.js",
+    "web-lite/youtube-module.js"
   %}<script type="text/javascript" src="{{ ASSET_URL }}"></script>{% endassets %}-->
 
   <script src="/static/web-lite/vendor/tween.js"></script>

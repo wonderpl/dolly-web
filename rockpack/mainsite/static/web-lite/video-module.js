@@ -48,7 +48,7 @@ OO.plugin("WonderUIModule", function (OO) {
     var wonder_template = 
         '<div id="wonder-poster" class="loading">' +
             '<img src="/static/assets/wonderplayer/img/trans.png" alt="" id="wonder-poster" class="blur"/>' +
-            '<table width="100%" height="100%" cellpadding="0" cellspacing="0"><tr><td width="100%" height="100%" align="center" valign="middle">Your video is loading</td></tr></table>' +
+            '<table width="100%" height="100%" cellpadding="0" cellspacing="0"><tr><td width="100%" height="100%" align="center" valign="middle"></td></tr></table>' +
         '</div>' +
         '<div id="wonder-loader" class="show f-sans f-uppercase"><span>Your video is loading</span></div>' + 
         '<a class="wonder-play-big"></a>' + 
@@ -177,6 +177,7 @@ OO.plugin("WonderUIModule", function (OO) {
             _.listen(_.elements.scrubber_vol, 'mousemove', _.interaction);
             _.listen(_.elements.scrubber_progress_vol, 'mousemove', _.interaction);
             _.listen(_.elements.scrubber_handle_vol, 'mousemove', _.interaction);        
+            document.onkeypress = _.spacebarPressed;
         }
         
 
@@ -237,6 +238,7 @@ OO.plugin("WonderUIModule", function (OO) {
         _.elements.poster.getElementsByTagName('img')[0].src = content.promo || content.promo_image;
         _.elements.poster.getElementsByTagName('td')[0].innerHTML = (_.data.title.replace(/_/g,' '));
         _.hideLoader();
+        _.elements.loader.getElementsByTagName('span')[0].innerHTML = '';
         _.removeClass( _.elements.poster, 'loading' );
         _.duration = content.duration/1000 || content.time;
 
@@ -292,6 +294,8 @@ OO.plugin("WonderUIModule", function (OO) {
             _.addClass(_.elements.playbutton, 'hidden');
             _.addClass(_.elements.bigplaybutton, 'hidden');
             _.removeClass(_.elements.pausebutton, 'hidden');
+            _.timers.interaction = 0;
+            _.controlshovered = false;
         }
         _.hideLoader();
         _.state.playing = true;
@@ -344,10 +348,12 @@ OO.plugin("WonderUIModule", function (OO) {
         if ( _.hasClass( _.elements.controls, 'show' ) ) {
             _.removeClass( _.elements.controls, 'show' );
             _.addClass( _.elements.controls, 'hide' );
+            _.addClass( _.elements.loader, 'no-cursor');
             return;
         } else {
             _.removeClass( _.elements.controls, 'show' );
             _.addClass( _.elements.controls, 'show' );
+            _.removeClass( _.elements.loader, 'no-cursor');
             return;
         }
         
@@ -387,6 +393,12 @@ OO.plugin("WonderUIModule", function (OO) {
             } else {
                 _.seek(0);
             }    
+        }
+    };
+
+    _.spacebarPressed = function(e) {
+        if ( e.keyCode === 32 ) {
+            _.togglePlay();
         }
     };
 
@@ -555,20 +567,21 @@ OO.plugin("WonderUIModule", function (OO) {
         _.addClass( _.elements.scrubber_vid, 'loading' );
         _.addClass( _.elements.scrubber_buffer, 'hide' );
         _.addClass( _.elements.scrubber_timer, 'show' );
-        _.elements.loader.className = 'show';
+        _.addClass( _.elements.loader, 'show' );
     };
 
     _.hideLoader = function () {
         _.removeClass( _.elements.scrubber_vid, 'loading' );
         _.removeClass( _.elements.scrubber_buffer, 'hide' );
         _.removeClass( _.elements.scrubber_timer, 'show' );
-        _.elements.loader.className = '';
+        _.removeClass( _.elements.loader, 'show' );
     };
 
     // Show the controls
     _.showUI = function () {
         _.addClass( _.elements.controls, 'show' );
         _.removeClass( _.elements.controls, 'hide' );
+        _.removeClass( _.elements.loader, 'no-cursor');
     };
 
     _.hideUI = function () {
@@ -576,6 +589,7 @@ OO.plugin("WonderUIModule", function (OO) {
         _.removeClass( _.elements.controls, 'show' );
         _.removeClass( _.elements.scrubber_vol, 'vol-visible' );   
         _.removeClass( _.elements.scrubber_target_vol, 'vol-visible' );   
+        _.addClass( _.elements.loader, 'no-cursor');
     };
 
     // A user interaction has been detected, show the UI and 

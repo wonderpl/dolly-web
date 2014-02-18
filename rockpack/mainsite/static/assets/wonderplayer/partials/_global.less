@@ -13,7 +13,7 @@ body, html {
 	background: transparent;
 	border: none;
 	outline: none;
-	position: absolute;
+	position: fixed;
 	left: 0;
 	top: 0;
 	width: 100%;
@@ -43,11 +43,11 @@ body, html {
 	position: relative;
 	overflow: hidden;
 
-	&:before {
-		content: '';
-		display: block;
-		padding-top: 56.25%;	
-	}
+	// &:before {
+	// 	content: '';
+	// 	display: block;
+	// 	padding-top: 56.25%;	
+	// }
 
 	iframe {
 		display: block;
@@ -71,10 +71,11 @@ body, html {
 	position: absolute;
 	overflow: hidden;
 
+
 	&:before {
-		content: '';
-		display: block;
-		padding-top: 56.25%;	
+		// content: '';
+		// display: block;
+		// padding-top: 56.25%;	
 	}
 
 	&.fullscreen {
@@ -241,6 +242,10 @@ body, html {
 		user-select: none;     
 		-webkit-tap-highlight-color: rgba(0,0,0,0);
 		cursor: pointer;
+
+		&.no-cursor {
+			cursor: none !important;
+		}
 
 		span {
 			position: absolute;
