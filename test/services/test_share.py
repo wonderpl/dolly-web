@@ -118,6 +118,22 @@ class TestShare(base.RockPackTestCase):
                 self.assertIn(('email', recipient),
                               [(f['external_system'], f['email']) for f in friends])
 
+    @patch_send_email()
+    def test_video_share_email(self, send_email):
+        with self.app.test_request_context():
+            with self.app.test_client() as client:
+                userid = self.create_test_user(avatar='avatar').id
+                r = client.post(
+                    '/ws/share/email/',
+                    data=json.dumps(dict(
+                        object_type='video_instance',
+                        object_id=VideoInstanceData.video_instance1.id,
+                        email=app.config['TEST_SHARE_EMAIL'],
+                    )),
+                    content_type='application/json',
+                    headers=[get_auth_header(userid)])
+                self.assertEquals(r.status_code, 204, r.data)
+
     @skip_unless_config('TEST_SHARE_EMAIL')
     def test_share_email_wo_patch(self):
         with self.app.test_client() as client:

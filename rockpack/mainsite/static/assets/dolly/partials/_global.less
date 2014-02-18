@@ -27,6 +27,10 @@ html, body {
 	margin: 0;
 }
 
+.desktop-break {
+	display: block;
+}
+
 .view-animate {
   -webkit-transition: opacity .4s ease-out;
   -moz-transition: opacity .4s ease-out;
@@ -164,6 +168,16 @@ a {
 
 	&.half-width {
 		width: 50%;
+		display: -moz-inline-stack;
+		display: inline-block;
+		vertical-align: middle;
+		*vertical-align: auto;
+		zoom: 1;
+		*display: inline;
+		vertical-align: top;
+	}
+	&.third-width {
+		width: 33.3333%;
 		display: -moz-inline-stack;
 		display: inline-block;
 		vertical-align: middle;
@@ -660,7 +674,12 @@ footer {
 	height: 420px;
 	position: relative;
 	display: block;
+
+	img {
+		max-width: none !important;
+	}
 }
+
 
 .gradient {
 	padding: 22px 0;

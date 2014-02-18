@@ -14,11 +14,11 @@
 
 				var mapOptions = {
 					zoom: 15,
-					center: new google.maps.LatLng(51.518662, -0.207372),
+					center: new google.maps.LatLng( attrs.lat, attrs.long ),
 					scrollwheel: false,
-					navigationControl: false,
-					mapTypeControl: false,
-					scaleControl: false,
+					// navigationControl: false,
+					// mapTypeControl: false,
+					// scaleControl: false,
 					draggable: false
 				}
 
@@ -27,7 +27,7 @@
 				var marker = new google.maps.Marker({
 					position: mapOptions.center,
 					map: scope.map,
-					title: 'Hello World!',
+					title: 'Wonder PL Offices',
 					icon: {
 						url: '/static/assets/dolly/img/map-marker.png',
 						origin: new google.maps.Point(0,0),

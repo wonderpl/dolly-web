@@ -2,51 +2,45 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Welcome to Wonder PL</title>
 <style type="text/css">
   /* Client-specific Styles */
-#outlook a{padding:0;} /* Force Outlook to provide a "view in browser" button. */
-body{width:100% !important;} .ReadMsgBody{width:100%;} .ExternalClass{width:100%;} /* Force Hotmail to display emails at full width */
-body{-webkit-text-size-adjust:none;} /* Prevent Webkit platforms from changing default text sizes. */
+  #outlook a{padding:0;} /* Force Outlook to provide a "view in browser" button. */
+  body{width:100% !important;} .ReadMsgBody{width:100%;} .ExternalClass{width:100%;} /* Force Hotmail to display emails at full width */
+  body{-webkit-text-size-adjust:none;} /* Prevent Webkit platforms from changing default text sizes. */
 
-  /* Reset Styles */
-body{margin:0; padding:0; background-color: #f9f9f9;}
-img{border:0; height:auto; line-height:100%; outline:none; text-decoration:none;}
-table td{border-collapse:collapse;}
-#backgroundTable{height:100% !important; margin:0; padding:0; width:100% !important;}
+    /* Reset Styles */
+  body{margin:0; padding:0; background-color: #f9f9f9;}
+  img{border:0; height:auto; line-height:100%; outline:none; text-decoration:none;}
+  table td{border-collapse:collapse;}
 
-body, #backgroundTable{
-  /*background-color:#;*/
-  font-family: verdana, sans-serif;
-  font-size: 14px;
-  color: #767472;
-}
+  body, #backgroundTable{
+    /*background-color:#;*/
+    font-family: verdana, sans-serif;
+    font-size: 14px;
+    color: #767472;
+  }
 
-h1 {
-  font-size: 22px;
-  line-height: 24px;
-  font-weight: normal;
-  color: #767472;
-}
+  h1 {
+    font-size: 22px;
+    line-height: 24px;
+    font-weight: normal;
+    color: #767472;
+  }
 
-p {
-  font-size: 18px;
-  line-height: 24px;
-  color: #767472;
-}
+  p {
+    font-size: 18px;
+    line-height: 24px;
+    color: #767472;
+  }
 
-/*.preheaderContent div{
-  color:#282d33;
-  font-family:Helvetica;
-  line-height:100%;
-  text-align:left;
-}
-*/
-a:link, a:visited, div a {
-  color:#5850bb;
-  font-weight:normal;
-  text-decoration:none;
-}
+  a:link, a:visited, div a {
+    color:#5850bb;
+    font-weight:normal;
+    text-decoration:none;
+  }
+
 </style>
 </head>
 <body leftmargin="0" marginwidth="0" topmargin="0" marginheight="0" offset="0">
@@ -54,44 +48,46 @@ a:link, a:visited, div a {
   <table border="0" cellpadding="0" cellspacing="0" width="100%" id="backgroundTable">
     <tr>
       <td align="center" valign="top">
-{% include "header.html" %}
+        {% include "header.html" %}
         <table border="0" cellpadding="0" cellspacing="0" width="100%" bgcolor="white">
           <tr>
             <td align="center">
-              <table border="0" cellpadding="0" cellspacing="0" width="600" bgcolor="white">
+              <table border="0" cellpadding="0" cellspacing="0" width="500" bgcolor="white">
                 <tr>
                   <td width="36" colspan="1"></td>
-                  <td align="left" valign="middle" height="120" colspan="1" width="528">
+                  <td align="center" valign="middle" height="120" colspan="1" width="428">
                     <br/>
-                    <h1><font face="verdana" size="4" color="#767472" style="font-weight: normal; font-size: 22px; line-height: 26px;">Hello {{ user.display_name }},</font></h1>
-                    <p><font face="verdana" size="3" color="#767472">Welcome to <a href="#">Wonder PL</a>, new home to the world’s best existing and original video content.</font></p>
-                    <p><font face="verdana" size="3" color="#767472">Now you are here, it’s easy to make yourself at home. Begin sharing your inspiration as soon as you find it, through your own personal collections. Watch free from clutter and distraction, on the cleanest player around. Live and feel better, within our very own quality communities of Culture, Wellness, Home &amp; Family, Food, the Mind and Entertainment.</font></p>
-                    <p><font face="verdana" size="3" color="#767472">And when indecision strikes, let Wonder PL’s <a href="#">Mood-Minder</a> find you the perfect video for right now, whichever way you might be feeling. Say hello to the next evolution of intelligent media.</font></p>
-                    <p><font face="verdana" size="3" color="#767472">We understand how important it is to keep good company, and our select partners and curators are what makes <a href="#">Wonder PL</a> the place to be. Start following some of them today for beautiful, exclusive content at your fingertips:</font></p>
+                    <h1><font face="verdana" size="4" color="#767472" style="font-weight: normal; font-size: 24px; line-height: 28px;">Hello {{ user.display_name }},</font></h1>
+                    <br/>
+                    <p><font face="verdana" size="4" color="#767472" style="font-size: 20px; line-height: 30px;">Welcome to <a href="#">Wonder PL</a>, new home to the world’s best existing and original video content.</font></p>
+                    <p><font face="verdana" size="4" color="#767472" style="font-size: 20px; line-height: 30px;">Now you are here, it’s easy to make yourself at home. Begin sharing your inspiration as soon as you find it, through your own personal collections. Watch free from clutter and distraction, on the cleanest player around. Live and feel better, within our very own quality communities of Culture, Wellness, Home &amp; Family, Food, the Mind and Entertainment.</font></p>
+                    <p><font face="verdana" size="4" color="#767472" style="font-size: 20px; line-height: 30px;">And when indecision strikes, let Wonder PL’s <a href="#">Mood-Minder</a> find you the perfect video for right now, whichever way you might be feeling. Say hello to the next evolution of intelligent media.</font></p>
+                    <p><font face="verdana" size="4" color="#767472" style="font-size: 20px; line-height: 30px;">We understand how important it is to keep good company, and our select partners and curators are what makes <a href="#">Wonder PL</a> the place to be. Start following some of them today for beautiful, exclusive content at your fingertips:</font></p>
                     <p>&nbsp;</p>
-                    <table border="0" cellpadding="0" cellspacing="0" width="100%" bgcolor="white">
+                    <table border="0" cellpadding="0" cellspacing="0" width="320" bgcolor="white">
                       <tr>
                         <td width="176" align="center" valign="top">
-                          <img src="{{ config.ASSETS_URL }}/assets/dolly/img/emails/avatar.png" width="132" height="132" />
-                          <h2><font face="verdana" size="3" color="#767472" style="font-weight: normal;">Inge Solheim</font></h2>
-                          <p><font face="verdana" size="2" color="#767472" style="line-height: 16px; font-size: 13px;">Description of the user, make me click. It needs to be alluring.</font></p>
-                        </td>
-                        <td width="176" align="center" valign="top">
-                          <img src="{{ config.ASSETS_URL }}/assets/dolly/img/emails/avatar.png" width="132" height="132" />
-                          <h2><font face="verdana" size="3" color="#767472" style="font-weight: normal;">Inge Solheim</font></h2>
-                          <p><font face="verdana" size="2" color="#767472" style="line-height: 16px; font-size: 13px;">Description of the user, make me click. It needs to be alluring.</font></p>
-                        </td>
-                        <td width="176" align="center" valign="top">
-                          <img src="{{ config.ASSETS_URL }}/assets/dolly/img/emails/avatar.png" width="132" height="132" />
-                          <h2><font face="verdana" size="3" color="#767472" style="font-weight: normal;">Inge Solheim</font></h2>
-                          <p><font face="verdana" size="2" color="#767472" style="line-height: 16px; font-size: 13px;">Description of the user, make me click. It needs to be alluring.</font></p>
+                          <img src="{{ config.ASSETS_URL }}/assets/dolly/img/emails/avatar.png" width="132" height="132" style="display: block;" />
+                          <h2><font face="verdana" size="3" color="#767472" style="font-weight: normal; font-size: 20px; line-height: 30px;">Inge Solheim</font></h2>
+                          <p><font face="verdana" size="4" color="#767472" style="font-size: 17px; line-height: 28px;">Description of the user, make me click. It needs to be alluring.</font></p>
+                          <p>&nbsp;</p>
+
+                          <img src="{{ config.ASSETS_URL }}/assets/dolly/img/emails/avatar.png" width="132" height="132" style="display: block;" />
+                          <h2><font face="verdana" size="3" color="#767472" style="font-weight: normal; font-size: 20px; line-height: 30px;">Inge Solheim</font></h2>
+                          <p><font face="verdana" size="4" color="#767472" style="font-size: 17px; line-height: 28px;">Description of the user, make me click. It needs to be alluring.</font></p>
+                          <p>&nbsp;</p>
+
+                          <img src="{{ config.ASSETS_URL }}/assets/dolly/img/emails/avatar.png" width="132" height="132" style="display: block;" />
+                          <h2><font face="verdana" size="3" color="#767472" style="font-weight: normal; font-size: 20px; line-height: 30px;">Inge Solheim</font></h2>
+                          <p><font face="verdana" size="2" color="#767472" style="font-size: 17px; line-height: 28px;">Description of the user, make me click. It needs to be alluring.</font></p>
+                          <p>&nbsp;</p>
                         </td>
                       </tr>
                     </table>
-                    <br/>
-                    <p><font face="verdana" size="3" color="#767472">You can find the answers to any more questions you might have for us here, but now we have met, rest assured we will keep you updated with upcoming releases and events, and continue to direct you to the most exclusive and exciting contemporary video content around.</font></p>
-                    <p><font face="verdana" size="3" color="#767472">Until then,</font></p>
-                    <p><font face="verdana" size="3" color="#767472">Fill your life with Wonder<br/>WONDER PL</font></p>
+
+                    <p><font face="verdana" size="4" color="#767472" style="font-size: 20px; line-height: 30px;">You can find the answers to any more questions you might have for us here, but now we have met, rest assured we will keep you updated with upcoming releases and events, and continue to direct you to the most exclusive and exciting contemporary video content around.</font></p>
+                    <p><font face="verdana" size="4" color="#767472" style="font-size: 20px; line-height: 30px;">Until then,</font></p>
+                    <p><font face="verdana" size="4" color="#767472" style="font-size: 20px; line-height: 30px;">Fill your life with Wonder<br/>WONDER PL</font></p>
                     <p>&nbsp;</p>
                   </td> 
                   <td width="36" colspan="1"></td>

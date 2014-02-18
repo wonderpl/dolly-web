@@ -67,19 +67,19 @@ a:link, a:visited, div a {
                       <br/><br/>
                       
                       {% if user.avatar.url is defined %}
-                        <img src="{{ user.avatar.url }}" style="display: block; width: 60px; height: 60px; border: none; outline: none;" border="0" width="60" height="60" />
+                        <img src="{{ user.avatar.url }}" style="display: block; width: 60px; height: 60px; border: 3px solid #bcbad4; outline: none;" border="0" width="60" height="60" />
                       {% else %}
                         <img src="{{ config.ASSETS_URL }}/assets/dolly/img/emails/avatar-small.png" style="display: block; width: 60px; height: 60px; border: none; outline: none;" border="0" width="60" height="60" />
                       {% endif %}
 
-                      <h1><font face="verdana" size="4" color="#767472" style="font-weight: normal; font-size: 22px; line-height: 26px;">{{ user.display_name }} shared a {{ object_type_name }} <br/>with you with Wonder PL.</font></h1>
+                      <h1><font face="verdana" size="3" color="#767472" style="font-weight: normal; font-size: 20px; line-height: 28px;">{{ user.display_name }} shared a {{ object_type_name }} <br/>with you with Wonder PL.</font></h1>
                       <br/>
 
                       {% if object_type == "channel" %}
-                        <p><a href="{{ link.url }}" border="0" style="border: none; outline: none;"><img src="{{ object.default_thumbnail }}" border="0" alt="" width="285" height="160" style="display: block; margin: 0 auto; border: none; ouline: none;" /></a></p>
+                        <a href="{{ link.url }}" border="0" style="border: none; outline: none;"><img src="{{ object.default_thumbnail }}" border="0" alt="" width="285" height="160" style="display: block; margin: 0 auto; border: 3px solid #bcbad4; ouline: none;" /></a>
                         <p style="width: 60%;"><font face="verdana" size="3" color="black">{{ object.title }}</font></p>
                       {% else %}
-                        <p><a href="{{ link.url }}" border="0" style="border: none; outline: none;"><img src="{{ object.default_thumbnail }}" border="0" alt="" width="285" height="160" style="display: block; margin: 0 auto; border: none; ouline: none;" /></a></p>
+                        <a href="{{ link.url }}" border="0" style="border: none; outline: none;"><img src="{{ object.default_thumbnail }}" border="0" alt="" width="285" height="160" style="display: block; margin: 0 auto; border: 3px solid #bcbad4; ouline: none;" /></a>
                         <p style="width: 60%;"><font face="verdana" size="3" color="black">{{ object.video_rel.title }}</font></p>
                       {% endif %}
 
