@@ -15,6 +15,8 @@ FORCE_INDEX_INSERT_REFRESH = False  # used by elasticsearch
 DATABASE_URL = ''  # e.g. postgresql://foo:bar@localhost:5432/rockpack
 SLAVE_DATABASE_URL = ''
 
+CACHE_TYPE = 'simple'
+
 AWS_ACCESS_KEY = None
 AWS_SECRET_KEY = None
 S3_BUCKET = 'media.dev.rockpack.com'

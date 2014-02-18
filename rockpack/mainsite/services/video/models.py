@@ -5,12 +5,12 @@ from sqlalchemy import (
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import relationship, aliased, lazyload
 from flask.ext.sqlalchemy import models_committed
+from rockpack.mainsite import app, cache
 from rockpack.mainsite.core.dbapi import db, defer_except
 from rockpack.mainsite.core.es import use_elasticsearch, api as es_api
 from rockpack.mainsite.helpers.db import add_base64_pk, add_video_pk, insert_new_only, ImageType, BoxType
 from rockpack.mainsite.helpers.urls import url_for
 from rockpack.mainsite.services.user.models import User
-from rockpack.mainsite import app
 
 
 class Locale(db.Model):
@@ -61,6 +61,16 @@ class Category(db.Model):
             query = query.filter(Category.parent.isnot(None))
         for category in query.order_by('parent asc'):
             yield category.id, unicode(category)
+
+    @classmethod
+    @cache.memoize(300)
+    def get_colour_map(cls):
+        colour = func.coalesce(Category.colour, ParentCategory.colour)
+        return dict(
+            Category.query.outerjoin(
+                ParentCategory, ParentCategory.id == Category.parent
+            ).filter(colour.isnot(None)).values(Category.id, colour)
+        )
 
 
 class CategoryTranslation(db.Model):
@@ -120,10 +130,9 @@ class Source(db.Model):
         return cls.get_sources().iteritems()
 
     @classmethod
+    @cache.memoize(3600)
     def get_sources(cls):
-        if not hasattr(cls, '_sources'):
-            cls._sources = dict(cls.query.values(cls.id, cls.label))
-        return cls._sources
+        return dict(cls.query.values(cls.id, cls.label))
 
     @classmethod
     def id_to_label(cls, id):
@@ -421,6 +430,10 @@ class Channel(db.Model):
         if not hasattr(self, '_video_count'):
             self._video_count = VideoInstance.query.filter_by(channel=self.id).value(func.count())
         return self._video_count
+
+    @property
+    def category_colour(self):
+        return Category.get_colour_map().get(self.category)
 
     def get_resource_url(self, own=False):
         view = 'userws.owner_channel_info' if own else 'userws.channel_info'

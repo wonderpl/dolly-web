@@ -38,6 +38,14 @@ class RockpackUserAgentParser(UserAgentParser):
 UserAgent._parser = RockpackUserAgentParser()
 
 
+try:
+    from flask.ext.cache import Cache
+except ImportError:
+    cache = type('Cache', (object,), dict(memoize=lambda *a: lambda f: f))()
+else:
+    cache = Cache(app, config=app.config)
+
+
 # hack to avoid django import issues via pyes
 os.environ['DJANGO_SETTINGS_MODULE'] = 'none'
 

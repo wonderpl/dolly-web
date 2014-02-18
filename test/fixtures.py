@@ -36,6 +36,7 @@ class CategoryData(DataSet):
         id = 1
         name = 'TV'
         parent = None
+        colour = '00ff00'
 
     class Series:
         id = 2
@@ -46,6 +47,7 @@ class CategoryData(DataSet):
         id = 3
         name = 'Music'
         parent = None
+        colour = 'dde6e5'
 
     class Rock:
         id = 4
@@ -277,7 +279,7 @@ class VideoData(DataSet):
         id = 'RP000001YCM2D3S3FXBPJWXVPQDJ3JA43YWGH4UH'
         title = 'Predator'
         source = 1
-        source_videoid = '0WEHHIzIFes'
+        source_videoid = 'qlicWUDf5MM'
         date_published = datetime(2013, 1, 1, 0, 0, 0)
 
     class video6:
