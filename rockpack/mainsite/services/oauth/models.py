@@ -131,7 +131,12 @@ class ExternalFriend(db.Model):
 
         graph = facebook.GraphAPI(token.external_token)
         # XXX: Paging not handled. If a user has more than 1000 friends, tough!
-        friends = graph.get_connections(token.external_uid, 'friends', limit=1000)
+        try:
+            friends = graph.get_connections(token.external_uid, 'friends', limit=1000)
+        except:
+            app.logger.exception('Unable to get connections for facebook user: %s (%s)',
+                                 userid, token.external_uid)
+            return
         external_friends = {}
         for friend in friends['data']:
             external_friends[friend['id']] = cls(
