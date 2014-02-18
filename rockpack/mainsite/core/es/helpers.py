@@ -259,7 +259,8 @@ class DBImport(object):
                     link_url=mapped.link_url,
                     link_title=mapped.link_title,
                     tags=mapped.tags,
-                    is_favourite=mapped.is_favourite
+                    is_favourite=mapped.is_favourite,
+                    most_influential=mapped.most_influential,
                 )
                 ev.manager.indexer.insert(v.id, rep)
 

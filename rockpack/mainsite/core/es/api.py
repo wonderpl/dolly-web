@@ -475,7 +475,9 @@ class ESVideoAttributeMap:
     @property
     def most_influential(self):
         # Default to True so that it automatically
-        # shows up in search
+        # shows up in search, except favs
+        if self.video_instance.is_favourite:
+            return False
         return True
 
     @property
