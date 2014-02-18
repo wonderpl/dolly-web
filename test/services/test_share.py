@@ -92,20 +92,19 @@ class TestShare(base.RockPackTestCase):
         with self.app.test_request_context():
             with self.app.test_client() as client:
                 userid = self.create_test_user().id
-                recipient = 'paulegan+unittest@rockpack.com'
+                recipient = 'noreply+unittest@rockpack.com'
                 r = client.post(
                     '/ws/share/email/',
-                    data=json.dumps({
-                        'object_type': 'channel',
-                        'object_id': ChannelData.channel1.id,
-                        'email': recipient,
-                        'external_system': 'email',
-                        'external_uid': '123'
-                    }),
+                    data=json.dumps(dict(
+                        object_type='channel',
+                        object_id=ChannelData.channel1.id,
+                        email=recipient,
+                        external_system='email',
+                        external_uid='123',
+                    )),
                     content_type='application/json',
                     headers=[get_auth_header(userid)])
                 self.assertEquals(r.status_code, 204, r.data)
-
                 self.assertEquals(send_email.call_count, 1)
                 self.assertEquals(send_email.call_args[0][0], recipient)
 
@@ -123,16 +122,19 @@ class TestShare(base.RockPackTestCase):
         with self.app.test_request_context():
             with self.app.test_client() as client:
                 userid = self.create_test_user(avatar='avatar').id
+                recipient = 'noreply+unittest@rockpack.com'
                 r = client.post(
                     '/ws/share/email/',
                     data=json.dumps(dict(
                         object_type='video_instance',
                         object_id=VideoInstanceData.video_instance1.id,
-                        email=app.config['TEST_SHARE_EMAIL'],
+                        email=recipient,
                     )),
                     content_type='application/json',
                     headers=[get_auth_header(userid)])
                 self.assertEquals(r.status_code, 204, r.data)
+                self.assertEquals(send_email.call_count, 1)
+                self.assertEquals(send_email.call_args[0][0], recipient)
 
     @skip_unless_config('TEST_SHARE_EMAIL')
     def test_share_email_wo_patch(self):
