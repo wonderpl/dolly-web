@@ -24,6 +24,7 @@
 	}
 
 	#wonder-controls {
+		height: 32px;
 
 		a {
 			&.hidden {
@@ -32,14 +33,14 @@
 
 			&.wonder-play {
 				width: 17%;
-				height: 38px;
-				background-size: 18px auto;
+				height: 32px;
+				background-size: 13px auto;
 			}
 
 			&.wonder-pause {
 				width: 17%;
-				height: 38px;
-				background-size: 18px auto;
+				height: 32px;
+				background-size: 13px auto;
 			}
 
 			&.wonder-volume {
@@ -59,8 +60,8 @@
 				right: 0px;
 				top: 0px;
 				width: 17%;
-				height: 38px;
-				background-size: 22px auto;
+				height: 32px;
+				background-size: 17px auto;
 			}
 		}
 	
@@ -76,9 +77,10 @@
 		// The wrappers for the scrubber bars
 		.scrubber {
 			&.vid {
-				top: 15px;
+				top: 13px;
 				width: 48%;
 				left: 20%;
+				height: 6px;
 			}
 
 			&.vol {
@@ -96,15 +98,22 @@
 			}
 		}
 
+		.scrubber-handle {
+			background-size: 12px auto;
+			&.vid {
+				top: -8px;
+			}
+		}
+
 		&.volume-disabled {
 			.scrubber {
 				&.vid {
-					width: 58%;
+					width: 59%;
 				}
 			}
 			.scrubber-target {
 				&.vid {
-					width: 71%;
+					width: 72%;
 				}
 			}
 		}

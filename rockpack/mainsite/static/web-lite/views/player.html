@@ -13,8 +13,8 @@
 <div class="bottom f-centered">
 	<h3 class="f-sans">(( videos[currentvideo].title ))</h3>
 	<div class="interactive">
-		<a ng-click="share('twitter')" class="weblite-icon-twitter"></a>
-		<a ng-click="share('facebook')" class="weblite-icon-facebook"></a>
+		<a ng-click="shareTwitter()" class="weblite-icon-twitter"></a>
+		<a ng-click="shareFacebook()" class="weblite-icon-facebook"></a>
 		<a ng-click="toggleEmbedOptions($event)" class="weblite-icon-embed"></a>
 	</div>
 	<div class="embed-options" ng-class="{ open: embedOptionsShowing }">

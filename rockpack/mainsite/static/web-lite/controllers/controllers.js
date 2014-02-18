@@ -78,6 +78,22 @@
             
         };
 
+        $scope.shareFacebook = function() {
+            console.log($rootScope.videos[$rootScope.currentvideo].video.thumbnail_url);
+            FB.ui({
+                method: 'feed',
+                link: $location.absUrl(),
+                picture: $rootScope.videos[$rootScope.currentvideo].video.thumbnail_url,
+                name: 'WonderPL',
+                caption: 'Shared a video with you'
+            });
+        };
+
+        $scope.shareTwitter = function(url) {
+            window.open("http://twitter.com/intent/tweet?url=#{url}");
+        };
+
+
     }]);
 
 

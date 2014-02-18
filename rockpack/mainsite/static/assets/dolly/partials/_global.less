@@ -99,7 +99,7 @@ a {
 
 		h2, h3, p, li {
 			text-align: left;
-			font-family: 'Lato', sans-serif;
+			font-family: 'proxima-nova', sans-serif;
 			font-style: normal;
 			font-weight: 400;
 			width: 90%;
@@ -145,7 +145,7 @@ a {
 			margin: 0 auto 22px auto;
 			text-align: center;
 			text-align: left;
-			font-family: 'Lato', sans-serif;
+			font-family: 'sans-serif', sans-serif;
 			font-style: normal;
 			font-weight: 400;
 
@@ -310,7 +310,8 @@ header {
 		top: 0;
 		height: 100%;
 		width: 125px;
-		background: transparent url('/static/assets/dolly/img/header-download-button.png') center center no-repeat;
+		background: transparent url('/static/assets/dolly/img/header-download-button-retina.png') center center no-repeat;
+		background-size: 100% auto;
 	}
 }
 
@@ -335,6 +336,13 @@ footer {
 	img {
 		display: block;
 		width: 100%;
+		visibility: hidden;
+	}
+
+	&:before {
+		// content: '';
+		// display: block;
+		// padding-top: 56.25%;
 	}
 }
 
