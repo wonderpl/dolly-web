@@ -438,7 +438,7 @@ class Channel(db.Model):
             except:
                 app.logger.exception('Unable to set cover from video: %s', self.id)
 
-    def add_videos(self, videos, tags=None, category=None, date_added=None, favourite=False):
+    def add_videos(self, videos, tags=None, category=None, date_added=None):
         instances = [
             VideoInstance(
                 channel=self.id,
@@ -446,7 +446,7 @@ class Channel(db.Model):
                 category=category or self.category,
                 tags=tags,
                 date_added=date_added,
-                is_favourite=favourite
+                is_favourite=self.favourite
             )
             for v in videos
         ]
