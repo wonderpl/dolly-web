@@ -33,7 +33,7 @@ class CronSqsProcessor(SqsProcessor):
 
         start_time = time.time()
         try:
-            manager.handle('cron', command)
+            manager.handle('cron', [command])
         except Exception:
             app.logger.exception('Failed to run command: %s', command)
             # message will re-appear on the queue after visibility timeout
