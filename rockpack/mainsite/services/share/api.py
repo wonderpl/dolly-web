@@ -36,12 +36,17 @@ def send_share_email(recipient, user, object_type, object, link):
     if assets_url.startswith('//'):
         # Force https for static images in html email (seems to be needed by yahoo mail)
         assets_url = 'https:' + assets_url
+    if app.config.get('DOLLY') and object_type == 'channel':
+        top_videos = VideoInstance.query.filter_by(channel=object.id).limit(3)
+    else:
+        top_videos = []
     body = template.render(
         user=user,
         link=link,
         object_type=object_type,
         object_type_name=object_type_name,
         object=object,
+        top_videos=top_videos,
         assets=assets_url,
     )
     email.send_email(recipient, body)
