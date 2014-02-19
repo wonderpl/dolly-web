@@ -18,7 +18,7 @@
         <td>{{ video.last_modified }}</td>
         <td>{{ video.size|filesizeformat }}</td>
         <td>
-          <a class="btn btn-success" href="./accept?video={{ video.path }}">Accept</a>
+          <a class="btn btn-success" href="./accept?video={{ video.path|urlencode }}">Accept</a>
           <button class="reject btn btn-danger" data-path="{{ video.path }}" data-loading-text="Yeah, it's shit!">Reject</button>
         </td>
       </tr>
