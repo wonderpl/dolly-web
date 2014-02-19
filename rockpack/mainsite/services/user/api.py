@@ -967,7 +967,7 @@ class UserWS(WebService):
             ch.set_paging(offset, limit)
             ch.favourite_sort('desc')
             ch.add_sort('date_updated')
-            ch.add_term('owner', userid)
+            ch.add_term('owner', user['id'])
             user.setdefault('channels', {})['items'] =\
                 ch.channels(with_owners=False, add_tracking=add_tracking)
             user['channels']['total'] = ch.total
