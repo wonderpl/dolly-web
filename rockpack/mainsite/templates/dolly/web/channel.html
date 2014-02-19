@@ -149,7 +149,7 @@
       <header>
         <div class="inner">
           <a href="/#/" class="logo"></a>
-          <a href="#" class="app-store-link"></a>
+          <a href="{{ config.ITUNES_APP_LINK }}&amp;ct={% if selected_video %}video{% else %}channel{% endif %}" target="_blank" class="app-store-link"></a>
         </div>
       </header>
       

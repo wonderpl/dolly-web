@@ -12,7 +12,7 @@
         --><li><a href="/#/about-us" ng-class="{ active: currentpage == '/about-us' }">About Us</a></li>
       </ul>
     </nav>
-    <a href="#" class="app-store-link"></a>
+    <a href="{{ config.ITUNES_APP_LINK }}&amp;ct=home" target="_blank" class="app-store-link"></a>
     <a class="nav-toggle wonder-icon-reorder desktop-hidden" ng-click="navToggle()"></a>
   </div>
 </header>

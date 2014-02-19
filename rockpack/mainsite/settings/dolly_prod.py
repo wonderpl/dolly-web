@@ -60,7 +60,7 @@ SHARE_SUBDOMAIN = 'share'
 GOOGLE_ANALYTICS_ACCOUNT = 'UA-46520786-2'
 
 # For app store links
-PHG_AFFILIATE_TOKEN = '11ls25'
+PHG_AFFILIATE_TOKEN = '11lukG'
 ITUNES_APP_ID = '824769819'
 ITUNES_APP_LINK = 'https://itunes.apple.com/app/wonder-pl/id%s?mt=8&ls=1&at=%s' % (ITUNES_APP_ID, PHG_AFFILIATE_TOKEN)
 
