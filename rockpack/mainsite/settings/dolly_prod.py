@@ -42,7 +42,7 @@ ENABLED_LOCALES = ('en-us',)
 ADMIN_NAME = 'Wonder Place Admin'
 IOS_APP_URL_SCHEME = 'wonderpl'
 
-DEFAULT_PROFILE_COVERS = ['default%d.jpg' % i for i in range(1, 6)]
+DEFAULT_PROFILE_COVERS = ['default%db.jpg' % i for i in range(1, 6)]
 
 FAVOURITE_CHANNEL = 'Favorites', 'My favorite videos', ''
 
