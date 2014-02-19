@@ -399,11 +399,11 @@ class OoyalaWS(WebService):
         models.Video.add_videos(data.videos, models.Source.label_to_id('ooyala'))
         meta = data.videos[0].meta
         if 'channel' in meta:
-            try:
-                channel = models.Channel.query.get(meta['channel'])
-            except Exception:
+            channel = models.Channel.query.get(meta['channel'])
+            if not channel:
                 app.logger.warning('Unable to add Ooyala video (%s) to channel: %s',
                                    videoid, meta['channel'])
+                return
             try:
                 category = models.Category.query.filter_by(
                     id=meta['category']).value('id')
