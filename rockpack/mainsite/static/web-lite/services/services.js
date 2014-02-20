@@ -10,11 +10,7 @@
     app.factory('UserService', ['$rootScope', '$http', '$timeout', function($rootScope, $http, $timeout){
         return {
             fetchUser: function(id) {
-<<<<<<< HEAD
-                $http({method: 'get', url: $rootScope.api.base_api + id + '/' }).success(function(data,status,headers,config){
-=======
                 $http({method: 'get', url: '/ws/' + id + '/' }).success(function(data,status,headers,config){
->>>>>>> 61544d8628f3421a99b6e05880544e0c622856bc
                     $timeout(function(){
                         $rootScope.$apply(function(){
                             $rootScope.user = data;
