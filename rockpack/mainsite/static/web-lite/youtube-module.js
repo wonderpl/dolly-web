@@ -157,13 +157,13 @@
             _.listen(_.elements.scrubber_trans, 'touchmove', _.scrubTouch);
             _.listen(_.elements.scrubber_trans, 'touchstart', _.scrubDown);
             _.listen(_.elements.scrubber_trans, 'touchleave', _.scrubUp);
-            _.listen(_.elements.scrubber_trans, 'touchend', _.scrubUp);
+            // _.listen(_.elements.scrubber_trans, 'touchend', _.scrubUp);
         } else {
             _.listen(_.elements.loader, 'click', _.togglePlay);
             _.listen(_.elements.scrubber_trans, 'mousemove', _.scrubMouse);
             _.listen(_.elements.scrubber_trans, 'mousedown', _.scrubDown);
             _.listen(_.elements.scrubber_trans, 'mouseup', _.scrubUp);
-            _.listen(_.elements.scrubber_trans, 'mouseleave', _.scrubUp);
+            // _.listen(_.elements.scrubber_trans, 'mouseleave', _.scrubUp);
             
             _.listen(_.elements.controls, 'mouseleave', function(){
                 _.controlshovered = false;

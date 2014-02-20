@@ -366,6 +366,7 @@ OO.plugin("WonderUIModule", function (OO) {
     _.play = function (e) {
         _.prevent(e);
         if ( _.loaded === true ) {
+            _.controlshovered = true;
             _.played = false;
             _.mb.publish(OO.EVENTS.PLAY);    
         }
@@ -374,6 +375,7 @@ OO.plugin("WonderUIModule", function (OO) {
     _.pause = function (e) {
         _.prevent(e);
         if ( _.loaded === true ) {
+            _.controlshovered = true;
             _.mb.publish(OO.EVENTS.PAUSE);    
         }
     };
