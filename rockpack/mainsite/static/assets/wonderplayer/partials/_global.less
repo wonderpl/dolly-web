@@ -487,10 +487,13 @@ body, html {
 					-o-transform: translateZ(0);
 					transform: translateZ(0);
 					background: rgba(0,0,0,0.3) url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACMAAAALCAYAAAD1JjQCAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAYhJREFUeNqclDsvREEYhuesyybrYOOWyAYNS+dauhT+htsv2BXRb6jUktUplrh0GpdCu6jdOqtQoKVQOt7h/ZLPZI7FJs/Jnmffd07OzM6YKIoKYAsEwICEcobUepzNrYCS43QuETOe19nLDRgAKZAGh3T9DLWCE7osXQs4Blegj066t6qrx8tWc/KlDgyCO7APGhkaBhW6kG4I3INd0EAn3QPQ5jjd/dHJFM2AF7DE5QocJ7k5urxyklsGzSAZ063qrFgHz2CKATtLRcfV0z2BCZWT7jTvkzHj/crZyznooegEZ3QZugzvL9Ty2VyZvkvlyk5X57o97ltO3jrgGz+CDTr72yRno6imdpy5Tf5nAuV0989OHpADr2BebfFFruescpJb4HaP6+Y9LlfNWbHD3THGBzSBPe6iUbpQ5UY4UMrTTXOXaRd6cl5neIbIdrRnxjU44lliXS+4BKegHdQo53bFdThdnYt1wefJZ8y7+fpsgwpYVa4EHsAaeAORcgVP7t/uQ4ABAEz6pT9CwgUmAAAAAElFTkSuQmCC) left top repeat;
-					-webkit-animation: loading 20s linear infinite;
-					-moz-animation: loading 20s linear infinite;
-					-o-animation: loading 20s linear infinite;
-					animation: loading 20s linear infinite;
+					// XXX: Setting translateZ(0) seems to fix the performance issues on Chrome but needs more testing
+					// http://www.chromium.org/developers/design-documents/gpu-accelerated-compositing-in-chrome
+					// -webkit-transform: translateZ(0);
+					//-webkit-animation: loading 20s linear infinite;
+					//-moz-animation: loading 20s linear infinite;
+					//-o-animation: loading 20s linear infinite;
+					//animation: loading 20s linear infinite;
 					-webkit-transition: opacity .2s ease-out;
 					-moz-transition: opacity .2s ease-out;
 					-o-transition: opacity .2s ease-out;
@@ -507,6 +510,7 @@ body, html {
 					&:after {
 						filter: alpha(opacity=100);
 						opacity: 1;
+<<<<<<< HEAD
 						-webkit-transform: translateZ(0);
 						-moz-transform: translateZ(0);
 						-o-transform: translateZ(0);
@@ -519,6 +523,9 @@ body, html {
 						-moz-transition: opacity .2s ease-out;
 						-o-transition: opacity .2s ease-out;
 						transition: opacity .2s ease-out;
+=======
+						//-webkit-animation: loading 20s linear infinite;
+>>>>>>> 61544d8628f3421a99b6e05880544e0c622856bc
 					}
 				}
 			}
