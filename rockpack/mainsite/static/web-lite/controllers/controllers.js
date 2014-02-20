@@ -14,6 +14,7 @@
         $rootScope.channel_data = window.channel_data;
         $rootScope.owner = window.channel_data.owner;
         $rootScope.videos = Array.prototype.slice.call( $rootScope.channel_data.videos.items );
+        $rootScope.appstorelink = window.itunesLink;
         $rootScope.api = window.apiUrls;
         $rootScope.shareurl = "";
 

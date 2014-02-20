@@ -16,6 +16,8 @@ OO.plugin("WonderUIModule", function (OO) {
         played: false,
         scrubbed: false,
         scrubbing: false,
+        metadataloaded: false,
+        fullscreenrequested: false,
         loaded: false,
         state: {
             playing: false,
@@ -186,6 +188,7 @@ OO.plugin("WonderUIModule", function (OO) {
         _.listen(_.elements.bigplaybutton, 'click', _.play);
         _.listen(_.elements.pausebutton, 'click', _.pause);
         _.listen(_.elements.fullscreenbutton, 'click', _.fullscreen);
+        _.listen(_.elements.fullscreenbutton, 'touchend', _.fullscreen);
         _.listen(_.elements.volumebutton, 'click', _.volume);
 
         // Decide which listeners to use for the scrubbers.
@@ -248,7 +251,11 @@ OO.plugin("WonderUIModule", function (OO) {
         if ( document.getElementsByTagName('video').length > 0 ) {
             _.elements.video = document.getElementsByTagName('video')[0];
             _.listen( _.elements.video, 'loadedmetadata', function(e){
-                // console.log('video meta data loaded');
+                _.metadataloaded = true;
+                if ( _.fullscreenrequested === true ) {
+                    _.fullscreen();
+                }
+                console.log('video meta data loaded');
             });
             _.listen( _.elements.video, 'webkitendfullscreen', function(e) {
                 _.mb.publish(OO.EVENTS.PAUSE);
@@ -411,30 +418,43 @@ OO.plugin("WonderUIModule", function (OO) {
 
     _.fullscreen = function (e) {
         _.prevent(e); 
-        if ( _.state.fullscreen === false ) {
-            if ( _.ipad === true ) {
+
+        if ( _.ipad === true ) {
+
+            if ( _.metadataloaded === false ) {
+                _.elements.video.play();
+                _.fullscreenrequested = true;
+                _.onPlay();
+            } else if ( _.elements.video.webkitDisplayingFullscreen === false ) {
                 _.elements.video.webkitEnterFullscreen();
-                _.state.fullscreen = true;
+                _.addClass(_.elements.wrapper, 'fullscreen');
+                _.state.fullscreen = true;                
             } else {
+                document.webkitExitFullscreen();
+                _.removeClass(_.elements.wrapper, 'fullscreen');
+                _.state.fullscreen = false;
+            }
+        } else {
+            if ( _.state.fullscreen === false ) {
                 _.mb.publish(OO.EVENTS.FULLSCREEN_CHANGED);
                 _.attemptFullscreen(_.elements.wrapper);
                 _.addClass(_.elements.wrapper, 'fullscreen');
                 _.state.fullscreen = true;
+            } else {
+                if(document.exitFullscreen) {
+                    document.exitFullscreen();
+                } else if (document.msExitFullscreen) {
+                    document.msExitFullscreen();
+                } else if(document.mozExitFullScreen) {
+                    document.mozExitFullScreen();
+                } else if(document.mozCancelFullScreen) {
+                    document.mozCancelFullScreen();
+                } else if(document.webkitExitFullscreen) {
+                    document.webkitExitFullscreen();
+                }
+                _.removeClass(_.elements.wrapper, 'fullscreen');
+                _.state.fullscreen = false;
             }
-        } else {
-            if(document.exitFullscreen) {
-                document.exitFullscreen();
-            } else if (document.msExitFullscreen) {
-                document.msExitFullscreen();
-            } else if(document.mozExitFullScreen) {
-                document.mozExitFullScreen();
-            } else if(document.mozCancelFullScreen) {
-                document.mozCancelFullScreen();
-            } else if(document.webkitExitFullscreen) {
-                document.webkitExitFullscreen();
-            }
-            _.removeClass(_.elements.wrapper, 'fullscreen');
-            _.state.fullscreen = false;
         }
     };
 
@@ -718,6 +738,7 @@ OO.plugin("WonderUIModule", function (OO) {
     /* ======================================= */
 
     _.attemptFullscreen = function(el) {
+        console.log('attempting fullscreen');
         if(el.requestFullscreen) {
             el.requestFullscreen();
         } else if(el.mozRequestFullScreen) {

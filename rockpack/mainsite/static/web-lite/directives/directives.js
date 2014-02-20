@@ -91,7 +91,8 @@
 							break;
 
 						case 'ooyala':
-							elem.append('<iframe src="http://' + $location.$$host + ( $location.$$port !== 80 ? ':' + $location.$$port : '' ) + '/embed/' + scope.vid.id + '/" width="100%" height="100%" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>');
+							console.log( 'ooyala video initialised' );
+							elem.html('<iframe src="http://' + $location.$$host + ( $location.$$port !== 80 ? ':' + $location.$$port : '' ) + '/embed/' + scope.vid.id + '/" width="100%" height="100%" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>');
 							break;
 					}
 				};
