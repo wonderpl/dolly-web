@@ -11,9 +11,7 @@
         $rootScope.weblite = true;
         $rootScope.assets_url = window.assets_url;
         $rootScope.selected_video = window.selected_video || false;
-        // console.log( 'selected video', $rootScope.selected_video );
         $rootScope.channel_data = window.channel_data;
-        // console.log( 'channel video', $rootScope.channel_data.videos.items[0] );
         $rootScope.owner = window.channel_data.owner;
         $rootScope.videos = Array.prototype.slice.call( $rootScope.channel_data.videos.items );
         $rootScope.api = window.apiUrls;

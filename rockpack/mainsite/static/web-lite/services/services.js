@@ -13,7 +13,17 @@
                 $http({method: 'get', url: '/ws/' + id + '/' }).success(function(data,status,headers,config){
                     $timeout(function(){
                         $rootScope.$apply(function(){
-                            $rootScope.user = data;
+                            if ( status === 200 ) {
+                                $rootScope.user = data;
+                            } else {
+                                $rootScope.user = $rootScope.owner;
+                            }
+                        });
+                    });
+                }).error(function(){
+                    $timeout(function(){
+                        $rootScope.$apply(function(){
+                            $rootScope.user = $rootScope.owner;
                         });
                     });
                 });
