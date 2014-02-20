@@ -653,7 +653,7 @@ OO.plugin("WonderUIModule", function (OO) {
         }
         _.elements.timer.innerHTML = _.displayTime;
 
-        if ( _.timers.interaction === 80 ) {
+        if ( _.timers.interaction === 40 ) {
             if ( _.isTouchDevice() === false && _.controlshovered === false ) {
                 _.hideUI();         
             }
@@ -664,7 +664,7 @@ OO.plugin("WonderUIModule", function (OO) {
         if ( _.state.playing === true ) {
             _.timers.buffer++;
         }
-        if ( _.timers.buffer === 60 ) {
+        if ( _.timers.buffer === 30 ) {
             _.showLoader();
         }
     };
