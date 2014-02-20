@@ -91,7 +91,7 @@ OO.plugin("WonderUIModule", function (OO) {
     // Add event listeners
     _.init = function () {
 
-        _.ie8 = ( _.hasClass(document.querySelector('html'), 'ie8') ) ? true : false;
+        _.ie8 = ( _.hasClass(document.querySelector('html'), 'lte9') ) ? true : false;
         _.ie10 = ( _.UA.indexOf('msie 1') !== -1 ) ? true : false;
         _.ipad = ( _.UA.indexOf('ipad') !== -1 ) ? true : false;
         _.ios = ( _.UA.indexOf('ipad') !== -1 || _.UA.indexOf('iphone') !== -1 ) ? true : false;
