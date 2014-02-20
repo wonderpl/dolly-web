@@ -227,7 +227,9 @@ class DBImport(object):
             ).options(
                 joinedload(VideoInstance.video_channel)
             ).filter(
-                Video.visible == True, Channel.public == True
+                Video.visible == True,
+                Channel.public == True,
+                Channel.deleted == False
             )
 
             if prefix:
