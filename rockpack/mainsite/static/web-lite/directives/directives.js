@@ -13,7 +13,7 @@
 			link: function( scope, elem, attrs ) {
 
 				$rootScope.playerElem = elem;
-				scope.YTReady = false;
+				scope.YTReady = false; 
 				
 				window.onYouTubeIframeAPIReady = function () {
 					window.YTReady = true;
@@ -63,7 +63,10 @@
 
 						if ( 'player' in scope ) {
 							try {
-								scope.player.destroy();
+								Conduit.pause();
+						        delete window.ytplayer;
+        						delete window.wonder;
+								delete scope.player;
 							} catch (e) {}
 						}
 

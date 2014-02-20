@@ -11,7 +11,7 @@
 
         // Status vars
         framecount: 0,
-        newvolume: 1,
+        newvolume: 100,
         currentvolume: 0,
         played: false,
         scrubbed: false,
@@ -61,18 +61,21 @@
     };
 
     _.onPlayerStateChange = function (state) {
-        console.log( state );
+        // console.log( state );
     };
 
     // Update content, status and duration
     _.onContentReady = function () {
-
         _.time = _.player.getCurrentTime();    
         _.duration = _.data.video.duration;
-        _.hideLoader();
         _.removeClass( _.elements.poster, 'loading' );
         _.elements.poster.getElementsByTagName('td')[0].innerHTML = (_.data.title.replace(/_/g,' '));
-        _.loaded = true;
+        setTimeout( function( ) {
+            _.state.playing = false;
+            _.hideLoader();
+            _.loaded = true;
+        }, 200);
+
     };
 
     // Add event listeners
@@ -197,8 +200,8 @@
             Conduit.remove('uiTick');
             Conduit.remove('actionTick');
             Conduit.remove('ieTick');
+            _.player.destroy();
         } catch (e) {}
-        console.log(' attempted to destroy the youtube player ');
     };
 
     _.onError = function (error, info) {
@@ -233,7 +236,7 @@
     };
 
     _.onSeeked = function (e) {
-        console.log('seeked event fired');
+        // console.log('onseeked event fired');
         _.scrubbed = false;
         if ( _.played === false ) {
             // _.mb.publish(OO.EVENTS.PLAY);    
@@ -268,7 +271,6 @@
 
     // _.toggleControls = function (e) {
     //     _.prevent(e);
-
     //     if ( _.hasClass( _.elements.controls, 'show' ) ) {
     //         _.removeClass( _.elements.controls, 'show' );
     //         _.addClass( _.elements.controls, 'hide' );
@@ -276,7 +278,6 @@
     //         _.removeClass( _.elements.controls, 'show' );
     //         _.addClass( _.elements.controls, 'show' );
     //     }
-        
     // };
 
     /*  UI listener callbacks
@@ -305,6 +306,7 @@
         _.prevent(e);
         if ( _.loaded === true ) {
             _.toggleClass( _.elements.scrubber_vol, 'vol-visible' );
+            _.toggleClass( _.elements.scrubber_target_vol, 'vol-visible' );
         }
     };
 
@@ -365,7 +367,6 @@
             _.mousedown = true;
             _.scrubMouse(e);
             _.oldtime = _.time;
-
         }
     };
 
@@ -555,8 +556,8 @@
                 _.elements.volumebutton.className = 'volume wonder-volume vol-3';
             }
 
-            _.elements.scrubber_progress_vol.style.height = ( _.newvolume * 100 ) + '%';
-            _.elements.scrubber_handle_vol.style.bottom = (( _.newvolume * 100 )-15) + '%';
+            _.elements.scrubber_progress_vol.style.height = ( _.newvolume ) + '%';
+            _.elements.scrubber_handle_vol.style.bottom = (( _.newvolume )-15) + '%';
         }
 
         // Update the time
@@ -618,7 +619,6 @@
 
     _.ytTick = function () {
         if ( _.loaded === true ) { 
-            console.log('yt tick firing');
             if ( 'getCurrentTime' in _.player ) {
                 var time = _.player.getCurrentTime();
             }

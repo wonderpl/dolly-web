@@ -11,9 +11,9 @@
         $rootScope.weblite = true;
         $rootScope.assets_url = window.assets_url;
         $rootScope.selected_video = window.selected_video || false;
-        console.log( 'selected video', $rootScope.selected_video );
+        // console.log( 'selected video', $rootScope.selected_video );
         $rootScope.channel_data = window.channel_data;
-        console.log( 'channel video', $rootScope.channel_data.videos.items[0] );
+        // console.log( 'channel video', $rootScope.channel_data.videos.items[0] );
         $rootScope.owner = window.channel_data.owner;
         $rootScope.videos = Array.prototype.slice.call( $rootScope.channel_data.videos.items );
         $rootScope.api = window.apiUrls;
@@ -46,7 +46,7 @@
                 $timeout( function() {
                     $rootScope.$apply(function() {
                         $rootScope.shareurl = ($location.$$protocol + '://' + $location.$$host + ( $location.$$port !== 80 ? ':' + $location.$$port : '' ) + '/channel/-/' + $rootScope.channel_data.id + '/?video=' +  $rootScope.videos[$rootScope.currentvideo].id);        
-                        console.log( $rootScope.videos[$rootScope.currentvideo] );
+                        // console.log( $rootScope.videos[$rootScope.currentvideo] );
                         if ( $rootScope.videos[$rootScope.currentvideo].video.source === 'ooyala' ) {
                             $rootScope.embedurl = ($location.$$protocol + '://' + $location.$$host + ( $location.$$port !== 80 ? ':' + $location.$$port : '' ) + '/embed/' + $rootScope.videos[$rootScope.currentvideo].id);
                         } else {
@@ -134,50 +134,50 @@
         $scope.changeVideo = function(e, index) {
             e.preventDefault();
 
-            if ( $rootScope.videos[$rootScope.currentvideo].video.source === 'youtube' ) {
-                try { 
-                    Conduit.pause();
-                    window.wonder.destroy();
-                } catch (e) {}
+            // if ( $rootScope.videos[$rootScope.currentvideo].video.source === 'youtube' ) {
+            //     try { 
+            //         Conduit.pause();
+            //         window.wonder.destroy();
+            //     } catch (e) {}
                 
-                $timeout( function() {
-                    var body = d.documentElement.scrollTop ? d.documentElement : d.body,
-                        from = body.scrollTop, 
-                        target = from - Math.abs(d.querySelector('.avatar').getBoundingClientRect().top) - 20;
+            //     $timeout( function() {
+            //         var body = d.documentElement.scrollTop ? d.documentElement : d.body,
+            //             from = body.scrollTop, 
+            //             target = from - Math.abs(d.querySelector('.avatar').getBoundingClientRect().top) - 20;
 
-                    $scope.tween = new TWEEN.Tween( { y: from } )
-                    .to( { y: target }, 600 )
-                    .easing( TWEEN.Easing.Cubic.Out )
-                    .onUpdate( function () {
-                        body.scrollTop = this.y;
-                    }).start();
+            //         $scope.tween = new TWEEN.Tween( { y: from } )
+            //         .to( { y: target }, 600 )
+            //         .easing( TWEEN.Easing.Cubic.Out )
+            //         .onUpdate( function () {
+            //             body.scrollTop = this.y;
+            //         }).start();
                 
-                    $rootScope.$apply(function() {
-                        $rootScope.currentvideo = index;
-                        $rootScope.currentpage = index;
-                    });
-                },500);
+            //         $rootScope.$apply(function() {
+            //             $rootScope.currentvideo = index;
+            //             $rootScope.currentpage = index;
+            //         });
+            //     },500);
 
-            } else {
-                
-                var body = d.documentElement.scrollTop ? d.documentElement : d.body,
-                    from = body.scrollTop, 
-                    target = from - Math.abs(d.querySelector('.avatar').getBoundingClientRect().top) - 20;
+            // } else {
 
-                $scope.tween = new TWEEN.Tween( { y: from } )
-                .to( { y: target }, 600 )
-                .easing( TWEEN.Easing.Cubic.Out )
-                .onUpdate( function () {
-                    body.scrollTop = this.y;
-                }).start();
+            var body = d.documentElement.scrollTop ? d.documentElement : d.body,
+                from = body.scrollTop, 
+                target = from - Math.abs(d.querySelector('.avatar').getBoundingClientRect().top) - 20;
 
-                $timeout( function() {
-                    $rootScope.$apply(function() {
-                        $rootScope.currentvideo = index;
-                        $rootScope.currentpage = index;
-                    });
-                });                
-            }
+            $scope.tween = new TWEEN.Tween( { y: from } )
+            .to( { y: target }, 600 )
+            .easing( TWEEN.Easing.Cubic.Out )
+            .onUpdate( function () {
+                body.scrollTop = this.y;
+            }).start();
+
+            $timeout( function() {
+                $rootScope.$apply(function() {
+                    $rootScope.currentvideo = index;
+                    $rootScope.currentpage = index;
+                });
+            });                
+            // }
         };
 
         $scope.page = function( direction ) {
