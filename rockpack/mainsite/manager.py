@@ -236,7 +236,11 @@ def import_video(s3path, **options):
 def update_ooyala_thumbnails(videoid):
     from rockpack.mainsite.services.video.models import Video
     from rockpack.mainsite.core.ooyala import update_thumbnails
-    video = Video.query.filter_by(id=videoid, source=2).first()
+    if len(videoid) == 32:    # ooyala embed_code
+        args = dict(source_videoid=videoid)
+    else:
+        args = dict(id=videoid)
+    video = Video.query.filter_by(source=2, **args).first()
     if video:
         update_thumbnails(video)
         video.save()
