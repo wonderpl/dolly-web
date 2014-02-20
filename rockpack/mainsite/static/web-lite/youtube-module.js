@@ -188,6 +188,19 @@
         Conduit.start();
     };
 
+    _.destroy = function() {
+        try {
+            Conduit.remove('yttick');
+            Conduit.remove('updateTimers');
+            Conduit.remove('bufferTick');
+            Conduit.remove('moveBufferBar');
+            Conduit.remove('uiTick');
+            Conduit.remove('actionTick');
+            Conduit.remove('ieTick');
+        } catch (e) {}
+        console.log(' attempted to destroy the youtube player ');
+    };
+
     _.onError = function (error, info) {
         // Info is an object with an error code
         // e.g. { "code": "stream" }
@@ -604,8 +617,11 @@
     };
 
     _.ytTick = function () {
-        if ( _.loaded === true ) {
-            var time = _.player.getCurrentTime();
+        if ( _.loaded === true ) { 
+            console.log('yt tick firing');
+            if ( 'getCurrentTime' in _.player ) {
+                var time = _.player.getCurrentTime();
+            }
 
             if ( time != _.time && _.scrubbed === true ) {
                 setTimeout( function(){

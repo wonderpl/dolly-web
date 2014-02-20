@@ -10,11 +10,14 @@
 
         $rootScope.weblite = true;
         $rootScope.assets_url = window.assets_url;
-        $rootScope.selected_video = window.selected_video || {};
+        $rootScope.selected_video = window.selected_video || false;
+        console.log( 'selected video', $rootScope.selected_video );
         $rootScope.channel_data = window.channel_data;
+        console.log( 'channel video', $rootScope.channel_data.videos.items[0] );
         $rootScope.owner = window.channel_data.owner;
         $rootScope.videos = Array.prototype.slice.call( $rootScope.channel_data.videos.items );
         $rootScope.api = window.apiUrls;
+        $rootScope.shareurl = "";
 
         // shareuser is either the owner of the channel, or the user
         // represented by the shareuser query string.
@@ -25,18 +28,34 @@
             $rootScope.user = $rootScope.owner;
         }
 
-        // Get the array index
-        var searchid = querystring.search( 'video' );
-        console.log(searchid);
-        if ( searchid.length > 0 ) {
-            ng.forEach( $rootScope.videos, function( el, i) {
-                if ( el.id === searchid ) {
-                    $rootScope.currentvideo = i;
-                }
-            });    
+        if ( $rootScope.selected_video !== false ) {
+            $rootScope.videos.push( $rootScope.selected_video );
+            $timeout( function() {
+                $rootScope.$apply(function(){
+                    $rootScope.currentvideo = $rootScope.videos.length-1;
+                    $rootScope.currentpage = 0;
+                });
+            });
         } else {
             $rootScope.currentvideo = 0;
+            $rootScope.currentpage = 0;
         }
+
+        $rootScope.$watch( 'currentvideo', function(newValue, oldValue) {
+            if ( newValue !== undefined ) {
+                $timeout( function() {
+                    $rootScope.$apply(function() {
+                        $rootScope.shareurl = ($location.$$protocol + '://' + $location.$$host + ( $location.$$port !== 80 ? ':' + $location.$$port : '' ) + '/channel/-/' + $rootScope.channel_data.id + '/?video=' +  $rootScope.videos[$rootScope.currentvideo].id);        
+                        console.log( $rootScope.videos[$rootScope.currentvideo] );
+                        if ( $rootScope.videos[$rootScope.currentvideo].video.source === 'ooyala' ) {
+                            $rootScope.embedurl = ($location.$$protocol + '://' + $location.$$host + ( $location.$$port !== 80 ? ':' + $location.$$port : '' ) + '/embed/' + $rootScope.videos[$rootScope.currentvideo].id);
+                        } else {
+                            $rootScope.embedurl = '//www.youtube.com/embed/' + $rootScope.videos[$rootScope.currentvideo].video.source_id;
+                        }
+                    });
+                });                
+            }
+        });
 
     }]);    
 
@@ -44,9 +63,9 @@
     app.controller('PlayerCtrl', ['$scope', '$timeout','$location', '$rootScope', '$templateCache', '$sanitize', '$compile', '$http', function($scope, $timeout, $location, $rootScope, $templateCache, $sanitize, $compile, $http) {
 
         var $this = ng.element(d.getElementById('player')),
-        template, 
-        $scp, 
-        tmpl;
+            template, 
+            $scp, 
+            tmpl;
 
         template = $templateCache.get('player.html');
         tmpl = $compile(template)($scope);
@@ -75,11 +94,9 @@
         };
 
         $scope.copyToClipboard = function(event) {
-            
         };
 
         $scope.shareFacebook = function() {
-            console.log($rootScope.videos[$rootScope.currentvideo].video.thumbnail_url);
             FB.ui({
                 method: 'feed',
                 link: $location.absUrl(),
@@ -89,8 +106,9 @@
             });
         };
 
-        $scope.shareTwitter = function(url) {
-            window.open("http://twitter.com/intent/tweet?url=#{url}");
+        $scope.shareTwitter = function() {
+            // console.log( $location.$$protocol + '://' + $location.$$host + ( $location.$$port !== 80 ? ':' + $location.$$port : '' ) + '/channel/-/' + $rootScope.channel_data.id + '/?video=' +  $rootScope.videos[$rootScope.currentvideo].id );
+            window.open("http://twitter.com/intent/tweet?url=" + $rootScope.shareurl);
         };
 
 
@@ -100,13 +118,11 @@
     app.controller('ChannelCtrl', ['$scope', '$timeout','$location', '$rootScope', '$templateCache', '$sanitize', '$compile', 'windowSize', function($scope, $timeout, $location, $rootScope, $templateCache, $sanitize, $compile, windowSize ) {
 
         var $this = ng.element(d.getElementById('channel')),
-        template, 
-        $scp, 
-        tmpl;
+            template, 
+            $scp, 
+            tmpl;
 
         $rootScope.wW = windowSize.ww();
-
-        $scope.currentpage = 0;
         $scope.items = $rootScope.videos.length;
         $scope.touchDevice = 'ontouchstart' in window || 'onmsgesturechange' in window;
 
@@ -117,44 +133,71 @@
 
         $scope.changeVideo = function(e, index) {
             e.preventDefault();
-                        
-            var body = d.documentElement.scrollTop ? d.documentElement : d.body,
-                from = body.scrollTop, 
-                target = from - Math.abs(d.querySelector('.avatar').getBoundingClientRect().top) - 20;
 
-            $scope.tween = new TWEEN.Tween( { y: from } )
-            .to( { y: target }, 600 )
-            .easing( TWEEN.Easing.Cubic.Out )
-            .onUpdate( function () {
-                body.scrollTop = this.y;
-            }).start();
+            if ( $rootScope.videos[$rootScope.currentvideo].video.source === 'youtube' ) {
+                try { 
+                    Conduit.pause();
+                    window.wonder.destroy();
+                } catch (e) {}
+                
+                $timeout( function() {
+                    var body = d.documentElement.scrollTop ? d.documentElement : d.body,
+                        from = body.scrollTop, 
+                        target = from - Math.abs(d.querySelector('.avatar').getBoundingClientRect().top) - 20;
 
-            $timeout( function() {
-                $rootScope.$apply(function() {
-                    $rootScope.currentvideo = index;
-                    $scope.currentpage = index;
-                });
-            });
+                    $scope.tween = new TWEEN.Tween( { y: from } )
+                    .to( { y: target }, 600 )
+                    .easing( TWEEN.Easing.Cubic.Out )
+                    .onUpdate( function () {
+                        body.scrollTop = this.y;
+                    }).start();
+                
+                    $rootScope.$apply(function() {
+                        $rootScope.currentvideo = index;
+                        $rootScope.currentpage = index;
+                    });
+                },500);
+
+            } else {
+                
+                var body = d.documentElement.scrollTop ? d.documentElement : d.body,
+                    from = body.scrollTop, 
+                    target = from - Math.abs(d.querySelector('.avatar').getBoundingClientRect().top) - 20;
+
+                $scope.tween = new TWEEN.Tween( { y: from } )
+                .to( { y: target }, 600 )
+                .easing( TWEEN.Easing.Cubic.Out )
+                .onUpdate( function () {
+                    body.scrollTop = this.y;
+                }).start();
+
+                $timeout( function() {
+                    $rootScope.$apply(function() {
+                        $rootScope.currentvideo = index;
+                        $rootScope.currentpage = index;
+                    });
+                });                
+            }
         };
 
         $scope.page = function( direction ) {
 
             switch ( direction ) {
                 case 'left':
-                    if ( $scope.currentpage > 0 ) {
+                    if ( $rootScope.currentpage > 0 ) {
                         $timeout(function(){
                             $scope.$apply(function(){
-                                $scope.currentpage--;    
+                                $rootScope.currentpage--;    
                             });
                         });
                     }
                     break;
 
                 case 'right':
-                    if ( $scope.currentpage < $scope.items-1 ) {
+                    if ( $rootScope.currentpage < $scope.items-1 ) {
                         $timeout(function(){
                             $scope.$apply(function(){
-                                $scope.currentpage++;    
+                                $rootScope.currentpage++;    
                             });
                         });
                     }
@@ -172,28 +215,9 @@
             if ( $scope.touchDevice === true && newValue < 768 ) {
                 d.querySelector('.scroll-outer-wrapper').scrollLeft = 0;
                 d.querySelector('.scroll-inner-wrapper').scrollLeft = 0;
-                $scope.currentpage = 0;
+                $rootScope.currentpage = 0;
             }
         });
-
-    }]);
-
-
-    app.controller('HeaderCtrl', ['$scope', '$timeout','$rootScope', function($scope, $timeout, $rootScope){
-
-        $rootScope.toggled = false;
-
-        $rootScope.navToggle = function() {
-            $timeout(function(){
-                $rootScope.$apply(function(){
-                    if ( $rootScope.toggled === true ) {
-                        $rootScope.toggled = false;
-                    } else {
-                        $rootScope.toggled = true;
-                    }
-                });
-            });  		
-        };
 
     }]);
 

@@ -1,37 +1,37 @@
 <!DOCTYPE html>
 <html lang="en" id="ng-app" ng-app="WebLite" xmlns:ng="http://angularjs.org">
 <head prefix="og: http://ogp.me/ns# {{ config.FACEBOOK_APP_NAMESPACE }}: http://ogp.me/ns/apps/{{ config.FACEBOOK_APP_NAMESPACE }}#">
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-    <meta name="HandheldFriendly" content="True">
-    <meta http-equiv="cleartype" content="on">
-    <link rel="shortcut icon" href="{{ config.ASSETS_URL }}/assets/dolly/img/favicon@2x.png" />
-    
-    {% include 'web/meta_social.html' %}
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="HandheldFriendly" content="True">
+  <meta http-equiv="cleartype" content="on">
+  <link rel="shortcut icon" href="{{ config.ASSETS_URL }}/assets/dolly/img/favicon@2x.png" />
+  
+  {% include 'web/meta_social.html' %}
 
-    <!--[if lt IE 9]>
-    <script src="{{config.ASSETS_URL}}/assets/vendor/js-no-compile/html5.js"></script>
-    <![endif]-->
+  <!--[if lt IE 9]>
+  <script src="{{config.ASSETS_URL}}/assets/vendor/js-no-compile/html5.js"></script>
+  <![endif]-->
 
-    <!--[if lte IE 8]>
-    <script>
-      document.createElement('header');
-      document.createElement('footer');
-      document.createElement('section');
-      document.createElement('nav');
-      document.createElement('ng-include');
-      document.createElement('ng-pluralize');
-      document.createElement('ng-view');
-      document.createElement('ng-animate');
-      document.createElement('ng:include');
-      document.createElement('ng:pluralize');
-      document.createElement('ng:view');
-      document.createElement('ng:animate');
-      document.createElement('wonderplayer');
-      document.createElement('webliteplayer');
-    </script>
-    <script src="{{config.ASSETS_URL}}/assets/vendor/js-no-compile/json2.js"></script>
-    <![endif]-->
+  <!--[if lte IE 8]>
+  <script>
+    document.createElement('header');
+    document.createElement('footer');
+    document.createElement('section');
+    document.createElement('nav');
+    document.createElement('ng-include');
+    document.createElement('ng-pluralize');
+    document.createElement('ng-view');
+    document.createElement('ng-animate');
+    document.createElement('ng:include');
+    document.createElement('ng:pluralize');
+    document.createElement('ng:view');
+    document.createElement('ng:animate');
+    document.createElement('wonderplayer');
+    document.createElement('webliteplayer');
+  </script>
+  <script src="{{config.ASSETS_URL}}/assets/vendor/js-no-compile/json2.js"></script>
+  <![endif]-->
 
   {% assets filters="less,cssmin", output="gen/web-lite-css.%(version)s.css", 
     depends="assets/web-lite/partials/_*.less", 
@@ -54,7 +54,6 @@
     depends="assets/wonderplayer/partials/_*.less", 
     "assets/wonderplayer/ie.less" 
   %}<!--[if lte IE 10]><link rel="stylesheet" href="{{ ASSET_URL }}"/><![endif]-->{% endassets %}
-
   
   {% assets filters="rjsmin", output="gen/weblite-lib.%(version)s.js",
     "assets/vendor/js/jquery-1.10.1.min.js", 
@@ -62,33 +61,6 @@
     "web-lite/vendor/angular/angular-route.js",
     "web-lite/vendor/angular/angular-animate.js",
     "web-lite/vendor/angular/angular-sanitize.js"
-  %}<script type="text/javascript" src="{{ ASSET_URL }}"></script>{% endassets %}
-
-  <!--{% assets filters="rjsmin", output="gen/weblite-app.%(version)s.js",
-    "web-lite/vendor/tween.js",
-    "web-lite/app.js",
-    "web-lite/controllers/controllers.js",  
-    "web-lite/directives/directives.js",  
-    "web-lite/services/services.js",
-    "web-lite/filters/filters.js",
-    "web-lite/conduit.js",
-    "web-lite/youtube-module.js"
-  %}<script type="text/javascript" src="{{ ASSET_URL }}"></script>{% endassets %}-->
-
-  <script src="/static/web-lite/vendor/tween.js"></script>
-  <script src="/static/web-lite/app.js"></script>
-  <script src="/static/web-lite/controllers/controllers.js"></script>  
-  <script src="/static/web-lite/directives/directives.js"></script>  
-  <script src="/static/web-lite/services/services.js"></script>
-  <script src="/static/web-lite/filters/filters.js"></script>
-  <script src="/static/web-lite/conduit.js"></script>
-  <script src="/static/web-lite/youtube-module.js"></script>
-
-  {% assets filters="weblitetemplates, rjsmin", output="gen/weblite-templates.%(version)s.js",
-    depends="web-lite/views/*.html",
-    "web-lite/views/player.html",
-    "web-lite/views/channel.html",
-    "web-lite/views/player-ui.html"
   %}<script type="text/javascript" src="{{ ASSET_URL }}"></script>{% endassets %}
 
   <script type="text/javascript">
@@ -102,30 +74,21 @@
   </script>
 
   {% if selected_video %}
-
   {% else %}
-
-      {% if request.args.mobile == "true" %}
-
-      {% else %}
-
-      {% endif %}
-
   {% endif %}
 
-    <script>
-      var tag = document.createElement('script');
-      tag.src = "//www.youtube.com/iframe_api";
-      var firstScriptTag = document.getElementsByTagName('script')[0];
-      firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
-    </script>
-
-  </head>
+  <script type="text/javascript">
+    var tag = document.createElement('script');
+    tag.src = "//www.youtube.com/iframe_api";
+    var firstScriptTag = document.getElementsByTagName('script')[0];
+    firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+  </script>
+  <script type="text/javascript" src="//platform.twitter.com/widgets.js"></script>
+</head>
   <body ng-controller="WebLiteCtrl" ng-class="currentPage" id="app">
     <div id="fb-root"></div>
     <script>
       window.fbAsyncInit = function() {
-        // init the FB JS SDK
         FB.init({
           appId      : '{{config.FACEBOOK_APP_ID}}',  // App ID from the app dashboard
           channelUrl : '/static/assets/channel.html', // Channel file for x-domain comms
@@ -133,8 +96,6 @@
           xfbml      : true                           // Look for social plugins on the page
         });
       };
-
-      // Load the SDK asynchronously
       (function(d, s, id){
         var js, fjs = d.getElementsByTagName(s)[0];
         if (d.getElementById(id)) {return;}
@@ -152,12 +113,8 @@
           <a href="{{ config.ITUNES_APP_LINK }}&amp;ct={% if selected_video %}video{% else %}channel{% endif %}" target="_blank" class="app-store-link"></a>
         </div>
       </header>
-      
       <div id="player" ng-controller="PlayerCtrl"></div>
       <div id="channel" ng-controller="ChannelCtrl"></div>
-
-      <!-- <div id="channel" class="channel-directive"></div> -->
-
     </div>
 
     <footer>
@@ -171,5 +128,22 @@
         </div>
       </div>
     </footer>
+
+    {% assets filters="rjsmin", output="gen/weblite-app.%(version)s.js",
+      "web-lite/vendor/tween.js",
+      "web-lite/app.js",
+      "web-lite/controllers/controllers.js",  
+      "web-lite/directives/directives.js",  
+      "web-lite/services/services.js",
+      "web-lite/filters/filters.js",
+      "web-lite/conduit.js",
+      "web-lite/youtube-module.js"
+    %}<script type="text/javascript" src="{{ ASSET_URL }}"></script>{% endassets %}
+    {% assets filters="weblitetemplates, rjsmin", output="gen/weblite-templates.%(version)s.js",
+      depends="web-lite/views/*.html",
+      "web-lite/views/player.html",
+      "web-lite/views/channel.html",
+      "web-lite/views/player-ui.html"
+    %}<script type="text/javascript" src="{{ ASSET_URL }}"></script>{% endassets %}
   </body>
 </html>
