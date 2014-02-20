@@ -47,13 +47,13 @@ OO.plugin("WonderUIModule", function (OO) {
     // This section contains the HTML content to be used as the UI
     // '<a href="#" class="rewind wonder-rewind icon-ccw"></a>' +
     // '<span class="f-thin f-uppercase"></span>' +
+    // '<a class="wonder-play-big"></a>' + 
     var wonder_template = 
         '<div id="wonder-poster" class="loading">' +
             '<img src="/static/assets/wonderplayer/img/trans.png" alt="" id="wonder-poster" class="blur"/>' +
-            '<table width="100%" height="100%" cellpadding="0" cellspacing="0"><tr><td width="100%" height="100%" align="center" valign="middle"></td></tr></table>' +
+            '<table width="100%" height="100%" cellpadding="0" cellspacing="0"><tr><td width="100%" height="100%" align="center" valign="middle"><span></span></td></tr></table>' +
         '</div>' +
-        '<div id="wonder-loader" class="show f-sans f-uppercase"><span>Your video is loading</span></div>' + 
-        '<a class="wonder-play-big"></a>' + 
+        '<div id="wonder-loader" class="show f-sans f-uppercase"><span></span></div>' + 
         '<div id="wonder-controls">' + 
             '<a class="play wonder-play player-icon-play"></a>' + 
             '<a class="pause wonder-pause player-icon-pause hidden"></a>' + 
@@ -133,7 +133,7 @@ OO.plugin("WonderUIModule", function (OO) {
         
         // Main buttons
         _.elements.playbutton = document.querySelector('.wonder-play');
-        _.elements.bigplaybutton = document.querySelector('.wonder-play-big');
+        // _.elements.bigplaybutton = document.querySelector('.wonder-play-big');
         _.elements.pausebutton = document.querySelector('.wonder-pause');
         _.elements.fullscreenbutton = document.querySelector('.wonder-fullscreen');
         _.elements.volumebutton = document.querySelector('.wonder-volume');
@@ -164,7 +164,7 @@ OO.plugin("WonderUIModule", function (OO) {
             _.listen(_.elements.poster, 'mousemove', _.interaction);
             _.listen(_.elements.loader, 'mousemove', _.interaction);
             _.listen(_.elements.playbutton, 'mousemove', _.interaction);
-            _.listen(_.elements.bigplaybutton, 'mousemove', _.interaction);
+            // _.listen(_.elements.bigplaybutton, 'mousemove', _.interaction);
             _.listen(_.elements.pausebutton, 'mousemove', _.interaction);
             _.listen(_.elements.fullscreenbutton, 'mousemove', _.interaction);
             _.listen(_.elements.volumebutton, 'mousemove', _.interaction);
@@ -185,7 +185,7 @@ OO.plugin("WonderUIModule", function (OO) {
 
         // Listen for interaction on the actual UI contols
         _.listen(_.elements.playbutton, 'click', _.play);
-        _.listen(_.elements.bigplaybutton, 'click', _.play);
+        // _.listen(_.elements.bigplaybutton, 'click', _.play);
         _.listen(_.elements.pausebutton, 'click', _.pause);
         _.listen(_.elements.fullscreenbutton, 'click', _.fullscreen);
         _.listen(_.elements.fullscreenbutton, 'touchend', _.fullscreen);
@@ -233,6 +233,8 @@ OO.plugin("WonderUIModule", function (OO) {
         }
         Conduit.setFPS(25);
         Conduit.start();
+        _.elements.poster.getElementsByTagName('span')[0].innerHTML = (_.data.title.replace(/_/g,' '));
+        _.duration = _.data.video.duration;
     };
 
     // Update content, status and duration
@@ -240,12 +242,17 @@ OO.plugin("WonderUIModule", function (OO) {
 
         _.info = content;
         _.elements.poster.getElementsByTagName('img')[0].src = content.promo || content.promo_image;
-        _.elements.poster.getElementsByTagName('td')[0].innerHTML = (_.data.title.replace(/_/g,' '));
         _.hideLoader();
-        _.elements.loader.getElementsByTagName('span')[0].innerHTML = '';
-        _.removeClass( _.elements.poster, 'loading' );
-        _.duration = content.duration/1000 || content.time;
+        
+        if ( _.ie10 ) {
+            _.addClass( _.elements.controls, 'ie10' );
+        }
 
+        _.elements.loader.getElementsByTagName('span')[0].innerHTML = '';
+        setTimeout( function(){
+            _.removeClass( _.elements.poster, 'loading' );
+        }, 600);
+        
         _.flash = ( _.elements.wrapper.getElementsByTagName('object')[0] !== undefined );
 
         if ( document.getElementsByTagName('video').length > 0 ) {
@@ -300,7 +307,7 @@ OO.plugin("WonderUIModule", function (OO) {
         if ( _.state.playing === false ) {
             _.addClass(_.elements.poster, 'hide');
             _.addClass(_.elements.playbutton, 'hidden');
-            _.addClass(_.elements.bigplaybutton, 'hidden');
+            // _.addClass(_.elements.bigplaybutton, 'hidden');
             _.removeClass(_.elements.pausebutton, 'hidden');
             _.timers.interaction = 0;
             _.controlshovered = false;

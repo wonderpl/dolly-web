@@ -94,7 +94,7 @@
         
         // Main buttons
         _.elements.playbutton = d.querySelector('.wonder-play');
-        _.elements.bigplaybutton = d.querySelector('.wonder-play-big');
+        // _.elements.bigplaybutton = d.querySelector('.wonder-play-big');
         _.elements.pausebutton = d.querySelector('.wonder-pause');
         _.elements.fullscreenbutton = d.querySelector('.wonder-fullscreen');
         _.elements.volumebutton = d.querySelector('.wonder-volume');
@@ -124,7 +124,7 @@
             _.listen(_.elements.poster, 'mousemove', _.interaction);
             _.listen(_.elements.loader, 'mousemove', _.interaction);
             _.listen(_.elements.playbutton, 'mousemove', _.interaction);
-            _.listen(_.elements.bigplaybutton, 'mousemove', _.interaction);
+            // _.listen(_.elements.bigplaybutton, 'mousemove', _.interaction);
             _.listen(_.elements.pausebutton, 'mousemove', _.interaction);
             _.listen(_.elements.fullscreenbutton, 'mousemove', _.interaction);
             _.listen(_.elements.volumebutton, 'mousemove', _.interaction);
@@ -143,7 +143,7 @@
 
         // Listen for interaction on the actual UI contols
         _.listen(_.elements.playbutton, 'click', _.play);
-        _.listen(_.elements.bigplaybutton, 'click', _.play);
+        // _.listen(_.elements.bigplaybutton, 'click', _.play);
         _.listen(_.elements.pausebutton, 'click', _.pause);
         _.listen(_.elements.fullscreenbutton, 'click', _.fullscreen);
         _.listen(_.elements.volumebutton, 'click', _.volume);
@@ -217,7 +217,7 @@
         if ( _.state.playing === false ) {
             _.addClass(_.elements.poster, 'hide');
             _.addClass(_.elements.playbutton, 'hidden');
-            _.addClass(_.elements.bigplaybutton, 'hidden');
+            // _.addClass(_.elements.bigplaybutton, 'hidden');
             _.removeClass(_.elements.pausebutton, 'hidden');
         }
         _.hideLoader();

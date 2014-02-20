@@ -178,20 +178,6 @@ body, html {
 			overflow: hidden;
 		}
 
-		span {
-			// position: absolute;
-			// display: block;
-			// width: 100%;
-			// text-align: center;
-			// height: 40%;
-			// top: 0;
-			// bottom: 0;
-			// padding: 0 20px;
-			// margin: auto;
-			// z-index: 200;
-			// font-size: 40px;
-		}
-
 		table {
 			width: 100%;
 			height: 100%;
@@ -203,6 +189,24 @@ body, html {
 			z-index: 200;
 		}
 
+
+		span {
+			filter: alpha(opacity=75);
+			opacity: 0.75;
+
+			&:after {
+				content: 'your video is loading';
+				display: block;					
+				filter: alpha(opacity=0);
+				opacity: 0;
+				text-align: center;
+				padding: 0 0 22px 0;
+				font-size: 26px;
+				line-height: 28px;
+				-webkit-transition: all .4s ease-out;
+			}
+		}
+
 		&.loading {
 			pointer-events: none;
 			span {
@@ -210,9 +214,8 @@ body, html {
 				&:after {
 					content: 'your video is loading';
 					display: block;
-					text-align: center;
-					padding: 22px 0;
-					font-size: 26px;
+					filter: alpha(opacity=75);
+					opacity: 0.75;
 				}
 			}
 		}
@@ -300,6 +303,7 @@ body, html {
 		position: absolute;
 		left: 0;
 		bottom: -38px;
+		bottom: 0px !important;
 		width: 100%;
 		height: 38px;
 		z-index: 10000;
@@ -721,6 +725,22 @@ body, html {
 				&.vid {
 					width: 53%;
 				}
+			}
+		}
+
+		&.ie10 {
+
+			a.wonder-logo {
+				right: 0%;
+				width: 22%;
+			}
+
+			a.wonder-fullscreen {
+				display: none;
+			}
+
+			a.wonder-volume {
+				right: 22%;
 			}
 		}
 	}

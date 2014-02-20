@@ -3,18 +3,26 @@
 /* ======================================= */
 
 #wonder-wrapper {
+	
+	
 
 	#wonder-poster {
-		display: none;
+		// display: none;
+
 		span {
-			top: -66px;
 			font-size: 18px;
 			line-height: 24px;
 
-			
 			&:after {
-				padding: 12px 0;
-				font-size: 13px;
+				padding: 0;
+				font-size: 11px;
+				line-height: 20px;
+			}
+		}
+
+		&.loading span {
+			&:after {
+
 			}
 		}
 	}
@@ -117,6 +125,37 @@
 					width: 72%;
 				}
 			}
+		}
+
+		&.ie10 {
+			a.wonder-volume {
+				right: 5%;
+				left: auto;
+			}
+			.scrubber {
+				&.vid {
+					width: 58%;
+				}
+			}
+			.scrubber-target {
+				&.vid {
+					width: 69%;
+				}
+			}
+			.scrubber {
+				&.vol {
+					right: 5%;
+					left: auto;
+				}
+			}
+
+			.scrubber-target {
+				&.vol {
+					right: 5%;
+					left: auto;
+				}
+			}
+
 		}
 	}
 }
