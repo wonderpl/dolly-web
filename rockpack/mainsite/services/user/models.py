@@ -1,6 +1,7 @@
 import re
 import uuid
 import random
+from datetime import datetime
 from sqlalchemy import (
     String, Column, Integer, Boolean, Date, DateTime, ForeignKey,
     Text, Enum, CHAR, PrimaryKeyConstraint, event, func)
@@ -218,6 +219,14 @@ class User(db.Model):
 
     def unset_flag(self, flag):
         UserFlag.query.filter_by(user=self.id, flag=flag).delete()
+
+    def promotion_map(self):
+        promos = []
+        now = datetime.utcnow()
+        for p in self.user_promotion:
+            if p.date_start < now and p.date_end > now:
+                promos.append('|'.join([str(p.locale_id), str(p.category_id), str(p.position)]))
+        return promos
 
 
 class UserFlag(db.Model):

@@ -537,6 +537,29 @@ class ChannelPromotion(db.Model):
                                 foreign_keys=[Category.__table__.c.id])
 
 
+class UserPromotion(db.Model):
+    __tablename__ = 'user_promotion'
+
+    id = Column(Integer, primary_key=True)
+    position = Column(Integer, nullable=False)
+
+    date_added = Column(DateTime(), nullable=False, default=func.now())
+    date_updated = Column(DateTime(), nullable=False, default=func.now(), onupdate=func.now())
+    date_start = Column(DateTime(), nullable=False, default=func.now())
+    date_end = Column(DateTime(), nullable=False, default=func.now())
+
+    # NOTE: Not a real fkey (category_id). Just an int in the db
+    category_id = Column('category', ForeignKey('category.id'), nullable=True)
+    user_id = Column('user', ForeignKey('user.id'), nullable=False)
+    locale_id = Column('locale', ForeignKey('locale.id'), nullable=False)
+
+    category = relationship(Category, backref='user_promotion_category',
+                            primaryjoin='Category.id==UserPromotion.category_id',
+                            foreign_keys=[Category.__table__.c.id])
+    user = relationship('User', backref='user_promotion')
+    locale = relationship('Locale', backref='user_promotion')
+
+
 class ChannelLocaleMeta(db.Model):
 
     __tablename__ = 'channel_locale_meta'

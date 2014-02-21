@@ -6,6 +6,7 @@ from flask.ext.admin.model.fields import AjaxSelectField
 from flask.ext.admin.model.typefmt import Markup
 from flask.ext.admin.model.form import InlineFormAdmin
 from rockpack.mainsite.services.video import models
+from rockpack.mainsite.services.user.models import User
 from rockpack.mainsite.services.cover_art import models as coverart_models
 from rockpack.mainsite.core.es import use_elasticsearch, api as es_api
 from .base import AdminModelView
@@ -146,7 +147,7 @@ class ChannelView(AdminModelView):
 
     form_excluded_columns = ('video_instances', 'channel_promotion')
     form_ajax_refs = dict(
-        owner_rel={'fields': (models.User.username,)},
+        owner_rel={'fields': (User.username,)},
     )
     form_args = dict(
         ecommerce_url=dict(validators=[wtf.validators.Optional()]),
@@ -192,6 +193,107 @@ def category_list():
         cats[c.category] = s + c.name
 
     return cats.items()
+
+
+class UserPromotionForm(BaseForm):
+    user = AjaxSelectField(None)
+    category_id = wtf.SelectField('Category')
+    locale_id = wtf.SelectField('Locale', validators=[wtf.validators.Required()])
+    position = wtf.IntegerField(validators=[wtf.validators.Required()])
+    date_start = wtf.DateTimeField(validators=[wtf.validators.Required()], widget=DateTimePickerWidget())
+    date_end = wtf.DateTimeField(validators=[wtf.validators.Required()], widget=DateTimePickerWidget())
+
+    def __init__(self, *args, **kwargs):
+        super(UserPromotionForm, self).__init__(*args, **kwargs)
+        self.user.loader = UserPromotionView()._form_ajax_refs['user']
+        self.category_id.choices = category_list()
+        self.locale_id.choices = [(l.id, l.name) for l in models.Locale.query.all()]
+
+    def validate(self):
+        # stupid hack for wtform's retarded handling of zero values
+        if int(self.category_id.data):
+            self.category_id.data = int(self.category_id.data)
+
+        if not super(UserPromotionForm, self).validate():
+            return
+
+        # Handle coercion here
+        self.category_id.data = int(self.category_id.data)
+
+        if self.date_start.data > self.date_end.data:
+            self.date_end.errors = ['End date must be after end date']
+            return
+
+        promos = models.ChannelPromotion.query.filter(
+            models.UserPromotion.date_end > self.date_start.data,
+            models.UserPromotion.date_start < self.date_end.data,
+            models.UserPromotion.date_end > datetime.utcnow(),
+            models.UserPromotion.category_id == self.category_id.data,
+            models.UserPromotion.locale_id == self.locale_id.data)
+
+        check_dupe = promos.filter(models.UserPromotion.user_id == self.user.data.id)
+        if request.args.get('id'):
+            check_dupe = check_dupe.filter(models.UserPromotion.id != int(request.args.get('id')))
+        if check_dupe.count():
+            self.user.errors = ['User is already promoted in this category']
+            return
+
+        if request.args.get('id'):
+            promo = models.UserPromotion.query.get(int(request.args.get('id')))
+            if promo.user_id != self.user.data.id:
+                self.user.errors = ['User cannot be changed once set']
+                return
+
+            promos = promos.filter(
+                models.UserPromotion.id != request.args.get('id'))
+
+        if int(self.position.data) > 8:
+            self.position.errors = ['Only a maximum of 8 position per category can be set']
+            return
+
+        promos = promos.filter(models.UserPromotion.position == self.position.data)
+
+        if promos.count():
+            self.position.errors = ['Conflicts with promotion "{}"'.format(','.join([_.user.username for _ in promos.all()]))]
+            return
+
+        return True
+
+
+class UserPromotionView(AdminModelView):
+
+    def _format_promo_state(view, context, user_promo, name):
+        now = datetime.utcnow()
+        if now < user_promo.date_start:
+            state = '<div style="background-color:#FFBB33; text-align: center; border: solid 1px #FF8800; color: #FFFFFF">WAITING</div>'
+        elif user_promo.date_end < now:
+            state = '<div style="background-color:#FF4444; text-align: center; border: solid 1px #CC0000; color: #FFFFFF">ENDED</div>'
+        else:
+            state = '<div style="background-color:#99CC00; text-align: center; border: solid 1px #669900; color: #FFFFFF">ACTIVE</div>'
+        return Markup(state)
+
+    def _format_category_names(view, context, user_promo, name):
+        if user_promo.category_id == 0:
+            return 'All'
+        return models.Category.query.get(user_promo.category_id)
+
+    def _format_user_from(view, context, user_promo, name):
+        return ', '.join(map(str, set([c[0] for c in models.Channel.query.filter(models.Channel.owner == user_promo.user.id).values('category')])))
+
+    model = models.UserPromotion
+
+    form = UserPromotionForm
+    form_ajax_refs = dict(
+        user={'fields': (models.User.username,)},
+    )
+
+    column_formatters = dict(
+        original_categories=_format_user_from,
+        promo_state=_format_promo_state,
+        appearing_in=_format_category_names)
+    column_list = ('user', 'original_categories', 'locale', 'appearing_in', 'promo_state', 'position', 'date_start', 'date_end', 'date_added', 'date_updated')
+    column_labels = dict(user='User', locale='Target Locale', appearing_in='Target Category')
+    column_filters = ('user', 'category', 'locale', 'position', 'date_added', 'date_updated', 'date_start', 'date_end')
 
 
 class ChannelPromotionForm(BaseForm):
