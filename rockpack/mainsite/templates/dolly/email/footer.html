@@ -4,7 +4,8 @@
       <table border="0" cellpadding="0" cellspacing="0" height="120" width="428" bgcolor="#f9f9f9">
         <tr>  
           <td align="center" valign="middle" height="120" width="100%">
-            <p><font face="verdana" size="1" color="#767472">To ensure our emails reach your inbox please make sure to add {{ config.DEFAULT_EMAIL_SOURCE|e }} to your address book or safe list. You are subscribed as {{ user.email }}. Your privacy is important to us, have a read of our <a style="color: #5850bb;" href="{{ url_for('privacy') }}" target="_blank"><font color="#5850bb">privacy policy</font></a>.</p>
+            <p><font face="verdana" color="#767472" style="font-size: 11px; line-height: 17px;">To ensure our emails reach your inbox please make sure to add {{ config.DEFAULT_EMAIL_SOURCE|e }} to your address book or safe list. You are subscribed as {{ user.email }}.</font></p>
+            <p><font face="verdana" color="#767472" style="font-size: 11px; line-height: 17px;">Your privacy is important to us, have a read of our <a style="color: #5850bb;" href="{{ url_for('privacy') }}" target="_blank"><font color="#5850bb">privacy policy</font></a>.</font></p>
           </td> 
         </tr>
       </table>
