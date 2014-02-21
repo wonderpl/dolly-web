@@ -68,8 +68,8 @@ footer {
 		// background: transparent url('/static/assets/dolly/img/header-logo-grey-bars-retina.png') left 15px no-repeat;
 		// background-size: 145px auto;
 		display: block;
-		padding: 80px 0 22px 0;
-
+		padding: 80px 0 0px 0;
+		
 		.col {
 			display: inline-block;
 			vertical-align: top;
@@ -94,8 +94,8 @@ footer {
 				font-family: 'proxima-nova', sans-serif;
 				font-style: normal;
 				font-weight: 300;
-				font-size: 20px;
-				line-height: 28px;
+				font-size: 24px;
+				line-height: 34px;
 
 				ul {
 				
@@ -109,9 +109,11 @@ footer {
 		}
 
 		.col-1 {
+			width: 27.5%;
 		}
 
 		.col-2 {
+			width: 22.5%;
 		}
 
 		.col-3, .col-4 {
@@ -120,20 +122,26 @@ footer {
 				width: 100%;
 				opacity: 1;
 				-webkit-transition: opacity .1s ease-out;
-
-				&:hover, &:active, &:focus {
-					// opacity: 0.8;
-				}
 			}
 			img {
 				display: block;
-				width: 70%;
-				margin: 0 auto 24px auto;
+				width: 45%;
+				margin: 0 auto 16px auto;
+			}
+			a.ooyala img {
+				margin: 0 auto 20px auto;
+			}
+			p {
+				text-align: left;
+				font-size: 13px;
 			}
 		}
-
+		.col-3 {
+			width: 27.5%;
+		}
 		.col-4 {
-			padding-top: 22px;
+			width: 22.5%;
+			padding-top: 40px;
 			text-align: center;
 			a:first-child {
 				margin: 0 0 28px 0;
@@ -141,13 +149,12 @@ footer {
 			a.app-store-link {
 				display: block;
 				position: relative;
-				width: 125px;
-				height: 125px;
+				width: 155px;
+				height: 50px;
 				margin: 0 auto;
 				background: transparent url('/static/assets/dolly/img/header-download-button-retina.png') center center no-repeat;
 				background-size: 100% auto;
 			}
-
 		}
 	}
 
