@@ -29,6 +29,11 @@ h1 {
   color: #767472;
 }
 
+h2 {
+  font-weight: normal;
+  color: #767472;
+}
+
 p {
   font-size: 18px;
   line-height: 24px;
@@ -65,27 +70,27 @@ a:link, a:visited, div a {
                     <center>
                       
                       <br/><br/>
-                      
+                
                       {% if user.avatar.url %}
-                        <img src="{{ user.avatar.url }}" style="display: block; width: 60px; height: 60px; border: 3px solid #bcbad4; outline: none;" border="0" width="60" height="60" />
+                        <img src="{{ user.avatar.url }}" style="display: block; width: 60px; height: 60px; border: 3px solid #bcbad4; outline: none;" border="0" width="60" height="60" alt="{{ user.display_name }}" />  
                       {% else %}
-                        <img src="{{ config.EMAIL_ASSETS_URL }}/assets/dolly/img/emails/avatar-small.png" style="display: block; width: 60px; height: 60px; border: none; outline: none;" border="0" width="60" height="60" />
+                        <img src="{{ config.EMAIL_ASSETS_URL }}/assets/dolly/img/emails/avatar-small.png" style="display: block; width: 60px; height: 60px; border: none; outline: none;" border="0" width="60" height="60" alt="{{ user.display_name }}" />
                       {% endif %}
 
-                      <h1><font face="verdana" size="3" color="#767472" style="font-weight: normal; font-size: 20px; line-height: 28px;">{{ user.display_name }} shared a {{ object_type_name }} <br/>with you with Wonder PL.</font></h1>
-                      <br/>
-
                       {% if object_type == "channel" %}
-                        <a href="{{ link.url }}" border="0" style="border: none; outline: none;"><img src="{{ object.default_thumbnail }}" border="0" alt="" width="285" height="160" style="display: block; margin: 0 auto; border: 3px solid #bcbad4; ouline: none;" /></a>
-                        <p style="width: 60%;"><font face="verdana" size="3" color="black">{{ object.title }}</font></p>
-                        <!-- FIXME:
+                        <h1><font face="verdana" size="3" color="#767472" style="font-weight: normal; font-size: 20px; line-height: 28px;">{{ user.display_name }} shared a {{ object_type_name }} <br/>with you with Wonder PL.</font></h1>
+                        <br/>
+                        <h2><font face="verdana" size="5" color="black">{% filter upper %}{{ object.title }}{% endfilter %}</font></h2>
                         {% for video in top_videos %}
-                        <div>
-                        <a href="{{ link.url }}" border="0" style="border: none; outline: none;"><img src="{{ video.default_thumbnail }}" border="0" alt="" width="285" height="160" style="display: block; margin: 0 auto; border: 3px solid #bcbad4; ouline: none;" /></a>
-                        </div>
-                          -->
+                        <p><a href="{{ link.url }}" border="0" style="border: none; outline: none;"><img src="{{ video.default_thumbnail }}" border="0" alt="" width="285" height="160" style="display: block; margin: 0 auto; border: 3px solid #bcbad4; ouline: none;" /></a></p>
+                        <p style="width: 60%;"><font face="verdana" size="3" color="black">{{ video.video_rel.title }}</font></p>
+                        <p><a href="{{ link.url }}" border="0" style="border: none; outline: none;"><img src="{{ video.default_thumbnail }}" border="0" alt="" width="285" height="160" style="display: block; margin: 0 auto; border: 3px solid #bcbad4; ouline: none;" /></a></p>
+                        <p style="width: 60%;"><font face="verdana" size="3" color="black">{{ video.video_rel.title }}</font></p>
+                        <p><a href="{{ link.url }}" border="0" style="border: none; outline: none;"><img src="{{ video.default_thumbnail }}" border="0" alt="" width="285" height="160" style="display: block; margin: 0 auto; border: 3px solid #bcbad4; ouline: none;" /></a></p>
+                        <p style="width: 60%;"><font face="verdana" size="3" color="black">{{ video.video_rel.title }}</font></p>
                         {% endfor %}
                       {% else %}
+                        <h1><font face="verdana" size="3" color="#767472" style="font-weight: normal; font-size: 20px; line-height: 28px;">{{ user.display_name }} shared a {{ object_type_name }} <br/>with you with Wonder PL.</font></h1>
                         <a href="{{ link.url }}" border="0" style="border: none; outline: none;"><img src="{{ object.default_thumbnail }}" border="0" alt="" width="285" height="160" style="display: block; margin: 0 auto; border: 3px solid #bcbad4; ouline: none;" /></a>
                         <p style="width: 60%;"><font face="verdana" size="3" color="black">{{ object.video_rel.title }}</font></p>
                       {% endif %}
