@@ -637,7 +637,6 @@ class UserSearch(EntitySearch, CategoryMixin):
                     brand=True,
                     site_url=user.site_url,
                 )
-            user_list.append(u)
 
             if self.promoted_category is not None and user.promotion:
                 # All these should be at the top so we have all the

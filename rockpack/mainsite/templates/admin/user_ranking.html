@@ -132,13 +132,13 @@
     <section class="card" style="min-width: 220px; width:36%; max-width:256px; height:390px; float: left; overflow: hidden; position: relative">
         <div style="height: 92px">
             <h1 {% if user.promoted %}style="color:#99CC00; font-weight: bold"{% endif %}>
-                {{ user.username|truncate(30, True) }} <img class="circle" src="{{ user.avatar_thumbnail_url }}"/>
+                {{ user.username|truncate(30, True) }} <img class="circle" src="{{ image_cdn }}{{ user.avatar_thumbnail_url }}"/>
             </h1>
         </div>
         <h3>date added: {{ user.date_added }} </h3>
         <h3>ranking: {{ user.explanation.value }} </h3>
         <h3>editorial boost: {{ user.editorial_boost }}</h3>
-        <div class="pic"><a href="{{ locale_base  }}{{ user.id }}/"><img style="min-width: 268px; width:100%; max-width:304px" src="{{ image_cdn }}{{ user.cover_thumbnail_large_url }}"/></a></div>
+        <div class="pic"><a href="{{ locale_base  }}{{ user.id }}/"><img style="min-width: 268px; width:100%; max-width:304px" src="{{ image_cdn }}{{ user.profile_cover_url }}"/></a></div>
     </section>
         {% endfor %}
 
