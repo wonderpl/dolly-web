@@ -442,7 +442,7 @@ class Channel(db.Model):
     resource_url = property(get_resource_url)
 
     def set_cover_fallback(self, videos):
-        if not self.cover and app.config.get('DOLLY'):
+        if not self.cover and videos and app.config.get('DOLLY'):
             try:
                 first = videos[0]
                 if isinstance(first, basestring):
