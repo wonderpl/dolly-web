@@ -2,10 +2,75 @@ from flask.ext.admin import expose
 from flask import request, redirect
 from rockpack.mainsite import app
 from rockpack.mainsite.admin.video_views import category_list
-from rockpack.mainsite.core.es.search import ChannelSearch, VideoSearch
+from rockpack.mainsite.core.es.search import ChannelSearch, VideoSearch, UserSearch
 from rockpack.mainsite.core.es import filters
 from rockpack.mainsite.services.video.models import Source
 from .base import AdminView
+
+
+class UserRankingView(AdminView):
+
+    @expose('/', ('GET',))
+    def index(self):
+        return redirect(request.url + 'locale/en-us/')
+
+    @expose('/locale/<string:locale>/', ('GET',))
+    def ranking_locale(self, locale):
+        category = int(request.args.get('category', 0))
+        search = request.args.get('search')
+
+        toggle_locale = {'en-us': 'en-gb', 'en-gb': 'en-us'}.get(locale)
+        ctx = {
+            'locale_base': self.url + '/locale/' + locale + '/',
+            'locale_toggle_name': toggle_locale,
+            'locale_toggle': self.url + '/locale/' + toggle_locale + '/',
+            'categories': category_list(),
+            'image_cdn': app.config['IMAGE_CDN'],
+            'category': category,
+            'locale': locale,
+            'search_term': request.args.get('search', 'Search for a user')}
+
+        if category == 0:
+            category = None
+
+        u = UserSearch()
+        offset, limit = request.args.get('start', 0), request.args.get('size', 20)
+        u.set_paging(offset, limit)
+        if search:
+            u.add_text('username', search)
+        else:
+            u.filter_category(category)
+            u.promotion_settings(category)
+        processed_users = u.users()
+
+        ctx['users'] = []
+
+        # loop once to get the raw data
+        raw_users = {}
+        print u
+        for user in u.results():
+            print user
+            u = {}
+            u['id'] = user.id
+            u['username'] = user.username
+            u['explanation'] = user.__dict__['_meta']['explanation']
+            u['profile_cover_url'] = user.profile_cover_url
+            u['avatar_thumbnail_url'] = user.avatar_thumbnail_url
+            u['description'] = user.description
+            u['promotion'] = user.promotion
+            u['normalised_rank'] = user.normalised_rank
+            raw_users[user.id] = u
+
+        # loop again to get the correct order
+        for user in processed_users:
+            u = raw_users[user['id']]
+            promo_string = '|'.join([locale, str(category or 0), str(user['position'] + 1)])
+            u['promoted'] = False
+            if u.get('promotion', []) and promo_string in u.get('promotion', []):
+                u['promoted'] = True
+            ctx['users'].append(u)
+
+        return self.render('admin/user_ranking.html', **ctx)
 
 
 class RankingView(AdminView):

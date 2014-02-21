@@ -580,18 +580,47 @@ class VideoSearch(EntitySearch, CategoryMixin, MediaSortMixin):
         return self._video_results
 
 
-class UserSearch(EntitySearch):
+class UserSearch(EntitySearch, CategoryMixin):
+
+    class PositionOutsideOffsetError(Exception):
+        pass
+
     def __init__(self):
         super(UserSearch, self).__init__('user')
         self._user_results = None
+        self.promoted_category = None
+
+    def _get_position(self, user):
+        promote_pattern = '|'.join([str(self.locale),
+                                    str(self.promoted_category)]) + '|'
+
+        for p in user.promotion:
+            if p.startswith(promote_pattern):
+                locale, category, pos = p.split('|')
+                pos = int(pos) - 1  # position isn't zero indexed, so adjust
+                if pos < self.paging[0]:
+                    raise self.PositionOutsideOffetError
+
+                return pos - self.paging[0]
+
+    @staticmethod
+    def _check_position(user_list, position, max_check):
+        if position > max_check:
+            return None
+
+        if not isinstance(user_list[position], int):
+            position += 1
+            position = UserSearch._check_position(user_list, position, max_check)
+        return position
 
     def _format_results(self, users):
-        user_list = []
+        user_list = range(self.paging[1])
         IMAGE_CDN = app.config.get('IMAGE_CDN', '')
         BASE_URL = url_for('basews.discover')
-        for position, user in enumerate(users, self.paging[0]):
+
+        position = 0
+        for user in users:
             u = dict(
-                position=position,
                 id=user.id,
                 username=user.username,
                 display_name=user.display_name,
@@ -610,11 +639,62 @@ class UserSearch(EntitySearch):
                 )
             user_list.append(u)
 
+            if self.promoted_category is not None and user.promotion:
+                # All these should be at the top so we have all the
+                # promoted slots filled before we process the non
+                # promoted ones
+                try:
+                    this_position = self._get_position(u)
+                except self.PositionOutsideOffetError:
+                    # We don't want to include this user
+                    pass
+                else:
+                    # NOTE: position starts at 1, so this is safe
+                    if this_position:
+                        u['position'] = this_position
+                        user_list[this_position] = u
+            else:
+                position = self._check_position(user_list, position, self.paging[1] - 1)
+                u['position'] = position + self.paging[0]
+                user_list[position] = u
+
+                # Incrementing the counter for
+                # non-promoted channels
+                position += 1
+
+        # We may have empty positions so lets strip these
+        user_list = filter(lambda x: not isinstance(x, int), user_list)
+
+        if getattr(self, '_real_paging', False):
+            # XXX: promotion hack - return the actual
+            # amount requested initially
+            user_list = user_list[self._real_paging[0]:self._real_paging[0] + self._real_paging[1]]
+
         return user_list
+
+    def promotion_settings(self, category):
+        self.promoted_category = category or 0
+        self.add_filter(
+            pyes.CustomFiltersScoreQuery.Filter(
+                pyes.PrefixFilter(
+                    field='promotion',
+                    prefix='|'.join([str(self.locale), str(self.promoted_category)])
+                ),
+                script='1000000000000000000'
+            )
+        )
 
     def users(self):
         if not self._user_results:
-            self._user_results = self._format_results(self.results())
+            # XXX: hack for promotions - we need at least 8
+            # positions and then return the correct amount
+            # asked for.
+            if self.paging[1] < 8:
+                self._real_paging = self.paging
+                self.paging = 0, 8
+            r = self.results()
+            self._user_results = self._format_results(r)
+
         return self._user_results
 
 

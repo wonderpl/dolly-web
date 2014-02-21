@@ -33,7 +33,8 @@ def send_share_email(recipient, user, object_type, object, link):
     object_type_name = OBJECT_NAME_MAP[object_type]
     template = email.env.get_template('share.html')
     if app.config.get('DOLLY') and object_type == 'channel':
-        top_videos = VideoInstance.query.filter_by(channel=object.id).limit(3)
+        top_videos = VideoInstance.query.filter_by(channel=object.id).\
+            order_by(VideoInstance.position, VideoInstance.date_added.desc()).limit(3)
     else:
         top_videos = []
     body = template.render(

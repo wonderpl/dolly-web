@@ -658,7 +658,8 @@ def add_user_to_index(user, bulk=False, refresh=False, no_check=False):
         site_url=user.site_url,
         brand=user.brand,
         subscriber_count=user.subscriber_count,
-        subscription_count=Subscription.query.filter_by(user=user.id).count()
+        subscription_count=Subscription.query.filter_by(user=user.id).count(),
+        promotion=user.promotion_map(),
     )
     return add_to_index(
         data,

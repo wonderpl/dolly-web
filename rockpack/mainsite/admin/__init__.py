@@ -25,7 +25,10 @@ def setup_admin(app):
 
     admin.add_view(import_views.ImportView(name='Import', endpoint='import', category='Import'))
     admin.add_view(import_views.UploadView(name='Review Uploads', endpoint='review', category='Import'))
-    admin.add_view(ranking_views.RankingView(name='Ranking', endpoint='ranking'))
+    if app.config.get('DOLLY'):
+        admin.add_view(ranking_views.UserRankingView(name='Ranking', endpoint='ranking'))
+    else:
+        admin.add_view(ranking_views.RankingView(name='Ranking', endpoint='ranking'))
 
     # Need to import here to avoid import uninitialised google_oauth decorator
     from .auth.views import login, logout, oauth_callback

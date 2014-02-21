@@ -276,7 +276,11 @@ user_mapping = {
         "category": {
             "type": "string",
             "index": "not_analyzed"
-        }
+        },
+        "promotion": {
+            "type": "string",
+            "index": "not_analyzed"
+        },
     }
 }
 
