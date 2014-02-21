@@ -148,7 +148,7 @@ footer {
 		background: #fff;
 	}
 
-	.col-1, .col-3 {
+	.col-1, .col-2, .col-3, .col-4 {
 		width: 50%;
 		display: inline-block;
 		vertical-align: top;
@@ -163,7 +163,7 @@ footer {
 		}
 
 		li {
-			text-align: left;
+			text-align: center;
 			font-family: 'proxima-nova', sans-serif;
 			font-style: normal;
 			font-weight: 300;
@@ -181,18 +181,51 @@ footer {
 		}
 	}
 
-	.col-3 {
-		padding: 16px 0 0 0;
+	// .col-3 {
+	// 	padding: 16px 0 0 0;
+	// 	img {
+	// 		display: block;
+	// 		width: 100%;
+	// 		max-width: 180px;
+	// 		margin: 0 auto 16px auto;
+	// 	}
+	// }
+
+	.col-3, .col-4 {
+		padding: 0;
+
 		img {
 			display: block;
-			width: 100%;
-			max-width: 180px;
-			margin: 0 auto 16px auto;
+			width: 60%;
+			margin: 0 auto 12px auto;
+		}
+
+		a {
+			display: block;
+			&.ooyala {
+
+				img {
+					margin: 0 auto 34px auto;
+				}		
+			}
+		}
+		a.app-store-link {
+			display: block;
+			position: relative;
+			width: 125px;
+			margin: 0 auto;
+			background: transparent url('/static/assets/dolly/img/header-download-button-retina.png') center center no-repeat;
+			background-size: 100% auto;
+			&:before {
+				content: '';
+				display: block;
+				padding-top: 50%;
+			}
 		}
 	}
 
-	.col-2, .col-4 {
-		display: none;
+	.col-4 {
+		padding-top: 18px;
 	}
 
 	.trim {
@@ -204,12 +237,36 @@ footer {
 			font-size: 15px;
 			padding: 6px;
 		}
-		.middle, .right {
+		.middle{
 			padding: 3px;
-			display: inline-block;
-			vertical-align: top;
+			display: block;
+			vertical-align: middle;
 			font-size: 11px;
 			margin: 0 0 12px 0;
+		}
+		.right {
+			display: block;
+			padding-bottom: 12px;
+			a.social {
+				display: inline-block;
+				width: 20px;
+				height: 20px;
+				background: #999999;
+				text-align: center;
+				color: #fff;
+				padding: 4px 0 0 0;
+				font-size: 12px;
+				-webkit-border-radius: 100px;
+				-moz-border-radius: 100px;
+				border-radius: 100px;
+				margin: 3;
+				-webkit-transition: background .1s ease-out;
+
+				&:hover, &:active, &:focus {
+					color: #fff;
+					background: @lilac;
+				}
+			}
 		}
 	}
 }
