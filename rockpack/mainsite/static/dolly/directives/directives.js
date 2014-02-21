@@ -40,7 +40,7 @@
 	}]);
 
 
-	app.directive('scrollAnchorLink', ['$timeout', function ($timeout) {
+	app.directive('scrollAnchorLink', ['$timeout', '$rootScope', function ($timeout, $rootScope) {
 		return {
 			priority: 100,
 			restrict: 'C',
@@ -52,21 +52,31 @@
 
 					elem.bind('click', function(e){
 						e.preventDefault();
-
-						var body = d.documentElement.scrollTop ? d.documentElement : d.body,
-    						from = body.scrollTop,
-    						to = target.getBoundingClientRect().top;
-
-						scope.tween = new TWEEN.Tween( { y: from } )
-			            .to( { y: to-75 }, 600 )
-			            .easing( TWEEN.Easing.Cubic.Out )
-			            .onUpdate( function () {
-			            	body.scrollTop = this.y;
-			            }).start();
+						$rootScope.scrollToAnchor( target );
 					});
+
 				} else {
 					elem.bind('click', function(e){e.preventDefault();});
 				}
+			}
+		}
+	}]);
+
+	app.directive('footerLink', ['$timeout', '$rootScope', '$location', function($timeout, $rootScope, $location){
+		return {
+			priority: 100,
+			restrict: 'C',
+			link: function (scope, elem, attrs) {
+				elem.bind('click', function(e) {
+				// 	if ( $location.path() === '/about-us' ) {
+				// 		var target = d.getElementById( 'anchor-' + attrs.anchor );
+				// 		if ( target !== null ) {
+				// 			$rootScope.scrollToAnchor( target );
+				// 		}
+				// 	} else {
+						$rootScope.queueAnchor = attrs.anchor;
+				// 	}
+				});
 			}
 		}
 	}]);

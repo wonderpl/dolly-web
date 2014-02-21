@@ -114,7 +114,7 @@ footer {
 		.col-2 {
 		}
 
-		.col-3 {
+		.col-3, .col-4 {
 			a {
 				display: block;
 				width: 100%;
@@ -133,46 +133,11 @@ footer {
 		}
 
 		.col-4 {
-			padding-top: 5px;
-			// padding-top: 52px;
+			padding-top: 22px;
 			text-align: center;
-
-			.row {
-				display: block;
-				clear: both;
-
-				&.top {
-					// padding: 0 0 0 30px;
-				}
-
-				&.bottom {
-					// padding: 0 0 0 54px;
-				}
+			a:first-child {
+				margin: 0 0 28px 0;
 			}
-
-			a.social {
-				display: inline-block;
-				width: 35px;
-				height: 35px;
-				background: #999999;
-				text-align: center;
-				color: #fff;
-				padding: 6px 0 0 0;
-				font-size: 25px;
-				-webkit-border-radius: 100px;
-				-moz-border-radius: 100px;
-				border-radius: 100px;
-				margin: 6px 12px;
-				-webkit-transition: background .1s ease-out;
-				-moz-transition: background .1s ease-out;
-				-o-transition: background .1s ease-out;
-
-				&:hover, &:active, &:focus {
-					color: #fff;
-					background: @lilac;
-				}
-			}
-
 			a.app-store-link {
 				display: block;
 				position: relative;
@@ -201,7 +166,7 @@ footer {
 			position: absolute;
 			display: block;
 			width: 33.3333%;
-			top: 50px;
+			top: 36px;
 		}
 
 		.left {
@@ -211,6 +176,7 @@ footer {
 		.middle {
 			left: 0;
 			right: 0;
+			top: 50px;
 			margin: 0 auto;
 		}
 		.right {
@@ -227,6 +193,29 @@ footer {
 
 			&:hover, &:focus, &:active {
 				color: @lilac;
+			}
+
+			&.social {
+				display: inline-block;
+				width: 35px;
+				height: 35px;
+				background: #999999;
+				text-align: center;
+				padding: 6px 0 0 0;
+				font-size: 25px;
+				color: @lightlilac;
+				-webkit-border-radius: 100px;
+				-moz-border-radius: 100px;
+				border-radius: 100px;
+				margin: 6px 12px;
+				-webkit-transition: background .1s ease-out;
+				-moz-transition: background .1s ease-out;
+				-o-transition: background .1s ease-out;
+
+				&:hover, &:active, &:focus {
+					color: @lilac;
+					background: #fff;
+				}
 			}
 		}
 	}

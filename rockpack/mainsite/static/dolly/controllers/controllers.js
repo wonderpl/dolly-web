@@ -8,15 +8,25 @@
 
     app.controller('MainCtrl', ['$scope', '$timeout','$location', '$rootScope', function($scope, $timeout, $location, $rootScope) {
 
+        $rootScope.queueAnchor = false;
+
     	$rootScope.$on('$locationChangeSuccess', function(event){
 			$timeout(function(){
         		$rootScope.$apply(function(){
     				$rootScope.currentpage = $location.$$path;
+
+                    if ( $location.path() === '/about-us' &&  $rootScope.queueAnchor !== false ) {
+                        $timeout( function(){
+                            $rootScope.scrollToAnchor(d.getElementById('anchor-' + $rootScope.queueAnchor))
+                            $rootScope.queueAnchor = false;
+                        }, 200)
+                    }
     			});
         	});
     	});
 
         $rootScope.$on('$locationChangeStart', function(event, newUrl, oldUrl){
+            console.log('location change start called');
         	$timeout(function(){
         		$rootScope.$apply(function(){
         			$rootScope.toggled = false;
@@ -36,6 +46,20 @@
         		});
         	});
         });
+
+        $rootScope.scrollToAnchor = function( target ) {
+            var body = d.documentElement.scrollTop ? d.documentElement : d.body,
+                from = body.scrollTop,
+                to = target.getBoundingClientRect().top,
+                tween;
+
+            tween = new TWEEN.Tween( { y: from } )
+            .to( { y: to-75 }, 600 )
+            .easing( TWEEN.Easing.Cubic.Out )
+            .onUpdate( function () {
+                body.scrollTop = this.y;
+            }).start();
+        };
 
     }]);    
 
