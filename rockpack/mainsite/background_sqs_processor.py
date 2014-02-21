@@ -37,7 +37,7 @@ class BackgroundSqsProcessor(SqsProcessor):
     sqs_visibility_timeout = app.config.get('SQS_BACKGROUND_VISIBILITY_TIMEOUT', 1200)
 
     def process_message(self, message):
-        _run_call(message)
+        return _run_call(message)
 
 
 def background_on_sqs(func):
