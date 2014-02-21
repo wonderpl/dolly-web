@@ -22,8 +22,8 @@ def _from_int(i):
 
 
 def load_activity(activity):
-    data = ('%d,%d,%d\n' % (_to_int(userid), _to_int(channelid[2:]), weight)
-            for userid, channelid, weight in activity)
+    data = '\n'.join('%d,%d,%d\n' % (_to_int(userid), _to_int(channelid[2:]), weight)
+                     for userid, channelid, weight in activity)
     return _myrrix_request('post', '/ingest', data=data,
                            headers={'Content-Type': 'application/csv'})
 
