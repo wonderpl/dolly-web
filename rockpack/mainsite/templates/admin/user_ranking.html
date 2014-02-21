@@ -132,7 +132,7 @@
     <section class="card" style="min-width: 220px; width:36%; max-width:256px; height:390px; float: left; overflow: hidden; position: relative">
         <div style="height: 92px">
             <h1 {% if user.promoted %}style="color:#99CC00; font-weight: bold"{% endif %}>
-                {{ user.username|truncate(30, True) }} <img class="circle" src="{{ image_cdn }}{{ user.avatar_thumbnail_url }}"/>
+                <img class="circle" src="{{ image_cdn }}{{ user.avatar_thumbnail_url }}"/> {{ user.username|truncate(30, True) }}
             </h1>
         </div>
         <h3>date added: {{ user.date_added }} </h3>
