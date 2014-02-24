@@ -23,7 +23,7 @@ OO.plugin("WonderUIModule", function (OO) {
             playing: false,
             fullscreen: false
         },
-        
+
         // UI vars
         mousedown: false,
         mousetarget: undefined,
@@ -97,6 +97,7 @@ OO.plugin("WonderUIModule", function (OO) {
         _.ie10 = ( _.UA.indexOf('msie 1') !== -1 ) ? true : false;
         _.ipad = ( _.UA.indexOf('ipad') !== -1 ) ? true : false;
         _.ios = ( _.UA.indexOf('ipad') !== -1 || _.UA.indexOf('iphone') !== -1 ) ? true : false;
+        _.ios5 = /(iphone|ipad).*os 5_.*/i.test(_.UA);
 
         _.mb.subscribe(OO.EVENTS.PLAYER_CREATED, 'wonder', _.onPlayerCreate);
         _.mb.subscribe(OO.EVENTS.SEEKED, 'wonder', _.onSeeked);
@@ -131,6 +132,8 @@ OO.plugin("WonderUIModule", function (OO) {
         _.elements.poster = document.getElementById('wonder-poster');
         _.elements.loader = document.getElementById('wonder-loader');
         
+        
+
         // Main buttons
         _.elements.playbutton = document.querySelector('.wonder-play');
         // _.elements.bigplaybutton = document.querySelector('.wonder-play-big');
@@ -194,21 +197,24 @@ OO.plugin("WonderUIModule", function (OO) {
         // Decide which listeners to use for the scrubbers.
         // && _.hasClass( document.querySelector('html'), 'ie10' )
         if ( _.isTouchDevice() ) {
-            // _.listen(_.elements.loader, 'touchstart', function(e){event.preventDefault();});
-            // _.listen(_.elements.loader, 'touchend', _.interaction);
             _.addClass(_.elements.controls, 'show');
             _.listen(_.elements.loader, 'click', _.toggleControls);
-            _.listen(_.elements.scrubber_trans, 'touchmove', _.scrubTouch);
-            _.listen(_.elements.scrubber_trans, 'touchstart', _.scrubDown);
-            _.listen(_.elements.scrubber_trans, 'touchleave', _.scrubUp);
-            // _.listen(_.elements.scrubber_trans, 'touchend', _.scrubUp);
+            
+            if ( _.ios5 === false ) {
+                _.listen(_.elements.scrubber_trans, 'touchmove', _.scrubTouch);
+                _.listen(_.elements.scrubber_trans, 'touchstart', _.scrubDown);
+                _.listen(_.elements.scrubber_trans, 'touchleave', _.scrubUp);                
+            } else {
+                _.listen(_.elements.scrubber_trans[0], 'touchmove', _.scrubTouch);
+                _.listen(_.elements.scrubber_trans[0], 'touchstart', _.scrubDown);
+                _.listen(_.elements.scrubber_trans[0], 'touchleave', _.scrubUp);                
+            }
+
         } else {
             _.listen(_.elements.loader, 'click', _.togglePlay);
             _.listen(_.elements.scrubber_trans, 'mousemove', _.scrubMouse);
             _.listen(_.elements.scrubber_trans, 'mousedown', _.scrubDown);
             _.listen(_.elements.scrubber_trans, 'mouseup', _.scrubUp);
-            // _.listen(_.elements.scrubber_trans, 'mouseleave', _.scrubUp);
-            
             _.listen(_.elements.controls, 'mouseleave', function(){
                 _.controlshovered = false;
             });
@@ -221,6 +227,10 @@ OO.plugin("WonderUIModule", function (OO) {
             _.addClass( _.elements.controls, 'volume-disabled' );
         }
 
+        if ( _.ios5 === true ) {
+            _.addClass( _.elements.poster, 'ios5' );
+        }
+        
         Conduit.add('updateTimers', _.updateTimers);
         Conduit.add('bufferTick', _.bufferTick);
         if ( _.ie8 === false && _.flash === false ) {
@@ -229,10 +239,12 @@ OO.plugin("WonderUIModule", function (OO) {
         Conduit.add('uiTick', _.uiTick);
         Conduit.add('actionTick', _.actionTick);
         if ( _.ie8 === true ) {
-            Conduit.add('ieTick', _.ieTick);    
+            Conduit.add('ieTick', _.ieTick);
         }
+
         Conduit.setFPS(25);
         Conduit.start();
+
         _.elements.poster.getElementsByTagName('span')[0].innerHTML = (_.data.title.replace(/_/g,' '));
         _.duration = _.data.video.duration;
     };
