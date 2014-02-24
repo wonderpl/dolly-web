@@ -1090,3 +1090,14 @@ class TestEmail(base.RockPackTestCase):
     def test_email_reactivation_wo_patch(self):
         user = self.create_test_user(email=app.config['TEST_REACTIVATION_EMAIL'])
         self._create_reactivation_email(user)
+
+    @skip_unless_config('TEST_RESET_EMAIL')
+    def test_email_reset_wo_patch(self):
+        user = self.create_test_user(email=app.config['TEST_RESET_EMAIL'])
+        with self.app.test_client() as client:
+            r = client.post(
+                '/ws/reset-password/',
+                headers=[get_client_auth_header()],
+                data=dict(username=user.email)
+            )
+            self.assertEqual(r.status_code, 204)

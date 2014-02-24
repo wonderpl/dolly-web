@@ -326,7 +326,7 @@ a:link, a:visited, div a {
                 <tr>
                   <td class="headerContent">
                     <br /><br />
-                    Hi {{ username }},<br />                     
+                    Hi {{ user.username }},<br />                     
                     <p><a href="{{ reset_link }}">Click here</a> to reset your password. This link will expire in 24 hours. </p>
                     <p>Thanks!</p>
 
@@ -345,7 +345,7 @@ a:link, a:visited, div a {
             <td>
               <p>To ensure our emails reach your inbox please make sure to add {{ email_sender|e }}</p>
               <p>to your address book or safe list.</p>
-              <p>You are subscribed as {{ email }}.</p>
+              <p>You are subscribed as {{ user.email }}.</p>
               <p>Your privacy is important to us, have a read to our <a href="{{ url_for('privacy') }}">privacy policy</a>.</p>
             </td>
           </tr>

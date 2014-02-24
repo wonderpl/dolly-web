@@ -15,6 +15,7 @@ from rockpack.mainsite.core.token import create_access_token
 from rockpack.mainsite.core.email import send_email, env as email_env
 from rockpack.mainsite.core.oauth.decorators import check_client_authorization
 from rockpack.mainsite.core.webservice import WebService, expose_ajax, secure_view
+from rockpack.mainsite.background_sqs_processor import background_on_sqs
 from rockpack.mainsite.services.user.models import User, UserAccountEvent, username_exists, GENDERS
 from rockpack.mainsite.services.video.models import Locale
 from . import facebook, models
@@ -147,7 +148,9 @@ def date_of_birth_validator():
     return _valid
 
 
-def send_password_reset(user):
+@background_on_sqs
+def send_password_reset(userid):
+    user = User.query.get(userid)
     if not user.email:
         app.logger.warning("Can't reset password for %s: no email address", user.id)
         return
@@ -156,10 +159,8 @@ def send_password_reset(user):
     template = email_env.get_template('reset.html')
     body = template.render(
         reset_link=url,
-        username=user.username,
-        email=user.email,
+        user=user,
         email_sender=app.config['DEFAULT_EMAIL_SOURCE'],
-        assets=app.config.get('ASSETS_URL', '')
     )
     send_email(user.email, body)
 
@@ -493,8 +494,7 @@ class ResetWS(WebService):
         if not user:
             abort(400)
         record_user_event(user.username, 'password reset requested', user=user, commit=True)
-        # TODO: move to offline process
-        send_password_reset(user)
+        send_password_reset(user.id)
 
 
 class FacebookWS(WebService):
