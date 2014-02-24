@@ -23,7 +23,7 @@ class UserView(AdminModelView):
     edit_template = 'admin/edit_with_child_links.html'
     child_links = (('Channels', 'channel', None),)
 
-    form_excluded_columns = ('channels', 'flags', 'activity', 'external_friends')
+    form_excluded_columns = ('channels', 'flags', 'activity', 'external_friends', 'user_promotion')
     form_args = dict(
         username=dict(validators=[wtf.validators.Regexp('^\w{3,50}$', message='alphanumeric only')]),
         first_name=dict(validators=[wtf.validators.Optional()]),
