@@ -946,6 +946,7 @@ class UserWS(WebService):
             if category:
                 try:
                     int(category)
+                    u.promotion_settings(category)
                 except ValueError:
                     abort(400)
             u.add_term('category', category)
