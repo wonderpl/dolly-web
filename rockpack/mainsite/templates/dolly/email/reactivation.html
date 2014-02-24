@@ -173,7 +173,22 @@ a:link, a:visited, div a {
             </td>
           </tr>
         </table>
-{% include "footer.html" %}
+        <table border="0" cellpadding="0" cellspacing="0" width="100%" bgcolor="#f9f9f9" style="border-top: 1px solid #b4b4b4;">
+          <tr>
+            <td align="center">
+              <table border="0" cellpadding="0" cellspacing="0" width="428" bgcolor="#f9f9f9">
+                <tr>  
+                  <td align="center" valign="middle" height="120" width="100%">
+                    {% if unsubscribe_token %}
+                      <p style="line-height: 20px; font-size: 11px;">To unsubscribe from account emails, click <a href="{{ url_for('unsubscribe') }}&token={{ unsubscribe_token }}" >here</a>.</p>
+                    {% endif %}
+                    <p style="line-height: 20px; font-size: 11px;"><font face="verdana" color="#767472">To ensure our emails reach your inbox please make sure to add {{ config.DEFAULT_EMAIL_SOURCE|e }} to your address book or safe list. You are subscribed as {{ user.email }}. Your privacy is important to us, have a read of our <a style="color: #5850bb;" href="{{ url_for('privacy') }}" target="_blank"><font color="#5850bb">privacy policy</font></a>.</font></p>
+                  </td> 
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
       </td>
     </tr>
   </table>
