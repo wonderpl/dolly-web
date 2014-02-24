@@ -1,0 +1,37 @@
+{% extends "web/layout.html" %}	
+{% block google_maps_api %}{% endblock %}
+
+{% block dolly_angular_lib %}{% endblock %}
+
+{% block app_data %}
+<script type="text/javascript">
+  var assets_url = '{{config.ASSETS_URL}}'
+</script>
+{% endblock %}
+
+{% block body_attributes %}class="dolly"{% endblock %}
+
+{% block body %}
+  {% include 'web/partials/header-static.html' %}
+  <div class="wrapper">
+    <div class="content">
+      {% block content %}
+      {% endblock %}
+    </div>
+  </div>
+  {% include 'web/partials/footer-static.html' %}
+
+	{% block scripts_footer %}
+	  {% assets filters="rjsmin", output="gen/dolly.static.lib.%(version)s.js", 
+	    "assets/vendor/js/jquery-1.10.1.min.js"
+	  %}<script type="text/javascript" src="{{ ASSET_URL }}"></script>{% endassets %}
+	  {% assets filters="rjsmin", output="gen/dolly.static.%(version)s.js", 
+	    "dolly/static.js"
+	  %}<script type="text/javascript" src="{{ ASSET_URL }}"></script>{% endassets %}
+	{% endblock %}
+{% endblock %}
+
+{% block google_analytics %}
+  {{ super() }}
+  <script>ga('send', 'pageview');</script>
+{% endblock %}

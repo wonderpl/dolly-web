@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<!--[if lt IE 7]>  <html lang="en" class="ie ie6 lte9 lte8 lte7"> <![endif]-->
+<!--[if IE 7]>     <html lang="en" class="ie ie7 lte9 lte8 lte7"> <![endif]-->
+<!--[if IE 8]>     <html lang="en" class="ie ie8 lte9 lte8"> <![endif]-->
+<!--[if IE 9]>     <html lang="en" class="ie ie9 lte9"> <![endif]-->
+<!--[if gt IE 9]>  <html> <![endif]-->
+<!--[if !IE]><!--> <html lang="en" xmlns:ng="http://angularjs.org"> <!--<![endif]-->
+<head>
+  <meta content="IE=edge,chrome=1" http-equiv="X-UA-Compatible">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>{% block title %}Wonderplace{% endblock %}</title>
+  <meta name="description" content="{% block meta_description %}Create, share and subscribe to personalized video channels with Wonder PL. Wonder PL is available on iPhone and iPad{% endblock %}">
+  <meta name="apple-itunes-app" content="app-id={{ config.ITUNES_APP_ID }}">
+  <meta name="twitter:card" content="app">
+  <meta name="twitter:app:id:iphone" content="{{ config.ITUNES_APP_ID }}">
+  <meta name="twitter:app:id:ipad" content="{{ config.ITUNES_APP_ID }}">
+  <link rel="shortcut icon" href="{{ config.ASSETS_URL }}/assets/dolly/img/favicon@2x.png" />
+
+  {% block ie_polyfills %}
+    <!--[if lt IE 9]>
+    <script src="{{config.ASSETS_URL}}/assets/vendor/js-no-compile/html5.js"></script>
+    <![endif]-->
+
+    <!--[if lte IE 8]>
+    <script>
+      document.createElement('header');
+      document.createElement('footer');
+      document.createElement('section');
+      document.createElement('nav');
+      document.createElement('ng-include');
+      document.createElement('ng-pluralize');
+      document.createElement('ng-view');
+      document.createElement('ng-animate');
+      document.createElement('ng:include');
+      document.createElement('ng:pluralize');
+      document.createElement('ng:view');
+      document.createElement('ng:animate');
+      document.createElement('wonderplayer');
+      document.createElement('webliteplayer');
+    </script>
+    <script src="{{config.ASSETS_URL}}/assets/vendor/js-no-compile/json2.js"></script>
+    <![endif]-->
+  {% endblock %}
+
+  {% block typekit_fonts %}
+    <script type="text/javascript" src="//use.typekit.net/twx7lpv.js"></script>
+    <script type="text/javascript">try{Typekit.load();}catch(e){}</script>
+  {% endblock %}
+  
+  {% block dolly_css %}
+    {% assets filters="less,cssmin", output="gen/dolly_css.%(version)s.css", 
+      depends="assets/dolly/partials/_*.less", 
+      "assets/dolly/front.less"
+    %}<link rel="stylesheet" href="{{ ASSET_URL }}"/>{% endassets %}
+
+    <!-- Conditional stylesheet for IE8 and below -->
+    {% assets filters="less,cssmin", output="gen/dolly_ie_css.%(version)s.css", 
+      depends="assets/dolly/partials/_*.less", "assets/dolly/ie.less" 
+    %}<!--[if lt IE 9]><link rel="stylesheet" href="{{ ASSET_URL }}"/><![endif]-->{% endassets %}
+  {% endblock %}
+  
+  {% block google_maps_api %}
+    <script src="https://maps.googleapis.com/maps/api/js?v=3.exp&sensor=false"></script>
+  {% endblock %}
+
+  {% block dolly_angular_lib %}
+    {% assets filters="rjsmin", output="gen/dolly-lib.%(version)s.js",
+      "assets/vendor/js/jquery-1.10.1.min.js", 
+      "dolly/vendor/angular/angular.js",
+      "dolly/vendor/angular/angular-route.js",
+      "dolly/vendor/angular/angular-animate.js"
+    %}<script type="text/javascript" src="{{ ASSET_URL }}"></script>{% endassets %}
+  {% endblock %}
+
+  {% block app_data %}
+    <script type="text/javascript">
+      var injectorUrl = '{{injectorUrl}}',
+          itunesLink = '{{config.ITUNES_APP_LINK}}',
+          assets_url = '{{config.ASSETS_URL}}',
+          top_channels = {{top_channels|tojson|safe}};
+    </script>
+  {% endblock %}
+
+</head>
+<body {% block body_attributes %}{% endblock %}>
+  {% block body %}
+    {% block scripts_footer %}{% endblock %}
+  {% endblock %}
+  {% block google_analytics %}
+    {% include 'web/ga.html' %}
+  {% endblock %}
+</body>
+</html>
