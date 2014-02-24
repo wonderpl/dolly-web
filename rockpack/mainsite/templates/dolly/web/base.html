@@ -7,6 +7,10 @@
   <title>Wonder PL</title>
   <meta name="description" content="Create, share and subscribe to personalized video channels with Wonder PL. Wonder PL is available on iPhone and iPad">
 
+  <!--[if lt IE 9]>
+  <script src="{{config.ASSETS_URL}}/assets/vendor/js-no-compile/html5.js"></script>
+  <![endif]-->
+
   <!--[if lte IE 8]>
   <script>
     document.createElement('header');
@@ -14,33 +18,35 @@
     document.createElement('section');
     document.createElement('nav');
   </script>
+  <script src="{{config.ASSETS_URL}}/assets/vendor/js-no-compile/json2.js"></script>
   <![endif]-->
 
-
   <link rel="shortcut icon" href="{{ config.ASSETS_URL }}/assets/dolly/img/favicon@2x.png" />
-
-  <link href='http://fonts.googleapis.com/css?family=Lato:400,700' rel='stylesheet' type='text/css'>
-  <link href='http://fonts.googleapis.com/css?family=Montserrat' rel='stylesheet' type='text/css'>
   <link type="text/css" rel="stylesheet" href="http://fast.fonts.net/cssapi/bf3bd3cb-8e2d-45b3-82f0-7b308ec41ba5.css"/>
-  {% assets filters="less,cssmin", output="gen/dolly_css.%(version)s.css", depends="assets/dolly/partials/_*.less", "assets/dolly/front.less" %}
-  <link rel="stylesheet" href="{{ ASSET_URL }}"/>
-  {% endassets %}
   
-  {% assets filters="rjsmin", output="gen/dolly-static-lib.%(version)s.js", "assets/vendor/js/jquery-1.10.1.min.js" %}
-  <script type="text/javascript" src="{{ ASSET_URL }}"></script>
-  {% endassets %}
+  {% assets filters="less,cssmin", output="gen/dolly_base_css.%(version)s.css", 
+    depends="assets/dolly/partials/_*.less", 
+    "assets/dolly/front.less" 
+  %}<link rel="stylesheet" href="{{ ASSET_URL }}"/>{% endassets %}
 
-  {% assets filters="rjsmin", output="gen/dolly.static.%(version)s.js", "dolly/static.js" %}
-  <script type="text/javascript" src="{{ ASSET_URL }}"></script>
-  {% endassets %}
+  {% assets filters="less,cssmin", output="gen/dolly_base_ie_css.%(version)s.css", 
+    depends="assets/dolly/partials/_*.less", 
+    "assets/dolly/ie.less" 
+  %}<!--[if lt IE 9]><link rel="stylesheet" href="{{ ASSET_URL }}"/><![endif]-->{% endassets %}
+
+  {% assets filters="rjsmin", output="gen/dolly.static.lib.%(version)s.js", 
+    "assets/vendor/js/jquery-1.10.1.min.js"
+  %}<script type="text/javascript" src="{{ ASSET_URL }}"></script>{% endassets %}
+
+  {% assets filters="rjsmin", output="gen/dolly.static.%(version)s.js", 
+    "dolly/static.js"
+  %}<script type="text/javascript" src="{{ ASSET_URL }}"></script>{% endassets %}
 
   <script type="text/javascript">
     var assets_url = '{{config.ASSETS_URL}}'
   </script>
-
 </head>
-
-<body >
+<body class="dolly">
   {% include 'web/partials/header-static.html' %}
   <div class="wrapper">
     <div class="content">

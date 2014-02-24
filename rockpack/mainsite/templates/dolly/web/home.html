@@ -52,11 +52,6 @@
   <script type="text/javascript" src="//use.typekit.net/twx7lpv.js"></script>
   <script type="text/javascript">try{Typekit.load();}catch(e){}</script>
 
-  {% assets filters="less,cssmin", output="gen/wonderplayer_css.%(version)s.css", 
-    depends="assets/wonderplayer/partials/_*.less", 
-    "assets/wonderplayer/main.less"
-  %}<link rel="stylesheet" href="{{ ASSET_URL }}"/>{% endassets %}
-
   {% assets filters="less,cssmin", output="gen/dolly_css.%(version)s.css", 
     depends="assets/dolly/partials/_*.less", 
     "assets/dolly/front.less"
