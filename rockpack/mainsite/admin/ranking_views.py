@@ -47,7 +47,7 @@ class UserRankingView(AdminView):
 
         # loop once to get the raw data
         raw_users = {}
-        print u
+
         for user in u.results():
             print user
             u = {}

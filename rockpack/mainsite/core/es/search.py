@@ -585,21 +585,23 @@ class UserSearch(EntitySearch, CategoryMixin):
     class PositionOutsideOffsetError(Exception):
         pass
 
-    def __init__(self):
+    def __init__(self, locale='en-us'):
         super(UserSearch, self).__init__('user')
         self._user_results = None
         self.promoted_category = None
+        self.locale = locale
+
+    @property
+    def _promotion_prefix(self):
+        return '|'.join([str(self.locale), str(self.promoted_category)]) + '|'
 
     def _get_position(self, user):
-        promote_pattern = '|'.join([str(self.locale),
-                                    str(self.promoted_category)]) + '|'
-
-        for p in user.promotion:
-            if p.startswith(promote_pattern):
+        for p in user['promotion']:
+            if p.startswith(self._promotion_prefix):
                 locale, category, pos = p.split('|')
                 pos = int(pos) - 1  # position isn't zero indexed, so adjust
                 if pos < self.paging[0]:
-                    raise self.PositionOutsideOffetError
+                    raise UserSearch.PositionOutsideOffsetError
 
                 return pos - self.paging[0]
 
@@ -630,6 +632,7 @@ class UserSearch(EntitySearch, CategoryMixin):
                 description=user.description or "",
                 subscriber_count=user.subscriber_count,
                 subscription_count=user.subscription_count,
+                promotion=user.promotion
                 #categories=getattr(user, 'category', []) or []
             )
             if user.brand:
@@ -638,13 +641,19 @@ class UserSearch(EntitySearch, CategoryMixin):
                     site_url=user.site_url,
                 )
 
-            if self.promoted_category is not None and user.promotion:
+            has_promotion = False
+            for p in user.promotion:
+                if p.startswith(self._promotion_prefix):
+                    has_promotion = True
+                    break
+
+            if self.promoted_category is not None and has_promotion:
                 # All these should be at the top so we have all the
                 # promoted slots filled before we process the non
                 # promoted ones
                 try:
                     this_position = self._get_position(u)
-                except self.PositionOutsideOffetError:
+                except UserSearch.PositionOutsideOffsetError:
                     # We don't want to include this user
                     pass
                 else:
@@ -673,12 +682,14 @@ class UserSearch(EntitySearch, CategoryMixin):
 
     def promotion_settings(self, category):
         self.promoted_category = category or 0
+        field = 'promotion'
+        prefix = '|'.join([str(self.locale), str(self.promoted_category)])
+
+        self._add_term_occurs(pyes.PrefixQuery(field=field, prefix=prefix), SHOULD)
+
         self.add_filter(
             pyes.CustomFiltersScoreQuery.Filter(
-                pyes.PrefixFilter(
-                    field='promotion',
-                    prefix='|'.join([str(self.locale), str(self.promoted_category)])
-                ),
+                pyes.PrefixFilter(field=field, prefix=prefix),
                 script='1000000000000000000'
             )
         )

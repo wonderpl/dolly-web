@@ -252,7 +252,21 @@ class ESUser(ESObject):
 
     _type = 'user'
 
-    #TODO: add insert mapper
+    def inser_mapper(self, user):
+        mapped = ESUserAttributeMap(user)
+        return dict(
+            id=mapped.id,
+            avatar_thumbnail_url=mapped.avatar_thumbnail_url,
+            resource_url=mapped.resource_url,
+            display_name=mapped.display_name,
+            username=mapped.username,
+            profile_cover_url=mapped.profile_cover_url,
+            description=mapped.description,
+            site_url=mapped.site_url,
+            brand=mapped.brand,
+            subscriber_count=mapped.subscriber_count,
+            subscription_count=mapped.subscription_count,
+            promotion=mapped.promotion)
 
 
 class ESVideo(ESObject):
@@ -361,6 +375,72 @@ def convert_image_path(obj, attr, type_):
     if isinstance(obj_attr, basestring) or obj_attr is None:
         return ImageType(type_).process_result_value(obj_attr, None)
     return obj_attr
+
+
+class ESUserAttributeMap:
+    def __init__(self, user):
+        self.user = user
+        self.urlpath = lambda u: urlparse(u).path
+
+    @property
+    def id(self):
+        return self.user.id
+
+    @property
+    def avatar_thumbnail_url(self):
+        return self.urlpath(convert_image_path(self.user, 'avatar', 'AVATAR').url)
+
+    @property
+    def resource_url(self):
+        return self.urlpath(self.user.resource_url)
+
+    @property
+    def display_name(self):
+        return self.user.display_name
+
+    @property
+    def username(self):
+        return self.user.username
+
+    @property
+    def profile_cover(self):
+        if self.user.brand:
+            cover = convert_image_path(self.user, 'brand_profile_cover', 'BRAND_PROFILE')
+        else:
+            cover = convert_image_path(self.user, 'profile_cover', 'PROFILE')
+        return self.urlpath(cover.url)
+
+    @property
+    def description(self):
+        return self.user.description
+
+    @property
+    def site_url(self):
+        return self.user.site_url
+
+    @property
+    def brand(self):
+        return self.user.brand
+
+    @property
+    def subscriber_count(self):
+        return self.user.subscriber_count
+
+    def subscription_count(self, empty=False):
+        if empty:
+            return 0
+        from rockpack.mainsite.services.user.models import Subscription
+        return Subscription.query.filter_by(user=self.user.id).count()
+
+    def promotion(self, empty=False):
+        if empty:
+            return ''
+        return self.user.promotion_map()
+
+    def category(self, empty=False):
+        if empty:
+            return []
+        return get_users_categories([self.user.id])
 
 
 class ESVideoAttributeMap:
@@ -660,6 +740,7 @@ def add_user_to_index(user, bulk=False, refresh=False, no_check=False):
         subscriber_count=user.subscriber_count,
         subscription_count=Subscription.query.filter_by(user=user.id).count(),
         promotion=user.promotion_map(),
+        category=[]
     )
     return add_to_index(
         data,
@@ -705,7 +786,7 @@ def condition_for_category(user, channel, video_count):
     return True
 
 
-def update_user_categories(user_ids=None):
+def get_users_categories(user_ids=None):
     from rockpack.mainsite.services.video import models
     from rockpack.mainsite.services.user.models import User
 
@@ -729,7 +810,12 @@ def update_user_categories(user_ids=None):
         else:
             category_map.setdefault(user, [])
 
-    for user, categories in category_map.iteritems():
+    return category_map
+
+
+def update_user_categories(user_ids=None):
+
+    for user, categories in get_users_categories(user_ids).iteritems():
         eu = ESUser.updater(bulk=True)
         eu.set_document_id(user.id)
         eu.add_field('category', list(set(categories)))

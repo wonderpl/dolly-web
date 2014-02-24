@@ -629,6 +629,14 @@ def _update_or_remove_channel(channel):
         es_api.remove_channel_from_index(channel.id)
 
 
+def _update_user(user):
+    eu = es_api.ESUser.updater()
+    eu.set_document_id(user.id)
+    eu.add_field('promotion', user.promotion_map())
+    eu.update()
+    es_api.ESUser.flush()
+
+
 # XXX: Do we still need this?
 @event.listens_for(VideoInstanceLocaleMeta, 'after_update')
 def _video_insert(mapper, connection, target):
@@ -692,6 +700,16 @@ def _es_channel_promotion_insert(mapper, connection, target):
 @event.listens_for(ChannelPromotion, 'after_update')
 def _es_channel_promotion_update(mapper, connection, target):
     _update_or_remove_channel(Channel.query.get(target.channel))
+
+
+@event.listens_for(UserPromotion, 'after_insert')
+def _es_user_promotion_insert(mapper, connection, target):
+    _update_user(target.user)
+
+
+@event.listens_for(UserPromotion, 'after_update')
+def _es_user_promotion_update(mapper, connection, target):
+    _update_user(target.user)
 
 
 @event.listens_for(Channel, 'before_update')
