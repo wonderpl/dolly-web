@@ -47,7 +47,6 @@
 			link: function (scope, elem, attrs) {
 				
 				var target = d.getElementById('anchor-' + attrs.href.replace('#',''));
-
 				if ( target !== null ) {
 
 					elem.bind('click', function(e){
@@ -68,14 +67,15 @@
 			restrict: 'C',
 			link: function (scope, elem, attrs) {
 				elem.bind('click', function(e) {
-				// 	if ( $location.path() === '/about-us' ) {
-				// 		var target = d.getElementById( 'anchor-' + attrs.anchor );
-				// 		if ( target !== null ) {
-				// 			$rootScope.scrollToAnchor( target );
-				// 		}
-				// 	} else {
+					if ( $location.path() === '/about-us' ) {
+						var target = d.getElementById( 'anchor-' + attrs.anchor );
+						if ( target !== null ) {
+							e.preventDefault();
+							$rootScope.scrollToAnchor( target );
+						}
+					} else {
 						$rootScope.queueAnchor = attrs.anchor;
-				// 	}
+					}
 				});
 			}
 		}

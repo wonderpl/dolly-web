@@ -1,5 +1,10 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:ng="http://angularjs.org">
+<!--[if lt IE 7]>  <html lang="en" class="ie ie6 lte9 lte8 lte7"> <![endif]-->
+<!--[if IE 7]>     <html lang="en" class="ie ie7 lte9 lte8 lte7"> <![endif]-->
+<!--[if IE 8]>     <html lang="en" class="ie ie8 lte9 lte8"> <![endif]-->
+<!--[if IE 9]>     <html lang="en" class="ie ie9 lte9"> <![endif]-->
+<!--[if gt IE 9]>  <html> <![endif]-->
+<!--[if !IE]><!--> <html lang="en" xmlns:ng="http://angularjs.org"> <!--<![endif]-->
 <head>
   <meta content="IE=edge,chrome=1" http-equiv="X-UA-Compatible">
   <meta charset="utf-8">
@@ -73,24 +78,6 @@
     "dolly/vendor/angular/angular-animate.js"
   %}<script type="text/javascript" src="{{ ASSET_URL }}"></script>{% endassets %}
 
-  {% assets filters="rjsmin", output="gen/dolly.%(version)s.js",
-    "dolly/vendor/tween.js",
-    "dolly/app.js",
-    "dolly/controllers/controllers.js",  
-    "dolly/directives/directives.js",  
-    "dolly/services/services.js",  
-    "dolly/filters/filters.js"
-  %}<script type="text/javascript" src="{{ ASSET_URL }}"></script>{% endassets %}
-
-  {% assets filters="fronttemplate, rjsmin", output="gen/dolly-templates.%(version)s.js",
-    "dolly/views/home.html",
-    "dolly/views/our-content.html", 
-    "dolly/views/our-categories.html", 
-    "dolly/views/about-us.html", 
-    "dolly/views/upload.html", 
-    "dolly/views/partners.html" 
-  %}<script type="text/javascript" src="{{ ASSET_URL }}"></script>{% endassets %}
-
   <script type="text/javascript">
     var injectorUrl = '{{injectorUrl}}',
         itunesLink = '{{config.ITUNES_APP_LINK}}',
@@ -112,6 +99,23 @@
 </div>
 
 {% include 'web/ga.html' %}
+  {% assets filters="rjsmin", output="gen/dolly.%(version)s.js",
+    "dolly/vendor/tween.js",
+    "dolly/app.js",
+    "dolly/controllers/controllers.js",  
+    "dolly/directives/directives.js",  
+    "dolly/services/services.js",  
+    "dolly/filters/filters.js"
+  %}<script type="text/javascript" src="{{ ASSET_URL }}"></script>{% endassets %}
+
+  {% assets filters="fronttemplate, rjsmin", output="gen/dolly-templates.%(version)s.js",
+    "dolly/views/home.html",
+    "dolly/views/our-content.html", 
+    "dolly/views/our-categories.html", 
+    "dolly/views/about-us.html", 
+    "dolly/views/upload.html", 
+    "dolly/views/partners.html" 
+  %}<script type="text/javascript" src="{{ ASSET_URL }}"></script>{% endassets %}
 
 </body>
 </html>
