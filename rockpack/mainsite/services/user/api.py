@@ -950,6 +950,7 @@ class UserWS(WebService):
                 except ValueError:
                     abort(400)
             u.add_term('category', category)
+            u.add_sort('subscriber_count')
             return dict(users=dict(items=u.users(), total=u.total))
 
     @expose_ajax('/<userid>/', cache_age=600, secure=False)

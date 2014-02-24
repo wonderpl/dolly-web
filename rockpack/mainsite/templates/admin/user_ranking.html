@@ -135,11 +135,11 @@
                 {{ user.username|truncate(30, True) }}
             </h1>
         </div>
-        <h3>date added: {{ user.date_added }} </h3>
         <h3>ranking: {{ user.explanation.value }} </h3>
-        <h3>editorial boost: {{ user.editorial_boost }}</h3>
+        <h3>categories: {{ user.category }} </h3>
+        <h3>brand: {{ user.brand }} </h3>
         <div class="pic">
-                <img class="circle" style="position: absolute; bottom: 206px; left: 130px; z-index=100" src="{{ image_cdn }}{{ user.avatar_thumbnail_url }}"/>
+            <img class="circle" style="position: absolute; bottom: 206px; left: 130px; z-index=100" src="{{ image_cdn }}{{ user.avatar_thumbnail_url }}"/>
             <a href="{{ locale_base  }}{{ user.id }}/"><img style="min-width: 268px; width:100%; max-width:304px" src="{{ image_cdn }}{{ user.profile_cover_url }}"/></a></div>
     </section>
         {% endfor %}

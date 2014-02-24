@@ -59,6 +59,8 @@ class UserRankingView(AdminView):
             u['description'] = user.description
             u['promotion'] = user.promotion
             u['normalised_rank'] = user.normalised_rank
+            u['category'] = user.category
+            u['brand'] = user.brand
             raw_users[user.id] = u
 
         # loop again to get the correct order
