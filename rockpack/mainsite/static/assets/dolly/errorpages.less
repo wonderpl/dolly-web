@@ -92,9 +92,14 @@ body, html {
 		-o-border-radius: 500px;
 		border-radius: 500px;
 		text-decoration: none;
+		-webkit-transition: all .1s ease-out;
+		-moz-transition: all .1s ease-out;
+		-o-transition: all .1s ease-out;
+		transition: all .1s ease-out;
 
 		&:active, &:hover, &:focus {
-			color: #777782;
+			background: #777782;
+			color: #fff;
 			text-decoration: none;
 			outline: none;
 		}
