@@ -36,7 +36,7 @@ class ESObjectIndexer(object):
             'type': mappings.USER_TYPE,
             'mapping': mappings.user_mapping
         },
-        'search_suggestion': {
+        'suggest': {
             'index': mappings.SUGGEST_INDEX,
             'type': mappings.SUGGEST_TYPE,
             'mapping': mappings.suggest_mapping
@@ -47,7 +47,7 @@ class ESObjectIndexer(object):
         'channel': mappings.CHANNEL_ALIAS,
         'video': mappings.VIDEO_ALIAS,
         'user': mappings.USER_ALIAS,
-        'search_suggestion': mappings.SUGGEST_ALIAS,
+        'suggest': mappings.SUGGEST_ALIAS,
     }
 
     class InvalidIndexingType(Exception):
@@ -341,7 +341,7 @@ class ESChannel(ESObject):
 
 class ESSearchSuggestion(ESObject):
 
-    _type = 'search_suggestion'
+    _type = 'suggest'
 
     def insert_mapper(self, item):
         completion = dict(

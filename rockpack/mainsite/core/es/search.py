@@ -711,4 +711,4 @@ class UserSearch(EntitySearch, CategoryMixin):
 class SuggestionSearch(EntitySearch):
 
     def __init__(self):
-        super(SuggestionSearch, self).__init__('search_suggestion')
+        super(SuggestionSearch, self).__init__('suggest')
