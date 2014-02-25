@@ -11,9 +11,9 @@ from rockpack.mainsite.core.es import es_connection, helpers
 from rockpack.mainsite.core.dbapi import commit_on_success
 from rockpack.mainsite.core.youtube import batch_query, _parse_datetime
 from rockpack.mainsite.helpers.http import get_external_resource
-from rockpack.mainsite.services.user.models import Subscription, UserActivity
+from rockpack.mainsite.services.user.models import Subscription, UserActivity, User
 from rockpack.mainsite.services.video.models import (
-    Channel, ChannelLocaleMeta, ChannelPromotion, Video, VideoInstance, PlayerErrorReport)
+    Channel, ChannelLocaleMeta, UserPromotion, ChannelPromotion, Video, VideoInstance, PlayerErrorReport)
 
 
 @manager.cron_command(interval=900)
@@ -128,6 +128,22 @@ def update_channel_promotions(date_from=None, date_to=None):
         es_channel.add_field(channel.id, channel.promotion_map())
         es_channel.update()
     api.ESChannel.flush()
+
+
+@manager.cron_command(interval=900)
+@job_control
+def update_user_promotions(date_from=None, date_to=None):
+    """ Update promotion data for channels in ES """
+    # Push everything to es. Promotion data
+    # will get updated during insert
+    promo_users = User.query.filter_by(is_active=True).join(
+        UserPromotion, UserPromotion.user_id == User.id).distinct()
+    for user in promo_users:
+        es_user = api.ESUser.updater(bulk=True)
+        es_user.set_document_id(user.id)
+        es_user.add_field('promotion', user.promotion_map())
+        es_user.update()
+    api.ESUser.flush()
 
 
 @manager.cron_command(interval=86400)
