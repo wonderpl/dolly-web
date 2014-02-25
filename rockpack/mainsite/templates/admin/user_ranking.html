@@ -109,6 +109,7 @@
         <form>
             <div style="float: left; width: 240px">
                 <select name="category" onchange="javascript:location.href = '{{ locale_base }}?category=' + this.value;" />
+                    <option value="0">Select a category ...</option>
                     {% for cat in categories %}
                     {% if '-' in cat[1] %}
                     <option value="{{cat[0]}}" {% if category == cat[0] %} selected="selected" {% endif %}>{{cat[1]}}</option>

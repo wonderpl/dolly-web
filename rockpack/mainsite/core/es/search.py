@@ -604,6 +604,7 @@ class UserSearch(EntitySearch, CategoryMixin):
                     raise UserSearch.PositionOutsideOffsetError
 
                 return pos - self.paging[0]
+        return None
 
     @staticmethod
     def _check_position(user_list, position, max_check):
@@ -657,8 +658,7 @@ class UserSearch(EntitySearch, CategoryMixin):
                     # We don't want to include this user
                     pass
                 else:
-                    # NOTE: position starts at 1, so this is safe
-                    if this_position:
+                    if this_position is not None:
                         u['position'] = this_position
                         user_list[this_position] = u
             else:

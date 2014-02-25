@@ -1,5 +1,6 @@
 from datetime import datetime
 import wtforms as wtf
+from sqlalchemy.orm import contains_eager
 from flask import request
 from flask.ext.admin.form import BaseForm, DateTimePickerWidget, RenderTemplateWidget
 from flask.ext.admin.model.fields import AjaxSelectField
@@ -278,7 +279,12 @@ class UserPromotionView(AdminModelView):
         return models.Category.query.get(user_promo.category_id)
 
     def _format_user_from(view, context, user_promo, name):
-        return ', '.join(map(str, set([c[0] for c in models.Channel.query.filter(models.Channel.owner == user_promo.user.id).values('category')])))
+        q = models.Channel.query.filter(
+            models.Channel.owner == user_promo.user.id
+        ).join(models.Category).options(
+            contains_eager(models.Channel.category_rel))
+        items = set(['%s:%s' % (c.category, c.category_rel.name) for c in q])
+        return ', '.join(items)
 
     model = models.UserPromotion
 
@@ -288,10 +294,10 @@ class UserPromotionView(AdminModelView):
     )
 
     column_formatters = dict(
-        original_categories=_format_user_from,
+        channel_categories=_format_user_from,
         promo_state=_format_promo_state,
         appearing_in=_format_category_names)
-    column_list = ('user', 'original_categories', 'locale', 'appearing_in', 'promo_state', 'position', 'date_start', 'date_end', 'date_added', 'date_updated')
+    column_list = ('user', 'channel_categories', 'locale', 'appearing_in', 'promo_state', 'position', 'date_start', 'date_end', 'date_added', 'date_updated')
     column_labels = dict(user='User', locale='Target Locale', appearing_in='Target Category')
     column_filters = ('user', 'category', 'locale', 'position', 'date_added', 'date_updated', 'date_start', 'date_end')
 
