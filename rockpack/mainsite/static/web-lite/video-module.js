@@ -216,6 +216,7 @@ OO.plugin("WonderUIModule", function (OO) {
             _.listen(_.elements.scrubber_trans, 'mousedown', _.scrubDown);
             _.listen(_.elements.scrubber_trans, 'mouseup', _.scrubUp);
             _.listen(_.elements.controls, 'mouseleave', function(){
+                console.log('mouseleave fired');
                 _.controlshovered = false;
             });
             _.listen(_.elements.controls, 'mouseenter', function(){
@@ -282,6 +283,12 @@ OO.plugin("WonderUIModule", function (OO) {
         }
 
         _.loaded = true;
+
+        setTimeout( function() {
+            _.controlshovered = true;
+            _.played = false;
+            _.mb.publish(OO.EVENTS.PLAY);    
+        }, 100);
     };
     
     // Event fired off by the OO message bus to indicate the playhead has moved.
@@ -319,10 +326,9 @@ OO.plugin("WonderUIModule", function (OO) {
         if ( _.state.playing === false ) {
             _.addClass(_.elements.poster, 'hide');
             _.addClass(_.elements.playbutton, 'hidden');
-            // _.addClass(_.elements.bigplaybutton, 'hidden');
             _.removeClass(_.elements.pausebutton, 'hidden');
             _.timers.interaction = 0;
-            _.controlshovered = false;
+            _.controlshovered = true;
         }
         _.hideLoader();
         _.state.playing = true;
@@ -335,6 +341,7 @@ OO.plugin("WonderUIModule", function (OO) {
             _.addClass(_.elements.pausebutton, 'hidden');
             _.hideLoader();
             _.state.playing = false;
+            _.controlshovered = true;
         }
     };
 
