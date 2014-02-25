@@ -1,0 +1,136 @@
+@import "partials/_normalise.less";
+@import "partials/_base.less";
+
+* {
+	box-sizing: border-box;
+}
+
+body, html {
+	font-family: 'proxima-nova', sans-serif;
+	color: #777782;
+}
+
+.header {
+	display: block;
+	position: relative;
+	height: 100px;
+	text-align: center;
+	margin: 0 auto;
+
+	a.logo {
+		display: block;
+		position: absolute;
+		left: 0;
+		top: 0;
+		height: 100%;
+		width: 145px;
+		z-index: 101;
+		background: transparent url('/static/assets/dolly/img/header-logo-grey-bars-ie.png') center center no-repeat;
+		background-size: 100% auto;
+	}
+
+	a.app-store-link {
+		display: block;
+		position: absolute;
+		right: 0;
+		top: 0;
+		height: 100%;
+		width: 125px;
+		background: transparent url('/static/assets/dolly/img/header-download-button.png') center center no-repeat;
+	}
+}
+
+.content {
+	display: block;
+	margin: 0 auto;
+	text-align: center;
+
+	h1 {
+		font-size: 96px;
+		line-height: 96px;
+		font-weight: 500;
+		margin: 50px 0 0 0;
+		text-transform: uppercase;
+
+		&.big {
+			font-size: 120px;
+			line-height: 110px;
+		}
+	}
+
+	h2 {
+		font-size: 30px;
+		line-height: 40px;
+		font-weight: 500;
+		margin: 0;
+		text-transform: uppercase;
+		position: relative;
+	}
+
+	h3 {
+		font-size: 18px;
+		line-height: 36px;
+		font-weight: 500;
+		margin: 0;
+		text-transform: uppercase;
+		position: relative;
+	}
+
+	a {
+		font-weight: 300;
+		display: block;
+		margin: 0 auto;
+		width: 243px;
+		border: 3px solid #777782;
+		color: #777782;
+		padding: 6px;
+		text-transform: uppercase;
+		font-size: 25px;
+		line-height: 45px;
+		-webkit-border-radius: 500px;
+		-moz-border-radius: 500px;
+		-o-border-radius: 500px;
+		border-radius: 500px;
+		text-decoration: none;
+
+		&:active, &:hover, &:focus {
+			color: #777782;
+			text-decoration: none;
+			outline: none;
+		}
+	}
+}
+
+.margin-bottom {
+	margin-bottom: 20px !important;
+}
+
+.padding-bottom {
+	padding-bottom: 20px !important;
+}
+
+// Mobile
+@media screen and (max-width: 767px) {
+	.header, .content {
+		width: 100%;
+		padding: 10px;
+		a.logo {
+			left: 10px;
+		}
+	}
+}
+
+// Tablet
+@media screen and (min-width: 768px) and (max-width: 959px) {
+	.header, .content {
+		width: 100%;	
+		padding: 10px;
+	}
+}
+
+// Desktop
+@media screen and (min-width: 960px) {
+	.header, .content {
+		width: 960px;
+	}
+}

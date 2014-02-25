@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<!--[if lt IE 7]>  <html lang="en" class="ie ie6 lte9 lte8 lte7"> <![endif]-->
+<!--[if IE 7]>     <html lang="en" class="ie ie7 lte9 lte8 lte7"> <![endif]-->
+<!--[if IE 8]>     <html lang="en" class="ie ie8 lte9 lte8"> <![endif]-->
+<!--[if IE 9]>     <html lang="en" class="ie ie9 lte9"> <![endif]-->
+<!--[if gt IE 9]>  <html> <![endif]-->
+<!--[if !IE]><!--> <html> <!--<![endif]-->
+<head>
+  
+  {% block viewport_and_content_type %}
+    <meta content="IE=edge,chrome=1" http-equiv="X-UA-Compatible">
+    <meta charset="utf-8">
+    <meta name="HandheldFriendly" content="True">
+    <meta http-equiv="cleartype" content="on">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  {% endblock %}
+  
+  <title>{% block title %}Wonderplace{% endblock %}</title>
+  
+  {% block meta_data %}
+    <meta name="description" content="{% block meta_description %}Create, share and subscribe to personalized video channels with Wonder PL. Wonder PL is available on iPhone and iPad{% endblock %}">
+  {% endblock %}
+
+  {% block favicon %}
+    <link rel="shortcut icon" href="{{ config.ASSETS_URL }}/assets/dolly/img/favicon@2x.png" />
+  {% endblock %}
+
+  {% block typekit_fonts %}
+    <script type="text/javascript" src="//use.typekit.net/twx7lpv.js"></script>
+    <script type="text/javascript">try{Typekit.load();}catch(e){}</script>
+  {% endblock %}
+  
+  {% block error_css %}
+    {% assets filters="less,cssmin", output="gen/error_css.%(version)s.css", 
+      depends="assets/dolly/partials/_*.less", 
+      "assets/dolly/errorpages.less"
+    %}<link rel="stylesheet" href="{{ ASSET_URL }}"/>{% endassets %}
+  {% endblock %}
+
+  <style type="text/css">
+  </style>
+
+</head>
+<body {% block body_attributes %}{% endblock %}>
+
+  <div class="header">
+    <a href="/" class="logo"></a>
+    <a href="{{config.ITUNES_APP_LINK}}" target="_blank" class="app-store-link"></a>
+  </div>
+
+  {% block body %}
+  {% endblock %}
+
+  {% block google_analytics %}
+    {% include 'web/ga.html' %}
+    <script>ga('send', 'pageview');</script>
+  {% endblock %}
+
+</body>
+</html>
