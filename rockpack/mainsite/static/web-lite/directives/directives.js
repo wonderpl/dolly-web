@@ -59,7 +59,7 @@
 				}
 
 				$rootScope.$watch( 'currentvideo', function( newValue ) {
-					if ( newValue !== '' ) {
+					if ( newValue !== '' && newValue !== undefined ) {
 
 						if ( 'player' in scope ) {
 							try {

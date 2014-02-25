@@ -77,17 +77,18 @@
                 var body = d.documentElement.scrollTop ? d.documentElement : d.body,
                     from = body.scrollTop,
                     el = event.srcElement || event.target, 
-                    target = el.getBoundingClientRect().top-12;
+                    target = ng.element( el ).offset().top-12;
 
-                $scope.tween = new TWEEN.Tween( { y: from } )
-                .to( { y: target }, 600 )
-                .easing( TWEEN.Easing.Cubic.Out )
-                .onUpdate( function () {
-                    body.scrollTop = this.y;
-                }).start();
-
+                $('body, html').animate({scrollTop: target}, 600);
                 $scope.embedOptionsShowing = true;
             } else {
+
+                var body = d.documentElement.scrollTop ? d.documentElement : d.body,
+                    from = body.scrollTop,
+                    el = d.getElementById('player-wrapper'), 
+                    target = ng.element( el ).offset().top-12;
+
+                $('body, html').animate({scrollTop: target}, 600);
                 $scope.embedOptionsShowing = false;
             }
         };

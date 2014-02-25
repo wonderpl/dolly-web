@@ -156,10 +156,6 @@ body, html {
 			transition: opacity .1s ease-out;
 		}
 
-		&.youtube {
-			background: transparent !important;
-		}
-
 		img {
 			display: block;
 			width: 100%;
@@ -189,6 +185,13 @@ body, html {
 			z-index: 200;
 		}
 
+		&.youtube {
+			background: transparent !important;
+
+			table {
+				top: -110px;
+			}
+		}
 
 		span {
 			filter: alpha(opacity=75);

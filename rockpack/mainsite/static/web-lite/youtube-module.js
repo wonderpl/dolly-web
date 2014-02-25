@@ -66,15 +66,23 @@
 
     // Update content, status and duration
     _.onContentReady = function () {
-        _.time = _.player.getCurrentTime();    
-        _.duration = _.data.video.duration;
-        _.removeClass( _.elements.poster, 'loading' );
-        _.elements.poster.getElementsByTagName('td')[0].innerHTML = (_.data.title.replace(/_/g,' '));
-        setTimeout( function( ) {
-            _.state.playing = false;
-            _.hideLoader();
-            _.loaded = true;
+
+        setTimeout( function() {
+            if ( 'getCurrentTime' in _.player ) {
+                _.time = _.player.getCurrentTime();        
+            }
+            
+            _.duration = _.data.video.duration;
+            _.removeClass( _.elements.poster, 'loading' );
+            _.elements.poster.getElementsByTagName('td')[0].innerHTML = (_.data.title.replace(/_/g,' '));
+            setTimeout( function( ) {
+                _.state.playing = false;
+                _.hideLoader();
+                _.loaded = true;
+                _.play();
+            }, 200);
         }, 200);
+        
 
     };
 
@@ -484,6 +492,7 @@
     };
 
     _.showLoader = function () {
+        console.log('show Loader called');
         _.addClass( _.elements.scrubber_vid, 'loading' );
         _.addClass( _.elements.scrubber_buffer, 'hide' );
         _.addClass( _.elements.scrubber_timer, 'show' );
