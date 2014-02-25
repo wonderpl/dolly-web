@@ -1,16 +1,15 @@
-<!DOCTYPE html>
-<!--[if lt IE 7]>  <html lang="en" class="ie ie6 lte9 lte8 lte7"> <![endif]-->
-<!--[if IE 7]>     <html lang="en" class="ie ie7 lte9 lte8 lte7"> <![endif]-->
-<!--[if IE 8]>     <html lang="en" class="ie ie8 lte9 lte8"> <![endif]-->
-<!--[if IE 9]>     <html lang="en" class="ie ie9 lte9"> <![endif]-->
-<!--[if gt IE 9]>  <html> <![endif]-->
-<!--[if !IE]><!--> <html lang="en"> <!--<![endif]-->
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Wonder PL</title>
-  <link rel="shortcut icon" href="{{ config.ASSETS_URL }}/assets/dolly/img/favicon@2x.png" />
+{% extends "web/layout.html" %}
 
+{# start un-needed blocks #}
+{% block itunes_app_data %}{% endblock %}
+{% block ie_polyfills %}{% endblock %}
+{% block typekit_fonts %}{% endblock %}
+{% block dolly_css %}{% endblock %}
+{% block google_maps_api %}{% endblock %}
+{% block dolly_angular_lib %}{% endblock %}
+{# end un-needed blocks #}
+
+{% block page_css %}
   {% assets filters="less,cssmin", output="gen/wonderplayer_css.%(version)s.css", 
   	depends="assets/wonderplayer/partials/_*.less", 
   	"assets/wonderplayer/main.less" 
@@ -21,42 +20,45 @@
     depends="assets/wonderplayer/partials/_*.less", 
     "assets/wonderplayer/ie.less" 
   %}<!--[if lte IE 10]><link rel="stylesheet" href="{{ ASSET_URL }}"/><![endif]-->{% endassets %}
+{% endblock %}
 
-  <script type="text/javascript" src="//player.ooyala.com/v3/{{ config.OOYALA_PLAYER_ID }}?platform=html5-priority"></script>
-  {% assets filters="rjsmin", output="gen/video-module.%(version)s.js",
-    "web-lite/conduit.js",
-    "web-lite/video-module.js"
-  %}<script type="text/javascript" src="{{ ASSET_URL }}"></script>{% endassets %}
-
-  <!--<script type="text/javascript" src="/static/web-lite/video-module.js"></script>-->
+{% block app_data %}
   <script type="text/javascript">
   	var videoData = {{ video_data|tojson }},
   	    ooyalaPlayerId = "{{ config.OOYALA_PLAYER_ID }}";
   </script>
-</head>
-<body class="embedded">
+{% endblock %}
 
-	<div id='ooyalaplayer'></div>
-	<script type="text/javascript">
-		OO.ready(function() { 
-			window.wonder = OO.Player.create(
-				'ooyalaplayer', videoData.video.source_id,
-				{
-					flashParams: { hide: 'all' },
-					wmode: 'opaque',
-					autoplay: false,
-					layout: 'chromeless'
-				} 
-			); 
-		});
-	</script>
+{% block body_attributes %}class="embedded"{% endblock %}>
 
-  {% include 'web/ga.html' %}
-  <script type="text/javascript">
-    ga('send', 'pageview');
-  </script>
+{% block body %}
+ 
+ <div id='ooyalaplayer'></div>
 
-</body>
-</html>
+  {% block scripts_footer %}
+    <script type="text/javascript" src="//player.ooyala.com/v3/{{ config.OOYALA_PLAYER_ID }}?platform=html5-priority"></script>
+    {% assets filters="rjsmin", output="gen/video-module.%(version)s.js",
+      "web-lite/conduit.js",
+      "web-lite/video-module.js"
+    %}<script type="text/javascript" src="{{ ASSET_URL }}"></script>{% endassets %}
 
+  	<script type="text/javascript">
+  		OO.ready(function() { 
+  			window.wonder = OO.Player.create(
+  				'ooyalaplayer', videoData.video.source_id,
+  				{
+  					flashParams: { hide: 'all' },
+  					wmode: 'opaque',
+  					autoplay: false,
+  					layout: 'chromeless'
+  				} 
+  			); 
+  		});
+  	</script>
+  {% endblock %}
+{% endblock %}
 
+{% block google_analytics %}
+  {{ super() }}
+  <script>ga('send', 'pageview');</script>
+{% endblock %}

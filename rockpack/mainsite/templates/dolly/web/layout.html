@@ -5,23 +5,37 @@
 <!--[if IE 9]>     <html lang="en" class="ie ie9 lte9"> <![endif]-->
 <!--[if gt IE 9]>  <html> <![endif]-->
 <!--[if !IE]><!--> <html lang="en" xmlns:ng="http://angularjs.org"> <!--<![endif]-->
-<head>
-  <meta content="IE=edge,chrome=1" http-equiv="X-UA-Compatible">
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<head {% block head_attributes %}{% endblock %}>
+  
+  {% block viewport_and_content_type %}
+    <meta content="IE=edge,chrome=1" http-equiv="X-UA-Compatible">
+    <meta charset="utf-8">
+    <meta name="HandheldFriendly" content="True">
+    <meta http-equiv="cleartype" content="on">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  {% endblock %}
+  
   <title>{% block title %}Wonderplace{% endblock %}</title>
-  <meta name="description" content="{% block meta_description %}Create, share and subscribe to personalized video channels with Wonder PL. Wonder PL is available on iPhone and iPad{% endblock %}">
-  <meta name="apple-itunes-app" content="app-id={{ config.ITUNES_APP_ID }}">
-  <meta name="twitter:card" content="app">
-  <meta name="twitter:app:id:iphone" content="{{ config.ITUNES_APP_ID }}">
-  <meta name="twitter:app:id:ipad" content="{{ config.ITUNES_APP_ID }}">
-  <link rel="shortcut icon" href="{{ config.ASSETS_URL }}/assets/dolly/img/favicon@2x.png" />
+  
+  {% block meta_data %}
+    <meta name="description" content="{% block meta_description %}Create, share and subscribe to personalized video channels with Wonder PL. Wonder PL is available on iPhone and iPad{% endblock %}">
+  {% endblock %}
+
+  {% block itunes_app_data %}
+    <meta name="apple-itunes-app" content="app-id={{ config.ITUNES_APP_ID }}">
+    <meta name="twitter:card" content="app">
+    <meta name="twitter:app:id:iphone" content="{{ config.ITUNES_APP_ID }}">
+    <meta name="twitter:app:id:ipad" content="{{ config.ITUNES_APP_ID }}">
+  {% endblock %}
+
+  {% block favicon %}
+    <link rel="shortcut icon" href="{{ config.ASSETS_URL }}/assets/dolly/img/favicon@2x.png" />
+  {% endblock %}
 
   {% block ie_polyfills %}
     <!--[if lt IE 9]>
     <script src="{{config.ASSETS_URL}}/assets/vendor/js-no-compile/html5.js"></script>
     <![endif]-->
-
     <!--[if lte IE 8]>
     <script>
       document.createElement('header');
@@ -60,6 +74,12 @@
     %}<!--[if lt IE 9]><link rel="stylesheet" href="{{ ASSET_URL }}"/><![endif]-->{% endassets %}
   {% endblock %}
   
+  {% block page_css %}
+  {% endblock %}
+
+  {% block page_js %}
+  {% endblock %}
+
   {% block google_maps_api %}
     <script src="https://maps.googleapis.com/maps/api/js?v=3.exp&sensor=false"></script>
   {% endblock %}
@@ -69,7 +89,8 @@
       "assets/vendor/js/jquery-1.10.1.min.js", 
       "dolly/vendor/angular/angular.js",
       "dolly/vendor/angular/angular-route.js",
-      "dolly/vendor/angular/angular-animate.js"
+      "dolly/vendor/angular/angular-animate.js",
+      "dolly/vendor/angular/angular-sanitize.js"
     %}<script type="text/javascript" src="{{ ASSET_URL }}"></script>{% endassets %}
   {% endblock %}
 

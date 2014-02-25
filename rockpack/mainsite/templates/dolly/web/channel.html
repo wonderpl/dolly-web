@@ -1,38 +1,13 @@
-<!DOCTYPE html>
-<html lang="en" id="ng-app" ng-app="WebLite" xmlns:ng="http://angularjs.org">
-<head prefix="og: http://ogp.me/ns# {{ config.FACEBOOK_APP_NAMESPACE }}: http://ogp.me/ns/apps/{{ config.FACEBOOK_APP_NAMESPACE }}#">
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="HandheldFriendly" content="True">
-  <meta http-equiv="cleartype" content="on">
-  <link rel="shortcut icon" href="{{ config.ASSETS_URL }}/assets/dolly/img/favicon@2x.png" />
-  
+{% extends "web/layout.html" %}
+{% block head_attributes %}prefix="og: http://ogp.me/ns# {{ config.FACEBOOK_APP_NAMESPACE }}: http://ogp.me/ns/apps/{{ config.FACEBOOK_APP_NAMESPACE }}#"{% endblock %}
+
+{% block meta_data %}
   {% include 'web/meta_social.html' %}
+{% endblock %}
 
-  <!--[if lt IE 9]>
-  <script src="{{config.ASSETS_URL}}/assets/vendor/js-no-compile/html5.js"></script>
-  <![endif]-->
+{% block dolly_css %}{% endblock %}
 
-  <!--[if lte IE 8]>
-  <script>
-    document.createElement('header');
-    document.createElement('footer');
-    document.createElement('section');
-    document.createElement('nav');
-    document.createElement('ng-include');
-    document.createElement('ng-pluralize');
-    document.createElement('ng-view');
-    document.createElement('ng-animate');
-    document.createElement('ng:include');
-    document.createElement('ng:pluralize');
-    document.createElement('ng:view');
-    document.createElement('ng:animate');
-    document.createElement('wonderplayer');
-    document.createElement('webliteplayer');
-  </script>
-  <script src="{{config.ASSETS_URL}}/assets/vendor/js-no-compile/json2.js"></script>
-  <![endif]-->
-
+{% block page_css %}
   {% assets filters="less,cssmin", output="gen/web-lite-css.%(version)s.css", 
     depends="assets/web-lite/partials/_*.less", 
     "assets/web-lite/front.less" 
@@ -54,15 +29,9 @@
     depends="assets/wonderplayer/partials/_*.less", 
     "assets/wonderplayer/ie.less" 
   %}<!--[if lte IE 10]><link rel="stylesheet" href="{{ ASSET_URL }}"/><![endif]-->{% endassets %}
-  
-  {% assets filters="rjsmin", output="gen/weblite-lib.%(version)s.js",
-    "assets/vendor/js/jquery-1.10.1.min.js",
-    "web-lite/vendor/angular/angular.js",
-    "web-lite/vendor/angular/angular-route.js",
-    "web-lite/vendor/angular/angular-animate.js",
-    "web-lite/vendor/angular/angular-sanitize.js"
-  %}<script type="text/javascript" src="{{ ASSET_URL }}"></script>{% endassets %}
+{% endblock %}
 
+{% block app_data %}
   <script type="text/javascript">
     var channel_data = {{ channel_data|tojson|safe }},
         assets_url = '{{config.ASSETS_URL}}',
@@ -72,11 +41,9 @@
         apiUrls = {{api_urls|safe}},
         ooyalaPlayerId = "{{ config.OOYALA_PLAYER_ID }}";
   </script>
+{% endblock %}
 
-  {% if selected_video %}
-  {% else %}
-  {% endif %}
-
+{% block page_js %}
   <script type="text/javascript">
     var tag = document.createElement('script');
     tag.src = "//www.youtube.com/iframe_api";
@@ -84,51 +51,55 @@
     firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
   </script>
   <script type="text/javascript" src="//platform.twitter.com/widgets.js"></script>
-</head>
-  <body ng-controller="WebLiteCtrl" ng-class="currentPage" id="app">
-    <div id="fb-root"></div>
-    <script>
-      window.fbAsyncInit = function() {
-        FB.init({
-          appId      : '{{config.FACEBOOK_APP_ID}}',  // App ID from the app dashboard
-          channelUrl : '/static/assets/channel.html', // Channel file for x-domain comms
-          status     : true,                          // Check Facebook Login status
-          xfbml      : true                           // Look for social plugins on the page
-        });
-      };
-      (function(d, s, id){
-        var js, fjs = d.getElementsByTagName(s)[0];
-        if (d.getElementById(id)) {return;}
-        js = d.createElement(s); js.id = id;
-        js.src = "//connect.facebook.net/en_US/all.js";
-        fjs.parentNode.insertBefore(js, fjs);
-      }(document, 'script', 'facebook-jssdk'));
-    </script>
+{% endblock %}
 
-    <div id="wrapper" class="web-lite-wrapper">
-      
-      <header>
-        <div class="inner">
-          <a href="/#/" class="logo"></a>
-          <a href="{{ config.ITUNES_APP_LINK }}&amp;ct={% if selected_video %}video{% else %}channel{% endif %}" target="_blank" class="app-store-link"></a>
-        </div>
-      </header>
-      <div id="player" ng-controller="PlayerCtrl"></div>
-      <div id="channel" ng-controller="ChannelCtrl"></div>
-    </div>
+{% block body_attributes %}ng-app="WebLite" ng-controller="WebLiteCtrl" ng-class="currentPage" id="ng-app"{% endblock %}
 
-    <footer>
-      <div class="trim">
-        <div class="inner">
-          <div class="left">
-            Made with love in London, England.
-          </div><!--
-          --><div class="middle"><a href="/privacy">Privacy Policy</a> | <a href="/tos">Terms</a> | <a href="#">Copyright</a></div><!--
-          --><div class="right">&copy; Wonder Place Ltd.</div>
-        </div>
+{% block body %}
+  <div id="fb-root"></div>
+  <script>
+    window.fbAsyncInit = function() {
+      FB.init({
+        appId      : '{{config.FACEBOOK_APP_ID}}',  // App ID from the app dashboard
+        channelUrl : '/static/assets/channel.html', // Channel file for x-domain comms
+        status     : true,                          // Check Facebook Login status
+        xfbml      : true                           // Look for social plugins on the page
+      });
+    };
+    (function(d, s, id){
+      var js, fjs = d.getElementsByTagName(s)[0];
+      if (d.getElementById(id)) {return;}
+      js = d.createElement(s); js.id = id;
+      js.src = "//connect.facebook.net/en_US/all.js";
+      fjs.parentNode.insertBefore(js, fjs);
+    }(document, 'script', 'facebook-jssdk'));
+  </script>
+
+  <div id="wrapper" class="web-lite-wrapper">
+    
+    <header>
+      <div class="inner">
+        <a href="/#/" class="logo"></a>
+        <a href="{{ config.ITUNES_APP_LINK }}&amp;ct={% if selected_video %}video{% else %}channel{% endif %}" target="_blank" class="app-store-link"></a>
       </div>
-    </footer>
+    </header>
+    <div id="player" ng-controller="PlayerCtrl"></div>
+    <div id="channel" ng-controller="ChannelCtrl"></div>
+  </div>
 
+  <footer>
+    <div class="trim">
+      <div class="inner">
+        <div class="left">
+          Made with love in London, England.
+        </div><!--
+        --><div class="middle"><a href="/privacy">Privacy Policy</a> | <a href="/tos">Terms</a> | <a href="#">Copyright</a></div><!--
+        --><div class="right">&copy; Wonder Place Ltd.</div>
+      </div>
+    </div>
+  </footer>
+
+  {% block scripts_footer %}
     {% assets filters="rjsmin", output="gen/weblite-app.%(version)s.js",
       "web-lite/vendor/tween.js",
       "web-lite/app.js",
@@ -145,5 +116,5 @@
       "web-lite/views/channel.html",
       "web-lite/views/player-ui.html"
     %}<script type="text/javascript" src="{{ ASSET_URL }}"></script>{% endassets %}
-  </body>
-</html>
+  {% endblock %}
+{% endblock %}
