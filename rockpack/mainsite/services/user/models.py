@@ -140,7 +140,7 @@ class User(db.Model):
             return source_name
 
         username = cls.query.filter(
-            func.lower(cls.username).like('{}%'.format(source_name))
+            func.lower(cls.username).like('{}%'.format(source_name.lower()))
         ).order_by("username desc").limit(1).value('username')
         match = re.findall(r"[a-zA-Z]+|\d+", username or source_name)
 
