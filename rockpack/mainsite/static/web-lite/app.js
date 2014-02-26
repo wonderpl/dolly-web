@@ -17,9 +17,11 @@
     }]);
 
     app.run(['$timeout', '$rootScope', 'animLoop', function($timeout, $rootScope, animLoop) {
-        animLoop.setFPS(60);
-        animLoop.add('tween', TWEEN.update);
-        animLoop.start();
+
+        window.onkeydown = function(e) { 
+            // d.getElementById('wonderplayer').getElementsByTagName('iframe')[0].contentWindow.focus();
+            return !(e.keyCode == 32);
+        };
     }]);
 
 })(window,document,navigator,window.angular,'WebLite');

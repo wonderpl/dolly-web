@@ -149,30 +149,32 @@
             _.listen(_.elements.scrubber_handle_vol, 'mousemove', _.interaction);    
         }
 
+        // Prevent window scroll
+        window.onkeydown = function(e) { 
+            if ( e.keyCode == 32 ) {
+                _.togglePlay();
+            }
+            return !(e.keyCode == 32);
+        };
+
         // Listen for interaction on the actual UI contols
         _.listen(_.elements.playbutton, 'click', _.play);
-        // _.listen(_.elements.bigplaybutton, 'click', _.play);
         _.listen(_.elements.pausebutton, 'click', _.pause);
         _.listen(_.elements.fullscreenbutton, 'click', _.fullscreen);
         _.listen(_.elements.volumebutton, 'click', _.volume);
 
         // Decide which listeners to use for the scrubbers.
         if ( _.isTouchDevice() ) {
-            // _.listen(_.elements.loader, 'touchstart', function(e){event.preventDefault();});
-            // _.listen(_.elements.loader, 'touchend', _.interaction);
             _.addClass(_.elements.controls, 'show');
             _.listen(_.elements.loader, 'click', _.toggleControls);
             _.listen(_.elements.scrubber_trans, 'touchmove', _.scrubTouch);
             _.listen(_.elements.scrubber_trans, 'touchstart', _.scrubDown);
             _.listen(_.elements.scrubber_trans, 'touchleave', _.scrubUp);
-            // _.listen(_.elements.scrubber_trans, 'touchend', _.scrubUp);
         } else {
             _.listen(_.elements.loader, 'click', _.togglePlay);
             _.listen(_.elements.scrubber_trans, 'mousemove', _.scrubMouse);
             _.listen(_.elements.scrubber_trans, 'mousedown', _.scrubDown);
             _.listen(_.elements.scrubber_trans, 'mouseup', _.scrubUp);
-            // _.listen(_.elements.scrubber_trans, 'mouseleave', _.scrubUp);
-            
             _.listen(_.elements.controls, 'mouseleave', function(){
                 _.controlshovered = false;
             });
@@ -492,7 +494,7 @@
     };
 
     _.showLoader = function () {
-        console.log('show Loader called');
+        // console.log('show Loader called');
         _.addClass( _.elements.scrubber_vid, 'loading' );
         _.addClass( _.elements.scrubber_buffer, 'hide' );
         _.addClass( _.elements.scrubber_timer, 'show' );

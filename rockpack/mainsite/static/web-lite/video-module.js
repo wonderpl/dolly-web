@@ -185,21 +185,25 @@ OO.plugin("WonderUIModule", function (OO) {
             document.onkeypress = _.spacebarPressed;
         }
         
+        // Prevent window scroll
+        window.onkeydown = function(e) { 
+            if ( e.keyCode == 32 ) {
+                _.togglePlay();
+            }
+            return !(e.keyCode == 32);
+        };
 
         // Listen for interaction on the actual UI contols
         _.listen(_.elements.playbutton, 'click', _.play);
-        // _.listen(_.elements.bigplaybutton, 'click', _.play);
         _.listen(_.elements.pausebutton, 'click', _.pause);
         _.listen(_.elements.fullscreenbutton, 'click', _.fullscreen);
         _.listen(_.elements.fullscreenbutton, 'touchend', _.fullscreen);
         _.listen(_.elements.volumebutton, 'click', _.volume);
 
         // Decide which listeners to use for the scrubbers.
-        // && _.hasClass( document.querySelector('html'), 'ie10' )
         if ( _.isTouchDevice() ) {
             _.addClass(_.elements.controls, 'show');
             _.listen(_.elements.loader, 'click', _.toggleControls);
-            
             if ( _.ios5 === false ) {
                 _.listen(_.elements.scrubber_trans, 'touchmove', _.scrubTouch);
                 _.listen(_.elements.scrubber_trans, 'touchstart', _.scrubDown);
@@ -209,14 +213,12 @@ OO.plugin("WonderUIModule", function (OO) {
                 _.listen(_.elements.scrubber_trans[0], 'touchstart', _.scrubDown);
                 _.listen(_.elements.scrubber_trans[0], 'touchleave', _.scrubUp);                
             }
-
         } else {
             _.listen(_.elements.loader, 'click', _.togglePlay);
             _.listen(_.elements.scrubber_trans, 'mousemove', _.scrubMouse);
             _.listen(_.elements.scrubber_trans, 'mousedown', _.scrubDown);
             _.listen(_.elements.scrubber_trans, 'mouseup', _.scrubUp);
             _.listen(_.elements.controls, 'mouseleave', function(){
-                console.log('mouseleave fired');
                 _.controlshovered = false;
             });
             _.listen(_.elements.controls, 'mouseenter', function(){
@@ -275,7 +277,7 @@ OO.plugin("WonderUIModule", function (OO) {
                 if ( _.fullscreenrequested === true ) {
                     _.fullscreen();
                 }
-                console.log('video meta data loaded');
+                // console.log('video meta data loaded');
             });
             _.listen( _.elements.video, 'webkitendfullscreen', function(e) {
                 _.mb.publish(OO.EVENTS.PAUSE);
@@ -764,7 +766,6 @@ OO.plugin("WonderUIModule", function (OO) {
     /* ======================================= */
 
     _.attemptFullscreen = function(el) {
-        console.log('attempting fullscreen');
         if(el.requestFullscreen) {
             el.requestFullscreen();
         } else if(el.mozRequestFullScreen) {

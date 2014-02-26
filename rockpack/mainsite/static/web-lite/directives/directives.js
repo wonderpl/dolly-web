@@ -91,8 +91,8 @@
 							break;
 
 						case 'ooyala':
-							console.log( 'ooyala video initialised' );
 							elem.html('<iframe src="http://' + $location.$$host + ( $location.$$port !== 80 ? ':' + $location.$$port : '' ) + '/embed/' + scope.vid.id + '/" width="100%" height="100%" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>');
+							elem[0].getElementsByTagName('iframe')[0].contentWindow.focus();
 							break;
 					}
 				};
@@ -107,11 +107,9 @@
 			link: function( scope, elem, attrs ) {
 
 				elem.bind('load', function(e) {
-					// console.log('loaded');
 				});
 
 				elem.bind('error', function(e) {
-					// console.log('error');
 					elem[0].src = '/static/assets/web-lite/img/thumbnail.jpg';
 				});
 
