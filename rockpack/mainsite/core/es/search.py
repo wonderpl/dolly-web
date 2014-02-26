@@ -643,7 +643,7 @@ class UserSearch(EntitySearch, CategoryMixin):
                 )
 
             has_promotion = False
-            for p in user.promotion:
+            for p in user.promotion or []:
                 if p.startswith(self._promotion_prefix):
                     has_promotion = True
                     break
