@@ -40,18 +40,18 @@
 	}]);
 
 
-	app.directive('scrollAnchorLink', ['$timeout', '$rootScope', function ($timeout, $rootScope) {
+	app.directive('scrollAnchorLink', ['$timeout', '$rootScope', '$anchorScroll', function ($timeout, $rootScope, $anchorScroll) {
 		return {
 			priority: 100,
 			restrict: 'C',
 			link: function (scope, elem, attrs) {
 				
-				var target = d.getElementById('anchor-' + attrs.href.replace('#',''));
+				var target = 'anchor-' + attrs.href.replace('#','');
 				if ( target !== null ) {
 
 					elem.bind('click', function(e){
 						e.preventDefault();
-						$rootScope.scrollToAnchor( target );
+      					$location.hash(target);
 					});
 
 				} else {
@@ -61,45 +61,20 @@
 		}
 	}]);
 
+
 	app.directive('footerLink', ['$timeout', '$rootScope', '$location', function($timeout, $rootScope, $location){
 		return {
 			priority: 100,
 			restrict: 'C',
 			link: function (scope, elem, attrs) {
+				
 				elem.bind('click', function(e) {
-					if ( $location.path() === '/about-us' ) {
-						var target = d.getElementById( 'anchor-' + attrs.anchor );
-						if ( target !== null ) {
-							e.preventDefault();
-							$rootScope.scrollToAnchor( target );
-						}
-					} else {
-						$rootScope.queueAnchor = attrs.anchor;
-					}
+					$location.hash = 'anchor-' + attrs.anchor;
 				});
+				
 			}
 		}
 	}]);
-
-
-	// app.directive('webliteplayer', ['$timeout', function($timeout){
-	// 	return {
-	// 		priority: 100,
-	// 		restrict: 'AE',
-	// 		link: function( scope, elem, attrs ) {
-	// 			scope.player = OO.ready(function() { 
-	// 				window.wonder = OO.Player.create( 'wonderplayer', attrs.video,
-	// 					{
-	// 						flashParams: { hide: 'all' },
-	// 						wmode: 'opaque',
-	// 						autoplay: false,
-	// 						layout: 'chromeless'
-	// 					} 
-	// 				); 
-	// 			});
-	// 		}
-	// 	}
-	// }]);
 	
 
 })(window,document,window.angular,'contentApp','directives');

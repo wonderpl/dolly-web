@@ -39,6 +39,7 @@ html, body {
   opacity: 1;
   position: relative;
   z-index: 50;
+  margin: 0 0 100px 0;
 }
 .view-animate.ng-enter, .view-animate.ng-leave {
   opacity: 1;
@@ -105,6 +106,10 @@ a {
 			width: 90%;
 			display: block;
 			margin: 0 auto 12px auto;
+
+			&.black {
+				color: #36362f;
+			}
 		}
 
 		p {
@@ -176,6 +181,7 @@ a {
 		*display: inline;
 		vertical-align: top;
 	}
+
 	&.third-width {
 		width: 33.3333%;
 		display: -moz-inline-stack;
@@ -185,6 +191,16 @@ a {
 		zoom: 1;
 		*display: inline;
 		vertical-align: top;
+	}
+
+	&.faq {
+		padding: 0 32px; 
+
+		.faq-break {
+			display: block;
+			width: 100%;
+			height: 32px;
+		}
 	}
 
 	img {
@@ -199,6 +215,15 @@ a {
 	}
 	&.top {
 		padding-top: 32px;
+	}
+}
+
+.double-padding {
+	&.bottom {
+		padding-bottom: 64px;
+	}
+	&.top {
+		padding-top: 64px;
 	}
 }
 
@@ -270,7 +295,7 @@ header {
 		left: 0;
 		top: 0;
 		height: 100%;
-		width: 145px;
+		width: 175px;
 		z-index: 101;
 		background: transparent url('/static/assets/dolly/img/header-logo-grey-bars-retina.png') center center no-repeat;
 		background-size: 100% auto;
@@ -316,11 +341,15 @@ header {
 }
 
 footer {
+	border-top: 1px solid rgba(0,0,0,0.1);
+	background: rgba(0,0,0,0.01);
+
 	h3 {
 		font-size: 18px;
 		line-height: 32px;
 		font-weight: 300;
 	}
+
 	div.top {
 		// background: transparent url('/static/assets/dolly/img/header-logo-grey-bars-retina.png') left 15px no-repeat;
 		// background-size: 145px auto;
@@ -386,7 +415,7 @@ footer {
 
 }
 
-#home-partners, #content-partners {
+#home-partners, #content-partners, .content-partners {
 	display: block;
 	margin: 0 0 62px 0;
 
@@ -621,8 +650,9 @@ footer {
 			padding: 80px 0 0 0;
 
 			h3 {
-				font-size: 26px;
-				line-height: 40px;
+				padding: 0 0 0 32px;
+				font-size: 22px;
+				line-height: 38px;
 				font-weight: normal;
 				text-align: left;
 			}
@@ -707,7 +737,11 @@ footer {
 	}
 }
 
-
+#about-us-page .section {
+	h2 {
+		color: #36362f;
+	}
+}
 
 /* 	About us page
 /* ======================================= */

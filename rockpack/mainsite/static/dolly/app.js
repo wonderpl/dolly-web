@@ -10,9 +10,14 @@
                         'ngAnimate'] /* module dependencies */);
 
     app.config(['$routeProvider', '$interpolateProvider', '$compileProvider', function( $routeProvider, $interpolateProvider, $compileProvider){
+        
+        // Change the interpolation symbols so they don't conflict with Jinja
         $interpolateProvider.startSymbol('((');
         $interpolateProvider.endSymbol('))');
+
         $compileProvider.aHrefSanitizationWhitelist(/^\s*(https?|ftp|mailto|javascript):/);
+
+        // Add our routes
         $routeProvider.when('/', {templateUrl: 'home.html', resolve: { trackingCode: function (GATrackingService) { return GATrackingService.push(); }}});
         $routeProvider.when('/our-content', {templateUrl: 'our-content.html', resolve: { trackingCode: function (GATrackingService) { return GATrackingService.push(); }}});
         $routeProvider.when('/our-categories', {templateUrl: 'our-categories.html', resolve: { trackingCode: function (GATrackingService) { return GATrackingService.push(); }}});
@@ -22,6 +27,8 @@
     }]);
 
     app.run(['$timeout', '$rootScope', 'animLoop' , function($timeout, $rootScope, animLoop) {
+
+        // Cache the assets URL
         $rootScope.assets_url = window.assets_url;
 
         // Initialise our animLoop service, and add our TWEEN loop

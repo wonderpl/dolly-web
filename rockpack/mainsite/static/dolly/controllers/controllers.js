@@ -6,21 +6,16 @@
                        [ns + '.services',
                         ns + '.directives'] /* module dependencies */);
 
-    app.controller('MainCtrl', ['$scope', '$timeout','$location', '$rootScope', function($scope, $timeout, $location, $rootScope) {
-
+    app.controller('MainCtrl', ['$scope', '$timeout','$location', '$rootScope', '$anchorScroll', function($scope, $timeout, $location, $rootScope, $anchorScroll) {
+        
         $rootScope.queueAnchor = false;
 
     	$rootScope.$on('$locationChangeSuccess', function(event){
 			$timeout(function(){
         		$rootScope.$apply(function(){
     				$rootScope.currentpage = $location.$$path;
-
-                    if ( $location.path() === '/about-us' &&  $rootScope.queueAnchor !== false ) {
-                        $timeout( function(){
-                            $rootScope.scrollToAnchor(d.getElementById('anchor-' + $rootScope.queueAnchor))
-                            $rootScope.queueAnchor = false;
-                        }, 200)
-                    }
+                    $anchorScroll();
+                    $location.hash('');
     			});
         	});
     	});
@@ -35,29 +30,6 @@
         		});
         	});
         });
-
-        $rootScope.scrollToAnchor = function( target ) {
-            var body = d.documentElement.scrollTop ? d.documentElement : d.body,
-                from = body.scrollTop,
-                to = ng.element(target).offset().top,
-                tween;
-
-                $('body, html').animate({scrollTop: to}, 600);
-
-            // tween = new TWEEN.Tween( { y: from } )
-            // .to( { y: to-75 }, 600 )
-            // .easing( TWEEN.Easing.Cubic.Out )
-            // .onUpdate( function () {
-            //     console.log(this.y);
-            //     body.scrollTop = this.y;
-            // }).start();
-
-            // if ( ng.element(d.getElementsByTagName('html')).hasClass('ie8') ) {
-            //     $timeout(function(){
-            //         body.scrollTop = to;
-            //     }, 100);
-            // }
-        };
 
     }]);    
 
