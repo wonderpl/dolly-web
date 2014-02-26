@@ -392,16 +392,29 @@ ul.anchor-nav {
 /* 	Upload page
 /* ======================================= */
 
+
+#upload-page .section .inner.page-intro, #upload-page .section:first-child {
+	margin-bottom: 0px !important;
+}
+
 #upload-page, #about-us-page {
 	.section {
+		
 		h2 {
 			color: @headinggrey;
+
+			&.standout {
+				font-size: 22px;
+				line-height: 32px;
+			}
 		}
+
 		p.standout {
 			font-size: 17px;
 			line-height: 25px;
 			padding: 0 6%;
 		}
+
 		&.upload, &.about-us {
 			margin-bottom: 32px;
 		}
@@ -417,7 +430,56 @@ ul.anchor-nav {
 			}
 		}
 
+		.inner.upload-intro-left-top {
+			display: block;
+			width: 100%;
+			padding: 0 20px;
+
+			img {
+				display: block;
+				width: 100%;
+			}
+		}
+		
+		.inner.upload-intro-right-top {
+			display: block;
+			width: 100%;
+			padding: 20px 20px 0 20px;
+
+			h3 {
+				padding: 0;
+				text-align: center;
+				font-size: 18px;
+			}
+		}
+
+		.inner.upload-intro-left-bottom {
+			display: block;
+			width: 100%;
+			padding: 0 20px;
+
+			img {
+				display: block;
+				width: 40%;
+				margin: 0 auto 22px auto;
+			}
+		}
+		
+		.inner.upload-intro-right-bottom {
+			display: block;
+			width: 100%;
+			padding: 0 20px;
+
+			h2 {
+				padding: 0;
+				font-size: 18px;
+				line-height: 28px;
+				text-align: center;
+			}
+		}
+
 		.inner.phones {
+			padding-bottom: 0px !important;
 			.inline {
 				display: block;
 				width: 100%;

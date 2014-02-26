@@ -250,28 +250,41 @@ ul.anchor-nav {
 
 #upload-page, #about-us-page {
 	.section {
-		.inner {
-			&.upload-intro-right {
-				padding: 64px 0 0 0; 
+		.inner.upload-intro-left-top {
+			padding: 0 0 100px 0;
+			width: 52%;
 
-				h2, h3, p {
-					padding: 0 0 0 42px;
-				}
+			img {
+				width: 78%;
+			}
+		}
+		
+		.inner.upload-intro-right-top {
+			.inline-block();
+			width: 40%;
+			padding: 50px 0 0 0;
 
-				h2 {
-					font-size: 24px;
-					line-height: 32px;
-				}
+			h3 {
+				font-size: 20px;
+				line-height: 30px;
+			}
+		}
 
-				h3 {
-					font-size: 24px;
-					line-height: 32px;
-				}
+		.inner.upload-intro-left-bottom {
+			padding: 20px 0 30px 0;
 
-				p {
-					font-size: 20px;
-					line-height: 28px;
-				}
+			img {
+				width: 80%;
+			}
+		}
+		
+		.inner.upload-intro-right-bottom {
+			padding: 140px 0 0 0;
+
+			h2 {
+				padding: 0 0 0 30px;
+				font-size: 20px;
+				line-height: 30px;
 			}
 		}
 	}
