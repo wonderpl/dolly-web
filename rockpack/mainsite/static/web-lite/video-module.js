@@ -99,6 +99,10 @@ OO.plugin("WonderUIModule", function (OO) {
         _.ios = ( _.UA.indexOf('ipad') !== -1 || _.UA.indexOf('iphone') !== -1 ) ? true : false;
         _.ios5 = /(iphone|ipad).*os 5_.*/i.test(_.UA);
 
+        // _.mb.subscribe('*', 'wonder', function(event){
+        //     console.log(event);
+        // });
+
         _.mb.subscribe(OO.EVENTS.PLAYER_CREATED, 'wonder', _.onPlayerCreate);
         _.mb.subscribe(OO.EVENTS.SEEKED, 'wonder', _.onSeeked);
         _.mb.subscribe(OO.EVENTS.CONTENT_TREE_FETCHED, 'wonder', _.onContentReady);
@@ -109,6 +113,7 @@ OO.plugin("WonderUIModule", function (OO) {
         _.mb.subscribe(OO.EVENTS.PLAY, 'wonder', _.onPlay);
         _.mb.subscribe(OO.EVENTS.ERROR, 'wonder', _.onError);
         _.mb.subscribe(OO.EVENTS.PLAYER_EMBEDDED, 'wonder', _.hideLoader);
+        _.mb.subscribe(OO.EVENTS.PLAYBACK_READY, 'wonder', _.autoPlay);
 
     };
 
@@ -120,7 +125,7 @@ OO.plugin("WonderUIModule", function (OO) {
         
         // Wrap the player element
         _.wrapper = document.createElement('div');
-        _.wrapper.setAttribute('id','wonder-wrapper');
+        _.wrapper.setAttribute('id', 'wonder-wrapper');
         _.wrapper.innerHTML = wonder_template;
         _.playerElem = document.getElementById(elementId);
         _.playerElem.parentNode.insertBefore(_.wrapper, _.playerElem);
@@ -131,12 +136,9 @@ OO.plugin("WonderUIModule", function (OO) {
         _.elements.controls = document.getElementById('wonder-controls');
         _.elements.poster = document.getElementById('wonder-poster');
         _.elements.loader = document.getElementById('wonder-loader');
-        
-        
 
         // Main buttons
         _.elements.playbutton = document.querySelector('.wonder-play');
-        // _.elements.bigplaybutton = document.querySelector('.wonder-play-big');
         _.elements.pausebutton = document.querySelector('.wonder-pause');
         _.elements.fullscreenbutton = document.querySelector('.wonder-fullscreen');
         _.elements.volumebutton = document.querySelector('.wonder-volume');
@@ -284,9 +286,12 @@ OO.plugin("WonderUIModule", function (OO) {
             });            
         }
 
-        _.loaded = true;
+        // _.loaded = true;
+    };
 
+    _.autoPlay = function() {
         setTimeout( function() {
+            _.loaded = true;
             _.controlshovered = true;
             _.played = false;
             _.mb.publish(OO.EVENTS.PLAY);    
