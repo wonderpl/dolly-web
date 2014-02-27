@@ -292,7 +292,7 @@ OO.plugin("WonderUIModule", function (OO) {
 
     _.autoPlay = function() {
 
-        if ( parseInt(_.getQuery( 'autoplay' )) === 1 && _.isMobile === false ) {
+        if ( parseInt(_.getQuery( 'autoplay' )) === 1 && _.isMobile === false && _.ipad === false ) {
             setTimeout( function() {
                 _.loaded = true;
                 _.controlshovered = false;
