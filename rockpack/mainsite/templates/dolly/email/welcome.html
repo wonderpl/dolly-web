@@ -59,34 +59,53 @@
                     <br/>
                     <h1><font face="verdana" size="4" color="#767472" style="font-weight: normal; font-size: 24px; line-height: 28px;">Hello {{ user.display_name }},</font></h1>
                     <br/>
-                    <p><font face="verdana" color="#767472" style="font-size: 17px; line-height: 29px;">Welcome to <a href="{{ url_for('homepage') }}" target="_blank">Wonder PL</a>, new home to the world’s best existing and original video content.</font></p>
-                    <p><font face="verdana" color="#767472" style="font-size: 17px; line-height: 29px;">Now you are here, it’s easy to make yourself at home. Begin sharing your inspiration as soon as you find it, through your own personal collections. Watch free from clutter and distraction, on the cleanest player around. Live and feel better, within our very own quality communities of Culture, Wellness, Home &amp; Family, Food, the Mind and Entertainment.</font></p>
-                    <p><font face="verdana" color="#767472" style="font-size: 17px; line-height: 29px;">And when indecision strikes, let Wonder PL’s Mood-Minder find you the perfect video for right now, whichever way you might be feeling. Say hello to the next evolution of intelligent media.</font></p>
-                    <p><font face="verdana" color="#767472" style="font-size: 17px; line-height: 29px;">We understand how important it is to keep good company, and our select partners and curators are what makes <a href="{{ url_for('homepage') }}" target="_blank">Wonder PL</a> the place to be. Start following some of them today for beautiful, exclusive content at your fingertips:</font></p>
+
+                    <p><font face="verdana" color="#767472" style="font-size: 17px; line-height: 29px;">Welcome to <a href="{{ url_for('homepage') }}" target="_blank">Wonder PL</a>, new home to the world's best video content.</font></p>
+                    <p><font face="verdana" color="#767472" style="font-size: 17px; line-height: 29px;">Live and feel better, within our very own quality communities of Culture, Wellness, Home &amp; Family, Food, the Mind and Entertainment.</font></p>
+                    <p><font face="verdana" color="#767472" style="font-size: 17px; line-height: 29px;">Our select partners and curators are what makes Wonder PL the place to be. Start following some of them today:</font></p>
                     <p>&nbsp;</p>
-                    <table border="0" cellpadding="0" cellspacing="0" width="320" bgcolor="white">
+
+                    <table border="0" cellpadding="0" cellspacing="0" width="495" bgcolor="white">
                       <tr>
-                        <td width="176" align="center" valign="top">
-                          <img src="{{ config.EMAIL_ASSETS_URL }}/assets/dolly/img/emails/home-partner-1.png" width="132" height="132" style="display: block;" />
-                          <h2><font face="verdana" size="3" color="#767472" style="font-weight: normal; font-size: 20px; line-height: 30px;">Inge Solheim</font></h2>
-                          <p><font face="verdana" size="4" color="#767472" style="font-size: 17px; line-height: 28px;">Polar Consultant, adventure guide, hobby philosopher. Optimist.</font></p>
+                        <td width="155" align="center" valign="top">
+                          <img src="{{ config.EMAIL_ASSETS_URL }}/assets/dolly/img/emails/welcome-tom.jpg" width="132" height="132" style="display: block;" />
+                          <h2 style="color: #767742; font-weight: normal; font-size: 16px; line-height: 26px;">Tom Aikens</h2>
                           <p>&nbsp;</p>
-
-                          <img src="{{ config.EMAIL_ASSETS_URL }}/assets/dolly/img/emails/home-nfb.png" width="132" height="132" style="display: block;" />
-                          <h2><font face="verdana" size="3" color="#767472" style="font-weight: normal; font-size: 20px; line-height: 30px;">National Film Board Of Canada</font></h2>
-                          <p><font face="verdana" size="4" color="#767472" style="font-size: 17px; line-height: 28px;">From documentaries to animations and experimental films to fiction.</font></p>
+                        </td>
+                        <td width="15" align="center" valign="top"> </td>
+                        <td width="155" align="center" valign="top">
+                          <img src="{{ config.EMAIL_ASSETS_URL }}/assets/dolly/img/emails/welcome-calgary.jpg" width="132" height="132" style="display: block;" />
+                          <h2 style="color: #767742; font-weight: normal; font-size: 16px; line-height: 26px;">Calgary Avansino</h2>
                           <p>&nbsp;</p>
-
-                          <img src="{{ config.EMAIL_ASSETS_URL }}/assets/dolly/img/emails/home-tom.png" width="132" height="132" style="display: block;" />
-                          <h2><font face="verdana" size="3" color="#767472" style="font-weight: normal; font-size: 20px; line-height: 30px;">Tom Aikens</font></h2>
-                          <p><font face="verdana" size="2" color="#767472" style="font-size: 17px; line-height: 28px;">Recipes from Tom's kitchens across London.</font></p>
+                        </td>
+                        <td width="15" align="center" valign="top"> </td>
+                        <td width="155" align="center" valign="top">
+                          <img src="{{ config.EMAIL_ASSETS_URL }}/assets/dolly/img/emails/welcome-inge.jpg" width="132" height="132" style="display: block;" />
+                          <h2 style="color: #767742; font-weight: normal; font-size: 16px; line-height: 26px;">Inge Solheim</h2>
                           <p>&nbsp;</p>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td width="155" align="center" valign="top">
+                          <img src="{{ config.EMAIL_ASSETS_URL }}/assets/dolly/img/emails/welcome-home-and-garden.jpg" width="132" height="132" style="display: block;" />
+                          <h2 style="color: #767742; font-weight: normal; font-size: 16px; line-height: 26px;">Home &amp; Garden</h2>
+                        </td>
+                        <td width="15" align="center" valign="top"> </td>
+                        <td width="155" align="center" valign="top">
+                          <img src="{{ config.EMAIL_ASSETS_URL }}/assets/dolly/img/emails/welcome-spacenk.jpg" width="132" height="132" style="display: block;" />
+                          <h2 style="color: #767742; font-weight: normal; font-size: 16px; line-height: 26px;">Space.NK</h2>
+                        </td>
+                        <td width="15" align="center" valign="top"> </td>
+                        <td width="165" align="center" valign="top">
+                          <img src="{{ config.EMAIL_ASSETS_URL }}/assets/dolly/img/emails/welcome-tribeca.jpg" width="132" height="132" style="display: block;" />
+                          <h2 style="color: #767742; font-weight: normal; font-size: 16px; line-height: 26px;">Tribeca Film Institute</h2>
                         </td>
                       </tr>
                     </table>
 
-                    <p><font face="verdana" color="#767472" style="font-size: 17px; line-height: 29px;">You can find the answers to any more questions you might have for us <a href="{{ url_for('help') }}" target="_blank">here</a>, but now we have met, rest assured we will keep you updated with upcoming releases and events, and continue to direct you to the most exclusive and exciting contemporary video content around.</font></p>
-                    <p><font face="verdana" color="#767472" style="font-size: 17px; line-height: 29px;">Until then,</font></p>
+                    <p><font face="verdana" color="#767472" style="font-size: 17px; line-height: 29px;">Make your own personal collections to save and share with friends. Watch free from clutter and distraction with no advertising.</font></p>
+                    <p><font face="verdana" color="#767472" style="font-size: 17px; line-height: 29px;">And when indecision strikes, let our Mood-Minder find the perfect video for right now, whichever way you might be feeling.</font></p>
+                    <p><font face="verdana" color="#767472" style="font-size: 17px; line-height: 29px;">Until we meet again,<br/><br/></font></p>
                     <p><font face="verdana" color="#767472" style="font-size: 17px; line-height: 29px;">Fill your life with Wonder<br/>WONDER PL</font></p>
                     <p>&nbsp;</p>
                   </td> 

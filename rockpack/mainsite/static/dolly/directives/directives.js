@@ -40,18 +40,18 @@
 	}]);
 
 
-	app.directive('scrollAnchorLink', ['$timeout', '$rootScope', '$anchorScroll', function ($timeout, $rootScope, $anchorScroll) {
+	app.directive('scrollAnchorLink', ['$timeout', '$rootScope', 'scrollManager', function ($timeout, $rootScope, scrollManager) {
 		return {
 			priority: 100,
 			restrict: 'C',
 			link: function (scope, elem, attrs) {
 				
-				var target = 'anchor-' + attrs.href.replace('#','');
+				var target = d.getElementById( 'anchor-' + attrs.href.replace('#','') );
 				if ( target !== null ) {
 
 					elem.bind('click', function(e){
 						e.preventDefault();
-      					$location.hash(target);
+						scrollManager.scrollTo( target );
 					});
 
 				} else {
@@ -62,14 +62,19 @@
 	}]);
 
 
-	app.directive('footerLink', ['$timeout', '$rootScope', '$location', function($timeout, $rootScope, $location){
+	app.directive('footerLink', ['$timeout', '$rootScope', '$location', 'scrollManager', function($timeout, $rootScope, $location, scrollManager){
 		return {
 			priority: 100,
 			restrict: 'C',
 			link: function (scope, elem, attrs) {
 				
 				elem.bind('click', function(e) {
-					$location.hash = 'anchor-' + attrs.anchor;
+					if ( $location.path() === '/about-us' ) {
+						e.preventDefault();
+						scrollManager.scrollTo( d.getElementById('anchor-' + attrs.anchor) );
+					} else {
+						$rootScope.queueAnchor = attrs.anchor;	
+					}
 				});
 				
 			}

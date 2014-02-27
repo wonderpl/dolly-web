@@ -6,7 +6,7 @@
                        [ns + '.services',
                         ns + '.directives'] /* module dependencies */);
 
-    app.controller('MainCtrl', ['$scope', '$timeout','$location', '$rootScope', '$anchorScroll', function($scope, $timeout, $location, $rootScope, $anchorScroll) {
+    app.controller('MainCtrl', ['$scope', '$timeout','$location', '$rootScope', 'scrollManager', function($scope, $timeout, $location, $rootScope, scrollManager) {
         
         $rootScope.queueAnchor = false;
 
@@ -14,8 +14,14 @@
 			$timeout(function(){
         		$rootScope.$apply(function(){
     				$rootScope.currentpage = $location.$$path;
-                    $anchorScroll();
-                    $location.hash('');
+
+                    if ( $rootScope.queueAnchor !== false ){
+                        $timeout( function() {
+                            scrollManager.scrollTo( d.getElementById('anchor-' + $rootScope.queueAnchor) );
+                            $rootScope.queueAnchor = false;
+                        }, 600);    
+                    }
+                    
     			});
         	});
     	});

@@ -24,6 +24,7 @@
         $routeProvider.when('/upload', {templateUrl: 'upload.html', resolve: { trackingCode: function (GATrackingService) { return GATrackingService.push(); }}});
         $routeProvider.when('/partners', {templateUrl: 'partners.html', resolve: { trackingCode: function (GATrackingService) { return GATrackingService.push(); }}});
         $routeProvider.when('/about-us', {templateUrl: 'about-us.html', resolve: { trackingCode: function (GATrackingService) { return GATrackingService.push(); }}});
+        $routeProvider.when('/faq', {templateUrl: 'faq.html', resolve: { trackingCode: function (GATrackingService) { return GATrackingService.push(); }}});
     }]);
 
     app.run(['$timeout', '$rootScope', 'animLoop' , function($timeout, $rootScope, animLoop) {

@@ -1,11 +1,52 @@
 (function(w,d,ng,ns,m) {
 
-
     'use strict';
-
 
     var app = ng.module(ns + '.' + m /* module name */,
                        [] /* module dependencies */);
+
+
+    app.factory('scrollManager', [function(){
+
+        var b = (d.querySelector('.lte9') == null ) ? d.body : d.documentElement;
+
+        var getOffset = function(target){
+
+            var docElem, box = {
+                top: 0,
+                left: 0
+            },
+
+            elem = target,
+            doc = elem && elem.ownerDocument;
+            docElem = doc.documentElement;
+
+            if (typeof elem.getBoundingClientRect !== undefined ) {
+                box = elem.getBoundingClientRect();
+            }
+            
+            return {
+                top: box.top + (w.pageYOffset || docElem.scrollTop) - (docElem.clientTop || 0),
+                left: box.left + (w.pageXOffset || docElem.scrollLeft) - (docElem.clientLeft || 0)
+            };
+
+        };
+
+        var scrollTo = function(target){
+            
+            var tween = new TWEEN.Tween( { y: b.scrollTop } )
+                .to( { y: getOffset(target).top-40 }, 600 )
+                .easing( TWEEN.Easing.Cubic.Out )
+                .onUpdate( function () {
+                    b.scrollTop = this.y
+                })
+                .start();
+        };
+
+        return {
+            scrollTo: scrollTo
+        }
+    }]);
 
 
     app.factory('$sanitize', [function() {
