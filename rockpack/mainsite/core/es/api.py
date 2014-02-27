@@ -683,8 +683,12 @@ class ESChannelAttributeMap:
         if self.channel.cover_aoi and isinstance(self.channel.cover_aoi, basestring):
             aoi = literal_eval(self.channel.cover_aoi)
 
+        # use path only if the host is the default IMAGE_CDN
+        thumbnail_url = convert_image_path(self.channel, 'cover', 'CHANNEL').url
+        if thumbnail_url.startswith(app.config['IMAGE_CDN']):
+            thumbnail_url = urlparse(thumbnail_url).path
         return dict(
-            thumbnail_url=urlparse(convert_image_path(self.channel, 'cover', 'CHANNEL').url).path,
+            thumbnail_url=thumbnail_url,
             aoi=aoi
         )
 
