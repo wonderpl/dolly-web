@@ -77,15 +77,15 @@ AUTO_FOLLOW_USERS = ('iOPtuNUO15f1cgMhZdDgwg',)
 # Mapping from share object type to message (can have formatting)
 SHARE_MESSAGE_MAP = dict(
     video_instance=dict(
-        message=u"I found \"{0[title]}\" on @WonderPL and thought you might like it too.",
+        message=u"I found \"{0[title]}\" on Wonder PL and thought you might like it too.",
         message_email=u"I found \"{0[title]}\" on Wonder PL and thought you might like it too.",
-        message_twitter=u"Look what I found on @WonderPL",
+        message_twitter=u"What a wonderful video! @WeAreWonderPL",
         message_facebook=u"Look what I found on Wonder PL",
     ),
     channel=dict(
-        message=u"I think you're going to love the video collection \"{0[title]}\" on @WonderPL.",
+        message=u"I think you're going to love the video collection \"{0[title]}\" on Wonder PL.",
         message_email=u"I think you're going to love the video collection \"{0[title]}\" on Wonder PL.",
-        message_twitter=u"I found this great collection of videos on @WonderPL",
+        message_twitter=u"What a wonderful collection of videos! @WeAreWonderPL",
         message_facebook=u"I found this great collection of videos on Wonder PL",
     ),
 )
