@@ -38,11 +38,8 @@
   {% block scripts_footer %}
   
     <script type="text/javascript">
-      if ( window.navigator.userAgent.toLowerCase().indexOf('opera') == -1 ) {
-        document.write('<script type="text/javascript" src="//player.ooyala.com/v3/{{ config.OOYALA_PLAYER_ID }}"><\/script>');
-      } else {
-        document.write('<script type="text/javascript" src="//player.ooyala.com/v3/{{ config.OOYALA_PLAYER_ID }}?platform=html5-priority"><\/script>');
-      }
+      var operacheck = window.navigator.userAgent.toLowerCase().indexOf('opera');
+      document.write('<scr'+'ipt type="text/javascript" src="//player.ooyala.com/v3/{{ config.OOYALA_PLAYER_ID }}"' + ( operacheck !== -1 ? '?platform=html5-priority' : "" ) + '><\/script>');
     </script>
 
     {% assets filters="rjsmin", output="gen/video-module.%(version)s.js",
