@@ -639,15 +639,16 @@ def _update_user(user):
 
 @event.listens_for(VideoInstanceLocaleMeta, 'after_update')
 def _video_insert(mapper, connection, target):
-    video_instance = target.video_instance_rel
-    if not video_instance:
-        video_instance = VideoInstance.query.get(target.video_instance)
+    if use_elasticsearch:
+        video_instance = target.video_instance_rel
+        if not video_instance:
+            video_instance = VideoInstance.query.get(target.video_instance)
 
-    mapped = es_api.ESVideoAttributeMap(video_instance)
-    ev = es_api.ESVideo.updater()
-    ev.set_document_id(video_instance.id)
-    ev.add_field('locales', mapped.locales)
-    ev.update()
+        mapped = es_api.ESVideoAttributeMap(video_instance)
+        ev = es_api.ESVideo.updater()
+        ev.set_document_id(video_instance.id)
+        ev.add_field('locales', mapped.locales)
+        ev.update()
 
 
 @event.listens_for(Video, 'after_update')
