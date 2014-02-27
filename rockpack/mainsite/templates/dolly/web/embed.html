@@ -1,5 +1,6 @@
 {% extends "web/layout.html" %}
 
+{% block title %}{{ video_data.title }}{% endblock %}
 {# start un-needed blocks #}
 {% block itunes_app_data %}{% endblock %}
 {% block ie_polyfills %}{% endblock %}
@@ -13,13 +14,23 @@
   {% assets filters="less,cssmin", output="gen/wonderplayer_css.%(version)s.css", 
   	depends="assets/wonderplayer/partials/_*.less", 
   	"assets/wonderplayer/main.less" 
-  %}<link rel="stylesheet" href="{{ ASSET_URL }}"/>{% endassets %}
+  %}
+  <style>
+  {% include static_include_path(ASSET_URL) %}
+  </style>
+  {% endassets %}
 
-  <!-- Conditional stylesheet for IE8 and below -->
+  {# Conditional stylesheet for IE8 and below #}
+  <!--[if lte IE 10]>
   {% assets filters="less,cssmin", output="gen/wonderplayer_ie_css.%(version)s.css", 
     depends="assets/wonderplayer/partials/_*.less", 
     "assets/wonderplayer/ie.less" 
-  %}<!--[if lte IE 10]><link rel="stylesheet" href="{{ ASSET_URL }}"/><![endif]-->{% endassets %}
+  %}
+  <style>
+  {% include static_include_path(ASSET_URL) %}
+  </style>
+  {% endassets %}
+  <![endif]-->
 {% endblock %}
 
 {% block app_data %}
@@ -39,13 +50,13 @@
   
     <script type="text/javascript">
       var operacheck = window.navigator.userAgent.toLowerCase().indexOf('opera');
-      document.write('<scr'+'ipt type="text/javascript" src="//player.ooyala.com/v3/{{ config.OOYALA_PLAYER_ID }}' + ( operacheck == -1 ? '?platform=html5-priority' : "" ) + '"><\/script>');
+      document.write('<scr'+'ipt type="text/javascript" src="//player.ooyala.com/v3/{{ config.OOYALA_PLAYER_ID }}"' + ( operacheck !== -1 ? '?platform=html5-priority' : "" ) + '><\/sc'+'ript>');
     </script>
 
     {% assets filters="rjsmin", output="gen/video-module.%(version)s.js",
       "web-lite/conduit.js",
       "web-lite/video-module.js"
-    %}<script type="text/javascript" src="{{ ASSET_URL }}"></script>{% endassets %}
+    %}<script type="text/javascript">{% include static_include_path(ASSET_URL) %}</script>{% endassets %}
 
   	<script type="text/javascript">
   		OO.ready(function() { 
