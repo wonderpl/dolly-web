@@ -37,7 +37,7 @@ def _discover_response():
 class FeedbackForm(Form):
     message = wtf.TextField(validators=get_column_validators(FeedbackRecord, 'message'))
     score = wtf.IntegerField(validators=[wtf.validators.Optional(),
-                                         wtf.validators.number_range(0, 9)])
+                                         wtf.validators.number_range(0, 10)])
 
 
 class BaseWS(WebService):
