@@ -22,7 +22,7 @@
   {% endblock %}
 
   {% block itunes_app_data %}
-    <meta name="apple-itunes-app" content="app-id={{ config.ITUNES_APP_ID }}">
+    <meta name="apple-itunes-app" content="app-id={{ config.ITUNES_APP_ID }}, affiliate-data=at={{ config.PHG_AFFILIATE_TOKEN }}&ct=banner">
     <meta name="twitter:card" content="app">
     <meta name="twitter:app:id:iphone" content="{{ config.ITUNES_APP_ID }}">
     <meta name="twitter:app:id:ipad" content="{{ config.ITUNES_APP_ID }}">
