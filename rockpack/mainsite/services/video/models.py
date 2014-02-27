@@ -639,7 +639,7 @@ def _update_user(user):
 
 @event.listens_for(VideoInstanceLocaleMeta, 'after_update')
 def _video_insert(mapper, connection, target):
-    if use_elasticsearch:
+    if use_elasticsearch():
         video_instance = target.video_instance_rel
         if not video_instance:
             video_instance = VideoInstance.query.get(target.video_instance)
