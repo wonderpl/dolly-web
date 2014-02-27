@@ -50,7 +50,6 @@
   
     <script type="text/javascript">
       var operacheck = window.navigator.userAgent.toLowerCase().indexOf('opera');
-      console.log('operacheck: ' + operacheck);
       document.write('<scr'+'ipt type="text/javascript" src="//player.ooyala.com/v3/{{ config.OOYALA_PLAYER_ID }}' + ( operacheck === -1 ? '?platform=html5-priority' : "" ) + '"><\/sc'+'ript>');
     </script>
 
