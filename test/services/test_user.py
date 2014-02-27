@@ -1072,7 +1072,7 @@ class TestEmail(base.RockPackTestCase):
         self.assertEqual(recipient, user.email)
         self.assertIn("<title>What's trending", body)
         self.assertIn('has added 2 videos to CHANNEL #3', body)
-        self.assertIn('has added 1 videos to CHANNEL #4', body)
+        self.assertIn('has added 1 video to CHANNEL #4', body)
         self.assertIn('utm_medium=email', body)
 
         # check that email isn't sent to active, bouncing, or unsubscribed users

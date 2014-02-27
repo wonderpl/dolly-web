@@ -44,7 +44,7 @@
           {# channel description #}
           <div style="float:left;  width:90%; font-size:12px; margin:8px 0px 3px 0px; line-height:18px; height:30px; ">
             <a style="color:#282d33; text-decoration:none; font-weight:bold;" href="{{ channel_url }}">{{ channel.owner_rel.display_name }}</a>,
-            <a style="color:#999; text-decoration:none;" href="{{ channel_url }}">has added {{ count }} videos to {{ channel.title|upper }}</a>
+            <a style="color:#999; text-decoration:none;" href="{{ channel_url }}">has added {{ count }} video{% if channel.video_count != 1 %}s{% endif %} to {{ channel.title|upper }}</a>
           </div>
           {# pack cover #}
           <a style="color:#999; text-decoration:none;" href="{{ channel_url }}">
