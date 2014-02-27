@@ -884,14 +884,6 @@ def update_channel_to_index(channel, no_check=False):
     update_user_categories([channel.owner])
 
 
-def add_video_to_index(video_instance, bulk=False, no_check=False):
-    if not use_elasticsearch():
-        return
-
-    es_video = ESVideo.inserter()
-    es_video.insert(video_instance.id, video_instance)
-
-
 @background_on_sqs
 def es_update_channel_videos(extant=[], deleted=[]):
     """ Updates the es documents for videos belonging to channels

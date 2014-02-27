@@ -637,13 +637,17 @@ def _update_user(user):
     es_api.ESUser.flush()
 
 
-# XXX: Do we still need this?
 @event.listens_for(VideoInstanceLocaleMeta, 'after_update')
 def _video_insert(mapper, connection, target):
     video_instance = target.video_instance_rel
-    if not video_instance.video_rel:
-        video_instance = VideoInstance.query.get(video_instance.id)
-    es_api.add_video_to_index(video_instance)
+    if not video_instance:
+        video_instance = VideoInstance.query.get(target.video_instance)
+
+    mapped = es_api.ESVideoAttributeMap(video_instance)
+    ev = es_api.ESVideo.updater()
+    ev.set_document_id(video_instance.id)
+    ev.add_field('locales', mapped.locales)
+    ev.update()
 
 
 @event.listens_for(Video, 'after_update')

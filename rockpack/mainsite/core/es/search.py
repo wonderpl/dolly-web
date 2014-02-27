@@ -513,7 +513,6 @@ class VideoSearch(EntitySearch, CategoryMixin, MediaSortMixin):
                     link_title=v.link_title
                 ),
                 position=pos,
-                owner=v.owner,
                 child_instance_count=getattr(v, 'child_instance_count', 0)
             )
             if v.owner:
