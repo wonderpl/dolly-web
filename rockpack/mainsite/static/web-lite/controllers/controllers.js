@@ -59,7 +59,7 @@
     }]);    
 
 
-    app.controller('PlayerCtrl', ['$scope', '$timeout','$location', '$rootScope', '$templateCache', '$sanitize', '$compile', '$http', function($scope, $timeout, $location, $rootScope, $templateCache, $sanitize, $compile, $http) {
+    app.controller('PlayerCtrl', ['$scope', '$timeout','$location', '$rootScope', '$templateCache', '$sanitize', '$compile', '$http', 'scrollManager', function($scope, $timeout, $location, $rootScope, $templateCache, $sanitize, $compile, $http, scrollManager) {
 
         var $this = ng.element(d.getElementById('player')),
             template, 
@@ -73,22 +73,10 @@
         $scope.embedOptionsShowing = false;
         $scope.toggleEmbedOptions = function(event){
             if ( $scope.embedOptionsShowing === false ) {
-
-                var body = d.documentElement.scrollTop ? d.documentElement : d.body,
-                    from = body.scrollTop,
-                    el = event.srcElement || event.target, 
-                    target = ng.element( el ).offset().top-12;
-
-                $('body, html').animate({scrollTop: target}, 600);
+                scrollManager.scrollTo( event.srcElement || event.target );
                 $scope.embedOptionsShowing = true;
             } else {
-
-                var body = d.documentElement.scrollTop ? d.documentElement : d.body,
-                    from = body.scrollTop,
-                    el = d.getElementById('player-wrapper'), 
-                    target = ng.element( el ).offset().top-12;
-
-                $('body, html').animate({scrollTop: target}, 600);
+                scrollManager.scrollTo( d.getElementById('player-wrapper') );
                 $scope.embedOptionsShowing = false;
             }
         };
@@ -115,7 +103,7 @@
     }]);
 
 
-    app.controller('ChannelCtrl', ['$scope', '$timeout','$location', '$rootScope', '$templateCache', '$sanitize', '$compile', 'windowSize', function($scope, $timeout, $location, $rootScope, $templateCache, $sanitize, $compile, windowSize ) {
+    app.controller('ChannelCtrl', ['$scope', '$timeout','$location', '$rootScope', '$templateCache', '$sanitize', '$compile', 'windowSize', 'scrollManager', function($scope, $timeout, $location, $rootScope, $templateCache, $sanitize, $compile, windowSize, scrollManager ) {
 
         var $this = ng.element(d.getElementById('channel')),
             template, 
@@ -134,38 +122,7 @@
         $scope.changeVideo = function(e, index) {
             e.preventDefault();
 
-            // if ( $rootScope.videos[$rootScope.currentvideo].video.source === 'youtube' ) {
-            //     try { 
-            //         Conduit.pause();
-            //         window.wonder.destroy();
-            //     } catch (e) {}
-                
-            //     $timeout( function() {
-            //         var body = d.documentElement.scrollTop ? d.documentElement : d.body,
-            //             from = body.scrollTop, 
-            //             target = from - Math.abs(d.querySelector('.avatar').getBoundingClientRect().top) - 20;
-
-            //         $scope.tween = new TWEEN.Tween( { y: from } )
-            //         .to( { y: target }, 600 )
-            //         .easing( TWEEN.Easing.Cubic.Out )
-            //         .onUpdate( function () {
-            //             body.scrollTop = this.y;
-            //         }).start();
-                
-            //         $rootScope.$apply(function() {
-            //             $rootScope.currentvideo = index;
-            //             $rootScope.currentpage = index;
-            //         });
-            //     },500);
-
-            // } else {
-
-            var body = d.documentElement.scrollTop ? d.documentElement : d.body,
-                    from = body.scrollTop,
-                    el = d.getElementById('player-wrapper'), 
-                    target = ng.element( el ).offset().top-12;
-
-            $('body, html').animate({scrollTop: target}, 600);
+            scrollManager.scrollTo( d.getElementById('player-wrapper') );
             $scope.embedOptionsShowing = false;
             
             $timeout( function() {
