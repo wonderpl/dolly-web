@@ -16,7 +16,7 @@
   	"assets/wonderplayer/main.less" 
   %}
   <style>
-  {% include static_include_path(ASSET_URL) %}
+  {{ include_static_inline(ASSET_URL) }}
   </style>
   {% endassets %}
 
@@ -27,7 +27,7 @@
     "assets/wonderplayer/ie.less" 
   %}
   <style>
-  {% include static_include_path(ASSET_URL) %}
+  {{ include_static_inline(ASSET_URL) }}
   </style>
   {% endassets %}
   <![endif]-->
@@ -56,7 +56,7 @@
     {% assets filters="rjsmin", output="gen/video-module.%(version)s.js",
       "web-lite/conduit.js",
       "web-lite/video-module.js"
-    %}<script type="text/javascript">{% include static_include_path(ASSET_URL) %}</script>{% endassets %}
+    %}<script type="text/javascript">{{ include_static_inline(ASSET_URL) }}</script>{% endassets %}
 
   	<script type="text/javascript">
   		OO.ready(function() { 

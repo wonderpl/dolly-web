@@ -1,6 +1,8 @@
+import os
 from werkzeug.routing import MapAdapter
 from flask.ext.assets import Environment
 import webassets.loaders
+from jinja2 import Markup
 from rockpack.mainsite import app
 
 # Init app routes
@@ -18,11 +20,13 @@ def _map_adapter_get_host(self, domain_part):
         return host
 
 
-def _static_include_path(url):
-    i = url.find('/static/')
+def _include_static_inline(path):
+    i = path.find('/static/')
     if i >= 0:
-        url = url[i + 8:]
-    return url
+        path = path[i + 8:]
+    path = os.path.join(app.static_folder, path)
+    with open(path) as f:
+        return Markup(f.read())
 
 
 def setup_web(app):
@@ -37,7 +41,7 @@ def setup_web(app):
         MapAdapter._get_host = MapAdapter.get_host
         MapAdapter.get_host = _map_adapter_get_host
 
-    app.jinja_env.globals.update(static_include_path=_static_include_path)
+    app.jinja_env.globals.update(include_static_inline=_include_static_inline)
 
     static_path = app.jinja_loader.searchpath[0].replace('/templates', '/static')
     app.jinja_loader.searchpath.append(static_path)
