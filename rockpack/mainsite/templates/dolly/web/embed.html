@@ -39,7 +39,7 @@
   
     <script type="text/javascript">
       var operacheck = window.navigator.userAgent.toLowerCase().indexOf('opera');
-      document.write('<scr'+'ipt type="text/javascript" src="//player.ooyala.com/v3/{{ config.OOYALA_PLAYER_ID }}"' + ( operacheck !== -1 ? '?platform=html5-priority' : "" ) + '><\/script>');
+      document.write('<scr'+'ipt type="text/javascript" src="//player.ooyala.com/v3/{{ config.OOYALA_PLAYER_ID }}' + ( operacheck == -1 ? '?platform=html5-priority' : "" ) + '"><\/script>');
     </script>
 
     {% assets filters="rjsmin", output="gen/video-module.%(version)s.js",
