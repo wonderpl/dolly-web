@@ -75,15 +75,6 @@
   {% block page_js %}
   {% endblock %}
 
-  {% block dolly_angular_lib %}
-    {% assets filters="rjsmin", output="gen/dolly-lib.%(version)s.js",
-      "dolly/vendor/angular/angular.js",
-      "dolly/vendor/angular/angular-route.js",
-      "dolly/vendor/angular/angular-animate.js",
-      "dolly/vendor/angular/angular-sanitize.js"
-    %}<script type="text/javascript" src="{{ ASSET_URL }}"></script>{% endassets %}
-  {% endblock %}
-
   {% block app_data %}
     <script type="text/javascript">
       var injectorUrl = '{{injectorUrl}}',
