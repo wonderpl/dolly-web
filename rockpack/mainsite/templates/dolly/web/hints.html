@@ -8,19 +8,130 @@
   
     <script type="text/javascript" src="//use.typekit.net/twx7lpv.js"></script>
     <script type="text/javascript">try{Typekit.load();}catch(e){}</script>
+    <style type="text/css">
 
-    {% assets filters="less,cssmin", 
-       output="gen/dolly_css.%(version)s.css", 
-       depends="assets/dolly/partials/_*.less", 
-       "assets/dolly/front.less"
-    %} <link rel="stylesheet" href="{{ ASSET_URL }}"/> {% endassets %}
+      * {
+        -webkit-box-sizing: border-box;
+        -moz-box-sizing: border-box;
+        box-sizing:border-box;
+      }
 
-    <!-- Conditional stylesheet for IE8 and below -->
-    {% assets filters="less,cssmin", 
-       output="gen/dolly_ie_css.%(version)s.css", 
-       depends="assets/dolly/partials/_*.less", 
-       "assets/dolly/ie.less" 
-    %} <!--[if lt IE 9]><link rel="stylesheet" href="{{ ASSET_URL }}"/><![endif]--> {% endassets %}
+      body, html {
+        display: block;
+        position: relative;
+        width: 100%;
+        height: 100%;
+        padding: 0;
+        margin: 0;
+      }
+
+      #hints-wrapper {
+        display: block;
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background: white;
+        color: #777782;
+        font-family: 'proxima-nova', sans-serif;
+        font-weight: 300;
+      }
+
+      #hints-wrapper  ul {
+          display: block;
+          max-width: 640px;
+          width: 88%;
+          margin: auto;
+          padding: 32px 0;
+          height: 500px;
+          position: absolute;
+          left: 0;
+          top: 0;
+          right: 0;
+          bottom: 0;
+      }
+
+      #hints-wrapper ul li {
+          font-size: 22px;
+          line-height: 28px;
+          display: block;
+          position: relative;
+          margin: 0 0 20px 0;
+          padding: 0 0 0 80px;
+          font-weight: 300;
+      }
+
+      #hints-wrapper ul li.item-1 {
+        background: transparent url('/static/assets/dolly/img/hints/item-1-v1.png') left top no-repeat;      
+      }
+
+      #hints-wrapper ul li.item-2 {
+        background: transparent url('/static/assets/dolly/img/hints/item-2-v1.png') left top no-repeat;
+      }
+
+      #hints-wrapper ul li.item-3 {
+        background: transparent url('/static/assets/dolly/img/hints/item-2-v1.png') left top no-repeat;
+      }
+
+      #hints-wrapper ul li.item-4 {
+        background: transparent url('/static/assets/dolly/img/hints/item-4-v1.png') left top no-repeat;      
+      }
+
+      #hints-wrapper ul li.item-5 {
+        background: transparent url('/static/assets/dolly/img/hints/item-6-v1.png') left top no-repeat;
+      }
+
+      #hints-wrapper ul li.item-6 {
+        background: transparent url('/static/assets/dolly/img/hints/item-6-v1.png') left top no-repeat;      
+      }
+
+      #hints-wrapper ul li.item-7 {
+        background: transparent url('/static/assets/dolly/img/hints/item-7-v1.png') left top no-repeat;
+      }
+        
+      #hints-wrapper a.cancel {
+        display: block;
+        position: absolute;
+        left: 22px;
+        top: 22px;
+      }
+
+      @media screen and (max-width: 767px) {
+
+        #hints-wrapper {
+          display: block;
+          position: relative;
+          height: auto;
+          min-height: 100%;
+          overflow: auto;
+          padding: 40px 0;
+        }
+
+        #hints-wrapper ul {
+          display: block;
+          max-width: 480px;
+          width: 88%;
+          height: auto;
+          margin: auto;
+          padding: 0;
+          position: relative;
+        }
+
+        #hints-wrapper ul li {
+          font-size: 20px;
+        }
+      }
+    </style>
+
+    <!--[if lt IE 9]>
+    <style type="text/css">
+      #hints-wrapper {
+        width: 960px;
+        margin: 0 auto;
+        position: relative;
+      }
+    </style><![endif]-->
   </head>
   <body class="body-hints">
     <div id="hints-wrapper">
