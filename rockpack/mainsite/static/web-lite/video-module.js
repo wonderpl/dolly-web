@@ -179,7 +179,6 @@ OO.plugin("WonderUIModule", function (OO) {
             _.listen(_.elements.scrubber_vol, 'mousemove', _.interaction);
             _.listen(_.elements.scrubber_progress_vol, 'mousemove', _.interaction);
             _.listen(_.elements.scrubber_handle_vol, 'mousemove', _.interaction);        
-            document.onkeypress = _.spacebarPressed;
         }
 
         // Prevent window scroll
@@ -190,6 +189,32 @@ OO.plugin("WonderUIModule", function (OO) {
             return !(e.keyCode == 32);
         };
 
+        if ( !_.ie8 ) {
+            document.addEventListener("fullscreenchange", function () {
+                if ( document.fullscreen === false ) { 
+                    _.state.fullscreen = false;
+                }
+            }, false);
+             
+            document.addEventListener("mozfullscreenchange", function () {
+                if ( document.mozFullScreen === false ) { 
+                    _.state.fullscreen = false;
+                }
+            }, false);
+             
+            document.addEventListener("webkitfullscreenchange", function () {
+                if ( document.webkitIsFullScreen === false ) { 
+                    _.state.fullscreen = false;
+                }
+            }, false);
+             
+            document.addEventListener("msfullscreenchange", function () {
+                if ( document.msFullscreenElement === false ) { 
+                    _.state.fullscreen = false;
+                }
+            }, false);
+        }
+        
         // Listen for interaction on the actual UI contols
         _.listen(_.elements.playbutton, 'click', _.play);
         _.listen(_.elements.pausebutton, 'click', _.pause);
@@ -434,11 +459,11 @@ OO.plugin("WonderUIModule", function (OO) {
         }
     };
 
-    _.spacebarPressed = function(e) {
-        if ( e.keyCode === 32 ) {
-            _.togglePlay();
-        }
-    };
+    // _.spacebarPressed = function(e) {
+    //     if ( e.keyCode === 32 ) {
+    //         _.togglePlay();
+    //     }
+    // };
 
     _.seek = function (seconds) {
         _.mb.publish(OO.EVENTS.SEEK, seconds);
