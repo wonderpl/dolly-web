@@ -183,8 +183,10 @@ def channel(slug, channelid):
 @expose_web('/embed/<contentid>/', 'web/embed.html', cache_age=3600)
 def embed(contentid):
     if app.config.get('DOLLY'):
-        assert contentid.startswith('vi')
-        return dict(video_data=ws_request('/ws/-/channels/-/videos/%s/' % contentid))
+        if contentid.startswith('vi'):
+            return dict(video_data=ws_request('/ws/-/channels/-/videos/%s/' % contentid))
+        else:
+            abort(404)
     else:
         videoid = request.args.get('video', None)
         return web_channel_data(contentid, load_video=videoid)
