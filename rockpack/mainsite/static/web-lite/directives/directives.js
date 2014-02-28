@@ -37,11 +37,13 @@
 
 
 				var newYTVideo = function() {
-					var template, tmpl;
+					var template, tmpl, div;
 					elem.append('<div id="wonder-wrapper"><div id="youtube-player"></div></div>');
 					template = $templateCache.get('player-ui.html');
 					tmpl = $compile(template)(scope);
-					ng.element(d.getElementById('wonder-wrapper')).append(tmpl);
+					div = d.getElementById('wonder-wrapper');
+					var $div = ng.element(div);
+					$div.append(tmpl);
 
 					$timeout(function(){
 						scope.player = new WonderYTModule('youtube-player', scope.vid.video.source_id, {
