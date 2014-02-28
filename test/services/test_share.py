@@ -107,6 +107,8 @@ class TestShare(base.RockPackTestCase):
                 self.assertEquals(r.status_code, 204, r.data)
                 self.assertEquals(send_email.call_count, 1)
                 self.assertEquals(send_email.call_args[0][0], recipient)
+                if self.app.config.get('DOLLY'):
+                    self.assertIn('subscribed as %s.' % recipient, send_email.call_args[0][1])
 
                 r = client.get(
                     '/ws/%s/friends/' % userid,

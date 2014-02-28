@@ -38,6 +38,7 @@ def send_share_email(recipient, user, object_type, object, link):
     else:
         top_videos = []
     body = template.render(
+        recipient=recipient,
         user=user,
         link=link,
         object_type=object_type,
