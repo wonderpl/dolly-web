@@ -100,10 +100,6 @@ OO.plugin("WonderUIModule", function (OO) {
         _.ios5 = /(iphone|ipad).*os 5_.*/i.test(_.UA);
         _.isMobile = _.isMobileDevice();
 
-        // _.mb.subscribe('*', 'wonder', function(event){
-        //     console.log(event);
-        // });
-
         _.mb.subscribe(OO.EVENTS.PLAYER_CREATED, 'wonder', _.onPlayerCreate);
         _.mb.subscribe(OO.EVENTS.SEEKED, 'wonder', _.onSeeked);
         _.mb.subscribe(OO.EVENTS.CONTENT_TREE_FETCHED, 'wonder', _.onContentReady);
@@ -160,7 +156,6 @@ OO.plugin("WonderUIModule", function (OO) {
         _.elements.scrubber_target_vol = document.querySelector('.scrubber-target.vol');
         _.elements.scrubber_progress_vol = document.querySelector('.scrubber-progress.vol');
         _.elements.scrubber_handle_vol = document.querySelector('.scrubber-handle.vol');
-
         _.elements.scrubber_timer = document.querySelector('.scrubber-timer');
 
         // Listen for user interaction and show and hide the nav as necessary
@@ -170,7 +165,6 @@ OO.plugin("WonderUIModule", function (OO) {
             _.listen(_.elements.poster, 'mousemove', _.interaction);
             _.listen(_.elements.loader, 'mousemove', _.interaction);
             _.listen(_.elements.playbutton, 'mousemove', _.interaction);
-            // _.listen(_.elements.bigplaybutton, 'mousemove', _.interaction);
             _.listen(_.elements.pausebutton, 'mousemove', _.interaction);
             _.listen(_.elements.fullscreenbutton, 'mousemove', _.interaction);
             _.listen(_.elements.volumebutton, 'mousemove', _.interaction);
@@ -208,18 +202,18 @@ OO.plugin("WonderUIModule", function (OO) {
             _.addClass(_.elements.controls, 'show');
             _.listen(_.elements.loader, 'click', _.toggleControls);
             if ( _.ios5 === false ) {
+                _.listen(_.elements.scrubber_trans, 'touchstart', _.touchDown);
                 _.listen(_.elements.scrubber_trans, 'touchmove', _.scrubTouch);
-                _.listen(_.elements.scrubber_trans, 'touchstart', _.scrubDown);
                 _.listen(_.elements.scrubber_trans, 'touchleave', _.scrubUp);                
             } else {
+                _.listen(_.elements.scrubber_trans[0], 'touchstart', _.mouseDown);
                 _.listen(_.elements.scrubber_trans[0], 'touchmove', _.scrubTouch);
-                _.listen(_.elements.scrubber_trans[0], 'touchstart', _.scrubDown);
                 _.listen(_.elements.scrubber_trans[0], 'touchleave', _.scrubUp);                
             }
         } else {
             _.listen(_.elements.loader, 'click', _.togglePlay);
+            _.listen(_.elements.scrubber_trans, 'mousedown', _.mouseDown);
             _.listen(_.elements.scrubber_trans, 'mousemove', _.scrubMouse);
-            _.listen(_.elements.scrubber_trans, 'mousedown', _.scrubDown);
             _.listen(_.elements.scrubber_trans, 'mouseup', _.scrubUp);
             _.listen(_.elements.controls, 'mouseleave', function(){
                 _.controlshovered = false;
@@ -280,7 +274,6 @@ OO.plugin("WonderUIModule", function (OO) {
                 if ( _.fullscreenrequested === true ) {
                     _.fullscreen();
                 }
-                // console.log('video meta data loaded');
             });
             _.listen( _.elements.video, 'webkitendfullscreen', function(e) {
                 _.mb.publish(OO.EVENTS.PAUSE);
@@ -339,7 +332,6 @@ OO.plugin("WonderUIModule", function (OO) {
             _.addClass(_.elements.playbutton, 'hidden');
             _.removeClass(_.elements.pausebutton, 'hidden');
             _.timers.interaction = 0;
-            // _.controlshovered = true;
         }
         _.hideLoader();
         _.state.playing = true;
@@ -495,7 +487,7 @@ OO.plugin("WonderUIModule", function (OO) {
     };
 
     // The scrubber has been clicked on
-    _.scrubDown = function(e) {
+    _.mouseDown = function(e) {
         _.prevent(e);
         if ( _.loaded === true ) {
             
@@ -504,6 +496,19 @@ OO.plugin("WonderUIModule", function (OO) {
             }
             _.mousedown = true;
             _.scrubMouse(e);
+            _.oldtime = _.time;
+        }
+    };
+
+    _.touchDown = function(e) {
+        _.prevent(e);
+        if ( _.loaded === true ) {
+            
+            if ( _.mousetarget === 'vid' ) {
+                _.play();
+            }
+            _.mousedown = true;
+            _.scrubTouch(e);
             _.oldtime = _.time;
         }
     };

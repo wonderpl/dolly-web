@@ -1,33 +1,23 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta content="IE=edge,chrome=1" http-equiv="X-UA-Compatible">
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Wonder Place - Coming Soon...</title>
-  <meta name="description" content="Wonder Place - Coming Soon">
-
-  <link rel="shortcut icon" href="{{ config.ASSETS_URL }}/root/favicon.ico" />
-  <link href='http://fonts.googleapis.com/css?family=Lato:400,700' rel='stylesheet' type='text/css'>
-  <link href='http://fonts.googleapis.com/css?family=Montserrat' rel='stylesheet' type='text/css'>
-  <link type="text/css" rel="stylesheet" href="http://fast.fonts.net/cssapi/bf3bd3cb-8e2d-45b3-82f0-7b308ec41ba5.css"/>
-  {% assets filters="less,cssmin", output="gen/dolly_css.%(version)s.css", depends="assets/dolly/partials/_*.less", "assets/dolly/front.less" %}
-  <link rel="stylesheet" href="{{ ASSET_URL }}"/>
-  {% endassets %}
-
-  <script type="text/javascript">
-    var assets_url = '{{config.ASSETS_URL}}'
-  </script>
-
-</head>
-
-<body class="no-padding">
-
-  <div class="coming-soon">
-    <img src="/static/assets/dolly/img/coming-soon.png" alt="Coming Soon"/>
+{% extends "web/layout_static.html" %}
+{% block itunes_app_data %}{% endblock %}
+{% block body_attributes %}{% endblock %}
+{% block header_static %}
+{% endblock %}
+{% block content %}
+  
+  <div id="home-splash" class="holding-page">
+    <div class="inner">
+      <img src="/static/assets/dolly/img/home-splash.png" />
+    </div>
   </div>
 
-  {% include 'web/ga.html' %}
-  <script>ga('send', 'pageview');</script>
-</body>
-</html>
+  <div id="home-description" class="holding-page">
+    <div class="inner">
+      <p class="standout f-serif">We think people are looking for simplicity, authenticity, inspiration and real community. So we are creating a home for the world's best video content to share with a discerning audience. One that cares about quality and deserves a viewing experience free from clutter.</p>
+    </div>
+  </div>
+
+{% endblock %}
+{% block footer_static %}
+{% endblock %}
+

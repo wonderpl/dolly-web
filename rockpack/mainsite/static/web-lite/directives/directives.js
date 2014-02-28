@@ -87,9 +87,9 @@
 				var newVideo = function () {
 					switch ( scope.vid.video.source ) {
 						case 'youtube':
-							scope.getYTReady().then(function(){
+							// scope.getYTReady().then(function(){
 								newYTVideo();
-							});
+							// });
 							break;
 
 						case 'ooyala':
