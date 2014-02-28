@@ -73,10 +73,10 @@
         $scope.embedOptionsShowing = false;
         $scope.toggleEmbedOptions = function(event){
             if ( $scope.embedOptionsShowing === false ) {
-                scrollManager.scrollTo( event.srcElement || event.target );
+                scrollManager.scrollTo( event.srcElement || event.target, -70 );
                 $scope.embedOptionsShowing = true;
             } else {
-                scrollManager.scrollTo( d.getElementById('player-wrapper') );
+                // scrollManager.scrollTo( d.getElementById('player-wrapper'), -300 );
                 $scope.embedOptionsShowing = false;
             }
         };

@@ -40,7 +40,7 @@
 	}]);
 
 
-	app.directive('scrollAnchorLink', ['$timeout', '$rootScope', 'scrollManager', function ($timeout, $rootScope, scrollManager) {
+	app.directive('scrollAnchorLink', ['$timeout', '$rootScope', 'scrollManager', 'windowSize', function ($timeout, $rootScope, scrollManager, windowSize) {
 		return {
 			priority: 100,
 			restrict: 'C',
@@ -51,7 +51,7 @@
 
 					elem.bind('click', function(e){
 						e.preventDefault();
-						scrollManager.scrollTo( target );
+						scrollManager.scrollTo( target, (windowSize.ww() < 768) ? (-70) : (-40) );
 					});
 
 				} else {

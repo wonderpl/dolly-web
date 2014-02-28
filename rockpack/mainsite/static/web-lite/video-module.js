@@ -208,12 +208,12 @@ OO.plugin("WonderUIModule", function (OO) {
             _.addClass(_.elements.controls, 'show');
             _.listen(_.elements.loader, 'click', _.toggleControls);
             if ( _.ios5 === false ) {
+                _.listen(_.elements.scrubber_trans, 'touchstart', _.touchDown);
                 _.listen(_.elements.scrubber_trans, 'touchmove', _.scrubTouch);
-                _.listen(_.elements.scrubber_trans, 'touchstart', _.scrubDown);
                 _.listen(_.elements.scrubber_trans, 'touchleave', _.scrubUp);                
             } else {
+                _.listen(_.elements.scrubber_trans[0], 'touchstart', _.mouseDown);
                 _.listen(_.elements.scrubber_trans[0], 'touchmove', _.scrubTouch);
-                _.listen(_.elements.scrubber_trans[0], 'touchstart', _.scrubDown);
                 _.listen(_.elements.scrubber_trans[0], 'touchleave', _.scrubUp);                
             }
         } else {
@@ -495,7 +495,7 @@ OO.plugin("WonderUIModule", function (OO) {
     };
 
     // The scrubber has been clicked on
-    _.scrubDown = function(e) {
+    _.mouseDown = function(e) {
         _.prevent(e);
         if ( _.loaded === true ) {
             
@@ -504,6 +504,19 @@ OO.plugin("WonderUIModule", function (OO) {
             }
             _.mousedown = true;
             _.scrubMouse(e);
+            _.oldtime = _.time;
+        }
+    };
+
+    _.touchDown = function(e) {
+        _.prevent(e);
+        if ( _.loaded === true ) {
+            
+            if ( _.mousetarget === 'vid' ) {
+                _.play();
+            }
+            _.mousedown = true;
+            _.scrubTouch(e);
             _.oldtime = _.time;
         }
     };

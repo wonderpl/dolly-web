@@ -34,10 +34,11 @@
 
         };
 
-        var scrollTo = function(target){
+        var scrollTo = function(target, offset){
             
-            var tween = new TWEEN.Tween( { y: b.scrollTop } )
-                .to( { y: getOffset(target).top-40 }, 600 )
+            var adjust = offset || (-100),
+                tween = new TWEEN.Tween( { y: b.scrollTop } )
+                .to( { y: getOffset(target).top+adjust }, 600 )
                 .easing( TWEEN.Easing.Cubic.Out )
                 .onUpdate( function () {
                     b.scrollTop = this.y
