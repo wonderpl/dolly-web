@@ -69,7 +69,9 @@ ES_ACTIVITY_UPDATE_MAP = dict(
     video_instance=VideoInstance,
     channel=Channel,
     es_video_map=es_api.ESVideoAttributeMap,
-    es_channel_map=es_api.ESChannelAttributeMap)
+    es_channel_map=es_api.ESChannelAttributeMap,
+    es_video_map_updater=es_api.ESVideo,
+    es_channel_map_updater=es_api.ESChannel)
 
 
 @commit_on_success
@@ -165,7 +167,7 @@ def _do_es_object_update(object_type, object_mapping, instanceid):
     if use_elasticsearch():
         object_instance = ES_ACTIVITY_UPDATE_MAP[object_type].query.get(instanceid)
         mapped = ES_ACTIVITY_UPDATE_MAP[object_mapping](object_instance)
-        ev = es_api.ESVideo.updater()
+        ev = ES_ACTIVITY_UPDATE_MAP[object_mapping + '_updater'].updater()
         ev.set_document_id(object_instance.id)
         ev.add_field('locales', mapped.locales)
         ev.update()
