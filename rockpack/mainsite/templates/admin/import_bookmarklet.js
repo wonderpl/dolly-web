@@ -3,6 +3,7 @@
 
 (function () {
 	var typeMap = {
+			channel: 'user',
 			v: 'video',
 			embed: 'video',
 			list: 'playlist'
@@ -39,7 +40,7 @@
 	}
 
 	// Check if page url refers to youtube user/channel:
-	if (checkMatch(/(youtube)\.com\/(user)\/(\w+)/)) {
+	if (checkMatch(/(youtube)\.com\/(user|channel)\/(\w+)/)) {
 		return;
 	}
 
