@@ -120,15 +120,16 @@ class TestAPNS(base.RockPackTestCase):
             from rockpack.mainsite.services.user.commands import send_push_notifications
             with patch.object(apnsclient.APNs, 'send', _new_send):
                 result = send_push_notifications(user)
-                self.assertFalse(result.failed or result.errors)
-                message = result.message.payload
-                self.assertEquals(user.display_name, message['aps']['alert']['loc-args'][0])
-                self.assertEquals(1, message['aps']['badge'])
-                self.assertEquals(un.id, message['id'])
-                self.assertEquals(
-                    urlparse.urlparse(ndata['channel']['resource_url']).path.lstrip('/ws/'),
-                    message['url']
-                )
+                if result:
+                    self.assertFalse(result.failed or result.errors)
+                    message = result.message.payload
+                    self.assertEquals(user.display_name, message['aps']['alert']['loc-args'][0])
+                    self.assertEquals(1, message['aps']['badge'])
+                    self.assertEquals(un.id, message['id'])
+                    self.assertEquals(
+                        urlparse.urlparse(ndata['channel']['resource_url']).path.lstrip('/ws/'),
+                        message['url']
+                    )
 
     def test_invalidate_tokens(self):
         with self.app.test_client() as client:
@@ -446,31 +447,32 @@ class TestUserContent(base.RockPackTestCase):
                 1 for user in json.loads(r.data)['users']['items']
                 if user['id'] == user1.id])
 
+    def _add_apns_token(self, userid, client=None):
+        token = uuid.uuid4().hex
+        client = client or self.app.test_client()
+        r = client.post(
+            '/ws/{}/external_accounts/'.format(userid),
+            data=json.dumps(dict(external_system='apns', external_token=token)),
+            content_type='application/json',
+            headers=[get_auth_header(userid)],
+        )
+        self.assertEquals(r.status_code, 201)
+        return token
+
     @skip_unless_config('ELASTICSEARCH_URL')
     def test_content_feed(self):
         with self.app.test_client() as client:
 
-            def _add_apns_token(userid):
-                token = uuid.uuid4().hex
-                system = 'apns'
-                client.post(
-                    '/ws/{}/external_accounts/'.format(userid),
-                    data=json.dumps(dict(external_system=system, external_token=token)),
-                    content_type='application/json',
-                    headers=[get_auth_header(userid)],
-                )
-                return token
-
             self.app.test_request_context().push()
 
             user1 = self.create_test_user().id
-            user1_token = _add_apns_token(user1)
+            user1_token = self._add_apns_token(user1, client)
 
             user2 = self.create_test_user().id
-            user2_token = _add_apns_token(user2)
+            user2_token = self._add_apns_token(user2, client)
 
             user3 = self.create_test_user().id
-            user3_token = _add_apns_token(user3)
+            user3_token = self._add_apns_token(user3, client)
 
             # Create new channel with a few videos and subscribe user
             channel1 = Channel.query.filter_by(owner=user1).one()
@@ -751,15 +753,7 @@ class TestUserContent(base.RockPackTestCase):
             self.app.test_request_context().push()
             user1 = self.create_test_user()
             user2 = self.create_test_user()
-
-            token = uuid.uuid4().hex
-            system = 'apns'
-            client.post(
-                '/ws/{}/external_accounts/'.format(user2.id),
-                data=json.dumps(dict(external_system=system, external_token=token)),
-                content_type='application/json',
-                headers=[get_auth_header(user2.id)],
-            )
+            self._add_apns_token(user2.id)
 
             channel1 = user1.channels[0]
             channel2 = Channel.create(owner=user2.id, title='new', description='',
@@ -783,7 +777,7 @@ class TestUserContent(base.RockPackTestCase):
 
             with patch.object(cron_cmds, '_send_apns_message') as mock_method:
                 for user in user_notifications.keys():
-                    cron_cmds.send_push_notifications(user2)
+                    cron_cmds.send_push_notifications(user)
 
             self.assertEquals(mock_method.mock_calls, [])
 
@@ -795,15 +789,7 @@ class TestUserContent(base.RockPackTestCase):
             self.app.test_request_context().push()
             user1 = self.create_test_user()
             user2 = self.create_test_user()
-
-            token = uuid.uuid4().hex
-            system = 'apns'
-            r = client.post(
-                '/ws/{}/external_accounts/'.format(user2.id),
-                data=json.dumps(dict(external_system=system, external_token=token)),
-                content_type='application/json',
-                headers=[get_auth_header(user2.id)],
-            )
+            self._add_apns_token(user2.id)
 
             channel1 = user1.channels[0]
             channel2 = Channel.create(owner=user2.id, title='new', description='',
@@ -825,10 +811,13 @@ class TestUserContent(base.RockPackTestCase):
 
             with patch.object(cron_cmds, '_send_apns_message') as mock_method:
                 for user in user_notifications.keys():
-                    cron_cmds.send_push_notifications(user2)
+                    cron_cmds.send_push_notifications(user)
 
-            self.assertEquals(mock_method.mock_calls[0][1][2]['alert']['loc-args'][0], 'Alexia Barrichello')
-            self.assertEquals(mock_method.mock_calls[0][1][2]['alert']['loc-key'], '%@ has mentioned you in a comment')
+                if 'comment_mention' in self.app.config['PUSH_NOTIFICATION_MAP']:
+                    self.assertEquals(mock_method.mock_calls[0][1][2]['alert']['loc-args'][0],
+                                      'Alexia Barrichello')
+                    self.assertEquals(mock_method.mock_calls[0][1][2]['alert']['loc-key'],
+                                      '%@ has mentioned you in a comment')
 
             r = client.get(
                 '/ws/{}/notifications/'.format(user2.id),
@@ -891,11 +880,12 @@ class TestUserContent(base.RockPackTestCase):
         with self.app.test_client() as client:
             self.app.test_request_context().push()
             user1 = self.create_test_user().id
-            user2 = self.create_test_user().id
+            user2 = self.create_test_user(first_name='Fn', last_name='Ln').id
             ExternalFriend(user=user1, external_system='facebook', external_uid='u2',
                            name='u2', avatar_url='').save()
             ExternalToken(user=user2, external_system='facebook', external_uid='u2',
                           external_token='xxx').save()
+            self._add_apns_token(user1)
 
             cron_cmds.create_new_registration_notifications()
             UserNotification.query.session.commit()
@@ -908,6 +898,12 @@ class TestUserContent(base.RockPackTestCase):
             notification, = json.loads(r.data)['notifications']['items']
             self.assertEquals(notification['message_type'], 'joined')
             self.assertEquals(notification['message']['user']['id'], user2)
+
+            with patch.object(cron_cmds, '_send_apns_message') as _send_apns_message:
+                cron_cmds.send_push_notifications(user1)
+                alert = _send_apns_message.call_args[0][2]['alert']
+                self.assertIn('Fn Ln', alert['loc-args'])
+                self.assertIn('Your Facebook friend', alert['loc-key'])
 
     def test_subscription_notification(self):
         with self.app.test_client() as client:

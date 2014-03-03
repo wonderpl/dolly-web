@@ -103,3 +103,7 @@ SHARE_MESSAGE_MAP = dict(
         message_facebook=u"I found this great collection of videos on Wonder PL",
     ),
 )
+
+PUSH_NOTIFICATION_MAP = dict(
+    joined=('user', "Your Facebook friend %@ has joined Wonder PL"),
+)

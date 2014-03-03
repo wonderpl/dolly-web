@@ -168,41 +168,31 @@ def send_push_notifications(user):
     if not token:
         return
 
-    notifications = UserNotification.query.filter_by(date_read=None, user=user_id).order_by('id desc')
-    count = notifications.count()
+    notifications = UserNotification.query.filter_by(date_read=None, user=user_id)
+    count = notifications.value(func.count())
     app.logger.debug('%s notification count: %d', user_id, count)
 
-    # Send most recent notification only
-    notification = sorted(notifications, key=lambda n: n.id, reverse=True)[0]
+    # Send most recent notification only, if we have configuration for it
+    notification_map = app.config['PUSH_NOTIFICATION_MAP']
+    notification = notifications.filter(
+        UserNotification.message_type.in_(notification_map.keys())
+    ).order_by('id desc').first()
+    if not notification:
+        return
     data = json.loads(notification.message)
+    key, push_message = notification_map[notification.message_type]
+    deeplink_url = _apns_url(data[key]['resource_url'])
 
-    if notification.message_type == 'subscribed':
-        key = 'channel'
-        push_message = "%@ has subscribed to your channel"
-    elif notification.message_type == 'joined':
-        key = 'user'
-        push_message = "Your Facebook friend %@ has joined Rockpack"
-    elif notification.message_type == 'repack':
-        key = 'video'
-        push_message = "%@ has re-packed one of your videos"
-    elif notification.message_type == 'unavailable':
-        key = 'video'
-        push_message = "One of your videos is no longer available"
-    elif notification.message_type == 'comment_mention':
-        key = 'video'
-        push_message = "%@ has mentioned you in a comment"
-    else:
-        key = 'video'
-        push_message = "%@ has liked your video"
     try:
         push_message_args = [data['user']['display_name']]
     except KeyError:
         push_message_args = []
-    deeplink_url = _apns_url(data[key]['resource_url'])
+
+    badge = None if app.config.get('DOLLY') else count
 
     return complex_push_notification(
         token, push_message, push_message_args,
-        badge=count, id=notification.id, url=deeplink_url)
+        badge=badge, id=notification.id, url=deeplink_url)
 
 
 def create_unavailable_notifications(date_from=None, date_to=None, user_notifications=None):
