@@ -639,18 +639,16 @@ def _update_user(user):
 
 @event.listens_for(VideoInstanceLocaleMeta, 'after_update')
 def video_insert(mapper, connection, target):
-    return _update_locales_on_video(target)
+    return _update_locales_on_video(target.video_instance)
 
 
 from rockpack.mainsite.background_sqs_processor import background_on_sqs
 
 
 @background_on_sqs
-def _update_locales_on_video(target):
+def _update_locales_on_video(video_instance_id):
     if use_elasticsearch():
-        video_instance = target.video_instance_rel
-        if not video_instance:
-            video_instance = VideoInstance.query.get(target.video_instance)
+        video_instance = VideoInstance.query.get(video_instance_id)
 
         mapped = es_api.ESVideoAttributeMap(video_instance)
         ev = es_api.ESVideo.updater()
