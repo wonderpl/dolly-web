@@ -240,6 +240,9 @@ OO.plugin("WonderUIModule", function (OO) {
             _.listen(_.elements.scrubber_trans, 'mousedown', _.mouseDown);
             _.listen(_.elements.scrubber_trans, 'mousemove', _.scrubMouse);
             _.listen(_.elements.scrubber_trans, 'mouseup', _.scrubUp);
+            _.listen(_.elements.loader, 'mousemove', function(){
+                _.controlshovered = false;
+            });
             _.listen(_.elements.controls, 'mouseleave', function(){
                 _.controlshovered = false;
             });
