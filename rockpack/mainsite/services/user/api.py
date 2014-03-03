@@ -1347,7 +1347,7 @@ class UserWS(WebService):
             items, total = _channel_videos(channelid, self.get_locale(), self.get_page())
         return dict(videos=dict(items=items, total=total))
 
-    @expose_ajax('/<userid>/channels/<channelid>/videos/', cache_age=0)
+    @expose_ajax('/<userid>/channels/<channelid>/videos/', cache_age=60)
     @check_authorization()
     def owner_channel_videos(self, userid, channelid):
         channel = Channel.query.filter_by(id=channelid, deleted=False).first_or_404()
@@ -1369,10 +1369,18 @@ class UserWS(WebService):
         add_videos_to_channel(channel, request.json, self.get_locale(),
                               request.method == 'PUT')
 
-    @expose_ajax('/<userid>/channels/<channelid>/videos/<videoid>/')
+    @expose_ajax('/<userid>/channels/<channelid>/videos/<videoid>/', cache_age=60)
     def channel_video_instance(self, userid, channelid, videoid):
-        instance = VideoInstance.query.filter_by(id=videoid).first_or_404()
-        return video_api.video_dict(instance)
+        if use_elasticsearch():
+            vs = es_search.VideoSearch(self.get_locale())
+            vs.add_id(videoid)
+            try:
+                return vs.videos()[0]
+            except IndexError:
+                abort(404)
+        else:
+            instance = VideoInstance.query.filter_by(id=videoid).first_or_404()
+            return video_api.video_dict(instance)
 
     @expose_ajax('/<userid>/channels/<channelid>/videos/<videoid>/comments/', cache_age=60)
     def video_instance_comments(self, userid, channelid, videoid):
