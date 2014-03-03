@@ -65,6 +65,12 @@ SUBSCRIPTION_VIDEO_FEED_THRESHOLD = func.now() - text("interval '7 day'")
 # Needs to be overriden to support sqlite tests
 ACTIVITY_LAST_ACTION_COMPARISON = "(array_agg(action order by id desc))[1] = '%s'"
 
+ES_ACTIVITY_UPDATE_MAP = dict(
+    video_instance=VideoInstance,
+    channel=Channel,
+    es_video_map=es_api.ESVideoAttributeMap,
+    es_channel_map=es_api.ESChannelAttributeMap)
+
 
 @commit_on_success
 def get_or_create_video_records(instance_ids):
@@ -157,8 +163,8 @@ def _update_video_comment_count(videoid):
 @background_on_sqs
 def _do_es_object_update(object_type, object_mapping, instanceid):
     if use_elasticsearch():
-        object_instance = object_type.query.get(instanceid)
-        mapped = object_mapping(object_instance)
+        object_instance = ES_ACTIVITY_UPDATE_MAP[object_type].query.get(instanceid)
+        mapped = ES_ACTIVITY_UPDATE_MAP[object_mapping](object_instance)
         ev = es_api.ESVideo.updater()
         ev.set_document_id(object_instance.id)
         ev.add_field('locales', mapped.locales)
@@ -184,7 +190,7 @@ def es_update_activity(object_type, object_mapping):
     return decorator
 
 
-@es_update_activity(VideoInstance, es_api.ESVideoAttributeMap)
+@es_update_activity('video_instance', 'es_video_map')
 @commit_on_success
 def save_video_activity(userid, action, instance_id, locale):
     column, value, incr = _get_action_incrementer(action)
@@ -218,7 +224,7 @@ def save_video_activity(userid, action, instance_id, locale):
                 return channel.add_videos([video_id])[0]
 
 
-@es_update_activity(Channel, es_api.ESChannelAttributeMap)
+@es_update_activity('channel', 'es_channel_map')
 @commit_on_success
 def save_channel_activity(userid, action, channelid, locale):
     """Update channel with subscriber, view, or star count changes."""
