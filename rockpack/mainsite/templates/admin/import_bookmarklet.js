@@ -40,7 +40,7 @@
 	}
 
 	// Check if page url refers to youtube user/channel:
-	if (checkMatch(/(youtube)\.com\/(user|channel)\/(\w+)/)) {
+	if (checkMatch(/(youtube)\.com\/(user|channel)\/([\w\-]+)/)) {
 		return;
 	}
 
