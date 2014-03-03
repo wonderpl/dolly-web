@@ -18,7 +18,66 @@ from rockpack.mainsite.services.video import models
 from rockpack.mainsite.services.user.models import UserActivity
 
 
+def search_video(videoid):
+    v = VideoSearch('en-us')
+    v.add_id(videoid)
+    return v.videos()[0]
+
 class ChannelViewCountPopulation(base.RockPackTestCase):
+
+    @skip_unless_config('ELASTICSEARCH_URL')
+    def test_star_counts(self):
+        """ Populate the view count on channel locale meta """
+        with self.app.test_request_context():
+            with self.app.test_client() as client:
+                user2_id = self.create_test_user().id
+                user3_id = self.create_test_user().id
+                user4_id = self.create_test_user().id
+
+                videoid = VideoInstanceData.video_instance1.id
+
+                client.post(
+                    '/ws/{}/activity/?locale=en-us'.format(user2_id),
+                    data=json.dumps(dict(action='star', video_instance=videoid)),
+                    content_type='application/json',
+                    headers=[get_auth_header(user2_id)])
+
+        with self.app.test_request_context():
+            #self.wait_for_es()
+            result = search_video(videoid)
+            #self.assertEquals(1, result['video']['star_count'])
+
+            with self.app.test_client() as client:
+                client.post(
+                    '/ws/{}/activity/?locale=en-us'.format(user3_id),
+                    data=json.dumps(dict(action='star', video_instance=videoid)),
+                    content_type='application/json',
+                    headers=[get_auth_header(user3_id)])
+
+        with self.app.test_request_context():
+            self.wait_for_es()
+            result = search_video(videoid)
+            self.assertEquals(2, result['video']['star_count'])
+
+            with self.app.test_client() as client:
+                client.post(
+                    '/ws/{}/activity/?locale=en-us'.format(user4_id),
+                    data=json.dumps(dict(action='star', video_instance=videoid)),
+                    content_type='application/json',
+                    headers=[get_auth_header(user4_id)])
+
+        with self.app.test_request_context():
+            self.wait_for_es()
+            result = search_video(videoid)
+            self.assertEquals(3, result['video']['star_count'])
+
+            with self.app.test_client() as client:
+
+                vilm = models.VideoInstanceLocaleMeta.query.filter(
+                    models.VideoInstanceLocaleMeta.video_instance == videoid).first()
+
+                self.assertEquals(3, vilm.star_count)
+
 
     def test_populate(self):
         """ Populate the view count on channel locale meta """

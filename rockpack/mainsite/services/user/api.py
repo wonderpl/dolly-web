@@ -1,5 +1,6 @@
+import sys
+from functools import partial, wraps
 from itertools import groupby
-from functools import partial
 from werkzeug.datastructures import MultiDict
 from sqlalchemy import desc, func, text
 from sqlalchemy.exc import IntegrityError
@@ -15,9 +16,10 @@ from rockpack.mainsite.core.dbapi import commit_on_success
 from rockpack.mainsite.core.webservice import WebService, expose_ajax, ajax_create_response, process_image
 from rockpack.mainsite.core.oauth.decorators import check_authorization
 from rockpack.mainsite.core.youtube import get_video_data
-from rockpack.mainsite.core.es import use_elasticsearch, search as es_search
+from rockpack.mainsite.core.es import use_elasticsearch, search as es_search, api as es_api
 from rockpack.mainsite.core.es.api import es_update_channel_videos, ESVideo, update_user_subscription_count
 from rockpack.mainsite.core import recommender
+from rockpack.mainsite.background_sqs_processor import background_on_sqs
 from rockpack.mainsite.helpers import lazy_gettext as _
 from rockpack.mainsite.helpers.forms import naughty_word_validator
 from rockpack.mainsite.helpers.urls import url_for, url_to_endpoint
@@ -152,6 +154,37 @@ def _update_video_comment_count(videoid):
         app.logger.error(str(e))
 
 
+@background_on_sqs
+def _do_es_object_update(object_type, object_mapping, instanceid):
+    if use_elasticsearch():
+        object_instance = object_type.query.get(instanceid)
+        mapped = object_mapping(object_instance)
+        ev = es_api.ESVideo.updater()
+        ev.set_document_id(object_instance.id)
+        ev.add_field('locales', mapped.locales)
+        ev.update()
+
+
+def es_update_activity(object_type, object_mapping):
+    """ Designed to wrap activity saves
+        for VideoInstance and Channel """
+    def decorator(f):
+        @wraps(f)
+        def wrapper(*args, **kwargs):
+            try:
+                result = f(*args, **kwargs)
+                if args[1] in ['star', 'unstar', 'open', 'view']:
+                    _do_es_object_update(object_type, object_mapping, args[2])
+            except Exception as e:
+                etype, evalue, traceback = sys.exc_info()
+                raise etype, e, traceback
+            else:
+                return result
+        return wrapper
+    return decorator
+
+
+@es_update_activity(VideoInstance, es_api.ESVideoAttributeMap)
 @commit_on_success
 def save_video_activity(userid, action, instance_id, locale):
     column, value, incr = _get_action_incrementer(action)
@@ -185,6 +218,7 @@ def save_video_activity(userid, action, instance_id, locale):
                 return channel.add_videos([video_id])[0]
 
 
+@es_update_activity(Channel, es_api.ESChannelAttributeMap)
 @commit_on_success
 def save_channel_activity(userid, action, channelid, locale):
     """Update channel with subscriber, view, or star count changes."""
