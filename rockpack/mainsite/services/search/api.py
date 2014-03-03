@@ -85,15 +85,8 @@ class SearchWS(WebService):
                 vs._exclusion_filters.append(f)
             start, size = self.get_page()
             vs.set_paging(offset=start, limit=size)
-            for video in vs.videos():
-                video['video']['source_view_count'] = video['video']['view_count']
-                del video['video']['star_count']
-                del video['public']
-                del video['video']['view_count']
-                del video['date_added']
-                items.append(video)
             total = vs.total
-            return total, items
+            return total, vs.videos()
 
         items = []
         query = request.args.get('q', '')
