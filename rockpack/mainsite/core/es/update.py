@@ -1,4 +1,4 @@
-from sqlalchemy import func, update
+from sqlalchemy import func
 from sqlalchemy.orm import aliased
 from rockpack.mainsite import app
 from rockpack.mainsite.services.video import models
@@ -8,6 +8,9 @@ from . import api
 
 def _update_most_influential_video(video_ids):
     # Re-calculate most influential
+    if not video_ids:
+        return
+
     child = aliased(models.VideoInstance, name='child')
     query = db.session.query(
         models.VideoInstance.id,
@@ -86,6 +89,21 @@ def _category_channel_mapping(channel_ids):
     return category_map
 
 
+def update_average_channel_category(channelid, cat_count_map):
+    try:
+        cat = next(cat for cat, count in cat_count_map.items() if count >= sum(cat_count_map.values()) * 0.6)
+    except StopIteration:
+        cat = []
+
+    # Update the database
+    qcat = cat or None
+    c = models.Channel.query.get(channelid)
+    if qcat != c.category:
+        c.category = qcat
+        c.save()
+    return qcat
+
+
 def _update_video_related_channel_meta(channel_ids):
     channel_map = _video_terms_channel_mapping(channel_ids)
     category_map = _category_channel_mapping(channel_ids)
@@ -102,19 +120,9 @@ def _update_video_related_channel_meta(channel_ids):
         if app.config.get('DOLLY', False):
             potential_cats = category_map.get(channel_id, None)
             if potential_cats:
-                try:
-                    cat = next(cat for cat, count in potential_cats.items() if count >= sum(potential_cats.values()) * 0.6)
-                except StopIteration:
-                    cat = []
-
-                # Update the database
-                qcat = cat or None
-                c = models.Channel.query.get(channel_id)
-                c.category = qcat
-                c.save()
-
+                new_cat = update_average_channel_category(channel_id, potential_cats)
                 # Set es field
-                ec.add_field('category', cat)
+                ec.add_field('category', new_cat)
 
         # Update the es record
         ec.update()

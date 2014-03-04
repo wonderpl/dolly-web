@@ -945,6 +945,9 @@ def remove_channel_from_index(channel_id):
     from rockpack.mainsite.services.video.models import Channel
     user_id = db.session.query(Channel.owner).filter(Channel.id == channel_id).first()
     if user_id:
+        # User category depends on channel category. Since we're deleting
+        # the channel, let's update channel cat then do the user's
+        update.update_average_channel_category(channel_id, {})
         update_user_categories([user_id[0]])
 
 

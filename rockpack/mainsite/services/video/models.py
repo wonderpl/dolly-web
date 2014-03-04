@@ -11,6 +11,7 @@ from rockpack.mainsite.core.es import use_elasticsearch, api as es_api
 from rockpack.mainsite.helpers.db import add_base64_pk, add_video_pk, insert_new_only, ImageType, BoxType
 from rockpack.mainsite.helpers.urls import url_for
 from rockpack.mainsite.services.user.models import User
+from rockpack.mainsite.background_sqs_processor import background_on_sqs
 
 
 class Locale(db.Model):
@@ -622,14 +623,17 @@ def _channel_is_public(channel):
     return channel.public and channel.visible and not channel.deleted
 
 
-def _update_or_remove_channel(channel):
-    if _channel_is_public(channel):
-        es_api.update_channel_to_index(channel)
-    else:
-        es_api.remove_channel_from_index(channel.id)
+@background_on_sqs
+def _update_or_remove_channel(channelid):
+    channel = Channel.query.get(channelid)
+    if channel is not None:
+        if _channel_is_public(channel):
+            es_api.update_channel_to_index(channel)
+        else:
+            es_api.remove_channel_from_index(channel.id)
 
 
-def _update_user(user):
+def _update_user_promotion(user):
     eu = es_api.ESUser.updater()
     eu.set_document_id(user.id)
     eu.add_field('promotion', user.promotion_map())
@@ -640,9 +644,6 @@ def _update_user(user):
 @event.listens_for(VideoInstanceLocaleMeta, 'after_update')
 def video_insert(mapper, connection, target):
     return _update_locales_on_video(target.video_instance)
-
-
-from rockpack.mainsite.background_sqs_processor import background_on_sqs
 
 
 @background_on_sqs
@@ -684,12 +685,12 @@ def _channel_insert(mapper, connection, target):
     # possibly do a lookup for owner in resource_url method instead of having it rely on self.owner_rel here
     channel = Channel.query.get(target.channel)
     if _channel_is_public(channel):
-        _update_or_remove_channel(channel)
+        _update_or_remove_channel(channel.id)
 
 
 @event.listens_for(ChannelLocaleMeta, 'after_update')
 def _es_channel_update_from_clm(mapper, connection, target):
-    _update_or_remove_channel(target.channel_rel)
+    _update_or_remove_channel(target.channel)
 
 
 # XXX: This is called on registration to add user's favourites - needs to move offline
@@ -701,27 +702,27 @@ def _es_channel_insert_from_channel(mapper, connection, target):
 
 @event.listens_for(Channel, 'after_update')
 def _es_channel_update_from_channel(mapper, connection, target):
-    _update_or_remove_channel(target)
+    _update_or_remove_channel(target.id)
 
 
 @event.listens_for(ChannelPromotion, 'after_insert')
 def _es_channel_promotion_insert(mapper, connection, target):
-    _update_or_remove_channel(Channel.query.get(target.channel))
+    _update_or_remove_channel(target.channel)
 
 
 @event.listens_for(ChannelPromotion, 'after_update')
 def _es_channel_promotion_update(mapper, connection, target):
-    _update_or_remove_channel(Channel.query.get(target.channel))
+    _update_or_remove_channel(target.channel)
 
 
 @event.listens_for(UserPromotion, 'after_insert')
 def _es_user_promotion_insert(mapper, connection, target):
-    _update_user(target.user)
+    _update_user_promotion(target.user)
 
 
 @event.listens_for(UserPromotion, 'after_update')
 def _es_user_promotion_update(mapper, connection, target):
-    _update_user(target.user)
+    _update_user_promotion(target.user)
 
 
 @event.listens_for(Channel, 'before_update')
