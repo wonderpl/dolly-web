@@ -14,6 +14,7 @@
 			$timeout(function(){
         		$rootScope.$apply(function(){
     				$rootScope.currentpage = $location.$$path;
+                    $rootScope.isHomepage = ( $rootScope.currentpage === '/' );
 
                     if ( $rootScope.queueAnchor !== false ){
                         $timeout( function() {
