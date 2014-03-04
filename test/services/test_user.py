@@ -1067,7 +1067,7 @@ class TestEmail(base.RockPackTestCase):
         recipient, body = send_email.call_args[0]
         self.assertEqual(recipient, user.email)
         self.assertIn("<title>What's trending", body)
-        self.assertIn('has added 2 videos to CHANNEL #3', body)
+        self.assertIn('has added 2 videos to CHANNEL', body)
         self.assertIn('has added 1 video to CHANNEL #4', body)
         self.assertIn('utm_medium=email', body)
 
