@@ -181,13 +181,13 @@ def _parse_fieldname(fieldname):
         print >>sys.stderr, 'Invalid field name: %s: %s' % (fieldname, e)
         sys.exit(2)
     cfgkey = model.__table__.columns.get(fieldname).type.cfgkey
-    return model, cfgkey
+    return model, fieldname, cfgkey
 
 
 @manager.command
 def update_image_thumbnails(fieldname):
     """Re-process all images for the specified Model.field."""
-    model, cfgkey = _parse_fieldname(fieldname)
+    model, fieldname, cfgkey = _parse_fieldname(fieldname)
     for instance in model.query.filter(getattr(model, fieldname) != ''):
         try:
             data = get_external_resource(getattr(instance, fieldname).original)
@@ -203,7 +203,7 @@ def update_image_thumbnails(fieldname):
 
 @manager.command
 def upload_default_image(fieldname, filename, name=None):
-    model, cfgkey = _parse_fieldname(fieldname)
+    model, fieldname, cfgkey = _parse_fieldname(fieldname)
     with open(filename) as img:
         resize_and_upload(img, cfgkey, name=name)
 
