@@ -440,7 +440,7 @@ class ESUserAttributeMap:
     def category(self, empty=False):
         if empty:
             return []
-        return get_users_categories([self.user.id])
+        return get_users_categories([self.user.id]).get(self.user, [])
 
 
 class ESVideoAttributeMap:
@@ -795,7 +795,10 @@ def get_users_categories(user_ids=None):
     from rockpack.mainsite.services.user.models import User
 
     query = db.session.query(User, models.Channel, func.count(models.VideoInstance.id)).outerjoin(
-        models.Channel, models.Channel.owner == User.id
+        models.Channel,
+        (models.Channel.owner == User.id) &
+        (models.Channel.deleted == False) &
+        (models.Channel.public == True)
     ).outerjoin(
         models.VideoInstance, models.VideoInstance.channel == models.Channel.id
     ).options(
@@ -818,7 +821,6 @@ def get_users_categories(user_ids=None):
 
 
 def update_user_categories(user_ids=None):
-
     for user, categories in get_users_categories(user_ids).iteritems():
         eu = ESUser.updater(bulk=True)
         eu.set_document_id(user.id)
