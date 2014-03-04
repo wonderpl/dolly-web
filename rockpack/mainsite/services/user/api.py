@@ -184,7 +184,6 @@ def es_update_activity(object_type, object_mapping):
             try:
                 result = f(*args, **kwargs)
                 if args[1] in ['star', 'unstar', 'open', 'view']:
-                    app.logger.warning('es_update_activity occurred with args: %s kwargs: %s' % (str(args), str(kwargs)))
                     _do_es_object_update(object_type, object_mapping, args[2])
             except Exception as e:
                 etype, evalue, traceback = sys.exc_info()
