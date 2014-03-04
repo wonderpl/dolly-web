@@ -649,7 +649,8 @@ from rockpack.mainsite.background_sqs_processor import background_on_sqs
 def _update_locales_on_video(video_instance_id):
     if use_elasticsearch():
         video_instance = VideoInstance.query.get(video_instance_id)
-
+        if video_instance is None:
+            return
         mapped = es_api.ESVideoAttributeMap(video_instance)
         ev = es_api.ESVideo.updater()
         ev.set_document_id(video_instance.id)
