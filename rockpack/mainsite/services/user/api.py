@@ -166,6 +166,8 @@ def _update_video_comment_count(videoid):
 def _do_es_object_update(object_type, object_mapping, instanceid):
     if use_elasticsearch():
         object_instance = ES_ACTIVITY_UPDATE_MAP[object_type].query.get(instanceid)
+        if object_instance is None:
+            return
         mapped = ES_ACTIVITY_UPDATE_MAP[object_mapping](object_instance)
         ev = ES_ACTIVITY_UPDATE_MAP[object_mapping + '_updater'].updater()
         ev.set_document_id(object_instance.id)
