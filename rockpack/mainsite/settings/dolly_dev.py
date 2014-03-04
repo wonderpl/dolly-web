@@ -46,7 +46,7 @@ FAVOURITE_CHANNEL = 'Favorites', 'My favorite videos', ''
 
 FACEBOOK_APP_ID = '573323026048639'
 FACEBOOK_APP_SECRET = _decrypt('0\xa9\xf4=)\xa9\x0cC#\xda \xa2\xe1.\xf8)R\x04\xf4\x9b\x0c\xb9x\x0f\xc1\xb7\xd5\xfb=\xfb\xef\xc1')
-FACEBOOK_APP_NAMESPACE = 'dolly-dev'
+FACEBOOK_APP_NAMESPACE = 'wonderpl-dev'
 
 SERVER_NAME = 'dev.wonderpl.com'
 SECURE_SUBDOMAIN = 'secure'
