@@ -252,7 +252,7 @@ class ESUser(ESObject):
 
     _type = 'user'
 
-    def inser_mapper(self, user):
+    def insert_mapper(self, user):
         mapped = ESUserAttributeMap(user)
         return dict(
             id=mapped.id,
@@ -265,8 +265,9 @@ class ESUser(ESObject):
             site_url=mapped.site_url,
             brand=mapped.brand,
             subscriber_count=mapped.subscriber_count,
-            subscription_count=mapped.subscription_count,
-            promotion=mapped.promotion)
+            subscription_count=mapped.subscription_count(),
+            promotion=mapped.promotion(),
+            category=mapped.category())
 
 
 class ESVideo(ESObject):
