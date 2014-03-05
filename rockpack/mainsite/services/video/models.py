@@ -671,8 +671,9 @@ def _video_update(mapper, connection, target):
 
 @event.listens_for(VideoInstance, 'after_delete')
 def video_instance_delete(mapper, connection, target):
-    from rockpack.mainsite.core.es import update as es_update
-    es_update.update_most_influential_video([target.video])
+    if use_elasticsearch():
+        from rockpack.mainsite.core.es import update as es_update
+        es_update.update_most_influential_video([target.video])
 
 
 @models_committed.connect_via(app)
