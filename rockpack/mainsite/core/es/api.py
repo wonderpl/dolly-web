@@ -404,7 +404,7 @@ class ESUserAttributeMap:
         return self.user.username
 
     @property
-    def profile_cover(self):
+    def profile_cover_url(self):
         if self.user.brand:
             cover = convert_image_path(self.user, 'brand_profile_cover', 'BRAND_PROFILE')
         else:
