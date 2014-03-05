@@ -66,7 +66,6 @@ class SearchWS(WebService):
         region = self.get_locale().split('-')[1]
 
         def _search_es(query):
-            items = []
             vs = VideoSearch(self.get_locale())
             # Split the term so that the search phrase is
             # over each individual word, and not the phrase
@@ -81,8 +80,6 @@ class SearchWS(WebService):
                 vs.search_terms(query)
                 vs.add_term('most_influential', True, occurs=MUST)
                 # also clear any favs from search
-                f = pyes.TermFilter(field='is_favourite', value=False)
-                vs._exclusion_filters.append(f)
             start, size = self.get_page()
             vs.set_paging(offset=start, limit=size)
             total = vs.total

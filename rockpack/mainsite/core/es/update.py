@@ -22,8 +22,7 @@ def _update_most_influential_video(video_ids):
         (models.VideoInstance.video == child.video) &
         (models.VideoInstance.channel == child.source_channel)
     ).filter(
-        models.VideoInstance.video.in_(video_ids),
-        models.VideoInstance.is_favourite == False
+        models.VideoInstance.video.in_(video_ids)
     ).group_by(models.VideoInstance.id, models.VideoInstance.video, child.source_channel)
 
     instance_counts = {}
