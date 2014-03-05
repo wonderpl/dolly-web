@@ -928,8 +928,8 @@ def es_update_channel_videos(extant=[], deleted=[]):
     if deleted:
         ESVideo.delete(deleted)
 
-    update._update_most_influential_video(video_ids)
-    update._update_video_related_channel_meta(channel_ids)
+    update.update_most_influential_video(video_ids)
+    update.update_video_related_channel_meta(channel_ids)
 
 
 def remove_channel_from_index(channel_id):

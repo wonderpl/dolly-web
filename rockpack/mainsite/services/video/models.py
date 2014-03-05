@@ -669,6 +669,12 @@ def _video_update(mapper, connection, target):
         es_api.ESVideo.delete(instance_ids)
 
 
+@event.listens_for(VideoInstance, 'after_delete')
+def video_instance_delete(mapper, connection, target):
+    from rockpack.mainsite.core.es import update as es_update
+    es_update.update_most_influential_video([target.video])
+
+
 @models_committed.connect_via(app)
 def on_models_committed(sender, changes):
     updated_videos, deleted_videos = [], []

@@ -6,7 +6,7 @@ from rockpack.mainsite.core.dbapi import db
 from . import api
 
 
-def _update_most_influential_video(video_ids):
+def update_most_influential_video(video_ids):
     # Re-calculate most influential
     if not video_ids:
         return
@@ -103,7 +103,7 @@ def update_average_channel_category(channelid, cat_count_map):
     return qcat
 
 
-def _update_video_related_channel_meta(channel_ids):
+def update_video_related_channel_meta(channel_ids):
     channel_map = _video_terms_channel_mapping(channel_ids)
     category_map = _category_channel_mapping(channel_ids)
 
