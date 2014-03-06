@@ -174,26 +174,30 @@
 
         if ( !_.ie8 ) {
             document.addEventListener("fullscreenchange", function () {
-                if ( document.fullscreen === false ) { 
-                    _.state.fullscreen = false;
+                if ( document.fullscreen === false && _.state.fullscreen === true ) { 
+                    console.log( 'fullscreen: ' + document.fullscreen );
+                    _.fullscreen();
                 }
             }, false);
              
             document.addEventListener("mozfullscreenchange", function () {
-                if ( document.mozFullScreen === false ) { 
-                    _.state.fullscreen = false;
+                if ( document.mozFullScreen === false && _.state.fullscreen === true ) { 
+                    console.log( 'fullscreen: ' + document.mozFullScreen );
+                    _.fullscreen();
                 }
             }, false);
              
             document.addEventListener("webkitfullscreenchange", function () {
-                if ( document.webkitIsFullScreen === false ) { 
-                    _.state.fullscreen = false;
+                if ( document.webkitIsFullScreen === false && _.state.fullscreen === true ) { 
+                    console.log( 'fullscreen: ' + document.webkitIsFullScreen );
+                    _.fullscreen();
                 }
             }, false);
              
             document.addEventListener("msfullscreenchange", function () {
-                if ( document.msFullscreenElement === false ) { 
-                    _.state.fullscreen = false;
+                if ( document.msFullscreenElement === false && _.state.fullscreen === true ) { 
+                    console.log( 'fullscreen: ' + document.msFullscreenElement );
+                    _.fullscreen();
                 }
             }, false);
         }
@@ -385,12 +389,12 @@
 
     _.fullscreen = function (e) {
         _.prevent(e); 
+        // console.log('fullscreen called!');
         if ( _.state.fullscreen === false ) {
             if ( _.ipad === true ) {
                 _.elements.video.webkitEnterFullscreen();
                 _.state.fullscreen = true;
             } else {
-                // _.mb.publish(OO.EVENTS.FULLSCREEN_CHANGED);
                 _.attemptFullscreen(_.elements.wrapper);
                 _.addClass(_.elements.wrapper, 'fullscreen');
                 _.state.fullscreen = true;
