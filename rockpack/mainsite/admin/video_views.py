@@ -43,9 +43,9 @@ class VideoView(AdminModelView):
     def after_model_change(self, form, model, is_created):
         if use_elasticsearch():
             instance_ids = [x[0] for x in models.VideoInstance.query.filter_by(video=model.id).values('id')]
-            # Force video instance updates when a video
-            # is changed in the admin
-            es_api.es_update_channel_videos(extant=instance_ids)
+            # Force video instance updates when a video is changed in the admin
+            args = dict(extant=instance_ids) if model.visible else dict(deleted=instance_ids)
+            es_api.es_update_channel_videos(**args)
 
 
 class VideoThumbnailView(AdminModelView):
