@@ -6,7 +6,7 @@ from rockpack.mainsite.core.dbapi import db
 from . import api
 
 
-def _update_most_influential_video(video_ids):
+def update_most_influential_video(video_ids):
     # Re-calculate most influential
     if not video_ids:
         return
@@ -22,8 +22,7 @@ def _update_most_influential_video(video_ids):
         (models.VideoInstance.video == child.video) &
         (models.VideoInstance.channel == child.source_channel)
     ).filter(
-        models.VideoInstance.video.in_(video_ids),
-        models.VideoInstance.is_favourite == False
+        models.VideoInstance.video.in_(video_ids)
     ).group_by(models.VideoInstance.id, models.VideoInstance.video, child.source_channel)
 
     instance_counts = {}
@@ -104,7 +103,7 @@ def update_average_channel_category(channelid, cat_count_map):
     return qcat
 
 
-def _update_video_related_channel_meta(channel_ids):
+def update_video_related_channel_meta(channel_ids):
     channel_map = _video_terms_channel_mapping(channel_ids)
     category_map = _category_channel_mapping(channel_ids)
 

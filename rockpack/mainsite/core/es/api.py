@@ -252,7 +252,7 @@ class ESUser(ESObject):
 
     _type = 'user'
 
-    def inser_mapper(self, user):
+    def insert_mapper(self, user):
         mapped = ESUserAttributeMap(user)
         return dict(
             id=mapped.id,
@@ -265,8 +265,9 @@ class ESUser(ESObject):
             site_url=mapped.site_url,
             brand=mapped.brand,
             subscriber_count=mapped.subscriber_count,
-            subscription_count=mapped.subscription_count,
-            promotion=mapped.promotion)
+            subscription_count=mapped.subscription_count(),
+            promotion=mapped.promotion(),
+            category=mapped.category())
 
 
 class ESVideo(ESObject):
@@ -403,7 +404,7 @@ class ESUserAttributeMap:
         return self.user.username
 
     @property
-    def profile_cover(self):
+    def profile_cover_url(self):
         if self.user.brand:
             cover = convert_image_path(self.user, 'brand_profile_cover', 'BRAND_PROFILE')
         else:
@@ -927,8 +928,8 @@ def es_update_channel_videos(extant=[], deleted=[]):
     if deleted:
         ESVideo.delete(deleted)
 
-    update._update_most_influential_video(video_ids)
-    update._update_video_related_channel_meta(channel_ids)
+    update.update_most_influential_video(video_ids)
+    update.update_video_related_channel_meta(channel_ids)
 
 
 def remove_channel_from_index(channel_id):

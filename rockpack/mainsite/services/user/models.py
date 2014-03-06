@@ -12,7 +12,8 @@ from flask.ext.sqlalchemy import models_committed
 from rockpack.mainsite import app
 from rockpack.mainsite.core.token import create_access_token
 from rockpack.mainsite.core.dbapi import db
-from rockpack.mainsite.core.es.api import add_user_to_index
+from rockpack.mainsite.core.es import use_elasticsearch
+from rockpack.mainsite.core.es.api import add_user_to_index, ESUser
 from rockpack.mainsite.helpers.db import ImageType, add_base64_pk, resize_and_upload
 from rockpack.mainsite.helpers.urls import url_for
 from rockpack.mainsite.background_sqs_processor import background_on_sqs
@@ -404,7 +405,12 @@ def username_exists(username):
 def _update_user(userid, just_registered=False):
     user = User.query.get(userid)
     #app.logger.debug('updating user %s (new=%s): %s', userid, just_registered, user)
-    add_user_to_index(user)
+    if use_elasticsearch():
+        if just_registered:
+            add_user_to_index(user)
+        else:
+            eu = ESUser.inserter()
+            eu.insert(user.id, user)
 
     if just_registered and 'AUTO_FOLLOW_USERS' in app.config:
         locales = app.config['ENABLED_LOCALES']

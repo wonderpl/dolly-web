@@ -1,6 +1,7 @@
 import wtforms as wtf
 from flask import request, abort
 from flask.ext.wtf import Form
+import pyes
 from collections import defaultdict
 from sqlalchemy import func, null
 from sqlalchemy.orm import contains_eager, lazyload
@@ -259,6 +260,10 @@ class VideoWS(WebService):
 
         if location:
             vs.check_country_allowed(location.upper())
+
+        if app.config.get('DOLLY'):
+            f = pyes.TermFilter(field='is_favourite', value=False)
+            vs._exclusion_filters.append(f)
 
         videos = vs.videos(with_channels=True)
         total = vs.total

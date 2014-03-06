@@ -36,6 +36,7 @@ def _ooyala_feed(feed, *resource, **kwargs):
         api_key=app.config['OOYALA_API_KEY'],
         expires=int(time()) + 60,
     )
+    params.update(kwargs.pop('params', {}))
     params['signature'] = _generate_signature(method, path, params, kwargs.get('data', ''))
     response = requests.request(method, urljoin(BASE_URL, path), params=params, **kwargs)
     response.raise_for_status()

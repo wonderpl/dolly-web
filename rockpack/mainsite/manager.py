@@ -235,17 +235,18 @@ def import_video(s3path, **options):
 @manager.command
 def update_ooyala_thumbnails(videoid):
     from rockpack.mainsite.services.video.models import Video
+    from rockpack.mainsite.core.es.api import es_update_channel_videos
     from rockpack.mainsite.core.ooyala import update_thumbnails
-    if len(videoid) == 32:    # ooyala embed_code
+    if videoid == 'all':
+        args = dict()
+    elif len(videoid) == 32:    # ooyala embed_code
         args = dict(source_videoid=videoid)
     else:
         args = dict(id=videoid)
-    video = Video.query.filter_by(source=2, **args).first()
-    if video:
+    for video in Video.query.filter_by(source=2, **args):
         update_thumbnails(video)
         video.save()
-    else:
-        app.logger.error('Video not found')
+        es_update_channel_videos([v.id for v in video.instances])
 
 
 def run(*args):

@@ -282,7 +282,7 @@ class VideoInstance(db.Model):
     category_rel = relationship('Category', backref='video_instance_rel')
 
     def __unicode__(self):
-        return self.video
+        return self.id or u'new'
 
     def __repr__(self):
         return 'VideoInstance(id={v.id!r}, video={v.video!r})'.format(v=self)
@@ -382,7 +382,10 @@ class Channel(db.Model):
     metas = relationship('ChannelLocaleMeta', backref=db.backref('channel_rel', lazy='joined', innerjoin=True))
 
     def __unicode__(self):
-        return self.title
+        if self.owner_rel:
+            return u'{}, {}'.format(self.owner_rel.username, self.title)
+        else:
+            return self.title
 
     def __repr__(self):
         return 'Channel(id={c.id!r}, owner={c.owner!r})'.format(c=self)
@@ -664,6 +667,13 @@ def _video_update(mapper, connection, target):
     if use_elasticsearch() and not target.visible:
         instance_ids = [x[0] for x in VideoInstance.query.filter_by(video=target.id).values('id')]
         es_api.ESVideo.delete(instance_ids)
+
+
+@event.listens_for(VideoInstance, 'after_delete')
+def video_instance_delete(mapper, connection, target):
+    if use_elasticsearch():
+        from rockpack.mainsite.core.es import update as es_update
+        es_update.update_most_influential_video([target.video])
 
 
 @models_committed.connect_via(app)
