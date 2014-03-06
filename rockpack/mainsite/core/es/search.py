@@ -415,7 +415,7 @@ class ChannelSearch(EntitySearch, CategoryMixin, MediaSortMixin):
             pyes.CustomFiltersScoreQuery.Filter(
                 pyes.PrefixFilter(
                     field='promotion',
-                    prefix='|'.join([str(self.locale), str(self.promoted_category)])
+                    prefix='{}|{}|'.format(str(self.locale), str(self.promoted_category))
                 ),
                 script='1000000000000000000'
             )
@@ -682,7 +682,7 @@ class UserSearch(EntitySearch, CategoryMixin):
     def promotion_settings(self, category):
         self.promoted_category = category or 0
         field = 'promotion'
-        prefix = '|'.join([str(self.locale), str(self.promoted_category)])
+        prefix = '{}|{}|'.format(str(self.locale), str(self.promoted_category))
 
         self._add_term_occurs(pyes.PrefixQuery(field=field, prefix=prefix), SHOULD)
 
