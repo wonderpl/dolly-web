@@ -32,7 +32,7 @@ class User(db.Model):
 
     id = Column(CHAR(22), primary_key=True)
     username = Column(String(52), unique=True, nullable=False)
-    password_hash = Column(String(60), nullable=False)
+    password_hash = Column(String(70), nullable=False)
     email = Column(String(254), nullable=False)
     first_name = Column(String(32), nullable=False)
     last_name = Column(String(32), nullable=False)

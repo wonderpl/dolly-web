@@ -20,7 +20,7 @@ class UserView(AdminModelView):
     column_filters = ('username', 'email', 'date_joined', 'is_active')
     column_searchable_list = ('username', )
 
-    edit_template = 'admin/edit_with_child_links.html'
+    edit_template = 'admin/user_edit_with_password_reset.html'
     child_links = (('Channels', 'channel', None),)
 
     form_excluded_columns = ('channels', 'flags', 'activity', 'external_friends', 'user_promotion')

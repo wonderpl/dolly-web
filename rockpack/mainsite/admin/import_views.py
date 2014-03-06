@@ -19,7 +19,7 @@ from rockpack.mainsite.services.video.models import (
     Source, Category, Video, VideoInstance, Channel)
 from rockpack.mainsite.services.cover_art.models import UserCoverArt
 from rockpack.mainsite.services.user.models import User
-from rockpack.mainsite.services.oauth.api import RockRegistrationForm
+from rockpack.mainsite.services.oauth.api import RockRegistrationForm, send_password_reset_from_user
 from .models import AdminLogRecord
 from .base import AdminView
 
@@ -347,6 +347,35 @@ class ImportView(AdminView):
         c = UserCoverArt(cover=resize_and_upload(request.files['cover'], 'CHANNEL'),
                          owner=request.form.get('owner')).save()
         return jsonify({'id': str(c.cover)})
+
+    @expose('/resetpassword.js/', methods=('POST',))
+    def resetpassword(self):
+        try:
+            user = User.query.filter(User.username == request.form.get('username')).one()
+            if not user.email or '@' not in user.email:
+                return jsonify({'error': "Can't reset password for %s: no valid email address" % user.id}), 400
+            # Check if the user has a favourite - if this wasn't created
+            # in the app it might not have one
+            send_password_reset_from_user(user)
+            fav = Channel.query.filter(
+                Channel.owner == user.id,
+                Channel.favourite == True,
+                Channel.public == True)
+
+            if not fav.count():
+                title, description, cover = app.config['FAVOURITE_CHANNEL']
+                Channel(
+                    favourite=True,
+                    title=title,
+                    description=description,
+                    cover=cover,
+                    public=True,
+                    owner=user.id
+                ).save()
+        except Exception, e:
+            return jsonify({'error': str(e) + str(request.args)}), 400
+        else:
+            return jsonify({'success': True})
 
 
 class UploadAcceptForm(form.BaseForm):
