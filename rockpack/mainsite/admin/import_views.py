@@ -356,7 +356,7 @@ class ImportView(AdminView):
                 return jsonify({'error': "Can't reset password for %s: no valid email address" % user.id}), 400
             # Check if the user has a favourite - if this wasn't created
             # in the app it might not have one
-            send_password_reset(user)
+            send_password_reset(user.id)
             fav = Channel.query.filter(
                 Channel.owner == user.id,
                 Channel.favourite == True,
