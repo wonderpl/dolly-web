@@ -1,6 +1,7 @@
 import wtforms as wtf
 from flask import request, abort
 from flask.ext.wtf import Form
+import pyes
 from collections import defaultdict
 from sqlalchemy import func, null
 from sqlalchemy.orm import contains_eager, lazyload
