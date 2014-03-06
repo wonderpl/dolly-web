@@ -944,6 +944,8 @@ def remove_channel_from_index(channel_id):
         ESVideo.delete_channel_videos(channel_id)
 
     from rockpack.mainsite.services.video.models import Channel
+    from . import update
+
     user_id = db.session.query(Channel.owner).filter(Channel.id == channel_id).first()
     if user_id:
         # User category depends on channel category. Since we're deleting
