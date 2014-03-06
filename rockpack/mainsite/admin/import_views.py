@@ -19,7 +19,7 @@ from rockpack.mainsite.services.video.models import (
     Source, Category, Video, VideoInstance, Channel)
 from rockpack.mainsite.services.cover_art.models import UserCoverArt
 from rockpack.mainsite.services.user.models import User
-from rockpack.mainsite.services.oauth.api import RockRegistrationForm, send_password_reset_from_user
+from rockpack.mainsite.services.oauth.api import RockRegistrationForm, send_password_reset
 from .models import AdminLogRecord
 from .base import AdminView
 
@@ -356,7 +356,7 @@ class ImportView(AdminView):
                 return jsonify({'error': "Can't reset password for %s: no valid email address" % user.id}), 400
             # Check if the user has a favourite - if this wasn't created
             # in the app it might not have one
-            send_password_reset_from_user(user)
+            send_password_reset(user)
             fav = Channel.query.filter(
                 Channel.owner == user.id,
                 Channel.favourite == True,

@@ -148,16 +148,13 @@ def date_of_birth_validator():
     return _valid
 
 
+@background_on_sqs
 def send_password_reset(userid):
     user = User.query.get(userid)
     if not user.email:
         app.logger.warning("Can't reset password for %s: no email address", user.id)
         return
-    send_password_reset_from_user(user)
 
-
-@background_on_sqs
-def send_password_reset_from_user(user):
     token = create_access_token(user.id, '', 86400)
     url = url_for('reset_password') + '?token=' + token
     template = email_env.get_template('reset.html')
