@@ -17,6 +17,11 @@
 
         $compileProvider.aHrefSanitizationWhitelist(/^\s*(https?|ftp|mailto|javascript):/);
 
+        if ( window.navigator.userAgent.toLowerCase().indexOf('firefox') !== -1 ) {
+            ng.element( d.body ).addClass('ff');
+            ng.element( d.getElementsByTagName('html')[0] ).addClass('ff');
+        }
+
         // Add our routes
         $routeProvider.when('/', {templateUrl: 'home.html', resolve: { trackingCode: function (GATrackingService) { return GATrackingService.push(); }}});
         $routeProvider.when('/our-content', {templateUrl: 'our-content.html', resolve: { trackingCode: function (GATrackingService) { return GATrackingService.push(); }}});
