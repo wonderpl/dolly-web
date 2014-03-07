@@ -1,4 +1,6 @@
 import wtforms as wtf
+from flask import request, jsonify
+from flask.ext.admin import expose
 from rockpack.mainsite.services.user import models
 from rockpack.mainsite.services.oauth import models as auth_models
 from rockpack.mainsite.services.cover_art import models as coverart_models
@@ -112,3 +114,15 @@ class BroadcastMessageView(AdminModelView):
         filter=dict(validators=[_filter_validator]),
         url_target=dict(validators=[_url_target_validator]),
     )
+
+    @expose('/check_filter/', methods=['POST'])
+    def check_filter(self):
+        try:
+            _filter_validator(None, type('Field', (object,), dict(data=request.form['filter']))())
+        except wtf.ValidationError as e:
+            return jsonify(error=e.message), 400
+        users = models.BroadcastMessage(
+            filter=request.form['filter'],
+            external_system=request.form['external_system']
+        ).get_users()
+        return jsonify(user_count=users.count())

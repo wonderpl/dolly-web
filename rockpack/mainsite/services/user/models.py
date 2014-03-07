@@ -4,7 +4,7 @@ import random
 from datetime import datetime
 from sqlalchemy import (
     String, Column, Integer, Boolean, Date, DateTime, ForeignKey,
-    Text, Enum, CHAR, PrimaryKeyConstraint, event, func)
+    Text, Enum, CHAR, PrimaryKeyConstraint, event, func, between, text)
 from sqlalchemy.orm import relationship
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask import g
@@ -368,6 +368,7 @@ class BroadcastMessage(db.Model):
         re.compile('(email) like (\S+)'),
         re.compile('(age) between (\d+) and (\d+)'),
         re.compile('(subscribed) to (\S+)'),
+        re.compile('(interested) in (\S+)'),
     )
 
     @classmethod
@@ -391,6 +392,41 @@ class BroadcastMessage(db.Model):
         object = model.query.filter_by(id=target).first()
         if object:
             return object.resource_url
+
+    def get_users(self):
+        users = User.query.filter_by(is_active=True)
+        for expr, type, values in BroadcastMessage.parse_filter_string(self.filter):
+            if type == 'email':
+                users = users.filter(User.email.like('%%%s' % values))
+            if type == 'locale':
+                users = users.filter(User.locale.like('%s%%' % values))
+            if type == 'gender':
+                users = users.filter(User.gender == values[0])
+            if type == 'age':
+                users = users.filter(between(
+                    func.age(User.date_of_birth),
+                    text("interval '%s years'" % values[0]),
+                    text("interval '%s years'" % values[1])))
+            if type == 'subscribed':
+                users = users.join(Subscription,
+                                   (Subscription.user == User.id) &
+                                   (Subscription.channel == values[0]))
+            if type == 'interested':
+                from rockpack.mainsite.services.video.models import Category
+                users = users.\
+                    join(UserInterest, UserInterest.user == User.id).\
+                    join(Category, Category.id == UserInterest.category).\
+                    filter((Category.name == values[0]))
+
+        if self.external_system == 'apns':
+            from rockpack.mainsite.services.oauth.models import ExternalToken
+            users = users.join(
+                ExternalToken,
+                (ExternalToken.external_system == 'apns') &
+                (ExternalToken.user == User.id)
+            )
+
+        return users
 
 
 def username_exists(username):

@@ -4,7 +4,7 @@ import urlparse
 from itertools import izip_longest, groupby
 from datetime import datetime, timedelta
 from flask import json
-from sqlalchemy import func, text, between, case, desc, distinct
+from sqlalchemy import func, text, case, desc, distinct
 from sqlalchemy.orm import joinedload, contains_eager, aliased
 from sqlalchemy.orm.exc import NoResultFound
 from rockpack.mainsite import app
@@ -740,33 +740,10 @@ def process_broadcast_messages(date_from, date_to):
         (BroadcastMessage.date_processed == None)
     )
     for message in messages:
-        users = User.query.filter_by(is_active=True)
         url = message.url_target and BroadcastMessage.get_target_resource_url(message.url_target)
-        if message.filter:
-            for expr, type, values in BroadcastMessage.parse_filter_string(message.filter):
-                if type == 'email':
-                    users = users.filter(User.email.like('%%%s' % values))
-                if type == 'locale':
-                    users = users.filter(User.locale.like('%s%%' % values))
-                if type == 'gender':
-                    users = users.filter(User.gender == values[0])
-                if type == 'age':
-                    users = users.filter(between(
-                        func.age(User.date_of_birth),
-                        text("interval '%s years'" % values[0]),
-                        text("interval '%s years'" % values[1])))
-                if type == 'subscribed':
-                    users = users.join(Subscription,
-                                       (Subscription.user == User.id) &
-                                       (Subscription.channel == values[0]))
 
         if message.external_system == 'apns':
-            users = users.join(
-                ExternalToken,
-                (ExternalToken.external_system == 'apns') &
-                (ExternalToken.user == User.id)
-            ).order_by(ExternalToken.external_token).\
-                values(User.id, ExternalToken.external_token)
+            users = message.get_users().values(User.id, ExternalToken.external_token)
             _process_apns_broadcast(users, message.message, url)
 
         app.logger.info('Processed broadcast message: %s', message.label)

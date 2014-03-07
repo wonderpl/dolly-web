@@ -33,5 +33,22 @@
 				callback(data);
 			}
 		});
+
+		$('input#filter').change(function () {
+			var input = $(this),
+				form = input.closest('form'),
+			    group = input.closest('.control-group'),
+			    info = input.next('.help-block');
+			$.post('{{ url_for("broadcast_message.check_filter") }}', form.serialize())
+				.done(function (result) {
+					group.toggleClass('error', false);
+					info.html('Matching users: ' + result.user_count);
+				})
+				.fail(function (xhr) {
+					var result = $.parseJSON(xhr.responseText)
+					group.toggleClass('error', true);
+					info.html(result.error);
+				});
+		}).after('<span class="help-block">');
 	});
 </script>
