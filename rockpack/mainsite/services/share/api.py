@@ -58,7 +58,7 @@ def send_share_email(recipient, user, object_type, object, link):
     if recipient_user:
         token = get_apns_token(recipient_user.id)
         if token:
-            push_message = '%@ shared a ' + object_type + ' with you'
+            push_message = '%@ shared a ' + object_type_name + ' with you'
             push_message_args = [user.display_name]
             deeplink_url = urlparse.urlparse(object.resource_url).path.lstrip('/ws/')
             complex_push_notification(token, push_message, push_message_args, url=deeplink_url)
