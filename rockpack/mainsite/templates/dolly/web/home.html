@@ -2,6 +2,24 @@
 {% block body_attributes %}id="ng-app" ng-app="contentApp" ng-controller="MainCtrl" ng-class="{ toggled: toggled }" class="dolly"{% endblock %}
 {% block body %}
 
+  <script type="text/javascript">
+    var tags = [],
+        images = [
+          '{{ config.ASSETS_URL }}/assets/dolly/img/home-wood-big-v1.jpg',
+          '{{ config.ASSETS_URL}}/assets/dolly/img/home-inge-v1.jpg',
+          '{{ config.ASSETS_URL}}/assets/dolly/img/home-nfb-v1.jpg',
+          '{{ config.ASSETS_URL}}/assets/dolly/img/home-tom-v1.jpg',
+          '{{ config.ASSETS_URL}}/assets/dolly/img/home-ipad-v2.jpg',
+          '{{ config.ASSETS_URL}}/assets/dolly/img/home-iphone-v1.jpg'
+        ];
+
+    for ( var i = 0; i < images.length; i++ ) {
+      tags.push( new Image() );
+      tags[i].src = images[i];
+    }
+
+  </script>
+
   <div id="wrapper">
     {% include 'web/partials/header.html' %}
     <div ng-view class="view-animate"></div>

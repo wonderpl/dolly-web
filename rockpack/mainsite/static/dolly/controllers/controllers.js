@@ -28,7 +28,6 @@
     	});
 
         $rootScope.$on('$locationChangeStart', function(event, newUrl, oldUrl){
-            console.log('location change started');
         	$timeout(function(){
         		$rootScope.$apply(function(){
         			$rootScope.toggled = false;

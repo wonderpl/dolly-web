@@ -32,10 +32,30 @@
         // Cache the assets URL
         $rootScope.assets_url = window.assets_url;
 
+        // The loaded state of the Google Maps API
+        $rootScope.mapsLoaded = false;
+
         // Initialise our animLoop service, and add our TWEEN loop
         animLoop.setFPS(60);
         animLoop.add('tween', TWEEN.update);
+        animLoop.add('checkMapsLoaded', function(){
+            if ( window.mapsAPILoaded === true ) {
+                $timeout(function(){
+                    $rootScope.$apply(function(){
+                        $rootScope.mapsLoaded = true;
+                    });
+                });
+                animLoop.remove('checkMapsLoaded');
+            }
+        });
         animLoop.start();
+
     }]);
 
 })(window,document,navigator,window.angular,'contentApp');
+
+// Setting up a maps loaded listener
+window.mapsAPILoaded = false;
+window.mapsloaded = function () {
+    window.mapsAPILoaded = true;
+};
