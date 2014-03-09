@@ -75,9 +75,9 @@ else:
     APNS_CERT_NAME = 'apns-dolly-prod.pem'
     APNS_PASSPHRASE = _decrypt('\x1dd\xdf\xce\xe0\x10\x170sP')
 
-#ITUNES_CONNECT_VENDORID = '85709520'
-#ITUNES_CONNECT_APPLEID = 'bot@rockpack.com'
-#ITUNES_CONNECT_PASSWORD = _decrypt('\xaf\x11\x0e\xce\r&a\xd0mV')
+ITUNES_CONNECT_VENDORID = '86088300'
+ITUNES_CONNECT_APPLEID = 'bot@wonderpl.com'
+ITUNES_CONNECT_PASSWORD = _decrypt('\x01\xbdZBAe\x87I\xd3\xcf')
 
 SQS_CRON_QUEUE = 'dolly-mainsite-cron'
 SQS_EMAIL_QUEUE = 'dolly-mainsite-email'
