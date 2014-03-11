@@ -4,7 +4,7 @@ from itertools import groupby
 from werkzeug.datastructures import MultiDict
 from sqlalchemy import desc, func, text
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import lazyload, contains_eager
+from sqlalchemy.orm import lazyload, contains_eager, joinedload
 from sqlalchemy.orm.exc import NoResultFound
 import wtforms as wtf
 from flask import abort, request, json, g
@@ -165,14 +165,28 @@ def _update_video_comment_count(videoid):
 @background_on_sqs
 def _do_es_object_update(object_type, object_mapping, instanceid):
     if use_elasticsearch():
-        object_instance = ES_ACTIVITY_UPDATE_MAP[object_type].query.get(instanceid)
-        if object_instance is None:
-            return
-        mapped = ES_ACTIVITY_UPDATE_MAP[object_mapping](object_instance)
-        ev = ES_ACTIVITY_UPDATE_MAP[object_mapping + '_updater'].updater()
-        ev.set_document_id(object_instance.id)
-        ev.add_field('locales', mapped.locales)
-        ev.update()
+        this_obj = ES_ACTIVITY_UPDATE_MAP[object_type]
+        object_instance = this_obj.query
+
+        if object_type == 'video':
+            object_instance = object_instance.options(joinedload(this_obj.video_channel))
+
+        try:
+            object_instance.get(instanceid)
+        except AttributeError:
+            pass
+        else:
+            if object_instance:
+                # We don't want to do updates for videos
+                # that are unlikely to be in es
+                if hasattr(object_instance, 'video_channel') and \
+                        object_instance.video_channel.deleted:
+                    return
+                mapped = ES_ACTIVITY_UPDATE_MAP[object_mapping](object_instance)
+                ev = ES_ACTIVITY_UPDATE_MAP[object_mapping + '_updater'].updater()
+                ev.set_document_id(object_instance.id)
+                ev.add_field('locales', mapped.locales)
+                ev.update()
 
 
 def es_update_activity(object_type, object_mapping):
