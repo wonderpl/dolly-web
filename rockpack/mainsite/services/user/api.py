@@ -172,7 +172,7 @@ def _do_es_object_update(object_type, object_mapping, instanceid):
             object_instance = object_instance.options(joinedload(this_obj.video_channel))
 
         try:
-            object_instance.get(instanceid)
+            object_instance = object_instance.get(instanceid)
         except AttributeError:
             pass
         else:
