@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 from mock import patch
 from rockpack.mainsite import app
 from rockpack.mainsite.services.video.models import Channel
-from rockpack.mainsite.services.oauth.api import ExternalUser
+from rockpack.mainsite.services.oauth.api import FacebookUser
 from rockpack.mainsite.services.oauth.models import ExternalToken, ExternalFriend
 from rockpack.mainsite.services.user.models import (
     User, UserActivity, UserAccountEvent, UserFlag, UserNotification,
@@ -155,11 +155,11 @@ class TestAPNS(base.RockPackTestCase):
 
 class TestProfileEdit(base.RockPackTestCase):
 
-    @patch('rockpack.mainsite.services.oauth.api.ExternalUser.get_new_token')
-    @patch('rockpack.mainsite.services.oauth.api.ExternalUser._get_external_data')
+    @patch('rockpack.mainsite.services.oauth.api.FacebookUser.get_new_token')
+    @patch('rockpack.mainsite.services.oauth.api.FacebookUser._get_external_data')
     def test_external_accounts(self, get_external_data, get_new_token):
         get_external_data.return_value = dict(id='1')
-        get_new_token.return_value = ExternalUser('facebook', 'xxx', 86400)
+        get_new_token.return_value = FacebookUser('facebook', 'xxx', 86400)
         with self.app.test_client() as client:
             def check_connect(userid, status):
                 r = client.post(

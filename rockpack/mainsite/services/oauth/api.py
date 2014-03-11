@@ -271,9 +271,12 @@ class APNSTokenManager(AbstractTokenManager):
         return ''
 
 
-# TODO: currently only Facebook
-# TODO: subclass this for each social account type
 class ExternalUser(AbstractTokenManager):
+
+    @staticmethod
+    def is_handler_for(external_system):
+        return False
+
     def __init__(self, external_system, external_token, token_expires, token_permissions=None, meta=None):
         super(ExternalUser, self).__init__(external_system, external_token, token_expires)
 
@@ -297,38 +300,12 @@ class ExternalUser(AbstractTokenManager):
         else:
             abort(400, error='unauthorized_client')
 
-    def _validate_token(self):
-        try:
-            return facebook.validate_token(
-                self._token,
-                app.config['FACEBOOK_APP_ID'],
-                app.config['FACEBOOK_APP_SECRET'])
-        except:
-            app.logger.exception('Failed to validate Facebook token')
-
-    def _get_external_data(self):
-        try:
-            return facebook.GraphAPI(self._token).get_object('me')
-        except facebook.GraphAPIError:
-            pass
-        return {}
-
-    @staticmethod
-    def is_handler_for(external_system):
-        return external_system == 'facebook'
-
-    def get_new_token(self):
-        token, expires = facebook.renew_token(
-            self._token,
-            app.config['FACEBOOK_APP_ID'],
-            app.config['FACEBOOK_APP_SECRET'])
-        return self.__class__(self.system, token, expires)
-
     id = property(lambda x: x._user_data.get('id'))
     username = property(lambda x: x._user_data.get('username'))
     first_name = property(lambda x: x._user_data.get('first_name', ''))
     last_name = property(lambda x: x._user_data.get('last_name', ''))
     display_name = property(lambda x: x._user_data.get('name', ''))
+    email = property(lambda x: x._user_data.get('email', ''))
 
     @property
     def meta(self):
@@ -341,15 +318,6 @@ class ExternalUser(AbstractTokenManager):
     @property
     def token_is_valid(self):
         return self._valid_token
-
-    @property
-    def email(self):
-        if 'email' in self._user_data:
-            return self._user_data['email']
-        elif 'username' in self._user_data:
-            return '%s@facebook.com' % self._user_data['username']
-        else:
-            return ''
 
     @property
     def gender(self):
@@ -378,6 +346,43 @@ class ExternalUser(AbstractTokenManager):
             return ''
         return l
 
+
+class FacebookUser(ExternalUser):
+
+    @staticmethod
+    def is_handler_for(external_system):
+        return external_system == 'facebook'
+
+    def _validate_token(self):
+        try:
+            return facebook.validate_token(
+                self._token,
+                app.config['FACEBOOK_APP_ID'],
+                app.config['FACEBOOK_APP_SECRET'])
+        except:
+            app.logger.exception('Failed to validate Facebook token')
+
+    def _get_external_data(self):
+        try:
+            return facebook.GraphAPI(self._token).get_object('me')
+        except facebook.GraphAPIError:
+            pass
+        return {}
+
+    def get_new_token(self):
+        token, expires = facebook.renew_token(
+            self._token,
+            app.config['FACEBOOK_APP_ID'],
+            app.config['FACEBOOK_APP_SECRET'])
+        return self.__class__(self.system, token, expires)
+
+    @property
+    def email(self):
+        email = super(FacebookUser, self).email
+        if not email and 'username' in self._user_data:
+            email = '%s@facebook.com' % self._user_data['username']
+        return email
+
     @property
     def avatar(self):
         r = requests.get(facebook.FACEBOOK_PICTURE_URL % self.id)
@@ -388,7 +393,7 @@ class ExternalUser(AbstractTokenManager):
 
 def ExternalTokenManager(external_system, external_token, **kwargs):
     """ Factory for selecting a Token Manager """
-    for cls in AbstractTokenManager.__subclasses__():
+    for cls in AbstractTokenManager.__subclasses__() + ExternalUser.__subclasses__():
         if cls.is_handler_for(external_system):
             return cls(external_system, external_token, **kwargs)
 
@@ -412,7 +417,7 @@ class LoginWS(WebService):
         if not form.validate():
             abort(400, form_errors=form.errors)
 
-        external_user = ExternalUser(**form.data)
+        external_user = ExternalTokenManager(**form.data)
         if not external_user.token_is_valid:
             abort(400, error='unauthorized_client')
 
