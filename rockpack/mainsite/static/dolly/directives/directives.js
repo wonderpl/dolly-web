@@ -118,10 +118,8 @@
 				}
 
 				$timeout(function(){
-
 					loadscript().then(function(){
-
-						if ( attrs.type === 'font' ) {
+						if ( attrs.typekit === 'true' ) {
 							try{
 								Typekit.load();
 							} catch(e){}
