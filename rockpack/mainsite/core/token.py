@@ -54,7 +54,7 @@ def create_access_token(userid, clientid, age):
     96
     """
     userid, clientid = (_decode_id(i) for i in (userid, clientid))
-    expiry = time.time() + age
+    expiry = time.time() + age if age else 0
     return _create_token(ACCESS_TOKEN_FMT, ACCESS_TOKEN_VERSION, expiry, userid, clientid)
 
 
@@ -72,7 +72,7 @@ def parse_access_token(token):
         pass
     else:
         if version == 1:
-            if expiry < time.time():
+            if expiry and expiry < time.time():
                 raise ExpiredTokenError()
             userid, clientid = (_encode_id(i) for i in (userid, clientid))
             return userid, clientid

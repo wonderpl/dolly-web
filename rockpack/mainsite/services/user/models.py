@@ -22,7 +22,7 @@ from rockpack.mainsite.background_sqs_processor import background_on_sqs
 VISIBLE_USER_FLAGS = 'facebook_autopost_star', 'facebook_autopost_add'
 HIDDEN_USER_FLAGS = 'unsub1', 'unsub2', 'unsub3', 'unsub4', 'bouncing'
 USER_FLAGS = HIDDEN_USER_FLAGS + VISIBLE_USER_FLAGS
-EXTERNAL_SYSTEM_NAMES = 'email', 'facebook', 'twitter', 'google', 'apns'
+EXTERNAL_SYSTEM_NAMES = 'email', 'facebook', 'twitter', 'google', 'apns', 'romeo'
 GENDERS_MAP = {'m': 'male', 'f': 'female'}
 GENDERS = GENDERS_MAP.keys()
 
@@ -111,8 +111,9 @@ class User(db.Model):
         return url_for(view, userid=self.id)
     resource_url = property(get_resource_url)
 
-    def get_credentials(self):
-        expires_in = app.config.get('ACCESS_TOKEN_EXPIRY', 3600)
+    def get_credentials(self, expires_in=None):
+        if expires_in is None:
+            expires_in = app.config.get('ACCESS_TOKEN_EXPIRY', 3600)
         # This is mostly used in oauth/api.py where `app_client_id` is set in the
         # `check_client_authorization` decorator from the Basic auth token. `client_id`
         # is set in `check_authorization` from the Bearer token.

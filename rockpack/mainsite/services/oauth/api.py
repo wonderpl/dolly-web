@@ -391,6 +391,27 @@ class FacebookUser(ExternalUser):
         return ''
 
 
+class RomeoUser(ExternalUser):
+
+    @staticmethod
+    def is_handler_for(external_system):
+        return external_system == 'romeo'
+
+    def _get_external_data(self):
+        r = requests.get(app.config['ROMEO_ACCOUNT_VERIFY_URL'],
+                         allow_redirects=False,
+                         cookies=dict(session=self.token))
+        if r.status_code == 200:
+            return r.json()
+
+    def get_new_token(self):
+        # All Romeo tokens are long lived
+        return self
+
+    id = property(lambda x: str(x._user_data.get('id')))
+    avatar = ''
+
+
 def ExternalTokenManager(external_system, external_token, **kwargs):
     """ Factory for selecting a Token Manager """
     for cls in AbstractTokenManager.__subclasses__() + ExternalUser.__subclasses__():
@@ -437,7 +458,9 @@ class LoginWS(WebService):
             else:
                 break
 
-        return dict(registered=registered, **user.get_credentials())
+        # Return non-expiring token to Romeo
+        expires_in = 0 if external_user.system == 'romeo' else None
+        return dict(registered=registered, **user.get_credentials(expires_in=expires_in))
 
 
 class RegistrationWS(WebService):

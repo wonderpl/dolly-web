@@ -66,6 +66,8 @@ OOYALA_PLAYER_ID = '8e49f5aacf724f33b534cadfc4485e6b'
 OOYALA_API_KEY = 'YzYW8xOshpVwePawyVliU0L_tBj_.yPTX2'
 OOYALA_SECRET = 'xxx'
 
+ROMEO_ACCOUNT_VERIFY_URL = 'https://romeo.wonderpl.com/_verify_account'
+
 # The "Mozilla Gecko" seems to be necessary for the gdata api to encode with gzip!
 USER_AGENT = 'rockpack/%s (Mozilla Gecko)' % VERSION
 
