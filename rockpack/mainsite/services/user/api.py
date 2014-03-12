@@ -17,6 +17,7 @@ from rockpack.mainsite.core.webservice import WebService, expose_ajax, ajax_crea
 from rockpack.mainsite.core.oauth.decorators import check_authorization
 from rockpack.mainsite.core.youtube import get_video_data
 from rockpack.mainsite.core.es import use_elasticsearch, search as es_search, api as es_api
+from rockpack.mainsite.core.es.exceptions import DocumentMissingException
 from rockpack.mainsite.core.es.api import es_update_channel_videos, ESVideo, update_user_subscription_count
 from rockpack.mainsite.core import recommender
 from rockpack.mainsite.background_sqs_processor import background_on_sqs
@@ -169,7 +170,9 @@ def _do_es_object_update(object_type, object_mapping, instanceid):
         object_instance = this_obj.query
 
         if object_type == 'video':
-            object_instance = object_instance.options(joinedload(this_obj.video_channel))
+            object_instance = object_instance.options(
+                joinedload(this_obj.video_channel),
+                joinedload(this_obj.video_rel))
 
         try:
             object_instance = object_instance.get(instanceid)
@@ -181,13 +184,18 @@ def _do_es_object_update(object_type, object_mapping, instanceid):
                 # that are unlikely to be in es
                 if hasattr(object_instance, 'video_channel') and (object_instance.video_channel.deleted or
                                                                   not object_instance.video_channel.visible or
-                                                                  not object_instance.video_channel.public):
+                                                                  not object_instance.video_channel.public or
+                                                                  not object_instance.video_rel.visible):
                     return
                 mapped = ES_ACTIVITY_UPDATE_MAP[object_mapping](object_instance)
                 ev = ES_ACTIVITY_UPDATE_MAP[object_mapping + '_updater'].updater()
                 ev.set_document_id(object_instance.id)
                 ev.add_field('locales', mapped.locales)
-                ev.update()
+                try:
+                    ev.update()
+                except DocumentMissingException:
+                    ev = ES_ACTIVITY_UPDATE_MAP[object_mapping + '_updater'].inserter()
+                    ev.insert(object_instance.id, object_instance)
 
 
 def es_update_activity(object_type, object_mapping):
