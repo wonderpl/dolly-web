@@ -180,7 +180,8 @@ def _do_es_object_update(object_type, object_mapping, instanceid):
                 # We don't want to do updates for videos
                 # that are unlikely to be in es
                 if hasattr(object_instance, 'video_channel') and \
-                        object_instance.video_channel.deleted:
+                        (object_instance.video_channel.deleted or \
+                         not object_instance.video_channel.visible):
                     return
                 mapped = ES_ACTIVITY_UPDATE_MAP[object_mapping](object_instance)
                 ev = ES_ACTIVITY_UPDATE_MAP[object_mapping + '_updater'].updater()

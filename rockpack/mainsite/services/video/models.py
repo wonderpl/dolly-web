@@ -635,6 +635,11 @@ def _update_or_remove_channel(channelid):
         else:
             es_api.remove_channel_from_index(channel.id)
 
+        # Explicit check for push subscriptions if channel deleted
+        if channel.deleted:
+            from rockpack.mainsite.services.pubsubhubbub.models import Subscription
+            Subscription.query.filter(Subscription.channel_id == channel.id).delete()
+
 
 def _update_user_promotion(user):
     eu = es_api.ESUser.updater()
