@@ -225,7 +225,7 @@ class UserPromotionForm(BaseForm):
             self.date_end.errors = ['End date must be after end date']
             return
 
-        promos = models.ChannelPromotion.query.filter(
+        promos = models.UserPromotion.query.filter(
             models.UserPromotion.date_end > self.date_start.data,
             models.UserPromotion.date_start < self.date_end.data,
             models.UserPromotion.date_end > datetime.utcnow(),

@@ -3,11 +3,12 @@ from sqlalchemy import (
     Text, String, Column, Boolean, Integer, Float, ForeignKey, DateTime, CHAR,
     UniqueConstraint, event, func)
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import relationship, aliased, lazyload
+from sqlalchemy.orm import relationship, aliased, lazyload, joinedload
 from flask.ext.sqlalchemy import models_committed
 from rockpack.mainsite import app, cache
 from rockpack.mainsite.core.dbapi import db, defer_except
 from rockpack.mainsite.core.es import use_elasticsearch, api as es_api
+from rockpack.mainsite.core.es.exceptions import DocumentMissingException
 from rockpack.mainsite.helpers.db import add_base64_pk, add_video_pk, insert_new_only, ImageType, BoxType
 from rockpack.mainsite.helpers.urls import url_for
 from rockpack.mainsite.services.user.models import User
@@ -657,14 +658,27 @@ def video_insert(mapper, connection, target):
 @background_on_sqs
 def _update_locales_on_video(video_instance_id):
     if use_elasticsearch():
-        video_instance = VideoInstance.query.get(video_instance_id)
-        if video_instance is None:
-            return
-        mapped = es_api.ESVideoAttributeMap(video_instance)
-        ev = es_api.ESVideo.updater()
-        ev.set_document_id(video_instance.id)
-        ev.add_field('locales', mapped.locales)
-        ev.update()
+        try:
+            video_instance = VideoInstance.query.options(
+                joinedload(VideoInstance.video_channel),
+                joinedload(VideoInstance.video_rel)
+            ).get(video_instance_id)
+        except AttributeError:
+            pass
+        else:
+            if video_instance is not None and (not video_instance.video_channel.deleted and
+                                               video_instance.video_channel.visible and
+                                               video_instance.video_channel.public and
+                                               video_instance.video_rel.visible):
+                mapped = es_api.ESVideoAttributeMap(video_instance)
+                ev = es_api.ESVideo.updater()
+                ev.set_document_id(video_instance.id)
+                ev.add_field('locales', mapped.locales)
+                try:
+                    ev.update()
+                except DocumentMissingException:
+                    ev = es_api.ESVideo.inserter()
+                    ev.insert(video_instance.id, video_instance)
 
 
 @event.listens_for(Video, 'after_update')
