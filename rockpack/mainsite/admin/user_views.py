@@ -4,6 +4,7 @@ from flask.ext.admin import expose
 from rockpack.mainsite.services.user import models
 from rockpack.mainsite.services.oauth import models as auth_models
 from rockpack.mainsite.services.cover_art import models as coverart_models
+from rockpack.mainsite.services.video import models as video_models
 from .auth.models import AdminUser
 from .base import AdminModelView
 
@@ -39,6 +40,16 @@ class UserView(AdminModelView):
     )
 
     inline_models = (auth_models.ExternalToken,)
+
+    def after_model_change(self, form, model, is_created):
+        if not model.is_active:
+            channels = video_models.Channel.query.filter(
+                video_models.Channel.owner == model.id,
+                video_models.Channel.public == True)
+            for channel in channels:
+                channel.visible = False
+                channel.public = False
+                channel.save()
 
 
 class UserCoverArtView(AdminModelView):
