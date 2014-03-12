@@ -35,7 +35,7 @@
 							anchor: new google.maps.Point(75,75),
 							size: new google.maps.Size(150, 150)
 						}
-					});	
+					});
 				}
 
 				if ( $rootScope.mapsLoaded === true ) {
@@ -47,7 +47,7 @@
 						$timeout(buildMap);
 					}
 				});
-				
+
 			}
 		}
 	}]);
