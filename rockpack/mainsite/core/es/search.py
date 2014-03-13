@@ -695,12 +695,12 @@ class UserSearch(EntitySearch, CategoryMixin):
 
     def users(self):
         if not self._user_results:
-            # XXX: hack for promotions - we need at least 8
+            # XXX: hack for promotions - we need at least 20
             # positions and then return the correct amount
             # asked for.
-            if self.paging[1] < 8:
+            if self.paging[1] < 20:
                 self._real_paging = self.paging
-                self.paging = 0, 8
+                self.paging = 0, 20
             r = self.results()
             self._user_results = self._format_results(r)
 
