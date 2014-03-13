@@ -248,8 +248,8 @@ class UserPromotionForm(BaseForm):
             promos = promos.filter(
                 models.UserPromotion.id != request.args.get('id'))
 
-        if int(self.position.data) > 8:
-            self.position.errors = ['Only a maximum of 8 position per category can be set']
+        if int(self.position.data) > 20:
+            self.position.errors = ['Only a maximum of 20 position per category can be set']
             return
 
         promos = promos.filter(models.UserPromotion.position == self.position.data)
