@@ -77,20 +77,27 @@ def update_thumbnails(video):
 
 def create_asset(s3path, metadata):
     # get metadata from s3
-    chunk_size = 2 ** 22
+    chunk_size = 2 ** 23
     bucket = s3connection().get_bucket(app.config['VIDEO_S3_BUCKET'])
     key = bucket.get_key(s3path)
     if not key:
         app.logger.error('s3://%s/%s not found', bucket.name, s3path)
         return
-    file_name = os.path.basename(key.name)
     file_size = key.size
+    file_name = os.path.basename(key.name)
+    name = metadata.pop('title', None) or os.path.splitext(file_name)[0].capitalize()
+
+    # check if asset already exists
+    assets = _ooyala_feed('assets', params=dict(where="name='%s'" % name, include='metadata'))
+    if assets['items']:
+        app.logger.warning('Asset already exists for "%s"', name)
+        return
 
     # create asset on ooyala
     asset = dict(
         asset_type='video',
         file_name=file_name,
-        name=metadata.pop('title', None) or os.path.splitext(file_name)[0].capitalize(),
+        name=name,
         file_size=file_size,
         chunk_size=chunk_size,
     )
