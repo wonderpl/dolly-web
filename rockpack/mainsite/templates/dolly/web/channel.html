@@ -46,7 +46,13 @@
 {% endblock %}
 
 {% block page_js %}
+
   <script type="text/javascript">
+    // Add a listener for the Youtube Ready callback
+    window.onYouTubeIframeAPIReady = function () {
+        console.log('youtube api ready callback');
+        window.YTReady = true;
+    };
     var tag = document.createElement('script');
     tag.src = "//www.youtube.com/iframe_api";
     var firstScriptTag = document.getElementsByTagName('script')[0];

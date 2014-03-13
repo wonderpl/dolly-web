@@ -14,10 +14,7 @@
 
 				$rootScope.playerElem = elem;
 				scope.YTReady = false; 
-				
-				window.onYouTubeIframeAPIReady = function () {
-					window.YTReady = true;
-				};
+
 
 				scope.getYTReady = function () {
 					var q = $q.defer();					
@@ -87,18 +84,9 @@
 				var newVideo = function () {
 					switch ( scope.vid.video.source ) {
 						case 'youtube':
-							
-							// if ( scope.YTReady === true ) {
-							// 	newYTVideo();
-							// } else {
-							// 	scope.getYTReady().then(function(){
-							// 		newYTVideo();
-							// 	});
-							// }
-
-							$timeout(function(){
+							scope.getYTReady().then(function(){
 								newYTVideo();
-							}, 1000);
+							});
 							break;
 						case 'ooyala':
 							elem.html('<iframe src="http://' + $location.$$host + ( $location.$$port !== 80 ? ':' + $location.$$port : '' ) + '/embed/' + scope.vid.id + '/?autoplay=1" width="100%" height="100%" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>');
