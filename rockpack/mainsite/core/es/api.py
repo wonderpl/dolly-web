@@ -5,7 +5,7 @@ import pyes
 from ast import literal_eval
 from urlparse import urlparse
 from sqlalchemy import func
-from sqlalchemy.orm import joinedload, lazyload, contains_eager
+from sqlalchemy.orm import lazyload, contains_eager
 from . import mappings
 from . import es_connection
 from . import use_elasticsearch
@@ -92,6 +92,12 @@ class ESObjectIndexer(object):
             )
         except pyes.exceptions.DocumentMissingException, e:
             raise exceptions.DocumentMissingException(e)
+        except pyes.exceptions.ElasticSearchException, e:
+            if 'NoSuchElementException' in e.args[0]:
+                app.logger.warning('%s: %s: %s (%s)', e, document_id, e.result['error'], data)
+                raise exceptions.DocumentMissingException(e)
+            else:
+                raise
 
     def delete(self, ids):
         if not ids:
@@ -765,8 +771,9 @@ def update_user_subscription_count(userid):
             ESObjectIndexer.indexes['user']['type'],
             userid,
             "ctx._source.subscription_count = %s" % subscription_count)
-    except pyes.exceptions.ElasticSearchException:
-        logger.warning('Could not update subscription count for %s' % str(userid))
+    except pyes.exceptions.ElasticSearchException, e:
+        app.logger.warning('Could not update subscription count for %s: %s: %s',
+                           userid, e, e.result['error'])
 
 
 def condition_for_category(user, channel, video_count):
