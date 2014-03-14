@@ -786,7 +786,8 @@ def _aggregate_content_feed(items):
         if 'channel' in item:
             key = 'video', item['channel']['id'], item['date_added'][:10]   # same channel and day
         else:
-            key = 'channel', item['owner']['id'], item['date_published'][:8]  # same owner and week
+            date_published = item.get('date_published') or item['date_added']
+            key = 'channel', item['owner']['id'], date_published[:8]  # same owner and week
         itemgroups.setdefault(key, []).append(item)
 
     # Then summarise aggregations from selected groups

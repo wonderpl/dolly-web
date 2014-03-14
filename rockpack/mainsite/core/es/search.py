@@ -312,6 +312,7 @@ class ChannelSearch(EntitySearch, CategoryMixin, MediaSortMixin):
                 subscriber_count=channel.subscriber_count,
                 description=channel.description,
                 title=channel.title,
+                date_added=_format_datetime(channel.date_added),
                 date_published=_format_datetime(channel.date_published),
                 public=channel.public,
                 cover=dict(
