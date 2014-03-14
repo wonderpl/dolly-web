@@ -770,7 +770,7 @@ def update_user_subscription_count(userid):
             ESObjectIndexer.indexes['user']['index'],
             ESObjectIndexer.indexes['user']['type'],
             userid,
-            "ctx._source.subscription_count = %s" % subscription_count)
+            "ctx._source[\"subscription_count\"] = %s" % subscription_count)
     except pyes.exceptions.ElasticSearchException, e:
         app.logger.warning('Could not update subscription count for %s: %s: %s',
                            userid, e, e.result['error'])
