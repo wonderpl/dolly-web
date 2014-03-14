@@ -88,7 +88,8 @@ def create_asset(s3path, metadata):
     name = metadata.pop('title', None) or os.path.splitext(file_name)[0].capitalize()
 
     # check if asset already exists
-    assets = _ooyala_feed('assets', params=dict(where="name='%s'" % name, include='metadata'))
+    name_exists = "name='%s'" % name.replace("'", "\\'")
+    assets = _ooyala_feed('assets', params=dict(where=name_exists, include='metadata'))
     if assets['items']:
         app.logger.warning('Asset already exists for "%s"', name)
         return
