@@ -713,7 +713,7 @@ class ESChannelAttributeMap:
 
     @property
     def video_count(self):
-        return len(self.channel.video_instances)
+        return self.channel.video_count
 
 
 def add_to_index(data, index, _type, id, bulk=False, refresh=False):

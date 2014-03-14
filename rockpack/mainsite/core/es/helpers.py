@@ -172,23 +172,39 @@ class DBImport(object):
             print 'finished in', time.time() - start, 'seconds'
 
     def import_channels(self):
-        from rockpack.mainsite.services.video.models import Channel
+        from rockpack.mainsite.services.video.models import Channel, VideoInstance, Video
 
         with app.test_request_context():
             channels = Channel.query.filter(
                 Channel.public == True,
-                Channel.deleted == False).options(
+                Channel.visible == True,
+                Channel.deleted == False
+            ).options(
                 joinedload(Channel.category_rel),
                 joinedload(Channel.metas),
-                joinedload(Channel.owner_rel),
-                joinedload(Channel.video_instances)
+                joinedload(Channel.owner_rel)
             )
             print 'importing {} PUBLIC channels\r'.format(channels.count())
             start = time.time()
             ec = ESChannel.inserter(bulk=True)
             count = 1
             total = channels.count()
+
+            video_counts = {c[0]: c[1] for c in Channel.query.outerjoin(
+                VideoInstance,
+                VideoInstance.channel == Channel.id
+            ).join(
+                Video,
+                (Video.id == VideoInstance.video) &
+                (Video.visible == True)
+            ).with_entities(
+                Channel.id, func.count(VideoInstance.id)
+            ).group_by(
+                Channel.id
+            )}
+
             for channel in channels.yield_per(6000):
+                channel._video_count = video_counts.get(channel.id) or 0
                 ec.insert(channel.id, channel)
                 self.print_percent_complete(count, total)
                 count += 1

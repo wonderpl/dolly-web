@@ -433,7 +433,11 @@ class Channel(db.Model):
     @property
     def video_count(self):
         if not hasattr(self, '_video_count'):
-            self._video_count = VideoInstance.query.filter_by(channel=self.id).value(func.count())
+            self._video_count = VideoInstance.query.join(
+                Video,
+                (Video.id == VideoInstance.video) &
+                (Video.visible == True)
+            ).filter_by(channel=self.id).value(func.count())
         return self._video_count
 
     @property
