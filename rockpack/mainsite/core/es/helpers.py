@@ -190,18 +190,12 @@ class DBImport(object):
             count = 1
             total = channels.count()
 
-            video_counts = {c[0]: c[1] for c in Channel.query.outerjoin(
-                VideoInstance,
-                VideoInstance.channel == Channel.id
-            ).join(
-                Video,
-                (Video.id == VideoInstance.video) &
-                (Video.visible == True)
-            ).with_entities(
-                Channel.id, func.count(VideoInstance.id)
-            ).group_by(
-                Channel.id
-            )}
+            video_counts = dict(
+                VideoInstance.query.
+                join(Video, (Video.id == VideoInstance.video) & (Video.visible == True)).
+                group_by(VideoInstance.channel).
+                values(VideoInstance.channel, func.count(VideoInstance.id))
+            )
 
             for channel in channels.yield_per(6000):
                 channel._video_count = video_counts.get(channel.id) or 0
