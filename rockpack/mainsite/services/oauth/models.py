@@ -139,6 +139,8 @@ class ExternalFriend(db.Model):
             return
         external_friends = {}
         for friend in friends['data']:
+            if not friend.get('name'):    # Ignore friends for whom we don't have a name
+                continue
             external_friends[friend['id']] = cls(
                 user=userid,
                 external_system='facebook',
