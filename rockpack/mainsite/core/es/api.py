@@ -437,7 +437,16 @@ class ESUserAttributeMap:
         if empty:
             return 0
         from rockpack.mainsite.services.user.models import Subscription
-        return Subscription.query.filter_by(user=self.user.id).count()
+        from rockpack.mainsite.services.video.models import Channel
+        return Subscription.query.filter_by(
+            user=self.user.id
+        ).join(
+            Channel,
+            (Channel.id == Subscription.channel) &
+            (Channel.public == True) &
+            (Channel.visible == True) &
+            (Channel.deleted == False)
+        ).count()
 
     def promotion(self, empty=False):
         if empty:
@@ -764,7 +773,16 @@ def add_user_to_index(user, bulk=False, refresh=False, no_check=False):
 
 def update_user_subscription_count(userid):
     from rockpack.mainsite.services.user.models import Subscription
-    subscription_count = Subscription.query.filter_by(user=userid).count()
+    from rockpack.mainsite.services.video.models import Channel
+    subscription_count = Subscription.query.filter(
+        Subscription.user == userid
+    ).join(
+        Channel,
+        (Channel.id == Subscription.channel) &
+        (Channel.public == True) &
+        (Channel.visible == True) &
+        (Channel.deleted == False)
+    ).count()
     try:
         es_connection.partial_update(
             ESObjectIndexer.indexes['user']['index'],
