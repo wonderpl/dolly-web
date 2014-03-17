@@ -19,7 +19,7 @@ def setup_admin(app):
                 for view in module.__dict__.itervalues()
                 if (isinstance(view, type) and issubclass(view, BaseView) and
                     # exclude base classes:
-                    view not in (AdminView, AdminModelView, stats_views.StatsView) and
+                    view not in (AdminView, AdminModelView, stats_views.StatsView, stats_views.TableStatsView) and
                     not getattr(view, 'inline_model', False))
             ], key=lambda v: v.name))
 

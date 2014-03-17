@@ -303,36 +303,73 @@ class RetentionStatsView(StatsView):
         return self.render('admin/retention_stats_old.html', **ctx)
 
 
-class TopChannelsStatsView(StatsView):
+class TableStatsView(StatsView):
+
+    periods = ('day', 1), ('week', 7), ('month', 31)
+    counts = 'view', 'star', 'share'
+    sortindex_base = 1
+    item_label = 'item'
+
+    def get_table_head(self):
+        return ([dict(id=self.item_label, type=str)] +
+                [dict(id='%s count' % c, type=int) for c in self.counts])
+
+    def _item_link(self, endpoint, id, label, param='id'):
+        return ('<a href="%s?%s=%s">%s</a>' % (url_for(endpoint), param, id, label)).encode('utf8')
+
+    def user_item(self, id, username):
+        return self._item_link('user.edit_view', id, username)
+
+    def channel_item(self, id, title):
+        return self._item_link('video_instance.index_view', id, title, 'flt0_0')
+
+    def video_item(self, id, title):
+        return self._item_link('video_instance.index_view', id, title, 'flt1_4')
+
     @expose('/')
     def index(self):
         from gviz_data_table import Table
-        from rockpack.mainsite.services.video.models import Channel, VideoInstance
-        from rockpack.mainsite.services.user.models import User, UserActivity
-        from rockpack.mainsite.services.share.models import ShareLink
 
-        periods = ('day', 1), ('week', 7), ('month', 31)
         try:
-            period = dict(periods)[request.args.get('period')]
+            period = dict(self.periods)[request.args.get('period')]
         except:
-            period = periods[0][1]
+            period = self.periods[0][1]
         date_from = date.today() - timedelta(days=period)
 
-        counts = 'activity', 'view', 'star', 'subscribe', 'share'
         try:
-            # +5 because there are 4 non-count columns at front
-            sortindex = counts.index(request.args.get('sort')) + 5
+            sortindex = self.counts.index(request.args.get('sort')) + self.sortindex_base
         except:
-            sortindex = 5
+            sortindex = self.sortindex_base
 
         try:
             limit = int(request.args['limit'])
         except:
             limit = 20
 
+        table = Table(self.get_table_head())
+        for row in self.get_query(date_from).order_by('%d desc' % sortindex).limit(limit):
+            item, counts = self.split_row(row)
+            table.append(item + [int(i) if i else 0 for i in counts])
+
+        selects = ('period', zip(*self.periods)[0]), ('sort', self.counts)
+        return self.render('admin/chart_table.html', data=table.encode(), selects=selects)
+
+
+class TopUsersStatsView(TableStatsView):
+
+    counts = 'activity', 'view', 'star', 'subscribe', 'share', 'click'
+    sortindex_base = 3
+    item_label = 'user'
+
+    def get_query(self, date_from):
+        from rockpack.mainsite.services.video.models import Channel, VideoInstance
+        from rockpack.mainsite.services.user.models import User, UserActivity
+        from rockpack.mainsite.services.share.models import ShareLink
+
         activity = readonly_session.query(
             func.coalesce(VideoInstance.channel, UserActivity.object_id).label('channel'),
-            UserActivity.action.label('action')
+            UserActivity.action.label('action'),
+            literal(0).label('click_count')
         ).select_from(
             UserActivity
         ).outerjoin(
@@ -342,7 +379,8 @@ class TopChannelsStatsView(StatsView):
         )
         shares = readonly_session.query(
             func.coalesce(VideoInstance.channel, ShareLink.object_id).label('channel'),
-            literal('share').label('action')
+            literal('share').label('action'),
+            ShareLink.click_count.label('click_count')
         ).select_from(
             ShareLink
         ).outerjoin(
@@ -353,32 +391,95 @@ class TopChannelsStatsView(StatsView):
         activity = activity.union_all(shares).subquery()
 
         query = readonly_session.query(
-            Channel.id,
-            Channel.title,
-            User.id,
-            User.username,
-            func.count(),
-            *[func.sum(func.cast(activity.c.action == c, Integer)) for c in counts[1:]]
+            *self._cols(Channel, User, activity)
+        ).select_from(
+            Channel
         ).join(
             activity, activity.c.channel == Channel.id
-        ).outerjoin(
+        ).join(
             User, User.id == Channel.owner
+        )
+
+        return self._agg_query(query, Channel, User, activity)
+
+    def split_row(self, row):
+        return [self.user_item(*row[:2])], row[2:]
+
+    def _cols(self, Channel, User, activity):
+        return ([User.id, User.username, func.count()] +
+                [func.sum(func.cast(activity.c.action == c, Integer)) for c in self.counts[1:-1]] +
+                [func.sum(activity.c.click_count)])
+
+    def _agg_query(self, query, Channel, User, activity):
+        return query.group_by(User.id)
+
+
+class TopChannelsStatsView(TopUsersStatsView):
+
+    item_label = 'channel'
+    sortindex_base = 5
+
+    def get_table_head(self):
+        cols = super(TopChannelsStatsView, self).get_table_head()
+        return cols[:1] + [dict(id='owner', type=str)] + cols[1:]
+
+    def split_row(self, row):
+        cid, ctitle, uid, username = row[:4]
+        return [self.channel_item(cid, ctitle), self.user_item(uid, username)], row[4:]
+
+    def _cols(self, Channel, User, activity):
+        cols = super(TopChannelsStatsView, self)._cols(Channel, User, activity)
+        return [Channel.id, Channel.title] + cols
+
+    def _agg_query(self, query, Channel, User, activity):
+        return query.filter(Channel.favourite == False).group_by(Channel.id, User.id)
+
+
+class TopVideosStatsView(TableStatsView):
+
+    counts = 'activity', 'instance', 'view', 'star', 'share', 'click'
+    sortindex_base = 3
+    item_label = 'video'
+
+    def get_query(self, date_from):
+        from rockpack.mainsite.services.video.models import Video, VideoInstance
+        from rockpack.mainsite.services.user.models import UserActivity
+        from rockpack.mainsite.services.share.models import ShareLink
+
+        activity = readonly_session.query(
+            UserActivity.object_id.label('video_instance'),
+            UserActivity.action.label('action'),
+            literal(0).label('click_count')
         ).filter(
-            Channel.favourite == False
+            UserActivity.object_type == 'video_instance',
+            UserActivity.date_actioned > date_from
+        )
+        shares = readonly_session.query(
+            ShareLink.object_id.label('video_instance'),
+            literal('share').label('action'),
+            ShareLink.click_count.label('click_count')
+        ).filter(
+            ShareLink.object_type == 'video_instance',
+            ShareLink.date_created > date_from
+        )
+        activity = activity.union_all(shares).subquery()
+
+        query = readonly_session.query(
+            Video.id,
+            Video.title,
+            func.count(activity.c.video_instance),
+            func.count(VideoInstance.id.distinct()),
+            *([func.sum(func.cast(activity.c.action == c, Integer)) for c in self.counts[2:-1]] +
+              [func.sum(activity.c.click_count)])
+        ).join(
+            VideoInstance, VideoInstance.video == Video.id
+        ).join(
+            activity, activity.c.video_instance == VideoInstance.id
         ).group_by(
-            Channel.id, User.id
-        ).order_by('%d desc' % sortindex).limit(limit)
+            Video.id
+        )
 
-        table = Table([dict(id='channel', type=str), dict(id='owner', type=str)] +
-                      [dict(id='%s count' % c, type=int) for c in counts])
+        return query
 
-        for row in query:
-            cid, ctitle, uid, username = row[:4]
-            channel = str('<a href="%s?flt0_0=%s">%s</a>' %
-                          (url_for('video_instance.index_view'), cid, ctitle))
-            owner = str('<a href="%s?id=%s">%s</a>' %
-                        (url_for('user.edit_view'), uid, username))
-            table.append([channel, owner] + map(int, row[4:]))
-
-        selects = dict(period=zip(*periods)[0], sort=counts)
-        return self.render('admin/chart_table.html', data=table.encode(), selects=selects)
+    def split_row(self, row):
+        return [self.video_item(*row[:2])], row[2:]
