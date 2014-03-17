@@ -1,9 +1,10 @@
-from datetime import datetime, date
-from sqlalchemy import func, between, text, Integer
+from datetime import datetime, date, timedelta
+from sqlalchemy import func, between, literal, text, Integer
 from sqlalchemy.orm import aliased
 from flask import request
 from flask.ext.admin import expose
 from rockpack.mainsite import app
+from rockpack.mainsite.helpers.urls import url_for
 from rockpack.mainsite.core.dbapi import readonly_session
 from rockpack.mainsite.core.es import search
 from .base import AdminView
@@ -28,7 +29,7 @@ class UserCategoriesStatsView(StatsView):
 
         parent = aliased(Category)
         cat_group = readonly_session.query(
-            Category.name, # order is important
+            Category.name,  # order is important
             parent.name,
             Category.id
         ).filter(
@@ -44,13 +45,13 @@ class UserCategoriesStatsView(StatsView):
         for (child_name, parent_name, child_id) in cat_group:
             users = search.UserSearch()
             users.add_term('category', child_id)
-            users.set_paging(1,0)
+            users.set_paging(1, 0)
             users.users()
             cat_map.append(
                 (parent_name,
-                child_name,
-                users.total,
-                '/admin/stats/usercategories/%s/' % child_id))
+                 child_name,
+                 users.total,
+                 '/admin/stats/usercategories/%s/' % child_id))
 
         ctx['cat_map'] = cat_map
 
@@ -70,7 +71,7 @@ class UserCategoriesStatsView(StatsView):
 
         parent = aliased(Category)
         query = readonly_session.query(
-            Category.name, # order is important
+            Category.name,  # order is important
             parent.name,
             Category.id
         ).filter(
@@ -97,7 +98,7 @@ class ContentStatsView(StatsView):
         parent = aliased(models.Category)
 
         cat_group = readonly_session.query(
-            models.Category.name, # order is important
+            models.Category.name,   # order is important
             parent.name,
             func.count(models.VideoInstance.id)
         ).outerjoin(models.VideoInstance).filter(
@@ -110,9 +111,9 @@ class ContentStatsView(StatsView):
         cat_count = cat_group.count()
 
         kwargs = dict(now=datetime.now().strftime('%Y-%m-%d'),
-            cat_group=cat_group.all(),
-            cat_count=cat_count,
-            is_dolly=app.config.get('DOLLY'))
+                      cat_group=cat_group.all(),
+                      cat_count=cat_count,
+                      is_dolly=app.config.get('DOLLY'))
 
         if not app.config.get('DOLLY'):
             channel_group = readonly_session.query(
@@ -300,3 +301,84 @@ class RetentionStatsView(StatsView):
             ctx['ret_%s_data' % key] = table.encode()
 
         return self.render('admin/retention_stats_old.html', **ctx)
+
+
+class TopChannelsStatsView(StatsView):
+    @expose('/')
+    def index(self):
+        from gviz_data_table import Table
+        from rockpack.mainsite.services.video.models import Channel, VideoInstance
+        from rockpack.mainsite.services.user.models import User, UserActivity
+        from rockpack.mainsite.services.share.models import ShareLink
+
+        periods = ('day', 1), ('week', 7), ('month', 31)
+        try:
+            period = dict(periods)[request.args.get('period')]
+        except:
+            period = periods[0][1]
+        date_from = date.today() - timedelta(days=period)
+
+        counts = 'activity', 'view', 'star', 'subscribe', 'share'
+        try:
+            # +5 because there are 4 non-count columns at front
+            sortindex = counts.index(request.args.get('sort')) + 5
+        except:
+            sortindex = 5
+
+        try:
+            limit = int(request.args['limit'])
+        except:
+            limit = 20
+
+        activity = readonly_session.query(
+            func.coalesce(VideoInstance.channel, UserActivity.object_id).label('channel'),
+            UserActivity.action.label('action')
+        ).select_from(
+            UserActivity
+        ).outerjoin(
+            VideoInstance, VideoInstance.id == UserActivity.object_id
+        ).filter(
+            UserActivity.date_actioned > date_from
+        )
+        shares = readonly_session.query(
+            func.coalesce(VideoInstance.channel, ShareLink.object_id).label('channel'),
+            literal('share').label('action')
+        ).select_from(
+            ShareLink
+        ).outerjoin(
+            VideoInstance, VideoInstance.id == ShareLink.object_id
+        ).filter(
+            ShareLink.date_created > date_from
+        )
+        activity = activity.union_all(shares).subquery()
+
+        query = readonly_session.query(
+            Channel.id,
+            Channel.title,
+            User.id,
+            User.username,
+            func.count(),
+            *[func.sum(func.cast(activity.c.action == c, Integer)) for c in counts[1:]]
+        ).join(
+            activity, activity.c.channel == Channel.id
+        ).outerjoin(
+            User, User.id == Channel.owner
+        ).filter(
+            Channel.favourite == False
+        ).group_by(
+            Channel.id, User.id
+        ).order_by('%d desc' % sortindex).limit(limit)
+
+        table = Table([dict(id='channel', type=str), dict(id='owner', type=str)] +
+                      [dict(id='%s count' % c, type=int) for c in counts])
+
+        for row in query:
+            cid, ctitle, uid, username = row[:4]
+            channel = str('<a href="%s?flt0_0=%s">%s</a>' %
+                          (url_for('video_instance.index_view'), cid, ctitle))
+            owner = str('<a href="%s?id=%s">%s</a>' %
+                        (url_for('user.edit_view'), uid, username))
+            table.append([channel, owner] + map(int, row[4:]))
+
+        selects = dict(period=zip(*periods)[0], sort=counts)
+        return self.render('admin/chart_table.html', data=table.encode(), selects=selects)
