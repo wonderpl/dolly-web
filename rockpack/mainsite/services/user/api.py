@@ -15,7 +15,7 @@ from rockpack.mainsite import app
 from rockpack.mainsite.core.dbapi import commit_on_success
 from rockpack.mainsite.core.webservice import WebService, expose_ajax, ajax_create_response, process_image
 from rockpack.mainsite.core.oauth.decorators import check_authorization
-from rockpack.mainsite.core.youtube import get_video_data
+from rockpack.mainsite.core import youtube, ooyala
 from rockpack.mainsite.core.es import use_elasticsearch, search as es_search, api as es_api
 from rockpack.mainsite.core.es.exceptions import DocumentMissingException
 from rockpack.mainsite.core.es.api import es_update_channel_videos, ESVideo, update_user_subscription_count
@@ -133,8 +133,12 @@ def get_or_create_video_records(instance_ids):
             source, source_videoid = video_id_map[video_id]
             # TODO: Use youtube batch request feature
             try:
-                assert source == 1
-                video_data = get_video_data(source_videoid)
+                if source == 1:
+                    video_data = youtube.get_video_data(source_videoid)
+                elif source == 2:
+                    video_data = ooyala.get_video_data(source_videoid)
+                else:
+                    raise NotImplementedError()
             except Exception:
                 abort(400, message=_('Invalid video instance ids'), data=[[source, source_videoid]])
             Video.add_videos(video_data.videos, source)
