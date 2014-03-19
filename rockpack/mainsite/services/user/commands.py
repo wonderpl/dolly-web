@@ -16,8 +16,9 @@ from rockpack.mainsite.core.apns import push_client
 from rockpack.mainsite.helpers.urls import url_tracking_context
 from rockpack.mainsite.services.oauth import facebook
 from rockpack.mainsite.services.oauth.models import ExternalFriend, ExternalToken
-from rockpack.mainsite.services.video.models import Channel, VideoInstanceComment, VideoInstance, Video
 from rockpack.mainsite.services.share.models import ShareLink
+from rockpack.mainsite.services.video.models import (
+    Channel, VideoInstanceComment, VideoInstance, Video, Category, ParentCategory)
 from .models import (
     User, UserActivity, UserAccountEvent, UserNotification, UserContentFeed,
     UserFlag, UserInterest, Subscription, BroadcastMessage)
@@ -923,3 +924,67 @@ def delete_user(username):
         channel.save()
     user.is_active = False
     user.save()
+
+
+@manager.command
+def load_users_into_mailchimp():
+    """Load records from user table to mailchimp list."""
+    from mailchimp import Mailchimp
+    excluded_users = UserFlag.query.filter(
+        UserFlag.flag.in_(('bouncing', 'unsub3'))).with_entities(UserFlag.user)
+    users = readonly_session.query(
+        User.id,
+        User.username,
+        User.email,
+        User.first_name,
+        User.last_name,
+        User.gender,
+        User.locale,
+        User.date_joined,
+        ParentCategory.name.label('interest_name'),
+        func.sum(UserInterest.weight).label('interest_weight'),
+    ).filter(
+        User.is_active == True,
+        User.email != '',
+        User.id.notin_(excluded_users),
+    ).outerjoin(
+        UserInterest, UserInterest.user == User.id
+    ).outerjoin(
+        Category, Category.id == UserInterest.category
+    ).outerjoin(
+        ParentCategory, ParentCategory.id == Category.parent
+    ).group_by(
+        User.id, ParentCategory.id
+    )
+    # TODO: chunking
+    batch = []
+    for userid, group in groupby(users.order_by(User.id), lambda u: u[0]):
+        usergroup = list(group)
+        user = usergroup[0]
+        merge_vars = dict(
+            fname=user.first_name,
+            lname=user.last_name,
+            username=user.username,
+            gender={'m': 'Male', 'f': 'Female'}.get(user.gender, 'Unknown'),
+            locale=user.locale,
+            datejoined=datetime.strftime(user.date_joined, '%m/%d/%Y'),
+        )
+        interests = [u.interest_name for u in usergroup if u.interest_name]
+        if interests:
+            merge_vars['groupings'] = [dict(name='Interest', groups=interests)]
+        batch.append(dict(
+            email=dict(email=user.email),
+            email_type='html',
+            merge_vars=merge_vars,
+        ))
+    conn = Mailchimp(app.config['MAILCHIMP_TOKEN'])
+    response = conn.lists.batch_subscribe(
+        app.config['MAILCHIMP_LISTID'],
+        batch,
+        double_optin=False,
+        update_existing=True,
+        replace_interests=True)
+    if response['error_count']:
+        app.logger.error('Error loading users into mailchimp: %s', response['errors'][0]['error'])
+    else:
+        app.logger.info('Loaded users into mailchimp: %d added, %d updated', response['add_count'], response['update_count'])

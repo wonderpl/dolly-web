@@ -66,6 +66,9 @@ FACEBOOK_APP_ID = '517447921656577'
 FACEBOOK_APP_SECRET = _decrypt('#>d\xb3\ri\xc5\x07*\xb7\x99\xb05\x0f8\x19\x03\xff1\xb3Id\xab=\x13\xc9\xcfQD\x0c\xd2G')
 FACEBOOK_APP_NAMESPACE = 'wonderpl'
 
+MAILCHIMP_TOKEN = _decrypt('~M\x93$\xd3\xbb\xf4Q\xba\xe0\xf2\x9b@"\xe5\xd9\xe4\xca\xc1o\x98y\xa2\xfe\xb9;\x14O\xb46~\xc1\xbb\xc7\xe7\\')
+MAILCHIMP_LISTID = '74e1537b36'
+
 SERVER_NAME = 'wonderpl.com'
 SECURE_SUBDOMAIN = 'secure'
 ADMIN_SUBDOMAIN = 'admin'
