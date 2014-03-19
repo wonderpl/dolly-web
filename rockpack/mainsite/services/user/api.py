@@ -24,7 +24,7 @@ from rockpack.mainsite.background_sqs_processor import background_on_sqs
 from rockpack.mainsite.helpers import lazy_gettext as _
 from rockpack.mainsite.helpers.forms import naughty_word_validator
 from rockpack.mainsite.helpers.urls import url_for, url_to_endpoint
-from rockpack.mainsite.helpers.db import gen_videoid, get_column_validators, get_box_value
+from rockpack.mainsite.helpers.db import gen_videoid, make_id, get_column_validators, get_box_value
 from rockpack.mainsite.services.video.models import (
     Channel, ChannelLocaleMeta, Category, ContentReport,
     Video, VideoInstance, VideoInstanceLocaleMeta, VideoInstanceComment)
@@ -808,7 +808,7 @@ def _aggregate_content_feed(items):
         if count <= 1:
             continue
 
-        aggid = str(group[0]['position'])
+        aggid = make_id()   # needs to be unique to work around client bug
         aggregations[aggid] = dict(
             type=type,
             count=count,
