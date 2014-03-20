@@ -696,7 +696,11 @@ def update_user_notifications(date_from, date_to):
     # commit first before we continue
     db.session.commit()
     for user in user_notifications.keys():
-        send_push_notifications(user)
+        try:
+            send_push_notifications(user)
+        except:
+            # Don't repeat this cron command if this fails
+            app.logger.exception('Failed to send push notifications for %s', user)
 
 
 @manager.cron_command(interval=300)
