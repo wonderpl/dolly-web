@@ -41,7 +41,7 @@ class UserRankingView(AdminView):
         else:
             u.filter_category(category)
             u.promotion_settings(category)
-        processed_users = u.users()
+        processed_users = u.users(include_promo=True)
 
         ctx['users'] = []
 

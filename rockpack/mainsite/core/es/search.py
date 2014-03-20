@@ -615,7 +615,7 @@ class UserSearch(EntitySearch, CategoryMixin):
             position = UserSearch._check_position(user_list, position, max_check)
         return position
 
-    def _format_results(self, users):
+    def _format_results(self, users, include_promo=False):
         user_list = range(self.paging[1])
         IMAGE_CDN = app.config.get('IMAGE_CDN', '')
         BASE_URL = url_for('basews.discover')
@@ -631,10 +631,12 @@ class UserSearch(EntitySearch, CategoryMixin):
                 profile_cover_url=urljoin(IMAGE_CDN, user.profile_cover_url) if user.profile_cover_url else '',
                 description=user.description or "",
                 subscriber_count=user.subscriber_count,
-                subscription_count=user.subscription_count,
-                promotion=user.promotion
+                subscription_count=user.subscription_count
                 #categories=getattr(user, 'category', []) or []
             )
+            if include_promo:
+                u['promotion'] = user.promotion
+
             if user.brand:
                 u.update(
                     brand=True,
@@ -693,7 +695,7 @@ class UserSearch(EntitySearch, CategoryMixin):
             )
         )
 
-    def users(self):
+    def users(self, include_promo=False):
         if not self._user_results:
             # XXX: hack for promotions - we need at least 20
             # positions and then return the correct amount
@@ -702,7 +704,7 @@ class UserSearch(EntitySearch, CategoryMixin):
                 self._real_paging = self.paging
                 self.paging = 0, 20
             r = self.results()
-            self._user_results = self._format_results(r)
+            self._user_results = self._format_results(r, include_promo=include_promo)
 
         return self._user_results
 
