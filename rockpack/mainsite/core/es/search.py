@@ -235,9 +235,8 @@ class EntitySearch(object):
 
     @property
     def total(self):
-        if not self._results:
-            return 0
-        return self._results.total
+        results = self.results()
+        return results.total if results else 0
 
 
 class ChannelSearch(EntitySearch, CategoryMixin, MediaSortMixin):
