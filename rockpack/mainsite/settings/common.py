@@ -256,6 +256,7 @@ DEFAULT_EMAIL_SOURCE = 'rockpack <noreply@rockpack.com>'
 FEEDBACK_RECIPIENT = 'feedback@rockpack.com'
 
 REACTIVATION_EMAIL_TRACKING_PARAMS = dict(utm_medium='email', utm_campaign='react')
+REACTIVATION_THRESHOLD_DAYS = 7
 
 SQS_REGION = 'eu-west-1'
 SQS_CRON_QUEUE = 'mainsite-cron'

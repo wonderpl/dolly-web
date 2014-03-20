@@ -1087,6 +1087,19 @@ class TestEmail(base.RockPackTestCase):
         user = self.create_test_user(email=app.config['TEST_REACTIVATION_EMAIL'])
         self._create_reactivation_email(user)
 
+    @skip_unless_config('TEST_PING_EMAIL')
+    def test_email_ping_wo_patch(self):
+        self.create_test_user(
+            email=app.config['TEST_PING_EMAIL'],
+            date_joined=datetime.now() - timedelta(days=2)
+        )
+        with self.app.test_request_context():
+            for config in app.config.get('PING_EMAILS', []):
+                config.update(
+                    date_from=datetime.now() - timedelta(minutes=1),
+                    date_to=datetime.now())
+                cron_cmds.create_ping_emails(**config)
+
     @skip_unless_config('TEST_RESET_EMAIL')
     def test_email_reset_wo_patch(self):
         user = self.create_test_user(email=app.config['TEST_RESET_EMAIL'])

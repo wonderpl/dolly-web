@@ -577,6 +577,27 @@ def create_reactivation_emails(date_from=None, date_to=None):
                 _send_email_or_log(user, template, **ctx)
 
 
+def create_ping_emails(listid, template_path, threshold_days, tracking_params, date_from=None, date_to=None):
+    delta = timedelta(days=threshold_days)
+    window = [d - delta for d in date_from, date_to]
+    excluded_users = UserFlag.query.filter(
+        UserFlag.flag.in_(('bouncing', 'unsub%d' % listid))).with_entities(UserFlag.user)
+    users = User.query.filter(
+        User.is_active == True,
+        User.email != '',
+        User.date_joined.between(*window),
+        User.id.notin_(excluded_users))
+
+    with url_tracking_context(tracking_params):
+        template = email.env.get_template(template_path)
+        for user in users:
+            ctx = dict(
+                unsubscribe_token=create_unsubscribe_token(listid, user.id),
+                **tracking_params
+            )
+            _send_email_or_log(user, template, **ctx)
+
+
 def _post_facebook_story(user, object_type, object_id, token, action, explicit=False):
     url = ShareLink.create(user, object_type, object_id).url
     if action.startswith('og'):
@@ -724,7 +745,12 @@ def send_registration_emails(date_from, date_to):
 @job_control
 def send_reactivation_emails(date_from, date_to):
     """Send email to users who haven't been active recently."""
-    create_reactivation_emails(date_from, date_to)
+    if app.config['REACTIVATION_THRESHOLD_DAYS']:
+        create_reactivation_emails(date_from, date_to)
+    ping_emails = app.config.get('PING_EMAILS', [])
+    for config in ping_emails:
+        config.update(date_from=date_from, date_to=date_to)
+        create_ping_emails(**config)
 
 
 @manager.cron_command(interval=60)
