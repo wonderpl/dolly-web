@@ -215,7 +215,7 @@ def create_unavailable_notifications(date_from=None, date_to=None, user_notifica
     for video_instance, video, channel in activity_window:
         user, message_type, message = unavailable_video_message(channel, video_instance)
         _add_user_notification(user, video.date_updated, message_type, message)
-        if user_notifications is not None:
+        if user_notifications is not None and message_type in app.config['PUSH_NOTIFICATION_MAP']:
             user_notifications.setdefault(user, None)
 
 
@@ -249,7 +249,7 @@ def create_new_repack_notifications(date_from=None, date_to=None, user_notificat
         user, type, body = repack_message(repacker, repacker_channel, video_instance)
 
         _add_user_notification(packer_channel.owner, video_instance.date_added, type, body)
-        if user_notifications is not None:
+        if user_notifications is not None and type in app.config['PUSH_NOTIFICATION_MAP']:
             user_notifications.setdefault(packer_channel.owner, None)
 
 
@@ -283,7 +283,7 @@ def create_new_activity_notifications(date_from=None, date_to=None, user_notific
                         # Don't send notifications to self
                         continue
                     _add_user_notification(user, activity.date_actioned, type, body)
-                    if user_notifications is not None:
+                    if user_notifications is not None and type in app.config['PUSH_NOTIFICATION_MAP']:
                         user_notifications.setdefault(user, None)
 
 
@@ -304,7 +304,7 @@ def create_new_registration_notifications(date_from=None, date_to=None, user_not
         for friend, in friends:
             friend, message_type, message = joined_message(friend, user)
             _add_user_notification(friend, user.date_joined, message_type, message)
-            if user_notifications is not None:
+            if user_notifications is not None and message_type in app.config['PUSH_NOTIFICATION_MAP']:
                 user_notifications.setdefault(friend, None)
 
 
@@ -344,7 +344,7 @@ def create_commmenter_notification(date_from=None, date_to=None, user_notificati
             for commenter, video_instance, channel, date_added in commented_on_users.get(user.username.lower()):
                 type, body = comment_mention_message(commenter, channel, video_instance)
                 _add_user_notification(user.id, date_added, type, body)
-                if user_notifications is not None:
+                if user_notifications is not None and type in app.config['PUSH_NOTIFICATION_MAP']:
                     user_notifications.setdefault(user.id, None)
 
 
