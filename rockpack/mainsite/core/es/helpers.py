@@ -342,7 +342,7 @@ class DBImport(object):
         print 'Finished.'
 
     def import_dolly_repin_counts(self):
-        from rockpack.mainsite.services.video.models import VideoInstance
+        from rockpack.mainsite.services.video.models import VideoInstance, Video
 
         with app.test_request_context():
             child = aliased(VideoInstance, name='child')
@@ -355,6 +355,10 @@ class DBImport(object):
                 child,
                 (VideoInstance.video == child.video) &
                 (VideoInstance.channel == child.source_channel)
+            ).join(
+                Video,
+                (Video.id == VideoInstance.video) &
+                (Video.visible == True)
             ).group_by(VideoInstance.id, VideoInstance.video, child.source_channel)
 
             instance_counts = {}

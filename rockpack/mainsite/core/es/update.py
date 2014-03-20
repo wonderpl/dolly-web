@@ -21,6 +21,10 @@ def update_most_influential_video(video_ids):
         child,
         (models.VideoInstance.video == child.video) &
         (models.VideoInstance.channel == child.source_channel)
+    ).join(
+        models.Video,
+        (models.Video.id == models.VideoInstance.video) &
+        (models.Video.visible == True)
     ).filter(
         models.VideoInstance.video.in_(video_ids)
     ).group_by(models.VideoInstance.id, models.VideoInstance.video, child.source_channel)
