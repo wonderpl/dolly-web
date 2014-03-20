@@ -9,7 +9,7 @@ from rockpack.mainsite.core import email
 from rockpack.mainsite.core.webservice import WebService, expose_ajax, ajax_create_response
 from rockpack.mainsite.core.oauth.decorators import check_authorization
 from rockpack.mainsite.services.user.commands import complex_push_notification, get_apns_token
-from rockpack.mainsite.services.video.models import Channel, VideoInstance
+from rockpack.mainsite.services.video.models import Channel, Video, VideoInstance
 from rockpack.mainsite.services.user.api import save_video_activity
 from rockpack.mainsite.services.user.models import EXTERNAL_SYSTEM_NAMES, User
 from rockpack.mainsite.services.search.api import VIDEO_INSTANCE_PREFIX
@@ -34,6 +34,7 @@ def send_share_email(recipient, user, object_type, object, link):
     template = email.env.get_template('share.html')
     if app.config.get('DOLLY') and object_type == 'channel':
         top_videos = VideoInstance.query.filter_by(channel=object.id).\
+            join(Video, (Video.id == VideoInstance.video) & (Video.visible == True)).\
             order_by(VideoInstance.position, VideoInstance.date_added.desc()).limit(3)
     else:
         top_videos = []
