@@ -631,11 +631,10 @@ class UserSearch(EntitySearch, CategoryMixin):
                 profile_cover_url=urljoin(IMAGE_CDN, user.profile_cover_url) if user.profile_cover_url else '',
                 description=user.description or "",
                 subscriber_count=user.subscriber_count,
-                subscription_count=user.subscription_count
+                subscription_count=user.subscription_count,
+                promotion=user.promotion
                 #categories=getattr(user, 'category', []) or []
             )
-            if include_promo:
-                u['promotion'] = user.promotion
 
             if user.brand:
                 u.update(
