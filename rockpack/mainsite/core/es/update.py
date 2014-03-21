@@ -25,6 +25,11 @@ def update_most_influential_video(video_ids):
         models.Video,
         (models.Video.id == models.VideoInstance.video) &
         (models.Video.visible == True)
+    ).join(
+        models.Channel,
+        (models.Channel.id == models.VideoInstance.channel) &
+        (models.Channel.deleted == False) &
+        (models.Channel.public == True)
     ).filter(
         models.VideoInstance.video.in_(video_ids)
     ).group_by(models.VideoInstance.id, models.VideoInstance.video, child.source_channel)
@@ -38,7 +43,7 @@ def update_most_influential_video(video_ids):
         # If the count is higher for the same video than
         # the previous instance, mark this instance as the
         # influential one for the video
-        i_id, i_count = influential_index.get(video, [None, 0])
+        i_id, i_count = influential_index.setdefault(video, (_id, count))
 
         # Count will always be at least 1
         # but should really be zero if no children
