@@ -24,7 +24,13 @@ PING_EMAILS = [
         listid=1,
         threshold_days=2,
         template_path='day-two.html',
-        tracking_params=dict(utm_medium='email', utm_campaign='day2'),
+        tracking_params=dict(utm_medium='email', utm_campaign='p2'),
+    ),
+    dict(
+        listid=1,
+        threshold_days=9,
+        template_path='hints-and-tips.html',
+        tracking_params=dict(utm_medium='email', utm_campaign='p9'),
     )
 ]
 

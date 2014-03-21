@@ -21,7 +21,8 @@ env.globals.update(config=app.config, url_for=url_for)
 
 def send_email(recipient, body, subject=None, format='html'):
     if not subject:
-        subject = TITLE_RE.search(body).group(1)
+        import HTMLParser
+        subject = HTMLParser.HTMLParser().unescape(TITLE_RE.search(body).group(1))
     return boto.connect_ses().send_email(
         app.config['DEFAULT_EMAIL_SOURCE'],
         subject,

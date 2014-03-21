@@ -1091,7 +1091,7 @@ class TestEmail(base.RockPackTestCase):
     def test_email_ping_wo_patch(self):
         self.create_test_user(
             email=app.config['TEST_PING_EMAIL'],
-            date_joined=datetime.now() - timedelta(days=2)
+            date_joined=datetime.now() - timedelta(days=9)
         )
         with self.app.test_request_context():
             for config in app.config.get('PING_EMAILS', []):
