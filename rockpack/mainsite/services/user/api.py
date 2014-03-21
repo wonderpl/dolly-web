@@ -1537,7 +1537,7 @@ class UserWS(WebService):
             items, total = [], 0
         return dict(videos=dict(items=items, total=total))
 
-    @expose_ajax('/<userid>/content_feed/', cache_age=60, cache_private=True)
+    @expose_ajax('/<userid>/content_feed/')
     @check_authorization(self_auth=True)
     def content_feed(self, userid):
         items, total = _content_feed(userid, self.get_locale(), self.get_page())
