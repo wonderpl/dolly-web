@@ -43,6 +43,9 @@ class ESObjectIndexer(object):
         },
     }
 
+    if app.config.get('DOLLY'):
+        indexes['video']['settings'] = mappings.video_settings
+
     aliases = {
         'channel': mappings.CHANNEL_ALIAS,
         'video': mappings.VIDEO_ALIAS,
@@ -139,6 +142,10 @@ class ESObjectIndexer(object):
     def get_alias(cls, doc_type):
         return cls.aliases[doc_type]
 
+    @classmethod
+    def get_settings(cls, doc_type):
+        return cls.indexes[doc_type].get('settings')
+
     @staticmethod
     def flush():
         """ Must be called at the end of insert/update operations
@@ -156,6 +163,10 @@ class ESObjectIndexer(object):
     @property
     def mapping(self):
         return self.get_mapping(self.indexing_type)
+
+    @property
+    def settings(self):
+        return self.get_settings(self.indexing_type)
 
 
 class ESInserter(object):

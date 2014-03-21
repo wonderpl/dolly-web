@@ -557,8 +557,7 @@ class VideoSearch(EntitySearch, CategoryMixin, MediaSortMixin):
             query = pyes.StringQuery(
                 phrase,
                 default_operator='AND',
-                search_fields=['title'],
-                analyzer='snowball',
+                search_fields=['title', 'title.folded'],
                 minimum_should_match=1
             )
             self._add_term_occurs(query, MUST)
