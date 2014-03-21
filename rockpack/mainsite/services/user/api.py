@@ -1195,7 +1195,7 @@ class UserWS(WebService):
         cover = getattr(user, attr)
         return dict(thumbnail_url=cover.url), 200, [('Location', cover.url)]
 
-    @expose_ajax('/<userid>/activity/', cache_age=60, cache_private=True)
+    @expose_ajax('/<userid>/activity/')
     @check_authorization(self_auth=True)
     def get_activity(self, userid):
         return user_activity(userid, self.get_locale(), self.get_page())
