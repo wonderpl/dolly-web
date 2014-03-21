@@ -948,6 +948,10 @@ def es_update_channel_videos(extant=[], deleted=[]):
             (models.Channel.deleted == False) &
             (models.Channel.visible == True) &
             (models.Channel.public == True)
+        ).join(
+            models.Video,
+            (models.Video.id == models.VideoInstance.video) &
+            (models.Video.visible == True)
         )
     else:
         all_instances = []
