@@ -61,7 +61,8 @@ def _video_terms_channel_mapping(channel_ids):
     """ Get all the video terms for a channel """
     video_details = db.session.query(models.VideoInstance.channel, models.Video.title).join(
         models.Video,
-        models.VideoInstance.video == models.Video.id
+        (models.VideoInstance.video == models.Video.id) &
+        (models.Video.visible == True)
     ).filter(models.VideoInstance.channel.in_(channel_ids))
 
     channel_map = {}
