@@ -340,6 +340,7 @@ def add_videos_to_channel(channel, instance_list, locale, delete_existing=False)
                 VideoInstance(video=video_id, channel=channel.id, source_channel=video_source)
             instance.position = position
             instance.category = videoidmap[video_id]
+            instance.is_favourite = channel.favourite
             VideoInstance.query.session.add(instance)
             added.append(video_id)
 
