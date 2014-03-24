@@ -126,3 +126,7 @@ SHARE_MESSAGE_MAP = dict(
 PUSH_NOTIFICATION_MAP = dict(
     joined=('user', "Your Facebook friend %@ has joined Wonder PL"),
 )
+
+AUTO_TAG_CHANNELS = {
+    'ch-d8Wwdt9mA5LImofAB6CdA': 'cat-editors-picks',
+}
