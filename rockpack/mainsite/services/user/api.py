@@ -221,7 +221,7 @@ def es_update_activity(object_type, object_mapping):
 @commit_on_success
 def save_video_activity(userid, action, instance_id, locale):
     column, value, incr = _get_action_incrementer(action)
-    video_id = get_or_create_video_records([instance_id])[0][0]
+    video_id, video_source = get_or_create_video_records([instance_id])[0]
     activity = dict(user=userid, action=action,
                     object_type='video_instance', object_id=instance_id, locale=locale)
     if not UserActivity.query.filter_by(**activity).count():
@@ -248,7 +248,10 @@ def save_video_activity(userid, action, instance_id, locale):
                 channel.remove_videos([video_id])
             else:
                 # Return new instance here so that it can be shared
-                return channel.add_videos([video_id])[0]
+                instance = channel.add_videos([video_id])[0]
+                if getattr(instance, 'source_channel', -1) is None:
+                    instance.source_channel = video_source
+                return instance
 
 
 @es_update_activity('channel', 'es_channel_map')

@@ -957,6 +957,10 @@ class TestUserContent(base.RockPackTestCase):
                 ('star', video_instance.id),
                 UserActivity.query.filter_by(user=user.id).values('action', 'object_id'))
 
+            fav_instance = user.channels[0].video_instances[0]
+            self.assertEquals(fav_instance.video, VideoData.video1.id)
+            self.assertEquals(fav_instance.source_channel, owner.channels[0].id)
+
             cron_cmds.create_new_activity_notifications()
             UserNotification.query.session.commit()
             notification = UserNotification.query.filter_by(
