@@ -884,7 +884,10 @@ def update_user_categories(user_ids=None):
         eu = ESUser.updater(bulk=True)
         eu.set_document_id(user.id)
         eu.add_field('category', list(set(categories)))
-        eu.update()
+        try:
+            eu.update()
+        except pyes.exceptions.ElasticSearchException:
+            app.logger.warning('update_user_categories failed to update %s', user)
 
     ESUser.flush()
 

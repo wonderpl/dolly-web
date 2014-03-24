@@ -141,6 +141,91 @@ class ESMigration(object):
                         break
 
 
+def full_user_import(start=datetime.now()):
+    from rockpack.mainsite.services.user import models
+    users = models.User.query.filter(models.User.date_updated >= start)
+
+    to_delete = []
+
+    # TODO: duck punch category on ESUser to load cats
+    # from get_user_categories which otherwise would be
+    # called n times where n = users.count()
+    for user in users:
+        if not user.is_active():
+            to_delete.append(user.id)
+        else:
+            eu = api.ESUser.inserter(bulk=True)
+            eu.insert(user.id, user)
+
+    api.ESUser.flush()
+
+    api.ESUser.delete(to_delete)
+
+
+def full_channel_import(start=datetime.now()):
+    from rockpack.mainsite.services.video import models
+    channels = models.Channel.query.filter(
+        models.Channel.date_modified >= start
+    ).options(
+        joinedload(models.Channel.category_rel),
+        joinedload(models.Channel.metas),
+        joinedload(models.Channel.owner_rel)
+    )
+
+    to_delete = []
+    updated = []
+
+    for channel in channels:
+        if channel.visible and channel.public and not channel.deleted:
+            eu = api.ESChannel(bulk=True)
+            eu.insert(channel.id, channel)
+            updated.append(channel.id)
+        else:
+            to_delete.append(channel.id)
+
+    api.ESChannel.flush()
+
+    api.ESChannel.delete(to_delete)
+
+
+def full_video_import(start=datetime.now(), prefix=None):
+    from rockpack.mainsite.services.video import models
+
+    with app.test_request_context():
+        query = models.VideoInstance.query.join(
+            models.Channel,
+            models.Channel.id == models.VideoInstance.channel
+        ).join(models.Video).outerjoin(
+            models.VideoInstanceLocaleMeta,
+            models.VideoInstance.id == models.VideoInstanceLocaleMeta.video_instance
+        ).options(
+            joinedload(models.VideoInstance.metas)
+        ).options(
+            joinedload(models.VideoInstance.video_rel)
+        ).options(
+            joinedload(models.VideoInstance.video_channel)
+        )
+
+        if prefix:
+            query = query.filter(models.VideoInstance.id.like(prefix.replace('_', '\\_') + '%'))
+
+        to_delete = []
+
+        # TODO: duck punch methods on ESVideo for
+        # import_dolly_repin_counts and import_dolly_video_owners
+        for instance in query:
+            if (instance.video_rel.visible and
+                instance.video_channel.visible and
+                instance.video_channel.public and not
+                instance.video_channel.deleted):
+                ev = api.ESVideo(bulk=True)
+                ev.insert(instance.id, instance)
+            else:
+                to_delete.append(instance.id)
+
+        api.ESVideo.flush()
+
+
 class DBImport(object):
 
     def __init__(self):
@@ -155,11 +240,15 @@ class DBImport(object):
             print int(n), "percent complete                                                \r",
             sys.stdout.flush()
 
-    def import_users(self):
+    def import_users(self, start=None):
         from rockpack.mainsite.services.user import models
 
         with app.test_request_context():
-            users = models.User.query
+            users = models.User.query.filter(models.User.is_active == True)
+
+            if start:
+                users = users.filter(models.User.date_updated >= start)
+
             total = users.count()
             print 'importing {} users'.format(total)
             start = time.time()
@@ -490,10 +579,13 @@ class DBImport(object):
             bulk=True
         )
 
-    def import_average_category(self):
+    def import_average_category(self, channel_ids=None):
         from rockpack.mainsite.services.video.models import VideoInstance, Channel
 
         query = readonly_session.query(VideoInstance.category, Channel.id).join(Channel, Channel.id == VideoInstance.channel).order_by(Channel.id)
+
+        if channel_ids:
+            query = query.filter(Channel.id.in_(channel_ids))
 
         category_map = {}
         for instance_cat, channel_id in query:
