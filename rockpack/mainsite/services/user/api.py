@@ -473,7 +473,7 @@ def user_subscriptions(userid, locale, paging, own=True):
         items = cs.channels(with_owners=True)
     else:
         items = video_api.get_db_channels(
-            locale, paging, channels=subs.keys(), with_video_counts=True)[0]
+            locale, (0, limit), channels=subs.keys(), with_video_counts=True)[0]
 
     items = [item for date, item in
              sorted([(subs[i['id']], i) for i in items], reverse=True)]
