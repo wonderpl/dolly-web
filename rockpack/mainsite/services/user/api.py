@@ -799,7 +799,7 @@ def _aggregate_content_feed(items):
     for (type, key, date), group in itemgroups.iteritems():
         if type == 'video':
             # Don't create small aggregations for videos
-            if len(group) <= app.config.get('FEED_VIDEO_AGG_THRESHOLD', 2):
+            if len(group) <= app.config.get('FEED_VIDEO_AGG_THRESHOLD', 5):
                 continue
             # Don't include most starred videos (up to a maximum of 5)
             group.sort(key=lambda i: i['video']['star_count'], reverse=True)
