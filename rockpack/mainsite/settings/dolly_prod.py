@@ -124,5 +124,3 @@ PUSH_NOTIFICATION_MAP = dict(
 AUTO_TAG_CHANNELS = {
     'ch-d8Wwdt9mA5LImofAB6CdA': 'cat-editors-picks',
 }
-
-EDITORS_PICKS_ID = 109

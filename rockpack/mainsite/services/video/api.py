@@ -255,9 +255,8 @@ class VideoWS(WebService):
         offset, limit = self.get_page()
         vs.set_paging(offset, limit)
         vs.filter_category(category)
-        if category and app.config.get('EDITORS_PICKS_ID') and\
-                app.config.get('EDITORS_PICKS_ID') == int(category):
-                vs.add_sort('date_tagged', 'desc')
+        if app.config.get('DOLLY'):
+            vs.add_sort('date_tagged', 'desc')
         vs.star_order_sort(request.args.get('star_order'))
         vs.date_sort(date_order)
 
