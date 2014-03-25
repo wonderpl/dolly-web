@@ -83,16 +83,10 @@ PHG_AFFILIATE_TOKEN = '11lukG'
 ITUNES_APP_ID = '824769819'
 ITUNES_APP_LINK = 'https://itunes.apple.com/app/wonder-pl/id%s?mt=8&ls=1&at=%s' % (ITUNES_APP_ID, PHG_AFFILIATE_TOKEN)
 
-if PRELAUNCH:
-    APNS_PUSH_TYPE = 'push_sandbox'
-    APNS_FEEDBACK_TYPE = 'feedback_sandbox'
-    APNS_PASSPHRASE = 'tempprod'
-    APNS_CERT_NAME = 'apns-dolly-temp.pem'
-else:
-    APNS_PUSH_TYPE = 'push_production'
-    APNS_FEEDBACK_TYPE = 'feedback_production'
-    APNS_CERT_NAME = 'apns-dolly-prod.pem'
-    APNS_PASSPHRASE = _decrypt('\x1dd\xdf\xce\xe0\x10\x170sP')
+APNS_PUSH_TYPE = 'push_production'
+APNS_FEEDBACK_TYPE = 'feedback_production'
+APNS_CERT_NAME = 'apns-dolly-prod.pem'
+APNS_PASSPHRASE = _decrypt('\x1dd\xdf\xce\xe0\x10\x170sP')
 
 ITUNES_CONNECT_VENDORID = '86088300'
 ITUNES_CONNECT_APPLEID = 'bot@wonderpl.com'
