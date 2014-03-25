@@ -313,6 +313,7 @@ class ESVideo(ESObject):
             link_url=mapped.link_url,
             link_title=mapped.link_title,
             tags=mapped.tags,
+            date_tagged=mapped.date_tagged,
             is_favourite=mapped.is_favourite
         )
 
@@ -600,6 +601,10 @@ class ESVideoAttributeMap:
         if not self.video_instance.tags:
             return []
         return map(unicode.strip, filter(None, self.video_instance.tags.split(',')))
+
+    @property
+    def date_tagged(self):
+        return self.video_instance.date_tagged
 
     @property
     def is_favourite(self):

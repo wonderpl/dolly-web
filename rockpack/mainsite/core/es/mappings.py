@@ -175,7 +175,8 @@ if app.config.get('DOLLY', False):
                 "type": "string",
                 "index": "not_analyzed",
                 "null_value": []
-            }
+            },
+            "date_tagged": {"type": "date"}
         }
     }
 else:
