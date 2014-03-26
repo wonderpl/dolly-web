@@ -335,7 +335,7 @@ def add_videos_to_channel(channel, instance_list, locale, delete_existing=False)
                     VideoInstance.query.filter_by(channel=channel.id).options(lazyload('video_rel')))
 
     videoidmap = {id_: category for (id_, category) in Video.query.filter(Video.id.in_([_[0] for _ in videomap])).values('id', 'category')}
-    added = []
+    added = {}
 
     for position, (video_id, video_source) in enumerate(videomap):
         if video_id not in added:
@@ -345,7 +345,7 @@ def add_videos_to_channel(channel, instance_list, locale, delete_existing=False)
             instance.category = videoidmap[video_id]
             instance.is_favourite = channel.favourite
             VideoInstance.query.session.add(instance)
-            added.append(video_id)
+            added[video_id] = instance
 
     deleted_video_ids = []
     if delete_existing:
@@ -360,6 +360,8 @@ def add_videos_to_channel(channel, instance_list, locale, delete_existing=False)
         channel.public = False
     elif not existing and Channel.should_be_public(channel, True, added):
         channel.public = True
+
+    return added.values()
 
 
 def _user_list(paging, **filters):

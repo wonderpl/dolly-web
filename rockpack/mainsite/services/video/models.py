@@ -628,6 +628,19 @@ class PlayerErrorReport(db.Model):
     count = Column(Integer, nullable=False, default=1)
 
 
+class VideoInstanceQueue(db.Model):
+    __tablename__ = 'video_instance_queue'
+
+    id = Column(Integer, primary_key=True)
+    date_scheduled = Column(DateTime(), nullable=False)
+    source_instance = Column(ForeignKey('video_instance.id'), nullable=False)
+    target_channel = Column(ForeignKey('channel.id'), nullable=False)
+    new_instance = Column(ForeignKey('video_instance.id'))
+
+    source_instance_rel = relationship('VideoInstance', foreign_keys=[source_instance], lazy='joined')
+    target_channel_rel = relationship('Channel')
+
+
 ParentCategory = aliased(Category)
 
 
