@@ -84,7 +84,7 @@ class User(db.Model):
     def get_display_name(cls, username, first_name, last_name, display_fullname=True):
         # XXX: Needs to be more general?
         if first_name and display_fullname:
-            return u'%s %s' % (first_name, last_name)
+            return (u'%s %s' % (first_name, last_name)).strip()
         else:
             return username
 
