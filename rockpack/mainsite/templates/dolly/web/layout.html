@@ -89,12 +89,11 @@
   {% block body %}
     {% block scripts_footer %}{% endblock %}
   {% endblock %}
+
   {% block google_analytics %}
     {% include 'web/ga.html' %}
-    <script type="text/javascript">
-      ga('send', 'pageview');
-    </script>
   {% endblock %}
+
   {% block typekit_fonts %}
     <script lazyload data-typekit="true" type="text/javascript" data-src="//use.typekit.net/twx7lpv.js"></script>
     <!--<script type="text/javascript">try{Typekit.load();}catch(e){}</script>-->

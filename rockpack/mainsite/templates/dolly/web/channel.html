@@ -129,3 +129,10 @@
     %}<script type="text/javascript" src="{{ ASSET_URL }}"></script>{% endassets %}
   {% endblock %}
 {% endblock %}
+
+{% block google_analytics %}
+  {{ super() }}
+  <script type="text/javascript">
+    ga('send', 'pageview');
+  </script>
+{% endblock %}

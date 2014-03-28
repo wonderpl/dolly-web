@@ -38,5 +38,7 @@
 
 {% block google_analytics %}
   {{ super() }}
-  <script>ga('send', 'pageview');</script>
+  <script type="text/javascript">
+    ga('send', 'pageview');
+  </script>
 {% endblock %}

@@ -51,10 +51,12 @@
   {% block body %}
   {% endblock %}
 
-  {% block google_analytics %}
-    {% include 'web/ga.html' %}
-    <script>ga('send', 'pageview');</script>
-  {% endblock %}
+{% block google_analytics %}
+  {{ super() }}
+  <script type="text/javascript">
+    ga('send', 'pageview');
+  </script>
+{% endblock %}
 
 </body>
 </html>
