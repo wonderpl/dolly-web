@@ -52,7 +52,7 @@
   {% endblock %}
 
 {% block google_analytics %}
-  {{ super() }}
+  {% include 'web/ga.html' %}
   <script type="text/javascript">
     ga('send', 'pageview');
   </script>
