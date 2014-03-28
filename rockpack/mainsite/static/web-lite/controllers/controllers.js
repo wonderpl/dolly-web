@@ -85,6 +85,7 @@
         };
 
         $scope.shareFacebook = function() {
+            ga('send', 'event', 'share', 'facebook');
             FB.ui({
                 method: 'feed',
                 link: $location.absUrl(),
@@ -95,7 +96,7 @@
         };
 
         $scope.shareTwitter = function() {
-            // console.log( $location.$$protocol + '://' + $location.$$host + ( $location.$$port !== 80 ? ':' + $location.$$port : '' ) + '/channel/-/' + $rootScope.channel_data.id + '/?video=' +  $rootScope.videos[$rootScope.currentvideo].id );
+            ga('send', 'event', 'share', 'twitter');
             window.open("http://twitter.com/intent/tweet?url=" + $rootScope.shareurl);
         };
 
@@ -119,9 +120,11 @@
         tmpl = $compile(template)($scope);
         $this.html('').append(tmpl);
 
-        $scope.changeVideo = function(e, index) {
+        $scope.changeVideo = function(e, index, id) {
             e.preventDefault();
-
+            
+            ga('send', 'event', 'web lite', 'video select', id );
+            console.log('event sent');
             scrollManager.scrollTo( d.getElementById('player-wrapper') );
             $scope.embedOptionsShowing = false;
             

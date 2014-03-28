@@ -8,7 +8,7 @@
 	<div class="scroll-inner-wrapper">
 		<ul class="channel-list">
 			<li ng-repeat="video in videos.items">
-				<a href="/channel/-/(( channel_data.id ))/?video=(( video.id ))" ng-click="changeVideo($event, $index)">
+				<a href="/channel/-/(( channel_data.id ))/?video=(( video.id ))" ng-click="changeVideo($event, $index, video.id)">
 					<img data-src="(( video.video.thumbnail_url ))" class="video-thumbnail" width="220" height="124" />
 					<span>(( video.title ))</span>
 				</a>
