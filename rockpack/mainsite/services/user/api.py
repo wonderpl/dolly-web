@@ -221,7 +221,7 @@ def es_update_activity(object_type, object_mapping):
 @commit_on_success
 def save_video_activity(userid, action, instance_id, locale):
     column, value, incr = _get_action_incrementer(action)
-    video_id = get_or_create_video_records([instance_id])[0][0]
+    video_id, video_source = get_or_create_video_records([instance_id])[0]
     activity = dict(user=userid, action=action,
                     object_type='video_instance', object_id=instance_id, locale=locale)
     if not UserActivity.query.filter_by(**activity).count():
@@ -248,7 +248,10 @@ def save_video_activity(userid, action, instance_id, locale):
                 channel.remove_videos([video_id])
             else:
                 # Return new instance here so that it can be shared
-                return channel.add_videos([video_id])[0]
+                instance = channel.add_videos([video_id])[0]
+                if getattr(instance, 'source_channel', -1) is None:
+                    instance.source_channel = video_source
+                return instance
 
 
 @es_update_activity('channel', 'es_channel_map')
@@ -332,7 +335,7 @@ def add_videos_to_channel(channel, instance_list, locale, delete_existing=False)
                     VideoInstance.query.filter_by(channel=channel.id).options(lazyload('video_rel')))
 
     videoidmap = {id_: category for (id_, category) in Video.query.filter(Video.id.in_([_[0] for _ in videomap])).values('id', 'category')}
-    added = []
+    added = {}
 
     for position, (video_id, video_source) in enumerate(videomap):
         if video_id not in added:
@@ -340,8 +343,9 @@ def add_videos_to_channel(channel, instance_list, locale, delete_existing=False)
                 VideoInstance(video=video_id, channel=channel.id, source_channel=video_source)
             instance.position = position
             instance.category = videoidmap[video_id]
+            instance.is_favourite = channel.favourite
             VideoInstance.query.session.add(instance)
-            added.append(video_id)
+            added[video_id] = instance
 
     deleted_video_ids = []
     if delete_existing:
@@ -356,6 +360,8 @@ def add_videos_to_channel(channel, instance_list, locale, delete_existing=False)
         channel.public = False
     elif not existing and Channel.should_be_public(channel, True, added):
         channel.public = True
+
+    return added.values()
 
 
 def _user_list(paging, **filters):
@@ -469,7 +475,7 @@ def user_subscriptions(userid, locale, paging, own=True):
         items = cs.channels(with_owners=True)
     else:
         items = video_api.get_db_channels(
-            locale, paging, channels=subs.keys(), with_video_counts=True)[0]
+            locale, (0, limit), channels=subs.keys(), with_video_counts=True)[0]
 
     items = [item for date, item in
              sorted([(subs[i['id']], i) for i in items], reverse=True)]
@@ -795,7 +801,7 @@ def _aggregate_content_feed(items):
     for (type, key, date), group in itemgroups.iteritems():
         if type == 'video':
             # Don't create small aggregations for videos
-            if len(group) <= app.config.get('FEED_VIDEO_AGG_THRESHOLD', 2):
+            if len(group) <= app.config.get('FEED_VIDEO_AGG_THRESHOLD', 5):
                 continue
             # Don't include most starred videos (up to a maximum of 5)
             group.sort(key=lambda i: i['video']['star_count'], reverse=True)
@@ -1195,7 +1201,7 @@ class UserWS(WebService):
         cover = getattr(user, attr)
         return dict(thumbnail_url=cover.url), 200, [('Location', cover.url)]
 
-    @expose_ajax('/<userid>/activity/', cache_age=60, cache_private=True)
+    @expose_ajax('/<userid>/activity/')
     @check_authorization(self_auth=True)
     def get_activity(self, userid):
         return user_activity(userid, self.get_locale(), self.get_page())

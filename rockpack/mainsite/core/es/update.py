@@ -15,6 +15,7 @@ def update_most_influential_video(video_ids):
     query = db.session.query(
         models.VideoInstance.id,
         models.VideoInstance.video,
+        models.VideoInstance.is_favourite,
         child.source_channel,
         func.count(models.VideoInstance.id)
     ).outerjoin(
@@ -25,27 +26,46 @@ def update_most_influential_video(video_ids):
         models.Video,
         (models.Video.id == models.VideoInstance.video) &
         (models.Video.visible == True)
+    ).join(
+        models.Channel,
+        (models.Channel.id == models.VideoInstance.channel) &
+        (models.Channel.deleted == False) &
+        (models.Channel.public == True)
     ).filter(
         models.VideoInstance.video.in_(video_ids)
-    ).group_by(models.VideoInstance.id, models.VideoInstance.video, child.source_channel)
+    ).group_by(models.VideoInstance.id, models.VideoInstance.video,
+               models.VideoInstance.is_favourite, child.source_channel)
 
     instance_counts = {}
     influential_index = {}
+    favs = []
 
-    for _id, video, source_channel, count in query.yield_per(6000):
+    for _id, video, fav, source_channel, count in query.yield_per(6000):
         # Set the count for the video instance
         instance_counts[(_id, video)] = count
+        if fav:
+            favs.append(_id)
         # If the count is higher for the same video than
         # the previous instance, mark this instance as the
         # influential one for the video
-        i_id, i_count = influential_index.get(video, [None, 0])
+        i_id, i_count = influential_index.setdefault(video, (_id, count))
 
         # Count will always be at least 1
         # but should really be zero if no children
         if not source_channel and count == 1:
             count = 0
+
         if (count > i_count) or\
                 (count == i_count) and not source_channel:
+            # If we've already got a video with the same count ...
+            if (count == i_count):
+                # ... and if what we want to set as most influential
+                # is a fav, and the existing one isn't a fav ...
+                if fav and i_id not in favs:
+                    # ... ignore this one because we'd prefer non favs
+                    # as the most influential video
+                    continue
+
             influential_index.update({video: (_id, count,)})
 
     for (_id, video), count in instance_counts.iteritems():
@@ -61,7 +81,8 @@ def _video_terms_channel_mapping(channel_ids):
     """ Get all the video terms for a channel """
     video_details = db.session.query(models.VideoInstance.channel, models.Video.title).join(
         models.Video,
-        models.VideoInstance.video == models.Video.id
+        (models.VideoInstance.video == models.Video.id) &
+        (models.Video.visible == True)
     ).filter(models.VideoInstance.channel.in_(channel_ids))
 
     channel_map = {}

@@ -34,6 +34,30 @@ locale_count_dict = {
 }
 
 if app.config.get('DOLLY', False):
+    video_settings = {
+        "analysis": {
+            "analyzer": {
+                "folded_snowball": {
+                    "filter": [
+                        "standard",
+                        "lowercase",
+                        "stop",
+                        "snowball",
+                        "my_ascii_folding"
+                    ],
+                    "type": "custom",
+                    "tokenizer": "standard"
+                }
+            },
+            "filter": {
+                "my_ascii_folding": {
+                    "type": "asciifolding",
+                    "preserve_original": True
+                }
+            }
+        }
+    }
+
     video_mapping = {
         "dynamic": "strict",
         "properties": {
@@ -43,8 +67,11 @@ if app.config.get('DOLLY', False):
             },
             "date_added": {"type": "date"},
             "title": {
-                "type": "string",
-                "analyzer": "snowball"
+                "type": "multi_field",
+                "fields": {
+                    "title": {"type": "string", "analyzer": "snowball"},
+                    "folded": {"type": "string", "analyzer": "folded_snowball"}
+                }
             },
             "position": {"type": "integer"},
             "public": {"type": "boolean"},
@@ -148,7 +175,8 @@ if app.config.get('DOLLY', False):
                 "type": "string",
                 "index": "not_analyzed",
                 "null_value": []
-            }
+            },
+            "date_tagged": {"type": "date"}
         }
     }
 else:

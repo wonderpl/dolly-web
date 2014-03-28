@@ -1,15 +1,18 @@
 from datetime import datetime
 import wtforms as wtf
+from sqlalchemy import or_
 from sqlalchemy.orm import contains_eager
 from flask import request
 from flask.ext.admin.form import BaseForm, DateTimePickerWidget, RenderTemplateWidget
 from flask.ext.admin.model.fields import AjaxSelectField
+from flask.ext.admin.model.ajax import AjaxModelLoader
 from flask.ext.admin.model.typefmt import Markup
 from flask.ext.admin.model.form import InlineFormAdmin
 from rockpack.mainsite.services.video import models
 from rockpack.mainsite.services.user.models import User
 from rockpack.mainsite.services.cover_art import models as coverart_models
 from rockpack.mainsite.core.es import use_elasticsearch, api as es_api
+from rockpack.mainsite.helpers.urls import url_for
 from .base import AdminModelView
 
 
@@ -24,6 +27,41 @@ def _format_video_instance_link(view, context, video, name):
         return Markup(t.format(video.video, video.video_rel.title))
     else:
         return ''
+
+
+class PrefixQueryAjaxModelLoader(AjaxModelLoader):
+
+    def get_one(self, id):
+        return self.model.query.get(id)
+
+    def get_list(self, term, offset=0, limit=10):
+        query = self.model.query.with_entities(self.model.id, *self.fields)
+        for join in self.joins:
+            query = query.join(*join)
+        query = query.filter(or_(*(f.like(u'%s%%' % term) for f in self.fields)))
+        return query.offset(offset).limit(limit).all()
+
+    def format(self, item):
+        if isinstance(item, self.model):
+            return item.id, unicode(item)
+        elif item:
+            # fields from get_list
+            return item[0], ', '.join(item[1:])
+
+
+class VideoInstanceAjaxModelLoader(PrefixQueryAjaxModelLoader):
+
+    model = models.VideoInstance
+    fields = models.Channel.title, models.Video.title
+    joins = ((models.Channel, models.Channel.id == models.VideoInstance.channel),
+             (models.Video, models.Video.id == models.VideoInstance.video))
+
+
+class ChannelAjaxModelLoader(PrefixQueryAjaxModelLoader):
+
+    model = models.Channel
+    fields = models.User.username, models.Channel.title
+    joins = ((models.User,),)
 
 
 class VideoInstanceLocaleMetaFormAdmin(InlineFormAdmin):
@@ -82,6 +120,24 @@ class VideoInstanceView(AdminModelView):
         if use_elasticsearch():
             es_video = es_api.ESVideo.inserter()
             es_video.insert(model.id, model)
+
+
+def _format_video_queue_thumbnail(view, context, item, name):
+    t = u'<a href="%s?id=%s"><img src="%s" width="160" height="90"/></a>'
+    return Markup(t % (url_for('video_instance.edit_view'), item.source_instance, item.source_instance_rel.default_thumbnail))
+
+
+class VideoInstanceQueueView(AdminModelView):
+    model = models.VideoInstanceQueue
+
+    column_list = ('source_instance_rel.video_rel', 'target_channel_rel', 'date_scheduled', 'thumbnail')
+    column_formatters = dict(thumbnail=_format_video_queue_thumbnail)
+    column_filters = ('target_channel_rel.title', 'date_scheduled')
+    form_excluded_columns = ('new_instance',)
+    form_ajax_refs = dict(
+        source_instance_rel=VideoInstanceAjaxModelLoader('source_instance_rel', {}),
+        target_channel_rel=ChannelAjaxModelLoader('target_channel_rel', {}),
+    )
 
 
 class SourceView(AdminModelView):

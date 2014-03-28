@@ -77,7 +77,7 @@ class SearchWS(WebService):
             else:
                 # Snowball analyzer is on the Dolly mapping
                 # so we can do a proper search here
-                vs.search_terms(query)
+                vs.search_terms(sub_string(query))
                 vs.add_term('most_influential', True, occurs=MUST)
                 # also clear any favs from search
             start, size = self.get_page()

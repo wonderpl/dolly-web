@@ -43,6 +43,9 @@ class ESObjectIndexer(object):
         },
     }
 
+    if app.config.get('DOLLY'):
+        indexes['video']['settings'] = mappings.video_settings
+
     aliases = {
         'channel': mappings.CHANNEL_ALIAS,
         'video': mappings.VIDEO_ALIAS,
@@ -139,6 +142,10 @@ class ESObjectIndexer(object):
     def get_alias(cls, doc_type):
         return cls.aliases[doc_type]
 
+    @classmethod
+    def get_settings(cls, doc_type):
+        return cls.indexes[doc_type].get('settings')
+
     @staticmethod
     def flush():
         """ Must be called at the end of insert/update operations
@@ -156,6 +163,10 @@ class ESObjectIndexer(object):
     @property
     def mapping(self):
         return self.get_mapping(self.indexing_type)
+
+    @property
+    def settings(self):
+        return self.get_settings(self.indexing_type)
 
 
 class ESInserter(object):
@@ -302,6 +313,7 @@ class ESVideo(ESObject):
             link_url=mapped.link_url,
             link_title=mapped.link_title,
             tags=mapped.tags,
+            date_tagged=mapped.date_tagged,
             is_favourite=mapped.is_favourite
         )
 
@@ -589,6 +601,10 @@ class ESVideoAttributeMap:
         if not self.video_instance.tags:
             return []
         return map(unicode.strip, filter(None, self.video_instance.tags.split(',')))
+
+    @property
+    def date_tagged(self):
+        return self.video_instance.date_tagged
 
     @property
     def is_favourite(self):
@@ -937,6 +953,10 @@ def es_update_channel_videos(extant=[], deleted=[]):
             (models.Channel.deleted == False) &
             (models.Channel.visible == True) &
             (models.Channel.public == True)
+        ).join(
+            models.Video,
+            (models.Video.id == models.VideoInstance.video) &
+            (models.Video.visible == True)
         )
     else:
         all_instances = []
@@ -976,7 +996,7 @@ def remove_channel_from_index(channel_id):
     from . import update
 
     user_id = db.session.query(Channel.owner).filter(Channel.id == channel_id).first()
-    if user_id:
+    if user_id and app.config.get('DOLLY'):
         # User category depends on channel category. Since we're deleting
         # the channel, let's update channel cat then do the user's
         update.update_average_channel_category(channel_id, {})

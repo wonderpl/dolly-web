@@ -4,6 +4,7 @@ from sqlalchemy import (
     UniqueConstraint, event, func)
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import relationship, aliased, lazyload, joinedload
+from sqlalchemy.orm.attributes import get_history
 from flask.ext.sqlalchemy import models_committed
 from rockpack.mainsite import app, cache
 from rockpack.mainsite.core.dbapi import db, defer_except
@@ -270,7 +271,7 @@ class VideoInstance(db.Model):
     view_count = Column(Integer, nullable=False, server_default='0')
     star_count = Column(Integer, nullable=False, server_default='0')
     position = Column(Integer, nullable=False, server_default='0', default=0)
-
+    date_tagged = Column(DateTime())
     video = Column(ForeignKey('video.id', ondelete='CASCADE'), nullable=False)
     channel = Column(ForeignKey('channel.id'), nullable=False)
     source_channel = Column(ForeignKey('channel.id'), nullable=True)
@@ -627,6 +628,19 @@ class PlayerErrorReport(db.Model):
     count = Column(Integer, nullable=False, default=1)
 
 
+class VideoInstanceQueue(db.Model):
+    __tablename__ = 'video_instance_queue'
+
+    id = Column(Integer, primary_key=True)
+    date_scheduled = Column(DateTime(), nullable=False)
+    source_instance = Column(ForeignKey('video_instance.id'), nullable=False)
+    target_channel = Column(ForeignKey('channel.id'), nullable=False)
+    new_instance = Column(ForeignKey('video_instance.id'))
+
+    source_instance_rel = relationship('VideoInstance', foreign_keys=[source_instance], lazy='joined')
+    target_channel_rel = relationship('Channel')
+
+
 ParentCategory = aliased(Category)
 
 
@@ -765,6 +779,32 @@ def _es_user_promotion_update(mapper, connection, target):
 def _set_date_published(mapper, connection, target):
     if target.public and not target.date_published:
         target.date_published = func.now()
+
+
+@event.listens_for(VideoInstance, 'before_insert')
+def _auto_tag(mapper, connection, target):
+    tag = app.config.get('AUTO_TAG_CHANNELS', {}).get(target.channel)
+    if tag and target.source_channel:
+        # use background function so we're not messing around in this transaction
+        _set_auto_tag(target.source_channel, target.video, tag)
+
+
+@background_on_sqs
+def _set_auto_tag(channel, video, tag):
+    instance = VideoInstance.query.filter_by(channel=channel, video=video).first()
+    if instance:
+        if instance.tags:
+            instance.tags += ',' + tag
+        else:
+            instance.tags = tag
+        instance.save()
+
+
+@event.listens_for(VideoInstance, 'before_update')
+@event.listens_for(VideoInstance, 'before_insert')
+def _set_date_tagged(mapper, connection, target):
+    if target.tags and get_history(target, 'tags').has_changes():
+        target.date_tagged = func.now()
 
 
 event.listen(Video, 'before_insert', add_video_pk)

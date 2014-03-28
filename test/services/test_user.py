@@ -957,6 +957,10 @@ class TestUserContent(base.RockPackTestCase):
                 ('star', video_instance.id),
                 UserActivity.query.filter_by(user=user.id).values('action', 'object_id'))
 
+            fav_instance = user.channels[0].video_instances[0]
+            self.assertEquals(fav_instance.video, VideoData.video1.id)
+            self.assertEquals(fav_instance.source_channel, owner.channels[0].id)
+
             cron_cmds.create_new_activity_notifications()
             UserNotification.query.session.commit()
             notification = UserNotification.query.filter_by(
@@ -1091,7 +1095,7 @@ class TestEmail(base.RockPackTestCase):
     def test_email_ping_wo_patch(self):
         self.create_test_user(
             email=app.config['TEST_PING_EMAIL'],
-            date_joined=datetime.now() - timedelta(days=2)
+            date_joined=datetime.now() - timedelta(days=9)
         )
         with self.app.test_request_context():
             for config in app.config.get('PING_EMAILS', []):

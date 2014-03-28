@@ -24,7 +24,13 @@ PING_EMAILS = [
         listid=1,
         threshold_days=2,
         template_path='day-two.html',
-        tracking_params=dict(utm_medium='email', utm_campaign='day2'),
+        tracking_params=dict(utm_medium='email', utm_campaign='p2'),
+    ),
+    dict(
+        listid=1,
+        threshold_days=9,
+        template_path='hints-and-tips.html',
+        tracking_params=dict(utm_medium='email', utm_campaign='p9'),
     )
 ]
 
@@ -60,6 +66,9 @@ FACEBOOK_APP_ID = '517447921656577'
 FACEBOOK_APP_SECRET = _decrypt('#>d\xb3\ri\xc5\x07*\xb7\x99\xb05\x0f8\x19\x03\xff1\xb3Id\xab=\x13\xc9\xcfQD\x0c\xd2G')
 FACEBOOK_APP_NAMESPACE = 'wonderpl'
 
+MAILCHIMP_TOKEN = _decrypt('~M\x93$\xd3\xbb\xf4Q\xba\xe0\xf2\x9b@"\xe5\xd9\xe4\xca\xc1o\x98y\xa2\xfe\xb9;\x14O\xb46~\xc1\xbb\xc7\xe7\\')
+MAILCHIMP_LISTID = '74e1537b36'
+
 SERVER_NAME = 'wonderpl.com'
 SECURE_SUBDOMAIN = 'secure'
 ADMIN_SUBDOMAIN = 'admin'
@@ -74,16 +83,10 @@ PHG_AFFILIATE_TOKEN = '11lukG'
 ITUNES_APP_ID = '824769819'
 ITUNES_APP_LINK = 'https://itunes.apple.com/app/wonder-pl/id%s?mt=8&ls=1&at=%s' % (ITUNES_APP_ID, PHG_AFFILIATE_TOKEN)
 
-if PRELAUNCH:
-    APNS_PUSH_TYPE = 'push_sandbox'
-    APNS_FEEDBACK_TYPE = 'feedback_sandbox'
-    APNS_PASSPHRASE = 'tempprod'
-    APNS_CERT_NAME = 'apns-dolly-temp.pem'
-else:
-    APNS_PUSH_TYPE = 'push_production'
-    APNS_FEEDBACK_TYPE = 'feedback_production'
-    APNS_CERT_NAME = 'apns-dolly-prod.pem'
-    APNS_PASSPHRASE = _decrypt('\x1dd\xdf\xce\xe0\x10\x170sP')
+APNS_PUSH_TYPE = 'push_production'
+APNS_FEEDBACK_TYPE = 'feedback_production'
+APNS_CERT_NAME = 'apns-dolly-prod.pem'
+APNS_PASSPHRASE = _decrypt('\x1dd\xdf\xce\xe0\x10\x170sP')
 
 ITUNES_CONNECT_VENDORID = '86088300'
 ITUNES_CONNECT_APPLEID = 'bot@wonderpl.com'
@@ -117,3 +120,7 @@ SHARE_MESSAGE_MAP = dict(
 PUSH_NOTIFICATION_MAP = dict(
     joined=('user', "Your Facebook friend %@ has joined Wonder PL"),
 )
+
+AUTO_TAG_CHANNELS = {
+    'ch-d8Wwdt9mA5LImofAB6CdA': 'cat-editors-picks',
+}

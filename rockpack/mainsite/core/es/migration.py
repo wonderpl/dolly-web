@@ -25,6 +25,8 @@ class Aliasing(object):
         # Get the mapping for the doc_type in question
         self.mapping = api.ESObjectIndexer.get_mapping(doc_type)
 
+        self.settings = api.ESObjectIndexer.get_settings(doc_type)
+
         self.index_prefix = self.get_base_index_prefix(self.alias)
 
     @classmethod
@@ -119,7 +121,7 @@ class Aliasing(object):
 
     def create_new_index(self):
         index_name = self.generate_new_index_name(self.index_prefix)
-        self.conn.create_index(index_name)
+        self.conn.indices.create_index(index_name, settings=self.settings)
         self.conn.put_mapping(doc_type=self.doc_type, mapping=self.mapping, indices=[index_name])
         return index_name
 
@@ -128,7 +130,7 @@ class Aliasing(object):
             existing index info stored with `self` in to a new index. """
 
         self.reindex(self.get_current_index(self.alias), self.doc_type,
-            target, self.doc_type, with_version=with_version)
+                     target, self.doc_type, with_version=with_version)
 
     def reassign_to(self, target):
         self.reassign(self.alias, self.get_current_index(self.alias), target)

@@ -319,12 +319,16 @@ class DBImport(object):
         update_user_categories()
 
     def import_comment_counts(self):
-        from rockpack.mainsite.services.video.models import VideoInstanceComment, VideoInstance
+        from rockpack.mainsite.services.video.models import VideoInstanceComment, VideoInstance, Video
         from rockpack.mainsite.core.dbapi import db
 
         counts = db.session.query(VideoInstance.id, func.count(VideoInstance.id)).join(
             VideoInstanceComment,
             VideoInstanceComment.video_instance == VideoInstance.id
+        ).join(
+            Video,
+            (Video.id == VideoInstance.video) &
+            (Video.visible == True)
         ).group_by(
             VideoInstance.id
         )

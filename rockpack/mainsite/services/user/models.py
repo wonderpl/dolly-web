@@ -13,7 +13,7 @@ from rockpack.mainsite import app
 from rockpack.mainsite.core.token import create_access_token
 from rockpack.mainsite.core.dbapi import db
 from rockpack.mainsite.core.es import use_elasticsearch
-from rockpack.mainsite.core.es.api import add_user_to_index, ESUser
+from rockpack.mainsite.core.es.api import add_user_to_index, ESUser, ESChannel, ESVideo
 from rockpack.mainsite.helpers.db import ImageType, add_base64_pk, resize_and_upload
 from rockpack.mainsite.helpers.urls import url_for
 from rockpack.mainsite.background_sqs_processor import background_on_sqs
@@ -84,7 +84,7 @@ class User(db.Model):
     def get_display_name(cls, username, first_name, last_name, display_fullname=True):
         # XXX: Needs to be more general?
         if first_name and display_fullname:
-            return u'%s %s' % (first_name, last_name)
+            return (u'%s %s' % (first_name, last_name)).strip()
         else:
             return username
 
@@ -445,6 +445,14 @@ def _update_user(userid, just_registered=False):
     if use_elasticsearch():
         if just_registered:
             add_user_to_index(user)
+        elif user.is_active is False:
+            from rockpack.mainsite.services.video.models import Channel
+            ESUser.delete([userid])
+            channel_ids = [_[0] for _ in Channel.query.filter(Channel.owner == userid).values('id')]
+            if channel_ids:
+                ESChannel.delete(channel_ids)
+                for cid in channel_ids:
+                    ESVideo.delete_channel_videos(cid)
         else:
             eu = ESUser.inserter()
             eu.insert(user.id, user)

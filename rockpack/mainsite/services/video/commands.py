@@ -13,7 +13,8 @@ from rockpack.mainsite.core.youtube import batch_query, _parse_datetime
 from rockpack.mainsite.helpers.http import get_external_resource
 from rockpack.mainsite.services.user.models import Subscription, UserActivity, User
 from rockpack.mainsite.services.video.models import (
-    Channel, ChannelLocaleMeta, UserPromotion, ChannelPromotion, Video, VideoInstance, PlayerErrorReport)
+    Channel, ChannelLocaleMeta, UserPromotion, ChannelPromotion,
+    Video, VideoInstance, VideoInstanceQueue, PlayerErrorReport)
 
 
 @manager.cron_command(interval=900)
@@ -144,6 +145,22 @@ def update_user_promotions(date_from=None, date_to=None):
         es_user.add_field('promotion', user.promotion_map())
         es_user.update()
     api.ESUser.flush()
+
+
+@manager.cron_command(interval=900)
+@job_control
+def process_video_instance_queue(date_from=None, date_to=None):
+    """Create queued video instances."""
+    from rockpack.mainsite.services.user.api import add_videos_to_channel
+    records = VideoInstanceQueue.query.filter(
+        VideoInstanceQueue.new_instance == None,
+        VideoInstanceQueue.date_scheduled < date_to
+    )
+    for record in records:
+        added = add_videos_to_channel(record.target_channel_rel, [record.source_instance], None)
+        record.new_instance = added[0].id
+        app.logger.info('Processed queue. Added %s to %s: %s',
+                        record.source_instance, record.target_channel, record.new_instance)
 
 
 @manager.cron_command(interval=86400)

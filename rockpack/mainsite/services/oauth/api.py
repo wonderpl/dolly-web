@@ -81,6 +81,11 @@ def _login(username, password):
 @commit_on_success
 def _external_login(external_user, locale):
     user = models.ExternalToken.user_from_uid(external_user.system, external_user.id)
+
+    if user and not user.is_active:
+        record_user_event(user.username, 'login failed', user=user, commit=True)
+        abort(400, error='invalid_grant')
+
     if user:
         record_user_event(user.username, 'login succeeded', user=user)
         registered = False
@@ -504,7 +509,7 @@ class TokenWS(WebService):
         refresh_token = request.form['refresh_token']
         if request.form['grant_type'] != 'refresh_token' or not refresh_token:
             abort(400, error='unsupported_grant_type')
-        user = User.query.filter_by(refresh_token=refresh_token).first()
+        user = User.query.filter_by(is_active=True, refresh_token=refresh_token).first()
         if not user:
             record_user_event('', 'refresh token failed', commit=True)
             abort(400, error='invalid_grant')
