@@ -90,6 +90,10 @@ if app.config.get('DOLLY', False):
                     "folded": {"type": "string", "analyzer": "folded_snowball"}
                 }
             },
+            "label": {
+                "type": "string",
+                "index": "not_analyzed"
+            },
             "position": {"type": "integer"},
             "public": {"type": "boolean"},
             "category": {

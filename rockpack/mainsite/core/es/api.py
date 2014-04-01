@@ -298,6 +298,7 @@ class ESVideo(ESObject):
             public=mapped.public,
             video=mapped.video,
             title=mapped.title,
+            label=mapped.label,
             channel=mapped.channel,
             channel_title=mapped.channel_title,
             category=mapped.category,
@@ -531,6 +532,10 @@ class ESVideoAttributeMap:
     @property
     def title(self):
         return self.video_instance.video_rel.title
+
+    @property
+    def label(self):
+        return self.video_instance.label
 
     @property
     def channel(self):

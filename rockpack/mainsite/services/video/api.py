@@ -141,6 +141,7 @@ def video_dict(instance):
     data = dict(
         id=instance.id,
         title=video.title,
+        label=instance.label,
         date_added=instance.date_added.isoformat(),
         video=dict(
             id=video.id,

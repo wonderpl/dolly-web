@@ -10,6 +10,7 @@ from rockpack.mainsite import app, cache
 from rockpack.mainsite.core.dbapi import db, defer_except
 from rockpack.mainsite.core.es import use_elasticsearch, api as es_api
 from rockpack.mainsite.core.es.exceptions import DocumentMissingException
+from rockpack.mainsite.helpers import lazy_gettext as _
 from rockpack.mainsite.helpers.db import add_base64_pk, add_video_pk, insert_new_only, ImageType, BoxType
 from rockpack.mainsite.helpers.urls import url_for
 from rockpack.mainsite.services.user.models import User
@@ -289,6 +290,14 @@ class VideoInstance(db.Model):
 
     def __repr__(self):
         return 'VideoInstance(id={v.id!r}, video={v.video!r})'.format(v=self)
+
+    @property
+    def label(self):
+        labels = self.tags and [t[6:] for t in self.tags.split(',') if t.startswith('label-')]
+        if labels:
+            return labels[0].replace('-', ' ').capitalize()
+        elif not self.original_channel_owner:
+            return _('Latest')
 
     @property
     def default_thumbnail(self):

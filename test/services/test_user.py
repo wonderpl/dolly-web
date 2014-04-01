@@ -480,6 +480,10 @@ class TestUserContent(base.RockPackTestCase):
                 v.id for v in VideoData.__dict__.values() if hasattr(v, 'id'))
             Subscription(user=user1, channel=channel1.id).save()
 
+            # Tag the first as recommended
+            c1instances[0].tags = 'label-recommended-for-you'
+            c1instances[1].original_channel_owner = UserData.test_user_a.id
+
             # Add some stars to the second video
             c1starred = c1instances[1]
             for user in user1, user2, user3:
@@ -552,8 +556,18 @@ class TestUserContent(base.RockPackTestCase):
             self.assertIn(u2new, itemids)
             self.assertIn(u3new, itemids)
 
-            # check subscription count is being generated
+            # Check labels
+            for item in data['items']:
+                if 'video' in item:
+                    if item['id'] == c1instances[0].id:
+                        label = 'Recommended for you'
+                    elif item['id'] == c1instances[1].id:
+                        label = None
+                    else:
+                        label = 'Latest'
+                    self.assertEquals(item['label'], label)
 
+        # check subscription count is being generated
         with self.app.test_client() as client:
             self.wait_for_es()
             r = client.get('/ws/{}/'.format(user1),

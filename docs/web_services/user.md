@@ -1435,6 +1435,7 @@ Cache-Control: private, max-age=60
     "id": "VIDEOINSTANCEID",
     "date_added": "2013-06-04T15:15:11.963565",
     "title": "Video title",
+    "label": "Recommended",
     "comments": {
      "total": 0
     },
