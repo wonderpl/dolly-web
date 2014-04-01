@@ -83,7 +83,7 @@ def update_channel_view_counts(time_from=None, time_to=None):
             )
 
         ua = ua.filter(
-            UserActivity.date_actioned > time_from
+            UserActivity.date_actioned.between(time_from, time_to)
         )
 
         if not ua.count():

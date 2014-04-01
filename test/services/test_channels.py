@@ -23,6 +23,7 @@ def search_video(videoid):
     v.add_id(videoid)
     return v.videos()[0]
 
+
 class ChannelViewCountPopulation(base.RockPackTestCase):
 
     @skip_unless_config('ELASTICSEARCH_URL')
@@ -78,7 +79,6 @@ class ChannelViewCountPopulation(base.RockPackTestCase):
 
                 self.assertEquals(3, vilm.star_count)
 
-
     def test_populate(self):
         """ Populate the view count on channel locale meta """
         with self.app.test_client() as client:
@@ -88,7 +88,7 @@ class ChannelViewCountPopulation(base.RockPackTestCase):
             user3_id = self.create_test_user().id
             user4_id = self.create_test_user().id
 
-            begin = datetime.now() - timedelta(hours=2)
+            begin = datetime.utcnow()
 
             # test duplicate title
             r = client.post(
@@ -109,7 +109,7 @@ class ChannelViewCountPopulation(base.RockPackTestCase):
             models.ChannelLocaleMeta(
                 channel=channel_id,
                 locale=this_locale,
-                date_added=datetime.now()
+                date_added=datetime.utcnow()
             ).save()
 
             video_instance = models.VideoInstance(
@@ -120,7 +120,7 @@ class ChannelViewCountPopulation(base.RockPackTestCase):
             UserActivity(
                 user=user2_id,
                 action='view',
-                date_actioned=datetime.now(),
+                date_actioned=datetime.utcnow(),
                 object_type='channel',
                 object_id=channel_id,
                 locale=this_locale
@@ -129,7 +129,7 @@ class ChannelViewCountPopulation(base.RockPackTestCase):
             UserActivity(
                 user=user3_id,
                 action='view',
-                date_actioned=datetime.now(),
+                date_actioned=datetime.utcnow(),
                 object_type='video',
                 object_id=video_instance.id,
                 locale=this_locale
@@ -147,7 +147,7 @@ class ChannelViewCountPopulation(base.RockPackTestCase):
             UserActivity(
                 user=user4_id,
                 action='view',
-                date_actioned=datetime.now(),
+                date_actioned=datetime.utcnow(),
                 object_type='channel',
                 object_id=channel_id,
                 locale=this_locale).save()
