@@ -27,6 +27,15 @@ def _filter_by_category(query, type, category_id):
     return query.filter(type.category.in_(cat_ids))
 
 
+def user_dict(user, own=False):
+    return dict(
+        id=user.id,
+        resource_url=user.get_resource_url(own),
+        display_name=user.display_name,
+        avatar_thumbnail_url=user.avatar.thumbnail_medium,
+    )
+
+
 def channel_dict(channel, position=None, with_owner=True, owner_url=False, video_count=None, add_tracking=None):
     ch_data = dict(
         id=channel.id,
@@ -46,12 +55,7 @@ def channel_dict(channel, position=None, with_owner=True, owner_url=False, video
     if channel.verified:
         ch_data['verified'] = True
     if with_owner:
-        ch_data['owner'] = dict(
-            id=channel.owner_rel.id,
-            resource_url=channel.owner_rel.get_resource_url(owner_url),
-            display_name=channel.owner_rel.display_name,
-            avatar_thumbnail_url=channel.owner_rel.avatar.thumbnail_medium,
-        )
+        ch_data['owner'] = user_dict(channel.owner_rel, own=owner_url)
     if owner_url:
         ch_data['public'] = channel.public
     if position is not None:
@@ -134,7 +138,7 @@ def get_es_channels(locale, paging, category, category_boosts=None,
 
 def video_dict(instance):
     video = instance.video_rel
-    return dict(
+    data = dict(
         id=instance.id,
         title=video.title,
         date_added=instance.date_added.isoformat(),
@@ -151,6 +155,10 @@ def video_dict(instance):
             link_title=video.link_title
         )
     )
+    original_channel_owner = instance.get_original_channel_owner()
+    if original_channel_owner:
+        data['original_channel_owner'] = user_dict(original_channel_owner)
+    return data
 
 
 def get_local_videos(loc, paging, with_channel=True, include_invisible=False, readonly_db=False, **filters):
@@ -290,15 +298,10 @@ class VideoWS(WebService):
         offset, limit = self.get_page()
         users = users.offset(offset).limit(limit)
         items = []
-
         for position, user in enumerate(users, offset):
-            items.append(dict(
-                position=position,
-                id=user.id,
-                resource_url=user.get_resource_url(),
-                display_name=user.display_name,
-                avatar_thumbnail_url=user.avatar.url,
-            ))
+            data = user_dict(user)
+            data['position'] = position
+
         return dict(users={'items': items}, total=total)
 
     @expose_ajax('/<video_id>/channels/')

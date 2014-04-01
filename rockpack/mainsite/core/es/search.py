@@ -488,6 +488,14 @@ class VideoSearch(EntitySearch, CategoryMixin, MediaSortMixin):
         IMAGE_CDN = app.config.get('IMAGE_CDN', '')
         BASE_URL = url_for('basews.discover')
 
+        def _format_user_data(user):
+            return dict(
+                id=user.resource_url.lstrip('/').split('/')[1],
+                display_name=user.display_name,
+                resource_url=urljoin(BASE_URL, user.resource_url),
+                avatar_thumbnail_url=urljoin(IMAGE_CDN, user.avatar) if user.avatar else ''
+            )
+
         for pos, v in enumerate(videos, self.paging[0]):
             published = v.video.date_published
             video = dict(
@@ -516,18 +524,11 @@ class VideoSearch(EntitySearch, CategoryMixin, MediaSortMixin):
             if v.link_url:
                 video['video'].update(link_url=v.link_url, link_title=v.link_title)
             if v.owner:
-                video['channel'].update(
-                    dict(
-                        owner=dict(
-                            id=v.owner.resource_url.lstrip('/').split('/')[1],
-                            display_name=v.owner.display_name,
-                            resource_url=urljoin(BASE_URL, v.owner.resource_url),
-                            avatar_thumbnail_url=urljoin(IMAGE_CDN, v.owner.avatar) if v.owner.avatar else ''
-                        )
-                    )
-                )
+                video['channel']['owner'] = _format_user_data(v.owner)
             if v.owner and v.channel:
                 video['channel']['resource_url'] = urljoin(BASE_URL, url_for('userws.channel_info', userid=video['channel']['owner']['id'], channelid=v.channel))
+            if v.original_channel_owner:
+                video['original_channel_owner'] = _format_user_data(v.original_channel_owner)
 
             if app.config.get('DOLLY'):
                 video.update({

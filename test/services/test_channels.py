@@ -881,3 +881,34 @@ class ChannelVideoTestCase(base.RockPackTestCase):
                 (VideoData.video1.id, None),
                 (VideoData.video2.id, VideoInstanceData.video_instance2.channel)
             ])
+
+    def test_original_channel_owner(self):
+        user_id = self.create_test_user().id
+        favourites = models.Channel.query.filter_by(
+            owner=user_id, favourite=True).value('id')
+        with self.app.test_request_context():
+            with self.app.test_client() as client:
+                r = client.post(
+                    '/ws/{}/channels/{}/videos/'.format(user_id, favourites),
+                    data=json.dumps([
+                        ('youtube', VideoData.video1.source_videoid),
+                        VideoInstanceData.video_instance2.id,
+                        VideoInstanceData.video_instance3.id,
+                    ]),
+                    content_type='application/json',
+                    headers=[get_auth_header(user_id)]
+                )
+                self.assertEquals(r.status_code, 204)
+
+        self.wait_for_es()
+
+        with self.app.test_request_context():
+            with self.app.test_client() as client:
+                r = client.get('/ws/{}/channels/{}/videos/'.format(user_id, favourites))
+                orig_map = [(v['video']['id'], v.get('original_channel_owner', {}).get('id'))
+                            for v in json.loads(r.data)['videos']['items']]
+                self.assertItemsEqual(orig_map, [
+                    (VideoData.video1.id, None),
+                    (VideoInstanceData.video_instance2.video, ChannelData.channel2.owner),
+                    (VideoInstanceData.video_instance3.video, VideoInstanceData.video_instance3.original_channel_owner),
+                ])

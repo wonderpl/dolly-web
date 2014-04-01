@@ -296,3 +296,22 @@ def sanitise_es():
         else:
             count += 1
     logging.info('Finished videos: %s removed from ES', count)
+
+
+@manager.command
+@commit_on_success
+def set_original_channel_owner():
+    instances = VideoInstance.query.\
+        join(Channel, (Channel.id == VideoInstance.channel) & (Channel.deleted == False))
+    dups = instances.with_entities(
+        VideoInstance.video, func.count()
+    ).group_by('1').having(func.count() > 1)
+    for video, count in dups:
+        candidates = instances.filter(VideoInstance.video == video)
+        (original_instance, original_channel_owner), = candidates.\
+            order_by(VideoInstance.date_added).\
+            limit(1).values(VideoInstance.id, Channel.owner)
+        candidates.filter(
+            VideoInstance.id != original_instance,
+            VideoInstance.original_channel_owner.is_(None)
+        ).update({VideoInstance.original_channel_owner: original_channel_owner})

@@ -112,6 +112,19 @@ class UserData(DataSet):
         refresh_token = ''
         locale = LocaleData.US.id
 
+    class test_user_b:
+        id = 'exNFWFzU9LnaIz1rSAgyCw'
+        username = 'test_user_2'
+        password_hash = 'sha1$WaxVi6jh$ed528a3a932fa1293b30dee6fcd2b518c78663e3'
+        email = 'test2@user.com'
+        first_name = 'test'
+        last_name = 'two'
+        date_of_birth = date(2000, 1, 1)
+        avatar = ''
+        is_active = True
+        refresh_token = ''
+        locale = LocaleData.US.id
+
 
 class ChannelData(DataSet):
     class channel1:
@@ -320,6 +333,7 @@ class VideoInstanceData(DataSet):
         video = VideoData.video3.id
         channel = ChannelData.channel2.id
         category = 2
+        original_channel_owner = UserData.test_user_b.id
 
     class video_instance4:
         id = 'viw4MLu432R5WfasdfQDUo7Q'

@@ -107,8 +107,11 @@ def get_or_create_video_records(instance_ids):
 
     # Check if any "real" ids are invalid
     if real_instance_ids:
-        instances = VideoInstance.query.filter(VideoInstance.id.in_(real_instance_ids))
-        existing_ids = dict((i, (v, c)) for i, v, c in instances.values('id', 'video', 'channel'))
+        instances = VideoInstance.query.filter(VideoInstance.id.in_(real_instance_ids)).\
+            join(Channel, Channel.id == VideoInstance.channel)
+        existing_ids = dict(
+            (i, (v, c, s or o)) for i, v, c, s, o in
+            instances.values(VideoInstance.id, 'video', 'channel', 'original_channel_owner', 'owner'))
         invalid = list(real_instance_ids - set(existing_ids.keys()))
         if invalid:
             abort(400, message=_('Invalid video instance ids'), data=invalid)
@@ -121,7 +124,7 @@ def get_or_create_video_records(instance_ids):
         for source, source_videoid in external_instance_ids:
             video_id = gen_videoid(None, source, source_videoid)
             video_id_map[video_id] = source, source_videoid
-            existing_ids[(source, source_videoid)] = (video_id, None)
+            existing_ids[(source, source_videoid)] = (video_id, None, None)
 
         # Check which video references from search instances already exist
         # and create records for any that don't
@@ -225,7 +228,7 @@ def es_update_activity(object_type, object_mapping):
 @commit_on_success
 def save_video_activity(userid, action, instance_id, locale):
     column, value, incr = _get_action_incrementer(action)
-    video_id, video_source = get_or_create_video_records([instance_id])[0]
+    video_id, video_source, original_channel_owner = get_or_create_video_records([instance_id])[0]
     activity = dict(user=userid, action=action,
                     object_type='video_instance', object_id=instance_id, locale=locale)
     if not UserActivity.query.filter_by(**activity).count():
@@ -255,6 +258,7 @@ def save_video_activity(userid, action, instance_id, locale):
                 instance = channel.add_videos([video_id])[0]
                 if getattr(instance, 'source_channel', -1) is None:
                     instance.source_channel = video_source
+                    instance.original_channel_owner = original_channel_owner
                 return instance
 
 
@@ -335,16 +339,22 @@ def save_content_report(userid, object_type, object_id, reason):
 @commit_on_success
 def add_videos_to_channel(channel, instance_list, locale, delete_existing=False):
     videomap = get_or_create_video_records(instance_list)
+    instance_ids = [_[0] for _ in videomap]
     existing = dict((v.video, v) for v in
                     VideoInstance.query.filter_by(channel=channel.id).options(lazyload('video_rel')))
 
-    videoidmap = {id_: category for (id_, category) in Video.query.filter(Video.id.in_([_[0] for _ in videomap])).values('id', 'category')}
+    videoidmap = {id_: category for (id_, category) in
+                  Video.query.filter(Video.id.in_(instance_ids)).values('id', 'category')}
     added = {}
 
-    for position, (video_id, video_source) in enumerate(videomap):
+    for position, (video_id, video_source, original_channel_owner) in enumerate(videomap):
         if video_id not in added:
             instance = existing.get(video_id) or \
-                VideoInstance(video=video_id, channel=channel.id, source_channel=video_source)
+                VideoInstance(
+                    video=video_id,
+                    channel=channel.id,
+                    source_channel=video_source,
+                    original_channel_owner=original_channel_owner)
             instance.position = position
             instance.category = videoidmap[video_id]
             instance.is_favourite = channel.favourite
@@ -353,11 +363,11 @@ def add_videos_to_channel(channel, instance_list, locale, delete_existing=False)
 
     deleted_video_ids = []
     if delete_existing:
-        deleted_video_ids = set(existing.keys()).difference([i for i, s in videomap])
+        deleted_video_ids = set(existing.keys()).difference(instance_ids)
         if deleted_video_ids:
             channel.remove_videos(deleted_video_ids)
 
-    channel.set_cover_fallback([v for v, s in videomap])
+    channel.set_cover_fallback(instance_ids)
 
     # Set to private if videos are cleared, or public if first videos added
     if delete_existing and not added:

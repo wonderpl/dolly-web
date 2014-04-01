@@ -56,7 +56,7 @@ class MigrationTestCase(unittest.TestCase):
         new_index = self._new_index()
 
         # assert the 3rd component starts with today
-        assert new_index.split('_')[2].startswith(datetime.datetime.now().strftime("%s")[:-4])
+        assert new_index.split('_')[2].startswith(datetime.datetime.utcnow().strftime("%s")[:-4])
 
         # assign an alias
         self.aliasing.assign(self.aliasing.alias, new_index)

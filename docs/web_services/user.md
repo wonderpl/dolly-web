@@ -1466,6 +1466,12 @@ Cache-Control: private, max-age=60
       "avatar_thumbnail_url": "http://path/to/user/avatar/img.jpg"
      }
     },
+    "original_channel_owner": {
+     "id": "USERID",
+     "resource_url": "http://path/to/user/resource/",
+     "display_name": "ORIGINAL CHANNEL OWNER",
+     "avatar_thumbnail_url": "http://path/to/user/avatar/img.jpg"
+    },
     "starring_users": [
      {
       "id": "USERID",

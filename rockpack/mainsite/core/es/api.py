@@ -309,6 +309,7 @@ class ESVideo(ESObject):
             child_instance_count=mapped.child_instance_count,
             most_influential=mapped.most_influential,
             owner=mapped.owner,
+            original_channel_owner=mapped.original_channel_owner,
             comments=mapped.comments(),
             link_url=mapped.link_url,
             link_title=mapped.link_title,
@@ -572,13 +573,22 @@ class ESVideoAttributeMap:
         Should be computed offline hence forth """
         return 0
 
+    def _user_data(self, user):
+        return dict(
+            avatar=urlparse(convert_image_path(user, 'avatar', 'AVATAR').thumbnail_medium).path,
+            display_name=user.display_name,
+            resource_url=urlparse(user.resource_url).path
+        )
+
     @property
     def owner(self):
-        owner = self.video_instance.video_channel.owner_rel
-        return dict(
-            avatar=urlparse(convert_image_path(owner, 'avatar', 'AVATAR').thumbnail_medium).path,
-            display_name=owner.display_name,
-            resource_url=urlparse(owner.resource_url).path)
+        return self._user_data(self.video_instance.video_channel.owner_rel)
+
+    @property
+    def original_channel_owner(self):
+        owner = self.video_instance.get_original_channel_owner()
+        if owner:
+            return self._user_data(owner)
 
     @property
     def most_influential(self):

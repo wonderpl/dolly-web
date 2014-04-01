@@ -58,6 +58,23 @@ if app.config.get('DOLLY', False):
         }
     }
 
+    owner_mapping = {
+        "properties": {
+            "avatar": {
+                "type": "string",
+                "index": "not_analyzed"
+            },
+            "display_name": {
+                "type": "string",
+                "index": "not_analyzed"
+            },
+            "resource_url": {
+                "type": "string",
+                "index": "not_analyzed"
+            }
+        }
+    }
+
     video_mapping = {
         "dynamic": "strict",
         "properties": {
@@ -129,22 +146,8 @@ if app.config.get('DOLLY', False):
             "child_instance_count": {
                 "type": "integer"
             },
-            "owner": {
-                "properties": {
-                    "avatar": {
-                        "type": "string",
-                        "index": "not_analyzed"
-                    },
-                    "display_name": {
-                        "type": "string",
-                        "index": "not_analyzed"
-                    },
-                    "resource_url": {
-                        "type": "string",
-                        "index": "not_analyzed"
-                    }
-                }
-            },
+            "owner": owner_mapping,
+            "original_channel_owner": owner_mapping,
             "most_influential": {
                 "type": "boolean",
                 "null_value": False

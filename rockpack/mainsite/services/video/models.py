@@ -275,6 +275,7 @@ class VideoInstance(db.Model):
     video = Column(ForeignKey('video.id', ondelete='CASCADE'), nullable=False)
     channel = Column(ForeignKey('channel.id'), nullable=False)
     source_channel = Column(ForeignKey('channel.id'), nullable=True)
+    original_channel_owner = Column(ForeignKey('user.id'), nullable=True)
     category = Column(ForeignKey('category.id'), nullable=True)
     tags = Column(String(1024), nullable=True)
     is_favourite = Column(Boolean(), nullable=False, server_default='false', default=False)
@@ -300,6 +301,10 @@ class VideoInstance(db.Model):
     def get_resource_url(self, own=False):
         return url_for('userws.channel_video_instance', userid='-', channelid=self.channel, videoid=self.id)
     resource_url = property(get_resource_url)
+
+    def get_original_channel_owner(self):
+        if self.original_channel_owner:
+            return User.query.filter_by(is_active=True, id=self.original_channel_owner).first()
 
     def add_meta(self, locale):
         return VideoInstanceLocaleMeta(video_instance=self.id, locale=locale).save()
