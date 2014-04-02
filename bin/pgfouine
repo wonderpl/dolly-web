@@ -1,0 +1,2 @@
+#!/bin/sh
+zcat "$1" | pgfouine.php -format html -logtype stderr - |& grep -v '^PHP Strict Standards:' >report.html
