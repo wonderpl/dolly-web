@@ -10,6 +10,9 @@ from rockpack.mainsite.core.es import search
 from .base import AdminView
 
 
+LAUNCHDATE = '2014-03-13' if app.config.get('DOLLY') else '2013-06-26'
+
+
 class StatsView(AdminView):
 
     def __init__(self, *args, **kwargs):
@@ -174,7 +177,7 @@ class AppStatsView(StatsView):
                       [dict(id=i, type=long) for i in 'Total', 'US', 'UK', 'Other'])
         table.extend(
             readonly_session.query(User).filter(
-                User.date_joined > '2013-06-26', User.refresh_token != None).
+                User.date_joined > LAUNCHDATE, User.refresh_token != None).
             group_by('1').order_by('1').
             values(
                 func.date(User.date_joined),
@@ -197,7 +200,7 @@ class ActivityStatsView(StatsView):
                       [dict(id=i, type=long) for i in
                        'Total', 'Unique Users', 'Views', 'Subscriptions', 'Plusses', 'Likes'])
         table.extend(
-            readonly_session.query(UserActivity).filter(UserActivity.date_actioned > '2013-06-26').
+            readonly_session.query(UserActivity).filter(UserActivity.date_actioned > LAUNCHDATE).
             group_by('1').order_by('1').
             values(
                 func.date(UserActivity.date_actioned),
@@ -227,7 +230,7 @@ class RetentionStatsView(StatsView):
         weeks_active = (func.date_part('week', activity_date) - cohort).label('weeks_active')
 
         q = readonly_session.query(User).filter(
-            User.date_joined > '2013-06-26', User.refresh_token != '')
+            User.date_joined > LAUNCHDATE, User.refresh_token != '')
         if request.args.get('gender') in ('m', 'f'):
             q = q.filter(User.gender == request.args['gender'])
         if request.args.get('locale') in app.config['ENABLED_LOCALES']:
