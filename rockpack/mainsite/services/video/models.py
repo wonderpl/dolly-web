@@ -170,12 +170,12 @@ class Video(db.Model):
     rockpack_curated = Column(Boolean, nullable=False, server_default='false', default=False)
     visible = Column(Boolean(), nullable=False, server_default='true', default=True)
     category = Column(ForeignKey('category.id'), nullable=True)
-
-    category_rel = relationship('Category', backref='video_rel')
-
+    description = Column(Text)
     link_url = Column(String(2048), nullable=True)
     link_title = Column(String(1024), nullable=True)
 
+
+    category_rel = relationship('Category', backref='video_rel')
     thumbnails = relationship('VideoThumbnail', backref='video_rel',
                               passive_deletes=True,
                               cascade="all, delete-orphan")

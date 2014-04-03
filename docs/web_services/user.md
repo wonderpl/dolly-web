@@ -1445,6 +1445,7 @@ Cache-Control: private, max-age=60
      "source_id": "9EVEmZ2c_es",
      "source_username": "TEDtalksDirector",
      "thumbnail_url": "http://i.ytimg.com/vi/9EVEmZ2c_es/mqdefault.jpg",
+     "description": "Some text.<br/>With <em>HTML</em> formatting.",
      "duration": 1408,
      "star_count": 0,
      "view_count": 0

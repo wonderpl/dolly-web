@@ -527,7 +527,9 @@ class ESVideoAttributeMap:
             source_id=self.video_instance.video_rel.source_videoid,
             source_username=self.video_instance.video_rel.source_username,
             date_published=self.video_instance.video_rel.date_published,
-            duration=self.video_instance.video_rel.duration)
+            duration=self.video_instance.video_rel.duration,
+            description=self.video_instance.video_rel.description,
+        )
 
     @property
     def title(self):

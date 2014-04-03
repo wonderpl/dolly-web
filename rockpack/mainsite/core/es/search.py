@@ -517,6 +517,7 @@ class VideoSearch(EntitySearch, CategoryMixin, MediaSortMixin):
                     source_username=v.video.source_username,
                     source_date_uploaded=published.isoformat() if hasattr(published, 'isoformat') else published,
                     duration=v.video.duration,
+                    description=v.video.description,
                     thumbnail_url=urljoin(app.config.get('IMAGE_CDN', ''), v.video.thumbnail_url) if v.video.thumbnail_url else '',
                 ),
                 position=pos,

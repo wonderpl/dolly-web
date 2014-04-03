@@ -123,7 +123,11 @@ if app.config.get('DOLLY', False):
                     "source_id": {"type": "string"},
                     "source_username": {"type": "string"},
                     "date_published": {"type": "date"},
-                    "duration": {"type": "integer"}
+                    "duration": {"type": "integer"},
+                    "description": {
+                        "type": "string",
+                        "index": "not_analyzed"
+                    }
                 }
             },
             "recent_user_likes": {
