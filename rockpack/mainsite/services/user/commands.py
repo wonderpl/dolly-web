@@ -708,10 +708,11 @@ def update_apns_tokens():
 def update_user_notifications(date_from, date_to):
     """Update user notifications based on recent activity."""
     user_notifications = {}
-    create_new_activity_notifications(date_from, date_to, user_notifications)
+    if not app.config('DOLLY'):
+        create_new_activity_notifications(date_from, date_to, user_notifications)
+        create_new_repack_notifications(date_from, date_to, user_notifications)
+        create_unavailable_notifications(date_from, date_to, user_notifications)
     create_new_registration_notifications(date_from, date_to, user_notifications)
-    create_new_repack_notifications(date_from, date_to, user_notifications)
-    create_unavailable_notifications(date_from, date_to, user_notifications)
     create_commmenter_notification(date_from, date_to, user_notifications)
     remove_old_notifications()
     # apns needs the notification ids, so we need to
