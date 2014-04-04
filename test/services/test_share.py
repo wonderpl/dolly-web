@@ -3,10 +3,11 @@ from urlparse import urlparse
 from flask import json
 from rockpack.mainsite import app
 from rockpack.mainsite.services.video.models import Channel
+from rockpack.mainsite.services.user.models import UserNotification
 from test import base
 from ..test_decorators import skip_if_dolly, skip_unless_config, patch_send_email
 from ..test_helpers import get_auth_header
-from ..fixtures import ChannelData, VideoInstanceData
+from ..fixtures import ChannelData, VideoInstanceData, UserData
 
 
 class TestShare(base.RockPackTestCase):
@@ -89,54 +90,61 @@ class TestShare(base.RockPackTestCase):
 
     @patch_send_email()
     def test_channel_share_email(self, send_email):
-        with self.app.test_request_context():
-            with self.app.test_client() as client:
-                userid = self.create_test_user().id
-                recipient = 'noreply+unittest@rockpack.com'
-                r = client.post(
-                    '/ws/share/email/',
-                    data=json.dumps(dict(
-                        object_type='channel',
-                        object_id=ChannelData.channel1.id,
-                        email=recipient,
-                        external_system='email',
-                        external_uid='123',
-                    )),
-                    content_type='application/json',
-                    headers=[get_auth_header(userid)])
-                self.assertEquals(r.status_code, 204, r.data)
-                self.assertEquals(send_email.call_count, 1)
-                self.assertEquals(send_email.call_args[0][0], recipient)
-                if self.app.config.get('DOLLY'):
-                    self.assertIn('subscribed as %s.' % recipient, send_email.call_args[0][1])
+        with self.app.test_client() as client:
+            userid = self.create_test_user().id
+            recipient = UserData.test_user_a.email
+            r = client.post(
+                '/ws/share/email/',
+                data=json.dumps(dict(
+                    object_type='channel',
+                    object_id=ChannelData.channel1.id,
+                    email=recipient,
+                    external_system='email',
+                    external_uid='123',
+                )),
+                content_type='application/json',
+                headers=[get_auth_header(userid)])
+            self.assertEquals(r.status_code, 204, r.data)
 
-                r = client.get(
-                    '/ws/%s/friends/' % userid,
-                    query_string='share_filter=true',
-                    headers=[get_auth_header(userid)])
-                self.assertEquals(r.status_code, 200, r.data)
-                friends = json.loads(r.data)['users']['items']
-                self.assertIn(('email', recipient),
-                              [(f['external_system'], f['email']) for f in friends])
+        self.assertEquals(send_email.call_count, 1)
+        self.assertEquals(send_email.call_args[0][0], recipient)
+        if self.app.config.get('DOLLY'):
+            self.assertIn('subscribed as %s.' % recipient, send_email.call_args[0][1])
+
+        notifications = UserNotification.query.filter_by(
+            user=UserData.test_user_a.id, message_type='share')
+        message = json.loads(notifications.value('message'))
+        self.assertEquals(message['user']['id'], userid)
+        self.assertEquals(message['channel']['id'], ChannelData.channel1.id)
+
+        with self.app.test_client() as client:
+            r = client.get(
+                '/ws/%s/friends/' % userid,
+                query_string='share_filter=true',
+                headers=[get_auth_header(userid)])
+            self.assertEquals(r.status_code, 200, r.data)
+            friends = json.loads(r.data)['users']['items']
+            self.assertIn(('email', recipient),
+                          [(f['external_system'], f['email']) for f in friends])
 
     @patch_send_email()
     def test_video_share_email(self, send_email):
-        with self.app.test_request_context():
-            with self.app.test_client() as client:
-                userid = self.create_test_user(avatar='avatar').id
-                recipient = 'noreply+unittest@rockpack.com'
-                r = client.post(
-                    '/ws/share/email/',
-                    data=json.dumps(dict(
-                        object_type='video_instance',
-                        object_id=VideoInstanceData.video_instance1.id,
-                        email=recipient,
-                    )),
-                    content_type='application/json',
-                    headers=[get_auth_header(userid)])
-                self.assertEquals(r.status_code, 204, r.data)
-                self.assertEquals(send_email.call_count, 1)
-                self.assertEquals(send_email.call_args[0][0], recipient)
+        with self.app.test_client() as client:
+            userid = self.create_test_user(avatar='avatar').id
+            recipient = 'noreply+unittest@rockpack.com'
+            r = client.post(
+                '/ws/share/email/',
+                data=json.dumps(dict(
+                    object_type='video_instance',
+                    object_id=VideoInstanceData.video_instance1.id,
+                    email=recipient,
+                )),
+                content_type='application/json',
+                headers=[get_auth_header(userid)])
+            self.assertEquals(r.status_code, 204, r.data)
+
+        self.assertEquals(send_email.call_count, 1)
+        self.assertEquals(send_email.call_args[0][0], recipient)
 
     @skip_unless_config('TEST_SHARE_EMAIL')
     def test_share_email_wo_patch(self):

@@ -103,7 +103,7 @@ class UserData(DataSet):
         id = 'xtpqTpGMTti2OAyohMRPLQ'
         username = 'test_user_1'
         password_hash = 'sha1$WaxVi6jh$ed528a3a932fa1293b30dee6fcd2b518c78663e3'
-        email = 'test@user.com'
+        email = 'noreply+test1@rockpack.com'
         first_name = 'test'
         last_name = 'user'
         date_of_birth = date(2000, 1, 1)
@@ -116,7 +116,7 @@ class UserData(DataSet):
         id = 'exNFWFzU9LnaIz1rSAgyCw'
         username = 'test_user_2'
         password_hash = 'sha1$WaxVi6jh$ed528a3a932fa1293b30dee6fcd2b518c78663e3'
-        email = 'test2@user.com'
+        email = 'noreply+test2@rockpack.com'
         first_name = 'test'
         last_name = 'two'
         date_of_birth = date(2000, 1, 1)

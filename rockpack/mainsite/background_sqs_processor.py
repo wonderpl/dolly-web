@@ -29,6 +29,7 @@ def _run_later(exception):
     if not exception:
         for call in getattr(g, '_background_on_sqs', []):
             _run_call(call)
+    g._background_on_sqs = []
 
 
 class BackgroundSqsProcessor(SqsProcessor):

@@ -24,7 +24,7 @@ class RockPackTestCase(unittest.TestCase):
             first_name='Alexia',
             last_name='Barrichello',
             date_of_birth=date(2000, 1, 1),
-            email='test_' + postfix + '@test.rockpack.com',
+            email='noreply+test_' + postfix + '@rockpack.com',
             avatar='',
             refresh_token='',
             is_active=True,

@@ -2,18 +2,19 @@ from datetime import datetime
 import urlparse
 import wtforms as wtf
 from sqlalchemy import func
-from flask import abort, g
+from flask import abort, g, json
 from flask.ext.wtf import Form
 from rockpack.mainsite import app
 from rockpack.mainsite.core import email
 from rockpack.mainsite.core.webservice import WebService, expose_ajax, ajax_create_response
 from rockpack.mainsite.core.oauth.decorators import check_authorization
-from rockpack.mainsite.services.user.commands import complex_push_notification, get_apns_token
+from rockpack.mainsite.background_sqs_processor import background_on_sqs
+from rockpack.mainsite.services.user import commands
 from rockpack.mainsite.services.video.models import Channel, Video, VideoInstance
 from rockpack.mainsite.services.user.api import save_video_activity
-from rockpack.mainsite.services.user.models import EXTERNAL_SYSTEM_NAMES, User
+from rockpack.mainsite.services.user.models import EXTERNAL_SYSTEM_NAMES, User, UserNotification
 from rockpack.mainsite.services.search.api import VIDEO_INSTANCE_PREFIX
-from rockpack.mainsite.services.oauth.models import ExternalFriend, ExternalToken
+from rockpack.mainsite.services.oauth.models import ExternalFriend
 from rockpack.mainsite.services.oauth.api import email_validator
 from .models import ShareLink
 
@@ -29,8 +30,13 @@ OBJECT_NAME_MAP = dict(
 )
 
 
-def send_share_email(recipient, user, object_type, object, link):
-    object_type_name = OBJECT_NAME_MAP[object_type]
+@background_on_sqs
+def share_content(userid, object_type, object_id, recipient_email):
+    link = ShareLink.create(userid, object_type, object_id)
+    object = SHARE_OBJECT_TYPE_MAP[object_type].query.get(object_id)
+    user = User.query.get(userid)
+
+    # Send email
     template = email.env.get_template('share.html')
     if app.config.get('DOLLY') and object_type == 'channel':
         top_videos = VideoInstance.query.filter_by(channel=object.id).\
@@ -39,30 +45,38 @@ def send_share_email(recipient, user, object_type, object, link):
     else:
         top_videos = []
     body = template.render(
-        recipient=recipient,
+        recipient=recipient_email,
         user=user,
         link=link,
         object_type=object_type,
-        object_type_name=object_type_name,
+        object_type_name=OBJECT_NAME_MAP[object_type],
         object=object,
         top_videos=top_videos,
     )
-    email.send_email(recipient, body)
+    email.send_email(recipient_email, body)
 
-    recipient_user = User.query.join(
-        ExternalToken,
-        ExternalToken.user == User.id
-    ).filter(
-        func.lower(User.email) == recipient.lower()
-    ).first()
-
+    recipient_user = User.query.filter(func.lower(User.email) == recipient_email.lower()).first()
     if recipient_user:
-        token = get_apns_token(recipient_user.id)
+        # Create user notification
+        message_body = dict(user=commands._notification_user_info(user))
+        if object_type == 'channel':
+            message_body['channel'] = commands._notification_channel_info(object, own=False)
+        else:
+            message_body['video'] = commands._notification_video_info(object, object.video_channel)
+        UserNotification(
+            user=recipient_user.id,
+            date_created=link.date_created,
+            message_type='share',
+            message=json.dumps(message_body, separators=(',', ':')),
+        ).save()
+
+        # Send push notification
+        token = commands.get_apns_token(recipient_user.id)
         if token:
-            push_message = '%@ shared a ' + object_type_name + ' with you'
+            push_message = '%@ shared a ' + OBJECT_NAME_MAP[object_type] + ' with you'
             push_message_args = [user.display_name]
             deeplink_url = urlparse.urlparse(object.resource_url).path.lstrip('/ws/')
-            complex_push_notification(token, push_message, push_message_args, url=deeplink_url)
+            commands.complex_push_notification(token, push_message, push_message_args, url=deeplink_url)
 
 
 class ShareForm(Form):
@@ -140,5 +154,4 @@ class ShareWS(WebService):
             updated = ExternalFriend.query.filter_by(**friendkey).update(friendval)
             if not updated and form.external_system.data == 'email':
                 ExternalFriend(**dict(friendkey, **friendval)).save()
-        link = ShareLink.create(g.authorized.userid, form.object_type.data, form.object_id.data)
-        send_share_email(form.email.data, g.authorized.user, form.object_type.data, form.object, link)
+        share_content(g.authorized.userid, form.object_type.data, form.object_id.data, form.email.data)

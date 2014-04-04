@@ -990,6 +990,7 @@ Message Type  | Content Record | Description
 `joined`      |                | Message contains user record only
 `repack`      | `video`        | Message contains data for the video which was created from the users
 `unavailable` | `video`        | Message contains data for the video which is no longer available
+`share`       | `video` or `channel` | Message contains data for the video or channel which was shared
 
 ```http
 HTTP/1.1 200 OK
