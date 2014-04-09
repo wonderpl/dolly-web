@@ -204,15 +204,6 @@ class EntitySearch(object):
         sort_list.append({sort: order})
         self._update_query_params({'sort': sort_list})
 
-    def add_sort_script(self, script, type, order="desc"):
-        """ Overrides any sorting in place with a script """
-
-        sort_dict = {"_script": script,
-                     "type": type,
-                     "order": order}
-
-        self._update_query_params({'sort': sort_dict})
-
     def date_sort(self, order):
         if order:
             if (order != 'desc') and (order != 'asc'):
