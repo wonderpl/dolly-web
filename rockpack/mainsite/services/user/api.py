@@ -1557,6 +1557,27 @@ class UserWS(WebService):
             items, total = [], 0
         return dict(videos=dict(items=items, total=total))
 
+    @expose_ajax('/<userid>/subscriptions/users/', cache_age=600, secure=False)
+    def subscritpion_user(self, userid):
+        """ For the channels subscribed to by a user,
+            return the users who own those channels"""
+        subscribed = Subscription.query.filter(Subscription.user == userid).join(
+            Channel,
+            (Channel.id == Subscription.channel) &
+            (Channel.deleted == False) &
+            (Channel.visible == True) &
+            (Channel.public == True)
+        ).join(
+            User, (User.id == Channel.owner) & (User.is_active == True)
+        ).with_entities(User)
+
+        users = []
+        for s in subscribed:
+            u = _base_user_info(s)
+            u['resource_url'] = s.get_resource_url()
+            users.append(u)
+        return dict(users=dict(items=users, total=len(users)))
+
     @expose_ajax('/<userid>/content_feed/')
     @check_authorization(self_auth=True)
     def content_feed(self, userid):
