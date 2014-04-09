@@ -265,17 +265,21 @@ class VideoWS(WebService):
         offset, limit = self.get_page()
         vs.set_paging(offset, limit)
         vs.filter_category(category)
+
         if app.config.get('DOLLY'):
-            vs.add_sort('date_tagged', 'desc')
-        vs.star_order_sort(request.args.get('star_order'))
-        vs.date_sort(date_order)
+            # Filter by tagged/added date
+            vs.add_filter(filters.date_tagged_sort())
+            vs.add_sort('_score', order='desc')
+
+            # exclude favs
+            f = pyes.TermFilter(field='is_favourite', value=False)
+            vs._exclusion_filters.append(f)
+        else:
+            vs.star_order_sort(request.args.get('star_order'))
+            vs.date_sort(date_order)
 
         if location:
             vs.check_country_allowed(location.upper())
-
-        if app.config.get('DOLLY'):
-            f = pyes.TermFilter(field='is_favourite', value=False)
-            vs._exclusion_filters.append(f)
 
         videos = vs.videos(with_channels=True)
         total = vs.total

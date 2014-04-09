@@ -15,6 +15,11 @@ def locale_filter(entity):
     return pyes.CustomFiltersScoreQuery.Filter(pyes.MatchAllFilter(), script=script)
 
 
+def date_tagged_sort():
+    script = "doc['date_tagged'].empty ? doc['date_added'].date.getMillis() : max(doc['date_tagged'].date.getMillis(), doc['date_added'].date.getMillis())"
+    return pyes.CustomFiltersScoreQuery.Filter(pyes.MatchAllFilter(), script=script)
+
+
 def filter_by_date_added():
     script = "(time() > doc['date_added'].date.getMillis()) ? 1 : 0"
     return pyes.ScriptFilter(script)

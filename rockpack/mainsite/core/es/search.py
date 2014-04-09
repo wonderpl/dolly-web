@@ -200,11 +200,18 @@ class EntitySearch(object):
         self._add_term_occurs(filter_, occurs)
 
     def add_sort(self, sort, order='desc'):
-        sort = ':'.join([sort, order])
-        sort_string = self._query_params.get('sort', sort)
-        if sort_string != sort:
-            sort_string = ','.join([sort_string, sort])
-        self._update_query_params({'sort': sort_string})
+        sort_list = self._query_params.get('sort', [])
+        sort_list.append({sort: order})
+        self._update_query_params({'sort': sort_list})
+
+    def add_sort_script(self, script, type, order="desc"):
+        """ Overrides any sorting in place with a script """
+
+        sort_dict = {"_script": script,
+                     "type": type,
+                     "order": order}
+
+        self._update_query_params({'sort': sort_dict})
 
     def date_sort(self, order):
         if order:
