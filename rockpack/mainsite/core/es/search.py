@@ -200,9 +200,11 @@ class EntitySearch(object):
         self._add_term_occurs(filter_, occurs)
 
     def add_sort(self, sort, order='desc'):
-        sort_list = self._query_params.get('sort', [])
-        sort_list.append({sort: order})
-        self._update_query_params({'sort': sort_list})
+        sort = ':'.join([sort, order])
+        sort_string = self._query_params.get('sort', sort)
+        if sort_string != sort:
+            sort_string = ','.join([sort_string, sort])
+        self._update_query_params({'sort': sort_string})
 
     def date_sort(self, order):
         if order:
