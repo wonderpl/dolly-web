@@ -369,11 +369,12 @@ def add_videos_to_channel(channel, instance_list, locale, delete_existing=False)
 
     channel.set_cover_fallback(instance_ids)
 
-    # Set to private if videos are cleared, or public if first videos added
-    if delete_existing and not added:
-        channel.public = False
-    elif not existing and Channel.should_be_public(channel, True, added):
-        channel.public = True
+    if app.config.get('DOLLY'):
+        # Set to private if videos are cleared, or public if first videos added
+        if delete_existing and not added:
+            channel.public = False
+        elif not existing and Channel.should_be_public(channel, True, added):
+            channel.public = True
 
     return added.values()
 
