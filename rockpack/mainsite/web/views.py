@@ -176,7 +176,7 @@ def channel(slug, channelid):
     return web_channel_data(channelid, load_video=videoid)
 
 
-@expose_web('/embed/<contentid>/', 'web/embed.html', cache_age=3600)
+@expose_web('/embed/<contentid>/', 'web/embed.html', cache_age=3600, secure='both')
 def embed(contentid):
     if app.config.get('DOLLY'):
         if contentid.startswith('vi'):
