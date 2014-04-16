@@ -35,6 +35,10 @@ def setup_web(app):
     for name, bundle in asset_loader.load_bundles().items():
         env.register(name, bundle)
 
+    # Use own url_for to force absolute urls with correct domains
+    from rockpack.mainsite.helpers.urls import url_for
+    app.jinja_env.globals.update(url_for=url_for)
+
     # Patch werkzeug to ensure that strict_slashes redirect uses main server
     # name and not internal load-balancer name
     if 'DEFAULT_SUBDOMAIN' in app.config and not hasattr(MapAdapter, '_get_host'):
