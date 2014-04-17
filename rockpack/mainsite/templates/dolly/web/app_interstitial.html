@@ -15,7 +15,7 @@
       var redirectLink = '{{ redirect_url }}';
       if (isiOS) {
         document.getElementById('loader').src = '{{ protocol_url }}';
-        redirectLink = '{{ config.ITUNES_APP_LINK }}';
+        redirectLink = '{{ config.ITUNES_APP_LINK }}&amp;ct=inter';
       }
       window.setTimeout(function () { location.replace(redirectLink); }, 1);
     </script>
