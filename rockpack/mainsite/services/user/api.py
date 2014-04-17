@@ -521,6 +521,32 @@ def _create_user_subscriptions(userid, channels, locale=None):
     return subscriptions
 
 
+def user_subscriptions_users(userid, locale, paging):
+    sub_users = _user_subscriptions_query(userid).join(
+        Channel,
+        (Channel.id == Subscription.channel) &
+        (Channel.deleted == False) &
+        (Channel.visible == True) &
+        (Channel.public == True)
+    ).join(
+        User, (User.id == Channel.owner) & (User.is_active == True)
+    ).with_entities(User).distinct()
+
+    total = sub_users.count()
+    offset, limit = paging
+    sub_users = sub_users.order_by(func.coalesce(User.first_name, User.username)).\
+        offset(offset).limit(limit)
+
+    items = []
+    for position, user in enumerate(sub_users, offset):
+        items.append(dict(
+            position=position,
+            resource_url=user.get_resource_url(),
+            **_base_user_info(user)
+        ))
+    return dict(items=items, total=total)
+
+
 def user_channels(userid, locale, paging, own=True):
     add_tracking = partial(_add_tracking, prefix='ownprofile' if own else 'profile')
 
@@ -1559,25 +1585,11 @@ class UserWS(WebService):
         return dict(videos=dict(items=items, total=total))
 
     @expose_ajax('/<userid>/subscriptions/users/', cache_age=600, secure=False)
-    def subscritpion_user(self, userid):
+    @check_authorization(abort_on_fail=False)
+    def get_subscriptions_users(self, userid):
         """ For the channels subscribed to by a user,
             return the users who own those channels"""
-        subscribed = Subscription.query.filter(Subscription.user == userid).join(
-            Channel,
-            (Channel.id == Subscription.channel) &
-            (Channel.deleted == False) &
-            (Channel.visible == True) &
-            (Channel.public == True)
-        ).join(
-            User, (User.id == Channel.owner) & (User.is_active == True)
-        ).with_entities(User)
-
-        users = []
-        for s in subscribed:
-            u = _base_user_info(s)
-            u['resource_url'] = s.get_resource_url()
-            users.append(u)
-        return dict(users=dict(items=users, total=len(users)))
+        return dict(users=user_subscriptions_users(userid, self.get_locale(), self.get_page()))
 
     @expose_ajax('/<userid>/content_feed/')
     @check_authorization(self_auth=True)
