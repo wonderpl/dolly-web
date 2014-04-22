@@ -222,6 +222,7 @@ class DBImport(object):
 
     def import_videos(self, prefix=None):
         from rockpack.mainsite.services.video.models import Channel, Video, VideoInstanceLocaleMeta, VideoInstance
+        from rockpack.mainsite.services.user.models import User
 
         with app.test_request_context():
             query = VideoInstance.query.join(
@@ -230,12 +231,18 @@ class DBImport(object):
             ).join(Video).outerjoin(
                 VideoInstanceLocaleMeta,
                 VideoInstance.id == VideoInstanceLocaleMeta.video_instance
+            ).outerjoin(
+                User,
+                (User.id == VideoInstance.original_channel_owner) &
+                (User.is_active == True)
             ).options(
                 joinedload(VideoInstance.metas)
             ).options(
                 joinedload(VideoInstance.video_rel)
             ).options(
                 joinedload(VideoInstance.video_channel)
+            ).options(
+                joinedload(VideoInstance.original_channel_owner_rel)
             ).filter(
                 Video.visible == True,
                 Channel.public == True,
@@ -273,6 +280,8 @@ class DBImport(object):
                     tags=mapped.tags,
                     is_favourite=mapped.is_favourite,
                     most_influential=mapped.most_influential,
+                    original_channel_owner=mapped.original_channel_owner,
+                    label=mapped.label,
                 )
                 ev.manager.indexer.insert(v.id, rep)
 

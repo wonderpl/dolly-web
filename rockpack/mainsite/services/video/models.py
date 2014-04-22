@@ -174,7 +174,6 @@ class Video(db.Model):
     link_url = Column(String(2048), nullable=True)
     link_title = Column(String(1024), nullable=True)
 
-
     category_rel = relationship('Category', backref='video_rel')
     thumbnails = relationship('VideoThumbnail', backref='video_rel',
                               passive_deletes=True,
@@ -284,6 +283,7 @@ class VideoInstance(db.Model):
     metas = relationship('VideoInstanceLocaleMeta', backref='video_instance_rel',
                          cascade='all,delete', passive_deletes=True)
     category_rel = relationship('Category', backref='video_instance_rel')
+    original_channel_owner_rel = relationship('User', backref='video_instance_rel')
 
     def __unicode__(self):
         return self.id or u'new'
@@ -309,11 +309,12 @@ class VideoInstance(db.Model):
 
     def get_resource_url(self, own=False):
         return url_for('userws.channel_video_instance', userid='-', channelid=self.channel, videoid=self.id)
+
     resource_url = property(get_resource_url)
 
     def get_original_channel_owner(self):
-        if self.original_channel_owner:
-            return User.query.filter_by(is_active=True, id=self.original_channel_owner).first()
+        if self.original_channel_owner and self.original_channel_owner_rel.is_active:
+            return self.original_channel_owner_rel
 
     def add_meta(self, locale):
         return VideoInstanceLocaleMeta(video_instance=self.id, locale=locale).save()
