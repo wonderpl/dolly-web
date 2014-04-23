@@ -171,6 +171,7 @@
                 _.controlshovered = true;
             });
             _.listen(_.elements.loader, 'mousemove', function(){
+                _.interaction();
                 _.controlshovered = false;
             });
         }
@@ -240,7 +241,7 @@
                     // 5 (video cued).
                     _.interaction();
                     _.addClass( _.elements.loader, 'youtube-show' );
-                    
+
                     if (state.data === 1 || state.data === 3 ) {
                         _.play();
                         _.removeClass( _.elements.ytplaybutton, 'show' );
