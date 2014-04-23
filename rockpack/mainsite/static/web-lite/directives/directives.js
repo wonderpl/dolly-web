@@ -15,7 +15,6 @@
 				$rootScope.playerElem = elem;
 				scope.YTReady = false; 
 
-
 				scope.getYTReady = function () {
 					var q = $q.defer();					
 
@@ -32,7 +31,6 @@
 					return q.promise;
 				};
 
-
 				var newYTVideo = function() {
 					var template, tmpl, div;
 					elem.append('<div id="wonder-wrapper"><div id="youtube-player"></div></div>');
@@ -44,7 +42,7 @@
 
 					$timeout(function(){
 						scope.player = new WonderYTModule('youtube-player', scope.vid.video.source_id, {
-							autoplay: 0,
+							autoplay: (!window.isMobileDevice() && (window.navigator.userAgent.toLowerCase().indexOf('ipad') === -1)) ? 1 : 0,
 							showinfo: 0,
 							modestbranding: true,
 							wmode: "opaque",
@@ -79,7 +77,6 @@
 						});
 					}
 				});
-
 
 				var newVideo = function () {
 					switch ( scope.vid.video.source ) {
@@ -117,17 +114,6 @@
 			}
 		}
 	}]);
-
-
-	// app.directive('channelDirective', ['$rootScope,' '$timeout', function($rootScope, $timeout){
-	// 	return {
-	// 		priority: 100,
-	// 		restrict: 'C',
-	// 		link: function( scope, elem, attrs ) {
-
-	// 		}
-	// 	}
-	// }]);
 
 
 })(window,document,window.angular,'WebLite','directives');

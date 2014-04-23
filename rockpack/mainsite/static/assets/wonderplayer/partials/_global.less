@@ -64,6 +64,27 @@ body, html {
 	}
 }
 
+.yt-play-button {
+	width: 100px;
+	height: 71px;
+	display: none;
+	position: absolute;
+	left: 0;
+	top: 0;
+	right: 0;
+	bottom: 0;
+	margin: auto;
+	pointer-events: none;
+
+	&.show {
+		display: block;
+	}
+}
+
+.controls-disabled {
+	pointer-events: none;
+}
+
 #wonder-wrapper {
 	display: block;
 	width: 100%;
@@ -256,6 +277,14 @@ body, html {
 		user-select: none;     
 		-webkit-tap-highlight-color: rgba(0,0,0,0);
 		cursor: pointer;
+
+		&.youtube {
+			display: none;
+		}
+
+		&.youtube-show {
+			display: block;
+		}
 
 		&.no-cursor {
 			cursor: none !important;
