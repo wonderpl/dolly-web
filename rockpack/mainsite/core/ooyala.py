@@ -90,7 +90,7 @@ def create_asset(s3path, metadata):
     # check if asset already exists
     name_exists = "name='%s'" % name.replace("'", "\\'")
     assets = _ooyala_feed('assets', params=dict(where=name_exists, include='metadata'))
-    if assets['items']:
+    if assets['items'] and assets['items'][0]['name'] == name:
         app.logger.warning('Asset already exists for "%s"', name)
         return
 
