@@ -1,0 +1,401 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+<head>
+<!-- If you delete this meta tag, the ground will open and swallow you. -->
+<meta name="viewport" content="width=device-width" />
+
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<title>Wonderful Hints &amp; Tips</title>
+	
+<link rel="stylesheet" type="text/css" href="stylesheets/email.css" >
+
+<style type="text/css">
+	/* ------------------------------------- 
+			GLOBAL 
+	------------------------------------- */
+	* { 
+		margin:0;
+		padding:0;
+	}
+	* { font-family: "Helvetica Neue", "Helvetica", Helvetica, Arial, sans-serif; }
+
+	img { 
+		max-width: 100%; 
+	}
+	.collapse {
+		margin:0;
+		padding:0;
+	}
+	body {
+		-webkit-font-smoothing:antialiased; 
+		-webkit-text-size-adjust:none; 
+		width: 100%!important; 
+		height: 100%;
+	}
+
+
+	/* ------------------------------------- 
+			ELEMENTS 
+	------------------------------------- */
+	a { color: #595d63;}
+
+	.btn {
+		text-decoration:none;
+		color: #FFF;
+		background-color: #bcbad4;
+		padding:10px 16px;
+		font-size: 20px;
+		font-weight:bold;
+		margin-right:10px;
+		text-align:center;
+		cursor:pointer;
+		display: inline-block;
+	}
+
+	p.callout {
+		padding:15px;
+		background-color:#ECF8FF;
+		margin-bottom: 15px;
+	}
+	.callout a {
+		font-weight:bold;
+		color: #2BA6CB;
+	}
+
+	table.social {
+	/* 	padding:15px; */
+		background-color: #ebebeb;
+		
+	}
+	.social .soc-btn {
+		padding: 3px 7px;
+		font-size:12px;
+		margin-bottom:10px;
+		text-decoration:none;
+		color: #FFF;font-weight:bold;
+		display:block;
+		text-align:center;
+	}
+	a.fb { background-color: #3B5998!important; }
+	a.tw { background-color: #1daced!important; }
+	a.gp { background-color: #DB4A39!important; }
+	a.ms { background-color: #000!important; }
+	a.ig { background-color: #4e80a1!important; }
+	a.li { background-color: #006996!important; }
+
+	.sidebar .soc-btn { 
+		display:block;
+		width:100%;
+	}
+
+	/* ------------------------------------- 
+			HEADER 
+	------------------------------------- */
+	table.head-wrap { width: 100%; }
+
+	.header.container table td.logo { padding: 15px; }
+	.header.container table td.label { padding: 15px; padding-left:0px;}
+
+
+	/* ------------------------------------- 
+			BODY 
+	------------------------------------- */
+	table.body-wrap { width: 100%;}
+
+
+	/* ------------------------------------- 
+			FOOTER 
+	------------------------------------- */
+	table.footer-wrap { width: 100%;	clear:both!important;
+	}
+	.footer-wrap .container td.content  p { border-top: 1px solid rgb(215,215,215); padding-top:15px;}
+	.footer-wrap .container td.content p {
+		font-size:10px;
+		font-weight: bold;
+		
+	}
+
+
+	/* ------------------------------------- 
+			TYPOGRAPHY 
+	------------------------------------- */
+	h1,h2,h3,h4,h5,h6 {
+	font-family: "HelveticaNeue-Light", "Helvetica Neue Light", "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif; line-height: 1.1; margin-bottom:15px; color:#000; padding: 0 15px;
+	}
+	h1 small, h2 small, h3 small, h4 small, h5 small, h6 small { font-size: 60%; color: #6f6f6f; line-height: 0; text-transform: none; padding: 0 15px;}
+
+	h1 { font-weight:200; font-size: 44px;}
+	h2 { font-weight:200; font-size: 37px;}
+	h3 { font-weight:500; font-size: 27px; font-weight: bold; text-align: center; }
+	h3.light { font-weight: normal; color: #676c74; }
+	h4 { font-weight:500; font-size: 23px; line-height: 32px; color: #777782; text-align: center; }
+	h5 { font-weight:900; font-size: 17px;}
+	h6 { font-weight:900; font-size: 14px; text-transform: uppercase; color:#444;}
+
+	.padding-top {
+		padding-top: 22px;
+	}
+	.collapse { margin:0!important; }
+	.video-link { padding:0px!important; margin: 0 0 18px 0; }
+	.video-link img {
+		-webkit-border-radius: 200px;
+		-moz-border-radius: 200px;
+		-o-border-radius: 200px;
+		border-radius: 200px;
+	}
+	p, ul { 
+		margin-bottom: 10px; 
+		font-weight: normal; 
+		font-size:14px; 
+		line-height:1.6;
+		padding: 0 15px;
+	}
+	p {
+		font-size: 20px;
+		color: #676c74;
+		line-height: 28px;
+		width: 80%;
+		display: block;
+		margin: 0 auto;
+	}
+	p.small {
+		font-size: 14px;
+	}
+	p.lead { font-size:17px; }
+	p.last { margin-bottom:0px;}
+
+	ul li {
+		margin-left:5px;
+		list-style-position: inside;
+	}
+
+	/* ------------------------------------- 
+			SIDEBAR 
+	------------------------------------- */
+	ul.sidebar {
+		background:#ebebeb;
+		display:block;
+		list-style-type: none;
+	}
+	ul.sidebar li { display: block; margin:0;}
+	ul.sidebar li a {
+		text-decoration:none;
+		color: #666;
+		padding:10px 16px;
+	/* 	font-weight:bold; */
+		margin-right:10px;
+	/* 	text-align:center; */
+		cursor:pointer;
+		border-bottom: 1px solid #777777;
+		border-top: 1px solid #FFFFFF;
+		display:block;
+		margin:0;
+	}
+	ul.sidebar li a.last { border-bottom-width:0px;}
+	ul.sidebar li a h1,ul.sidebar li a h2,ul.sidebar li a h3,ul.sidebar li a h4,ul.sidebar li a h5,ul.sidebar li a h6,ul.sidebar li a p { margin-bottom:0!important;}
+
+
+
+	/* --------------------------------------------------- 
+			RESPONSIVENESS
+			Nuke it from orbit. It's the only way to be sure. 
+	------------------------------------------------------ */
+
+	/* Set a max-width, and make it display as block so it will automatically stretch to that width, but will also shrink down on a phone or something */
+	.container {
+		display:block!important;
+		max-width:600px!important;
+		margin:0 auto!important; /* makes it centered */
+		clear:both!important;
+	}
+
+	/* This should also be a block element, so that it will fill 100% of the .container */
+	.content {
+		padding:0px;
+		max-width:600px;
+		margin:0 auto;
+		display:block; 
+	}
+
+	/* Let's make sure tables in the content area are 100% wide */
+	.content table { width: 100%; }
+
+
+	/* Odds and ends */
+	.column {
+		width: 300px;
+		float:left;
+	}
+	.column tr td { padding: 15px; }
+	.column-wrap { 
+		padding:0!important; 
+		margin:0 auto; 
+		max-width:600px!important;
+	}
+	.column table { width:100%;}
+	.social .column {
+		width: 280px;
+		min-width: 279px;
+		float:left;
+	}
+
+	/* Be sure to place a .clear element after each set of columns, just to be safe */
+	.clear { display: block; clear: both; }
+
+
+	/* ------------------------------------------- 
+			PHONE
+			For clients that support media queries.
+			Nothing fancy. 
+	-------------------------------------------- */
+	@media only screen and (max-width: 600px) {
+		
+		a[class="btn"] { display:block!important; margin-bottom:10px!important; background-image:none!important; margin-right:0!important;}
+
+		div[class="column"] { width: auto!important; float:none!important;}
+		
+		table.social div[class="column"] {
+			width:auto!important;
+		}
+
+	}
+</style>
+
+</head>
+ 
+<body bgcolor="#FFFFFF" topmargin="0" leftmargin="0" marginheight="0" marginwidth="0">
+
+<table class="head-wrap" bgcolor="#f1f1f6">
+	<tr>
+		<td></td>
+		<td class="header container" align="">
+			
+			<div class="content">
+				<table bgcolor="#f1f1f6" >
+					<tr>
+						<td align="center" valign="middle" height="140">
+							<a href="http://wonderpl.com/" target="_blank" style="border: none; outline: none;">
+								<img src="http://d3aiqrk3zfzlqs.cloudfront.net/static/assets/dolly/img/emails/editors-picks/wonder-logo.png" width="236" border="0" />
+							</a>
+						</td>
+					</tr>
+				</table>
+			</div>
+			
+		</td>
+		<td></td>
+	</tr>
+</table>
+
+<!-- // Begin Template Body \\ -->
+<table class="body-wrap" bgcolor="#f1f1f6">
+	<tr>
+		<td></td>
+		<td class="container" align="" bgcolor="#fff">
+			
+			<!-- // Begin Module: Standard Content \\ -->
+			<div class="content">
+				<table>
+					<tr>
+						<td bgcolor="white" mc:edit="std_content00" class="padding-top">
+							<h4 class="intro">Dear {First Name Last Name},</h4>
+							<h4 class="intro">Wonder PL is your personal video magazine.<br/>Here are some of our top tips.</h4>
+						</td>
+					</tr>
+				</table>
+				<table>
+					<tr>
+						<td bgcolor="white" align="center" mc:edit="std_content01" class="padding-top">
+							<h3 class="padding-top">Stay Updated</h3>
+							<p class="video-link"><img src="img/tips/tip-1.jpg" width="240" /></p>
+							<p>Follow content that interests you such as The New York Times or Michelin Starred Chef, Tom Aikens. New videos will show up daily in your feed.</p>
+							<p>&nbsp;</p>
+						</td>
+					</tr>
+				</table>
+				<table>
+					<tr>
+						<td bgcolor="white" align="center" mc:edit="std_content01" class="padding-top">
+							<h3 class="padding-top">Collect And Save</h3>
+							<p class="video-link"><img src="img/tips/tip-2.jpg" width="240" /></p>
+							<p>Tap the + to organize your videos into collections, such as 'My Recipes', 'Favourite Talks', My Funnies'.</p>
+							<p>&nbsp;</p>
+						</td>
+					</tr>
+				</table>
+				<table>
+					<tr>
+						<td bgcolor="white" align="center" mc:edit="std_content01" class="padding-top">
+							<h3 class="padding-top">Buy, Learn, Do...</h3>
+							<p class="video-link"><img src="img/tips/tip-3.jpg" width="240" /></p>
+							<p>If you like what you've watched, and want to learn more, tap the button under the video.</p>
+							<p>&nbsp;</p>
+						</td>
+					</tr>
+				</table>
+				<table>
+					<tr>
+						<td bgcolor="white" align="center" mc:edit="std_content01" class="padding-top">
+							<h3 class="padding-top">Without Leaving The App...</h3>
+							<p class="video-link"><img src="img/tips/tip-4.jpg" width="240" /></p>
+							<p>This button will take you to a webpage where you can browse, or even buy something without leaving the app.</p>
+							<p>&nbsp;</p>
+						</td>
+					</tr>
+				</table>
+				<table>
+					<tr>
+						<td bgcolor="white" align="center" mc:edit="std_content01" class="padding-top">
+							<h3 class="padding-top">Share With Friends</h3>
+							<p class="video-link"><img src="img/tips/tip-5.jpg" width="240" /></p>
+							<p>It’s just two taps to share via email, Twitter or Facebook.  We even store your frequently used contacts to make it easier for you.</p>
+							<p>&nbsp;</p>
+						</td>
+					</tr>
+				</table>
+			</div>
+			<!-- // End Module: Standard Content \\ -->
+
+			<div class="content">
+				<table>
+					<tr>
+						<td align="center" style="padding: 22px 0;">
+							<h3 class="light">The world is full of Wonder; you just have to know where to find it.</h3>
+						</td>
+					</tr>
+				</table>
+			</div>
+
+		</td>
+		<td></td>
+	</tr>
+</table>
+<!-- // End Template Body \\ -->
+
+
+<table class="footer-wrap">
+	<tr>
+		<td></td>
+		<td class="container">
+			
+				<div class="content">
+					<table>
+						<tr>
+							<td align="center">
+								<p class="small">
+									<a href="http://wonderpl.com/tos">Terms</a> |
+									<a href="http://wonderpl.com/privacy">Privacy</a> |
+									<a href="*|UNSUB|*"><unsubscribe>Unsubscribe</unsubscribe></a>
+								</p>
+							</td>
+						</tr>
+					</table>
+				</div>
+				
+		</td>
+		<td></td>
+	</tr>
+</table><!-- /FOOTER -->
+
+</body>
+</html>
