@@ -1,9 +1,17 @@
 import os
+import sys
 import time
+import signal
 import logging
 from boto.sqs import connect_to_region
 from boto.sqs.jsonmessage import JSONMessage
 from rockpack.mainsite import app, init_app
+
+
+def hup_handler(sighup, frame):
+    global _hup_received
+    _hup_received = True
+_hup_received = False
 
 
 class SqsProcessor(object):
@@ -44,6 +52,9 @@ class SqsProcessor(object):
         if not app.blueprints:
             init_app()
 
+        # Catch HUP from uwsgi
+        signal.signal(signal.SIGHUP, hup_handler)
+
         if 'SENTRY_DSN' in app.config:
             from raven.contrib.flask import Sentry
             Sentry(app, logging=app.config.get('SENTRY_ENABLE_LOGGING'), level=logging.WARN)
@@ -54,3 +65,5 @@ class SqsProcessor(object):
             else:
                 with app.app_context():
                     self.poll()
+            if _hup_received:
+                sys.exit()
