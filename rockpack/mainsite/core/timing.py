@@ -33,14 +33,22 @@ def request_timing():
         pass
 
 
-def wrap(f, prefix=''):
+def wrap(f, prefix='', is_view=True):
     @wraps(f)
     def wrapper(*args, **kwargs):
         start = time.time()
         result = f(*args, **kwargs)
-        timing = request_timing()
-        if timing:
-            timing.setdefault(prefix + f.__name__, []).append(time.time() - start)
+        runtime = time.time() - start
+        if callable(prefix):
+            key = prefix(f, *args, **kwargs)
+        else:
+            key = prefix + f.__name__
+        if is_view:
+            timing = request_timing()
+            if timing:
+                timing.setdefault(key, []).append(runtime)
+        else:
+            record_timing(key + '.run_time', runtime)
         return result
     return wrapper
 
@@ -79,5 +87,17 @@ def setup_timing(app):
             requests.Session.request = wrap(requests.Session.request, 'requests.')
             from geventhttpclient.client import HTTPClient
             HTTPClient.request = wrap(HTTPClient.request, 'requests.')
+        from rockpack.mainsite.sqs_processor import SqsProcessor
+        SqsProcessor.write_message = classmethod(wrap(
+            SqsProcessor.write_message.__func__, _sqs_processor_prefix, False))
         app.before_request(before_request)
         app.after_request(after_request)
+
+
+def _sqs_processor_prefix(f, *args, **kwargs):
+    cls, msg, delay = args
+    try:
+        cmd = msg['command']
+    except Exception:
+        cmd = None
+    return '.'.join(filter(None, (cls.__name__, f.__name__, cmd)))
