@@ -95,7 +95,7 @@ def setup_timing(app):
 
 
 def _sqs_processor_prefix(f, *args, **kwargs):
-    cls, msg, delay = args
+    cls, msg = args[:2]
     try:
         cmd = msg['command']
     except Exception:
