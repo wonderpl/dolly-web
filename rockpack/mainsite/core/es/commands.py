@@ -1,7 +1,7 @@
 import time
 from functools import wraps
 from rockpack.mainsite import app
-from rockpack.mainsite.manager import manager
+from rockpack.mainsite.manager import manager, job_control
 from rockpack.mainsite.core.es import helpers
 
 
@@ -12,6 +12,17 @@ def timer(func):
         func(*args, **kwargs)
         app.logger.info('Ran %s in %fs', func.func_name, time.time() - start)
     return wrapper
+
+
+@manager.cron_command(interval=900)
+@job_control
+def update_indexes(date_from=None, date_to=None):
+    """ Updates all data in all indexes """
+    start = time.time()
+    helpers.full_user_import(start=date_from)
+    helpers.full_channel_import(start=date_from)
+    helpers.full_video_import(start=date_from)
+    app.logger.info('Ran update_indexes in %ds', time.time() - start)
 
 
 @manager.command

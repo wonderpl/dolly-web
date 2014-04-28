@@ -1,5 +1,4 @@
 import uuid
-import time
 import json
 from datetime import datetime, timedelta
 from urlparse import urlsplit
@@ -42,6 +41,8 @@ class ChannelViewCountPopulation(base.RockPackTestCase):
                     data=json.dumps(dict(action='star', video_instance=videoid)),
                     content_type='application/json',
                     headers=[get_auth_header(user2_id)])
+
+            self.wait_for_es()
 
         with self.app.test_request_context():
             #self.wait_for_es()
@@ -226,7 +227,8 @@ class ChannelDisplayTestCase(BaseUserTestCase):
                 else:
                     videos = self.get(self.urls['video_search'], params=params)['videos']['items']
                     self.put(owned_resource + 'videos/', [videos[0]['id']], token=self.token)
-                time.sleep(2)
+
+                self.wait_for_es()
 
                 resource = '{}/ws/{}/channels/{}/'.format(self.default_base_url, user['id'], r['id'])
 
@@ -246,7 +248,8 @@ class ChannelDisplayTestCase(BaseUserTestCase):
                 ch.save()
                 self.assertEquals(models.Channel.query.get(new_ch.id).visible, False)
 
-                time.sleep(2)
+                self.wait_for_es()
+
                 # Owner should still be able to see channel
                 r = self.get(owned_resource, token=user_token)
                 self.assertEquals(channel['id'], r['id'])
@@ -776,6 +779,8 @@ class ChannelVideoTestCase(base.RockPackTestCase):
                 (VideoData.video2.id, 0),
                 (VideoData.video3.id, 1),
             ])
+
+            self.wait_for_es()
 
         # Only run this part if es is turned on
         if app.config.get('DOLLY') and app.config.get('ELASTICSEARCH_URL'):

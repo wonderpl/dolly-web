@@ -804,27 +804,36 @@ def add_user_to_index(user, bulk=False, refresh=False, no_check=False):
         refresh=refresh)
 
 
-def update_user_subscription_count(userid):
+def update_user_subscription_count(userids=None):
     from rockpack.mainsite.services.user.models import Subscription
     from rockpack.mainsite.services.video.models import Channel
-    subscription_count = Subscription.query.filter(
-        Subscription.user == userid
-    ).join(
+
+    subscription_count = Subscription.query.join(
         Channel,
         (Channel.id == Subscription.channel) &
         (Channel.public == True) &
         (Channel.visible == True) &
         (Channel.deleted == False)
-    ).count()
-    try:
-        es_connection.partial_update(
-            ESObjectIndexer.indexes['user']['index'],
-            ESObjectIndexer.indexes['user']['type'],
-            userid,
-            "ctx._source[\"subscription_count\"] = %s" % subscription_count)
-    except pyes.exceptions.ElasticSearchException, e:
-        app.logger.warning('Could not update subscription count for %s: %s: %s',
-                           userid, e, e.result['error'])
+    )
+
+    if userids:
+        subscription_count = subscription_count.filter(Subscription.user.in_(userids))
+
+    subscription_count = subscription_count.with_entities(Subscription.user, func.count(Subscription.channel)).group_by(Subscription.user)
+
+    for userid, count in subscription_count:
+        try:
+            es_connection.update(
+                ESObjectIndexer.indexes['user']['index'],
+                ESObjectIndexer.indexes['user']['type'],
+                userid,
+                script="ctx._source[\"subscription_count\"] = %s" % count,
+                bulk=True)
+        except pyes.exceptions.ElasticSearchException, e:
+            app.logger.warning('Could not update subscription count for %s: %s: %s',
+                               userid, e, e.result['error'])
+
+    es_connection.flush_bulk(forced=True)
 
 
 def condition_for_category(user, channel, video_count):

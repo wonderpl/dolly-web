@@ -15,7 +15,7 @@ from rockpack.mainsite.core.es import es_connection
 from rockpack.mainsite.core.es import migration
 from rockpack.mainsite.core.es.api import (
     ESObjectIndexer, ESVideo, ESChannel, ESSearchSuggestion,
-    ESVideoAttributeMap, update_user_categories)
+    ESVideoAttributeMap, update_user_categories, update_user_subscription_count)
 
 
 class Indexing(object):
@@ -141,89 +141,75 @@ class ESMigration(object):
                         break
 
 
-def full_user_import(start=datetime.now()):
+def full_user_import(start=None):
     from rockpack.mainsite.services.user import models
-    users = models.User.query.filter(models.User.date_updated >= start)
+    users_to_delete = models.User.query.filter(models.User.is_active == False)
 
-    to_delete = []
+    with app.test_request_context():
+        if start:
+            users_to_delete = users_to_delete.filter(models.User.date_updated >= start)
 
-    # TODO: duck punch category on ESUser to load cats
-    # from get_user_categories which otherwise would be
-    # called n times where n = users.count()
-    for user in users:
-        if not user.is_active():
-            to_delete.append(user.id)
-        else:
-            eu = api.ESUser.inserter(bulk=True)
-            eu.insert(user.id, user)
+        users_to_delete = users_to_delete.values('id')
 
-    api.ESUser.flush()
+        api.ESUser.delete([u[0] for u in users_to_delete])
+        api.ESUser.flush()
 
-    api.ESUser.delete(to_delete)
+    imp = DBImport()
+    imp.import_users()
+    update_user_categories()
+    update_user_subscription_count()
 
 
-def full_channel_import(start=datetime.now()):
-    from rockpack.mainsite.services.video import models
-    channels = models.Channel.query.filter(
-        models.Channel.date_modified >= start
-    ).options(
-        joinedload(models.Channel.category_rel),
-        joinedload(models.Channel.metas),
-        joinedload(models.Channel.owner_rel)
-    )
-
-    to_delete = []
-    updated = []
-
-    for channel in channels:
-        if channel.visible and channel.public and not channel.deleted:
-            eu = api.ESChannel(bulk=True)
-            eu.insert(channel.id, channel)
-            updated.append(channel.id)
-        else:
-            to_delete.append(channel.id)
-
-    api.ESChannel.flush()
-
-    api.ESChannel.delete(to_delete)
-
-
-def full_video_import(start=datetime.now(), prefix=None):
+def full_channel_import(start=None):
     from rockpack.mainsite.services.video import models
 
     with app.test_request_context():
-        query = models.VideoInstance.query.join(
-            models.Channel,
-            models.Channel.id == models.VideoInstance.channel
-        ).join(models.Video).outerjoin(
-            models.VideoInstanceLocaleMeta,
-            models.VideoInstance.id == models.VideoInstanceLocaleMeta.video_instance
-        ).options(
-            joinedload(models.VideoInstance.metas)
-        ).options(
-            joinedload(models.VideoInstance.video_rel)
-        ).options(
-            joinedload(models.VideoInstance.video_channel)
+        channels_to_delete = models.Channel.query.filter(
+            (models.Channel.public == False) |
+            (models.Channel.deleted == True) |
+            (models.Channel.visible == False)
         )
 
+        if start:
+            channels_to_delete = channels_to_delete.filter(models.Channel.date_updated >= start)
+
+        channels_to_delete = channels_to_delete.values('id')
+
+        api.ESChannel.delete([c[0] for c in channels_to_delete])
+        api.ESChannel.flush()
+
+    imp = DBImport()
+    imp.import_channels(start=start)
+    imp.import_average_category(start=start)
+    imp.import_video_channel_terms(start=start)
+
+
+def full_video_import(start=None, prefix=None):
+    from rockpack.mainsite.services.video import models
+
+    with app.test_request_context():
+        videos_to_delete = models.VideoInstance.query.filter(
+            models.VideoInstance.deleted == True)
+
+        if start:
+            videos_to_delete = videos_to_delete.filter(
+                models.VideoInstance.date_updated >= start)
+
         if prefix:
-            query = query.filter(models.VideoInstance.id.like(prefix.replace('_', '\\_') + '%'))
+            videos_to_delete = videos_to_delete.filter(
+                models.VideoInstance.id.like(prefix.replace('_', '\\_') + '%'))
 
-        to_delete = []
+        videos_to_delete = videos_to_delete.values(models.VideoInstance.id)
 
-        # TODO: duck punch methods on ESVideo for
-        # import_dolly_repin_counts and import_dolly_video_owners
-        for instance in query:
-            if (instance.video_rel.visible and
-                instance.video_channel.visible and
-                instance.video_channel.public and not
-                instance.video_channel.deleted):
-                ev = api.ESVideo(bulk=True)
-                ev.insert(instance.id, instance)
-            else:
-                to_delete.append(instance.id)
-
+        api.ESVideo.delete([v[0] for v in videos_to_delete])
         api.ESVideo.flush()
+
+    imp = DBImport()
+    imp.import_videos(prefix=prefix, start=start)
+    imp.import_dolly_video_owners(prefix=prefix)
+    imp.import_comment_counts(prefix=prefix)
+    imp.import_dolly_repin_counts(prefix=prefix)
+    imp.import_video_stars(prefix=prefix)
 
 
 class DBImport(object):
@@ -250,7 +236,9 @@ class DBImport(object):
                 users = users.filter(models.User.date_updated >= start)
 
             total = users.count()
-            print 'importing {} users'.format(total)
+
+            app.logger.debug('importing {} users'.format(total))
+
             start = time.time()
             count = 1
             for users in users.yield_per(6000):
@@ -258,9 +246,10 @@ class DBImport(object):
                 self.print_percent_complete(count, total)
                 count += 1
             self.conn.flush_bulk(forced=True)
-            print 'finished in', time.time() - start, 'seconds'
 
-    def import_channels(self):
+            app.logger.debug('finished in {}'.format(time.time() - start, 'seconds'))
+
+    def import_channels(self, start=None):
         from rockpack.mainsite.services.video.models import Channel, VideoInstance, Video
 
         with app.test_request_context():
@@ -273,7 +262,9 @@ class DBImport(object):
                 joinedload(Channel.metas),
                 joinedload(Channel.owner_rel)
             )
-            print 'importing {} PUBLIC channels\r'.format(channels.count())
+
+            app.logger.debug('importing {} PUBLIC channels\r'.format(channels.count()))
+
             start = time.time()
             ec = ESChannel.inserter(bulk=True)
             count = 1
@@ -292,7 +283,8 @@ class DBImport(object):
                 self.print_percent_complete(count, total)
                 count += 1
             ec.flush_bulk()
-            print 'finished in', time.time() - start, 'seconds'
+
+            app.logger.debug('finished in {} seconds'.format(time.time() - start))
 
     def import_search_suggestions(self):
         from rockpack.mainsite.services.video.models import Video
@@ -309,7 +301,7 @@ class DBImport(object):
                 inserter.insert(video.id, video)
             inserter.flush_bulk()
 
-    def import_videos(self, prefix=None):
+    def import_videos(self, prefix=None, start=None, recent_user_stars=False):
         from rockpack.mainsite.services.video.models import Channel, Video, VideoInstanceLocaleMeta, VideoInstance
         from rockpack.mainsite.services.user.models import User
 
@@ -333,20 +325,22 @@ class DBImport(object):
             ).options(
                 joinedload(VideoInstance.original_channel_owner_rel)
             ).filter(
-                Video.visible == True,
-                Channel.public == True,
-                Channel.deleted == False
+                VideoInstance.deleted == False
             )
 
             if prefix:
                 query = query.filter(VideoInstance.id.like(prefix.replace('_', '\\_') + '%'))
 
+            if start:
+                query = query.filter(VideoInstance.date_updated >= start)
+
             total = query.count()
-            print 'importing {} videos'.format(total)
+            app.logger.debug('importing {} videos'.format(total))
             start = time.time()
             done = 1
 
             ev = ESVideo.inserter(bulk=True)
+            vids = []
             for v in query.yield_per(6000):
                 mapped = ESVideoAttributeMap(v)
                 rep = dict(
@@ -360,7 +354,7 @@ class DBImport(object):
                     date_added=mapped.date_added,
                     position=mapped.position,
                     locales=mapped.locales,
-                    recent_user_stars=mapped.recent_user_stars(empty=True),
+                    recent_user_stars=mapped.recent_user_stars(empty=recent_user_stars),
                     country_restriction=mapped.country_restriction(empty=True),
                     comments=mapped.comments(empty=True),
                     child_instance_count=mapped.child_instance_count,
@@ -377,27 +371,36 @@ class DBImport(object):
                 self.print_percent_complete(done, total)
                 done += 1
 
+                vids.append(v.video)
+
+            from . import update
+            update.update_most_influential_video(vids)
+
             ev.flush_bulk()
-            print 'finished in', time.time() - start, 'seconds'
+            app.logger.debug('finished in {} seconds'.format(time.time() - start))
 
     def import_dolly_video_owners(self, prefix=None):
         """ Import all the owner attributes of
             a video instance belonging to a channel """
 
-        from rockpack.mainsite.services.video.models import Channel
+        from rockpack.mainsite.services.video.models import Channel, VideoInstance
 
         with app.test_request_context():
             channels = Channel.query.options(
                 joinedload(Channel.owner_rel)
+            ).join(
+                VideoInstance,
+                VideoInstance.channel == Channel.id
             ).options(
                 joinedload(Channel.video_instances)
             ).filter(
                 Channel.public == True,
                 Channel.visible == True,
-                Channel.deleted == False)
+                Channel.deleted == False,
+                VideoInstance.deleted == False)
 
             if prefix:
-                channels = channels.filter(Channel.id.like(prefix.replace('_', '\\_') + '%'))
+                channels = channels.filter(VideoInstance.id.like(prefix.replace('_', '\\_') + '%'))
 
             total = channels.count()
             done = 1
@@ -416,7 +419,7 @@ class DBImport(object):
     def import_user_categories(self):
         update_user_categories()
 
-    def import_comment_counts(self):
+    def import_comment_counts(self, prefix=None):
         from rockpack.mainsite.services.video.models import VideoInstanceComment, VideoInstance, Video
         from rockpack.mainsite.core.dbapi import db
 
@@ -426,13 +429,18 @@ class DBImport(object):
         ).join(
             Video,
             (Video.id == VideoInstance.video) &
-            (Video.visible == True)
-        ).group_by(
+            (Video.visible == True) &
+            (VideoInstance.deleted == False))
+
+        if prefix:
+            counts = counts.filter(VideoInstance.id.like(prefix.replace('_', '\\_') + '%'))
+
+        counts = counts.group_by(
             VideoInstance.id
         )
 
-        print '%d video%s with comments' % (counts.count(), 's' if counts.count() > 1 else '')
-        print 'Processing ...'
+        app.logger.debug('%d video%s with comments' % (counts.count(), 's' if counts.count() > 1 else ''))
+        app.logger.debug('Processing ...')
 
         for videoid, count in counts:
             ev = ESVideo.updater(bulk=True)
@@ -441,9 +449,7 @@ class DBImport(object):
             ev.update()
         ESVideo.flush()
 
-        print 'Finished.'
-
-    def import_dolly_repin_counts(self):
+    def import_dolly_repin_counts(self, prefix=None):
         from rockpack.mainsite.services.video.models import VideoInstance, Video
 
         with app.test_request_context():
@@ -460,8 +466,13 @@ class DBImport(object):
             ).join(
                 Video,
                 (Video.id == VideoInstance.video) &
-                (Video.visible == True)
-            ).group_by(VideoInstance.id, VideoInstance.video, child.source_channel)
+                (Video.visible == True) &
+                (VideoInstance.deleted == False))
+
+            if prefix:
+                query = query.filter(VideoInstance.id.like(prefix.replace('_', '\\_') + '%'))
+
+            query = query.group_by(VideoInstance.id, VideoInstance.video, child.source_channel)
 
             instance_counts = {}
             influential_index = {}
@@ -503,7 +514,7 @@ class DBImport(object):
 
             ESVideo.flush()
 
-    def import_video_stars(self):
+    def import_video_stars(self, prefix=None):
         from rockpack.mainsite.services.user.models import UserActivity
 
         with app.test_request_context():
@@ -514,26 +525,22 @@ class DBImport(object):
                 'object_id', 'date_actioned desc'
             )
 
-            total = query.count()
-            missing = 0
-            done = 1
-            start = time.time()
+            if prefix:
+                query = query.filter(UserActivity.object_id.like(prefix.replace('_', '\\_') + '%'))
+
             for instance_id, group in groupby(query.yield_per(200).values(UserActivity.object_id, UserActivity.user), lambda x: x[0]):
                 try:
                     ec = ESVideo.updater(bulk=True)
                     ec.set_document_id(instance_id)
                     ec.add_field(
                         'recent_user_stars',
-                        str(list(set([u.encode('utf8') for v, u in group]))[:5])
+                        list(set([u.encode('utf8') for v, u in group]))[:5]
                     )
                     ec.update()
                 except pyes.exceptions.ElasticSearchException:
-                    missing += 1
-                done += 1
-                self.print_percent_complete(done, total)
+                    pass
 
             self.conn.flush_bulk(forced=True)
-            print '%s finished in' % total, time.time() - start, 'seconds (%s videos not in es)' % missing
 
     def import_video_restrictions(self):
         from rockpack.mainsite.services.video.models import VideoRestriction, VideoInstance, Video, Channel
@@ -544,12 +551,6 @@ class DBImport(object):
                 VideoInstance.video == VideoRestriction.video
             ).join(Channel, VideoInstance.channel == Channel.id).join(Video, Video.id == VideoRestriction.video).filter(Video.visible == True, Channel.public == True).order_by(VideoInstance.id)
 
-            potential = VideoInstance.query.join(Channel, VideoInstance.channel == Channel.id).join(Video, Video.id == VideoInstance.video).filter(Video.visible == True, Channel.public == True).count()
-
-            total = 0
-            missing = 0
-            start = time.time()
-            print '2 passes for (approx) %d videos ...' % potential
             for relationship in ('allow', 'deny',):
                 for instance_id, group in groupby(query.filter(VideoRestriction.relationship == relationship).yield_per(6000).values(VideoInstance.id, VideoRestriction.country), lambda x: x[0]):
                     countries = [c.encode('utf8') for i, c in group]
@@ -561,14 +562,11 @@ class DBImport(object):
                             instance_id,
                             "ctx._source.country_restriction.%s = %s" % (relationship, str(countries),)
                         )
-                    except pyes.exceptions.ElasticSearchException, e:
-                        missing += 1
+                    except pyes.exceptions.ElasticSearchException:
+                        pass
 
-                    total += 1
-                print total, 'completed in this pass'
                 sys.stdout.flush()
                 self.conn.flush_bulk(forced=True)
-            print '%s finished in' % total, time.time() - start, 'seconds (%s videos not in es)' % missing
 
     def _partial_update(self, index, id, script, params=None):
         self.conn.update(
@@ -579,13 +577,16 @@ class DBImport(object):
             bulk=True
         )
 
-    def import_average_category(self, channel_ids=None):
+    def import_average_category(self, channel_ids=None, start=None):
         from rockpack.mainsite.services.video.models import VideoInstance, Channel
 
         query = readonly_session.query(VideoInstance.category, Channel.id).join(Channel, Channel.id == VideoInstance.channel).order_by(Channel.id)
 
         if channel_ids:
             query = query.filter(Channel.id.in_(channel_ids))
+
+        if start:
+            query = query.filter(Channel.date_updated >= start)
 
         category_map = {}
         for instance_cat, channel_id in query:
@@ -603,7 +604,7 @@ class DBImport(object):
             ec.update()
         self.conn.flush_bulk(forced=True)
 
-    def import_video_channel_terms(self):
+    def import_video_channel_terms(self, prefix=None, start=None):
         from rockpack.mainsite.services.video.models import VideoInstance, Channel, Video
 
         query = VideoInstance.query.join(
@@ -791,7 +792,7 @@ class DBImport(object):
                     ec.add_field('normalised_rank[\'%s\']' % locale, float(count))
                     ec.update()
 
-                except exceptions.DocumentMissingException, e:
+                except exceptions.DocumentMissingException:
                     missing += 1
                 total += 1
                 self.print_percent_complete(done, i_total)

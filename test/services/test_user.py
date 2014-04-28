@@ -530,6 +530,7 @@ class TestUserContent(base.RockPackTestCase):
         with self.app.test_client() as client:
             # Fetch feed
             self.wait_for_es()
+
             r = client.get('/ws/{}/content_feed/'.format(user1),
                            headers=[get_auth_header(user1)])
 

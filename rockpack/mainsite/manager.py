@@ -154,11 +154,11 @@ def import_to_es(prefix=None, **kwargs):
         return
 
     if not (kwargs['videos_only'] or kwargs['users_only']):
-        i.import_channels()
+        helpers.full_channel_import()
     if not (kwargs['channels_only'] or kwargs['users_only']):
-        i.import_videos(prefix)
+        helpers.full_video_import(prefix=prefix)
     if not (kwargs['channels_only'] or kwargs['videos_only']):
-        i.import_users()
+        helpers.full_user_import()
 
 
 @manager.command

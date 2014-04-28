@@ -101,20 +101,6 @@ def update_channel_view_counts(time_from=None, time_to=None):
                 session.add(meta)
 
 
-@manager.cron_command(interval=3600)
-def update_channel_rank():
-    start = time.time()
-    helpers.DBImport().import_channel_share()
-    app.logger.info('Ran update_channel_rank in %ds', time.time() - start)
-
-
-@manager.command
-def update_video_channel_terms():
-    start = time.time()
-    helpers.DBImport().import_video_channel_terms()
-    app.logger.info('Ran import_video_channel_terms in %ds', time.time() - start)
-
-
 @manager.cron_command(interval=900)
 @job_control
 def update_channel_promotions(date_from=None, date_to=None):

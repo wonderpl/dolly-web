@@ -4,13 +4,10 @@ from sqlalchemy import (
     Text, String, Column, Boolean, Integer, Float, ForeignKey, DateTime, CHAR,
     UniqueConstraint, event, func)
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import relationship, aliased, lazyload, joinedload
+from sqlalchemy.orm import relationship, aliased, lazyload
 from sqlalchemy.orm.attributes import get_history
-from flask.ext.sqlalchemy import models_committed
 from rockpack.mainsite import app, cache
 from rockpack.mainsite.core.dbapi import db, defer_except
-from rockpack.mainsite.core.es import use_elasticsearch, api as es_api
-from rockpack.mainsite.core.es.exceptions import DocumentMissingException
 from rockpack.mainsite.helpers import lazy_gettext as _
 from rockpack.mainsite.helpers.db import add_base64_pk, add_video_pk, insert_new_only, ImageType, BoxType
 from rockpack.mainsite.helpers.urls import url_for
@@ -310,6 +307,7 @@ class VideoInstance(db.Model):
     category = Column(ForeignKey('category.id'), nullable=True)
     tags = Column(String(1024), nullable=True)
     is_favourite = Column(Boolean(), nullable=False, server_default='false', default=False)
+    deleted = Column(Boolean(), nullable=False, server_default='false', default=False)
 
     metas = relationship('VideoInstanceLocaleMeta', backref='video_instance_rel',
                          cascade='all,delete', passive_deletes=True)
@@ -503,11 +501,14 @@ class Channel(db.Model):
     def set_cover_fallback(self, videos):
         if not self.cover and videos and app.config.get('DOLLY'):
             try:
-                first = videos[0]
+                try:
+                    first = videos[0]
+                except (AttributeError, TypeError):
+                    return
                 if isinstance(first, basestring):
                     first = Video.query.get(first)
                 self.cover = first.default_thumbnail
-            except:
+            except Exception:
                 app.logger.exception('Unable to set cover from video: %s', self.id)
 
     def add_videos(self, videos, tags=None, category=None, date_added=None):
@@ -547,8 +548,10 @@ class Channel(db.Model):
         videos = VideoInstance.query.\
             options(lazyload('video_rel'), *defer_except(VideoInstance, ['id'])).\
             filter(VideoInstance.channel == self.id, VideoInstance.video.in_(video_ids))
+
         for video in videos:
-            VideoInstance.query.session.delete(video)
+            video.deleted = True
+            video.save()
 
     def add_meta(self, locale):
         return ChannelLocaleMeta(channel=self.id, locale=locale).save()
@@ -699,127 +702,41 @@ def _channel_is_public(channel):
 def _update_or_remove_channel(channelid):
     channel = Channel.query.get(channelid)
     if channel is not None:
-        if _channel_is_public(channel):
-            es_api.update_channel_to_index(channel)
-        else:
-            es_api.remove_channel_from_index(channel.id)
-
         # Explicit check for push subscriptions if channel deleted
         if channel.deleted:
             from rockpack.mainsite.services.pubsubhubbub.models import Subscription
             Subscription.query.filter(Subscription.channel_id == channel.id).delete()
 
 
-def _update_user_promotion(user):
-    eu = es_api.ESUser.updater()
-    eu.set_document_id(user.id)
-    eu.add_field('promotion', user.promotion_map())
-    eu.update()
-    es_api.ESUser.flush()
-
-
-@event.listens_for(VideoInstanceLocaleMeta, 'after_update')
-def video_insert(mapper, connection, target):
-    return _update_locales_on_video(target.video_instance)
+@background_on_sqs
+def _update_channel_category(channelid):
+    from rockpack.mainsite.core.es.update import update_video_related_channel_meta
+    update_video_related_channel_meta(channelid)
 
 
 @background_on_sqs
-def _update_locales_on_video(video_instance_id):
-    if use_elasticsearch():
-        try:
-            video_instance = VideoInstance.query.options(
-                joinedload(VideoInstance.video_channel),
-                joinedload(VideoInstance.video_rel)
-            ).get(video_instance_id)
-        except AttributeError:
-            pass
-        else:
-            if video_instance is not None and (not video_instance.video_channel.deleted and
-                                               video_instance.video_channel.visible and
-                                               video_instance.video_channel.public and
-                                               video_instance.video_rel.visible):
-                mapped = es_api.ESVideoAttributeMap(video_instance)
-                ev = es_api.ESVideo.updater()
-                ev.set_document_id(video_instance.id)
-                ev.add_field('locales', mapped.locales)
-                try:
-                    ev.update()
-                except DocumentMissingException:
-                    ev = es_api.ESVideo.inserter()
-                    ev.insert(video_instance.id, video_instance)
+def update_video_instance_date_updated(instance_ids, visible=None):
+    instances = VideoInstance.query.filter(VideoInstance.id.in_(instance_ids))
+    for instance in instances:
+        instance.date_updated = datetime.utcnow()
+        if visible is not None:
+            instance.deleted = not visible
+        instance.save()
 
 
-@event.listens_for(Video, 'after_update')
-def _video_update(mapper, connection, target):
-    if use_elasticsearch() and not target.visible:
-        instance_ids = [x[0] for x in VideoInstance.query.filter_by(video=target.id).values('id')]
-        es_api.ESVideo.delete(instance_ids)
+@background_on_sqs
+def update_channel_date_updated(channel_ids):
+    channels = Channel.query.filter(Channel.id.in_(channel_ids))
+    for channel in channels:
+        channel.date_updated = datetime.now()
+        channel.save()
 
 
+@event.listens_for(VideoInstance, 'after_insert')
 @event.listens_for(VideoInstance, 'after_delete')
-def video_instance_delete(mapper, connection, target):
-    if use_elasticsearch():
-        from rockpack.mainsite.core.es import update as es_update
-        es_update.update_most_influential_video([target.video])
-
-
-@models_committed.connect_via(app)
-def on_models_committed(sender, changes):
-    updated_videos, deleted_videos = [], []
-    for obj, change in changes:
-        if isinstance(obj, VideoInstance):
-            if change == 'delete':
-                deleted_videos.append(obj.id)
-            else:
-                updated_videos.append(obj.id)
-    if updated_videos or deleted_videos:
-        es_api.es_update_channel_videos(updated_videos, deleted_videos)
-
-
-@event.listens_for(ChannelLocaleMeta, 'after_insert')
-def _channel_insert(mapper, connection, target):
-    # NOTE: owner_rel isn't available on Channel if we pass channel_rel for owner.resource_url.
-    # possibly do a lookup for owner in resource_url method instead of having it rely on self.owner_rel here
-    channel = Channel.query.get(target.channel)
-    if _channel_is_public(channel):
-        _update_or_remove_channel(channel.id)
-
-
-@event.listens_for(ChannelLocaleMeta, 'after_update')
-def _es_channel_update_from_clm(mapper, connection, target):
-    _update_or_remove_channel(target.channel)
-
-
-# XXX: This is called on registration to add user's favourites - needs to move offline
-@event.listens_for(Channel, 'after_insert')
-def _es_channel_insert_from_channel(mapper, connection, target):
-    if _channel_is_public(target):
-        es_api.add_channel_to_index(Channel.query.get(target.id))
-
-
-@event.listens_for(Channel, 'after_update')
-def _es_channel_update_from_channel(mapper, connection, target):
-    _update_or_remove_channel(target.id)
-
-
-@event.listens_for(ChannelPromotion, 'after_insert')
-def _es_channel_promotion_insert(mapper, connection, target):
-    _update_or_remove_channel(target.channel)
-
-
-@event.listens_for(ChannelPromotion, 'after_update')
-def _es_channel_promotion_update(mapper, connection, target):
-    _update_or_remove_channel(target.channel)
-
-
-@event.listens_for(UserPromotion, 'after_insert')
-def _es_user_promotion_insert(mapper, connection, target):
-    _update_user_promotion(target.user)
-
-
-@event.listens_for(UserPromotion, 'after_update')
-def _es_user_promotion_update(mapper, connection, target):
-    _update_user_promotion(target.user)
+def video_instance_change(mapper, connection, target):
+    if app.config.get('DOLLY'):
+        _update_channel_category([target.channel])
 
 
 @event.listens_for(Channel, 'before_update')
@@ -828,12 +745,38 @@ def _set_date_published(mapper, connection, target):
         target.date_published = func.now()
 
 
+@event.listens_for(Channel, 'after_update')
+def channel_visibility_change(mapper, connection, target):
+    if (get_history(target, 'public').has_changes() or
+        get_history(target, 'deleted').has_changes() or
+            get_history(target, 'visible').has_changes()):
+
+        instances = VideoInstance.query.filter(VideoInstance.channel == target.id).values('id')
+        update_video_instance_date_updated([i[0] for i in instances], visible=_channel_is_public(target))
+
+
 @event.listens_for(VideoInstance, 'before_insert')
 def _auto_tag(mapper, connection, target):
     tag = app.config.get('AUTO_TAG_CHANNELS', {}).get(target.channel)
     if tag and target.source_channel:
         # use background function so we're not messing around in this transaction
         _set_auto_tag(target.source_channel, target.video, tag)
+
+
+@event.listens_for(ChannelLocaleMeta, 'after_update')
+def channel_date_update_trigger_from_meta(mapper, connection, target):
+    update_channel_date_updated([target.channel_rel.id])
+
+
+@event.listens_for(VideoInstanceLocaleMeta, 'after_update')
+def video_instance_date_update_trigger_from_meta(mapper, connection, target):
+    update_video_instance_date_updated([target.video_instance_rel.id])
+
+
+@event.listens_for(Video, 'after_update')
+def video_instance_date_update_trigger_from_video(mapper, connection, target):
+    instances = VideoInstance.query.filter(VideoInstance.video == target.id).values('id')
+    update_video_instance_date_updated([i[0] for i in instances], visible=target.visible)
 
 
 @background_on_sqs
