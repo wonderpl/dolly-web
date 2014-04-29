@@ -89,7 +89,7 @@ a:link, a:visited, div a {
                         {% set channel_url = url_for('share_redirect_root') + '&c=' + channel.id %}
                       <tr>
                         <td colspan="5" width="600" align="center" valign="top"><br/><br/>
-                          <p><font face="verdana" size="4" color="#767472">{{ channel.owner_rel.display_name }} has added {{ count }} video{% if channel.video_count != 1 %}s{% endif %} to {{ channel.title|upper }}<br/></font></p>
+                          <p><font face="verdana" size="4" color="#767472">{{ channel.owner_rel.display_name }} has added {{ count }} video{% if count != 1 %}s{% endif %} to {{ channel.title|upper }}<br/></font></p>
                         </td>
                       </tr>
                           {% if videos|length > 1 %}
