@@ -187,6 +187,15 @@ class User(db.Model):
                 public=True,
             )
         ]
+        if 'WATCH_LATER_CHANNEL' in app.config:
+            title, description, cover = app.config['WATCH_LATER_CHANNEL']
+            user.channels.append(Channel(
+                favourite=True,
+                title=title,
+                description=description,
+                cover=cover,
+                public=False,
+            ))
 
         return user
 

@@ -321,7 +321,10 @@ class ChannelSearch(EntitySearch, CategoryMixin, MediaSortMixin):
                 videos=dict(total=channel.video_count)
             )
             if channel.favourite:
-                ch['favourites'] = True
+                if channel.title == 'Watch Later':
+                    ch['watchlater'] = True
+                else:
+                    ch['favourites'] = True
             if channel.verified:
                 ch['verified'] = True
 

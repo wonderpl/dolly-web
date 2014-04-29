@@ -189,7 +189,7 @@ class ChannelPromotionTest(base.RockPackTestCase):
                 self.assertEquals(feed['channels']['items'][0]['id'], ChannelData.channel1.id)
 
 
-class ChannelVisibleFlag(BaseUserTestCase):
+class ChannelDisplayTestCase(BaseUserTestCase):
 
     def test_visible_flag(self):
         with self.app.test_client() as client:
@@ -307,13 +307,38 @@ class ChannelVisibleFlag(BaseUserTestCase):
 
         # Check own channels are ordered by date_created
         r = self.get(self.urls['user'], token=self.token)
-        self.assertEquals([c['title'] for c in r['channels']['items']],
-                          ['Favorites', '2', 'updated', '0'])
+        created_order = ['Favorites', '2', 'updated', '0']
+        if 'WATCH_LATER_CHANNEL' in app.config:
+            created_order.insert(1, app.config['WATCH_LATER_CHANNEL'][0])
+        self.assertEquals([c['title'] for c in r['channels']['items']], created_order)
 
         # Check public channels are order by date_updated
         r = self.get('{}/ws/{}/'.format(self.default_base_url, user['id']))
         self.assertEquals([c['title'] for c in r['channels']['items']],
                           ['Favorites', 'updated', '2', '0'])
+
+    @skip_unless_config('WATCH_LATER_CHANNEL')
+    def test_watch_later(self):
+        with self.app.test_client():
+            self.register_user()
+
+            # watch later is present but not public
+            r = self.get(self.urls['channels'], token=self.token)
+            channel = next(c for c in r['channels']['items']
+                           if c['title'] == app.config['WATCH_LATER_CHANNEL'][0])
+            self.assertTrue(channel.get('watchlater'))
+            self.assertFalse(channel['public'])
+
+            # not editable
+            with self.assertRaisesRegexp(self.failureException, '400'):
+                self.request(channel['resource_url'], 'delete', token=self.token)
+
+            # but can add videos
+            self.post(channel['resource_url'] + 'videos/',
+                      [VideoInstanceData.video_instance1.id], token=self.token)
+            videos = dict(models.VideoInstance.query.
+                          filter_by(channel=channel['id']).values('video', 'id'))
+            self.assertIn(VideoInstanceData.video_instance1.video, videos)
 
 
 class ChannelCreateTestCase(base.RockPackTestCase):
@@ -594,7 +619,7 @@ class ChannelCreateTestCase(base.RockPackTestCase):
             r = client.get('/ws/{}/'.format(user.id), headers=[get_auth_header(user.id)])
             channels = json.loads(r.data)['channels']['items']
             favourites_url = [c['resource_url'] for c in channels if c.get('favourites')][0]
-            normal_url = [c['resource_url'] for c in channels if not c.get('favourites')][0]
+            normal_url = [c['resource_url'] for c in channels if not c.get('favourites') and not c.get('watchlater')][0]
 
             for url, code in (favourites_url, 400), (normal_url, 200):
                 path = urlsplit(url).path

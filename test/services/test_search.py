@@ -21,14 +21,14 @@ class SearchTestCase(RockPackTestCase):
             self.wait_for_es()
 
             channels = self._search('channels', owner.username)
-            self.assertEquals(channels['total'], 1)
+            self.assertGreaterEqual(channels['total'], 1)
             self.assertEqual(channels['items'][0]['owner']['id'], owner.id)
 
     @skip_unless_config('ELASTICSEARCH_URL')
     def test_search_channel_by_video_title(self):
         with self.app.test_request_context():
             owner = self.create_test_user()
-            channel, = owner.channels
+            channel = owner.channels[0]
             channel.add_videos([VideoData.video1.id])
             db.session.commit()
 

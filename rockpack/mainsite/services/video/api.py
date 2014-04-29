@@ -51,7 +51,10 @@ def channel_dict(channel, position=None, with_owner=True, owner_url=False, video
         )
     )
     if channel.favourite:
-        ch_data['favourites'] = True
+        if channel.title == 'Watch Later':
+            ch_data['watchlater'] = True
+        else:
+            ch_data['favourites'] = True
     if channel.verified:
         ch_data['verified'] = True
     if with_owner:

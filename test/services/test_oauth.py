@@ -370,8 +370,8 @@ class RegisterTestCase(base.RockPackTestCase):
         creds = json.loads(r.data)
         self.assertEquals(200, r.status_code)
         self.assertNotEquals(None, creds['refresh_token'])
-        self.assertEquals(1, Channel.query.filter_by(owner=creds['user_id']).count(),
-                          'default user channel should be created')
+        self.assertGreaterEqual(Channel.query.filter_by(owner=creds['user_id']).count(), 1,
+                                'default user channel should be created')
 
         self.wait_for_es()
 
@@ -381,7 +381,7 @@ class RegisterTestCase(base.RockPackTestCase):
                 '/ws/{}/'.format(creds['user_id']),
                 headers=[get_auth_header(viewing_user)]
             )
-            self.assertEquals(json.loads(r.data)['channels']['total'], 1)
+            self.assertGreaterEqual(json.loads(r.data)['channels']['total'], 1)
 
             creds = json.loads(r.data)
 

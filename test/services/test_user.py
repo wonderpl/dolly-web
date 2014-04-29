@@ -475,7 +475,7 @@ class TestUserContent(base.RockPackTestCase):
             user3_token = self._add_apns_token(user3, client)
 
             # Create new channel with a few videos and subscribe user
-            channel1 = Channel.query.filter_by(owner=user1).one()
+            channel1 = Channel.query.filter_by(owner=user1, public=True).first()
             c1instances = channel1.add_videos(
                 v.id for v in VideoData.__dict__.values() if hasattr(v, 'id'))
             Subscription(user=user1, channel=channel1.id).save()
@@ -652,7 +652,7 @@ class TestUserContent(base.RockPackTestCase):
             self.app.test_request_context().push()
             user = self.create_test_user().id
             owner = self.create_test_user().id
-            channels = [i for i, in Channel.query.filter_by(owner=owner).values('id')]
+            channels = [i for i, in Channel.query.filter_by(owner=owner, public=True).values('id')]
 
             r = client.post(
                 '/ws/{}/activity/'.format(user),
@@ -670,9 +670,9 @@ class TestUserContent(base.RockPackTestCase):
                 query_string=dict(data=['activity', 'subscriptions']),
                 headers=[get_auth_header(user)])
             user_data = json.loads(r.data)
-            self.assertListEqual([owner], user_data['activity']['user_subscribed'])
-            self.assertListEqual(channels, user_data['activity']['subscribed'])
-            self.assertListEqual(channels, [c['id'] for c in user_data['subscriptions']['items']])
+            self.assertItemsEqual([owner], user_data['activity']['user_subscribed'])
+            self.assertItemsEqual(channels, user_data['activity']['subscribed'])
+            self.assertItemsEqual(channels, [c['id'] for c in user_data['subscriptions']['items']])
 
             r = client.post(
                 '/ws/{}/activity/'.format(user),
@@ -690,9 +690,9 @@ class TestUserContent(base.RockPackTestCase):
                 query_string=dict(data=['activity', 'subscriptions']),
                 headers=[get_auth_header(user)])
             user_data = json.loads(r.data)
-            self.assertListEqual([], user_data['activity']['user_subscribed'])
-            self.assertListEqual([], user_data['activity']['subscribed'])
-            self.assertListEqual([], [c['id'] for c in user_data['subscriptions']['items']])
+            self.assertItemsEqual([], user_data['activity']['user_subscribed'])
+            self.assertItemsEqual([], user_data['activity']['subscribed'])
+            self.assertItemsEqual([], [c['id'] for c in user_data['subscriptions']['items']])
 
     def test_activity_duplicates(self):
         with self.app.test_client() as client:
@@ -715,7 +715,8 @@ class TestUserContent(base.RockPackTestCase):
                         True,
                         Channel.query.filter(
                             Channel.owner == user,
-                            Channel.favourite == True
+                            Channel.favourite == True,
+                            Channel.public == True,
                         ).one().video_instances[0].is_favourite)
 
                 r = client.get(
