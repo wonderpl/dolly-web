@@ -3,7 +3,7 @@
 {% macro select(param, values, default=None) -%}
   <div class="sel">
     <label for="{{ param }}">{{ param|capitalize }}</label>
-    <select name="{{ param }}" onchange="this.form.submit()">
+    <select name="{{ param }}" id="{{ param }}">
       {% with sel = request.args.get(param, default) %}
       {% if not default %}
       <option {% if not sel %}selected="true"{% endif %}></option>
@@ -27,6 +27,14 @@
     {% for param, values in selects %}
     {{ select(param, values, values[0]) }}
     {% endfor %}
+    {% for param, value in dates %}
+    <div class="sel">
+      <label for="{{ param }}">{{ param|capitalize }}</label>
+      <input name="{{ param }}" value="{{ value.__str__()[:16] }}" id="{{ param }}" type="text"
+        data-role="datetimepicker" data-date-format="yyyy-mm-dd hh:ii" data-date-autoclose="true"/>
+    </div>
+    {% endfor %}
+    <input type="submit" value="Go" class="btn-primary"/>
   </form>
   <div>
     {% call chart('X', data, 'Table') %}
@@ -36,4 +44,28 @@
     {% endcall %}
   </div>
 </div>
+{% endblock %}
+
+{% block head %}
+  {{ super() }}
+  <link href="{{ url_for('admin.static', filename='datetimepicker/bootstrap-datetimepicker.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block tail %}
+  {{ super() }}
+  <script src="{{ url_for('admin.static', filename='datetimepicker/bootstrap-datetimepicker.js') }}"></script>
+  <script src="{{ url_for('admin.static', filename='admin/js/form.js') }}"></script>
+  <script>
+    $('#period').change(function () {
+        var period = {day:1, week:7, month:31}[$(this).val()],
+            now = new Date(),
+            dateFrom = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDay())),
+            dateTo;
+        dateFrom.setDate(dateFrom.getDate() - period);
+        dateTo = new Date(dateFrom);
+        dateTo.setDate(dateTo.getDate() + period);
+        $('#from').val(dateFrom.toISOString().replace('T', ' ').substring(0, 16));
+        $('#to').val(dateTo.toISOString().replace('T', ' ').substring(0, 16));
+    });
+  </script>
 {% endblock %}

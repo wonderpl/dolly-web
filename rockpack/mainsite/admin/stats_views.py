@@ -1,4 +1,4 @@
-from datetime import datetime, date, timedelta
+from datetime import datetime, date, time, timedelta
 from sqlalchemy import func, between, literal, text, Integer
 from sqlalchemy.orm import aliased
 from flask import request
@@ -337,7 +337,14 @@ class TableStatsView(StatsView):
             period = dict(self.periods)[request.args.get('period')]
         except:
             period = self.periods[0][1]
-        date_from = date.today() - timedelta(days=period)
+
+        dates = {'from': datetime.combine(date.today() - timedelta(days=period), time.min)}
+        dates['to'] = dates['from'] + timedelta(days=period)
+        for param in 'from', 'to':
+            try:
+                dates[param] = datetime.strptime(request.args[param], '%Y-%m-%d %H:%M')
+            except:
+                pass
 
         try:
             sortindex = self.counts.index(request.args.get('sort')) + self.sortindex_base
@@ -350,12 +357,16 @@ class TableStatsView(StatsView):
             limit = 20
 
         table = Table(self.get_table_head())
-        for row in self.get_query(date_from).order_by('%d desc' % sortindex).limit(limit):
+        for row in self.get_query(dates['from'], dates['to']).\
+                order_by('%d desc' % sortindex).limit(limit):
             item, counts = self.split_row(row)
             table.append(item + [int(i) if i else 0 for i in counts])
 
-        selects = ('period', zip(*self.periods)[0]), ('sort', self.counts)
-        return self.render('admin/chart_table.html', data=table.encode(), selects=selects)
+        selects = ('sort', self.counts), ('period', zip(*self.periods)[0])
+        return self.render('admin/chart_table.html',
+                           data=table.encode(),
+                           selects=selects,
+                           dates=sorted(dates.items()))
 
 
 class TopUsersStatsView(TableStatsView):
@@ -364,7 +375,7 @@ class TopUsersStatsView(TableStatsView):
     sortindex_base = 3
     item_label = 'user'
 
-    def get_query(self, date_from):
+    def get_query(self, date_from, date_to):
         from rockpack.mainsite.services.video.models import Channel, VideoInstance
         from rockpack.mainsite.services.user.models import User, UserActivity
         from rockpack.mainsite.services.share.models import ShareLink
@@ -378,7 +389,7 @@ class TopUsersStatsView(TableStatsView):
         ).outerjoin(
             VideoInstance, VideoInstance.id == UserActivity.object_id
         ).filter(
-            UserActivity.date_actioned > date_from
+            UserActivity.date_actioned.between(date_from, date_to)
         )
         shares = readonly_session.query(
             func.coalesce(VideoInstance.channel, ShareLink.object_id).label('channel'),
@@ -389,7 +400,7 @@ class TopUsersStatsView(TableStatsView):
         ).outerjoin(
             VideoInstance, VideoInstance.id == ShareLink.object_id
         ).filter(
-            ShareLink.date_created > date_from
+            ShareLink.date_created.between(date_from, date_to)
         )
         activity = activity.union_all(shares).subquery()
 
@@ -444,7 +455,7 @@ class TopVideosStatsView(TableStatsView):
     sortindex_base = 3
     item_label = 'video'
 
-    def get_query(self, date_from):
+    def get_query(self, date_from, date_to):
         from rockpack.mainsite.services.video.models import Video, VideoInstance
         from rockpack.mainsite.services.user.models import UserActivity
         from rockpack.mainsite.services.share.models import ShareLink
@@ -455,7 +466,7 @@ class TopVideosStatsView(TableStatsView):
             literal(0).label('click_count')
         ).filter(
             UserActivity.object_type == 'video_instance',
-            UserActivity.date_actioned > date_from
+            UserActivity.date_actioned.between(date_from, date_to)
         )
         shares = readonly_session.query(
             ShareLink.object_id.label('video_instance'),
@@ -463,7 +474,7 @@ class TopVideosStatsView(TableStatsView):
             ShareLink.click_count.label('click_count')
         ).filter(
             ShareLink.object_type == 'video_instance',
-            ShareLink.date_created > date_from
+            ShareLink.date_created.between(date_from, date_to)
         )
         activity = activity.union_all(shares).subquery()
 
