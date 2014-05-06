@@ -153,7 +153,7 @@ class AdminModelView(AuthMixin, ModelView):
     def on_model_delete(self, model):
         self.record_action('deleted', model)
 
-    def prettify_name(self, name):
+    def _prettify_name(self, name):
         # Split class names on capitalised word:
         name = re.sub('\B[A-Z]', ' \\g<0>', name)
-        return super(AdminModelView, self).prettify_name(name)
+        return super(AdminModelView, self)._prettify_name(name)

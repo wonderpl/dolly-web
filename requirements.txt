@@ -9,11 +9,11 @@ Flask-Rauth>=0.3.2
 Flask-Cache>=0.11
 rauth>=0.4.17
 Flask-Script>=0.6
-#Flask-Assets>=0.8
-git+git://github.com/miracle2k/flask-assets.git@d89884ec765c7040e8347063f4041f59b944236c
+Flask-Assets>=0.9
 boto>=2.7.0
 git+git://github.com/StartTheShift/pyoauth2.git@94b1e8e5bfe0a1aa220f1645c810ab2f609db281
 alembic>=0.5.0
+pillow>=2
 raven>=3.1.17
 blinker>=1.2
 requests>=1.1.0
