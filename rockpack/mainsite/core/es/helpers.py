@@ -179,9 +179,9 @@ def full_channel_import(start=None):
         api.ESChannel.flush()
 
     imp = DBImport()
-    imp.import_channels(start=start)
-    imp.import_average_category(start=start)
-    imp.import_video_channel_terms(start=start)
+    imp.import_channels(start=start, automatic_flush=False)
+    imp.import_average_category(start=start, automatic_flush=False)
+    imp.import_video_channel_terms(start=start, automatic_flush=False)
 
 
 def full_video_import(start=None, prefix=None):
@@ -205,11 +205,13 @@ def full_video_import(start=None, prefix=None):
         api.ESVideo.flush()
 
     imp = DBImport()
-    imp.import_videos(prefix=prefix, start=start)
-    imp.import_dolly_video_owners(prefix=prefix)
-    imp.import_comment_counts(prefix=prefix)
-    imp.import_dolly_repin_counts(prefix=prefix)
-    imp.import_video_stars(prefix=prefix)
+    imp.import_videos(prefix=prefix, start=start, automatic_flush=False)
+    imp.import_dolly_video_owners(prefix=prefix, automatic_flush=False)
+    imp.import_comment_counts(prefix=prefix, automatic_flush=False)
+    imp.import_dolly_repin_counts(prefix=prefix, automatic_flush=False)
+    imp.import_video_stars(prefix=prefix, automatic_flush=False)
+
+    api.ESVideo.flush()
 
 
 class DBImport(object):
@@ -226,7 +228,7 @@ class DBImport(object):
             print int(n), "percent complete                                                \r",
             sys.stdout.flush()
 
-    def import_users(self, start=None):
+    def import_users(self, start=None, automatic_flush=True):
         from rockpack.mainsite.services.user import models
 
         with app.test_request_context():
@@ -245,11 +247,13 @@ class DBImport(object):
                 api.add_user_to_index(users, bulk=True, no_check=True)
                 self.print_percent_complete(count, total)
                 count += 1
-            self.conn.flush_bulk(forced=True)
+
+            if automatic_flush:
+                self.conn.flush_bulk(forced=True)
 
             app.logger.debug('finished in {}'.format(time.time() - start, 'seconds'))
 
-    def import_channels(self, start=None):
+    def import_channels(self, start=None, automatic_flush=True):
         from rockpack.mainsite.services.video.models import Channel, VideoInstance, Video
 
         with app.test_request_context():
@@ -282,7 +286,9 @@ class DBImport(object):
                 ec.insert(channel.id, channel)
                 self.print_percent_complete(count, total)
                 count += 1
-            ec.flush_bulk()
+
+            if automatic_flush:
+                ec.flush_bulk()
 
             app.logger.debug('finished in {} seconds'.format(time.time() - start))
 
@@ -299,9 +305,10 @@ class DBImport(object):
             )
             for video in videos.yield_per(6000):
                 inserter.insert(video.id, video)
+
             inserter.flush_bulk()
 
-    def import_videos(self, prefix=None, start=None, recent_user_stars=False):
+    def import_videos(self, prefix=None, start=None, recent_user_stars=False, automatic_flush=True):
         from rockpack.mainsite.services.video.models import Channel, Video, VideoInstanceLocaleMeta, VideoInstance
         from rockpack.mainsite.services.user.models import User
 
@@ -376,10 +383,12 @@ class DBImport(object):
             from . import update
             update.update_most_influential_video(vids)
 
-            ev.flush_bulk()
+            if automatic_flush:
+                ev.flush_bulk()
+
             app.logger.debug('finished in {} seconds'.format(time.time() - start))
 
-    def import_dolly_video_owners(self, prefix=None):
+    def import_dolly_video_owners(self, prefix=None, automatic_flush=True):
         """ Import all the owner attributes of
             a video instance belonging to a channel """
 
@@ -414,12 +423,14 @@ class DBImport(object):
                     ec.update()
                 self.print_percent_complete(done, total)
                 done += 1
-            self.conn.flush_bulk(forced=True)
+
+            if automatic_flush:
+                self.conn.flush_bulk(forced=True)
 
     def import_user_categories(self):
         update_user_categories()
 
-    def import_comment_counts(self, prefix=None):
+    def import_comment_counts(self, prefix=None, automatic_flush=True):
         from rockpack.mainsite.services.video.models import VideoInstanceComment, VideoInstance, Video
         from rockpack.mainsite.core.dbapi import db
 
@@ -447,9 +458,11 @@ class DBImport(object):
             ev.set_document_id(videoid)
             ev.add_field('comments.count', count)
             ev.update()
-        ESVideo.flush()
 
-    def import_dolly_repin_counts(self, prefix=None):
+        if automatic_flush:
+            ESVideo.flush()
+
+    def import_dolly_repin_counts(self, prefix=None, automatic_flush=True):
         from rockpack.mainsite.services.video.models import VideoInstance, Video
 
         with app.test_request_context():
@@ -512,9 +525,10 @@ class DBImport(object):
                 self.print_percent_complete(done, total)
                 done += 1
 
-            ESVideo.flush()
+            if automatic_flush:
+                ESVideo.flush()
 
-    def import_video_stars(self, prefix=None):
+    def import_video_stars(self, prefix=None, automatic_flush=True):
         from rockpack.mainsite.services.user.models import UserActivity
 
         with app.test_request_context():
@@ -540,9 +554,10 @@ class DBImport(object):
                 except pyes.exceptions.ElasticSearchException:
                     pass
 
-            self.conn.flush_bulk(forced=True)
+            if automatic_flush:
+                self.conn.flush_bulk(forced=True)
 
-    def import_video_restrictions(self):
+    def import_video_restrictions(self, automatic_flush=True):
         from rockpack.mainsite.services.video.models import VideoRestriction, VideoInstance, Video, Channel
 
         with app.test_request_context():
@@ -566,7 +581,9 @@ class DBImport(object):
                         pass
 
                 sys.stdout.flush()
-                self.conn.flush_bulk(forced=True)
+
+                if automatic_flush:
+                    self.conn.flush_bulk(forced=True)
 
     def _partial_update(self, index, id, script, params=None):
         self.conn.update(
@@ -577,7 +594,7 @@ class DBImport(object):
             bulk=True
         )
 
-    def import_average_category(self, channel_ids=None, start=None):
+    def import_average_category(self, channel_ids=None, start=None, automatic_flush=True):
         from rockpack.mainsite.services.video.models import VideoInstance, Channel
 
         query = readonly_session.query(VideoInstance.category, Channel.id).join(Channel, Channel.id == VideoInstance.channel).order_by(Channel.id)
@@ -602,9 +619,11 @@ class DBImport(object):
                 max(((count, cat) for cat, count in c_map.items()))
             )
             ec.update()
-        self.conn.flush_bulk(forced=True)
 
-    def import_video_channel_terms(self, prefix=None, start=None):
+        if automatic_flush:
+            self.conn.flush_bulk(forced=True)
+
+    def import_video_channel_terms(self, prefix=None, start=None, automatic_flush=True):
         from rockpack.mainsite.services.video.models import VideoInstance, Channel, Video
 
         query = VideoInstance.query.join(
@@ -641,10 +660,11 @@ class DBImport(object):
                 print e
             total += 1
 
-        self.conn.flush_bulk(forced=True)
+        if automatic_flush:
+            self.conn.flush_bulk(forced=True)
         print '%s finished in' % total, time.time() - start, 'seconds'
 
-    def import_channel_share(self):
+    def import_channel_share(self, automatic_flush=True):
         from rockpack.mainsite.services.share.models import ShareLink
         from rockpack.mainsite.services.user.models import UserActivity, User
         from rockpack.mainsite.services.video.models import VideoInstance, Channel
@@ -797,6 +817,8 @@ class DBImport(object):
                 total += 1
                 self.print_percent_complete(done, i_total)
                 done += 1
-            ESChannel.flush()
+
+            if automatic_flush:
+                ESChannel.flush()
 
         print '%s total updates in two passesfinished in' % total, time.time() - start, 'seconds (%s channels not in es)' % missing

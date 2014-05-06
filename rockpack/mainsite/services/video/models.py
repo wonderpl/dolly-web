@@ -7,7 +7,8 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import relationship, aliased, lazyload
 from sqlalchemy.orm.attributes import get_history
 from rockpack.mainsite import app, cache
-from rockpack.mainsite.core.dbapi import db, defer_except
+from rockpack.mainsite.core.dbapi import commit_on_success
+from rockpack.mainsite.core.dbapi import db, defer_except, commit_on_success
 from rockpack.mainsite.helpers import lazy_gettext as _
 from rockpack.mainsite.helpers.db import add_base64_pk, add_video_pk, insert_new_only, ImageType, BoxType
 from rockpack.mainsite.helpers.urls import url_for
@@ -300,6 +301,7 @@ class VideoInstance(db.Model):
     star_count = Column(Integer, nullable=False, server_default='0')
     position = Column(Integer, nullable=False, server_default='0', default=0)
     date_tagged = Column(DateTime())
+    date_updated = Column(DateTime(), nullable=False, default=func.now(), onupdate=func.now())
     video = Column(ForeignKey('video.id', ondelete='CASCADE'), nullable=False)
     channel = Column(ForeignKey('channel.id'), nullable=False)
     source_channel = Column(ForeignKey('channel.id'), nullable=True)
@@ -551,7 +553,6 @@ class Channel(db.Model):
 
         for video in videos:
             video.deleted = True
-            video.save()
 
     def add_meta(self, locale):
         return ChannelLocaleMeta(channel=self.id, locale=locale).save()
@@ -715,21 +716,21 @@ def _update_channel_category(channelid):
 
 
 @background_on_sqs
+@commit_on_success
 def update_video_instance_date_updated(instance_ids, visible=None):
     instances = VideoInstance.query.filter(VideoInstance.id.in_(instance_ids))
     for instance in instances:
         instance.date_updated = datetime.utcnow()
         if visible is not None:
             instance.deleted = not visible
-        instance.save()
 
 
 @background_on_sqs
+@commit_on_success
 def update_channel_date_updated(channel_ids):
     channels = Channel.query.filter(Channel.id.in_(channel_ids))
     for channel in channels:
         channel.date_updated = datetime.now()
-        channel.save()
 
 
 @event.listens_for(VideoInstance, 'after_insert')
@@ -743,6 +744,15 @@ def video_instance_change(mapper, connection, target):
 def _set_date_published(mapper, connection, target):
     if target.public and not target.date_published:
         target.date_published = func.now()
+
+
+@event.listens_for(Channel, 'before_update')
+def check_channel_visibility(mapper, connection, target):
+    """ Put channel.public to False if the other flags
+        would suggest it should be """
+    if target.channel.public:
+        if not target.channel.visible or target.channel.deleted:
+            target.channel.public = False
 
 
 @event.listens_for(Channel, 'after_update')
