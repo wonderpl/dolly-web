@@ -507,16 +507,17 @@ class VideoSearch(EntitySearch, CategoryMixin, MediaSortMixin):
             if not v.video.description:
                 return []
 
-            _, sm = v.video.description.split('SHOP_MOTION', 1)
-            lines = []
+            sm = v.video.description.split('SHOP_MOTION', 1)
 
-            for line in sm.split('\n'):
-                lines.append(line.strip())
+            if len(sm) > 1:
+                lines = []
+                for line in sm.split('\n'):
+                    lines.append(line.strip())
 
-            try:
-                return json.loads(''.join(lines))
-            except:
-                app.logger.error('Failed to load shop motion annotations for video %s', str(v.video.id))
+                try:
+                    return json.loads(''.join(lines))
+                except:
+                    app.logger.error('Failed to load shop motion annotations for video %s', str(v.video.id))
             return []
 
         for pos, v in enumerate(videos, self.paging[0]):
