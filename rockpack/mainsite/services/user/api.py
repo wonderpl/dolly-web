@@ -602,11 +602,33 @@ def _action_object_list(user, action, anti_action=None, limit=1000):
     return [id for id, in query.values('object_id')]
 
 
+def _subscribed_to_users(userid, limit=1000):
+    subscribed_to = Subscription.query.filter(
+        Subscription.user == userid
+    ).join(
+        Channel,
+        (Channel.id == Subscription.channel) &
+        (Channel.public == True) &
+        (Channel.deleted == False) &
+        (Channel.visible == True)
+    ).distinct(Channel.owner).order_by(
+        Subscription.date_created).limit(limit).values(Channel.owner)
+
+    return [s[0] for s in subscribed_to]
+
+
+def _subscribed_channels(userid, limit=1000):
+    return [s[0] for s in Subscription.query.filter(
+        Subscription.user == userid).distinct(
+            Subscription.channel).order_by(
+                Subscription.date_created).limit(limit).values('channel')]
+
+
 def user_activity(userid, locale, paging):
     return dict(
         recently_starred=_action_object_list(userid, 'star'),
-        subscribed=_action_object_list(userid, 'subscribe'),
-        user_subscribed=_action_object_list(userid, 'subscribe_all'),
+        subscribed=_subscribed_channels(userid),
+        user_subscribed=_subscribed_to_users(userid),
     )
 
 
@@ -1263,6 +1285,8 @@ class UserWS(WebService):
         else:
             save_video_activity(
                 userid, form.action.data, form.object_id.data, self.get_locale())
+
+        return user_activity(userid, self.get_locale(), self.get_page())
 
     @expose_ajax('/<userid>/notifications/', cache_age=60, cache_private=True)
     @check_authorization(self_auth=True)

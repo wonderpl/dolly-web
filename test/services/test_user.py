@@ -633,7 +633,7 @@ class TestUserContent(base.RockPackTestCase):
                 )),
                 content_type='application/json',
                 headers=[get_auth_header(user)])
-            self.assertEquals(r.status_code, 204)
+            self.assertEquals(r.status_code, 200)
 
             r = client.get(
                 '/ws/{}/activity/'.format(user),
@@ -663,7 +663,7 @@ class TestUserContent(base.RockPackTestCase):
                 )),
                 content_type='application/json',
                 headers=[get_auth_header(user)])
-            self.assertEquals(r.status_code, 204)
+            self.assertEquals(r.status_code, 200)
 
             r = client.get(
                 '/ws/{}/'.format(user),
@@ -683,7 +683,7 @@ class TestUserContent(base.RockPackTestCase):
                 )),
                 content_type='application/json',
                 headers=[get_auth_header(user)])
-            self.assertEquals(r.status_code, 204)
+            self.assertEquals(r.status_code, 200)
 
             r = client.get(
                 '/ws/{}/'.format(user),
@@ -708,7 +708,7 @@ class TestUserContent(base.RockPackTestCase):
                     )),
                     content_type='application/json',
                     headers=[get_auth_header(user)])
-                self.assertEquals(r.status_code, 204)
+                self.assertEquals(r.status_code, 200)
 
                 if action == 'star':
                     self.assertEquals(
@@ -965,7 +965,7 @@ class TestUserContent(base.RockPackTestCase):
                 data=json.dumps(dict(action='star', video_instance=video_instance.id)),
                 content_type='application/json',
                 headers=[get_auth_header(user.id)])
-            self.assertEquals(r.status_code, 204)
+            self.assertEquals(r.status_code, 200)
 
             self.assertIn(
                 ('star', video_instance.id),
@@ -999,7 +999,7 @@ class TestUserContent(base.RockPackTestCase):
                     object_id=channel['id'])),
                 content_type='application/json',
                 headers=[get_auth_header(user.id)])
-            self.assertEquals(r.status_code, 204)
+            self.assertEquals(r.status_code, 200)
 
             self.assertIn(
                 ('open', channel['tracking_code']),
