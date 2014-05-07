@@ -1,5 +1,6 @@
 import pyes
 from urlparse import urljoin
+from flask import json
 from . import mappings
 from . import es_connection
 from . import exceptions
@@ -499,8 +500,28 @@ class VideoSearch(EntitySearch, CategoryMixin, MediaSortMixin):
                 avatar_thumbnail_url=urljoin(IMAGE_CDN, user.avatar) if user.avatar else ''
             )
 
+        def get_shop_motion_annotation(v):
+            """ Parses out a list of dicts from a string
+                following the SHOP_MOTION tag """
+
+            if not v.video.description:
+                return []
+
+            _, sm = v.video.description.split('SHOP_MOTION', 1)
+            lines = []
+
+            for line in sm.split('\n'):
+                lines.append(line.strip())
+
+            try:
+                return json.loads(''.join(lines))
+            except:
+                app.logger.error('Failed to load shop motion annotations for video %s', str(v.video.id))
+            return []
+
         for pos, v in enumerate(videos, self.paging[0]):
             published = v.video.date_published
+
             video = dict(
                 id=v.id,
                 channel=dict(
@@ -520,7 +541,8 @@ class VideoSearch(EntitySearch, CategoryMixin, MediaSortMixin):
                     source_username=v.video.source_username,
                     source_date_uploaded=published.isoformat() if hasattr(published, 'isoformat') else published,
                     duration=v.video.duration,
-                    description=v.video.description,
+                    description=v.video.description.split('SHOP_MOTION', 1)[0] if v.video.description else '',
+                    annotation=get_shop_motion_annotation(v),
                     thumbnail_url=urljoin(app.config.get('IMAGE_CDN', ''), v.video.thumbnail_url) if v.video.thumbnail_url else '',
                 ),
                 position=pos,
