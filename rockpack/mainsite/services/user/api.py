@@ -611,7 +611,7 @@ def _subscribed_to_users(userid, limit=1000):
         (Channel.public == True) &
         (Channel.deleted == False) &
         (Channel.visible == True)
-    ).distinct(Channel.owner).order_by(
+    ).distinct(Channel.owner, Subscription.date_created).order_by(
         Subscription.date_created).limit(limit).values(Channel.owner)
 
     return [s[0] for s in subscribed_to]
