@@ -651,6 +651,7 @@ class VideoInstanceQueue(db.Model):
     source_instance = Column(ForeignKey('video_instance.id'), nullable=False)
     target_channel = Column(ForeignKey('channel.id'), nullable=False)
     new_instance = Column(ForeignKey('video_instance.id'))
+    tags = Column(String(1024), nullable=True)
 
     source_instance_rel = relationship('VideoInstance', foreign_keys=[source_instance], lazy='joined')
     target_channel_rel = relationship('Channel')

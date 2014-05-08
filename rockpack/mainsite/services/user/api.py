@@ -337,7 +337,7 @@ def save_content_report(userid, object_type, object_id, reason):
 
 
 @commit_on_success
-def add_videos_to_channel(channel, instance_list, locale, delete_existing=False):
+def add_videos_to_channel(channel, instance_list, locale, delete_existing=False, tags=None):
     videomap = get_or_create_video_records(instance_list)
     instance_ids = [_[0] for _ in videomap]
     existing = dict((v.video, v) for v in
@@ -358,6 +358,8 @@ def add_videos_to_channel(channel, instance_list, locale, delete_existing=False)
             instance.position = position
             instance.category = videoidmap[video_id]
             instance.is_favourite = channel.favourite
+            if tags:
+                instance.tags = tags
             VideoInstance.query.session.add(instance)
             added[video_id] = instance
 
