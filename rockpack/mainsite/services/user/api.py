@@ -620,7 +620,7 @@ def _subscribed_to_users(userid, limit=1000):
 def _subscribed_channels(userid, limit=1000):
     return [s[0] for s in Subscription.query.filter(
         Subscription.user == userid).distinct(
-            Subscription.channel).order_by(
+            Subscription.channel, Subscription.date_created).order_by(
                 Subscription.date_created).limit(limit).values(Subscription.channel)]
 
 
