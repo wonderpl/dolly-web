@@ -543,7 +543,7 @@ class VideoSearch(EntitySearch, CategoryMixin, MediaSortMixin):
                     source_date_uploaded=published.isoformat() if hasattr(published, 'isoformat') else published,
                     duration=v.video.duration,
                     description=v.video.description.split('SHOP_MOTION', 1)[0] if v.video.description else '',
-                    annotation=get_shop_motion_annotation(v),
+                    annotations=get_shop_motion_annotation(v),
                     thumbnail_url=urljoin(app.config.get('IMAGE_CDN', ''), v.video.thumbnail_url) if v.video.thumbnail_url else '',
                 ),
                 position=pos,
