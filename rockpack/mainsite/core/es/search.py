@@ -511,7 +511,7 @@ class VideoSearch(EntitySearch, CategoryMixin, MediaSortMixin):
 
             if len(sm) > 1:
                 lines = []
-                for line in sm.split('\n'):
+                for line in sm[1].split('\n'):
                     lines.append(line.strip())
 
                 try:
