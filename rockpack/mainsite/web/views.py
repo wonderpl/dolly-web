@@ -49,6 +49,14 @@ def ws_request(url, method='GET', content_type=None, body=None, token=None, **kw
     return response and json.loads(response)
 
 
+def romeo_ws_request(url):
+    ws_base_url = app.config['ROMEO_WS_URL']
+    response = requests.get(urljoin(ws_base_url, url))
+    if response.status_code == 404:
+        abort(404)
+    return response.json()
+
+
 @expose_web('/welcome_email', cache_age=3600)
 def welcome_email():
     from rockpack.mainsite.core.email import env
@@ -182,7 +190,12 @@ def embed(contentid):
         if contentid.startswith('vi'):
             return dict(video_data=ws_request('/ws/-/channels/-/videos/%s/' % contentid))
         else:
-            abort(404)
+            try:
+                int(contentid)
+            except Exception:
+                abort(404)
+            else:
+                return dict(video_data=romeo_ws_request('/api/v/%s' % contentid))
     else:
         videoid = request.args.get('video', None)
         return web_channel_data(contentid, load_video=videoid)

@@ -59,6 +59,7 @@ SHARE_SUBDOMAIN = 'share'
 GOOGLE_ANALYTICS_ACCOUNT = 'UA-46534300-2'
 
 ROMEO_ACCOUNT_VERIFY_URL = 'https://romeo.dev.wonderpl.com/_verify_account'
+ROMEO_WS_URL = 'https://romeo.dev.wonderpl.com/api'
 
 # For app store links
 PHG_AFFILIATE_TOKEN = '11lukG'
