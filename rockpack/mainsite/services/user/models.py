@@ -405,28 +405,30 @@ class BroadcastMessage(db.Model):
 
     def get_users(self):
         users = User.query.filter_by(is_active=True)
-        for expr, type, values in BroadcastMessage.parse_filter_string(self.filter):
-            if type == 'email':
-                users = users.filter(User.email.like('%%%s' % values))
-            if type == 'locale':
-                users = users.filter(User.locale.like('%s%%' % values))
-            if type == 'gender':
-                users = users.filter(User.gender == values[0])
-            if type == 'age':
-                users = users.filter(between(
-                    func.age(User.date_of_birth),
-                    text("interval '%s years'" % values[0]),
-                    text("interval '%s years'" % values[1])))
-            if type == 'subscribed':
-                users = users.join(Subscription,
-                                   (Subscription.user == User.id) &
-                                   (Subscription.channel == values[0]))
-            if type == 'interested':
-                from rockpack.mainsite.services.video.models import Category
-                users = users.\
-                    join(UserInterest, UserInterest.user == User.id).\
-                    join(Category, Category.id == UserInterest.category).\
-                    filter((Category.name == values[0]))
+
+        if self.filter:
+            for expr, type, values in BroadcastMessage.parse_filter_string(self.filter):
+                if type == 'email':
+                    users = users.filter(User.email.like('%%%s' % values))
+                if type == 'locale':
+                    users = users.filter(User.locale.like('%s%%' % values))
+                if type == 'gender':
+                    users = users.filter(User.gender == values[0])
+                if type == 'age':
+                    users = users.filter(between(
+                        func.age(User.date_of_birth),
+                        text("interval '%s years'" % values[0]),
+                        text("interval '%s years'" % values[1])))
+                if type == 'subscribed':
+                    users = users.join(Subscription,
+                                       (Subscription.user == User.id) &
+                                       (Subscription.channel == values[0]))
+                if type == 'interested':
+                    from rockpack.mainsite.services.video.models import Category
+                    users = users.\
+                        join(UserInterest, UserInterest.user == User.id).\
+                        join(Category, Category.id == UserInterest.category).\
+                        filter((Category.name == values[0]))
 
         if self.external_system == 'apns':
             from rockpack.mainsite.services.oauth.models import ExternalToken
