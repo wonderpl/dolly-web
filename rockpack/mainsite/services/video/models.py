@@ -1,4 +1,5 @@
 from datetime import datetime
+from flask import json
 from sqlalchemy import (
     Text, String, Column, Boolean, Integer, Float, ForeignKey, DateTime, CHAR,
     UniqueConstraint, event, func)
@@ -15,6 +16,9 @@ from rockpack.mainsite.helpers.db import add_base64_pk, add_video_pk, insert_new
 from rockpack.mainsite.helpers.urls import url_for
 from rockpack.mainsite.services.user.models import User
 from rockpack.mainsite.background_sqs_processor import background_on_sqs
+
+
+EXTRA_META_KEYWORD = 'EXTRA_META'
 
 
 class Locale(db.Model):
@@ -188,6 +192,33 @@ class Video(db.Model):
 
     def __repr__(self):
         return 'Video(id={v.id!r}, source_videoid={v.source_videoid!r})'.format(v=self)
+
+    @staticmethod
+    def extra_meta(video):
+        """ Parses out a list of dicts from a string
+            following the EXTRA_META_KEYWORD tag """
+
+        if not video.description:
+            return {}
+
+        sm = video.description.split(EXTRA_META_KEYWORD, 1)
+
+        if len(sm) > 1:
+            lines = []
+            for line in sm[1].split('\n'):
+                lines.append(line.strip())
+
+            try:
+                return json.loads(''.join(lines))
+            except:
+                app.logger.error('Failed to load extra_meta for video %s', str(video.id))
+        return {}
+
+    @staticmethod
+    def cleaned_description(description):
+        if not description:
+            return ''
+        return description.split(EXTRA_META_KEYWORD, 1)[0] if description else ''
 
     @property
     def source_label(self):

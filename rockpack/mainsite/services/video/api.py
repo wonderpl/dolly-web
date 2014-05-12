@@ -155,7 +155,7 @@ def video_dict(instance):
             view_count=video.view_count,
             star_count=video.star_count,
             thumbnail_url=video.default_thumbnail,
-            description=video.description,
+            description=models.Video.cleaned_description(video.description),
             link_url=video.link_url,
             link_title=video.link_title
         )

@@ -8,7 +8,7 @@ from . import filters
 from rockpack.mainsite.core.es.api import ESObjectIndexer
 from rockpack.mainsite import app
 from rockpack.mainsite.helpers.urls import url_for
-from rockpack.mainsite.services.video.models import Source
+from rockpack.mainsite.services.video.models import Source, Video
 
 
 DEFAULT_FILTERS = []  # [filters.locale_filter]
@@ -500,26 +500,6 @@ class VideoSearch(EntitySearch, CategoryMixin, MediaSortMixin):
                 avatar_thumbnail_url=urljoin(IMAGE_CDN, user.avatar) if user.avatar else ''
             )
 
-        def get_shop_motion_annotation(v):
-            """ Parses out a list of dicts from a string
-                following the SHOP_MOTION tag """
-
-            if not v.video.description:
-                return []
-
-            sm = v.video.description.split('SHOP_MOTION', 1)
-
-            if len(sm) > 1:
-                lines = []
-                for line in sm[1].split('\n'):
-                    lines.append(line.strip())
-
-                try:
-                    return json.loads(''.join(lines))
-                except:
-                    app.logger.error('Failed to load shop motion annotations for video %s', str(v.video.id))
-            return []
-
         for pos, v in enumerate(videos, self.paging[0]):
             published = v.video.date_published
 
@@ -542,13 +522,13 @@ class VideoSearch(EntitySearch, CategoryMixin, MediaSortMixin):
                     source_username=v.video.source_username,
                     source_date_uploaded=published.isoformat() if hasattr(published, 'isoformat') else published,
                     duration=v.video.duration,
-                    description=v.video.description.split('SHOP_MOTION', 1)[0] if v.video.description else '',
-                    annotations=get_shop_motion_annotation(v),
+                    description=Video.cleaned_description(v.video.description),
                     thumbnail_url=urljoin(app.config.get('IMAGE_CDN', ''), v.video.thumbnail_url) if v.video.thumbnail_url else '',
                 ),
                 position=pos,
                 child_instance_count=getattr(v, 'child_instance_count', 0)
             )
+            video['video'].update(Video.extra_meta(v.video))
             if v.link_url:
                 video['video'].update(link_url=v.link_url, link_title=v.link_title)
             if v.owner:
