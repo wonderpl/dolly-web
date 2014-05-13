@@ -1,14 +1,14 @@
 """Add deleted to video_instance
 
 Revision ID: 58eaa9715323
-Revises: 68154013656
+Revises: 1de6cae29457
 Create Date: 2014-04-29 11:16:52.254987
 
 """
 
 # revision identifiers, used by Alembic.
 revision = '58eaa9715323'
-down_revision = '68154013656'
+down_revision = '1de6cae29457'
 
 from alembic import op
 import sqlalchemy as sa
