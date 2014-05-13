@@ -17,29 +17,59 @@ if es_url:
         update_connection_pool(app.config.get('ELASTICSEARCH_CONNECTION_POOL_MAXSIZE', 4))
 
 
+class FlushTimer(object):
+
+    class UnstartedTimerError(Exception):
+        pass
+
+    __shared_state = {}
+
+    def __init__(self):
+        self.__dict__ = self.__shared_state
+        self.start_time = None
+        self.elapsed = 0
+
+    def start(self):
+        if self.start_time is None:
+            self.elapsed = 0
+            self.start_time = time.time()
+
+    def stop(self):
+        try:
+            self.elapsed = time.time() - self.start_time
+        except TypeError:
+            raise FlushTimer.UnstartedTimerError('Cannot stop an unstarted timer')
+        else:
+            self.start_time = None
+            return self.elapsed
+
+
 class LoggingListBulker(pyes.models.ListBulker):
     def __init__(self, *args, **kwargs):
         self.flush_count = 0
-        self.flush_timer = None
+        self.data_size = 0
+        self.flush_timer = FlushTimer()
         super(LoggingListBulker, self).__init__(*args, **kwargs)
-
-    def initialise_timer(self):
-        self.flush_timer = time.time()
-
-    def unset_timer(self):
-        self.flush_timer = None
 
     def metric(self, name):
         return '.'.join([self.__class__.__module__,
                          self.__class__.__name__,
                          name])
 
-    def log_flushes(self):
-        timing.record_counter(self.metric('count'), self.flush_count)
+    def log_flush_count(self):
+        timing.record_counter(self.metric('flush_count_per_forced'), self.flush_count)
+
+    def log_bulk_size(self):
+        timing.record_counter(self.metric('bulk_size'), self.data_size)
 
     def log_timer(self):
-        timing.record_counter(self.metric('elapsed_time'),
-                              time.time() - self.flush_timer)
+        timing.record_counter(self.metric('elapsed_time'), self.flush_timer.elapsed)
+
+    def inc_flush_count(self):
+        self.flush_count += 1
+
+    def reset_flush_count(self):
+        self.flush_count = 0
 
     def flush_bulk(self, forced=False):
         """ Counts any flushes made and logs the count
@@ -49,18 +79,20 @@ class LoggingListBulker(pyes.models.ListBulker):
             __del__ method isn't guaranteed to be called
             so there may be unflushed data still present """
 
-        if self.flush_timer is None:
-            self.initialise_timer()
+        self.flush_timer.start()
+
+        self.data_size = len(self.bulk_data)
 
         if len(self.bulk_data) >= self.bulk_size or forced:
-            self.flush_count += 1
+            self.log_bulk_size()
+            self.inc_flush_count()
 
         result = super(LoggingListBulker, self).flush_bulk(forced=forced)
         if forced:
-            self.log_flushes()
+            self.flush_timer.stop()
             self.log_timer()
-            self.flush_count = 0
-            self.flush_timer = None
+            self.log_flush_count()
+            self.reset_flush_count()
         return result
 
 

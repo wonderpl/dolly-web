@@ -1,6 +1,6 @@
 import logging
-from flask import json
 import datetime
+from flask import json
 import pyes
 from ast import literal_eval
 from urlparse import urlparse
@@ -804,7 +804,7 @@ def add_user_to_index(user, bulk=False, refresh=False, no_check=False):
         refresh=refresh)
 
 
-def update_user_subscription_count(userids=None):
+def update_user_subscription_count(userids=None, automatic_flush=True):
     from rockpack.mainsite.services.user.models import Subscription
     from rockpack.mainsite.services.video.models import Channel
 
@@ -833,7 +833,8 @@ def update_user_subscription_count(userids=None):
             app.logger.warning('Could not update subscription count for %s: %s: %s',
                                userid, e, e.result['error'])
 
-    es_connection.flush_bulk(forced=True)
+    if automatic_flush:
+        es_connection.flush_bulk(forced=True)
 
 
 def condition_for_category(user, channel, video_count):
@@ -888,7 +889,7 @@ def get_users_categories(user_ids=None):
     return category_map
 
 
-def update_user_categories(user_ids=None):
+def update_user_categories(user_ids=None, automatic_flush=True):
     for user, categories in get_users_categories(user_ids).iteritems():
         eu = ESUser.updater(bulk=True)
         eu.set_document_id(user.id)
@@ -898,7 +899,8 @@ def update_user_categories(user_ids=None):
         except pyes.exceptions.ElasticSearchException:
             app.logger.warning('update_user_categories failed to update %s', user)
 
-    ESUser.flush()
+    if automatic_flush:
+        ESUser.flush()
 
 
 def add_channel_to_index(channel, bulk=False, no_check=False):

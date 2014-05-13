@@ -1,21 +1,31 @@
 import sys
 import time
+import decimal
 from datetime import datetime, timedelta
+from functools import wraps
 from itertools import groupby
 from flask import json
 import pyes
-import decimal
 from sqlalchemy import distinct, func, literal
 from sqlalchemy.orm import aliased, joinedload
 from . import api
 from . import exceptions
 from rockpack.mainsite import app
 from rockpack.mainsite.core.dbapi import readonly_session
+from rockpack.mainsite.core.es import FlushTimer
 from rockpack.mainsite.core.es import es_connection
 from rockpack.mainsite.core.es import migration
 from rockpack.mainsite.core.es.api import (
     ESObjectIndexer, ESVideo, ESChannel, ESSearchSuggestion,
     ESVideoAttributeMap, update_user_categories, update_user_subscription_count)
+
+
+def start_flush_timer(func):
+    @wraps(func)
+    def decorator(*args, **kwargs):
+        FlushTimer().start()
+        return func(*args, **kwargs)
+    return decorator
 
 
 class Indexing(object):
@@ -141,6 +151,7 @@ class ESMigration(object):
                         break
 
 
+@start_flush_timer
 def full_user_import(start=None):
     from rockpack.mainsite.services.user import models
     users_to_delete = models.User.query.filter(models.User.is_active == False)
@@ -155,11 +166,14 @@ def full_user_import(start=None):
         api.ESUser.flush()
 
     imp = DBImport()
-    imp.import_users()
-    update_user_categories()
-    update_user_subscription_count()
+    imp.import_users(start=start, automatic_flush=False)
+    update_user_categories(automatic_flush=False)
+    update_user_subscription_count(automatic_flush=False)
+
+    api.ESUser.flush()
 
 
+@start_flush_timer
 def full_channel_import(start=None):
     from rockpack.mainsite.services.video import models
 
@@ -183,7 +197,10 @@ def full_channel_import(start=None):
     imp.import_average_category(start=start, automatic_flush=False)
     imp.import_video_channel_terms(start=start, automatic_flush=False)
 
+    api.ESChannel.flush()
 
+
+@start_flush_timer
 def full_video_import(start=None, prefix=None):
     from rockpack.mainsite.services.video import models
 
