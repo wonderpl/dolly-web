@@ -198,7 +198,7 @@ def save_channel_activity(userid, action, channelid, locale):
     # Update channel record:
     updated = Channel.query.filter_by(id=channelid).update(incr(Channel))
     if not updated:
-        return
+        return False
     # Update or create locale meta record:
     ChannelLocaleMeta.query.filter_by(channel=channelid, locale=locale).update(incr(ChannelLocaleMeta)) or \
         ChannelLocaleMeta(channel=channelid, locale=locale, **{column: value}).add()
@@ -212,6 +212,16 @@ def save_channel_activity(userid, action, channelid, locale):
         ).add()
     if app.config['MYRRIX_URL'] and action == 'open':
         recommender.record_activity(userid, channelid)
+
+    if action == 'subscribe':
+        if Subscription.query.filter_by(user=userid, channel=channelid).count():
+            return  # fail silently if already subscribed
+        _create_user_subscriptions(userid, [channelid], locale)
+    if action == 'unsubscribe':
+        _remove_user_subscriptions(userid, [channelid], locale)
+
+    if use_elasticsearch():
+        update_user_subscription_count(userid)
 
 
 @commit_on_success
@@ -228,6 +238,7 @@ def save_owner_activity(userid, action, ownerid, locale):
         tracking_code=request.args.get('tracking_code') if request else None,
     ).add()
 
+    channels = None
     if action == 'subscribe_all':
         channels = [
             c for c, in Channel.query.filter_by(
@@ -239,15 +250,20 @@ def save_owner_activity(userid, action, ownerid, locale):
         if channels:
             _create_user_subscriptions(userid, channels, locale)
     if action == 'unsubscribe_all':
-        subscriptions = _user_subscriptions_query(userid).filter(Subscription.channel.in_(
-            Channel.query.filter_by(owner=ownerid).with_entities(Channel.id)))
-        channel_ids = [c for c, in subscriptions.values(Subscription.channel)]
-        subscriptions.delete(False)
-        UserContentFeed.query.filter(
-            UserContentFeed.user == userid,
-            UserContentFeed.channel.in_(channel_ids)).delete(False)
-        for channel in channel_ids:
-            save_channel_activity(userid, 'unsubscribe', channel, locale)
+        channels = [
+            c for c, in _user_subscriptions_query(userid).filter(
+                Subscription.channel.in_(Channel.query.filter_by(owner=ownerid).with_entities(Channel.id))
+            ).values(Subscription.channel)
+        ]
+        if channels:
+            _remove_user_subscriptions(userid, channels, locale)
+
+    if channels:
+        Channel.query.filter(Channel.id.in_(channels)).update(incr(Channel), False)
+        ChannelLocaleMeta.query.filter(
+            ChannelLocaleMeta.channel.in_(channels),
+            ChannelLocaleMeta.locale == locale
+        ).update(incr(ChannelLocaleMeta), False)
 
 
 @commit_on_success
@@ -432,12 +448,9 @@ def user_subscriptions(userid, locale, paging, own=True):
     return dict(items=items, total=total)
 
 
-@commit_on_success
 def _create_user_subscriptions(userid, channels, locale=None):
-    subscriptions = []
     for channelid in channels:
-        subscriptions.append(Subscription(user=userid, channel=channelid).add())
-        save_channel_activity(userid, 'subscribe', channelid, locale)
+        Subscription(user=userid, channel=channelid).add()
 
     # Add some recent videos from this channel into the users feed
     UserContentFeed.query.session.add_all(
@@ -448,7 +461,18 @@ def _create_user_subscriptions(userid, channels, locale=None):
         ).order_by('date_added desc').limit(10).values('id', 'channel', 'date_added')
     )
 
-    return subscriptions
+
+def _remove_user_subscriptions(userid, channels, locale=None):
+    Subscription.query.filter(
+        Subscription.user == userid,
+        Subscription.channel.in_(channels),
+    ).delete(False)
+
+    # Remove any videos from these channels from the users feed
+    UserContentFeed.query.filter(
+        UserContentFeed.user == userid,
+        UserContentFeed.channel.in_(channels)
+    ).delete(False)
 
 
 def user_subscriptions_users(userid, locale, paging):
@@ -631,10 +655,10 @@ class ChannelForm(Form):
         user_channels = Channel.query.filter_by(owner=self.userid)
         if not field.data:
             untitled_channel = app.config['UNTITLED_CHANNEL'] + ' '
-            titles = [t[0].lower() for t in
-                      user_channels.filter(
-                          func.lower(Channel.title).like(untitled_channel.lower() + '%')
-                      ).values('title')]
+            titles = [
+                t[0].lower() for t in user_channels.filter(
+                    func.lower(Channel.title).like(untitled_channel.lower() + '%')
+                ).values('title')]
             for i in xrange(1, 1000):
                 t = untitled_channel + str(i)
                 if t.lower() not in titles:
@@ -1490,10 +1514,9 @@ class UserWS(WebService):
         channelid = args['channelid']
         if not Channel.query.filter_by(id=channelid, deleted=False).count():
             abort(400, message=_('Channel not found'))
-        if Subscription.query.filter_by(user=userid, channel=channelid).count():
-            return  # fail silently if already subscribed
-        subs = _create_user_subscriptions(userid, [channelid], self.get_locale())[0]
-        return ajax_create_response(subs)
+        if save_channel_activity(userid, 'subscribe', channelid, self.get_locale()) is False:
+            abort(404)
+        return ajax_create_response(Subscription.query.filter_by(user=userid, channel=channelid).one())
 
     @expose_ajax('/<userid>/subscriptions/<channelid>/', cache_age=30, cache_private=True)
     @check_authorization(self_auth=True)
@@ -1503,12 +1526,7 @@ class UserWS(WebService):
 
     @expose_ajax('/<userid>/subscriptions/<channelid>/', methods=['DELETE'])
     @check_authorization(self_auth=True)
-    @commit_on_success
     def delete_subscription_item(self, userid, channelid):
-        if not _user_subscriptions_query(userid).filter_by(channel=channelid).delete():
-            abort(404)
-        # Remove any videos from this channel from the users feed
-        UserContentFeed.query.filter_by(user=userid, channel=channelid).delete()
         save_channel_activity(userid, 'unsubscribe', channelid, self.get_locale())
 
     @expose_ajax('/<userid>/subscriptions/recent_videos/', cache_age=60, cache_private=True)

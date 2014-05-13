@@ -620,6 +620,51 @@ class TestUserContent(base.RockPackTestCase):
             self.assertIn('description', users[0])
             self.assertIn('category', users[0])
 
+    def test_subscribe_activity(self):
+        with self.app.test_client() as client:
+            user = self.create_test_user().id
+            owner = self.create_test_user().id
+            channel = Channel.query.filter_by(owner=owner).value('id')
+            r = client.post(
+                '/ws/{}/activity/'.format(user),
+                data=json.dumps(dict(
+                    action='subscribe',
+                    object_type='channel',
+                    object_id=channel,
+                )),
+                content_type='application/json',
+                headers=[get_auth_header(user)])
+            self.assertEquals(r.status_code, 200)
+
+            r = client.get(
+                '/ws/{}/activity/'.format(user),
+                headers=[get_auth_header(user)])
+            activity = json.loads(r.data)
+            self.assertIn(channel, activity['subscribed'])
+            self.assertIn(owner, activity['user_subscribed'])
+
+            self.assertEquals(Subscription.query.filter_by(user=user, channel=channel).count(), 1)
+
+            r = client.post(
+                '/ws/{}/activity/'.format(user),
+                data=json.dumps(dict(
+                    action='unsubscribe',
+                    object_type='channel',
+                    object_id=channel,
+                )),
+                content_type='application/json',
+                headers=[get_auth_header(user)])
+            self.assertEquals(r.status_code, 200)
+
+            r = client.get(
+                '/ws/{}/activity/'.format(user),
+                headers=[get_auth_header(user)])
+            activity = json.loads(r.data)
+            self.assertNotIn(channel, activity['subscribed'])
+            self.assertNotIn(owner, activity['user_subscribed'])
+
+            self.assertEquals(Subscription.query.filter_by(user=user, channel=channel).count(), 0)
+
     def test_subscribe_all(self):
         with self.app.test_client() as client:
             self.app.test_request_context().push()
