@@ -1,10 +1,9 @@
-import sys
-from functools import partial, wraps
+from functools import partial
 from itertools import groupby
 from werkzeug.datastructures import MultiDict
 from sqlalchemy import desc, func, text
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import lazyload, contains_eager, joinedload
+from sqlalchemy.orm import lazyload, contains_eager
 from sqlalchemy.orm.exc import NoResultFound
 import wtforms as wtf
 from flask import abort, request, json, g
@@ -17,10 +16,7 @@ from rockpack.mainsite.core.webservice import WebService, expose_ajax, ajax_crea
 from rockpack.mainsite.core.oauth.decorators import check_authorization
 from rockpack.mainsite.core import youtube, ooyala
 from rockpack.mainsite.core.es import use_elasticsearch, search as es_search, api as es_api
-from rockpack.mainsite.core.es.exceptions import DocumentMissingException
-from rockpack.mainsite.core.es.api import es_update_channel_videos, ESVideo, update_user_subscription_count
 from rockpack.mainsite.core import recommender
-from rockpack.mainsite.background_sqs_processor import background_on_sqs
 from rockpack.mainsite.helpers import lazy_gettext as _
 from rockpack.mainsite.helpers.forms import naughty_word_validator
 from rockpack.mainsite.helpers.urls import url_for, url_to_endpoint
@@ -158,73 +154,6 @@ def _get_action_incrementer(action):
     return column, value, incr
 
 
-def _update_video_comment_count(videoid):
-    try:
-        ev = ESVideo.updater()
-        ev.set_document_id(videoid)
-        ev.add_field(
-            'comments.count',
-            VideoInstanceComment.query.filter_by(video_instance=videoid).count())
-        ev.update()
-    except Exception, e:
-        app.logger.error(str(e))
-
-
-@background_on_sqs
-def _do_es_object_update(object_type, object_mapping, instanceid):
-    if use_elasticsearch():
-        this_obj = ES_ACTIVITY_UPDATE_MAP[object_type]
-        object_instance = this_obj.query
-
-        if object_type == 'video':
-            object_instance = object_instance.options(
-                joinedload(this_obj.video_channel),
-                joinedload(this_obj.video_rel))
-
-        try:
-            object_instance = object_instance.get(instanceid)
-        except AttributeError:
-            pass
-        else:
-            if object_instance:
-                # We don't want to do updates for videos
-                # that are unlikely to be in es
-                if hasattr(object_instance, 'video_channel') and (object_instance.video_channel.deleted or
-                                                                  not object_instance.video_channel.visible or
-                                                                  not object_instance.video_channel.public or
-                                                                  not object_instance.video_rel.visible):
-                    return
-                mapped = ES_ACTIVITY_UPDATE_MAP[object_mapping](object_instance)
-                ev = ES_ACTIVITY_UPDATE_MAP[object_mapping + '_updater'].updater()
-                ev.set_document_id(object_instance.id)
-                ev.add_field('locales', mapped.locales)
-                try:
-                    ev.update()
-                except DocumentMissingException:
-                    ev = ES_ACTIVITY_UPDATE_MAP[object_mapping + '_updater'].inserter()
-                    ev.insert(object_instance.id, object_instance)
-
-
-def es_update_activity(object_type, object_mapping):
-    """ Designed to wrap activity saves
-        for VideoInstance and Channel """
-    def decorator(f):
-        @wraps(f)
-        def wrapper(*args, **kwargs):
-            try:
-                result = f(*args, **kwargs)
-                if args[1] in ['star', 'unstar', 'open', 'view']:
-                    _do_es_object_update(object_type, object_mapping, args[2])
-            except Exception as e:
-                etype, evalue, traceback = sys.exc_info()
-                raise etype, e, traceback
-            else:
-                return result
-        return wrapper
-    return decorator
-
-
-@es_update_activity('video_instance', 'es_video_map')
 @commit_on_success
 def save_video_activity(userid, action, instance_id, locale):
     column, value, incr = _get_action_incrementer(action)
@@ -262,7 +191,6 @@ def save_video_activity(userid, action, instance_id, locale):
                 return instance
 
 
-@es_update_activity('channel', 'es_channel_map')
 @commit_on_success
 def save_channel_activity(userid, action, channelid, locale):
     """Update channel with subscriber, view, or star count changes."""
@@ -1405,8 +1333,6 @@ class UserWS(WebService):
         if not form.validate():
             abort(400, form_errors=form.errors)
 
-        channel_was_public = channel.public
-
         channel.title = form.title.data
         channel.description = form.description.data
         if not form.cover.data == 'KEEP':
@@ -1415,11 +1341,6 @@ class UserWS(WebService):
         channel.category = form.category.data
         channel.public = Channel.should_be_public(channel, form.public.data)
         channel.save()
-
-        # Push all videos to search if channel became public:
-        if channel.public and not channel_was_public:
-            es_update_channel_videos(
-                [v[0] for v in VideoInstance.query.filter_by(channel=channel.id).values('id')])
 
         resource_url = channel.get_resource_url(True)
         return (dict(id=channel.id, resource_url=resource_url),
@@ -1526,8 +1447,6 @@ class UserWS(WebService):
             # video instance doesn't exist
             abort(404)
         else:
-            if use_elasticsearch():
-                _update_video_comment_count(videoid)
             return ajax_create_response(comment)
 
     @expose_ajax('/<userid>/channels/<channelid>/videos/<videoid>/comments/<commentid>/')
@@ -1543,8 +1462,6 @@ class UserWS(WebService):
         comment = VideoInstanceComment.query.filter_by(id=commentid, user=g.authorized.userid)
         if not comment.delete():
             abort(404)
-        elif use_elasticsearch():
-            _update_video_comment_count(videoid)
 
     @expose_ajax('/<userid>/channels/<channelid>/subscribers/', cache_age=600)
     def channel_subscribers(self, userid, channelid):
