@@ -750,9 +750,9 @@ def _set_date_published(mapper, connection, target):
 def check_channel_visibility(mapper, connection, target):
     """ Put channel.public to False if the other flags
         would suggest it should be """
-    if target.channel.public:
-        if not target.channel.visible or target.channel.deleted:
-            target.channel.public = False
+    if target.public:
+        if not target.visible or target.deleted:
+            target.public = False
 
 
 @event.listens_for(Channel, 'after_update')
