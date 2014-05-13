@@ -224,6 +224,22 @@ def es_update_activity(object_type, object_mapping):
     return decorator
 
 
+@commit_on_success
+def increment_video_instance_counts(video_id, instance_id, locale, incr, column):
+    # Increment value on each of instance, video, & locale meta
+    Video.query.filter_by(id=video_id, visible=True).update(incr(Video))
+    if not instance_id.startswith(search_api.VIDEO_INSTANCE_PREFIX):
+        updated = VideoInstance.query.filter_by(id=instance_id).update(incr(VideoInstance))
+        if updated:
+            # It's possible that this instance could have been remove by a concurrent
+            # request, in which case don't bother trying to update/create the meta record.
+            meta = VideoInstanceLocaleMeta.query.filter_by(video_instance=instance_id, locale=locale)
+            updated = meta.update(incr(VideoInstanceLocaleMeta))
+            if not updated:
+                meta = VideoInstance.query.get(instance_id).add_meta(locale)
+                setattr(meta, column, 1)
+
+
 @es_update_activity('video_instance', 'es_video_map')
 @commit_on_success
 def save_video_activity(userid, action, instance_id, locale):
@@ -232,18 +248,7 @@ def save_video_activity(userid, action, instance_id, locale):
     activity = dict(user=userid, action=action,
                     object_type='video_instance', object_id=instance_id, locale=locale)
     if not UserActivity.query.filter_by(**activity).count():
-        # Increment value on each of instance, video, & locale meta
-        Video.query.filter_by(id=video_id, visible=True).update(incr(Video))
-        if not instance_id.startswith(search_api.VIDEO_INSTANCE_PREFIX):
-            updated = VideoInstance.query.filter_by(id=instance_id).update(incr(VideoInstance))
-            if updated:
-                # It's possible that this instance could have been remove by a concurrent
-                # request, in which case don't bother trying to update/create the meta record.
-                meta = VideoInstanceLocaleMeta.query.filter_by(video_instance=instance_id, locale=locale)
-                updated = meta.update(incr(VideoInstanceLocaleMeta))
-                if not updated:
-                    meta = VideoInstance.query.get(instance_id).add_meta(locale)
-                    setattr(meta, column, 1)
+        increment_video_instance_counts(video_id, instance_id, locale, incr, column)
 
     activity.update(tracking_code=request.args.get('tracking_code'))
     UserActivity(**activity).add()

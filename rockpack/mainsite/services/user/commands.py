@@ -380,6 +380,7 @@ def update_video_feed_item_stars(date_from, date_to):
                (UserContentFeed.video_instance == VideoInstance.id)).\
         with_entities(UserContentFeed, func.string_agg(UserActivity.user, ' ')).\
         group_by(UserContentFeed.id)
+
     star_limit = app.config.get('FEED_STARS_LIMIT', 3)
     for feed_item, new_stars in feed_items:
         old_stars = json.loads(feed_item.stars) if feed_item.stars else []
