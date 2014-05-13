@@ -1318,7 +1318,10 @@ Content-Type: application/json
 }
 ```
 
-To subscribe to all channels owned by a specific user POST to the activity service.
+You can also subscribe to a specific channel with a POST to the activity server with
+an `action=subscribe` and the channel id specified with the `object_id`.
+To subscribe to all channels owned by a specific user POST to the activity service with
+`action=subscribe_all`.
 
 ### Unsubscribe
 
