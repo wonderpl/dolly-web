@@ -223,9 +223,9 @@ def full_video_import(start=None, prefix=None):
 
     imp = DBImport()
     imp.import_videos(prefix=prefix, start=start, automatic_flush=False)
-    imp.import_dolly_video_owners(prefix=prefix, automatic_flush=False)
+    imp.import_dolly_video_owners(prefix=prefix, start=start, automatic_flush=False)
     imp.import_comment_counts(prefix=prefix, automatic_flush=False)
-    imp.import_dolly_repin_counts(prefix=prefix, automatic_flush=False)
+    imp.import_dolly_repin_counts(prefix=prefix, start=start, automatic_flush=False)
     imp.import_video_stars(prefix=prefix, automatic_flush=False)
 
     api.ESVideo.flush()
@@ -283,6 +283,9 @@ class DBImport(object):
                 joinedload(Channel.metas),
                 joinedload(Channel.owner_rel)
             )
+
+            if start:
+                channels = channels.filter(Channel.date_updated >= start)
 
             app.logger.debug('importing {} PUBLIC channels\r'.format(channels.count()))
 
@@ -405,7 +408,7 @@ class DBImport(object):
 
             app.logger.debug('finished in {} seconds'.format(time.time() - start))
 
-    def import_dolly_video_owners(self, prefix=None, automatic_flush=True):
+    def import_dolly_video_owners(self, prefix=None, start=None, automatic_flush=True):
         """ Import all the owner attributes of
             a video instance belonging to a channel """
 
@@ -427,6 +430,9 @@ class DBImport(object):
 
             if prefix:
                 channels = channels.filter(VideoInstance.id.like(prefix.replace('_', '\\_') + '%'))
+
+            if start:
+                channels = channels.filter(VideoInstance.date_updated >= start)
 
             total = channels.count()
             done = 1
@@ -479,7 +485,7 @@ class DBImport(object):
         if automatic_flush:
             ESVideo.flush()
 
-    def import_dolly_repin_counts(self, prefix=None, automatic_flush=True):
+    def import_dolly_repin_counts(self, prefix=None, start=None, automatic_flush=True):
         from rockpack.mainsite.services.video.models import VideoInstance, Video
 
         with app.test_request_context():
@@ -501,6 +507,16 @@ class DBImport(object):
 
             if prefix:
                 query = query.filter(VideoInstance.id.like(prefix.replace('_', '\\_') + '%'))
+
+            if start:
+                video_ids = [v[0].video for v in VideoInstance.query.filter(
+                    VideoInstance.date_updated >= start).values('video')]
+
+                if not video_ids:
+                    # No point doing anything as nothing here updated
+                    return
+
+                query = query.filter(Video.id.in_(video_ids))
 
             query = query.group_by(VideoInstance.id, VideoInstance.video, child.source_channel)
 
