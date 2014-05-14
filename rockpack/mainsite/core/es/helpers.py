@@ -168,7 +168,7 @@ def full_user_import(start=None):
     imp = DBImport()
     imp.import_users(start=start, automatic_flush=False)
     update_user_categories(automatic_flush=False)
-    update_user_subscription_count(automatic_flush=False)
+    update_user_subscription_count(start=start, automatic_flush=False)
 
     api.ESUser.flush()
 

@@ -220,9 +220,6 @@ def save_channel_activity(userid, action, channelid, locale):
     if action == 'unsubscribe':
         _remove_user_subscriptions(userid, [channelid], locale)
 
-    if use_elasticsearch():
-        update_user_subscription_count(userid)
-
 
 @commit_on_success
 def save_owner_activity(userid, action, ownerid, locale):

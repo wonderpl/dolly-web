@@ -4,7 +4,7 @@ from flask import json
 import pyes
 from ast import literal_eval
 from urlparse import urlparse
-from sqlalchemy import func
+from sqlalchemy import func, distinct
 from sqlalchemy.orm import lazyload, contains_eager
 from . import mappings
 from . import es_connection
@@ -804,7 +804,7 @@ def add_user_to_index(user, bulk=False, refresh=False, no_check=False):
         refresh=refresh)
 
 
-def update_user_subscription_count(userids=None, automatic_flush=True):
+def update_user_subscription_count(userids=None, start=None, automatic_flush=True):
     from rockpack.mainsite.services.user.models import Subscription
     from rockpack.mainsite.services.video.models import Channel
 
@@ -818,6 +818,12 @@ def update_user_subscription_count(userids=None, automatic_flush=True):
 
     if userids:
         subscription_count = subscription_count.filter(Subscription.user.in_(userids))
+
+    if start:
+        # Find the users which have added new subs and use that as a subquery
+        # to filter down which users channels we want to update counts on
+        subq = Subscription.query.filter(Subscription.date_created >= start).with_entities(distinct(Subscription.user)).subquery()
+        subscription_count = subscription_count.query.filter(Subscription.user.in_(subq))
 
     subscription_count = subscription_count.with_entities(Subscription.user, func.count(Subscription.channel)).group_by(Subscription.user)
 
