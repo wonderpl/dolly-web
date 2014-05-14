@@ -823,7 +823,7 @@ def update_user_subscription_count(userids=None, start=None, automatic_flush=Tru
         # Find the users which have added new subs and use that as a subquery
         # to filter down which users channels we want to update counts on
         subq = Subscription.query.filter(Subscription.date_created >= start).with_entities(distinct(Subscription.user)).subquery()
-        subscription_count = subscription_count.query.filter(Subscription.user.in_(subq))
+        subscription_count = subscription_count.filter(Subscription.user.in_(subq))
 
     subscription_count = subscription_count.with_entities(Subscription.user, func.count(Subscription.channel)).group_by(Subscription.user)
 
