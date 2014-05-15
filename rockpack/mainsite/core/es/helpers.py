@@ -294,12 +294,23 @@ class DBImport(object):
             count = 1
             total = channels.count()
 
-            video_counts = dict(
-                VideoInstance.query.
-                join(Video, (Video.id == VideoInstance.video) & (Video.visible == True)).
-                group_by(VideoInstance.channel).
-                values(VideoInstance.channel, func.count(VideoInstance.id))
-            )
+            query = VideoInstance.query.join(
+                Video,
+                (Video.id == VideoInstance.video) &
+                (Video.visible == True)
+            ).group_by(VideoInstance.channel)
+
+            if start:
+                # Restrict the counts selected to the channels we want
+                query = query.join(
+                    Channel,
+                    (Channel.id == VideoInstance.channel) &
+                    (Channel.date_updated >= start)
+                )
+
+            query = query.values(VideoInstance.channel, func.count(VideoInstance.id))
+
+            video_counts = dict(query)
 
             for channel in channels.yield_per(6000):
                 channel._video_count = video_counts.get(channel.id) or 0
@@ -509,7 +520,7 @@ class DBImport(object):
                 query = query.filter(VideoInstance.id.like(prefix.replace('_', '\\_') + '%'))
 
             if start:
-                video_ids = [v[0].video for v in VideoInstance.query.filter(
+                video_ids = [v[0] for v in VideoInstance.query.filter(
                     VideoInstance.date_updated >= start).values('video')]
 
                 if not video_ids:
@@ -659,6 +670,8 @@ class DBImport(object):
     def import_video_channel_terms(self, prefix=None, start=None, automatic_flush=True):
         from rockpack.mainsite.services.video.models import VideoInstance, Channel, Video
 
+        child = aliased(VideoInstance, name='child')
+
         query = VideoInstance.query.join(
             Channel,
             Channel.id == VideoInstance.channel
@@ -666,6 +679,9 @@ class DBImport(object):
             Video,
             Video.id == VideoInstance.video
         ).filter(Channel.public == True, Channel.deleted == False)
+
+        if start:
+            query = query.join(child, child.channel == Channel.id).filter(child.date_updated >= start)
 
         channel_terms = {}
 
