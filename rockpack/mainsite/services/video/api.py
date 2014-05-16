@@ -160,6 +160,9 @@ def video_dict(instance):
             link_title=video.link_title
         )
     )
+
+    data['video'].update(models.Video.extra_meta(video))
+
     original_channel_owner = instance.get_original_channel_owner()
     if original_channel_owner:
         data['original_channel_owner'] = user_dict(original_channel_owner)
