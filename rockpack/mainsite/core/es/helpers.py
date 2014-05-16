@@ -289,7 +289,7 @@ class DBImport(object):
 
             app.logger.debug('importing {} PUBLIC channels\r'.format(channels.count()))
 
-            start = time.time()
+            func_start = time.time()
             ec = ESChannel.inserter(bulk=True)
             count = 1
             total = channels.count()
@@ -321,7 +321,7 @@ class DBImport(object):
             if automatic_flush:
                 ec.flush_bulk()
 
-            app.logger.debug('finished in {} seconds'.format(time.time() - start))
+            app.logger.debug('finished in {} seconds'.format(time.time() - func_start))
 
     def import_search_suggestions(self):
         from rockpack.mainsite.services.video.models import Video
