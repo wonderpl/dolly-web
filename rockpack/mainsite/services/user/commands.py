@@ -367,7 +367,7 @@ def update_video_feed_item_stars(date_from, date_to):
     # Find all star actions in this interval for which a friend of the star'ing user
     # has the video in their feed and update the stars list with these new stars at
     # the top.
-    feed_items = UserContentFeed.query.\
+    feed_items_1 = UserContentFeed.query.\
         join(UserActivity,
             (UserActivity.action == 'star') &
             (UserActivity.date_actioned.between(date_from, date_to))).\
@@ -380,6 +380,36 @@ def update_video_feed_item_stars(date_from, date_to):
                (UserContentFeed.video_instance == VideoInstance.id)).\
         with_entities(UserContentFeed, func.string_agg(UserActivity.user, ' ')).\
         group_by(UserContentFeed.id)
+
+    feed_items_2 = UserContentFeed.query.\
+        join(UserActivity,
+            (UserActivity.action == 'star') &
+            (UserActivity.date_actioned.between(date_from, date_to))).\
+        join(User, User.id == UserActivity.user).\
+        join(ExternalFriend, (ExternalFriend.email == User.email) &
+                             (ExternalFriend.external_system == 'email')).\
+        join(VideoInstance, UserActivity.object_id == VideoInstance.id).\
+        filter((UserContentFeed.user == ExternalFriend.user) &
+               (UserContentFeed.channel == VideoInstance.channel) &
+               (UserContentFeed.video_instance == VideoInstance.id)).\
+        with_entities(UserContentFeed, func.string_agg(UserActivity.user, ' ')).\
+        group_by(UserContentFeed.id)
+
+    feed_items_3 = UserContentFeed.query.\
+        join(UserActivity,
+            (UserActivity.action == 'star') &
+            (UserActivity.date_actioned.between(date_from, date_to))).\
+        join(Channel, Channel.owner == UserActivity.user).\
+        join(Subscription, Subscription.channel == Channel.id).\
+        join(VideoInstance, UserActivity.object_id == VideoInstance.id).\
+        filter((UserContentFeed.user == Subscription.user) &
+               (UserContentFeed.channel == VideoInstance.channel) &
+               (UserContentFeed.video_instance == VideoInstance.id)).\
+        with_entities(UserContentFeed, func.string_agg(UserActivity.user, ' ')).\
+        group_by(UserContentFeed.id)
+
+    feed_items = feed_items_1.union(feed_items_2).union(feed_items_3).alias('feed_items')
+
     star_limit = app.config.get('FEED_STARS_LIMIT', 3)
     for feed_item, new_stars in feed_items:
         old_stars = json.loads(feed_item.stars) if feed_item.stars else []

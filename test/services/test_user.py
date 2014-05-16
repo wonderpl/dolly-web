@@ -568,6 +568,46 @@ class TestUserContent(base.RockPackTestCase):
                         label = 'Latest'
                     self.assertEquals(item['label'], label)
 
+            # Add an additional star by a subscribee and an email friend
+            user4 = self.create_test_user().id
+
+            u4new = Channel(owner=user4, title='u4new', description='', cover='',
+                            public=True, date_published=datetime.now()).save().id
+
+            Subscription(user=user1, channel=u4new).save()
+
+            user5 = self.create_test_user()
+
+            ExternalFriend(user=user1, external_system='email', external_uid='u5',
+                           name='u5', avatar_url='', email=user5.email).save()
+
+            UserActivity(user=user4, action='star', object_type='video_instance',
+                         object_id=c1starred.id).save()
+
+            UserActivity(user=user5.id, action='star', object_type='video_instance',
+                         object_id=c1starred.id).save()
+
+            # cron time
+            app.config['FEED_STARS_LIMIT'] = 5
+            date_from, date_to = datetime(2012, 1, 1), datetime(2020, 1, 1)
+            cron_cmds.create_new_video_feed_items(date_from, date_to)
+            User.query.session.commit()
+
+        with self.app.test_client() as client:
+            # Fetch feed
+            self.wait_for_es()
+
+            r = client.get('/ws/{}/content_feed/'.format(user1),
+                           headers=[get_auth_header(user1)])
+            data = json.loads(r.data)['content']
+
+            starred = [i for i in data['items'] if i['id'] == c1starred.id][0]
+            self.assertEquals(starred['video']['star_count'], 5)
+            starred_users = [u['id'] for u in starred['starring_users']]
+
+            self.assertIn(user4, starred_users)
+            self.assertIn(user5.id, starred_users)
+
         # check subscription count is being generated
         with self.app.test_client() as client:
             self.wait_for_es()
