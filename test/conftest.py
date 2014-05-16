@@ -41,6 +41,11 @@ def pytest_configure(config):
     dbapi.sync_database(custom_modules=('rockpack.mainsite.admin', 'rockpack.mainsite.admin.auth', ))
     install(*all_data)
 
+    if app.config.get('ELASTICSEARCH_URL'):
+        helpers.full_user_import()
+        helpers.full_channel_import()
+        helpers.full_video_import()
+
 
 def pytest_unconfigure(config):
     from rockpack.mainsite import app
