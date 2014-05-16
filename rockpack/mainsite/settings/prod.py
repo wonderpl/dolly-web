@@ -34,6 +34,8 @@ ENABLE_TIMINGS = True
 
 SQS_REGION = 'us-east-1'
 
+DISABLED_CRON_JOBS = ('update_user_promotions', 'process_video_instance_queue')
+
 #USE_GEVENT = True
 
 # Credentials for rockpack prod app on facebook

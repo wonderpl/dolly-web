@@ -76,6 +76,12 @@ SQS_EMAIL_QUEUE = 'dolly-mainsite-email'
 SQS_BACKGROUND_QUEUE = 'dolly-mainsite-background'
 SQS_ELASTICSEARCH_QUEUE = 'dolly-mainsite-es'
 
+DISABLED_CRON_JOBS = (
+    'import_google_movies', 'import_itunes_downloads', 'process_broadcast_messages',
+    'refresh_pubsubhubbub_subscriptions', 'reset_expiring_tokens',
+    'send_reactivation_emails', 'update_apns_tokens', 'update_recommender'
+)
+
 AUTO_FOLLOW_USERS = ('iOPtuNUO15f1cgMhZdDgwg',)
 
 # Mapping from share object type to message (can have formatting)

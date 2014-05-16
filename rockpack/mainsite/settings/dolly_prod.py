@@ -98,6 +98,8 @@ SQS_EMAIL_QUEUE = 'dolly-mainsite-email'
 SQS_BACKGROUND_QUEUE = 'dolly-mainsite-background'
 SQS_ELASTICSEARCH_QUEUE = 'dolly-mainsite-es'
 
+DISABLED_CRON_JOBS = ('import_google_movies', 'update_recommender')
+
 AUTO_FOLLOW_USERS = ('iOPtuNUO15f1cgMhZdDgwg',)
 
 ENABLE_USER_CATEGORISATION_CONDITIONS = True

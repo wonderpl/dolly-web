@@ -28,6 +28,12 @@ ELASTICSEARCH_URL = 'http://es1:9200'
 SQS_BACKGROUND_QUEUE = 'mainsite-background'
 SQS_ELASTICSEARCH_QUEUE = 'es-video-update'
 
+DISABLED_CRON_JOBS = (
+    'import_google_movies', 'import_itunes_downloads', 'process_broadcast_messages',
+    'refresh_pubsubhubbub_subscriptions', 'reset_expiring_tokens',
+    'send_reactivation_emails', 'update_apns_tokens', 'update_recommender'
+)
+
 STATSD_HOST = 'admin'
 
 ENABLE_TIMINGS = True
