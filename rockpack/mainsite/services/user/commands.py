@@ -386,7 +386,7 @@ def update_video_feed_item_stars(date_from, date_to):
         with_entities(ExternalToken.user.label('friendid'),
                       ExternalFriend.user.label('userid'))
 
-    unioned = subscription_friend.union_all(email_friend, external_friend)
+    unioned = subscription_friend.union_all(email_friend, external_friend).subquery()
 
     feed_items = UserContentFeed.query.\
         join(UserActivity,
