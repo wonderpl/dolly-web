@@ -96,7 +96,8 @@ def get_db_channels(locale, paging, with_video_counts=False, add_tracking=None, 
     if with_video_counts:
         channels = channels.outerjoin(
             models.VideoInstance,
-            models.VideoInstance.channel == models.Channel.id
+            (models.VideoInstance.channel == models.Channel.id) &
+            (models.VideoInstance.deleted == False)
         ).with_entities(models.Channel, func.count(models.VideoInstance.id)).\
             group_by(models.Channel.id, models.User.id)
     else:
@@ -180,6 +181,7 @@ def get_local_videos(loc, paging, with_channel=True, include_invisible=False, re
         func.count(models.VideoInstanceComment.id)
     ).join(
         models.Video, models.Video.id == models.VideoInstance.video).\
+        filter(models.VideoInstance.deleted == False).\
         options(contains_eager(models.VideoInstance.video_rel)).\
         outerjoin(models.VideoInstanceComment,
                   models.VideoInstanceComment.video_instance == models.VideoInstance.id).\
