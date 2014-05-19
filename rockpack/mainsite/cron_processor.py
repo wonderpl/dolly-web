@@ -55,7 +55,7 @@ def process_next_job():
     finally:
         assert unlock_command(command)
 
-    record_timing('rockpack.mainsite.cron_processor.%s.run_time' % command, time.time() - start_time)
+    record_timing('cron_processor.%s.run_time' % command, time.time() - start_time)
 
     return success
 
