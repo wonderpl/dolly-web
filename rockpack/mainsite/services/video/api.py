@@ -140,7 +140,7 @@ def get_es_channels(locale, paging, category, category_boosts=None,
     return channels, cs.total
 
 
-def video_dict(instance):
+def video_dict(instance, position=None, add_tracking=None):
     video = instance.video_rel
     data = dict(
         id=instance.id,
@@ -167,10 +167,17 @@ def video_dict(instance):
     original_channel_owner = instance.get_original_channel_owner()
     if original_channel_owner:
         data['original_channel_owner'] = user_dict(original_channel_owner)
+
+    if position is not None:
+        data['position'] = position
+
+    if add_tracking:
+        add_tracking(data)
+
     return data
 
 
-def get_local_videos(loc, paging, with_channel=True, with_comments=False, include_invisible=False, readonly_db=False, **filters):
+def get_local_videos(loc, paging, with_channel=True, with_comments=False, include_invisible=False, add_tracking=None, readonly_db=False, **filters):
     session = readonly_session if readonly_db else db.session
     videos = session.query(
         models.VideoInstance,
@@ -225,8 +232,7 @@ def get_local_videos(loc, paging, with_channel=True, with_comments=False, includ
     videos = videos.offset(offset).limit(limit)
     data = []
     for position, (video, comment_count) in enumerate(videos, offset):
-        item = video_dict(video)
-        item['position'] = position
+        item = video_dict(video, position, add_tracking=add_tracking)
         if comment_count is not None:
             item['comments'] = dict(count=comment_count)
         if with_channel:
@@ -255,20 +261,29 @@ class VideoWS(WebService):
 
     @expose_ajax('/', cache_age=3600)
     def video_list(self):
-        if not use_elasticsearch():
-            data, total = get_local_videos(self.get_locale(), self.get_page(), star_order=True, **request.args)
-            return dict(videos=dict(items=data, total=total))
+        def add_tracking(video, extra=None):
+            video['tracking_code'] = ' '.join(filter(None, (
+                'video-browse',
+                str(video['position']),
+                category and 'cat-%s' % category,
+                extra)))
 
-        location = request.args.get('location')
-        date_order = request.args.get('date_order')
-        if app.config.get('DOLLY'):
-            date_order = 'desc'
         category = request.args.get('category')
         if category:
             try:
                 int(category)
             except ValueError:
                 abort(400)
+
+        if not use_elasticsearch():
+            data, total = get_local_videos(self.get_locale(), self.get_page(), star_order=True,
+                                           add_tracking=add_tracking, **request.args)
+            return dict(videos=dict(items=data, total=total))
+
+        location = request.args.get('location')
+        date_order = request.args.get('date_order')
+        if app.config.get('DOLLY'):
+            date_order = 'desc'
 
         vs = VideoSearch(self.get_locale())
         offset, limit = self.get_page()
@@ -351,7 +366,7 @@ class ChannelWS(WebService):
     def channel_list(self):
         def add_tracking(channel, extra=None):
             channel['tracking_code'] = ' '.join(filter(None, (
-                'browse',
+                'channel-browse',
                 str(channel['position']),
                 category and 'cat-%s' % category,
                 extra)))

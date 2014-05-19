@@ -65,6 +65,12 @@ class SearchWS(WebService):
         start, size = self.get_page()
         region = self.get_locale().split('-')[1]
 
+        def _add_tracking(video, extra=None):
+            video['tracking_code'] = ' '.join(filter(None, (
+                'video-search',
+                str(video['position']),
+                extra)))
+
         def _search_es(query):
             vs = VideoSearch(self.get_locale())
             # Split the term so that the search phrase is
@@ -83,7 +89,7 @@ class SearchWS(WebService):
             start, size = self.get_page()
             vs.set_paging(offset=start, limit=size)
             total = vs.total
-            return total, vs.videos()
+            return total, vs.videos(add_tracking=_add_tracking)
 
         items = []
         query = request.args.get('q', '')

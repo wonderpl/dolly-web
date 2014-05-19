@@ -1,6 +1,5 @@
 import pyes
 from urlparse import urljoin
-from flask import json
 from . import mappings
 from . import es_connection
 from . import exceptions
@@ -486,7 +485,7 @@ class VideoSearch(EntitySearch, CategoryMixin, MediaSortMixin):
         if log_cache:
             app.logger.warning("Missing channels '%s' during mapping", str(log_cache))
 
-    def _format_results(self, videos, with_channels=True, with_stars=False):
+    def _format_results(self, videos, with_channels=True, with_stars=False, add_tracking=None):
         vlist = []
         channel_list = set()
         IMAGE_CDN = app.config.get('IMAGE_CDN', '')
@@ -550,6 +549,9 @@ class VideoSearch(EntitySearch, CategoryMixin, MediaSortMixin):
             if v.category:
                 video['category'] = max(v.category) if isinstance(v.category, list) else v.category
 
+            if add_tracking:
+                add_tracking(video)
+
             channel_list.add(v.channel)
             vlist.append(video)
 
@@ -576,14 +578,16 @@ class VideoSearch(EntitySearch, CategoryMixin, MediaSortMixin):
         if country:
             self._exclusion_filters.append(filters.country_restriction(country))
 
-    def videos(self, with_channels=False, with_stars=False):
+    def videos(self, with_channels=False, with_stars=False, add_tracking=None):
         if not self._video_results:
             if app.config.get('DOLLY'):
                 # Ensure videos aren't displayed that have
                 # a date_added in the future
                 self._exclusion_filters.append(filters.filter_by_date_added())
             r = self.results()
-            self._video_results = self._format_results(r, with_channels=with_channels, with_stars=with_stars)
+            self._video_results = self._format_results(
+                r, with_channels=with_channels, with_stars=with_stars,
+                add_tracking=add_tracking)
         return self._video_results
 
 
@@ -641,7 +645,7 @@ class UserSearch(EntitySearch, CategoryMixin):
                 subscriber_count=user.subscriber_count,
                 subscription_count=user.subscription_count,
                 promotion=user.promotion
-                #categories=getattr(user, 'category', []) or []
+                # categories=getattr(user, 'category', []) or []
             )
 
             if user.brand:
