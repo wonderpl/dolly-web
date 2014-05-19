@@ -743,7 +743,7 @@ def _content_feed(userid, locale, paging, country=None):
         i, item = itemmap[video['id']]
         # Compose list of liking users from feed item and global video stars
         item._starring_users = json.loads(item.stars) if item.stars else []
-        if app.config.get('DOLLY'):
+        if not app.config.get('DOLLY'):
             for user in video.pop('recent_user_stars'):
                 if user not in item._starring_users:
                     item._starring_users.append(user)
