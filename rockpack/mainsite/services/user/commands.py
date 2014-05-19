@@ -367,48 +367,37 @@ def update_video_feed_item_stars(date_from, date_to):
     # Find all star actions in this interval for which a friend of the star'ing user
     # has the video in their feed and update the stars list with these new stars at
     # the top.
-    feed_items_1 = UserContentFeed.query.\
-        join(UserActivity,
-            (UserActivity.action == 'star') &
-            (UserActivity.date_actioned.between(date_from, date_to))).\
-        join(ExternalToken, ExternalToken.user == UserActivity.user).\
-        join(ExternalFriend, (ExternalFriend.external_system == ExternalToken.external_system) &
-                             (ExternalFriend.external_uid == ExternalToken.external_uid)).\
-        join(VideoInstance, UserActivity.object_id == VideoInstance.id).\
-        filter((UserContentFeed.user == ExternalFriend.user) &
-               (UserContentFeed.channel == VideoInstance.channel) &
-               (UserContentFeed.video_instance == VideoInstance.id)).\
-        with_entities(UserContentFeed, func.string_agg(UserActivity.user, ' ')).\
-        group_by(UserContentFeed.id)
 
-    feed_items_2 = UserContentFeed.query.\
-        join(UserActivity,
-            (UserActivity.action == 'star') &
-            (UserActivity.date_actioned.between(date_from, date_to))).\
-        join(User, User.id == UserActivity.user).\
-        join(ExternalFriend, (ExternalFriend.email == User.email) &
-                             (ExternalFriend.external_system == 'email')).\
-        join(VideoInstance, UserActivity.object_id == VideoInstance.id).\
-        filter((UserContentFeed.user == ExternalFriend.user) &
-               (UserContentFeed.channel == VideoInstance.channel) &
-               (UserContentFeed.video_instance == VideoInstance.id)).\
-        with_entities(UserContentFeed, func.string_agg(UserActivity.user, ' ')).\
-        group_by(UserContentFeed.id)
-
-    feed_items_3 = UserContentFeed.query.\
-        join(UserActivity,
-            (UserActivity.action == 'star') &
-            (UserActivity.date_actioned.between(date_from, date_to))).\
-        join(Channel, Channel.owner == UserActivity.user).\
+    subscription_friend = Channel.query.\
         join(Subscription, Subscription.channel == Channel.id).\
-        join(VideoInstance, UserActivity.object_id == VideoInstance.id).\
-        filter((UserContentFeed.user == Subscription.user) &
-               (UserContentFeed.channel == VideoInstance.channel) &
-               (UserContentFeed.video_instance == VideoInstance.id)).\
+        with_entities(Channel.owner.label('friendid'), Subscription.user.label('userid'))
+
+    email_friend = ExternalFriend.query.\
+        join(User,
+             (ExternalFriend.email == User.email) &
+             (ExternalFriend.external_system == 'email')).\
+        with_entities(User.id.label('friendid'),
+                      ExternalFriend.user.label('userid'))
+
+    external_friend = ExternalToken.query.\
+        join(ExternalFriend,
+            (ExternalFriend.external_system == ExternalToken.external_system) &
+            (ExternalFriend.external_uid == ExternalToken.external_uid)).\
+        with_entities(ExternalToken.user.label('friendid'),
+                      ExternalFriend.user.label('userid'))
+
+    unioned = subscription_friend.union_all(email_friend, external_friend)
+
+    feed_items = UserContentFeed.query.\
+        join(UserActivity,
+            (UserActivity.action == 'star') &
+            (UserActivity.date_actioned.between(date_from, date_to))).\
+        join(unioned, unioned.c.userid == UserContentFeed.user).\
+        filter((UserActivity.user == unioned.c.friendid) &
+               (UserContentFeed.user != UserActivity.user) &
+               (UserContentFeed.video_instance == UserActivity.object_id)).\
         with_entities(UserContentFeed, func.string_agg(UserActivity.user, ' ')).\
         group_by(UserContentFeed.id)
-
-    feed_items = feed_items_1.union_all(feed_items_2, feed_items_3)
 
     star_limit = app.config.get('FEED_STARS_LIMIT', 3)
     for feed_item, new_stars in feed_items:
