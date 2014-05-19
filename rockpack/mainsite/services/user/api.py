@@ -743,9 +743,10 @@ def _content_feed(userid, locale, paging, country=None):
         i, item = itemmap[video['id']]
         # Compose list of liking users from feed item and global video stars
         item._starring_users = json.loads(item.stars) if item.stars else []
-        for user in video.pop('recent_user_stars'):
-            if user not in item._starring_users:
-                item._starring_users.append(user)
+        if app.config.get('DOLLY'):
+            for user in video.pop('recent_user_stars'):
+                if user not in item._starring_users:
+                    item._starring_users.append(user)
         usermap.update((u, None) for u in item._starring_users)
         channelmap[item.channel] = None
         video['position'] = i + offset
