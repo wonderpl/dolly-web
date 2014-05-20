@@ -710,9 +710,12 @@ def _update_or_remove_channel(channelid):
 
 
 @background_on_sqs
-def _update_channel_category(channelid):
-    from rockpack.mainsite.core.es.update import update_video_related_channel_meta
-    update_video_related_channel_meta(channelid)
+@commit_on_success
+def _update_channel_category(channelids):
+    from rockpack.mainsite.core.es.update import update_potential_categories, _category_channel_mapping
+    for channelid in channelids:
+        category_map = _category_channel_mapping(channelid)
+        update_potential_categories(channelid, category_map)
 
 
 @background_on_sqs
