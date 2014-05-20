@@ -260,7 +260,8 @@ class TestProfileEdit(base.RockPackTestCase):
                 '/ws/token/',
                 headers=[get_client_auth_header()],
                 data=dict(refresh_token=creds['refresh_token'],
-                grant_type='refresh_token'))
+                          grant_type='refresh_token')
+            )
 
             new_creds = json.loads(r.data)
 
@@ -524,7 +525,7 @@ class TestUserContent(base.RockPackTestCase):
 
             self.assertEquals(mock_method.call_count, 2)
 
-            #cron_cmds.update_video_feed_item_stars(date_from, date_to)
+            cron_cmds.update_video_feed_item_stars(date_from, date_to)
             User.query.session.commit()
 
         with self.app.test_client() as client:
@@ -542,15 +543,17 @@ class TestUserContent(base.RockPackTestCase):
             # Check videos from channel1 (except c1starred) are present and aggregated
             self.assertIn(c1instances[0].id, itemids)
             agg = [a for a in data['aggregations'].values() if a['type'] == 'video'][0]
-            self.assertEquals(agg['count'], len(c1instances) - 1)
+            self.assertEquals(agg['count'], len(c1instances) - (0 if app.config.get('DOLLY') else 1))
 
             # Check stars on c1starred and that no stars on cover video
             self.assertNotIn(c1starred.id, agg['covers'])
             cover = [i for i in data['items'] if i['id'] == agg['covers'][0]][0]
             self.assertEquals(cover['video']['star_count'], 0)
             starred = [i for i in data['items'] if i['id'] == c1starred.id][0]
-            self.assertEquals(starred['video']['star_count'], 3)
-            self.assertItemsEqual([u['id'] for u in starred['starring_users']], [user1, user2, user3])
+            # starring_users not set on DOLLY
+            if not app.config.get('DOLLY'):
+                self.assertEquals(starred['video']['star_count'], 3)
+                self.assertItemsEqual([u['id'] for u in starred['starring_users']], [user1, user2, user3])
 
             # Check that new channels from friend and from subscription owner are present
             self.assertNotIn(u2old, itemids)
@@ -587,10 +590,15 @@ class TestUserContent(base.RockPackTestCase):
             UserActivity(user=user5.id, action='star', object_type='video_instance',
                          object_id=c1starred.id).save()
 
+            user6 = self.create_test_user()
+            UserActivity(user=user6.id, action='star', object_type='video_instance',
+                         object_id=c1starred.id).save()
+
             # cron time
-            app.config['FEED_STARS_LIMIT'] = 5
+            app.config['FEED_STARS_LIMIT'] = 6
             date_from, date_to = datetime(2012, 1, 1), datetime(2020, 1, 1)
             cron_cmds.create_new_video_feed_items(date_from, date_to)
+            cron_cmds.update_video_feed_item_stars(date_from, date_to)
             User.query.session.commit()
 
         with self.app.test_client() as client:
@@ -602,11 +610,15 @@ class TestUserContent(base.RockPackTestCase):
             data = json.loads(r.data)['content']
 
             starred = [i for i in data['items'] if i['id'] == c1starred.id][0]
-            self.assertEquals(starred['video']['star_count'], 5)
-            starred_users = [u['id'] for u in starred['starring_users']]
+            starring_user_ids = [u['id'] for u in starred['starring_users']]
 
-            self.assertIn(user4, starred_users)
-            self.assertIn(user5.id, starred_users)
+            starring_friends = [user2, user3, user4, user5.id]
+            if app.config.get('DOLLY'):
+                self.assertItemsEqual(starring_user_ids, starring_friends)
+            else:
+                # rockpack has additional "global" starring_users
+                for friend in starring_friends:
+                    self.assertIn(friend, starring_user_ids)
 
         # check subscription count is being generated
         with self.app.test_client() as client:
