@@ -112,7 +112,7 @@ class TestShare(base.RockPackTestCase):
             self.assertIn('subscribed as %s.' % recipient, send_email.call_args[0][1])
 
         notifications = UserNotification.query.filter_by(
-            user=UserData.test_user_a.id, message_type='share')
+            user=UserData.test_user_a.id, message_type='channel_shared')
         message = json.loads(notifications.value('message'))
         self.assertEquals(message['user']['id'], userid)
         self.assertEquals(message['channel']['id'], ChannelData.channel1.id)
