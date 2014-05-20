@@ -154,16 +154,17 @@ class ESMigration(object):
 @start_flush_timer
 def full_user_import(start=None):
     from rockpack.mainsite.services.user import models
-    users_to_delete = models.User.query.filter(models.User.is_active == False)
 
     with app.test_request_context():
+        users_to_delete = models.User.query.filter(models.User.is_active == False)
         if start:
             users_to_delete = users_to_delete.filter(models.User.date_updated >= start)
 
-        users_to_delete = users_to_delete.values('id')
+        delete = [u[0] for u in users_to_delete.values('id')]
 
-        api.ESUser.delete([u[0] for u in users_to_delete])
-        api.ESUser.flush()
+        if delete:
+            api.ESUser.delete(delete)
+            api.ESUser.flush()
 
     imp = DBImport()
     imp.import_users(start=start, automatic_flush=False)
@@ -187,10 +188,11 @@ def full_channel_import(start=None):
         if start:
             channels_to_delete = channels_to_delete.filter(models.Channel.date_updated >= start)
 
-        channels_to_delete = channels_to_delete.values('id')
+        delete = [c[0] for c in channels_to_delete.values('id')]
 
-        api.ESChannel.delete([c[0] for c in channels_to_delete])
-        api.ESChannel.flush()
+        if delete:
+            api.ESChannel.delete(delete)
+            api.ESChannel.flush()
 
     imp = DBImport()
     imp.import_channels(start=start, automatic_flush=False)
@@ -205,21 +207,27 @@ def full_video_import(start=None, prefix=None):
     from rockpack.mainsite.services.video import models
 
     with app.test_request_context():
-        videos_to_delete = models.VideoInstance.query.filter(
-            models.VideoInstance.deleted == True)
+        videos_to_delete = models.VideoInstance.query.join(
+            models.Video,
+            models.VideoInstance.video == models.Video.id
+        ).filter(
+            (models.VideoInstance.deleted == True) |
+            (models.Video.visible == False))
 
         if start:
             videos_to_delete = videos_to_delete.filter(
-                models.VideoInstance.date_updated >= start)
+                (models.VideoInstance.date_updated >= start) |
+                (models.Video.date_updated >= start))
 
         if prefix:
             videos_to_delete = videos_to_delete.filter(
                 models.VideoInstance.id.like(prefix.replace('_', '\\_') + '%'))
 
-        videos_to_delete = videos_to_delete.values(models.VideoInstance.id)
+        delete = [v[0] for v in videos_to_delete.values(models.VideoInstance.id)]
 
-        api.ESVideo.delete([v[0] for v in videos_to_delete])
-        api.ESVideo.flush()
+        if delete:
+            api.ESVideo.delete(delete)
+            api.ESVideo.flush()
 
     imp = DBImport()
     imp.import_videos(prefix=prefix, start=start, automatic_flush=False)
