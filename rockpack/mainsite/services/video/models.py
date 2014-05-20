@@ -7,7 +7,6 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import relationship, aliased, lazyload
 from sqlalchemy.orm.attributes import get_history
 from rockpack.mainsite import app, cache
-from rockpack.mainsite.core.dbapi import commit_on_success
 from rockpack.mainsite.core.dbapi import db, defer_except, commit_on_success
 from rockpack.mainsite.helpers import lazy_gettext as _
 from rockpack.mainsite.helpers.db import add_base64_pk, add_video_pk, insert_new_only, ImageType, BoxType
@@ -326,7 +325,8 @@ class VideoInstance(db.Model):
     def label(self):
         labels = self.tags and [t[6:] for t in self.tags.split(',') if t.startswith('label-')]
         if labels:
-            return labels[0].replace('-', ' ').capitalize()
+            label = labels[0].replace('-', ' ')
+            return label.capitalize() if label.islower() else label
         elif not self.original_channel_owner:
             return _('Latest')
 
