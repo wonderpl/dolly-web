@@ -12,7 +12,7 @@ from . import use_elasticsearch
 from . import exceptions
 from rockpack.mainsite import app
 from rockpack.mainsite.helpers.db import ImageType
-from rockpack.mainsite.core.dbapi import db
+from rockpack.mainsite.core.dbapi import db, readonly_session
 from rockpack.mainsite.background_sqs_processor import background_on_sqs
 
 logger = logging.getLogger(__name__)
@@ -865,7 +865,7 @@ def condition_for_category(user, channel, video_count):
     return True
 
 
-def get_users_categories(user_ids=None):
+def get_users_categories(user_ids=None, start=None):
     from rockpack.mainsite.services.video import models
     from rockpack.mainsite.services.user.models import User
 
@@ -873,13 +873,28 @@ def get_users_categories(user_ids=None):
         models.Channel,
         (models.Channel.owner == User.id) &
         (models.Channel.deleted == False) &
+        (models.Channel.visible == True) &
         (models.Channel.public == True)
     ).outerjoin(
-        models.VideoInstance, models.VideoInstance.channel == models.Channel.id
+        models.VideoInstance,
+        (models.VideoInstance.channel == models.Channel.id) &
+        (models.VideoInstance.deleted == False)
     ).options(
         lazyload(models.Channel.category_rel),
         contains_eager(models.Channel.owner_rel)
-    ).group_by(User.id, models.Channel.id).order_by(User.id)
+    )
+
+    if start:
+        updated_channels = readonly_session.query(distinct(models.Channel.id))\
+            .filter(models.Channel.date_updated >= start)
+
+        updated_instances = readonly_session.query(distinct(models.VideoInstance.channel))\
+            .filter(models.VideoInstance.date_updated >= start)
+
+        unioned = updated_channels.union(updated_instances).subquery()
+        query = query.filter(models.Channel.id.in_(unioned))
+
+    query = query.group_by(User.id, models.Channel.id).order_by(User.id)
 
     if user_ids:
         query = query.filter(User.id.in_(user_ids))
@@ -895,8 +910,8 @@ def get_users_categories(user_ids=None):
     return category_map
 
 
-def update_user_categories(user_ids=None, automatic_flush=True):
-    for user, categories in get_users_categories(user_ids).iteritems():
+def update_user_categories(user_ids=None, automatic_flush=True, start=None):
+    for user, categories in get_users_categories(user_ids=user_ids, start=start).iteritems():
         eu = ESUser.updater(bulk=True)
         eu.set_document_id(user.id)
         eu.add_field('category', list(set(categories)))

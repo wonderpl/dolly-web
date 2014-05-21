@@ -168,7 +168,7 @@ def full_user_import(start=None):
 
     imp = DBImport()
     imp.import_users(start=start, automatic_flush=False)
-    update_user_categories(automatic_flush=False)
+    update_user_categories(automatic_flush=False, start=start)
     update_user_subscription_count(start=start, automatic_flush=False)
 
     api.ESUser.flush()
@@ -232,9 +232,9 @@ def full_video_import(start=None, prefix=None):
     imp = DBImport()
     imp.import_videos(prefix=prefix, start=start, automatic_flush=False)
     imp.import_dolly_video_owners(prefix=prefix, start=start, automatic_flush=False)
-    imp.import_comment_counts(prefix=prefix, automatic_flush=False)
     imp.import_dolly_repin_counts(prefix=prefix, start=start, automatic_flush=False)
-    imp.import_video_stars(prefix=prefix, automatic_flush=False)
+    imp.import_video_stars(prefix=prefix, automatic_flush=False, start=start)
+    imp.import_comment_counts(prefix=prefix, automatic_flush=False, start=start)
 
     api.ESVideo.flush()
 
@@ -472,7 +472,7 @@ class DBImport(object):
     def import_user_categories(self):
         update_user_categories()
 
-    def import_comment_counts(self, prefix=None, automatic_flush=True):
+    def import_comment_counts(self, prefix=None, automatic_flush=True, start=None):
         from rockpack.mainsite.services.video.models import VideoInstanceComment, VideoInstance, Video
         from rockpack.mainsite.core.dbapi import db
 
@@ -482,11 +482,14 @@ class DBImport(object):
         ).join(
             Video,
             (Video.id == VideoInstance.video) &
-            (Video.visible == True) &
-            (VideoInstance.deleted == False))
+            (Video.visible == True)
+        ).filter(VideoInstance.deleted == False)
 
         if prefix:
             counts = counts.filter(VideoInstance.id.like(prefix.replace('_', '\\_') + '%'))
+
+        if start:
+            counts = counts.filter(VideoInstanceComment.date_added >= start)
 
         counts = counts.group_by(
             VideoInstance.id
@@ -580,16 +583,24 @@ class DBImport(object):
             if automatic_flush:
                 ESVideo.flush()
 
-    def import_video_stars(self, prefix=None, automatic_flush=True):
+    def import_video_stars(self, prefix=None, automatic_flush=True, start=None):
         from rockpack.mainsite.services.user.models import UserActivity
+
+        updated_activity = aliased(UserActivity, name='updated_activity')
 
         with app.test_request_context():
             query = UserActivity.query.filter(
                 UserActivity.action == 'star',
                 UserActivity.object_type == 'video_instance'
             ).order_by(
-                'object_id', 'date_actioned desc'
+                UserActivity.object_id, UserActivity.date_actioned.desc()
             )
+
+            if start:
+                query = query.join(
+                    updated_activity,
+                    (updated_activity.object_id == UserActivity.object_id) &
+                    (updated_activity.date_actioned >= start))
 
             if prefix:
                 query = query.filter(UserActivity.object_id.like(prefix.replace('_', '\\_') + '%'))
