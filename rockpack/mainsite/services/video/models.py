@@ -714,7 +714,7 @@ def _update_or_remove_channel(channelid):
 def _update_channel_category(channelids):
     from rockpack.mainsite.core.es.update import update_potential_categories, _category_channel_mapping
     for channelid in channelids:
-        category_map = _category_channel_mapping(channelid)
+        category_map = _category_channel_mapping([channelid])
         update_potential_categories(channelid, category_map)
 
 
@@ -737,9 +737,14 @@ def update_channel_date_updated(channel_ids):
 
 
 @event.listens_for(VideoInstance, 'after_insert')
-@event.listens_for(VideoInstance, 'after_delete')
 def video_instance_change(mapper, connection, target):
     if app.config.get('DOLLY'):
+        _update_channel_category([target.channel])
+
+
+@event.listens_for(VideoInstance, 'after_update')
+def video_instance_update(mapper, connection, target):
+    if app.config.get('DOLLY') and target.deleted:
         _update_channel_category([target.channel])
 
 
