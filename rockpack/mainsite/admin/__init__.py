@@ -48,3 +48,6 @@ def setup_admin(app):
     @app.context_processor
     def original_create_master_template():
         return {'original_create_master': original_create_master}
+
+    from cubes.server import slicer
+    app.register_blueprint(slicer, url_prefix='/admin/slicer', config='slicer.ini')

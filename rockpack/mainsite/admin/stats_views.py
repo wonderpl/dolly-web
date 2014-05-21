@@ -497,3 +497,11 @@ class TopVideosStatsView(TableStatsView):
 
     def split_row(self, row):
         return [self.video_item(*row[:2])], row[2:]
+
+
+class SlicerStatsView(StatsView):
+
+    @expose('/')
+    def index(self):
+        ctx = {}
+        return self.render('admin/slicer_stats.html', **ctx)

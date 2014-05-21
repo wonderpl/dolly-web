@@ -1,0 +1,75 @@
+{
+	"cubes": [
+		{
+			"name": "user_activity",
+			"label": "User Activity",
+			"dimensions": ["date", "action", "content"],
+			"measures": [],
+			"aggregates": [
+				{
+					"name": "record_count",
+					"function": "count"
+				}
+			],
+			"mappings": {
+				"action.locale": "locale",
+				"action.action": "action",
+				"content.object_type": "object_type",
+				"content.object_id": "object_id",
+				"date.year": {"column":"date_actioned", "extract":"year"},
+				"date.month": {"column":"date_actioned", "extract":"month"},
+				"date.day": {"column":"date_actioned", "extract":"day"}
+			}
+		}
+	],
+	"dimensions": [
+		{
+			"name": "date",
+			"levels": [
+				{
+					"name": "year",
+					"label": "Year",
+					"attributes": ["year"]
+				},
+				{
+					"name": "month",
+					"label": "Month",
+					"attributes": ["month"]
+				},
+				{
+					"name": "day",
+					"label": "Day",
+					"attributes": ["day"]
+				}
+			]
+		},
+		{
+			"name": "action",
+			"levels": [
+				{
+					"name": "action",
+					"label": "Action",
+					"attributes": ["action"],
+					"cardinality": "low"
+				}
+			]
+		},
+		{
+			"name": "content",
+			"levels": [
+				{
+					"name": "object_type",
+					"label": "Content Type",
+					"attributes": ["object_type"],
+					"cardinality": "tiny"
+				},
+				{
+					"name": "object_id",
+					"label": "Content Identifier",
+					"attributes": ["object_id"],
+					"cardinality": "high"
+				}
+			]
+		}
+	]
+}

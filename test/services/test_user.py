@@ -436,7 +436,8 @@ class TestUserContent(base.RockPackTestCase):
             channel.description = 'a description'
             channel.save()
 
-            time.sleep(2)
+        with self.app.test_client() as client:
+            self.wait_for_es()
 
             app.config['USER_CATEGORISATION_VIDEO_THRESHOLD'] = ucv_threshold
             app.config['ENABLE_USER_CATEGORISATION_CONDITIONS'] = enable_ucc
