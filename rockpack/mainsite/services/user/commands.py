@@ -867,19 +867,33 @@ def update_recommender(date_from, date_to):
     _post_activity_to_recommender(date_from, date_to)
 
 
+@commit_on_success
+def update_user_counts(subscribe_counts):
+    for owner_id, count in subscribe_counts:
+        db.session.query(User).filter(User.id == owner_id).\
+            update({"subscriber_count": count})
+
+
 @manager.cron_command(interval=900)
 @job_control
 def update_user_subscriber_counts(date_from=None, date_to=None):
     """Update subscriber_count on users."""
-    users = User.query.join(
-        Channel,
-        (Channel.owner == User.id) & (Channel.date_updated.between(date_from, date_to)))
-    for user in users.distinct():
-        # Each user done seperately so that the ES signal kicks in
-        user.subscriber_count = Subscription.query.join(
-            Channel,
-            (Channel.id == Subscription.channel) & (Channel.owner == user.id)
-        ).value(func.count(distinct(Subscription.user)))
+
+    subscribe_counts = Subscription.query.join(Channel, (Channel.id == Subscription.channel))
+
+    if date_from:
+        subscribed_channels = Subscription.query.filter(
+            Subscription.date_created.between(date_from, date_to)
+        ).with_entities(distinct(Subscription.channel)).subquery()
+
+        subscribe_counts = subscribe_counts.filter(
+            Subscription.channel.in_(subscribed_channels))
+
+    subscribe_counts = subscribe_counts.group_by(
+        Channel.owner
+    ).with_entities(Channel.owner, func.count(Subscription.channel))
+
+    update_user_counts(subscribe_counts)
 
 
 @manager.cron_command(interval=900)
