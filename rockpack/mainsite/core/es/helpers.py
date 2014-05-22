@@ -432,37 +432,46 @@ class DBImport(object):
             a video instance belonging to a channel """
 
         from rockpack.mainsite.services.video.models import Channel, VideoInstance
+        from rockpack.mainsite.services.user.models import User
 
         with app.test_request_context():
-            channels = Channel.query.options(
-                joinedload(Channel.owner_rel)
+            instances = VideoInstance.query.join(
+                Channel,
+                (VideoInstance.channel == Channel.id) &
+                (Channel.public == True) &
+                (Channel.visible == True) &
+                (Channel.deleted == False)
             ).join(
-                VideoInstance,
-                VideoInstance.channel == Channel.id
-            ).options(
-                joinedload(Channel.video_instances)
-            ).filter(
-                Channel.public == True,
-                Channel.visible == True,
-                Channel.deleted == False,
-                VideoInstance.deleted == False)
+                User,
+                User.id == Channel.owner
+            )
 
             if prefix:
-                channels = channels.filter(VideoInstance.id.like(prefix.replace('_', '\\_') + '%'))
+                instances = instances.filter(VideoInstance.id.like(prefix.replace('_', '\\_') + '%'))
 
             if start:
-                channels = channels.filter(VideoInstance.date_updated >= start)
+                instances = instances.filter(VideoInstance.date_updated >= start)
 
-            total = channels.count()
+            instances = instances.with_entities(VideoInstance, User).order_by(VideoInstance.channel)
+
+            total = instances.count()
             done = 1
 
-            for channel in channels.yield_per(6000):
-                for video in channel.video_instances:
-                    mapped = ESVideoAttributeMap(video)
-                    ec = ESVideo.updater(bulk=True)
-                    ec.set_document_id(video.id)
-                    ec.add_field('owner', mapped.owner)
-                    ec.update()
+            current_user_dict = None
+            current_channel = None
+
+            for instance, user in instances.yield_per(6000):
+                if instance.channel != current_channel:
+                    # Duck punch the user on for perf
+                    instance.owner_rel = user
+                    mapped = ESVideoAttributeMap(instance)
+                    current_user_dict = mapped.owner
+
+                ec = ESVideo.updater(bulk=True)
+                ec.set_document_id(instance.id)
+                ec.add_field('owner', current_user_dict)
+                ec.update()
+
                 self.print_percent_complete(done, total)
                 done += 1
 
