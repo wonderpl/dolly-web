@@ -306,7 +306,7 @@ class DBImport(object):
                 Video,
                 (Video.id == VideoInstance.video) &
                 (Video.visible == True)
-            ).group_by(VideoInstance.channel)
+            ).filter(VideoInstance.deleted == False).group_by(VideoInstance.channel)
 
             if start:
                 # Restrict the counts selected to the channels we want
@@ -400,7 +400,7 @@ class DBImport(object):
                     date_added=mapped.date_added,
                     position=mapped.position,
                     locales=mapped.locales,
-                    recent_user_stars=mapped.recent_user_stars(empty=recent_user_stars),
+                    recent_user_stars=mapped.recent_user_stars(empty=not recent_user_stars),
                     country_restriction=mapped.country_restriction(empty=True),
                     comments=mapped.comments(empty=True),
                     child_instance_count=mapped.child_instance_count,
@@ -420,7 +420,7 @@ class DBImport(object):
                 vids.append(v.video)
 
             from . import update
-            update.update_most_influential_video(vids)
+            update.update_most_influential_video(list(set(vids)))
 
             if automatic_flush:
                 ev.flush_bulk()
@@ -444,6 +444,8 @@ class DBImport(object):
             ).join(
                 User,
                 User.id == Channel.owner
+            ).filter(
+                VideoInstance.deleted == False
             )
 
             if prefix:
@@ -540,12 +542,9 @@ class DBImport(object):
                 query = query.filter(VideoInstance.id.like(prefix.replace('_', '\\_') + '%'))
 
             if start:
-                video_ids = [v[0] for v in VideoInstance.query.filter(
-                    VideoInstance.date_updated >= start).values('video')]
-
-                if not video_ids:
-                    # No point doing anything as nothing here updated
-                    return
+                video_ids = VideoInstance.query.filter(
+                    VideoInstance.date_updated >= start
+                ).with_entities(VideoInstance.video).subquery()
 
                 query = query.filter(Video.id.in_(video_ids))
 

@@ -10,7 +10,7 @@ from . import mappings
 from . import es_connection
 from . import use_elasticsearch
 from . import exceptions
-from rockpack.mainsite import app
+from rockpack.mainsite import app, cache
 from rockpack.mainsite.helpers.db import ImageType
 from rockpack.mainsite.core.dbapi import db, readonly_session
 from rockpack.mainsite.background_sqs_processor import background_on_sqs
@@ -547,6 +547,16 @@ class ESVideoAttributeMap:
     def channel_title(self):
         return self.video_instance.video_channel.title
 
+    @classmethod
+    @cache.memoize(300)
+    def cat_name_to_id_dict(cls):
+        from rockpack.mainsite.services.video.models import Category
+        return dict(Category.query.values(Category.name, Category.id))
+
+    @classmethod
+    def cat_ids_from_names(cls, names):
+        return [id for name, id in cls.cat_name_to_id_dict().iteritems() if name in names]
+
     @property
     def category(self):
         primary_cat = self.video_instance.category
@@ -557,8 +567,7 @@ class ESVideoAttributeMap:
 
         cat_tags = [tag[4:] for tag in self.tags if tag.startswith('cat-')]
         if cat_tags:
-            from rockpack.mainsite.services.video.models import Category
-            return [primary_cat] + [cat[0] for cat in Category.query.filter(Category.name.in_(cat_tags)).values('id')]
+            return [primary_cat] + self.cat_ids_from_names(cat_tags)
         return primary_cat
 
     @property
