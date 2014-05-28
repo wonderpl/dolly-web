@@ -19,9 +19,9 @@ def timer(func):
 def update_indexes(date_from=None, date_to=None):
     """ Updates all data in all indexes """
     start = time.time()
-    helpers.full_user_import(start=date_from)
-    helpers.full_channel_import(start=date_from)
-    helpers.full_video_import(start=date_from)
+    helpers.full_user_import(start=date_from, stop=date_to)
+    helpers.full_channel_import(start=date_from, stop=date_to)
+    helpers.full_video_import(start=date_from, stop=date_to)
     app.logger.info('Ran update_indexes in %ds', time.time() - start)
 
 
