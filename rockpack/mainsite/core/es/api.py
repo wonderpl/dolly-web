@@ -821,7 +821,7 @@ def add_user_to_index(user, bulk=False, refresh=False, no_check=False):
         refresh=refresh)
 
 
-def update_user_subscription_count(userids=None, start=None, automatic_flush=True):
+def update_user_subscription_count(userids=None, start=None, stop=None, automatic_flush=True):
     from rockpack.mainsite.services.user.models import Subscription
     from rockpack.mainsite.services.video.models import Channel
 
@@ -839,7 +839,9 @@ def update_user_subscription_count(userids=None, start=None, automatic_flush=Tru
     if start:
         # Find the users which have added new subs and use that as a subquery
         # to filter down which users channels we want to update counts on
-        subq = Subscription.query.filter(Subscription.date_created >= start).with_entities(distinct(Subscription.user)).subquery()
+        subq = Subscription.query.filter(
+            Subscription.date_created.between(start, stop)
+        ).with_entities(distinct(Subscription.user)).subquery()
         subscription_count = subscription_count.filter(Subscription.user.in_(subq))
 
     subscription_count = subscription_count.with_entities(Subscription.user, func.count(Subscription.channel)).group_by(Subscription.user)
@@ -882,7 +884,7 @@ def condition_for_category(user, channel, video_count):
     return True
 
 
-def get_users_categories(user_ids=None, start=None):
+def get_users_categories(user_ids=None, start=None, stop=None):
     from rockpack.mainsite.services.video import models
     from rockpack.mainsite.services.user.models import User
 
@@ -903,10 +905,10 @@ def get_users_categories(user_ids=None, start=None):
 
     if start:
         updated_channels = readonly_session.query(distinct(models.Channel.id))\
-            .filter(models.Channel.date_updated >= start)
+            .filter(models.Channel.date_updated.between(start, stop))
 
         updated_instances = readonly_session.query(distinct(models.VideoInstance.channel))\
-            .filter(models.VideoInstance.date_updated >= start)
+            .filter(models.VideoInstance.date_updated.between(start, stop))
 
         unioned = updated_channels.union(updated_instances).subquery()
         query = query.filter(models.Channel.id.in_(unioned))
@@ -927,8 +929,8 @@ def get_users_categories(user_ids=None, start=None):
     return category_map
 
 
-def update_user_categories(user_ids=None, automatic_flush=True, start=None):
-    for user, categories in get_users_categories(user_ids=user_ids, start=start).iteritems():
+def update_user_categories(user_ids=None, automatic_flush=True, start=None, stop=None):
+    for user, categories in get_users_categories(user_ids=user_ids, start=start, stop=stop).iteritems():
         eu = ESUser.updater(bulk=True)
         eu.set_document_id(user.id)
         eu.add_field('category', list(set(categories)))
