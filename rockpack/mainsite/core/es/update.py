@@ -68,12 +68,13 @@ def update_most_influential_video(video_ids):
 
             influential_index.update({video: (_id, count,)})
 
+    ev = api.ESVideo.updater(bulk=True)
     for (_id, video), count in instance_counts.iteritems():
-        ev = api.ESVideo.updater(bulk=True)
         ev.set_document_id(_id)
         ev.add_field('child_instance_count', count)
         ev.add_field('most_influential', True if influential_index.get(video, '')[0] == _id else False)
         ev.update()
+        ev.reset()
     api.ESVideo.flush()
 
 

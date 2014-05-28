@@ -208,6 +208,10 @@ class ESUpdater(object):
     def flush_bulk(self):
         self.manager.indexer.flush()
 
+    def reset(self):
+        self.document_id = None
+        self.partial_document = []
+
 
 class ESObject(object):
 
@@ -518,18 +522,22 @@ class ESVideoAttributeMap:
     def public(self):
         return self.video_instance.video_rel.visible
 
+    @classmethod
+    def get_video_structure(cls, video_rel):
+        return dict(
+            id=video_rel.id,
+            thumbnail_url=video_rel.default_thumbnail,
+            source=video_rel.source,
+            source_id=video_rel.source_videoid,
+            source_username=video_rel.source_username,
+            date_published=video_rel.date_published,
+            duration=video_rel.duration,
+            description=video_rel.description,
+        )
+
     @property
     def video(self):
-        return dict(
-            id=self.video_instance.video,
-            thumbnail_url=self.video_instance.video_rel.default_thumbnail,
-            source=self.video_instance.video_rel.source,
-            source_id=self.video_instance.video_rel.source_videoid,
-            source_username=self.video_instance.video_rel.source_username,
-            date_published=self.video_instance.video_rel.date_published,
-            duration=self.video_instance.video_rel.duration,
-            description=self.video_instance.video_rel.description,
-        )
+        return self.get_video_structure(self.video_instance.video_rel)
 
     @property
     def title(self):

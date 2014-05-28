@@ -152,13 +152,13 @@ class ESMigration(object):
 
 
 @start_flush_timer
-def full_user_import(start=None):
+def full_user_import(start=None, stop=None):
     from rockpack.mainsite.services.user import models
 
     with app.test_request_context():
         users_to_delete = models.User.query.filter(models.User.is_active == False)
         if start:
-            users_to_delete = users_to_delete.filter(models.User.date_updated >= start)
+            users_to_delete = users_to_delete.filter(models.User.date_updated.between(start, stop))
 
         delete = [u[0] for u in users_to_delete.values('id')]
 
@@ -167,15 +167,15 @@ def full_user_import(start=None):
             api.ESUser.flush()
 
     imp = DBImport()
-    imp.import_users(start=start, automatic_flush=False)
-    update_user_categories(automatic_flush=False, start=start)
-    update_user_subscription_count(start=start, automatic_flush=False)
+    imp.import_users(start=start, stop=stop, automatic_flush=False)
+    update_user_categories(automatic_flush=stop, start=start, stop=None)
+    update_user_subscription_count(start=start, stop=stop, automatic_flush=False)
 
     api.ESUser.flush()
 
 
 @start_flush_timer
-def full_channel_import(start=None):
+def full_channel_import(start=None, stop=None):
     from rockpack.mainsite.services.video import models
 
     with app.test_request_context():
@@ -186,7 +186,7 @@ def full_channel_import(start=None):
         )
 
         if start:
-            channels_to_delete = channels_to_delete.filter(models.Channel.date_updated >= start)
+            channels_to_delete = channels_to_delete.filter(models.Channel.date_updated.between(start, stop))
 
         delete = [c[0] for c in channels_to_delete.values('id')]
 
@@ -195,15 +195,15 @@ def full_channel_import(start=None):
             api.ESChannel.flush()
 
     imp = DBImport()
-    imp.import_channels(start=start, automatic_flush=False)
-    imp.import_average_category(start=start, automatic_flush=False)
-    imp.import_video_channel_terms(start=start, automatic_flush=False)
+    imp.import_channels(start=start, stop=stop, automatic_flush=False)
+    imp.import_average_category(start=start, stop=stop, automatic_flush=False)
+    imp.import_video_channel_terms(start=start, stop=stop, automatic_flush=False)
 
     api.ESChannel.flush()
 
 
 @start_flush_timer
-def full_video_import(start=None, prefix=None):
+def full_video_import(start=None, stop=None, prefix=None):
     from rockpack.mainsite.services.video import models
 
     with app.test_request_context():
@@ -216,8 +216,8 @@ def full_video_import(start=None, prefix=None):
 
         if start:
             videos_to_delete = videos_to_delete.filter(
-                (models.VideoInstance.date_updated >= start) |
-                (models.Video.date_updated >= start))
+                (models.VideoInstance.date_updated.between(start, stop)) |
+                (models.Video.date_updated.between(start, stop)))
 
         if prefix:
             videos_to_delete = videos_to_delete.filter(
@@ -230,11 +230,16 @@ def full_video_import(start=None, prefix=None):
             api.ESVideo.flush()
 
     imp = DBImport()
-    imp.import_videos(prefix=prefix, start=start, automatic_flush=False)
-    imp.import_dolly_video_owners(prefix=prefix, start=start, automatic_flush=False)
-    imp.import_dolly_repin_counts(prefix=prefix, start=start, automatic_flush=False)
-    imp.import_video_stars(prefix=prefix, automatic_flush=False, start=start)
-    imp.import_comment_counts(prefix=prefix, automatic_flush=False, start=start)
+    print 'videos'
+    imp.import_videos(prefix=prefix, start=start, stop=stop, automatic_flush=False)
+    print 'owners'
+    imp.import_dolly_video_owners(prefix=prefix, start=start, stop=stop, automatic_flush=False)
+    print 'counts'
+    imp.import_dolly_repin_counts(prefix=prefix, start=start, stop=stop, automatic_flush=False)
+    print 'stars'
+    imp.import_video_stars(prefix=prefix, automatic_flush=False, start=start, stop=stop)
+    print 'comment'
+    imp.import_comment_counts(prefix=prefix, automatic_flush=False, start=start, stop=stop)
 
     api.ESVideo.flush()
 
@@ -253,14 +258,14 @@ class DBImport(object):
             print int(n), "percent complete                                                \r",
             sys.stdout.flush()
 
-    def import_users(self, start=None, automatic_flush=True):
+    def import_users(self, start=None, stop=None, automatic_flush=True):
         from rockpack.mainsite.services.user import models
 
         with app.test_request_context():
             users = models.User.query.filter(models.User.is_active == True)
 
             if start:
-                users = users.filter(models.User.date_updated >= start)
+                users = users.filter(models.User.date_updated.between(start, stop))
 
             total = users.count()
 
@@ -278,7 +283,7 @@ class DBImport(object):
 
             app.logger.debug('finished in {}'.format(time.time() - start, 'seconds'))
 
-    def import_channels(self, start=None, automatic_flush=True):
+    def import_channels(self, start=None, stop=None, automatic_flush=True):
         from rockpack.mainsite.services.video.models import Channel, VideoInstance, Video
 
         with app.test_request_context():
@@ -293,7 +298,7 @@ class DBImport(object):
             )
 
             if start:
-                channels = channels.filter(Channel.date_updated >= start)
+                channels = channels.filter(Channel.date_updated.between(start, stop))
 
             app.logger.debug('importing {} PUBLIC channels\r'.format(channels.count()))
 
@@ -313,7 +318,7 @@ class DBImport(object):
                 query = query.join(
                     Channel,
                     (Channel.id == VideoInstance.channel) &
-                    (Channel.date_updated >= start)
+                    (Channel.date_updated.between(start, stop))
                 )
 
             query = query.values(VideoInstance.channel, func.count(VideoInstance.id))
@@ -347,8 +352,9 @@ class DBImport(object):
 
             inserter.flush_bulk()
 
-    def import_videos(self, prefix=None, start=None, recent_user_stars=False, automatic_flush=True):
-        from rockpack.mainsite.services.video.models import Channel, Video, VideoInstanceLocaleMeta, VideoInstance
+    def import_videos(self, prefix=None, start=None, stop=None, recent_user_stars=False, automatic_flush=True):
+        from rockpack.mainsite.services.video.models import (Channel, Video, VideoInstanceLocaleMeta,
+                                                             VideoInstance)
         from rockpack.mainsite.services.user.models import User
 
         with app.test_request_context():
@@ -378,11 +384,11 @@ class DBImport(object):
                 query = query.filter(VideoInstance.id.like(prefix.replace('_', '\\_') + '%'))
 
             if start:
-                query = query.filter(VideoInstance.date_updated >= start)
+                query = query.filter(VideoInstance.date_updated.between(start, stop))
 
             total = query.count()
             app.logger.debug('importing {} videos'.format(total))
-            start = time.time()
+            start_timer = time.time()
             done = 1
 
             ev = ESVideo.inserter(bulk=True)
@@ -425,9 +431,9 @@ class DBImport(object):
             if automatic_flush:
                 ev.flush_bulk()
 
-            app.logger.debug('finished in {} seconds'.format(time.time() - start))
+            app.logger.debug('finished in {} seconds'.format(time.time() - start_timer))
 
-    def import_dolly_video_owners(self, prefix=None, start=None, automatic_flush=True):
+    def import_dolly_video_owners(self, prefix=None, start=None, stop=None, automatic_flush=True):
         """ Import all the owner attributes of
             a video instance belonging to a channel """
 
@@ -452,7 +458,7 @@ class DBImport(object):
                 instances = instances.filter(VideoInstance.id.like(prefix.replace('_', '\\_') + '%'))
 
             if start:
-                instances = instances.filter(VideoInstance.date_updated >= start)
+                instances = instances.filter(VideoInstance.date_updated.between(start, stop))
 
             instances = instances.with_entities(VideoInstance, User).order_by(VideoInstance.channel)
 
@@ -483,7 +489,7 @@ class DBImport(object):
     def import_user_categories(self):
         update_user_categories()
 
-    def import_comment_counts(self, prefix=None, automatic_flush=True, start=None):
+    def import_comment_counts(self, prefix=None, automatic_flush=True, start=None, stop=None):
         from rockpack.mainsite.services.video.models import VideoInstanceComment, VideoInstance, Video
         from rockpack.mainsite.core.dbapi import db
 
@@ -500,7 +506,7 @@ class DBImport(object):
             counts = counts.filter(VideoInstance.id.like(prefix.replace('_', '\\_') + '%'))
 
         if start:
-            counts = counts.filter(VideoInstanceComment.date_added >= start)
+            counts = counts.filter(VideoInstanceComment.date_added.between(start, stop))
 
         counts = counts.group_by(
             VideoInstance.id
@@ -518,7 +524,7 @@ class DBImport(object):
         if automatic_flush:
             ESVideo.flush()
 
-    def import_dolly_repin_counts(self, prefix=None, start=None, automatic_flush=True):
+    def import_dolly_repin_counts(self, prefix=None, start=None, stop=None, automatic_flush=True):
         from rockpack.mainsite.services.video.models import VideoInstance, Video
 
         with app.test_request_context():
@@ -543,7 +549,7 @@ class DBImport(object):
 
             if start:
                 video_ids = VideoInstance.query.filter(
-                    VideoInstance.date_updated >= start
+                    VideoInstance.date_updated.between(start, stop)
                 ).with_entities(VideoInstance.video).subquery()
 
                 query = query.filter(Video.id.in_(video_ids))
@@ -591,7 +597,7 @@ class DBImport(object):
             if automatic_flush:
                 ESVideo.flush()
 
-    def import_video_stars(self, prefix=None, automatic_flush=True, start=None):
+    def import_video_stars(self, prefix=None, automatic_flush=True, start=None, stop=None):
         from rockpack.mainsite.services.user.models import UserActivity
 
         updated_activity = aliased(UserActivity, name='updated_activity')
@@ -608,7 +614,7 @@ class DBImport(object):
                 query = query.join(
                     updated_activity,
                     (updated_activity.object_id == UserActivity.object_id) &
-                    (updated_activity.date_actioned >= start))
+                    (updated_activity.date_actioned.between(start, stop)))
 
             if prefix:
                 query = query.filter(UserActivity.object_id.like(prefix.replace('_', '\\_') + '%'))
@@ -665,7 +671,7 @@ class DBImport(object):
             bulk=True
         )
 
-    def import_average_category(self, channel_ids=None, start=None, automatic_flush=True):
+    def import_average_category(self, channel_ids=None, start=None, stop=None, automatic_flush=True):
         from rockpack.mainsite.services.video.models import VideoInstance, Channel
 
         query = readonly_session.query(VideoInstance.category, Channel.id).join(Channel, Channel.id == VideoInstance.channel).order_by(Channel.id)
@@ -674,7 +680,7 @@ class DBImport(object):
             query = query.filter(Channel.id.in_(channel_ids))
 
         if start:
-            query = query.filter(Channel.date_updated >= start)
+            query = query.filter(Channel.date_updated.between(start, stop))
 
         category_map = {}
         for instance_cat, channel_id in query:
@@ -694,7 +700,7 @@ class DBImport(object):
         if automatic_flush:
             self.conn.flush_bulk(forced=True)
 
-    def import_video_channel_terms(self, prefix=None, start=None, automatic_flush=True):
+    def import_video_channel_terms(self, prefix=None, start=None, stop=None, automatic_flush=True):
         from rockpack.mainsite.services.video.models import VideoInstance, Channel, Video
 
         child = aliased(VideoInstance, name='child')
@@ -708,7 +714,7 @@ class DBImport(object):
         ).filter(Channel.public == True, Channel.deleted == False)
 
         if start:
-            query = query.join(child, child.channel == Channel.id).filter(child.date_updated >= start)
+            query = query.join(child, child.channel == Channel.id).filter(child.date_updated.between(start, stop))
 
         channel_terms = {}
 
