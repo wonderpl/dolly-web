@@ -234,8 +234,6 @@ def full_video_import(start=None, stop=None, prefix=None):
     imp.import_videos(prefix=prefix, start=start, stop=stop, automatic_flush=False)
     print 'owners'
     imp.import_dolly_video_owners(prefix=prefix, start=start, stop=stop, automatic_flush=False)
-    print 'counts'
-    imp.import_dolly_repin_counts(prefix=prefix, start=start, stop=stop, automatic_flush=False)
     print 'stars'
     imp.import_video_stars(prefix=prefix, automatic_flush=False, start=start, stop=stop)
     print 'comment'

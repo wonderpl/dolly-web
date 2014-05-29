@@ -11,6 +11,8 @@ def update_most_influential_video(video_ids):
     if not video_ids:
         return
 
+    print len(video_ids), 'video ids in update_most_influential_video', len(video_ids)
+
     child = aliased(models.VideoInstance, name='child')
     query = db.session.query(
         models.VideoInstance.id,
@@ -40,6 +42,8 @@ def update_most_influential_video(video_ids):
     influential_index = {}
     favs = []
 
+    print 'sql done. processing ...'
+
     for _id, video, fav, source_channel, count in query.yield_per(6000):
         # Set the count for the video instance
         instance_counts[(_id, video)] = count
@@ -68,6 +72,7 @@ def update_most_influential_video(video_ids):
 
             influential_index.update({video: (_id, count,)})
 
+    print 'pushing ...'
     ev = api.ESVideo.updater(bulk=True)
     for (_id, video), count in instance_counts.iteritems():
         ev.set_document_id(_id)
