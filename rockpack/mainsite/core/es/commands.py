@@ -14,7 +14,7 @@ def timer(func):
     return wrapper
 
 
-@manager.cron_command(interval=900)
+@manager.cron_command(interval=60)
 @job_control
 def update_indexes(date_from=None, date_to=None):
     """ Updates all data in all indexes """

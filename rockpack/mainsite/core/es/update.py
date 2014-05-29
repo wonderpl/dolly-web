@@ -6,19 +6,11 @@ from . import api
 
 @commit_on_success
 def update_most_influential_video(video_ids=None):
-    # Re-calculate most influential
-    #if not video_ids:
-    #    return
-
-    #print len(video_ids), 'video ids in update_most_influential_video', len(video_ids)
-
     query = models.get_influential_instances(video_ids=video_ids)
 
     instance_counts = {}
     influential_index = {}
     favs = []
-
-    print 'sql done. processing ...'
 
     for _id, video, fav, source_channel, count in query.yield_per(6000):
         # Set the count for the video instance
@@ -48,18 +40,12 @@ def update_most_influential_video(video_ids=None):
 
             influential_index.update({video: (_id, count,)})
 
-    print 'pushing ...'
-    #ev = api.ESVideo.updater(bulk=True)
     for (_id, video), count in instance_counts.iteritems():
-        models.VideoInstance.query.filter(models.VideoInstance.id == _id).update({models.VideoInstance.most_influential: True if influential_index.get(video, '')[0] == _id else False})
-        """
-        ev.set_document_id(_id)
-        ev.add_field('child_instance_count', count)
-        ev.add_field('most_influential', True if influential_index.get(video, '')[0] == _id else False)
-        ev.update()
-        ev.reset()
-        """
-    #api.ESVideo.flush()
+        models.VideoInstance.query.filter(
+            models.VideoInstance.id == _id
+        ).update(
+            {models.VideoInstance.most_influential: True if influential_index.get(video, '')[0] == _id else False}
+        )
 
 
 def _video_terms_channel_mapping(channel_ids):

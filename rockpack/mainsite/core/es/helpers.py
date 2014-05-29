@@ -230,13 +230,9 @@ def full_video_import(start=None, stop=None, prefix=None):
             api.ESVideo.flush()
 
     imp = DBImport()
-    print 'videos'
     imp.import_videos(prefix=prefix, start=start, stop=stop, automatic_flush=False)
-    print 'owners'
     imp.import_dolly_video_owners(prefix=prefix, start=start, stop=stop, automatic_flush=False)
-    print 'stars'
     imp.import_video_stars(prefix=prefix, automatic_flush=False, start=start, stop=stop)
-    print 'comment'
     imp.import_comment_counts(prefix=prefix, automatic_flush=False, start=start, stop=stop)
 
     api.ESVideo.flush()

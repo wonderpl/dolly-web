@@ -779,13 +779,15 @@ def get_influential_count_by_instance(instance_id):
 
 @background_on_sqs
 @commit_on_success
-def _update_most_influential(instance):
+def _update_most_influential(instance_id):
     """ Calculate the most influential instance related
         to this instance.
 
         Otherwise, get the influential counts from the instance
         that this was "repinned" from, compare counts to the existing
         most influential and update repinned instance if it has more """
+
+    instance = VideoInstance.query.get(instance_id)
 
     source_instance = VideoInstance.query.filter(
         VideoInstance.video == instance.video,
@@ -829,7 +831,7 @@ def _update_most_influential(instance):
 def video_instance_change(mapper, connection, target):
     if app.config.get('DOLLY'):
         _update_channel_category([target.channel])
-        _update_most_influential(target)
+        _update_most_influential(target.id)
 
 
 @event.listens_for(VideoInstance, 'after_update')
