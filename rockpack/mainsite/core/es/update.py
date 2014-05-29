@@ -1,42 +1,18 @@
-from sqlalchemy import func
-from sqlalchemy.orm import aliased
 from rockpack.mainsite import app
 from rockpack.mainsite.services.video import models
-from rockpack.mainsite.core.dbapi import db
+from rockpack.mainsite.core.dbapi import db, commit_on_success
 from . import api
 
 
-def update_most_influential_video(video_ids):
+@commit_on_success
+def update_most_influential_video(video_ids=None):
     # Re-calculate most influential
-    if not video_ids:
-        return
+    #if not video_ids:
+    #    return
 
-    print len(video_ids), 'video ids in update_most_influential_video', len(video_ids)
+    #print len(video_ids), 'video ids in update_most_influential_video', len(video_ids)
 
-    child = aliased(models.VideoInstance, name='child')
-    query = db.session.query(
-        models.VideoInstance.id,
-        models.VideoInstance.video,
-        models.VideoInstance.is_favourite,
-        child.source_channel,
-        func.count(models.VideoInstance.id)
-    ).outerjoin(
-        child,
-        (models.VideoInstance.video == child.video) &
-        (models.VideoInstance.channel == child.source_channel)
-    ).join(
-        models.Video,
-        (models.Video.id == models.VideoInstance.video) &
-        (models.Video.visible == True)
-    ).join(
-        models.Channel,
-        (models.Channel.id == models.VideoInstance.channel) &
-        (models.Channel.deleted == False) &
-        (models.Channel.public == True)
-    ).filter(
-        models.VideoInstance.video.in_(video_ids)
-    ).group_by(models.VideoInstance.id, models.VideoInstance.video,
-               models.VideoInstance.is_favourite, child.source_channel)
+    query = models.get_influential_instances(video_ids=video_ids)
 
     instance_counts = {}
     influential_index = {}
@@ -73,14 +49,17 @@ def update_most_influential_video(video_ids):
             influential_index.update({video: (_id, count,)})
 
     print 'pushing ...'
-    ev = api.ESVideo.updater(bulk=True)
+    #ev = api.ESVideo.updater(bulk=True)
     for (_id, video), count in instance_counts.iteritems():
+        models.VideoInstance.query.filter(models.VideoInstance.id == _id).update({models.VideoInstance.most_influential: True if influential_index.get(video, '')[0] == _id else False})
+        """
         ev.set_document_id(_id)
         ev.add_field('child_instance_count', count)
         ev.add_field('most_influential', True if influential_index.get(video, '')[0] == _id else False)
         ev.update()
         ev.reset()
-    api.ESVideo.flush()
+        """
+    #api.ESVideo.flush()
 
 
 def _video_terms_channel_mapping(channel_ids):

@@ -616,11 +616,7 @@ class ESVideoAttributeMap:
 
     @property
     def most_influential(self):
-        # Default to True so that it automatically
-        # shows up in search, except favs
-        if self.video_instance.is_favourite:
-            return False
-        return True
+        return self.video_instance.most_influential
 
     @property
     def link_url(self):
@@ -1048,7 +1044,6 @@ def es_update_channel_videos(extant=[], deleted=[]):
     if deleted:
         ESVideo.delete(deleted)
 
-    update.update_most_influential_video(video_ids)
     update.update_video_related_channel_meta(channel_ids)
 
 

@@ -309,6 +309,7 @@ class VideoInstance(db.Model):
     tags = Column(String(1024), nullable=True)
     is_favourite = Column(Boolean(), nullable=False, server_default='false', default=False)
     deleted = Column(Boolean(), nullable=False, server_default='false', default=False)
+    most_influential = Column(Boolean(), nullable=False, server_default='false', default=False)
 
     metas = relationship('VideoInstanceLocaleMeta', backref='video_instance_rel',
                          cascade='all,delete', passive_deletes=True)
@@ -736,10 +737,99 @@ def update_channel_date_updated(channel_ids):
         channel.date_updated = datetime.now()
 
 
+def get_influential_instances(video_ids=None, instance_ids=None):
+    child = aliased(VideoInstance, name='child')
+    query = db.session.query(
+        VideoInstance.id,
+        VideoInstance.video,
+        VideoInstance.is_favourite,
+        child.source_channel,
+        func.count(VideoInstance.id)
+    ).outerjoin(
+        child,
+        (VideoInstance.video == child.video) &
+        (VideoInstance.channel == child.source_channel)
+    ).join(
+        Video,
+        (Video.id == VideoInstance.video) &
+        (Video.visible == True)
+    ).join(
+        Channel,
+        (Channel.id == VideoInstance.channel) &
+        (Channel.deleted == False) &
+        (Channel.public == True)
+    ).group_by(VideoInstance.id, VideoInstance.video,
+               VideoInstance.is_favourite, child.source_channel)
+
+    if video_ids is not None:
+        query = query.filter(VideoInstance.video.in_(video_ids))
+
+    if instance_ids is not None:
+        query = query.filter(VideoInstance.id.in_(instance_ids))
+
+    return query
+
+
+def get_influential_count_by_instance(instance_id):
+    """ returns _id, video, fav, source_channel, count """
+    result = list(get_influential_instances(instance_ids=[instance_id]))
+    if result:
+        return result[0]
+
+
+@background_on_sqs
+@commit_on_success
+def _update_most_influential(instance):
+    """ Calculate the most influential instance related
+        to this instance.
+
+        Otherwise, get the influential counts from the instance
+        that this was "repinned" from, compare counts to the existing
+        most influential and update repinned instance if it has more """
+
+    source_instance = VideoInstance.query.filter(
+        VideoInstance.video == instance.video,
+        VideoInstance.channel == instance.source_channel).first()
+
+    most_influential_instance = VideoInstance.query.filter(
+        VideoInstance.most_influential == True,
+        VideoInstance.video == instance.video).first()
+
+    if not source_instance and not most_influential_instance:
+        # This must be the first instance for that video.
+        # Set as most influential
+        instance.most_influential == True
+        return
+
+    elif most_influential_instance \
+            and most_influential_instance.id == instance.id:
+        # Are we processing this again?
+        # If we are then lets just exit
+        return
+
+    source_id, source_video, source_is_fav, source_source_channel, source_count = get_influential_count_by_instance(source_instance.id)
+
+    if not most_influential_instance:
+        # If we don't have a most influential for this video
+        source_instance.most_influential == True
+    elif most_influential_instance.is_favourite:
+        # If the existing influential instance is a fav
+        # then switch to the new one instead
+        source_instance.most_influential == True
+        most_influential_instance.most_influential == False
+    else:
+        _, _, _, _, current_influential_count = get_influential_count_by_instance(most_influential_instance.id)
+
+        if source_count > current_influential_count:
+            source_instance.most_influential == True
+            most_influential_instance.most_influential == False
+
+
 @event.listens_for(VideoInstance, 'after_insert')
 def video_instance_change(mapper, connection, target):
     if app.config.get('DOLLY'):
         _update_channel_category([target.channel])
+        _update_most_influential(target)
 
 
 @event.listens_for(VideoInstance, 'after_update')

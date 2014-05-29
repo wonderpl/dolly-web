@@ -423,9 +423,6 @@ class DBImport(object):
 
                 vids.append(v.video)
 
-            from . import update
-            update.update_most_influential_video(list(set(vids)))
-
             if automatic_flush:
                 ev.flush_bulk()
 
@@ -466,6 +463,7 @@ class DBImport(object):
             current_user_dict = None
             current_channel = None
 
+            ec = ESVideo.updater(bulk=True)
             for instance, user in instances.yield_per(6000):
                 if instance.channel != current_channel:
                     # Duck punch the user on for perf
@@ -473,10 +471,10 @@ class DBImport(object):
                     mapped = ESVideoAttributeMap(instance)
                     current_user_dict = mapped.owner
 
-                ec = ESVideo.updater(bulk=True)
                 ec.set_document_id(instance.id)
                 ec.add_field('owner', current_user_dict)
                 ec.update()
+                ec.reset()
 
                 self.print_percent_complete(done, total)
                 done += 1
@@ -513,11 +511,12 @@ class DBImport(object):
         app.logger.debug('%d video%s with comments' % (counts.count(), 's' if counts.count() > 1 else ''))
         app.logger.debug('Processing ...')
 
+        ev = ESVideo.updater(bulk=True)
         for videoid, count in counts:
-            ev = ESVideo.updater(bulk=True)
             ev.set_document_id(videoid)
             ev.add_field('comments.count', count)
             ev.update()
+            ev.reset()
 
         if automatic_flush:
             ESVideo.flush()
@@ -582,12 +581,13 @@ class DBImport(object):
             total = len(instance_counts)
             done = 1
 
+            ec = ESVideo.updater(bulk=True)
             for (_id, video), count in instance_counts.iteritems():
-                ec = ESVideo.updater(bulk=True)
                 ec.set_document_id(_id)
                 ec.add_field('child_instance_count', count)
                 ec.add_field('most_influential', True if influential_index.get(video, '')[0] == _id else False)
                 ec.update()
+                ec.reset()
 
                 self.print_percent_complete(done, total)
                 done += 1
@@ -617,9 +617,9 @@ class DBImport(object):
             if prefix:
                 query = query.filter(UserActivity.object_id.like(prefix.replace('_', '\\_') + '%'))
 
+            ec = ESVideo.updater(bulk=True)
             for instance_id, group in groupby(query.yield_per(200).values(UserActivity.object_id, UserActivity.user), lambda x: x[0]):
                 try:
-                    ec = ESVideo.updater(bulk=True)
                     ec.set_document_id(instance_id)
                     ec.add_field(
                         'recent_user_stars',
@@ -628,6 +628,8 @@ class DBImport(object):
                     ec.update()
                 except pyes.exceptions.ElasticSearchException:
                     pass
+                finally:
+                    ec.reset()
 
             if automatic_flush:
                 self.conn.flush_bulk(forced=True)
@@ -686,14 +688,15 @@ class DBImport(object):
             current_count = channel_cat_counts.setdefault(instance_cat, 0)
             channel_cat_counts[instance_cat] = current_count + 1
 
+        ec = ESChannel.updater(bulk=True)
         for channel_id, c_map in category_map.iteritems():
-            ec = ESChannel.updater(bulk=True)
             ec.set_document_id(channel_id)
             ec.add_field(
                 'category',
                 max(((count, cat) for cat, count in c_map.items()))
             )
             ec.update()
+            ec.reset()
 
         if automatic_flush:
             self.conn.flush_bulk(forced=True)
@@ -877,6 +880,7 @@ class DBImport(object):
 
             done = 1
             i_total = len(channel_dict)
+            ec = ESChannel.updater(bulk=True)
             for id, _dict in channel_dict.iteritems():
                 try:
                     count = 0
@@ -887,13 +891,14 @@ class DBImport(object):
                     if count == 0:
                         continue
 
-                    ec = ESChannel.updater(bulk=True)
                     ec.set_document_id(id)
                     ec.add_field('normalised_rank[\'%s\']' % locale, float(count))
                     ec.update()
 
                 except exceptions.DocumentMissingException:
                     missing += 1
+                finally:
+                    ec.reset()
                 total += 1
                 self.print_percent_complete(done, i_total)
                 done += 1
