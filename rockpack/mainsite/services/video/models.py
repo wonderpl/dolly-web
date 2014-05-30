@@ -809,22 +809,27 @@ def _update_most_influential(instance_id):
         # If we are then lets just exit
         return
 
-    source_id, source_video, source_is_fav, source_source_channel, source_count = get_influential_count_by_instance(source_instance.id)
+    source_influential_data = get_influential_count_by_instance(source_instance.id)
 
-    if not most_influential_instance:
-        # If we don't have a most influential for this video
-        source_instance.most_influential == True
-    elif most_influential_instance.is_favourite:
-        # If the existing influential instance is a fav
-        # then switch to the new one instead
-        source_instance.most_influential == True
-        most_influential_instance.most_influential == False
-    else:
-        _, _, _, _, current_influential_count = get_influential_count_by_instance(most_influential_instance.id)
+    # If we have any influential counts for the source instance proceed,
+    # otherwise we won't bother doing anything else
+    if source_influential_data:
+        source_id, source_video, source_is_fav, source_source_channel, source_count = source_influential_data
 
-        if source_count > current_influential_count:
+        if not most_influential_instance:
+            # If we don't have a most influential for this video
+            source_instance.most_influential == True
+        elif most_influential_instance.is_favourite:
+            # If the existing influential instance is a fav
+            # then switch to the new one instead
             source_instance.most_influential == True
             most_influential_instance.most_influential == False
+        else:
+            _, _, _, _, current_influential_count = get_influential_count_by_instance(most_influential_instance.id)
+
+            if source_count > current_influential_count:
+                source_instance.most_influential == True
+                most_influential_instance.most_influential == False
 
 
 @event.listens_for(VideoInstance, 'after_insert')
