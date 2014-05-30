@@ -203,11 +203,12 @@ def get_local_videos(loc, paging, with_channel=True, with_comments=False, includ
         videos = videos.filter(models.VideoInstance.channel.in_(filters['channels']))
 
     if filters.get('owner'):
-        videos = videos.join(
-            models.Channel,
-            (models.Channel.id == models.VideoInstance.channel) &
-            (models.Channel.owner == filters['owner'])
-        )
+        # Check we haven't already joined Channel
+        if not with_channel:
+            videos = videos.join(
+                models.Channel,
+                models.Channel.id == models.VideoInstance.channel)
+        videos = videos.filter(models.Channel.owner == filters['owner'])
 
     if filters.get('category'):
         videos = _filter_by_category(videos, models.VideoInstance, filters['category'][0])

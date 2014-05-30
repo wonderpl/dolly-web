@@ -996,18 +996,9 @@ def _channel_videos(channelid, locale, paging, own=False):
     return items, total
 
 
-def _user_videos(userid, locale, paging, own=False):
-    paging_ = None
-    if (own and paging == (0, 48) and
-            request.rockpack_ios_version and request.rockpack_ios_version < (1, 3)):
-        paging_ = paging
-        paging = (0, 1000)
-    items, total = video_api.get_local_videos(
-        locale, paging, owner=userid, with_channel=False,
-        include_invisible=own,  date_order=True)
-    if paging_:
-        total = min(paging_[1], total)
-    return items, total
+def _user_videos(userid, locale, paging):
+    return video_api.get_local_videos(
+        locale, paging, owner=userid, with_channel=True, date_order=True)
 
 
 def _channel_info_response(channel, locale, paging, owner_url):
