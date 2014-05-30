@@ -1294,6 +1294,11 @@ class UserWS(WebService):
             items, total = _user_videos(userid, self.get_locale(), self.get_page())
         return dict(videos=dict(items=items, total=total))
 
+    @expose_ajax('/<userid>/videos/', cache_private=True)
+    @check_authorization(self_auth=True)
+    def owner_user_videos(self, userid):
+        return dict(videos=_user_videos(userid, self.get_locale(), self.get_page()))
+
     @expose_ajax('/<userid>/channels/', cache_private=True)
     @check_authorization(self_auth=True)
     def get_channels(self, userid):
