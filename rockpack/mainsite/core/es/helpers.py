@@ -466,6 +466,7 @@ class DBImport(object):
                     instance.owner_rel = user
                     mapped = ESVideoAttributeMap(instance)
                     current_user_dict = mapped.owner
+                    current_channel = instance.channel
 
                 ec.set_document_id(instance.id)
                 ec.add_field('owner', current_user_dict)

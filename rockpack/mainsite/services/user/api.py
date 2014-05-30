@@ -1,5 +1,6 @@
 from functools import partial
 from itertools import groupby
+from urlparse import urlparse
 from werkzeug.datastructures import MultiDict
 from sqlalchemy import desc, func, text
 from sqlalchemy.exc import IntegrityError
@@ -995,6 +996,20 @@ def _channel_videos(channelid, locale, paging, own=False):
     return items, total
 
 
+def _user_videos(userid, locale, paging, own=False):
+    paging_ = None
+    if (own and paging == (0, 48) and
+            request.rockpack_ios_version and request.rockpack_ios_version < (1, 3)):
+        paging_ = paging
+        paging = (0, 1000)
+    items, total = video_api.get_local_videos(
+        locale, paging, owner=userid, with_channel=False,
+        include_invisible=own,  date_order=True)
+    if paging_:
+        total = min(paging_[1], total)
+    return items, total
+
+
 def _channel_info_response(channel, locale, paging, owner_url):
     data = video_api.channel_dict(channel, owner_url=owner_url)
     items, total = _channel_videos(channel.id, locale, paging, own=owner_url)
@@ -1270,6 +1285,23 @@ class UserWS(WebService):
             abort(400, form_errors=form.errors)
         save_content_report(userid, form.object_type.data,
                             form.object_id.data, form.reason.data)
+
+    @expose_ajax('/<userid>/videos/', cache_age=600, secure=False)
+    def user_videos(self, userid):
+        if use_elasticsearch():
+            location = request.args.get('location')
+            vs = es_search.VideoSearch(self.get_locale())
+            resource_url = urlparse(url_for('userws.user_info', userid=userid)).path
+            vs.add_term('owner.resource_url', resource_url)
+            if location:
+                vs.check_country_allowed(location.upper())
+            vs.date_sort('desc')
+            vs.set_paging(*self.get_page())
+            items = vs.videos()
+            total = vs.total
+        else:
+            items, total = _user_videos(userid, self.get_locale(), self.get_page())
+        return dict(videos=dict(items=items, total=total))
 
     @expose_ajax('/<userid>/channels/', cache_private=True)
     @check_authorization(self_auth=True)
