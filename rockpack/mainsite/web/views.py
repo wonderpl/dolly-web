@@ -129,27 +129,27 @@ def injector():
     return dict(iframe_url=url_for('bookmarklet')), 200, {'Content-Type': 'application/javascript'}
 
 
-@expose_web('/hints', 'web/hints.html', cache_age=3600)
+@expose_web('/hints', 'web/hints.html', cache_age=3600, secure='both')
 def hints():
     return {}
 
 
-@expose_web('/help', 'web/help.html', cache_age=3600)
+@expose_web('/help', 'web/help.html', cache_age=3600, secure='both')
 def help():
     return {}
 
 
-@expose_web('/tos', 'web/terms.html', cache_age=3600)
+@expose_web('/tos', 'web/terms.html', cache_age=3600, secure='both')
 def terms():
     return {}
 
 
-@expose_web('/cookies', 'web/cookies.html', cache_age=3600)
+@expose_web('/cookies', 'web/cookies.html', cache_age=3600, secure='both')
 def cookies():
     return {}
 
 
-@expose_web('/privacy', 'web/privacy.html', cache_age=3600)
+@expose_web('/privacy', 'web/privacy.html', cache_age=3600, secure='both')
 def privacy():
     return {}
 
