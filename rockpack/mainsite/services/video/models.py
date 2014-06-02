@@ -789,6 +789,10 @@ def _update_most_influential(instance_id):
 
     instance = VideoInstance.query.get(instance_id)
 
+    if not instance:
+        app.logger.warning('Failed to run _update_most_influential for instance %s', instance_id)
+        return
+
     source_instance = VideoInstance.query.filter(
         VideoInstance.video == instance.video,
         VideoInstance.channel == instance.source_channel).first()
