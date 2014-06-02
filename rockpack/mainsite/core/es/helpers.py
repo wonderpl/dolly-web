@@ -1,6 +1,7 @@
 import sys
 import time
 import decimal
+import logging
 from datetime import datetime, timedelta
 from functools import wraps
 from itertools import groupby
@@ -269,7 +270,8 @@ class DBImport(object):
             count = 1
             for users in users.yield_per(6000):
                 api.add_user_to_index(users, bulk=True, no_check=True)
-                self.print_percent_complete(count, total)
+                if app.logger.isEnabledFor(logging.DEBUG):
+                    self.print_percent_complete(count, total)
                 count += 1
 
             if automatic_flush:
@@ -322,7 +324,8 @@ class DBImport(object):
             for channel in channels.yield_per(6000):
                 channel._video_count = video_counts.get(channel.id) or 0
                 ec.insert(channel.id, channel)
-                self.print_percent_complete(count, total)
+                if app.logger.isEnabledFor(logging.DEBUG):
+                    self.print_percent_complete(count, total)
                 count += 1
 
             if automatic_flush:
@@ -414,7 +417,8 @@ class DBImport(object):
                 )
                 ev.manager.indexer.insert(v.id, rep)
 
-                self.print_percent_complete(done, total)
+                if app.logger.isEnabledFor(logging.DEBUG):
+                    self.print_percent_complete(done, total)
                 done += 1
 
                 vids.append(v.video)
@@ -473,7 +477,8 @@ class DBImport(object):
                 ec.update()
                 ec.reset()
 
-                self.print_percent_complete(done, total)
+                if app.logger.isEnabledFor(logging.DEBUG):
+                    self.print_percent_complete(done, total)
                 done += 1
 
             if automatic_flush:
@@ -572,7 +577,8 @@ class DBImport(object):
                         (count == i_count) and not source_channel:
                     influential_index.update({video: (_id, count,)})
 
-                self.print_percent_complete(done, total)
+                if app.logger.isEnabledFor(logging.DEBUG):
+                    self.print_percent_complete(done, total)
                 done += 1
 
             total = len(instance_counts)
@@ -586,7 +592,8 @@ class DBImport(object):
                 ec.update()
                 ec.reset()
 
-                self.print_percent_complete(done, total)
+                if app.logger.isEnabledFor(logging.DEBUG):
+                    self.print_percent_complete(done, total)
                 done += 1
 
             if automatic_flush:
@@ -719,11 +726,11 @@ class DBImport(object):
         total = 0
         start = time.time()
 
-        print 'Building data ...'
+        app.logger.debug('Building data ...')
         for v in query.yield_per(600):
             channel_terms.setdefault(v.channel, []).append(v.video_rel.title)
 
-        print 'Updating records in es ...'
+        app.logger.debug('Updating records in es ...')
         for c_id, terms_list in channel_terms.iteritems():
             try:
                 self._partial_update(
@@ -737,12 +744,12 @@ class DBImport(object):
                     'ctx._source.video_count = %s' % len(terms_list)
                 )
             except pyes.exceptions.ElasticSearchException, e:
-                print e
+                app.logger.error('Failed to import channel terms with %s', str(e))
             total += 1
 
         if automatic_flush:
             self.conn.flush_bulk(forced=True)
-        print '%s finished in' % total, time.time() - start, 'seconds'
+        app.logger.debug('%s finished in %s seconds', total, time.time() - start)
 
     def import_channel_share(self, automatic_flush=True):
         from rockpack.mainsite.services.share.models import ShareLink
@@ -760,7 +767,6 @@ class DBImport(object):
                 return 0
 
         def _update_channel_id(id, val, max_val, min_val):
-            print id, channel_dict.get(id), channel_dict.setdefault(id, 0), _normalised(val, max_val, min_val)
             channel_dict[id] = channel_dict.setdefault(id, 0) + _normalised(val, max_val, min_val)
 
         # The strength of actions decay until any older than zulu have no effect
@@ -768,7 +774,7 @@ class DBImport(object):
         time_since_zulu = (datetime.utcnow() - zulu).total_seconds()
 
         for locale in ['en-gb', 'en-us']:
-            print 'starting for', locale
+            app.logger.debug('starting for %s', locale)
             channel_dict = {}
             channel_shares = {}
 
@@ -801,7 +807,7 @@ class DBImport(object):
                 channel_dict[id]['user_activity'] = [count, _normalised(count, q_max, q_min)]
                 channel_dict[id]['norm_user_activity'] = _normalised(count, q_max, q_min)
 
-            print 'user activity done'
+            app.logger.debug('user activity done')
 
             summation = func.sum(
                 (time_since_zulu - (func.extract('epoch', datetime.utcnow()) - func.extract('epoch', ShareLink.date_created))) / time_since_zulu
@@ -835,8 +841,7 @@ class DBImport(object):
                 channel_shares[id] = count
                 channel_dict[id]['share_link_channel'] = [count, _normalised(count, q_max, q_min)]
 
-            print 'channel shares done'
-
+            app.logger.debug('channel shares done')
             # activity for videos shares of channels
             query = readonly_session.query(
                 distinct(Channel.id).label('channel_id'),
@@ -871,9 +876,9 @@ class DBImport(object):
                     channel_share_vals = [0, 0]
                 channel_dict[id]['norm_share_link_channel'] = channel_dict[id].setdefault('norm_share_link_channel', 0) + _normalised(count + val, q_max + channel_share_vals[0], q_min + channel_share_vals[1])
 
-            print 'video shares done'
+            app.logger.debug('video shares done')
 
-            print '... updating elasticsearch for %s ...' % locale
+            app.logger.debug('... updating elasticsearch for %s ...', locale)
 
             done = 1
             i_total = len(channel_dict)
@@ -897,10 +902,11 @@ class DBImport(object):
                 finally:
                     ec.reset()
                 total += 1
-                self.print_percent_complete(done, i_total)
+                if app.logger.isEnabledFor(logging.DEBUG):
+                    self.print_percent_complete(done, i_total)
                 done += 1
 
             if automatic_flush:
                 ESChannel.flush()
 
-        print '%s total updates in two passesfinished in' % total, time.time() - start, 'seconds (%s channels not in es)' % missing
+        app.logger.debug('%s total updates in two passes. finished in %s seconds (%s channels not in es)', total, time.time() - start, missing)

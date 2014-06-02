@@ -109,7 +109,6 @@ def update_potential_categories(channelid, category_map):
 
 def update_video_related_channel_meta(channel_ids):
     channel_map = _video_terms_channel_mapping(channel_ids)
-    print 'channel_ids'
     category_map = _category_channel_mapping(channel_ids)
 
     try:
