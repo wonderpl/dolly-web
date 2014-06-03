@@ -488,7 +488,9 @@ class Channel(db.Model):
                 Video,
                 (Video.id == VideoInstance.video) &
                 (Video.visible == True)
-            ).filter(VideoInstance.channel == self.id).value(func.count())
+            ).filter(
+                VideoInstance.channel == self.id,
+                VideoInstance.deleted == False).value(func.count())
         return self._video_count
 
     @property
