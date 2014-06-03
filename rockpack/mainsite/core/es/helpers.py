@@ -389,7 +389,7 @@ class DBImport(object):
             done = 1
 
             ev = ESVideo.inserter(bulk=True)
-            vids = []
+            channel_ids = []
             for v in query.yield_per(6000):
                 mapped = ESVideoAttributeMap(v)
                 rep = dict(
@@ -421,12 +421,45 @@ class DBImport(object):
                     self.print_percent_complete(done, total)
                 done += 1
 
-                vids.append(v.video)
+                if start:
+                    channel_ids.append(v.channel)
+
+            if start:
+                # We'll want to update channel counts that
+                # may not get trigger elsewhere
+                self.import_channel_video_counts(channel_ids)
 
             if automatic_flush:
                 ev.flush_bulk()
 
             app.logger.debug('finished in {} seconds'.format(time.time() - start_timer))
+
+    def import_channel_video_counts(self, channel_ids):
+        if channel_ids:
+
+            from rockpack.mainsite.services.video.models import Channel, VideoInstance
+
+            with app.test_request_context():
+                query = Channel.query.join(
+                    VideoInstance,
+                    (VideoInstance.channel == Channel.id) &
+                    (VideoInstance.deleted == False)
+                ).filter(
+                    Channel.id.in_(channel_ids)
+                ).group_by(
+                    Channel.id
+                ).values(Channel.id, func.count(Channel.id))
+
+                for channel_id, count in query:
+                    try:
+                        self.conn.partial_update(
+                            self.indexing['channel']['index'],
+                            self.indexing['channel']['type'],
+                            channel_id,
+                            "ctx._source.video_counts = %s" % count
+                        )
+                    except pyes.exceptions.ElasticSearchException:
+                        pass
 
     def import_dolly_video_owners(self, prefix=None, start=None, stop=None, automatic_flush=True):
         """ Import all the owner attributes of
