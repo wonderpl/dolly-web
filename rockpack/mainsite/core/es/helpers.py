@@ -421,7 +421,7 @@ class DBImport(object):
                     self.print_percent_complete(done, total)
                 done += 1
 
-                if start:
+                if start and v.channel not in channel_ids:
                     channel_ids.append(v.channel)
 
             if start:
