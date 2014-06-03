@@ -20,7 +20,9 @@ Run dev server with:
 
 
 Note on cryptography package installation error: raise ffiplatform.VerificationError(error)
+
 Possible fix: http://chriskief.com/2014/03/25/installing-cryptography-via-pip-with-macports-or-homebrew/
+
     sudo env ARCHFLAGS="-arch x86_64" LDFLAGS="-L/opt/local/lib" CFLAGS="-I/opt/local/include" pip install cryptography
 
 
