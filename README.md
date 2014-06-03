@@ -18,6 +18,12 @@ Run dev server with:
 0. `python2.7 manage.py runserver`
 0. `curl http://127.0.0.1:5000/ws/`
 
+
+Note on cryptography package installation error: raise ffiplatform.VerificationError(error)
+Possible fix: http://chriskief.com/2014/03/25/installing-cryptography-via-pip-with-macports-or-homebrew/
+    sudo env ARCHFLAGS="-arch x86_64" LDFLAGS="-L/opt/local/lib" CFLAGS="-I/opt/local/include" pip install cryptography
+
+
 ### Database setup
 
 0. Install & start postgres server (version 9)
