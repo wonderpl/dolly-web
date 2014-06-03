@@ -906,7 +906,11 @@ def get_users_categories(user_ids=None, start=None, stop=None):
         updated_instances = readonly_session.query(distinct(models.VideoInstance.channel))\
             .filter(models.VideoInstance.date_updated.between(start, stop))
 
-        unioned = updated_channels.union(updated_instances).subquery()
+        updated_users = readonly_session.query(distinct(models.Channel.id))\
+            .join(User, User.id == models.Channel.owner)\
+            .filter(User.date_updated.between(start, stop))
+
+        unioned = updated_channels.union_all(updated_instances, updated_users).subquery()
         query = query.filter(models.Channel.id.in_(unioned))
 
     query = query.group_by(User.id, models.Channel.id).order_by(User.id)
@@ -926,14 +930,16 @@ def get_users_categories(user_ids=None, start=None, stop=None):
 
 
 def update_user_categories(user_ids=None, automatic_flush=True, start=None, stop=None):
+    eu = ESUser.updater(bulk=True)
     for user, categories in get_users_categories(user_ids=user_ids, start=start, stop=stop).iteritems():
-        eu = ESUser.updater(bulk=True)
         eu.set_document_id(user.id)
         eu.add_field('category', list(set(categories)))
         try:
             eu.update()
         except pyes.exceptions.ElasticSearchException:
             app.logger.warning('update_user_categories failed to update %s', user)
+        finally:
+            eu.reset()
 
     if automatic_flush:
         ESUser.flush()
