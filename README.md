@@ -32,6 +32,12 @@ Possible fix: https://github.com/joelverhagen/flask-rauth/issues/4
 
     easy_install rauth==0.4.17
 
+File not found error: _flask OSError: [Errno 2] No such file or directory_
+
+Possible fix: install less and coffeescript via npm
+
+    sudo npm install -g less
+    sudo npm install -g coffee-script
 
 ### Database setup
 
