@@ -374,7 +374,8 @@ class DBImport(object):
             ).options(
                 joinedload(VideoInstance.original_channel_owner_rel)
             ).filter(
-                VideoInstance.deleted == False
+                VideoInstance.deleted == False,
+                Video.visible == True
             )
 
             if prefix:

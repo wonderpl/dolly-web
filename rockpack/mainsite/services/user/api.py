@@ -51,6 +51,17 @@ ACTION_COLUMN_VALUE_MAP = dict(
 )
 
 
+SUBSCRIPTION_FUNC = lambda userid: User.subscriber_count_for_userid(userid)
+
+
+ACTION_COLUMN_METHOD_MAP = dict(
+    subscribe=SUBSCRIPTION_FUNC,
+    unsubscribe=SUBSCRIPTION_FUNC,
+    subscribe_all=SUBSCRIPTION_FUNC,
+    unsubscribe_all=SUBSCRIPTION_FUNC
+)
+
+
 ACTIVITY_OBJECT_TYPE_MAP = dict(
     user=User,
     channel=Channel,
@@ -146,9 +157,13 @@ def get_or_create_video_records(instance_ids):
     return [existing_ids[id] for id in instance_id_order]
 
 
-def _get_action_incrementer(action):
+def _get_action_incrementer(action, userid=None):
     try:
         column, value = ACTION_COLUMN_VALUE_MAP[action]
+        if userid:
+            calc_value = ACTION_COLUMN_METHOD_MAP.get(action, lambda x: None)(userid)
+            if calc_value:
+                value = calc_value
     except KeyError:
         abort(400, message=_('Invalid action'))
     incr = lambda m: {getattr(m, column): getattr(m, column) + value}
@@ -195,7 +210,7 @@ def save_video_activity(userid, action, instance_id, locale):
 @commit_on_success
 def save_channel_activity(userid, action, channelid, locale):
     """Update channel with subscriber, view, or star count changes."""
-    column, value, incr = _get_action_incrementer(action)
+    column, value, incr = _get_action_incrementer(action, userid=userid)
     # Update channel record:
     updated = Channel.query.filter_by(id=channelid).update(incr(Channel))
     if not updated:

@@ -237,6 +237,20 @@ class User(db.Model):
                 promos.append('|'.join([str(p.locale_id), str(p.category_id), str(p.position)]))
         return promos
 
+    @classmethod
+    def subscriber_count_for_userid(cls, userid):
+        from rockpack.mainsite.services.video import models
+        value = Subscription.query.join(
+            models.Channel,
+            (models.Channel.owner == Subscription.channel) &
+            (models.Channel.deleted == False) &
+            (models.Channel.owner == userid)
+        ).group_by(
+            models.Channel.owner
+        ).with_entities(func.count(models.Channel.owner)).first()
+
+        return value[0] if value else 0
+
 
 class UserFlag(db.Model):
     __tablename__ = 'user_flag'
