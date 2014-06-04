@@ -30,7 +30,7 @@ Syncdb Response error: _ImportError: cannot import name Response_
 
 Possible fix: https://github.com/joelverhagen/flask-rauth/issues/4
 
-    https://github.com/joelverhagen/flask-rauth/issues/4
+    easy_install rauth==0.4.17
 
 
 ### Database setup
