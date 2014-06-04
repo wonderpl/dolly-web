@@ -18,12 +18,19 @@ Run dev server with:
 0. `python2.7 manage.py runserver`
 0. `curl http://127.0.0.1:5000/ws/`
 
+#### Troubleshooting
 
-Note on cryptography package installation error: raise ffiplatform.VerificationError(error)
+Cryptography package installation error: _raise ffiplatform.VerificationError(error)_
 
 Possible fix: http://chriskief.com/2014/03/25/installing-cryptography-via-pip-with-macports-or-homebrew/
 
     sudo env ARCHFLAGS="-arch x86_64" LDFLAGS="-L/opt/local/lib" CFLAGS="-I/opt/local/include" pip install cryptography
+
+Syncdb Response error: _ImportError: cannot import name Response_
+
+Possible fix: https://github.com/joelverhagen/flask-rauth/issues/4
+
+    https://github.com/joelverhagen/flask-rauth/issues/4
 
 
 ### Database setup
