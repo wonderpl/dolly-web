@@ -160,13 +160,14 @@ def get_or_create_video_records(instance_ids):
 def _get_action_incrementer(action, userid=None):
     try:
         column, value = ACTION_COLUMN_VALUE_MAP[action]
-        if userid:
-            calc_value = ACTION_COLUMN_METHOD_MAP.get(action, lambda x: None)(userid)
-            if calc_value:
-                value = calc_value
     except KeyError:
         abort(400, message=_('Invalid action'))
-    incr = lambda m: {getattr(m, column): getattr(m, column) + value}
+
+    if userid:
+        calc_value = ACTION_COLUMN_METHOD_MAP.get(action, lambda x: 0)(userid)
+        incr = lambda m: {getattr(m, column): calc_value + value}
+    else:
+        incr = lambda m: {getattr(m, column): getattr(m, column) + value}
     return column, value, incr
 
 
@@ -210,7 +211,7 @@ def save_video_activity(userid, action, instance_id, locale):
 @commit_on_success
 def save_channel_activity(userid, action, channelid, locale):
     """Update channel with subscriber, view, or star count changes."""
-    column, value, incr = _get_action_incrementer(action, userid=userid)
+    column, value, incr = _get_action_incrementer(action)
     # Update channel record:
     updated = Channel.query.filter_by(id=channelid).update(incr(Channel))
     if not updated:
@@ -239,8 +240,12 @@ def save_channel_activity(userid, action, channelid, locale):
 
 @commit_on_success
 def save_owner_activity(userid, action, ownerid, locale):
-    column, value, incr = _get_action_incrementer(action)
+    # Get distinct action counts for user record
+    column, value, incr = _get_action_incrementer(action, userid=ownerid)
     updated = User.query.filter_by(is_active=True, id=ownerid).update(incr(User))
+
+    # Only increment/decrement for channel records
+    column, value, incr = _get_action_incrementer(action)
     if not updated:
         abort(400, message=_('Invalid user id'))
     UserActivity(
