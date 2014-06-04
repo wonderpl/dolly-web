@@ -402,7 +402,7 @@ def update_video_feed_item_stars(date_from, date_to):
     star_limit = app.config.get('FEED_STARS_LIMIT', 3)
     for feed_item, new_stars in feed_items:
         old_stars = json.loads(feed_item.stars) if feed_item.stars else []
-        new_stars = [l for l in new_stars.split() if l not in old_stars]
+        new_stars = [l for l in set(new_stars.split()) if l not in old_stars]
         stars = (new_stars + old_stars)[:star_limit]
         feed_item.stars = json.dumps(stars)
 
