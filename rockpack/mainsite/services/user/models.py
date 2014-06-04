@@ -245,9 +245,7 @@ class User(db.Model):
             (models.Channel.owner == Subscription.channel) &
             (models.Channel.deleted == False) &
             (models.Channel.owner == userid)
-        ).group_by(
-            models.Channel.owner
-        ).with_entities(func.count(models.Channel.owner)).first()
+        ).with_entities(func.count(func.distinct(Subscription.user))).first()
 
         return value[0] if value else 0
 
