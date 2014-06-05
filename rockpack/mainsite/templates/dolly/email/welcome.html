@@ -1,137 +1,101 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html>
+<html lang="en">
 <head>
-<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Welcome to Wonder PL</title>
-<style type="text/css">
-  /* Client-specific Styles */
-  #outlook a{padding:0;} /* Force Outlook to provide a "view in browser" button. */
-  body{width:100% !important;} .ReadMsgBody{width:100%;} .ExternalClass{width:100%;} /* Force Hotmail to display emails at full width */
-  body{-webkit-text-size-adjust:none;} /* Prevent Webkit platforms from changing default text sizes. */
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="initial-scale=1.0">
+  <meta name="format-detection" content="telephone=no">
 
-    /* Reset Styles */
-  body{margin:0; padding:0; background-color: #f9f9f9;}
-  img{border:0; height:auto; line-height:100%; outline:none; text-decoration:none;}
-  table td{border-collapse:collapse;}
-
-  body, #backgroundTable{
-    /*background-color:#;*/
-    font-family: verdana, sans-serif;
-    font-size: 14px;
-    color: #767472;
-  }
-
-  h1 {
-    font-size: 22px;
-    line-height: 24px;
-    font-weight: normal;
-    color: #767472;
-  }
-
-  p {
-    font-size: 17px;
-    line-height: 24px;
-    color: #767472;
-  }
-
-  a:link, a:visited, div a {
-    color:#5850bb;
-    font-weight:normal;
-    text-decoration:none;
-  }
-
-</style>
+  <title>Welcome to Wonder PL</title>
+  <style type="text/css">
+    #outlook a{padding:0;}body.outlook p{display:inline !important}
+    body{width:100% !important}.ReadMsgBody{width:100%;background-color:#fff}.ExternalClass{width:100%;background-color:#fff}.ExternalClass,.ExternalClass p,.ExternalClass span,.ExternalClass font,.ExternalClass td,.ExternalClass div{line-height:100%}
+    body{-webkit-text-size-adjust:none;-ms-text-size-adjust:none}
+    body{margin:0;padding:0}
+    img{max-width:100%;height:auto;line-height:100%;text-decoration:none;border:0;outline:none}
+    table{border-spacing:0}
+    table td{border-collapse:collapse}
+    a{text-decoration:none;color:#51B464!important;border-bottom:1px solid #55AA65}
+    h1 a,h2 a,h3 a,h4 a,h5 a,h6 a{border:none}
+    a img{border:0 none}
+    hr{height:0;margin-bottom:23px;border:0 solid #d2dadf;border-bottom-width:1px;border-bottom-style:solid}
+    @media screen and (max-width: 480px) {
+      table[class="container"]{width: 92% !important;}td[class="container-padding"]{padding-left:12px !important;padding-right:12px !important}
+    }
+    h1{margin:0;margin-bottom:24px;font-weight:400;font-size:18px;line-height:28px;font-family:'Lucida Grande','Lucida Sans Unicode','Lucida Sans',Geneva,Verdana,sans-serif;font-weight:normal;color:#2e2e32}
+    p{margin:0;margin-bottom:24px;font-size:16px;line-height:24px;font-family:Georgia,Cambria,'Times New Roman',Times,serif;color:#777782}
+    a:link,a:visited,div a{font-weight:normal;}
+    .container-padding{background-color:#fff;padding-left:24px;padding-right:24px}
+  </style>
 </head>
-<body leftmargin="0" marginwidth="0" topmargin="0" marginheight="0" offset="0">
-<center>
-  <table border="0" cellpadding="0" cellspacing="0" width="100%" id="backgroundTable">
+<body style="margin:0;padding:0;" bgcolor="#fff" topmargin="0" leftmargin="0" marginwidth="0" marginheight="0" offset="0">
+  <table border="0" width="100%" height="100%" cellpadding="0" cellspacing="0" bgcolor="#fff">
     <tr>
-      <td align="center" valign="top">
-        {% include "header.html" %}
-        <table border="0" cellpadding="0" cellspacing="0" width="100%" bgcolor="white">
+      <td align="center" valign="top" bgcolor="#fff" style="background-color:#fff">
+        
+        <table border="0" width="480" cellpadding="0" cellspacing="0" class="container" bgcolor="#fff">
           <tr>
-            <td align="center">
-              <table border="0" cellpadding="0" cellspacing="0" width="500" bgcolor="white">
-                <tr>
-                  <td width="36" colspan="1"></td>
-                  <td align="center" valign="middle" height="120" colspan="1" width="428">
-                    <br/>
-                    <h1><font face="verdana" size="4" color="#767472" style="font-weight: normal; font-size: 24px; line-height: 28px;">Hello {{ user.display_name }},</font></h1>
-                    <br/>
-
-                    <p><font face="verdana" color="#767472" style="font-size: 17px; line-height: 29px;">Welcome to <a href="{{ url_for('homepage') }}" target="_blank">Wonder PL</a>, new home to the world's best video content.</font></p>
-                    <p><font face="verdana" color="#767472" style="font-size: 17px; line-height: 29px;">Live and feel better, within our very own quality communities of Culture, Wellness, Home &amp; Family, Food, the Mind and Entertainment.</font></p>
-                    <p><font face="verdana" color="#767472" style="font-size: 17px; line-height: 29px;">Our select partners and curators are what makes Wonder PL the place to be. Start following some of them today:</font></p>
-                    <p>&nbsp;</p>
-
-                    <table border="0" cellpadding="0" cellspacing="0" width="495" bgcolor="white">
-                      <tr>
-                        <td width="155" align="center" valign="top">
-                          <a href="{{ url_for('share_redirect_root') }}?c=ch979hiEf_IObzFiLHs1-DHA">
-                            <img src="{{ config.EMAIL_ASSETS_URL }}/assets/dolly/img/emails/welcome-tom-v2.jpg" width="132" height="132" style="display: block;" />
-                            <h2 style="color: #767742; font-weight: normal; font-size: 16px; line-height: 26px;">Tom Aikens</h2>
-                            <p>&nbsp;</p>
-                          </a>
-                        </td>
-                        <td width="15" align="center" valign="top"> </td>
-                        <td width="155" align="center" valign="top">
-                          <a href="{{ url_for('share_redirect_root') }}?c=chvX7Sk_KTF266TpziNLrsiA">
-                            <img src="{{ config.EMAIL_ASSETS_URL }}/assets/dolly/img/emails/welcome-calgary-v2.jpg" width="132" height="132" style="display: block;" />
-                            <h2 style="color: #767742; font-weight: normal; font-size: 16px; line-height: 26px;">Calgary Avansino</h2>
-                            <p>&nbsp;</p>
-                          </a>
-                        </td>
-                        <td width="15" align="center" valign="top"> </td>
-                        <td width="155" align="center" valign="top">
-                          <a href="{{ url_for('share_redirect_root') }}?c=chECnC4qg2eyXn6AGxny7uxg">
-                            <img src="{{ config.EMAIL_ASSETS_URL }}/assets/dolly/img/emails/welcome-nfb-v2.jpg" width="132" height="132" style="display: block;" />
-                            <h2 style="color: #767742; font-weight: normal; font-size: 16px; line-height: 26px;">National Film Board of Canada</h2>
-                            <p>&nbsp;</p>
-                          </a>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td width="155" align="center" valign="top">
-                          <a href="{{ url_for('share_redirect_root') }}?c=chIrlHCJwWvKxngpCEoqlW1A">
-                            <img src="{{ config.EMAIL_ASSETS_URL }}/assets/dolly/img/emails/welcome-open-road-media-v2.jpg" width="132" height="132" style="display: block;" />
-                            <h2 style="color: #767742; font-weight: normal; font-size: 16px; line-height: 26px;">Open Road Media</h2>
-                          </a>
-                        </td>
-                        <td width="15" align="center" valign="top"> </td>
-                        <td width="155" align="center" valign="top">
-                          <a href="{{ url_for('share_redirect_root') }}?c=chuwXUtaT8krA0mce8eFKE4g">
-                            <img src="{{ config.EMAIL_ASSETS_URL }}/assets/dolly/img/emails/welcome-spacenk-v2.jpg" width="132" height="132" style="display: block;" />
-                            <h2 style="color: #767742; font-weight: normal; font-size: 16px; line-height: 26px;">Space.NK</h2>
-                          </a>
-                        </td>
-                        <td width="15" align="center" valign="top"> </td>
-                        <td width="165" align="center" valign="top">
-                          <a href="{{ url_for('share_redirect_root') }}?c=ch5tdDuBDgI8qL6Ylc259k_w">
-                            <img src="{{ config.EMAIL_ASSETS_URL }}/assets/dolly/img/emails/welcome-north-of-new-york-v2.jpg" width="132" height="132" style="display: block;" />
-                            <h2 style="color: #767742; font-weight: normal; font-size: 16px; line-height: 26px;">North of New York</h2>
-                          </a>
-                        </td>
-                      </tr>
-                    </table>
-
-                    <p><font face="verdana" color="#767472" style="font-size: 17px; line-height: 29px;">Make your own personal collections to save and share with friends. Watch free from clutter and distraction with no advertising.</font></p>
-                    <p><font face="verdana" color="#767472" style="font-size: 17px; line-height: 29px;">And when indecision strikes, let our Mood-Minder find the perfect video for right now, whichever way you might be feeling.</font></p>
-                    <p><font face="verdana" color="#767472" style="font-size: 17px; line-height: 29px;">Until we meet again,<br/><br/></font></p>
-                    <p><font face="verdana" color="#767472" style="font-size: 17px; line-height: 29px;">Fill your life with Wonder<br/>WONDER PL</font></p>
-                    <p>&nbsp;</p>
-                  </td> 
-                  <td width="36" colspan="1"></td>
+            {% include "header.html" %}
+          </tr>
+          <tr>
+            <td align="center" valign="top" class="container-padding" bgcolor="#fff">
+              <h1><font face="Verdana" size="4" color="#2e2e32" style="margin:0;margin-bottom:24px;font-weight:400;font-size:18px;line-height:28px">Hello {{ user.display_name }},</font></h1>
+              <p><font face="Georgia" color="#777782" style="margin:0;margin-bottom:24px;font-size:18px;line-height:28px">Welcome to <a href="{{ url_for('homepage') }}" target="_blank">Wonder PL</a>, the worlds first ad-free video magazine, designed to give you the most beautiful video experience curated just for you.</font></p>
+              <p><font face="Georgia" color="#777782" style="margin:0;margin-bottom:24px;font-size:16px;line-height:24px">This is the home of ideas and stories across food, the mind, wellness, entertainment, culture and home &amp; family.</font></p>
+              <p><font face="Georgia" color="#777782" style="margin:0;margin-bottom:24px;font-size:16px;line-height:24px">We&lsquo;re here to help you discover only quality videos, from cutting edge animation to insights and opinions that shape the world and fill your lives with Wonder.</font></p>
+              <p><font face="Georgia" color="#777782" style="margin:0;margin-bottom:24px;font-size:16px;line-height:24px">Watch the experts and learn the tricks of the trade from recipes by world renowned chefs to the latest technology innovations in a setting that is transformative and utterly delightful.</font></p>
+              <p><font face="Georgia" color="#777782" style="margin:0;margin-bottom:24px;font-size:16px;line-height:24px">Why not follow some of our favourite content providers here:</font></p>
+              <table border="0" cellpadding="0" cellspacing="0" width="100%" bgcolor="white" style="width:100%">
+                <tr style="font-size:14px;line-height:22px;color:#777782">
+                  <td colspan="3" valign="top" width="width:33.3333%" style="width:33.3333%;vertical-align:top;padding:0 12px">
+                    <a href="{{ url_for('share_redirect_root') }}?c=ch979hiEf_IObzFiLHs1-DHA">
+                      <img src="{{ config.EMAIL_ASSETS_URL }}/assets/dolly/img/emails/gbc.jpg" width="120" height="120" style="display:block;margin:0 auto 12px auto" />
+                      <p style="margin:0;margin-bottom:22px;font-size:14px;line-height:22px;text-align:center;">Great British Chefs</p>
+                    </a>
+                  </td>
+                  <td colspan="3" valign="top" width="width:33.3333%" style="width:33.3333%;vertical-align:top;padding:0 12px">
+                    <a href="{{ url_for('share_redirect_root') }}?c=chvX7Sk_KTF266TpziNLrsiA">
+                      <img src="{{ config.EMAIL_ASSETS_URL }}/assets/dolly/img/emails/ny-times.jpg" width="120" height="120" style="display:block;margin:0 auto 12px auto" />
+                      <p style="margin:0;margin-bottom:22px;font-size:14px;line-height:22px;text-align:center;">New York Times</p>
+                    </a>
+                  </td>
+                  <td colspan="3" valign="top" width="width:33.3333%" style="width:33.3333%;vertical-align:top;padding:0 12px">
+                    <a href="{{ url_for('share_redirect_root') }}?c=chECnC4qg2eyXn6AGxny7uxg">
+                      <img src="{{ config.EMAIL_ASSETS_URL }}/assets/dolly/img/emails/stash.jpg" width="120" height="120" style="display:block;margin:0 auto 12px auto" />
+                      <p style="margin:0;margin-bottom:22px;font-size:14px;line-height:22px;text-align:center;">Stash Media</p>
+                    </a>
+                  </td>
+                </tr>
+                <tr style="font-size:14px;line-height:22px;color:#777782">
+                  <td colspan="3" valign="top" width="width:33.3333%" style="width:33.3333%;vertical-align:top;padding:0 12px">
+                    <a href="{{ url_for('share_redirect_root') }}?c=chIrlHCJwWvKxngpCEoqlW1A">
+                      <img src="{{ config.EMAIL_ASSETS_URL }}/assets/dolly/img/emails/bodyism.jpg" width="120" height="120" style="display:block;margin:0 auto 12px auto" />
+                      <p style="margin:0;margin-bottom:22px;font-size:14px;line-height:22px;text-align:center;">Bodyism</p>
+                    </a>
+                  </td>
+                  <td colspan="3" valign="top" width="width:33.3333%" style="width:33.3333%;vertical-align:top;padding:0 12px">
+                    <a href="{{ url_for('share_redirect_root') }}?c=chuwXUtaT8krA0mce8eFKE4g">
+                      <img src="{{ config.EMAIL_ASSETS_URL }}/assets/dolly/img/emails/bloomberg-tv.jpg" width="120" height="120" style="display:block;margin:0 auto 12px auto" />
+                      <p style="margin:0;margin-bottom:22px;font-size:14px;line-height:22px;text-align:center;">Bloomberg TV</p>
+                    </a>
+                  </td>
+                  <td colspan="3" valign="top" width="width:33.3333%" style="width:33.3333%;vertical-align:top;padding:0 12px">
+                    <a href="{{ url_for('share_redirect_root') }}?c=ch5tdDuBDgI8qL6Ylc259k_w">
+                      <img src="{{ config.EMAIL_ASSETS_URL }}/assets/dolly/img/emails/forbes.jpg" width="120" height="120" style="display:block;margin:0 auto 12px auto" />
+                      <p style="margin:0;margin-bottom:22px;font-size:14px;line-height:22px;text-align:center;">Forbes Women</p>
+                    </a>
+                  </td>
                 </tr>
               </table>
+              <p><font face="Georgia" color="#777782" style="margin:0;margin-bottom:24px;font-size:16px;line-height:24px">Until we meet again,<br /><br /><em style="font-style:italic">Wonder PL</em></font></p>
             </td>
           </tr>
+          <tr>
+            {% include "footer.html" %}
+          </tr>
         </table>
-{% include "footer.html" %}
       </td>
     </tr>
   </table>
-</center>
-{% include "tracking_img.html" %}
+  {% include "tracking_img.html" %}
 </body>
 </html>
