@@ -72,14 +72,14 @@
               <h1><font face="verdana" color="#2e2e32" style="font-weight:400;font-size:24px;line-height:32px;font-family:'Lucida Grande','Lucida Sans Unicode','Lucida Sans',Geneva,Verdana,sans-serif;word-break:normal;text-rendering:optimizeLegibility;color:#2e2e32">{{ user.display_name }} shared a {{ object_type_name }} <br/>with you from Wonder PL.</font></h1>
               <p><font face="verdana" color="#777782" style="margin:0;margin-bottom:24px;font-size:22px;line-height:30px;font-family:'Lucida Grande','Lucida Sans Unicode','Lucida Sans',Geneva,Verdana,sans-serif;word-break:normal;text-rendering:optimizeLegibility;color:#777782"><a href="{{ link.url }}" border="0" style="text-decoration:none;color:#777782 !important;border:none">{{ object.video_rel.title }}</a></font></p>
               <a href="{{ link.url }}" border="0" style="display:block;margin:0;margin-bottom:24px;border:none;outline:none">
-                <img src="{{ object.default_thumbnail }}" border="0" alt="" width="285" height="160" style="display:block;width:100%;height:auto;margin:0 auto;border:none;outline:none" />
+                <img src="{{ object.default_thumbnail }}" border="0" alt="" style="display:block;width:100%;height:auto;margin:0 auto;border:none;outline:none" />
               </a>
               {% endif %}
               <hr />
               <h3 style="margin:0;margin-bottom:12px;font-weight:400;font-size:18px;line-height:28px;font-family:'Lucida Grande','Lucida Sans Unicode','Lucida Sans',Geneva,Verdana,sans-serif;word-break:normal;text-rendering:optimizeLegibility;color:#2e2e32;text-align:center;">Not part of the Wonder PL community?</h3>
               <p style="text-align:center"><font face="Georgia" color="#777782" style="margin:0;margin-bottom:24px;font-size:16px;line-height:24px;">You're missing out on the world's best opinions, stories and ideas.<br /><br />Download the app here:</font></p>
               <a href="{{ config.ITUNES_APP_LINK }}&ct=shareemail" border="0" style="display:block;margin:0;margin-bottom:24px;border:none;outline:none">
-                <img src="{{ config.EMAIL_ASSETS_URL }}/assets/dolly/img/emails/shared-app-store.png" border="0" alt="" width="135" height="40" style="display:block;width:100%;height:auto;margin:0 auto;border:none;outline:none"/>
+                <img src="{{ config.EMAIL_ASSETS_URL }}/assets/dolly/img/emails/shared-app-store.png" border="0" alt="" style="display:block;width:135px;height:40px;margin:0 auto;border:none;outline:none"/>
               </a>
             </td>
           </tr>
