@@ -352,27 +352,38 @@ class VideoWS(WebService):
             abort(400, form_errors=form.errors)
         save_player_error(form.video_instance.data, form.error.data)
 
-    @expose_ajax('/<video_instance>/activity/', methods=['GET', 'POST'])
-    def anon_activity(self, video_instance):
+    @expose_ajax('/<video_instance_id>/activity/', methods=['POST'])
+    @commit_on_success
+    def anon_activity(self, video_instance_id):
+
+        def add_instance(video_instance_id):
+            instance = models.VideoInstanceAnonActivity(
+                remote_address=request.remote_addr,
+                object_id=video_instance_id)
+            instance.add()
+            return instance
+
         try:
             activity = models.VideoInstanceAnonActivity.query.filter(
-                models.VideoInstanceAnonActivity.remote_address == request.remote_addr).one()
+                models.VideoInstanceAnonActivity.remote_address == request.remote_addr,
+                models.VideoInstanceAnonActivity.object_id == video_instance_id).one()
         except NoResultFound:
-            models.VideoInstanceAnonActivity(remote_address=request.remote_addr).save()
+            add_instance(video_instance_id)
         else:
-            if activity.date_added + timedelta(hours=24) > datetime.utcnow():
+            if (activity.date_added + timedelta(hours=24)) > datetime.utcnow():
+                # Nothing to do here; dupe for the day.
                 return
             else:
-                activity.date_added = datetime.utcnow()
-                activity.save()
+                add_instance(video_instance_id)
+
         from rockpack.mainsite.services.user.api import (increment_video_instance_counts,
                                                          _get_action_incrementer)
 
         video_id = list(models.VideoInstance.query.filter(
-            models.VideoInstance.id == video_instance).values(models.VideoInstance.video))[0][0]
+            models.VideoInstance.id == video_instance_id).values(models.VideoInstance.video))[0][0]
 
         column, value, incr = _get_action_incrementer('view')
-        increment_video_instance_counts(video_id, video_instance, 'en-us', incr, column)
+        increment_video_instance_counts(video_id, video_instance_id, 'en-us', incr, column)
 
 
 class ChannelWS(WebService):

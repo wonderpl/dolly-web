@@ -23,6 +23,66 @@ def search_video(videoid):
     return v.videos()[0]
 
 
+class ChannelVideoAnonCount(base.RockPackTestCase):
+
+    def test_anon_video_count_inc(self):
+
+        with self.app.test_request_context():
+            with self.app.test_client() as client:
+
+                videoid = VideoInstanceData.video_instance1.id
+                remote_address = '127.0.0.1'
+
+                client.post(
+                    '/ws/videos/{}/activity/'.format(videoid),
+                    environ_base={'REMOTE_ADDR': remote_address}
+                )
+
+                activity = models.VideoInstanceAnonActivity.query.filter(
+                    models.VideoInstanceAnonActivity.remote_address == remote_address,
+                    models.VideoInstanceAnonActivity.object_id == videoid).one()
+
+                video_instance = models.VideoInstance.query.get(videoid)
+
+                self.assertEquals(activity.object_id, videoid)
+                self.assertEquals(activity.remote_address, remote_address)
+                self.assertEquals(video_instance.view_count, 1)
+                self.assertEquals(video_instance.video_rel.view_count, 1)
+
+                # Send activity again and make sure we don't get a dupe record
+
+                client.post(
+                    '/ws/videos/{}/activity/'.format(videoid),
+                    data='1',
+                    environ_base={'REMOTE_ADDR': remote_address}
+                )
+
+                activity = models.VideoInstanceAnonActivity.query.filter(
+                    models.VideoInstanceAnonActivity.remote_address == remote_address,
+                    models.VideoInstanceAnonActivity.object_id == videoid).one()
+
+                self.assertEquals(video_instance.view_count, 1)
+
+        # Now again but for tomorrow
+        utcmock = lambda *args, **kwargs: datetime.utcnow() + timedelta(days=2)
+        with patch('rockpack.mainsite.services.video.api.datetime') as mockdate:
+            with self.app.test_request_context():
+                with self.app.test_client() as client:
+                    mockdate.utcnow.return_value = utcmock()
+                    mockdate.side_effect = lambda *args, **kwargs: datetime.datetime(*args, **kwargs)
+                    client.post(
+                        '/ws/videos/{}/activity/'.format(videoid),
+                        data='1',
+                        environ_base={'REMOTE_ADDR': remote_address}
+                    )
+
+                    activities = models.VideoInstanceAnonActivity.query.filter(
+                        models.VideoInstanceAnonActivity.remote_address == remote_address,
+                        models.VideoInstanceAnonActivity.object_id == videoid)
+
+                    self.assertEquals(activities.count(), 2)
+
+
 class ChannelViewCountPopulation(base.RockPackTestCase):
 
     @skip_unless_config('ELASTICSEARCH_URL')

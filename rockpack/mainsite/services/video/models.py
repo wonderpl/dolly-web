@@ -402,6 +402,7 @@ class VideoInstanceAnonActivity(db.Model):
 
     id = Column(Integer, primary_key=True)
     remote_address = Column(String(15), nullable=False)
+    object_id = Column(CHAR(24), nullable=False)
     date_added = Column(DateTime(), nullable=False, default=func.now())
 
 

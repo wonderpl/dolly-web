@@ -8,7 +8,7 @@ Create Date: 2014-05-09 16:38:31.775184
 
 # revision identifiers, used by Alembic.
 revision = '4b5924754008'
-down_revision = '1de6cae29457'
+down_revision = '11f480b26722'
 
 from alembic import op
 import sqlalchemy as sa
@@ -19,6 +19,7 @@ def upgrade():
     op.create_table('video_instance_anon_activity',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('remote_address', sa.String(length=15), nullable=False),
+    sa.Column('object_id', sa.CHAR(24), nullable=False),
     sa.Column('date_added', sa.DateTime(), nullable=False),
     sa.PrimaryKeyConstraint('id')
     )
