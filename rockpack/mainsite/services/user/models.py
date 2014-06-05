@@ -242,7 +242,7 @@ class User(db.Model):
         from rockpack.mainsite.services.video import models
         value = Subscription.query.join(
             models.Channel,
-            (models.Channel.owner == Subscription.channel) &
+            (models.Channel.id == Subscription.channel) &
             (models.Channel.deleted == False) &
             (models.Channel.owner == userid)
         ).with_entities(func.count(func.distinct(Subscription.user))).first()
