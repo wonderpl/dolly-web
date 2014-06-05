@@ -1,13 +1,3 @@
-<table border="0" cellpadding="0" cellspacing="0" width="100%" bgcolor="#f9f9f9" style="border-top: 1px solid #b4b4b4;">
-  <tr>
-    <td align="center">
-      <table border="0" cellpadding="0" cellspacing="0" height="120" width="428" bgcolor="#f9f9f9">
-        <tr>  
-          <td align="center" valign="middle" height="120" width="100%">
-            <p style="line-height: 17px; font-size: 11px; "><font face="verdana" color="#767472">To ensure our emails reach your inbox please make sure to add {{ config.DEFAULT_EMAIL_SOURCE|e }} to your address book or safe list. You are subscribed as {{ recipient or user.email }}. {% if unsubscribe_token %}To unsubscribe from these emails, click <a href="{{ url_for('unsubscribe') }}&token={{ unsubscribe_token }}" >here</a>.{% endif %} Your privacy is important to us, have a read of our <a style="color: #5850bb;" href="{{ url_for('privacy') }}" target="_blank"><font color="#5850bb">privacy policy</font></a>.</font></p>
-          </td> 
-        </tr>
-      </table>
-    </td>
-  </tr>
-</table>
+<td align="center" valign="top" class="container-padding" bgcolor="#fff">
+  <p style="margin:0;margin-bottom:18px;font-size:12px;line-height:18px;"><font face="Georgia" color="#777782" style="margin:0;margin-bottom:18px;font-size:12px;line-height:18px">To ensure our emails reach your inbox please make sure to add {{ config.DEFAULT_EMAIL_SOURCE|e }} to your address book or safe list. You are subscribed as {{ recipient or user.email }}. {% if unsubscribe_token %}To unsubscribe from these emails, click <a href="{{ url_for('unsubscribe') }}&token={{ unsubscribe_token }}" >here</a>.{% endif %} Your privacy is important to us, have a read of our <a style="color:#51b464" href="{{ url_for('privacy') }}" target="_blank"><font color="#51b464">privacy policy</font></a>.</font></p>
+</td>
