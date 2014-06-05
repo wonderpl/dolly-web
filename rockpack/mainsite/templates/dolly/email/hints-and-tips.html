@@ -31,48 +31,55 @@
 <body style="margin:0;padding:0;" bgcolor="#fff" topmargin="0" leftmargin="0" marginwidth="0" marginheight="0" offset="0">
 	<table border="0" width="100%" height="100%" cellpadding="0" cellspacing="0" bgcolor="#fff">
 		<tr>
-			{% include "header.html" %}
-		</tr>
-		<tr>
-			<td align="center" valign="top" class="container-padding" bgcolor="#fff">
-				<h1><font face="Georgia" color="#777782" style="margin:0;margin-bottom:24px;font-size:18px;line-height:28px">Hello {{ user.display_name }},</font></h1>
-				<p><font face="Georgia" color="#777782" style="margin:0;margin-bottom:24px;font-size:18px;line-height:28px">Wonder PL is your ad free personalised video magazine. Here are some of our top tips.</font></p>
-				<table border="0" width="100%" cellpadding="0" cellspacing="0" bgcolor="#fff" style="width:100%;margin-bottom:48px">
+      <td align="center" valign="top" bgcolor="#fff" style="background-color:#fff">
+      	<table border="0" width="480" cellpadding="0" cellspacing="0" class="container" bgcolor="#fff">
 					<tr>
-						<td style="vertical-align:top;padding:0 12px;" valign="top">
-							<img src="{{ config.EMAIL_ASSETS_URL }}/assets/dolly/img/emails/hints-quick-share.jpg" width="180" height="180" style="display:block;margin:0 auto 12px auto" />
-							<h2 style="margin:0;margin-bottom:24px;font-weight:400;font-size:22px;line-height:30px;font-family:'Lucida Grande','Lucida Sans Unicode','Lucida Sans',Geneva,Verdana,sans-serif;word-break:normal;text-rendering:optimizeLegibility;text-align:center;color:#2e2e32">Quick Share</h2>
-							<p style="text-align:center">It takes just two taps to share via email, Twitter or Facebook. We even store your frequently used contacts to make it easier for you.</p>
-						</td>
+						{% include "header.html" %}
 					</tr>
 					<tr>
-						<td style="vertical-align:top;padding:0 12px;" valign="top">
-							<img src="{{ config.EMAIL_ASSETS_URL }}/assets/dolly/img/emails/hints-follow-creators.jpg" width="180" height="180" style="display:block;margin:0 auto 12px auto" />
-							<h2 style="margin:0;margin-bottom:24px;font-weight:400;font-size:22px;line-height:30px;font-family:'Lucida Grande','Lucida Sans Unicode','Lucida Sans',Geneva,Verdana,sans-serif;word-break:normal;text-rendering:optimizeLegibility;text-align:center;color:#2e2e32">Follow New Creators</h2>
-							<p style="text-align:center">We&lsquo;ve curated some of the most interesting creators on the web across a range of topics. Get out of your comfort zone.</p>
+						<td align="center" valign="top" class="container-padding" bgcolor="#fff">
+							<h1><font face="Georgia" color="#777782" style="margin:0;margin-bottom:24px;font-size:18px;line-height:28px">Hello {{ user.display_name }},</font></h1>
+							<p><font face="Georgia" color="#777782" style="margin:0;margin-bottom:24px;font-size:18px;line-height:28px">Wonder PL is your ad free personalised video magazine. Here are some of our top tips.</font></p>
+							<table border="0" width="100%" cellpadding="0" cellspacing="0" bgcolor="#fff" style="width:100%;margin-bottom:48px">
+								<tr>
+									<td style="vertical-align:top;padding:0 12px;" valign="top">
+										<img src="{{ config.EMAIL_ASSETS_URL }}/assets/dolly/img/emails/hints-quick-share.jpg" width="180" height="180" style="display:block;margin:0 auto 12px auto" />
+										<h2 style="margin:0;margin-bottom:24px;font-weight:400;font-size:22px;line-height:30px;font-family:'Lucida Grande','Lucida Sans Unicode','Lucida Sans',Geneva,Verdana,sans-serif;word-break:normal;text-rendering:optimizeLegibility;text-align:center;color:#2e2e32">Quick Share</h2>
+										<p style="text-align:center">It takes just two taps to share via email, Twitter or Facebook. We even store your frequently used contacts to make it easier for you.</p>
+									</td>
+								</tr>
+								<tr>
+									<td style="vertical-align:top;padding:0 12px;" valign="top">
+										<img src="{{ config.EMAIL_ASSETS_URL }}/assets/dolly/img/emails/hints-follow-creators.jpg" width="180" height="180" style="display:block;margin:0 auto 12px auto" />
+										<h2 style="margin:0;margin-bottom:24px;font-weight:400;font-size:22px;line-height:30px;font-family:'Lucida Grande','Lucida Sans Unicode','Lucida Sans',Geneva,Verdana,sans-serif;word-break:normal;text-rendering:optimizeLegibility;text-align:center;color:#2e2e32">Follow New Creators</h2>
+										<p style="text-align:center">We&rsquo;ve curated some of the most interesting creators on the web across a range of topics. Get out of your comfort zone.</p>
+									</td>
+								</tr>
+								<tr>
+									<td style="vertical-align:top;padding:0 12px;" valign="top">
+										<img src="{{ config.EMAIL_ASSETS_URL }}/assets/dolly/img/emails/hints-collect-save.jpg" width="180" height="180" style="display:block;margin:0 auto 12px auto" />
+										<h2 style="margin:0;margin-bottom:24px;font-weight:400;font-size:22px;line-height:30px;font-family:'Lucida Grande','Lucida Sans Unicode','Lucida Sans',Geneva,Verdana,sans-serif;word-break:normal;text-rendering:optimizeLegibility;text-align:center;color:#2e2e32">Collect &amp; Save</h2>
+										<p style="text-align:center">Tap the &lsquo;+&rsquo; to organize your videos into collections, such as &lsquo;My Recipes&rsquo;, &lsquo;Favorite Talks&rsquo;, &lsquo;My Funnies&rsquo;.</p>
+									</td>
+								</tr>
+								<tr>
+									<td style="vertical-align:top;padding:0 12px;" valign="top">
+										<img src="{{ config.EMAIL_ASSETS_URL }}/assets/dolly/img/emails/hints-quick-share.jpg" width="180" height="180" style="display:block;margin:0 auto 12px auto" />
+										<h2 style="margin:0;margin-bottom:24px;font-weight:400;font-size:22px;line-height:30px;font-family:'Lucida Grande','Lucida Sans Unicode','Lucida Sans',Geneva,Verdana,sans-serif;word-break:normal;text-rendering:optimizeLegibility;text-align:center;color:#2e2e32">Buy</h2>
+										<p style="text-align:center">Look for the shop motion symbol &lsquo;<img src="{{ config.EMAIL_ASSETS_URL }}/assets/dolly/img/emails/hints-shopmotion-16x16.png" style="display:inline-block;width:16px;height:16px;vertical-align:middle;line-height:1;" />&rsquo;, tap it and experience touch screen shopping.</p>
+									</td>
+								</tr>
+							</table>
+							<p style="font-weight:400;font-size:22px;line-height:30px;font-family:'Lucida Grande','Lucida Sans Unicode','Lucida Sans',Geneva,Verdana,sans-serif;word-break:normal;text-rendering:optimizeLegibility;text-align:center">Fill your life with Wonder</p>
 						</td>
 					</tr>
-					<tr>
-						<td style="vertical-align:top;padding:0 12px;" valign="top">
-							<img src="{{ config.EMAIL_ASSETS_URL }}/assets/dolly/img/emails/hints-collect-save.jpg" width="180" height="180" style="display:block;margin:0 auto 12px auto" />
-							<h2 style="margin:0;margin-bottom:24px;font-weight:400;font-size:22px;line-height:30px;font-family:'Lucida Grande','Lucida Sans Unicode','Lucida Sans',Geneva,Verdana,sans-serif;word-break:normal;text-rendering:optimizeLegibility;text-align:center;color:#2e2e32">Collect &amp; Save</h2>
-							<p style="text-align:center">Tap the &rsquo;+&lsquo; to organize your videos into collections, such as &rsquo;My Recipes&lsquo;, &rsquo;Favorite Talks&lsquo;, &rsquo;My Funnies&lsquo;.</p>
-						</td>
-					</tr>
-					<tr>
-						<td style="vertical-align:top;padding:0 12px;" valign="top">
-							<img src="{{ config.EMAIL_ASSETS_URL }}/assets/dolly/img/emails/hints-quick-share.jpg" width="180" height="180" style="display:block;margin:0 auto 12px auto" />
-							<h2 style="margin:0;margin-bottom:24px;font-weight:400;font-size:22px;line-height:30px;font-family:'Lucida Grande','Lucida Sans Unicode','Lucida Sans',Geneva,Verdana,sans-serif;word-break:normal;text-rendering:optimizeLegibility;text-align:center;color:#2e2e32">Buy</h2>
-							<p style="text-align:center">Look for the shop motion symbol &rsquo;<img src="{{ config.EMAIL_ASSETS_URL }}/assets/dolly/img/emails/hints-shopmotion-16x16.png" style="display:inline-block;width:16px;height:16px;vertical-align:middle;line-height:1;" />&lsquo;, tap it and experience touch screen shopping.</p>
-						</td>
-					</tr>
-				</table>
-			</td>
-		</tr>
-		<tr>
-			{% include "footer.html" %}
-		</tr>
-	</table>
-	{% include "tracking_img.html" %}
+          <tr>
+            {% include "footer.html" %}
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+  {% include "tracking_img.html" %}
 </body>
 </html>
