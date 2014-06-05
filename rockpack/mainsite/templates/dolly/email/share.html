@@ -56,7 +56,7 @@
               <h1><font face="verdana" color="#2e2e32" style="font-weight:400;font-size:24px;line-height:32px;font-family:'Lucida Grande','Lucida Sans Unicode','Lucida Sans',Geneva,Verdana,sans-serif;word-break:normal;text-rendering:optimizeLegibility;color:#2e2e32">{{ user.display_name }} shared a {{ object_type_name }} <br/>with you from Wonder PL.</font></h1>
               <h2>
                 <font face="verdana" color="#2e2e32" style="font-weight:400;font-size:22px;line-height:30px;font-family:'Lucida Grande','Lucida Sans Unicode','Lucida Sans',Geneva,Verdana,sans-serif;word-break:normal;text-rendering:optimizeLegibility;color:#2e2e32">{% filter upper %}{{ object.title }}{% endfilter %}</font><br/>
-                <font face="verdana" color="#777782" style="font-weight:400;font-size:14px;line-height:20px;text-align:center">( {{ object.video_count }} videos )</font>
+                <font face="verdana" color="#777782" style="font-weight:400;font-size:14px;line-height:20px;text-align:center">( {{ object.video_count }} video{% if object.video_count != 1 %}s{% endif %} )</font>
               </h2>
               {% for video in top_videos %}
               <p><font face="verdana" color="#777782" style="margin:0;margin-bottom:24px;font-size:22px;line-height:30px;font-family:'Lucida Grande','Lucida Sans Unicode','Lucida Sans',Geneva,Verdana,sans-serif;word-break:normal;text-rendering:optimizeLegibility;color:#777782"><a href="{{ link.url }}?video={{ video.id }}" border="0" style="text-decoration:none;color:#777782 !important;border:none">{{ video.video_rel.title }}</a></font></p>
@@ -70,7 +70,7 @@
 
               {% else %}
               <h1><font face="verdana" color="#2e2e32" style="font-weight:400;font-size:24px;line-height:32px;font-family:'Lucida Grande','Lucida Sans Unicode','Lucida Sans',Geneva,Verdana,sans-serif;word-break:normal;text-rendering:optimizeLegibility;color:#2e2e32">{{ user.display_name }} shared a {{ object_type_name }} <br/>with you from Wonder PL.</font></h1>
-              <p><font face="verdana" color="#777782" style="margin:0;margin-bottom:24px;font-size:22px;line-height:30px;font-family:'Lucida Grande','Lucida Sans Unicode','Lucida Sans',Geneva,Verdana,sans-serif;word-break:normal;text-rendering:optimizeLegibility;color:#777782"><a href="{{ link.url }}?video={{ video.id }}" border="0" style="text-decoration:none;color:#777782 !important;border:none">{{ object.video_rel.title }}</a></font></p>
+              <p><font face="verdana" color="#777782" style="margin:0;margin-bottom:24px;font-size:22px;line-height:30px;font-family:'Lucida Grande','Lucida Sans Unicode','Lucida Sans',Geneva,Verdana,sans-serif;word-break:normal;text-rendering:optimizeLegibility;color:#777782"><a href="{{ link.url }}" border="0" style="text-decoration:none;color:#777782 !important;border:none">{{ object.video_rel.title }}</a></font></p>
               <a href="{{ link.url }}" border="0" style="display:block;margin:0;margin-bottom:24px;border:none;outline:none">
                 <img src="{{ object.default_thumbnail }}" border="0" alt="" width="285" height="160" style="display:block;width:100%;height:auto;margin:0 auto;border:none;outline:none" />
               </a>
