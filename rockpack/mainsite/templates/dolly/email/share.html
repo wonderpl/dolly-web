@@ -61,7 +61,7 @@
               {% for video in top_videos %}
               <p><font face="verdana" color="#777782" style="margin:0;margin-bottom:24px;font-size:22px;line-height:30px;font-family:'Lucida Grande','Lucida Sans Unicode','Lucida Sans',Geneva,Verdana,sans-serif;word-break:normal;text-rendering:optimizeLegibility;color:#777782"><a href="{{ link.url }}?video={{ video.id }}" border="0" style="text-decoration:none;color:#777782 !important;border:none">{{ video.video_rel.title }}</a></font></p>
               <a href="{{ link.url }}?video={{ video.id }}" border="0" style="display:block;margin:0;margin-bottom:24px;border:none;outline:none">
-                <img src="{{ video.default_thumbnail }}" border="0" alt="" style="display:block;width:285px;height:160px;margin:0 auto;border:none;outline:none" />
+                <img src="{{ video.default_thumbnail }}" border="0" alt="" style="display:block;width:100%;height:auto;margin:0 auto;border:none;outline:none" />
               </a>
               {% endfor %}
               {% if object.video_count > 1 %}
