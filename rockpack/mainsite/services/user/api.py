@@ -531,7 +531,8 @@ def user_channels(userid, locale, paging, own=True):
     offset, limit = paging
     channels = channels.outerjoin(
         VideoInstance,
-        VideoInstance.channel == Channel.id
+        (VideoInstance.channel == Channel.id) &
+        (VideoInstance.deleted == False)
     ).order_by(
         Channel.favourite.desc(),
         Channel.date_added.desc() if own else Channel.date_updated.desc(),
