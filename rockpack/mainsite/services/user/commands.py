@@ -891,7 +891,7 @@ def update_user_subscriber_counts(date_from=None, date_to=None):
 
     subscribe_counts = subscribe_counts.group_by(
         Channel.owner
-    ).with_entities(Channel.owner, func.count(Subscription.channel))
+    ).with_entities(Channel.owner, func.count(distinct(Subscription.user)))
 
     update_user_counts(subscribe_counts)
 
