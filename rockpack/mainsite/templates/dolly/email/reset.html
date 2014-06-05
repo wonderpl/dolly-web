@@ -1,88 +1,58 @@
+
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html>
+<html lang="en">
 <head>
-<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-<title>Password reset instructions</title>
-<style type="text/css">
-  /* Client-specific Styles */
-#outlook a{padding:0;} /* Force Outlook to provide a "view in browser" button. */
-body{width:100% !important;} .ReadMsgBody{width:100%;} .ExternalClass{width:100%;} /* Force Hotmail to display emails at full width */
-body{-webkit-text-size-adjust:none;} /* Prevent Webkit platforms from changing default text sizes. */
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="initial-scale=1.0">
+  <meta name="format-detection" content="telephone=no">
 
-  /* Reset Styles */
-body{margin:0; padding:0; background-color: #f9f9f9;}
-img{border:0; height:auto; line-height:100%; outline:none; text-decoration:none;}
-table td{border-collapse:collapse;}
-#backgroundTable{height:100% !important; margin:0; padding:0; width:100% !important;}
-
-body, #backgroundTable{
-  /*background-color:#;*/
-  font-family: verdana, sans-serif;
-  font-size: 14px;
-  color: #767472;
-}
-
-h1 {
-  font-size: 22px;
-  line-height: 24px;
-  font-weight: normal;
-  color: #767472;
-}
-
-p {
-  font-size: 18px;
-  line-height: 24px;
-  color: #767472;
-}
-
-/*.preheaderContent div{
-  color:#282d33;
-  font-family:Helvetica;
-  line-height:100%;
-  text-align:left;
-}
-*/
-a:link, a:visited, div a {
-  color:#5850bb;
-  font-weight:normal;
-  text-decoration:none;
-}
-</style>
+  <title>Password reset instructions</title>
+  <style type="text/css">
+    #outlook a{padding:0;}body.outlook p{display:inline !important}
+    body{width:100% !important}.ReadMsgBody{width:100%;background-color:#fff}.ExternalClass{width:100%;background-color:#fff}.ExternalClass,.ExternalClass p,.ExternalClass span,.ExternalClass font,.ExternalClass td,.ExternalClass div{line-height:100%}
+    body{-webkit-text-size-adjust:none;-ms-text-size-adjust:none}
+    body{margin:0;padding:0}
+    img{max-width:100%;height:auto;line-height:100%;text-decoration:none;border:0;outline:none}
+    table{border-spacing:0}
+    table td{border-collapse:collapse}
+    a{text-decoration:none;color:#51B464!important;border-bottom:1px solid #55AA65}
+    h1 a,h2 a,h3 a,h4 a,h5 a,h6 a{border:none}
+    a img{border:0 none}
+    hr{height:0;margin-bottom:23px;border:0 solid #d2dadf;border-bottom-width:1px;border-bottom-style:solid}
+    @media screen and (max-width: 480px) {
+      table[class="container"]{width: 92% !important;}td[class="container-padding"]{padding-left:12px !important;padding-right:12px !important}
+    }
+    h1{margin:0;margin-bottom:24px;font-weight:400;font-size:18px;line-height:28px;font-family:'Lucida Grande','Lucida Sans Unicode','Lucida Sans',Geneva,Verdana,sans-serif;font-weight:normal;text-align:left;color:#2e2e32}
+    p{margin:0;margin-bottom:24px;font-size:16px;line-height:24px;font-family:Georgia,Cambria,'Times New Roman',Times,serif;text-align:left;color:#777782}
+    a:link,a:visited,div a{font-weight:normal;}
+    .container{max-width:480px;}
+    .container-padding{background-color:#fff;padding-left:24px;padding-right:24px}
+  </style>
 </head>
-<body leftmargin="0" marginwidth="0" topmargin="0" marginheight="0" offset="0">
-<center>
-  <table border="0" cellpadding="0" cellspacing="0" width="100%" id="backgroundTable">
+<body style="margin:0;padding:0;" bgcolor="#fff" topmargin="0" leftmargin="0" marginwidth="0" marginheight="0" offset="0">
+  <table border="0" width="100%" height="100%" cellpadding="0" cellspacing="0" bgcolor="#fff">
     <tr>
-      <td align="center" valign="top">
-{% include "header.html" %}
-        <table border="0" cellpadding="0" cellspacing="0" width="100%" bgcolor="white">
+      <td align="center" valign="top" bgcolor="#fff" style="background-color:#fff">
+        <table border="0" width="480" cellpadding="0" cellspacing="0" class="container" bgcolor="#fff">
           <tr>
-            <td align="center">
-              <table border="0" cellpadding="0" cellspacing="0" width="600" bgcolor="white">
-                <tr>
-                  <td width="36" colspan="1"></td>
-                  <td align="left" valign="middle" height="120" colspan="1" width="528">
-                    <br/>
-
-                    <h1><font face="verdana" size="4" color="#767472" style="font-weight: normal; font-size: 22px; line-height: 26px;">Hello {{ user.display_name }},</font></h1>
-                    <p><font face="verdana" size="4" color="#767472"><a href="{{ reset_link }}">Click here</a> to reset your password. This link will expire in 24 hours.</font></p>
-                    <p><font face="verdana" size="4" color="#767472">If you didn't initiate the password reset process, don't worry, your data is secure. Simply ignore this email.</font></p>
-                    <p><font face="verdana" size="4" color="#767472">Thanks!</font></p>
-                    <p><font face="verdana" size="4" color="#767472">The Wonder PL Team</font></p>
-                    <br /><br />
-
-                  </td>
-                  <td width="36" colspan="1"></td>
-                </tr>
-              </table>
+            {% include "header.html" %}
+          </tr>
+          <tr>
+            <td align="center" valign="top" class="container-padding" bgcolor="#fff">
+              <h1><font face="Verdana" size="4" color="#2e2e32" style="margin:0;margin-bottom:24px;font-weight:400;font-size:18px;line-height:28px">Hello {{ user.display_name }},</font></h1>
+              <p><font face="Georgia" color="#777782" style="margin:0;margin-bottom:24px;font-size:16px;line-height:24px"><a href="{{ reset_link }}">Click here</a> to reset your password. This link will expire in 24 hours.</font></p>
+              <p><font face="Georgia" color="#777782" style="margin:0;margin-bottom:24px;font-size:16px;line-height:24px">If you didn't initiate the password reset process, don't worry, your data is secure. Simply ignore this email.</font></p>
+              <p><font face="Georgia" color="#777782" style="margin:0;margin-bottom:24px;font-size:16px;line-height:24px">Thanks!</font></p>
+              <p><font face="Georgia" color="#777782" style="margin:0;margin-bottom:24px;font-size:16px;line-height:24px"><em style="font-style:italic">&mdash;The Wonder PL Team</em></font></p>
             </td>
           </tr>
+          <tr>
+            {% include "footer.html" %}
+          </tr>
         </table>
-{% include "footer.html" %}
       </td>
     </tr>
   </table>
-</center>
-{% include "tracking_img.html" %}
+  {% include "tracking_img.html" %}
 </body>
 </html>
