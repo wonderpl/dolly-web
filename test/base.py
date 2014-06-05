@@ -5,6 +5,7 @@ import rockpack
 import pytest
 from datetime import date
 from rockpack.mainsite.core.dbapi import db
+from rockpack.mainsite.core.es import helpers
 from rockpack.mainsite.services.user.models import User
 
 
@@ -38,4 +39,8 @@ class RockPackTestCase(unittest.TestCase):
 
     def wait_for_es(self):
         if self.app.config.get('ELASTICSEARCH_URL'):
+            time.sleep(2)
+            helpers.full_user_import()
+            helpers.full_channel_import()
+            helpers.full_video_import()
             time.sleep(2)

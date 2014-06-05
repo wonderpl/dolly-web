@@ -20,7 +20,7 @@ from rockpack.mainsite.core.es.search import (
 VIDEO_INSTANCE_PREFIX = 'Svi0xYzZY'
 
 # lucene special characters
-sub_string = lambda x: re.sub(r'([\+\-\&\|\!\(\)\{\}\[\]\^\"\~\*\?\:\\])', r'\\\1', x)
+sub_string = lambda x: re.sub(r'([\/\+\-\&\|\!\(\)\{\}\[\]\^\"\~\*\?\:\\])', r'\\\1', x)
 
 
 def escape_and_retry(func):

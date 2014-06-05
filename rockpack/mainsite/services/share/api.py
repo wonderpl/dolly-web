@@ -61,12 +61,14 @@ def share_content(userid, object_type, object_id, recipient_email):
         message_body = dict(user=commands._notification_user_info(user))
         if object_type == 'channel':
             message_body['channel'] = commands._notification_channel_info(object, own=False)
+            message_type = 'channel_shared'
         else:
             message_body['video'] = commands._notification_video_info(object, object.video_channel)
+            message_type = 'video_shared'
         UserNotification(
             user=recipient_user.id,
             date_created=link.date_created,
-            message_type='share',
+            message_type=message_type,
             message=json.dumps(message_body, separators=(',', ':')),
         ).save()
 

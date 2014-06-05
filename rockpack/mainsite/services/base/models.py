@@ -7,6 +7,7 @@ class JobControl(db.Model):
 
     job = Column(String(32), primary_key=True)
     last_run = Column(DateTime(), nullable=True)
+    next_run = Column(DateTime(), nullable=True)
 
 
 class SessionRecord(db.Model):

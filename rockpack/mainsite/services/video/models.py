@@ -4,13 +4,10 @@ from sqlalchemy import (
     Text, String, Column, Boolean, Integer, Float, ForeignKey, DateTime, CHAR,
     UniqueConstraint, event, func)
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import relationship, aliased, lazyload, joinedload
+from sqlalchemy.orm import relationship, aliased, lazyload
 from sqlalchemy.orm.attributes import get_history
-from flask.ext.sqlalchemy import models_committed
 from rockpack.mainsite import app, cache
-from rockpack.mainsite.core.dbapi import db, defer_except
-from rockpack.mainsite.core.es import use_elasticsearch, api as es_api
-from rockpack.mainsite.core.es.exceptions import DocumentMissingException
+from rockpack.mainsite.core.dbapi import db, defer_except, commit_on_success
 from rockpack.mainsite.helpers import lazy_gettext as _
 from rockpack.mainsite.helpers.db import add_base64_pk, add_video_pk, insert_new_only, ImageType, BoxType
 from rockpack.mainsite.helpers.urls import url_for
@@ -303,6 +300,7 @@ class VideoInstance(db.Model):
     star_count = Column(Integer, nullable=False, server_default='0')
     position = Column(Integer, nullable=False, server_default='0', default=0)
     date_tagged = Column(DateTime())
+    date_updated = Column(DateTime(), nullable=False, default=func.now(), onupdate=func.now())
     video = Column(ForeignKey('video.id', ondelete='CASCADE'), nullable=False)
     channel = Column(ForeignKey('channel.id'), nullable=False)
     source_channel = Column(ForeignKey('channel.id'), nullable=True)
@@ -310,6 +308,8 @@ class VideoInstance(db.Model):
     category = Column(ForeignKey('category.id'), nullable=True)
     tags = Column(String(1024), nullable=True)
     is_favourite = Column(Boolean(), nullable=False, server_default='false', default=False)
+    deleted = Column(Boolean(), nullable=False, server_default='false', default=False)
+    most_influential = Column(Boolean(), nullable=False, server_default='false', default=False)
 
     metas = relationship('VideoInstanceLocaleMeta', backref='video_instance_rel',
                          cascade='all,delete', passive_deletes=True)
@@ -326,7 +326,8 @@ class VideoInstance(db.Model):
     def label(self):
         labels = self.tags and [t[6:] for t in self.tags.split(',') if t.startswith('label-')]
         if labels:
-            return labels[0].replace('-', ' ').capitalize()
+            label = labels[0].replace('-', ' ')
+            return label.capitalize() if label.islower() else label
         elif not self.original_channel_owner:
             return _('Latest')
 
@@ -496,7 +497,9 @@ class Channel(db.Model):
                 Video,
                 (Video.id == VideoInstance.video) &
                 (Video.visible == True)
-            ).filter(VideoInstance.channel == self.id).value(func.count())
+            ).filter(
+                VideoInstance.channel == self.id,
+                VideoInstance.deleted == False).value(func.count())
         return self._video_count
 
     @property
@@ -512,11 +515,14 @@ class Channel(db.Model):
     def set_cover_fallback(self, videos):
         if not self.cover and videos and app.config.get('DOLLY'):
             try:
-                first = videos[0]
+                try:
+                    first = videos[0]
+                except (AttributeError, TypeError):
+                    return
                 if isinstance(first, basestring):
                     first = Video.query.get(first)
                 self.cover = first.default_thumbnail
-            except:
+            except Exception:
                 app.logger.exception('Unable to set cover from video: %s', self.id)
 
     def add_videos(self, videos, tags=None, category=None, date_added=None):
@@ -556,8 +562,9 @@ class Channel(db.Model):
         videos = VideoInstance.query.\
             options(lazyload('video_rel'), *defer_except(VideoInstance, ['id'])).\
             filter(VideoInstance.channel == self.id, VideoInstance.video.in_(video_ids))
+
         for video in videos:
-            VideoInstance.query.session.delete(video)
+            video.deleted = True
 
     def add_meta(self, locale):
         return ChannelLocaleMeta(channel=self.id, locale=locale).save()
@@ -708,127 +715,149 @@ def _channel_is_public(channel):
 def _update_or_remove_channel(channelid):
     channel = Channel.query.get(channelid)
     if channel is not None:
-        if _channel_is_public(channel):
-            es_api.update_channel_to_index(channel)
-        else:
-            es_api.remove_channel_from_index(channel.id)
-
         # Explicit check for push subscriptions if channel deleted
         if channel.deleted:
             from rockpack.mainsite.services.pubsubhubbub.models import Subscription
             Subscription.query.filter(Subscription.channel_id == channel.id).delete()
 
 
-def _update_user_promotion(user):
-    eu = es_api.ESUser.updater()
-    eu.set_document_id(user.id)
-    eu.add_field('promotion', user.promotion_map())
-    eu.update()
-    es_api.ESUser.flush()
-
-
-@event.listens_for(VideoInstanceLocaleMeta, 'after_update')
-def video_insert(mapper, connection, target):
-    return _update_locales_on_video(target.video_instance)
+@background_on_sqs
+@commit_on_success
+def _update_channel_category(channelids):
+    from rockpack.mainsite.core.es.update import update_potential_categories, _category_channel_mapping
+    for channelid in channelids:
+        category_map = _category_channel_mapping([channelid])
+        update_potential_categories(channelid, category_map)
 
 
 @background_on_sqs
-def _update_locales_on_video(video_instance_id):
-    if use_elasticsearch():
-        try:
-            video_instance = VideoInstance.query.options(
-                joinedload(VideoInstance.video_channel),
-                joinedload(VideoInstance.video_rel)
-            ).get(video_instance_id)
-        except AttributeError:
-            pass
+@commit_on_success
+def update_video_instance_date_updated(instance_ids, visible=None):
+    instances = VideoInstance.query.filter(VideoInstance.id.in_(instance_ids))
+    for instance in instances:
+        instance.date_updated = datetime.utcnow()
+        if visible is not None:
+            instance.deleted = not visible
+
+
+@background_on_sqs
+@commit_on_success
+def update_channel_date_updated(channel_ids):
+    channels = Channel.query.filter(Channel.id.in_(channel_ids))
+    for channel in channels:
+        channel.date_updated = datetime.now()
+
+
+def get_influential_instances(video_ids=None, instance_ids=None):
+    child = aliased(VideoInstance, name='child')
+    query = db.session.query(
+        VideoInstance.id,
+        VideoInstance.video,
+        VideoInstance.is_favourite,
+        child.source_channel,
+        func.count(VideoInstance.id)
+    ).outerjoin(
+        child,
+        (VideoInstance.video == child.video) &
+        (VideoInstance.channel == child.source_channel)
+    ).join(
+        Video,
+        (Video.id == VideoInstance.video) &
+        (Video.visible == True)
+    ).join(
+        Channel,
+        (Channel.id == VideoInstance.channel) &
+        (Channel.deleted == False) &
+        (Channel.public == True)
+    ).group_by(VideoInstance.id, VideoInstance.video,
+               VideoInstance.is_favourite, child.source_channel)
+
+    if video_ids is not None:
+        query = query.filter(VideoInstance.video.in_(video_ids))
+
+    if instance_ids is not None:
+        query = query.filter(VideoInstance.id.in_(instance_ids))
+
+    return query
+
+
+def get_influential_count_by_instance(instance_id):
+    """ returns _id, video, fav, source_channel, count """
+    result = list(get_influential_instances(instance_ids=[instance_id]))
+    if result:
+        return result[0]
+
+
+@background_on_sqs
+@commit_on_success
+def _update_most_influential(instance_id):
+    """ Calculate the most influential instance related
+        to this instance.
+
+        Otherwise, get the influential counts from the instance
+        that this was "repinned" from, compare counts to the existing
+        most influential and update repinned instance if it has more """
+
+    instance = VideoInstance.query.get(instance_id)
+
+    if not instance:
+        app.logger.warning('Failed to run _update_most_influential for instance %s', instance_id)
+        return
+
+    source_instance = VideoInstance.query.filter(
+        VideoInstance.video == instance.video,
+        VideoInstance.channel == instance.source_channel).first()
+
+    most_influential_instance = VideoInstance.query.filter(
+        VideoInstance.most_influential == True,
+        VideoInstance.video == instance.video).first()
+
+    if not source_instance and not most_influential_instance:
+        # This must be the first instance for that video.
+        # Set as most influential
+        instance.most_influential == True
+        return
+
+    elif most_influential_instance \
+            and most_influential_instance.id == instance.id:
+        # Are we processing this again?
+        # If we are then lets just exit
+        return
+
+    source_influential_data = get_influential_count_by_instance(source_instance.id)
+
+    # If we have any influential counts for the source instance proceed,
+    # otherwise we won't bother doing anything else
+    if source_influential_data:
+        source_id, source_video, source_is_fav, source_source_channel, source_count = source_influential_data
+
+        if not most_influential_instance:
+            # If we don't have a most influential for this video
+            source_instance.most_influential == True
+        elif most_influential_instance.is_favourite:
+            # If the existing influential instance is a fav
+            # then switch to the new one instead
+            source_instance.most_influential == True
+            most_influential_instance.most_influential == False
         else:
-            if video_instance is not None and (not video_instance.video_channel.deleted and
-                                               video_instance.video_channel.visible and
-                                               video_instance.video_channel.public and
-                                               video_instance.video_rel.visible):
-                mapped = es_api.ESVideoAttributeMap(video_instance)
-                ev = es_api.ESVideo.updater()
-                ev.set_document_id(video_instance.id)
-                ev.add_field('locales', mapped.locales)
-                try:
-                    ev.update()
-                except DocumentMissingException:
-                    ev = es_api.ESVideo.inserter()
-                    ev.insert(video_instance.id, video_instance)
+            _, _, _, _, current_influential_count = get_influential_count_by_instance(most_influential_instance.id)
+
+            if source_count > current_influential_count:
+                source_instance.most_influential == True
+                most_influential_instance.most_influential == False
 
 
-@event.listens_for(Video, 'after_update')
-def _video_update(mapper, connection, target):
-    if use_elasticsearch() and not target.visible:
-        instance_ids = [x[0] for x in VideoInstance.query.filter_by(video=target.id).values('id')]
-        es_api.ESVideo.delete(instance_ids)
+@event.listens_for(VideoInstance, 'after_insert')
+def video_instance_change(mapper, connection, target):
+    if app.config.get('DOLLY'):
+        _update_channel_category([target.channel])
+        _update_most_influential(target.id)
 
 
-@event.listens_for(VideoInstance, 'after_delete')
-def video_instance_delete(mapper, connection, target):
-    if use_elasticsearch():
-        from rockpack.mainsite.core.es import update as es_update
-        es_update.update_most_influential_video([target.video])
-
-
-@models_committed.connect_via(app)
-def on_models_committed(sender, changes):
-    updated_videos, deleted_videos = [], []
-    for obj, change in changes:
-        if isinstance(obj, VideoInstance):
-            if change == 'delete':
-                deleted_videos.append(obj.id)
-            else:
-                updated_videos.append(obj.id)
-    if updated_videos or deleted_videos:
-        es_api.es_update_channel_videos(updated_videos, deleted_videos)
-
-
-@event.listens_for(ChannelLocaleMeta, 'after_insert')
-def _channel_insert(mapper, connection, target):
-    # NOTE: owner_rel isn't available on Channel if we pass channel_rel for owner.resource_url.
-    # possibly do a lookup for owner in resource_url method instead of having it rely on self.owner_rel here
-    channel = Channel.query.get(target.channel)
-    if _channel_is_public(channel):
-        _update_or_remove_channel(channel.id)
-
-
-@event.listens_for(ChannelLocaleMeta, 'after_update')
-def _es_channel_update_from_clm(mapper, connection, target):
-    _update_or_remove_channel(target.channel)
-
-
-# XXX: This is called on registration to add user's favourites - needs to move offline
-@event.listens_for(Channel, 'after_insert')
-def _es_channel_insert_from_channel(mapper, connection, target):
-    if _channel_is_public(target):
-        es_api.add_channel_to_index(Channel.query.get(target.id))
-
-
-@event.listens_for(Channel, 'after_update')
-def _es_channel_update_from_channel(mapper, connection, target):
-    _update_or_remove_channel(target.id)
-
-
-@event.listens_for(ChannelPromotion, 'after_insert')
-def _es_channel_promotion_insert(mapper, connection, target):
-    _update_or_remove_channel(target.channel)
-
-
-@event.listens_for(ChannelPromotion, 'after_update')
-def _es_channel_promotion_update(mapper, connection, target):
-    _update_or_remove_channel(target.channel)
-
-
-@event.listens_for(UserPromotion, 'after_insert')
-def _es_user_promotion_insert(mapper, connection, target):
-    _update_user_promotion(target.user)
-
-
-@event.listens_for(UserPromotion, 'after_update')
-def _es_user_promotion_update(mapper, connection, target):
-    _update_user_promotion(target.user)
+@event.listens_for(VideoInstance, 'after_update')
+def video_instance_update(mapper, connection, target):
+    if app.config.get('DOLLY') and target.deleted:
+        _update_channel_category([target.channel])
 
 
 @event.listens_for(Channel, 'before_update')
@@ -837,12 +866,47 @@ def _set_date_published(mapper, connection, target):
         target.date_published = func.now()
 
 
+@event.listens_for(Channel, 'before_update')
+def check_channel_visibility(mapper, connection, target):
+    """ Put channel.public to False if the other flags
+        would suggest it should be """
+    if target.public:
+        if not target.visible or target.deleted:
+            target.public = False
+
+
+@event.listens_for(Channel, 'after_update')
+def channel_visibility_change(mapper, connection, target):
+    if (get_history(target, 'public').has_changes() or
+        get_history(target, 'deleted').has_changes() or
+            get_history(target, 'visible').has_changes()):
+
+        instances = VideoInstance.query.filter(VideoInstance.channel == target.id).values('id')
+        update_video_instance_date_updated([i[0] for i in instances], visible=_channel_is_public(target))
+
+
 @event.listens_for(VideoInstance, 'before_insert')
 def _auto_tag(mapper, connection, target):
     tag = app.config.get('AUTO_TAG_CHANNELS', {}).get(target.channel)
     if tag and target.source_channel:
         # use background function so we're not messing around in this transaction
         _set_auto_tag(target.source_channel, target.video, tag)
+
+
+@event.listens_for(ChannelLocaleMeta, 'after_update')
+def channel_date_update_trigger_from_meta(mapper, connection, target):
+    update_channel_date_updated([target.channel_rel.id])
+
+
+@event.listens_for(VideoInstanceLocaleMeta, 'after_update')
+def video_instance_date_update_trigger_from_meta(mapper, connection, target):
+    update_video_instance_date_updated([target.video_instance_rel.id])
+
+
+@event.listens_for(Video, 'after_update')
+def video_instance_date_update_trigger_from_video(mapper, connection, target):
+    instances = VideoInstance.query.filter(VideoInstance.video == target.id).values('id')
+    update_video_instance_date_updated([i[0] for i in instances], visible=target.visible)
 
 
 @background_on_sqs

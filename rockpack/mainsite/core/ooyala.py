@@ -25,7 +25,7 @@ def _generate_signature(method, path, params, body=''):
     # See http://support.ooyala.com/developers/documentation/tasks/api_signing_requests.html
     head = app.config['OOYALA_SECRET'] + method.upper() + path
     for key, value in sorted(params.iteritems()):
-        head += key + '=' + str(value)
+        head += ('%s=%s' % (key, value)).encode('utf8')
     return b64encode(sha256(head + body).digest())[0:43]
 
 

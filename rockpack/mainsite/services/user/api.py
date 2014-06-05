@@ -1,10 +1,10 @@
-import sys
-from functools import partial, wraps
+from functools import partial
 from itertools import groupby
+from urlparse import urlparse
 from werkzeug.datastructures import MultiDict
 from sqlalchemy import desc, func, text
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import lazyload, contains_eager, joinedload
+from sqlalchemy.orm import lazyload, contains_eager
 from sqlalchemy.orm.exc import NoResultFound
 import wtforms as wtf
 from flask import abort, request, json, g
@@ -17,10 +17,7 @@ from rockpack.mainsite.core.webservice import WebService, expose_ajax, ajax_crea
 from rockpack.mainsite.core.oauth.decorators import check_authorization
 from rockpack.mainsite.core import youtube, ooyala
 from rockpack.mainsite.core.es import use_elasticsearch, search as es_search, api as es_api
-from rockpack.mainsite.core.es.exceptions import DocumentMissingException
-from rockpack.mainsite.core.es.api import es_update_channel_videos, ESVideo, update_user_subscription_count
 from rockpack.mainsite.core import recommender
-from rockpack.mainsite.background_sqs_processor import background_on_sqs
 from rockpack.mainsite.helpers import lazy_gettext as _
 from rockpack.mainsite.helpers.forms import naughty_word_validator
 from rockpack.mainsite.helpers.urls import url_for, url_to_endpoint
@@ -51,6 +48,17 @@ ACTION_COLUMN_VALUE_MAP = dict(
     unsubscribe=('subscriber_count', -1),
     subscribe_all=('subscriber_count', 1),
     unsubscribe_all=('subscriber_count', -1),
+)
+
+
+SUBSCRIPTION_FUNC = lambda userid: User.subscriber_count_for_userid(userid)
+
+
+ACTION_COLUMN_METHOD_MAP = dict(
+    subscribe=SUBSCRIPTION_FUNC,
+    unsubscribe=SUBSCRIPTION_FUNC,
+    subscribe_all=SUBSCRIPTION_FUNC,
+    unsubscribe_all=SUBSCRIPTION_FUNC
 )
 
 
@@ -149,82 +157,20 @@ def get_or_create_video_records(instance_ids):
     return [existing_ids[id] for id in instance_id_order]
 
 
-def _get_action_incrementer(action):
+def _get_action_incrementer(action, userid=None):
     try:
         column, value = ACTION_COLUMN_VALUE_MAP[action]
     except KeyError:
         abort(400, message=_('Invalid action'))
-    incr = lambda m: {getattr(m, column): getattr(m, column) + value}
+
+    if userid:
+        calc_value = ACTION_COLUMN_METHOD_MAP.get(action, lambda x: 0)(userid)
+        incr = lambda m: {getattr(m, column): calc_value + value}
+    else:
+        incr = lambda m: {getattr(m, column): getattr(m, column) + value}
     return column, value, incr
 
 
-def _update_video_comment_count(videoid):
-    try:
-        ev = ESVideo.updater()
-        ev.set_document_id(videoid)
-        ev.add_field(
-            'comments.count',
-            VideoInstanceComment.query.filter_by(video_instance=videoid).count())
-        ev.update()
-    except Exception, e:
-        app.logger.error(str(e))
-
-
-@background_on_sqs
-def _do_es_object_update(object_type, object_mapping, instanceid):
-    if use_elasticsearch():
-        this_obj = ES_ACTIVITY_UPDATE_MAP[object_type]
-        object_instance = this_obj.query
-
-        if object_type == 'video':
-            object_instance = object_instance.options(
-                joinedload(this_obj.video_channel),
-                joinedload(this_obj.video_rel))
-
-        try:
-            object_instance = object_instance.get(instanceid)
-        except AttributeError:
-            pass
-        else:
-            if object_instance:
-                # We don't want to do updates for videos
-                # that are unlikely to be in es
-                if hasattr(object_instance, 'video_channel') and (object_instance.video_channel.deleted or
-                                                                  not object_instance.video_channel.visible or
-                                                                  not object_instance.video_channel.public or
-                                                                  not object_instance.video_rel.visible):
-                    return
-                mapped = ES_ACTIVITY_UPDATE_MAP[object_mapping](object_instance)
-                ev = ES_ACTIVITY_UPDATE_MAP[object_mapping + '_updater'].updater()
-                ev.set_document_id(object_instance.id)
-                ev.add_field('locales', mapped.locales)
-                try:
-                    ev.update()
-                except DocumentMissingException:
-                    ev = ES_ACTIVITY_UPDATE_MAP[object_mapping + '_updater'].inserter()
-                    ev.insert(object_instance.id, object_instance)
-
-
-def es_update_activity(object_type, object_mapping):
-    """ Designed to wrap activity saves
-        for VideoInstance and Channel """
-    def decorator(f):
-        @wraps(f)
-        def wrapper(*args, **kwargs):
-            try:
-                result = f(*args, **kwargs)
-                if args[1] in ['star', 'unstar', 'open', 'view']:
-                    _do_es_object_update(object_type, object_mapping, args[2])
-            except Exception as e:
-                etype, evalue, traceback = sys.exc_info()
-                raise etype, e, traceback
-            else:
-                return result
-        return wrapper
-    return decorator
-
-
-@commit_on_success
 def increment_video_instance_counts(video_id, instance_id, locale, incr, column):
     # Increment value on each of instance, video, & locale meta
     Video.query.filter_by(id=video_id, visible=True).update(incr(Video))
@@ -240,7 +186,6 @@ def increment_video_instance_counts(video_id, instance_id, locale, incr, column)
                 setattr(meta, column, 1)
 
 
-@es_update_activity('video_instance', 'es_video_map')
 @commit_on_success
 def save_video_activity(userid, action, instance_id, locale):
     column, value, incr = _get_action_incrementer(action)
@@ -267,7 +212,6 @@ def save_video_activity(userid, action, instance_id, locale):
                 return instance
 
 
-@es_update_activity('channel', 'es_channel_map')
 @commit_on_success
 def save_channel_activity(userid, action, channelid, locale):
     """Update channel with subscriber, view, or star count changes."""
@@ -275,7 +219,7 @@ def save_channel_activity(userid, action, channelid, locale):
     # Update channel record:
     updated = Channel.query.filter_by(id=channelid).update(incr(Channel))
     if not updated:
-        return
+        return False
     # Update or create locale meta record:
     ChannelLocaleMeta.query.filter_by(channel=channelid, locale=locale).update(incr(ChannelLocaleMeta)) or \
         ChannelLocaleMeta(channel=channelid, locale=locale, **{column: value}).add()
@@ -290,11 +234,22 @@ def save_channel_activity(userid, action, channelid, locale):
     if app.config['MYRRIX_URL'] and action == 'open':
         recommender.record_activity(userid, channelid)
 
+    if action == 'subscribe':
+        if Subscription.query.filter_by(user=userid, channel=channelid).count():
+            return  # fail silently if already subscribed
+        _create_user_subscriptions(userid, [channelid], locale)
+    if action == 'unsubscribe':
+        _remove_user_subscriptions(userid, [channelid], locale)
+
 
 @commit_on_success
 def save_owner_activity(userid, action, ownerid, locale):
-    column, value, incr = _get_action_incrementer(action)
+    # Get distinct action counts for user record
+    column, value, incr = _get_action_incrementer(action, userid=ownerid)
     updated = User.query.filter_by(is_active=True, id=ownerid).update(incr(User))
+
+    # Only increment/decrement for channel records
+    column, value, incr = _get_action_incrementer(action)
     if not updated:
         abort(400, message=_('Invalid user id'))
     UserActivity(
@@ -305,6 +260,7 @@ def save_owner_activity(userid, action, ownerid, locale):
         tracking_code=request.args.get('tracking_code') if request else None,
     ).add()
 
+    channels = None
     if action == 'subscribe_all':
         channels = [
             c for c, in Channel.query.filter_by(
@@ -316,15 +272,20 @@ def save_owner_activity(userid, action, ownerid, locale):
         if channels:
             _create_user_subscriptions(userid, channels, locale)
     if action == 'unsubscribe_all':
-        subscriptions = _user_subscriptions_query(userid).filter(Subscription.channel.in_(
-            Channel.query.filter_by(owner=ownerid).with_entities(Channel.id)))
-        channel_ids = [c for c, in subscriptions.values(Subscription.channel)]
-        subscriptions.delete(False)
-        UserContentFeed.query.filter(
-            UserContentFeed.user == userid,
-            UserContentFeed.channel.in_(channel_ids)).delete(False)
-        for channel in channel_ids:
-            save_channel_activity(userid, 'unsubscribe', channel, locale)
+        channels = [
+            c for c, in _user_subscriptions_query(userid).filter(
+                Subscription.channel.in_(Channel.query.filter_by(owner=ownerid).with_entities(Channel.id))
+            ).values(Subscription.channel)
+        ]
+        if channels:
+            _remove_user_subscriptions(userid, channels, locale)
+
+    if channels:
+        Channel.query.filter(Channel.id.in_(channels)).update(incr(Channel), False)
+        ChannelLocaleMeta.query.filter(
+            ChannelLocaleMeta.channel.in_(channels),
+            ChannelLocaleMeta.locale == locale
+        ).update(incr(ChannelLocaleMeta), False)
 
 
 @commit_on_success
@@ -509,12 +470,9 @@ def user_subscriptions(userid, locale, paging, own=True):
     return dict(items=items, total=total)
 
 
-@commit_on_success
 def _create_user_subscriptions(userid, channels, locale=None):
-    subscriptions = []
     for channelid in channels:
-        subscriptions.append(Subscription(user=userid, channel=channelid).add())
-        save_channel_activity(userid, 'subscribe', channelid, locale)
+        Subscription(user=userid, channel=channelid).add()
 
     # Add some recent videos from this channel into the users feed
     UserContentFeed.query.session.add_all(
@@ -525,7 +483,18 @@ def _create_user_subscriptions(userid, channels, locale=None):
         ).order_by('date_added desc').limit(10).values('id', 'channel', 'date_added')
     )
 
-    return subscriptions
+
+def _remove_user_subscriptions(userid, channels, locale=None):
+    Subscription.query.filter(
+        Subscription.user == userid,
+        Subscription.channel.in_(channels),
+    ).delete(False)
+
+    # Remove any videos from these channels from the users feed
+    UserContentFeed.query.filter(
+        UserContentFeed.user == userid,
+        UserContentFeed.channel.in_(channels)
+    ).delete(False)
 
 
 def user_subscriptions_users(userid, locale, paging):
@@ -566,7 +535,8 @@ def user_channels(userid, locale, paging, own=True):
     offset, limit = paging
     channels = channels.outerjoin(
         VideoInstance,
-        VideoInstance.channel == Channel.id
+        (VideoInstance.channel == Channel.id) &
+        (VideoInstance.deleted == False)
     ).order_by(
         Channel.favourite.desc(),
         Channel.date_added.desc() if own else Channel.date_updated.desc(),
@@ -708,10 +678,10 @@ class ChannelForm(Form):
         user_channels = Channel.query.filter_by(owner=self.userid)
         if not field.data:
             untitled_channel = app.config['UNTITLED_CHANNEL'] + ' '
-            titles = [t[0].lower() for t in
-                      user_channels.filter(
-                          func.lower(Channel.title).like(untitled_channel.lower() + '%')
-                      ).values('title')]
+            titles = [
+                t[0].lower() for t in user_channels.filter(
+                    func.lower(Channel.title).like(untitled_channel.lower() + '%')
+                ).values('title')]
             for i in xrange(1, 1000):
                 t = untitled_channel + str(i)
                 if t.lower() not in titles:
@@ -799,9 +769,10 @@ def _content_feed(userid, locale, paging, country=None):
         i, item = itemmap[video['id']]
         # Compose list of liking users from feed item and global video stars
         item._starring_users = json.loads(item.stars) if item.stars else []
-        for user in video.pop('recent_user_stars'):
-            if user not in item._starring_users:
-                item._starring_users.append(user)
+        if not app.config.get('DOLLY'):
+            for user in video.pop('recent_user_stars'):
+                if user not in item._starring_users:
+                    item._starring_users.append(user)
         usermap.update((u, None) for u in item._starring_users)
         channelmap[item.channel] = None
         video['position'] = i + offset
@@ -1048,6 +1019,11 @@ def _channel_videos(channelid, locale, paging, own=False):
     if paging_:
         total = min(paging_[1], total)
     return items, total
+
+
+def _user_videos(userid, locale, paging):
+    return video_api.get_local_videos(
+        locale, paging, owner=userid, with_channel=True, date_order=True)
 
 
 def _channel_info_response(channel, locale, paging, owner_url):
@@ -1326,6 +1302,28 @@ class UserWS(WebService):
         save_content_report(userid, form.object_type.data,
                             form.object_id.data, form.reason.data)
 
+    @expose_ajax('/<userid>/videos/', cache_age=600, secure=False)
+    def user_videos(self, userid):
+        if use_elasticsearch():
+            location = request.args.get('location')
+            vs = es_search.VideoSearch(self.get_locale())
+            resource_url = urlparse(url_for('userws.user_info', userid=userid)).path
+            vs.add_term('owner.resource_url', resource_url)
+            if location:
+                vs.check_country_allowed(location.upper())
+            vs.date_sort('desc')
+            vs.set_paging(*self.get_page())
+            items = vs.videos()
+            total = vs.total
+        else:
+            items, total = _user_videos(userid, self.get_locale(), self.get_page())
+        return dict(videos=dict(items=items, total=total))
+
+    @expose_ajax('/<userid>/videos/', cache_private=True)
+    @check_authorization(self_auth=True)
+    def owner_user_videos(self, userid):
+        return dict(videos=_user_videos(userid, self.get_locale(), self.get_page()))
+
     @expose_ajax('/<userid>/channels/', cache_private=True)
     @check_authorization(self_auth=True)
     def get_channels(self, userid):
@@ -1386,8 +1384,6 @@ class UserWS(WebService):
         if not form.validate():
             abort(400, form_errors=form.errors)
 
-        channel_was_public = channel.public
-
         channel.title = form.title.data
         channel.description = form.description.data
         if not form.cover.data == 'KEEP':
@@ -1396,11 +1392,6 @@ class UserWS(WebService):
         channel.category = form.category.data
         channel.public = Channel.should_be_public(channel, form.public.data)
         channel.save()
-
-        # Push all videos to search if channel became public:
-        if channel.public and not channel_was_public:
-            es_update_channel_videos(
-                [v[0] for v in VideoInstance.query.filter_by(channel=channel.id).values('id')])
 
         resource_url = channel.get_resource_url(True)
         return (dict(id=channel.id, resource_url=resource_url),
@@ -1507,8 +1498,6 @@ class UserWS(WebService):
             # video instance doesn't exist
             abort(404)
         else:
-            if use_elasticsearch():
-                _update_video_comment_count(videoid)
             return ajax_create_response(comment)
 
     @expose_ajax('/<userid>/channels/<channelid>/videos/<videoid>/comments/<commentid>/')
@@ -1524,8 +1513,6 @@ class UserWS(WebService):
         comment = VideoInstanceComment.query.filter_by(id=commentid, user=g.authorized.userid)
         if not comment.delete():
             abort(404)
-        elif use_elasticsearch():
-            _update_video_comment_count(videoid)
 
     @expose_ajax('/<userid>/channels/<channelid>/subscribers/', cache_age=600)
     def channel_subscribers(self, userid, channelid):
@@ -1578,12 +1565,9 @@ class UserWS(WebService):
         channelid = args['channelid']
         if not Channel.query.filter_by(id=channelid, deleted=False).count():
             abort(400, message=_('Channel not found'))
-        if Subscription.query.filter_by(user=userid, channel=channelid).count():
-            return  # fail silently if already subscribed
-        subs = _create_user_subscriptions(userid, [channelid], self.get_locale())[0]
-        if use_elasticsearch():
-            update_user_subscription_count(userid)
-        return ajax_create_response(subs)
+        if save_channel_activity(userid, 'subscribe', channelid, self.get_locale()) is False:
+            abort(404)
+        return ajax_create_response(Subscription.query.filter_by(user=userid, channel=channelid).one())
 
     @expose_ajax('/<userid>/subscriptions/<channelid>/', cache_age=30, cache_private=True)
     @check_authorization(self_auth=True)
@@ -1593,14 +1577,7 @@ class UserWS(WebService):
 
     @expose_ajax('/<userid>/subscriptions/<channelid>/', methods=['DELETE'])
     @check_authorization(self_auth=True)
-    @commit_on_success
     def delete_subscription_item(self, userid, channelid):
-        if not _user_subscriptions_query(userid).filter_by(channel=channelid).delete():
-            abort(404)
-        if use_elasticsearch():
-            update_user_subscription_count(userid)
-        # Remove any videos from this channel from the users feed
-        UserContentFeed.query.filter_by(user=userid, channel=channelid).delete()
         save_channel_activity(userid, 'unsubscribe', channelid, self.get_locale())
 
     @expose_ajax('/<userid>/subscriptions/recent_videos/', cache_age=60, cache_private=True)

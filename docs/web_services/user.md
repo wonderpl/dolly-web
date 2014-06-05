@@ -990,7 +990,8 @@ Message Type  | Content Record | Description
 `joined`      |                | Message contains user record only
 `repack`      | `video`        | Message contains data for the video which was created from the users
 `unavailable` | `video`        | Message contains data for the video which is no longer available
-`share`       | `video` or `channel` | Message contains data for the video or channel which was shared
+`video_shared`   | `video`     | Message contains data for the video which was shared
+`channel_shared` | `channel`   | Message contains data for the channel which was shared
 
 ```http
 HTTP/1.1 200 OK
@@ -1318,7 +1319,10 @@ Content-Type: application/json
 }
 ```
 
-To subscribe to all channels owned by a specific user POST to the activity service.
+You can also subscribe to a specific channel with a POST to the activity server with
+an `action=subscribe` and the channel id specified with the `object_id`.
+To subscribe to all channels owned by a specific user POST to the activity service with
+`action=subscribe_all`.
 
 ### Unsubscribe
 

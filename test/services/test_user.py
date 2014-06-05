@@ -260,7 +260,8 @@ class TestProfileEdit(base.RockPackTestCase):
                 '/ws/token/',
                 headers=[get_client_auth_header()],
                 data=dict(refresh_token=creds['refresh_token'],
-                grant_type='refresh_token'))
+                          grant_type='refresh_token')
+            )
 
             new_creds = json.loads(r.data)
 
@@ -435,7 +436,8 @@ class TestUserContent(base.RockPackTestCase):
             channel.description = 'a description'
             channel.save()
 
-            time.sleep(2)
+        with self.app.test_client() as client:
+            self.wait_for_es()
 
             app.config['USER_CATEGORISATION_VIDEO_THRESHOLD'] = ucv_threshold
             app.config['ENABLE_USER_CATEGORISATION_CONDITIONS'] = enable_ucc
@@ -524,12 +526,13 @@ class TestUserContent(base.RockPackTestCase):
 
             self.assertEquals(mock_method.call_count, 2)
 
-            #cron_cmds.update_video_feed_item_stars(date_from, date_to)
+            cron_cmds.update_video_feed_item_stars(date_from, date_to)
             User.query.session.commit()
 
         with self.app.test_client() as client:
             # Fetch feed
             self.wait_for_es()
+
             r = client.get('/ws/{}/content_feed/'.format(user1),
                            headers=[get_auth_header(user1)])
 
@@ -541,15 +544,17 @@ class TestUserContent(base.RockPackTestCase):
             # Check videos from channel1 (except c1starred) are present and aggregated
             self.assertIn(c1instances[0].id, itemids)
             agg = [a for a in data['aggregations'].values() if a['type'] == 'video'][0]
-            self.assertEquals(agg['count'], len(c1instances) - 1)
+            self.assertEquals(agg['count'], len(c1instances) - (0 if app.config.get('DOLLY') else 1))
 
             # Check stars on c1starred and that no stars on cover video
             self.assertNotIn(c1starred.id, agg['covers'])
             cover = [i for i in data['items'] if i['id'] == agg['covers'][0]][0]
             self.assertEquals(cover['video']['star_count'], 0)
             starred = [i for i in data['items'] if i['id'] == c1starred.id][0]
-            self.assertEquals(starred['video']['star_count'], 3)
-            self.assertItemsEqual([u['id'] for u in starred['starring_users']], [user1, user2, user3])
+            # starring_users not set on DOLLY
+            if not app.config.get('DOLLY'):
+                self.assertEquals(starred['video']['star_count'], 3)
+                self.assertItemsEqual([u['id'] for u in starred['starring_users']], [user1, user2, user3])
 
             # Check that new channels from friend and from subscription owner are present
             self.assertNotIn(u2old, itemids)
@@ -566,6 +571,55 @@ class TestUserContent(base.RockPackTestCase):
                     else:
                         label = 'Latest'
                     self.assertEquals(item['label'], label)
+
+            # Add an additional star by a subscribee and an email friend
+            user4 = self.create_test_user().id
+
+            u4new = Channel(owner=user4, title='u4new', description='', cover='',
+                            public=True, date_published=datetime.now()).save().id
+
+            Subscription(user=user1, channel=u4new).save()
+
+            user5 = self.create_test_user()
+
+            ExternalFriend(user=user1, external_system='email', external_uid='u5',
+                           name='u5', avatar_url='', email=user5.email).save()
+
+            UserActivity(user=user4, action='star', object_type='video_instance',
+                         object_id=c1starred.id).save()
+
+            UserActivity(user=user5.id, action='star', object_type='video_instance',
+                         object_id=c1starred.id).save()
+
+            user6 = self.create_test_user()
+            UserActivity(user=user6.id, action='star', object_type='video_instance',
+                         object_id=c1starred.id).save()
+
+            # cron time
+            app.config['FEED_STARS_LIMIT'] = 6
+            date_from, date_to = datetime(2012, 1, 1), datetime(2020, 1, 1)
+            cron_cmds.create_new_video_feed_items(date_from, date_to)
+            cron_cmds.update_video_feed_item_stars(date_from, date_to)
+            User.query.session.commit()
+
+        with self.app.test_client() as client:
+            # Fetch feed
+            self.wait_for_es()
+
+            r = client.get('/ws/{}/content_feed/'.format(user1),
+                           headers=[get_auth_header(user1)])
+            data = json.loads(r.data)['content']
+
+            starred = [i for i in data['items'] if i['id'] == c1starred.id][0]
+            starring_user_ids = [u['id'] for u in starred['starring_users']]
+
+            starring_friends = [user2, user3, user4, user5.id]
+            if app.config.get('DOLLY'):
+                self.assertItemsEqual(starring_user_ids, starring_friends)
+            else:
+                # rockpack has additional "global" starring_users
+                for friend in starring_friends:
+                    self.assertIn(friend, starring_user_ids)
 
         # check subscription count is being generated
         with self.app.test_client() as client:
@@ -618,6 +672,51 @@ class TestUserContent(base.RockPackTestCase):
             # Recommended users should have description & category fields:
             self.assertIn('description', users[0])
             self.assertIn('category', users[0])
+
+    def test_subscribe_activity(self):
+        with self.app.test_client() as client:
+            user = self.create_test_user().id
+            owner = self.create_test_user().id
+            channel = Channel.query.filter_by(owner=owner).value('id')
+            r = client.post(
+                '/ws/{}/activity/'.format(user),
+                data=json.dumps(dict(
+                    action='subscribe',
+                    object_type='channel',
+                    object_id=channel,
+                )),
+                content_type='application/json',
+                headers=[get_auth_header(user)])
+            self.assertEquals(r.status_code, 200)
+
+            r = client.get(
+                '/ws/{}/activity/'.format(user),
+                headers=[get_auth_header(user)])
+            activity = json.loads(r.data)
+            self.assertIn(channel, activity['subscribed'])
+            self.assertIn(owner, activity['user_subscribed'])
+
+            self.assertEquals(Subscription.query.filter_by(user=user, channel=channel).count(), 1)
+
+            r = client.post(
+                '/ws/{}/activity/'.format(user),
+                data=json.dumps(dict(
+                    action='unsubscribe',
+                    object_type='channel',
+                    object_id=channel,
+                )),
+                content_type='application/json',
+                headers=[get_auth_header(user)])
+            self.assertEquals(r.status_code, 200)
+
+            r = client.get(
+                '/ws/{}/activity/'.format(user),
+                headers=[get_auth_header(user)])
+            activity = json.loads(r.data)
+            self.assertNotIn(channel, activity['subscribed'])
+            self.assertNotIn(owner, activity['user_subscribed'])
+
+            self.assertEquals(Subscription.query.filter_by(user=user, channel=channel).count(), 0)
 
     def test_subscribe_all(self):
         with self.app.test_client() as client:

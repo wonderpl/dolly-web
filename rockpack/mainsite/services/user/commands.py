@@ -367,24 +367,42 @@ def update_video_feed_item_stars(date_from, date_to):
     # Find all star actions in this interval for which a friend of the star'ing user
     # has the video in their feed and update the stars list with these new stars at
     # the top.
+
+    subscription_friend = Channel.query.\
+        join(Subscription, Subscription.channel == Channel.id).\
+        with_entities(Channel.owner.label('friendid'), Subscription.user.label('userid'))
+
+    email_friend = ExternalFriend.query.\
+        join(User,
+             (ExternalFriend.email == User.email) &
+             (ExternalFriend.external_system == 'email')).\
+        with_entities(User.id.label('friendid'),
+                      ExternalFriend.user.label('userid'))
+
+    external_friend = ExternalToken.query.\
+        join(ExternalFriend,
+            (ExternalFriend.external_system == ExternalToken.external_system) &
+            (ExternalFriend.external_uid == ExternalToken.external_uid)).\
+        with_entities(ExternalToken.user.label('friendid'),
+                      ExternalFriend.user.label('userid'))
+
+    unioned = subscription_friend.union_all(email_friend, external_friend).subquery()
+
     feed_items = UserContentFeed.query.\
         join(UserActivity,
             (UserActivity.action == 'star') &
             (UserActivity.date_actioned.between(date_from, date_to))).\
-        join(ExternalToken, ExternalToken.user == UserActivity.user).\
-        join(ExternalFriend, (ExternalFriend.external_system == ExternalToken.external_system) &
-                             (ExternalFriend.external_uid == ExternalToken.external_uid)).\
-        join(VideoInstance, UserActivity.object_id == VideoInstance.id).\
-        filter((UserContentFeed.user == ExternalFriend.user) &
-               (UserContentFeed.channel == VideoInstance.channel) &
-               (UserContentFeed.video_instance == VideoInstance.id)).\
+        join(unioned, unioned.c.userid == UserContentFeed.user).\
+        filter((UserActivity.user == unioned.c.friendid) &
+               (UserContentFeed.user != UserActivity.user) &
+               (UserContentFeed.video_instance == UserActivity.object_id)).\
         with_entities(UserContentFeed, func.string_agg(UserActivity.user, ' ')).\
         group_by(UserContentFeed.id)
 
     star_limit = app.config.get('FEED_STARS_LIMIT', 3)
     for feed_item, new_stars in feed_items:
         old_stars = json.loads(feed_item.stars) if feed_item.stars else []
-        new_stars = [l for l in new_stars.split() if l not in old_stars]
+        new_stars = [l for l in set(new_stars.split()) if l not in old_stars]
         stars = (new_stars + old_stars)[:star_limit]
         feed_item.stars = json.dumps(stars)
 
@@ -849,19 +867,33 @@ def update_recommender(date_from, date_to):
     _post_activity_to_recommender(date_from, date_to)
 
 
+@commit_on_success
+def update_user_counts(subscribe_counts):
+    for owner_id, count in subscribe_counts:
+        db.session.query(User).filter(User.id == owner_id).\
+            update({"subscriber_count": count})
+
+
 @manager.cron_command(interval=900)
 @job_control
 def update_user_subscriber_counts(date_from=None, date_to=None):
     """Update subscriber_count on users."""
-    users = User.query.join(
-        Channel,
-        (Channel.owner == User.id) & (Channel.date_updated.between(date_from, date_to)))
-    for user in users.distinct():
-        # Each user done seperately so that the ES signal kicks in
-        user.subscriber_count = Subscription.query.join(
-            Channel,
-            (Channel.id == Subscription.channel) & (Channel.owner == user.id)
-        ).value(func.count(distinct(Subscription.user)))
+
+    subscribe_counts = Subscription.query.join(Channel, (Channel.id == Subscription.channel))
+
+    if date_from:
+        subscribed_channels = Subscription.query.filter(
+            Subscription.date_created.between(date_from, date_to)
+        ).with_entities(distinct(Subscription.channel)).subquery()
+
+        subscribe_counts = subscribe_counts.filter(
+            Subscription.channel.in_(subscribed_channels))
+
+    subscribe_counts = subscribe_counts.group_by(
+        Channel.owner
+    ).with_entities(Channel.owner, func.count(distinct(Subscription.user)))
+
+    update_user_counts(subscribe_counts)
 
 
 @manager.cron_command(interval=900)

@@ -29,6 +29,7 @@ class SearchTestCase(RockPackTestCase):
         with self.app.test_request_context():
             owner = self.create_test_user()
             channel = owner.channels[0]
+            channelid = channel.id
             channel.add_videos([VideoData.video1.id])
             db.session.commit()
 
@@ -36,7 +37,7 @@ class SearchTestCase(RockPackTestCase):
 
         channels = self._search('channels', VideoData.video1.title)
         self.assertGreater(channels['total'], 0)
-        self.assertIn(channel.id, [c['id'] for c in channels['items']])
+        self.assertIn(channelid, [c['id'] for c in channels['items']])
         self.assertGreater(channels['items'][0]['videos']['total'], 0)
 
 

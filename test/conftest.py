@@ -22,6 +22,9 @@ def pytest_configure(config):
         connection = dbapi.db.engine.raw_connection().connection
         # Seems to be required for sub-transaction support:
         connection.isolation_level = None
+        # Use group_concat instead of string_agg
+        from sqlalchemy import func
+        func.string_agg = func.group_concat
         # For compatibility with postgres. XXX: can't return timedelta :-(
         from datetime import datetime
         connection.create_function('age', 1, lambda d: None)
@@ -33,6 +36,9 @@ def pytest_configure(config):
 
     dbapi.sync_database(drop_all=True)
 
+    from rockpack.mainsite.core import timing
+    timing.log.level = 50
+
     from test.test_helpers import install_mocks
     from test.fixtures import install, all_data
     install_mocks()
@@ -40,6 +46,11 @@ def pytest_configure(config):
     # Explicityly load admin tables after app is loaded.
     dbapi.sync_database(custom_modules=('rockpack.mainsite.admin', 'rockpack.mainsite.admin.auth', ))
     install(*all_data)
+
+    if app.config.get('ELASTICSEARCH_URL'):
+        helpers.full_user_import()
+        helpers.full_channel_import()
+        helpers.full_video_import()
 
 
 def pytest_unconfigure(config):

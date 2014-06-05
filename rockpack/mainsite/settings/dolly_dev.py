@@ -40,7 +40,7 @@ ENABLED_LOCALES = ('en-us',)
 ADMIN_NAME = 'Wonder Place Admin'
 IOS_APP_URL_SCHEME = 'wonderpldev'
 
-DEFAULT_PROFILE_COVERS = ['default%db.jpg' % i for i in range(1, 6)]
+DEFAULT_PROFILE_COVERS = ['default%df.jpg' % i for i in range(1, 5)]
 
 FAVOURITE_CHANNEL = 'Favorites', 'My favorite videos', ''
 WATCH_LATER_CHANNEL = 'Watch Later', '', ''
@@ -75,6 +75,12 @@ SQS_CRON_QUEUE = 'dolly-mainsite-cron'
 SQS_EMAIL_QUEUE = 'dolly-mainsite-email'
 SQS_BACKGROUND_QUEUE = 'dolly-mainsite-background'
 SQS_ELASTICSEARCH_QUEUE = 'dolly-mainsite-es'
+
+DISABLED_CRON_JOBS = (
+    'import_google_movies', 'import_itunes_downloads', 'process_broadcast_messages',
+    'refresh_pubsubhubbub_subscriptions', 'reset_expiring_tokens',
+    'send_reactivation_emails', 'update_apns_tokens', 'update_recommender'
+)
 
 AUTO_FOLLOW_USERS = ('iOPtuNUO15f1cgMhZdDgwg',)
 

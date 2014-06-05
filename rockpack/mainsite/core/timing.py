@@ -87,17 +87,5 @@ def setup_timing(app):
             requests.Session.request = wrap(requests.Session.request, 'requests.')
             from geventhttpclient.client import HTTPClient
             HTTPClient.request = wrap(HTTPClient.request, 'requests.')
-        from rockpack.mainsite.sqs_processor import SqsProcessor
-        SqsProcessor.write_message = classmethod(wrap(
-            SqsProcessor.write_message.__func__, _sqs_processor_prefix, False))
         app.before_request(before_request)
         app.after_request(after_request)
-
-
-def _sqs_processor_prefix(f, *args, **kwargs):
-    cls, msg = args[:2]
-    try:
-        cmd = msg['command']
-    except Exception:
-        cmd = None
-    return '.'.join(filter(None, (cls.__name__, f.__name__, cmd)))

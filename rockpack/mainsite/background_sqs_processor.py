@@ -51,7 +51,9 @@ def background_on_sqs(func):
             kwargs=kwargs,
         )
         if BackgroundSqsProcessor.queue_name:
-            BackgroundSqsProcessor.write_message(call)
+            # Delaying backgrounding for 10 seconds so that any commits
+            # have time to complete before this executes
+            BackgroundSqsProcessor.write_message(call, delay_seconds=10)
         else:
             # put the call on the request context for _run_later
             if not hasattr(g, '_background_on_sqs'):

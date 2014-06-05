@@ -12,8 +12,6 @@ from flask.ext.sqlalchemy import models_committed
 from rockpack.mainsite import app
 from rockpack.mainsite.core.token import create_access_token
 from rockpack.mainsite.core.dbapi import db
-from rockpack.mainsite.core.es import use_elasticsearch
-from rockpack.mainsite.core.es.api import add_user_to_index, ESUser, ESChannel, ESVideo
 from rockpack.mainsite.helpers.db import ImageType, add_base64_pk, resize_and_upload
 from rockpack.mainsite.helpers.urls import url_for
 from rockpack.mainsite.background_sqs_processor import background_on_sqs
@@ -239,6 +237,18 @@ class User(db.Model):
                 promos.append('|'.join([str(p.locale_id), str(p.category_id), str(p.position)]))
         return promos
 
+    @classmethod
+    def subscriber_count_for_userid(cls, userid):
+        from rockpack.mainsite.services.video import models
+        value = Subscription.query.join(
+            models.Channel,
+            (models.Channel.id == Subscription.channel) &
+            (models.Channel.deleted == False) &
+            (models.Channel.owner == userid)
+        ).with_entities(func.count(func.distinct(Subscription.user))).first()
+
+        return value[0] if value else 0
+
 
 class UserFlag(db.Model):
     __tablename__ = 'user_flag'
@@ -453,20 +463,6 @@ def username_exists(username):
 def _update_user(userid, just_registered=False):
     user = User.query.get(userid)
     #app.logger.debug('updating user %s (new=%s): %s', userid, just_registered, user)
-    if use_elasticsearch():
-        if just_registered:
-            add_user_to_index(user)
-        elif user.is_active is False:
-            from rockpack.mainsite.services.video.models import Channel
-            ESUser.delete([userid])
-            channel_ids = [_[0] for _ in Channel.query.filter(Channel.owner == userid).values('id')]
-            if channel_ids:
-                ESChannel.delete(channel_ids)
-                for cid in channel_ids:
-                    ESVideo.delete_channel_videos(cid)
-        else:
-            eu = ESUser.inserter()
-            eu.insert(user.id, user)
 
     if just_registered and 'AUTO_FOLLOW_USERS' in app.config:
         locales = app.config['ENABLED_LOCALES']

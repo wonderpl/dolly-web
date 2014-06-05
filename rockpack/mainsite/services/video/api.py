@@ -81,7 +81,7 @@ def get_db_channels(locale, paging, with_video_counts=False, add_tracking=None, 
         outerjoin(
             models.ChannelLocaleMeta,
             ((models.ChannelLocaleMeta.channel == models.Channel.id) &
-            (models.ChannelLocaleMeta.locale == locale))).\
+             (models.ChannelLocaleMeta.locale == locale))).\
         options(lazyload('category_rel'), contains_eager(models.Channel.owner_rel))
 
     if filters.get('channels'):
@@ -98,7 +98,8 @@ def get_db_channels(locale, paging, with_video_counts=False, add_tracking=None, 
     if with_video_counts:
         channels = channels.outerjoin(
             models.VideoInstance,
-            models.VideoInstance.channel == models.Channel.id
+            (models.VideoInstance.channel == models.Channel.id) &
+            (models.VideoInstance.deleted == False)
         ).with_entities(models.Channel, func.count(models.VideoInstance.id)).\
             group_by(models.Channel.id, models.User.id)
     else:
@@ -162,27 +163,30 @@ def video_dict(instance):
             link_title=video.link_title
         )
     )
+
+    data['video'].update(models.Video.extra_meta(video))
+
     original_channel_owner = instance.get_original_channel_owner()
     if original_channel_owner:
         data['original_channel_owner'] = user_dict(original_channel_owner)
     return data
 
 
-def get_local_videos(loc, paging, with_channel=True, include_invisible=False, readonly_db=False, **filters):
-    if readonly_db:
-        videos = readonly_session
-    else:
-        videos = db.session
-
-    videos = videos.query(
+def get_local_videos(loc, paging, with_channel=True, with_comments=False, include_invisible=False, readonly_db=False, **filters):
+    session = readonly_session if readonly_db else db.session
+    videos = session.query(
         models.VideoInstance,
-        func.count(models.VideoInstanceComment.id)
+        func.count(models.VideoInstanceComment.id) if with_comments else null(),
     ).join(
         models.Video, models.Video.id == models.VideoInstance.video).\
+        filter(models.VideoInstance.deleted == False).\
         options(contains_eager(models.VideoInstance.video_rel)).\
-        outerjoin(models.VideoInstanceComment,
-                  models.VideoInstanceComment.video_instance == models.VideoInstance.id).\
         group_by(models.VideoInstance.id, models.Video.id)
+
+    if with_comments:
+        videos = videos.outerjoin(
+            models.VideoInstanceComment,
+            models.VideoInstanceComment.video_instance == models.VideoInstance.id)
 
     if include_invisible is False:
         videos = videos.filter(models.Video.visible == True)
@@ -200,6 +204,14 @@ def get_local_videos(loc, paging, with_channel=True, include_invisible=False, re
     if filters.get('channels'):
         videos = videos.filter(models.VideoInstance.channel.in_(filters['channels']))
 
+    if filters.get('owner'):
+        # Check we haven't already joined Channel
+        if not with_channel:
+            videos = videos.join(
+                models.Channel,
+                models.Channel.id == models.VideoInstance.channel)
+        videos = videos.filter(models.Channel.owner == filters['owner'])
+
     if filters.get('category'):
         videos = _filter_by_category(videos, models.VideoInstance, filters['category'][0])
 
@@ -211,7 +223,8 @@ def get_local_videos(loc, paging, with_channel=True, include_invisible=False, re
             models.VideoInstanceLocaleMeta,
             (models.VideoInstanceLocaleMeta.video_instance == models.VideoInstance.id) &
             (models.VideoInstanceLocaleMeta.locale == loc))
-        videos = videos.order_by(desc(models.VideoInstanceLocaleMeta.star_count))
+        videos = videos.group_by(models.VideoInstance.id, models.Video.id, models.VideoInstanceLocaleMeta.star_count).\
+            order_by(desc(models.VideoInstanceLocaleMeta.star_count))
 
     if filters.get('date_order'):
         videos = videos.order_by(desc(models.VideoInstance.date_added)).\
@@ -224,7 +237,8 @@ def get_local_videos(loc, paging, with_channel=True, include_invisible=False, re
     for position, (video, comment_count) in enumerate(videos, offset):
         item = video_dict(video)
         item['position'] = position
-        item['comments'] = dict(count=comment_count)
+        if comment_count is not None:
+            item['comments'] = dict(count=comment_count)
         if with_channel:
             item['channel'] = channel_dict(video.video_channel)
         data.append(item)

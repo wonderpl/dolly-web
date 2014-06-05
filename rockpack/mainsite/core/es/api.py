@@ -1,18 +1,18 @@
 import logging
-from flask import json
 import datetime
+from flask import json
 import pyes
 from ast import literal_eval
 from urlparse import urlparse
-from sqlalchemy import func
+from sqlalchemy import func, distinct
 from sqlalchemy.orm import lazyload, contains_eager
 from . import mappings
 from . import es_connection
 from . import use_elasticsearch
 from . import exceptions
-from rockpack.mainsite import app
+from rockpack.mainsite import app, cache
 from rockpack.mainsite.helpers.db import ImageType
-from rockpack.mainsite.core.dbapi import db
+from rockpack.mainsite.core.dbapi import db, readonly_session
 from rockpack.mainsite.background_sqs_processor import background_on_sqs
 
 logger = logging.getLogger(__name__)
@@ -207,6 +207,10 @@ class ESUpdater(object):
 
     def flush_bulk(self):
         self.manager.indexer.flush()
+
+    def reset(self):
+        self.document_id = None
+        self.partial_document = []
 
 
 class ESObject(object):
@@ -518,18 +522,22 @@ class ESVideoAttributeMap:
     def public(self):
         return self.video_instance.video_rel.visible
 
+    @classmethod
+    def get_video_structure(cls, video_rel):
+        return dict(
+            id=video_rel.id,
+            thumbnail_url=video_rel.default_thumbnail,
+            source=video_rel.source,
+            source_id=video_rel.source_videoid,
+            source_username=video_rel.source_username,
+            date_published=video_rel.date_published,
+            duration=video_rel.duration,
+            description=video_rel.description,
+        )
+
     @property
     def video(self):
-        return dict(
-            id=self.video_instance.video,
-            thumbnail_url=self.video_instance.video_rel.default_thumbnail,
-            source=self.video_instance.video_rel.source,
-            source_id=self.video_instance.video_rel.source_videoid,
-            source_username=self.video_instance.video_rel.source_username,
-            date_published=self.video_instance.video_rel.date_published,
-            duration=self.video_instance.video_rel.duration,
-            description=self.video_instance.video_rel.description,
-        )
+        return self.get_video_structure(self.video_instance.video_rel)
 
     @property
     def title(self):
@@ -547,6 +555,16 @@ class ESVideoAttributeMap:
     def channel_title(self):
         return self.video_instance.video_channel.title
 
+    @classmethod
+    @cache.memoize(300)
+    def cat_name_to_id_dict(cls):
+        from rockpack.mainsite.services.video.models import Category
+        return dict(Category.query.values(Category.name, Category.id))
+
+    @classmethod
+    def cat_ids_from_names(cls, names):
+        return [id for name, id in cls.cat_name_to_id_dict().iteritems() if name in names]
+
     @property
     def category(self):
         primary_cat = self.video_instance.category
@@ -557,8 +575,7 @@ class ESVideoAttributeMap:
 
         cat_tags = [tag[4:] for tag in self.tags if tag.startswith('cat-')]
         if cat_tags:
-            from rockpack.mainsite.services.video.models import Category
-            return [primary_cat] + [cat[0] for cat in Category.query.filter(Category.name.in_(cat_tags)).values('id')]
+            return [primary_cat] + self.cat_ids_from_names(cat_tags)
         return primary_cat
 
     @property
@@ -599,11 +616,7 @@ class ESVideoAttributeMap:
 
     @property
     def most_influential(self):
-        # Default to True so that it automatically
-        # shows up in search, except favs
-        if self.video_instance.is_favourite:
-            return False
-        return True
+        return self.video_instance.most_influential
 
     @property
     def link_url(self):
@@ -804,27 +817,45 @@ def add_user_to_index(user, bulk=False, refresh=False, no_check=False):
         refresh=refresh)
 
 
-def update_user_subscription_count(userid):
+def update_user_subscription_count(userids=None, start=None, stop=None, automatic_flush=True):
     from rockpack.mainsite.services.user.models import Subscription
     from rockpack.mainsite.services.video.models import Channel
-    subscription_count = Subscription.query.filter(
-        Subscription.user == userid
-    ).join(
+
+    subscription_count = Subscription.query.join(
         Channel,
         (Channel.id == Subscription.channel) &
         (Channel.public == True) &
         (Channel.visible == True) &
         (Channel.deleted == False)
-    ).count()
-    try:
-        es_connection.partial_update(
-            ESObjectIndexer.indexes['user']['index'],
-            ESObjectIndexer.indexes['user']['type'],
-            userid,
-            "ctx._source[\"subscription_count\"] = %s" % subscription_count)
-    except pyes.exceptions.ElasticSearchException, e:
-        app.logger.warning('Could not update subscription count for %s: %s: %s',
-                           userid, e, e.result['error'])
+    )
+
+    if userids:
+        subscription_count = subscription_count.filter(Subscription.user.in_(userids))
+
+    if start:
+        # Find the users which have added new subs and use that as a subquery
+        # to filter down which users channels we want to update counts on
+        subq = Subscription.query.filter(
+            Subscription.date_created.between(start, stop)
+        ).with_entities(distinct(Subscription.user)).subquery()
+        subscription_count = subscription_count.filter(Subscription.user.in_(subq))
+
+    subscription_count = subscription_count.with_entities(Subscription.user, func.count(Subscription.channel)).group_by(Subscription.user)
+
+    for userid, count in subscription_count:
+        try:
+            es_connection.update(
+                ESObjectIndexer.indexes['user']['index'],
+                ESObjectIndexer.indexes['user']['type'],
+                userid,
+                script="ctx._source[\"subscription_count\"] = %s" % count,
+                bulk=True)
+        except pyes.exceptions.ElasticSearchException, e:
+            app.logger.warning('Could not update subscription count for %s: %s: %s',
+                               userid, e, e.result['error'])
+
+    if automatic_flush:
+        es_connection.flush_bulk(forced=True)
 
 
 def condition_for_category(user, channel, video_count):
@@ -849,7 +880,7 @@ def condition_for_category(user, channel, video_count):
     return True
 
 
-def get_users_categories(user_ids=None):
+def get_users_categories(user_ids=None, start=None, stop=None):
     from rockpack.mainsite.services.video import models
     from rockpack.mainsite.services.user.models import User
 
@@ -857,13 +888,32 @@ def get_users_categories(user_ids=None):
         models.Channel,
         (models.Channel.owner == User.id) &
         (models.Channel.deleted == False) &
+        (models.Channel.visible == True) &
         (models.Channel.public == True)
     ).outerjoin(
-        models.VideoInstance, models.VideoInstance.channel == models.Channel.id
+        models.VideoInstance,
+        (models.VideoInstance.channel == models.Channel.id) &
+        (models.VideoInstance.deleted == False)
     ).options(
         lazyload(models.Channel.category_rel),
         contains_eager(models.Channel.owner_rel)
-    ).group_by(User.id, models.Channel.id).order_by(User.id)
+    )
+
+    if start:
+        updated_channels = readonly_session.query(distinct(models.Channel.id))\
+            .filter(models.Channel.date_updated.between(start, stop))
+
+        updated_instances = readonly_session.query(distinct(models.VideoInstance.channel))\
+            .filter(models.VideoInstance.date_updated.between(start, stop))
+
+        updated_users = readonly_session.query(distinct(models.Channel.id))\
+            .join(User, User.id == models.Channel.owner)\
+            .filter(User.date_updated.between(start, stop))
+
+        unioned = updated_channels.union_all(updated_instances, updated_users).subquery()
+        query = query.filter(models.Channel.id.in_(unioned))
+
+    query = query.group_by(User.id, models.Channel.id).order_by(User.id)
 
     if user_ids:
         query = query.filter(User.id.in_(user_ids))
@@ -879,14 +929,20 @@ def get_users_categories(user_ids=None):
     return category_map
 
 
-def update_user_categories(user_ids=None):
-    for user, categories in get_users_categories(user_ids).iteritems():
-        eu = ESUser.updater(bulk=True)
+def update_user_categories(user_ids=None, automatic_flush=True, start=None, stop=None):
+    eu = ESUser.updater(bulk=True)
+    for user, categories in get_users_categories(user_ids=user_ids, start=start, stop=stop).iteritems():
         eu.set_document_id(user.id)
         eu.add_field('category', list(set(categories)))
-        eu.update()
+        try:
+            eu.update()
+        except pyes.exceptions.ElasticSearchException:
+            app.logger.warning('update_user_categories failed to update %s', user)
+        finally:
+            eu.reset()
 
-    ESUser.flush()
+    if automatic_flush:
+        ESUser.flush()
 
 
 def add_channel_to_index(channel, bulk=False, no_check=False):
@@ -994,7 +1050,6 @@ def es_update_channel_videos(extant=[], deleted=[]):
     if deleted:
         ESVideo.delete(deleted)
 
-    update.update_most_influential_video(video_ids)
     update.update_video_related_channel_meta(channel_ids)
 
 
