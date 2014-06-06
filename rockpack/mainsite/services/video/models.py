@@ -803,10 +803,13 @@ def _update_most_influential(instance_id):
         VideoInstance.most_influential == True,
         VideoInstance.video == instance.video).first()
 
-    if not source_instance and not most_influential_instance:
-        # This must be the first instance for that video.
-        # Set as most influential
-        instance.most_influential == True
+    if not source_instance:
+        if not most_influential_instance:
+            # This must be the first instance for that video.
+            # Set as most influential
+            instance.most_influential == True
+        # ... else we've come through a path that isn't setting
+        # most influential. Let's just drop out then.
         return
 
     elif most_influential_instance \
