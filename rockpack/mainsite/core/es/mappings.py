@@ -323,6 +323,29 @@ user_mapping = {
     }
 }
 
+channel_settings = {
+    "analysis": {
+        "analyzer": {
+            "folded_snowball": {
+                "filter": [
+                    "standard",
+                    "lowercase",
+                    "stop",
+                    "snowball",
+                    "my_ascii_folding"
+                ],
+                "type": "custom",
+                "tokenizer": "standard"
+            }
+        },
+        "filter": {
+            "my_ascii_folding": {
+                "type": "asciifolding",
+                "preserve_original": True
+            }
+        }
+    }
+}
 
 channel_mapping = {
     "dynamic": "strict",
@@ -408,6 +431,16 @@ channel_mapping = {
         }
     }
 }
+
+
+if app.config.get('DOLLY'):
+    channel_mapping['properties']['title'] = {
+        "type": "multi_field",
+        "fields": {
+            "title": {"type": "string", "analyzer": "snowball"},
+            "folded": {"type": "string", "analyzer": "folded_snowball"}
+        }
+    }
 
 suggest_mapping = {
     "dynamic": "strict",
