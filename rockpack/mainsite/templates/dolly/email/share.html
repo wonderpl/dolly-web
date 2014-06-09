@@ -63,6 +63,7 @@
               <a href="{{ link.url }}?video={{ video.id }}" border="0" style="display:block;margin:0;margin-bottom:24px;border:none;outline:none">
                 <img src="{{ video.default_thumbnail }}" border="0" alt="" style="display:block;width:100%;height:auto;margin:0 auto;border:none;outline:none" />
               </a>
+              <p><font face="Georgia" color="#777782" style="margin:0;margin-bottom:24px;font-size:16px;line-height:24px">{{ video.video_rel.description }}</font></p>
               {% endfor %}
               {% if object.video_count > 1 %}
               <p class="btn-center"><a href="{{ link.url }}" class="btn" border="0">View all {{ object.video_count }} videos on Wonder PL</a></p>
@@ -81,6 +82,7 @@
               <a href="{{ config.ITUNES_APP_LINK }}&ct=shareemail" border="0" style="display:block;margin:0;margin-bottom:24px;border:none;outline:none">
                 <img src="{{ config.EMAIL_ASSETS_URL }}/assets/dolly/img/emails/shared-app-store.png" border="0" alt="" style="display:block;width:135px;height:40px;margin:0 auto;border:none;outline:none"/>
               </a>
+              <p><font face="Georgia" color="#777782" style="margin:0;margin-bottom:24px;font-size:16px;line-height:24px">{{ video.video_rel.description }}</font></p>
             </td>
           </tr>
           <tr>
