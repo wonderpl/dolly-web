@@ -42,47 +42,60 @@
             {% include "header.html" %}
           </tr>
           <tr>
-            <td align="center" valign="top" class="container-padding" bgcolor="#fff">
-              {% if user.avatar.url %}
-              <img src="{{ user.avatar.url }}" style="display:block;width:60px;height:60px;margin:0 auto 24px auto;border-radius:50%;outline:none" border="0" width="60" height="60" alt="{{ user.display_name }}" />  
-              {% else %}
-              <img src="{{ config.EMAIL_ASSETS_URL }}/assets/dolly/img/emails/avatar-small.png" style="display:block;width:60px;height:60px;margin:0 auto 24px auto;border-radius:50%;outline:none" border="0" width="60" height="60" alt="{{ user.display_name }}" />
-              {% endif %}
-            </td>
-          </tr>
-          <tr>
-            <td align="center" valign="top" class="container-padding" bgcolor="#fff">
+            <td colspan="100%" align="center" valign="top" class="container-padding" bgcolor="#fff" style="width:100% !important;padding-left:24px;padding-right:24px;background-color:#fff;">
               {% if object_type == "channel" %}
-              <h1><font face="verdana" color="#2e2e32" style="font-weight:400;font-size:24px;line-height:32px;font-family:'Lucida Grande','Lucida Sans Unicode','Lucida Sans',Geneva,Verdana,sans-serif;word-break:normal;text-rendering:optimizeLegibility;color:#2e2e32">{{ user.display_name }} shared a {{ object_type_name }} <br/>with you from Wonder PL.</font></h1>
-              <h2>
-                <font face="verdana" color="#51B464" style="font-weight:400;font-size:22px;line-height:30px;font-family:'Lucida Grande','Lucida Sans Unicode','Lucida Sans',Geneva,Verdana,sans-serif;word-break:normal;text-rendering:optimizeLegibility;color:#51B464 !important"><a href="{{ link.url }}" border="0" style="text-decoration:none;color:#51B464 !important;border:none">{% filter upper %}{{ object.title }}{% endfilter %}</a></font><br/>
-                <font face="verdana" color="#777782" style="font-weight:400;font-size:14px;line-height:20px;color:#777782;text-align:center">( {{ object.video_count }} video{% if object.video_count != 1 %}s{% endif %} )</font>
-              </h2>
-              {% for video in top_videos %}
+              <p style="margin:0;margin-bottom:20px;font-size:14px;line-height:20px;font-family:Georgia,Cambria,'Times New Roman',Times,serif;text-align:left;color:#777782;"><font face="Georgia" color="#777782">{{ object.video_count }} video{% if object.video_count != 1 %}s{% endif %}</font></p>
+              <h1 style="margin:0;margin-bottom:32px;font-weight:800;font-size:24px;line-height:32px;font-family:'Lucida Grande','Lucida Sans Unicode','Lucida Sans',Geneva,Verdana,sans-serif;word-break:normal;"><a href="{{ link.url }}" border="0" style="font-weight:inherit;color:inherit;text-decoration:none;border:none;">{% filter upper %}{{ object.title }}{% endfilter %}</a></h1>
+              <p style="margin:0;margin-bottom:24px;font-size:16px;line-height:24px;font-family:Georgia,Cambria,'Times New Roman',Times,serif;text-align:left;color:#777782;"><font face="Georgia" color="#777782">{{ video.video_rel.description }}</font></p>
+              <!--{% for video in top_videos %}
               <p><font face="verdana" color="#777782" style="margin:0;margin-bottom:24px;font-size:22px;line-height:30px;font-family:'Lucida Grande','Lucida Sans Unicode','Lucida Sans',Geneva,Verdana,sans-serif;word-break:normal;text-rendering:optimizeLegibility;color:#777782">{{ video.video_rel.title }}</font></p>
               <a href="{{ link.url }}?video={{ video.id }}" border="0" style="display:block;margin:0;margin-bottom:24px;border:none;outline:none">
                 <img src="{{ video.default_thumbnail }}" border="0" alt="" style="display:block;width:100%;height:auto;margin:0 auto;border:none;outline:none" />
               </a>
               <p><font face="Georgia" color="#777782" style="margin:0;margin-bottom:24px;font-size:16px;line-height:24px">{{ video.video_rel.description }}</font></p>
-              {% endfor %}
+              {% endfor %}-->
               {% if object.video_count > 1 %}
-              <p class="btn-center"><a href="{{ link.url }}" class="btn" border="0">View all {{ object.video_count }} videos on Wonder PL</a></p>
-              {% endif %}
-
+              <p class="btn-center" style="display:block;width:100%;margin-bottom:48px;text-align:center;"><a href="{{ link.url }}" class="btn" style="margin:0 auto;font-weight:400;font-family:'Lucida Grande','Lucida Sans Unicode','Lucida Sans',Geneva,Verdana,sans-serif;color:#fff;text-align:center;background-color:#51b364;border:none;border-radius:100px;cursor:pointer;" border="0">Watch &amp; Read More</a></p>
+            </td>
+          </tr>
+          <tr>
+            <td colspan="100%" align="center" valign="top" style="width:75%;margin:0 auto;padding:0 12.5%;" bgcolor="#fff">
+              {% if user.avatar.url %}
+              <img src="{{ user.avatar.url }}" style="display:block;margin-right:12px;margin-bottom:24px;border-radius:40px;outline:none" border="0" width="40" height="40" alt="{{ user.display_name }}" align="left" />
               {% else %}
-              <h1><font face="verdana" color="#2e2e32" style="font-weight:400;font-size:24px;line-height:32px;font-family:'Lucida Grande','Lucida Sans Unicode','Lucida Sans',Geneva,Verdana,sans-serif;word-break:normal;text-rendering:optimizeLegibility;color:#2e2e32">{{ user.display_name }} shared a {{ object_type_name }} <br/>with you from Wonder PL.</font></h1>
-              <p><font face="verdana" color="#777782" style="margin:0;margin-bottom:24px;font-size:22px;line-height:30px;font-family:'Lucida Grande','Lucida Sans Unicode','Lucida Sans',Geneva,Verdana,sans-serif;word-break:normal;text-rendering:optimizeLegibility;color:#777782"><a href="{{ link.url }}" border="0" style="text-decoration:none;color:#51B464 !important;border:none">{{ object.video_rel.title }}</a></font></p>
-              <a href="{{ link.url }}" border="0" style="display:block;margin:0;margin-bottom:24px;border:none;outline:none">
-                <img src="{{ object.default_thumbnail }}" border="0" alt="" style="display:block;width:100%;height:auto;margin:0 auto;border:none;outline:none" />
-              </a>
+              <img src="{{ config.EMAIL_ASSETS_URL }}/assets/dolly/img/emails/avatar-small.png" style="display:block;margin-right:12px;margin-bottom:24px;border-radius:40px;outline:none" border="0" width="40" height="40" alt="{{ user.display_name }}" align="left" />
               {% endif %}
-              <hr />
-              <h3 style="margin:0;margin-bottom:12px;font-weight:400;font-size:18px;line-height:28px;font-family:'Lucida Grande','Lucida Sans Unicode','Lucida Sans',Geneva,Verdana,sans-serif;word-break:normal;text-rendering:optimizeLegibility;color:#2e2e32;text-align:center;">Not part of the Wonder PL community?</h3>
-              <p style="text-align:center"><font face="Georgia" color="#777782" style="margin:0;margin-bottom:24px;font-size:16px;line-height:24px;">You're missing out on the world's best opinions, stories and ideas.<br /><br />Download the app here:</font></p>
-              <a href="{{ config.ITUNES_APP_LINK }}&ct=shareemail" border="0" style="display:block;margin:0;margin-bottom:24px;border:none;outline:none">
-                <img src="{{ config.EMAIL_ASSETS_URL }}/assets/dolly/img/emails/shared-app-store.png" border="0" alt="" style="display:block;width:135px;height:40px;margin:0 auto;border:none;outline:none"/>
+              <p style="margin:0;margin-bottom:24px;font-size:13px;line-height:18px;font-style:italic"><font face="Georgia" color="#777782"><strong>{{ user.display_name }}</strong> shared a {{ object_type_name }} with you.</font></p>
+            </td>
+          </tr>
+            {% endif %}
+            {% else %}
+              <h1 style="margin:0;margin-bottom:32px;font-weight:800;font-size:24px;line-height:32px;font-family:'Lucida Grande','Lucida Sans Unicode','Lucida Sans',Geneva,Verdana,sans-serif;word-break:normal;"><a href="{{ link.url }}" border="0" style="font-weight:inherit;color:inherit;text-decoration:none;border:none;">{{ object.video_rel.title }}</a></font></h1>
+              <a href="{{ link.url }}" border="0" class="video-thumb" style="display:block;margin:0;margin-bottom:12px;border:none;outline:none;">
+                <img src="{{ object.default_thumbnail }}" border="0" alt="Video Description" class="video-img" style="display:block;width:100%;height:auto;margin:0 auto;border:none;outline:none" />
               </a>
-              <p><font face="Georgia" color="#777782" style="margin:0;margin-bottom:24px;font-size:16px;line-height:24px">{{ video.video_rel.description }}</font></p>
+              <p style="margin:0;margin-bottom:24px;font-size:16px;line-height:24px;font-family:Georgia,Cambria,'Times New Roman',Times,serif;text-align:left;color:#777782;"><font face="Georgia" color="#777782">{{ video.video_rel.description }}</font></p>
+              <p class="btn-center" style="display:block;width:100%;margin-bottom:48px;text-align:center;"><a href="{{ link.url }}" class="btn" style="margin:0 auto;font-weight:400;font-family:'Lucida Grande','Lucida Sans Unicode','Lucida Sans',Geneva,Verdana,sans-serif;color:#fff;text-align:center;background-color:#51b364;border:none;border-radius:100px;cursor:pointer;" border="0">Watch &amp; Read More</a></p>
+            </td>
+          </tr>
+          <tr>
+            <td colspan="100%" align="center" valign="top" style="width:75%;margin:0 auto;padding:0 12.5%;" bgcolor="#fff">
+              {% if user.avatar.url %}
+              <img src="{{ user.avatar.url }}" style="display:block;margin-right:12px;margin-bottom:24px;border-radius:40px;outline:none" border="0" width="40" height="40" alt="{{ user.display_name }}" align="left" />
+              {% else %}
+              <img src="{{ config.EMAIL_ASSETS_URL }}/assets/dolly/img/emails/avatar-small.png" style="display:block;margin-right:12px;margin-bottom:24px;border-radius:40px;outline:none" border="0" width="40" height="40" alt="{{ user.display_name }}" align="left" />
+              {% endif %}
+              <p style="margin:0;margin-bottom:24px;font-size:13px;line-height:18px;font-style:italic"><font face="Georgia" color="#777782"><strong>{{ user.display_name }}</strong> shared a {{ object_type_name }} with you.</font></p>
+            </td>
+          </tr>
+          {% endif %}
+          <tr>
+            <td colspan="100%" align="center" valign="top" style="width:75%;margin:0 auto;padding:0 12.5%;" bgcolor="#fff">
+              <hr />
+              <h3 style="margin:0;margin-bottom:12px;font-weight:400;font-size:18px;line-height:28px;font-family:'Lucida Grande','Lucida Sans Unicode','Lucida Sans',Geneva,Verdana,sans-serif;word-break:normal;color:#2e2e32;text-align:center;">Watch and share what matters.<br />Download the app here:</h3>
+              <a href="{{ config.ITUNES_APP_LINK }}&ct=shareemail" border="0" style="display:block;margin:0;margin-bottom:48px;border:none;outline:none">
+                <img src="{{ config.EMAIL_ASSETS_URL }}/assets/dolly/img/emails/shared-app-store.png" border="0" alt="" style="display:block;width:135px;height:40px;margin:0;margin:0 auto;border:none !important;outline:none"/>
+              </a>
             </td>
           </tr>
           <tr>
