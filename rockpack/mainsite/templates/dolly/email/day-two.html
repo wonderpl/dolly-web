@@ -14,18 +14,37 @@
     img{max-width:100%;height:auto;line-height:100%;text-decoration:none;border:0;outline:none}
     table{border-spacing:0}
     table td{border-collapse:collapse}
-    a{text-decoration:none;color:#51B464!important;border-bottom:1px solid #55AA65}
-    h1 a,h2 a,h3 a,h4 a,h5 a,h6 a{border:none}
+    a{text-decoration:none;color:#51B464;border-bottom:1px solid #55AA65}
+    h1 a,h2 a,h3 a,h4 a,h5 a,h6 a{font-weight:inherit;color:inherit;border:none}
     a img{border:0 none}
     hr{height:0;margin-bottom:23px;border:0 solid #d2dadf;border-bottom-width:1px;border-bottom-style:solid}
     @media screen and (max-width: 480px) {
       table[class="container"]{width: 92% !important;}td[class="container-padding"]{padding-left:12px !important;padding-right:12px !important}
     }
-    h1{margin:0;margin-bottom:24px;font-weight:400;font-size:18px;line-height:28px;font-family:'Lucida Grande','Lucida Sans Unicode','Lucida Sans',Geneva,Verdana,sans-serif;font-weight:normal;text-align:left;color:#2e2e32}
-    p{margin:0;margin-bottom:24px;font-size:16px;line-height:24px;font-family:Georgia,Cambria,'Times New Roman',Times,serif;text-align:left;color:#777782}
+   
+    h1,h2{margin:0;font-family:'Lucida Grande','Lucida Sans Unicode','Lucida Sans',Geneva,Verdana,sans-serif;text-align:left;}
+    h1{margin-bottom:32px;font-size:24px;line-height:32px;font-weight:800;color:#2e2e32;}
+    h2{margin-bottom:28px;font-size:22px;line-height:28px;font-weight:400;color:#2e2e32;}
+  
+    p.lede,p.lead,p{margin:0;font-family:Georgia,Cambria,'Times New Roman',Times,serif;text-align:left;color:#777782;}
+    p.lede,p.lead{margin-bottom:28px;font-size:18px;line-height:28px;}
+    p{margin-bottom:24px;font-size:16px;line-height:24px;}
+
     a:link,a:visited,div a{font-weight:normal;}
+    a:hover.video-thumb,a:active.video-thumb,a:focused.video-thumb{text-decoration:none;border:none;outline:none;}
+    a.video-thumb{display:block;margin:0;margin-bottom:12px;}
+
+    img.video-img{display:block;width:100%;height:auto;margin:0 auto;border:none;outline:none;}
+
     .container{max-width:480px;}
-    .container-padding{background-color:#fff;padding-left:24px;padding-right:24px}
+    .container-padding{width:100%;padding-left:24px;padding-right:24px;background-color:#fff;}
+
+    #outlook a.btn{display:inline !important}
+    a.btn{display:inline-block;overflow:visible;vertical-align:middle;margin:0;padding:8px 18px;font-weight:400;font-family:"Lucida Grande","Lucida Sans Unicode","Lucida Sans",Geneva,Verdana,sans-serif;color:#fff;text-align:center;background-color:#51b364;border:none;border-radius:100px;cursor:pointer;}
+    a:hover.btn,a:active.btn,a:focus.btn,a:visited.btn{text-decoration:none;}
+
+    .btn-center{display:block;width:100%;margin-bottom:24px;text-align:center}
+    .btn-center a.btn{margin:0 auto}
   </style>
 </head>
 <body style="margin:0;padding:0;" bgcolor="#fff" topmargin="0" leftmargin="0" marginwidth="0" marginheight="0" offset="0">
@@ -37,14 +56,15 @@
             {% include "header.html" %}
           </tr>
           <tr>
-            <td align="center" valign="top" class="container-padding" bgcolor="#fff">
-              <h1><font face="Georgia" color="#777782" style="margin:0;margin-bottom:24px;font-size:18px;line-height:28px">Hello {{ user.display_name }},</font></h1>
-              <p><font face="Georgia" color="#777782" style="margin:0;margin-bottom:24px;font-size:18px;line-height:28px">We created Wonder PL because we are all tuning out the useless noise that is cluttering our smartphones and tuning into the good stuff.</font></p>
-              <p><font face="Georgia" color="#777782" style="margin:0;margin-bottom:24px;font-size:16px;line-height:24px">We are approaching video in a fresh and exciting way. We&rsquo;re enabling you to engage on multiple levels, through articles, embedded blogs and things to buy, allowing you to cross the web and come back again without leaving our app.</font></p>
-              <p><font face="Georgia" color="#777782" style="margin:0;margin-bottom:24px;font-size:16px;line-height:24px">Personalisation is important, there is no one size fits all solution. Some of us care about making the perfect carpaccio or understanding sports psychology, while others like to push the envelope with cutting edge creative film or cliff hanging adventures.</font></p>
-              <p><font face="Georgia" color="#777782" style="margin:0;margin-bottom:24px;font-size:16px;line-height:24px">We care about our content providers too. To produce a quality platform requires a different mind set and orientation, down to every design decision through to winning editorial. We want them to flourish here and build meaningful connections with consumers and brands.</font></p>
-              <p><font face="Georgia" color="#777782" style="margin:0;margin-bottom:24px;font-size:16px;line-height:24px">We are creating a media platform that is better, one that has the power to instruct, inspire and fill people&rsquo;s lives with wonder.</font></p>
-              <p><font face="Georgia" color="#777782" style="margin:0;margin-bottom:24px;font-size:16px;line-height:24px">There is more to do, and we need your help to do it. Write to us with your suggestions, tell us what you think about the new designs and features, or just say hi.<br><br>Get in touch with us at hello@wonderpl.com.</font></p>
+            <td colspan="100%" align="center" valign="top" class="container-padding" bgcolor="#fff" style="width:100% !important;padding-left:24px;padding-right:24px;background-color:#fff;">
+              <h1 style="margin:0;margin-bottom:32px;font-weight:800;font-size:24px;line-height:32px;font-family:'Lucida Grande','Lucida Sans Unicode','Lucida Sans',Geneva,Verdana,sans-serif;word-break:normal;"><a href="{{ link.url }}" border="0" style="font-weight:inherit;color:inherit;text-decoration:none;border:none;">Dear {{ user.display_name }},</h1>
+              <p class="lede" style="margin:0;margin-bottom:28px;font-size:18px;line-height:28px;font-family:Georgia,Cambria,'Times New Roman',Times,serif;text-align:left;color:#777782"><font face="Georgia" color="#777782">We are creating a media platform that is better, one that has the power to instruct, inspire and fill people&rsquo;s lives with wonder.</p>
+              <h2 style="margin:0;margin-bottom:28px;font-weight:400;font-size:22px;line-height:28px;font-family:'Lucida Grande','Lucida Sans Unicode','Lucida Sans',Geneva,Verdana,sans-serif;word-break:normal;">Wonder PL is the place to watch and share the videos that matter.</h2>
+              <p style="margin:0;margin-bottom:24px;font-size:16px;line-height:24px;font-family:Georgia,Cambria,'Times New Roman',Times,serif;text-align:left;color:#777782;"><font face="Georgia" color="#777782">Our approach to video is fresh and exciting. We&rsquo;re enabling you to engage on multiple levels, through articles, embedded blogs and things to buy, allowing you to cross the web and back again without leaving our app.</p>
+              <p style="margin:0;margin-bottom:24px;font-size:16px;line-height:24px;font-family:Georgia,Cambria,'Times New Roman',Times,serif;text-align:left;color:#777782;"><font face="Georgia" color="#777782">Personalisation is important, there is no one size fits all solution. Some of us care about making the perfect carpaccio or understanding sports psychology, while others like to push the envelope with cutting edge creative film or cliff hanging adventures.</p>
+              <p style="margin:0;margin-bottom:24px;font-size:16px;line-height:24px;font-family:Georgia,Cambria,'Times New Roman',Times,serif;text-align:left;color:#777782;"><font face="Georgia" color="#777782">We care about our content providers too. To produce a quality platform requires a different mind set and orientation, down to every design decision through to winning editorial. We want them to flourish here and build meaningful connections with consumers and brands.</p>
+              <p style="margin:0;margin-bottom:24px;font-size:16px;line-height:24px;font-family:Georgia,Cambria,'Times New Roman',Times,serif;text-align:left;color:#777782;"><font face="Georgia" color="#777782">There is more to do, and we need your help to do it. Write to us with your suggestions, tell us what you think about the new designs and features, or just say hi.</p>
+              <p style="margin:0;margin-bottom:24px;font-size:16px;line-height:24px;font-family:Georgia,Cambria,'Times New Roman',Times,serif;text-align:left;color:#777782;"><font face="Georgia" color="#777782">Get in touch with us at <a href="mailto:hello@wonderpl.com">hello@wonderpl.com</a>.</p>
             </td>
           </tr>
           <tr>
