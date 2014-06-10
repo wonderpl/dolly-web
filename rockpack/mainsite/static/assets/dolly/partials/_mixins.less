@@ -1,0 +1,14 @@
+
+//http://lesscss.org/features/#mixins-parametric-feature-advanced-arguments-and-the-coderestcode-variable
+
+.as-desktop(@rules) {
+  @media screen and (min-width: 960px) {
+    @rules();
+  }
+}
+
+.as-tablet(@rules) {
+  @media screen and (min-width: 768px) and (max-width: 959px) {
+    @rules();
+  }
+}

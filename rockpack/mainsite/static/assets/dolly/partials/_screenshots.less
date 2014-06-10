@@ -4,10 +4,10 @@
 
 .screenshots__section {
   text-align : center;
-  @media screen and (min-width: 960px) {
+  .as-desktop({
     margin: 1em auto;
     display: inline-block;
-  }
+  });
 }
 
 .screenshots__image {
@@ -35,21 +35,21 @@
   margin: 1em 6%;
   text-align: center;
   vertical-align: top;
-  @media screen and (min-width: 960px) {
+  .as-desktop({
     text-align: left;
     font-size: 22px;
     line-height: 28px;
     margin: 1em 0 0;
     display: inline-block;
     width: 23%;
-  }
+  });
 }
 
 .screenshots__text--inline {
   display: inline-block;
   max-width: 100%;
   vertical-align: top;
-  @media screen and (min-width: 960px) {
+  .as-desktop({
     max-width: 35%;
-  }
+  });
 }
