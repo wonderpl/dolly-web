@@ -116,7 +116,7 @@ a {
 		}
 
 		p {
-			
+
 		}
 
 		ul, ol {
@@ -231,7 +231,7 @@ a {
 	}
 
 	&.faq {
-		padding: 0 32px; 
+		padding: 0 32px;
 
 		.faq-break {
 			display: block;
@@ -352,7 +352,7 @@ header {
 		height: 100%;
 
 		ul {
-			
+
 		}
 
 		li {
@@ -417,9 +417,12 @@ footer {
 /* 	Home page
 /* ======================================= */
 
+/* Migrate home styles out to separate module */
+@import "partials/_screenshots.less";
+
 #home-splash {
 	display: block;
-	background: transparent url('/static/assets/dolly/img/home-wood-big-v1.jpg') center top no-repeat;
+	background: transparent url('/static/assets/dolly/img/home/hero.jpg') center top no-repeat;
 	background-size: auto 100%;
 	margin: 0 0 32px 0;
 	-webkit-transform: translateZ(0);
@@ -546,7 +549,7 @@ footer {
 	}
 }
 
-#home-mood-minder {		
+#home-mood-minder {
 
 	.iphone {
 		display: block;
@@ -677,7 +680,7 @@ footer {
 				line-height: 38px;
 			}
 		}
-		
+
 		p.standout {
 			font-size: 20px;
 			line-height: 26px;
@@ -702,7 +705,7 @@ footer {
 				margin: 0 auto;
 			}
 		}
-		
+
 		.inner.upload-intro-right-top {
 			.inline-block();
 			width: 40%;
@@ -728,7 +731,7 @@ footer {
 				margin: 0 auto;
 			}
 		}
-		
+
 		.inner.upload-intro-right-bottom {
 			.inline-block();
 			width: 40%;
@@ -743,14 +746,14 @@ footer {
 				color: @grey;
 			}
 		}
-		
+
 		.inner.call-to-action {
 			padding: 0 0 80px 0;
 			h2 {
 				font-size: 24px;
 				line-height: 32px;
-				color: black;	
-				padding: 0 12%;			
+				color: black;
+				padding: 0 12%;
 			}
 		}
 		.inner.phones {
@@ -786,7 +789,7 @@ footer {
 					width: 100%;
 				}
 			}
-	
+
 			.centered {
 				display: block;
 				width: 50%;
@@ -849,7 +852,7 @@ footer {
 .password-reset {
 	padding-bottom: 200px;
 	display: block;
-	
+
 	h2 {
 		text-align: center;
 		font-size: 22px;
@@ -908,9 +911,9 @@ footer {
 
 }
 
-.faq{ 
+.faq{
 	padding: 22px;
-	
+
 	h3 {
 		text-transform: capitalize;
 	}
@@ -943,7 +946,7 @@ footer {
 	text-transform: uppercase;
 	margin: 0 0 60px 0;
 	border: 1px solid #cbccd5;
-	
+
 	h2 {
 		background: #f3f4f7;
 		padding: 10px 20px;
@@ -970,11 +973,11 @@ footer {
 		border-left: 1px solid #cbccd5;
 
 		&.pro {
-			background: #dedeee;	
+			background: #dedeee;
 		}
 
 		li {
-			border-bottom: 1px solid #cbccd5;	
+			border-bottom: 1px solid #cbccd5;
 
 			&:last-child {
 				border: none;
