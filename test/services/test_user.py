@@ -990,9 +990,7 @@ class TestUserContent(base.RockPackTestCase):
             self.assertEquals(notification['message']['video']['id'], video.id)
 
     def test_registration_notifications(self):
-        message_prefix = "Your Facebook friend"
-        if app.config.get('DOLLY'):
-            message_prefix = "Your friend"
+        message_prefix = "Your friend"
 
         with self.app.test_client() as client:
             self.app.test_request_context().push()
