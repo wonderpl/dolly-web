@@ -95,7 +95,7 @@ def create_reverse_email_friend_association(sender, recipient):
     if not ExternalFriend.query.filter(
         ExternalFriend.external_system == 'email',
         ExternalFriend.user == recipient.id,
-        ExternalFriend.external_uid == sender.id
+        ExternalFriend.external_uid == sender.email
     ).count():
 
         ExternalFriend(

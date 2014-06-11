@@ -293,16 +293,44 @@ def create_new_registration_notifications(date_from=None, date_to=None, user_not
         (ExternalToken.user == User.id) &
         (ExternalToken.external_system == 'facebook'))
     ).options(contains_eager(User.external_tokens))
+
     if date_from:
         new_users = new_users.filter(User.date_joined >= date_from)
+
     if date_to:
         new_users = new_users.filter(User.date_joined < date_to)
+
     for user in new_users:
         token = user.external_tokens[0]
         friends = ExternalFriend.query.\
             filter_by(external_system=token.external_system, external_uid=token.external_uid).\
             values(ExternalFriend.user)
         for friend, in friends:
+            friend, message_type, message = joined_message(friend, user)
+            _add_user_notification(friend, user.date_joined, message_type, message)
+            if user_notifications is not None and message_type in app.config['PUSH_NOTIFICATION_MAP']:
+                user_notifications.setdefault(friend, None)
+
+    if app.config.get('DOLLY'):
+
+        FriendUser = aliased(User)
+
+        new_email_users = User.query.join(
+            ExternalFriend,
+            (ExternalFriend.email == User.email) &
+            (ExternalFriend.external_system == 'email')
+        ).join(
+            FriendUser,
+            ExternalFriend.user == FriendUser.id
+        ).with_entities(FriendUser.id, User)
+
+        if date_from:
+            new_email_users = new_users.filter(User.date_joined >= date_from)
+
+        if date_to:
+            new_email_users = new_users.filter(User.date_joined < date_to)
+
+        for friend, user in new_email_users:
             friend, message_type, message = joined_message(friend, user)
             _add_user_notification(friend, user.date_joined, message_type, message)
             if user_notifications is not None and message_type in app.config['PUSH_NOTIFICATION_MAP']:
