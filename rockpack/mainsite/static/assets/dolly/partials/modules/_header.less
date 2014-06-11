@@ -1,0 +1,60 @@
+header {
+  display: block;
+  position: relative;
+  height: 100px;
+  text-align: center;
+
+  a.logo {
+    display: block;
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    width: 175px;
+    z-index: 101;
+    background: transparent url('/static/assets/dolly/img/header-logo-grey-bars-retina.png') center center no-repeat;
+    background-size: 100% auto;
+  }
+
+  nav {
+    display: block;
+    padding: 0 125px;
+    height: 100%;
+
+    ul {
+
+    }
+
+    li {
+    }
+
+    a {
+      font-variant: small-caps;
+      font-weight: bold;
+      text-transform: lowercase;
+      letter-spacing: 0.1em;
+      color: @green;
+      font-size: 18px;
+      text-decoration: none;
+      -webkit-transition: all .1s ease-out;
+      -moz-transition: all .1s ease-out;
+      -o-transition: all .1s ease-out;
+
+      &:hover, &:focus, &:active {
+        outline: none;
+        color: @green;
+      }
+    }
+  }
+
+  a.app-store-link {
+    display: block;
+    position: absolute;
+    right: 0;
+    top: 0;
+    height: 100%;
+    width: 125px;
+    background: transparent url('/static/assets/dolly/img/header-download-button-retina-v1.png') center center no-repeat;
+    background-size: 100% auto;
+  }
+}

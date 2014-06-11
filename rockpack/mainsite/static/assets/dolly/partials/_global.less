@@ -153,34 +153,6 @@ a {
 			list-style-type: decimal;
 		}
 
-		// li ul, li ol {
-		// 	margin:0 1.5em;
-		// }
-		// ul, ol {
-		// 	margin:0 1.5em 1.5em 1.5em;
-		// }
-		// ul {
-		// 	list-style-type:disc;
-		// }
-		// ol {
-		// 	list-style-type:decimal;
-		// }
-		// ol ol {
-		// 	list-style: upper-alpha;
-		// }
-		// ol ol ol {
-		// 	list-style: lower-roman;
-		// }
-		// ol ol ol ol {
-		// 	list-style: lower-alpha;
-		// }
-		// dl {
-		// 	margin:0 0 1.5em 0;
-		// }
-		// dl dt {
-		// 	font-weight:bold;
-		// }
-
 		table {
 			// display: block;
 			width: 90%;
@@ -289,29 +261,6 @@ a {
 ul.anchor-nav {
 	displas: block;
 	margin: 0 0 52px 0;
-
-	// li {
-	// 	display: inline;
-	// 	border-left: 1px solid @darkgrey;
-
-	// 	&:first-child {
-	// 		padding: 0;
-	// 		border: none;
-	// 	}
-
-	// 	a {
-	// 		font-size: 20px;
-	// 		padding: 0 13px;
-	// 		color: @headinggrey;
-	// 		text-decoration: none;
-	// 		-webkit-transition: color .1s ease-out;
-
-	// 		&:hover, &:focus, &:active {
-		// outline: none;
-	// 			color: @lilac;
-	// 		}
-	// 	}
-	// }
 }
 
 .inner-full {
@@ -328,66 +277,7 @@ ul.anchor-nav {
 	}
 }
 
-header {
-	display: block;
-	position: relative;
-	height: 100px;
-	text-align: center;
-
-	a.logo {
-		display: block;
-		position: absolute;
-		left: 0;
-		top: 0;
-		height: 100%;
-		width: 175px;
-		z-index: 101;
-		background: transparent url('/static/assets/dolly/img/header-logo-grey-bars-retina.png') center center no-repeat;
-		background-size: 100% auto;
-	}
-
-	nav {
-		display: block;
-		padding: 0 125px;
-		height: 100%;
-
-		ul {
-
-		}
-
-		li {
-		}
-
-		a {
-			font-variant: small-caps;
-			font-weight: bold;
-			text-transform: lowercase;
-			letter-spacing: 0.1em;
-			color: @green;
-			font-size: 18px;
-			text-decoration: none;
-			-webkit-transition: all .1s ease-out;
-			-moz-transition: all .1s ease-out;
-			-o-transition: all .1s ease-out;
-
-			&:hover, &:focus, &:active {
-				outline: none;
-				color: @green;
-			}
-		}
-	}
-
-	a.app-store-link {
-		display: block;
-		position: absolute;
-		right: 0;
-		top: 0;
-		height: 100%;
-		width: 125px;
-		background: transparent url('/static/assets/dolly/img/header-download-button-retina-v1.png') center center no-repeat;
-		background-size: 100% auto;
-	}
-}
+@import "partials/modules/_header.less";
 
 footer {
 	border-top: 1px solid #D2DADF;
@@ -417,39 +307,10 @@ footer {
 /* 	Home page
 /* ======================================= */
 
-/* Migrate home styles out to separate module */
+/* Migrate styles out to separate module */
 @import "partials/_screenshots.less";
-
-#home-splash {
-	display: block;
-	background: transparent url('/static/assets/dolly/img/home/hero.jpg') center top no-repeat;
-	background-size: auto 100%;
-	margin: 0 0 32px 0;
-	-webkit-transform: translateZ(0);
-	-moz-transform: translateZ(0);
-	-o-transform: translateZ(0);
-	transform: translateZ(0);
-
-	.inner {
-		// max-width: 100%;
-	}
-
-	img {
-		display: block;
-		width: 100%;
-		visibility: hidden;
-	}
-
-	&:before {
-		content: '';
-		display: block;
-		height: 460px;
-	}
-
-	&.holding-page {
-		margin: 0 0 0 0;
-	}
-}
+@import "partials/modules/_home_quote.less";
+@import "partials/modules/_home_splash.less";
 
 #home-sponsors {
 
@@ -591,6 +452,10 @@ footer {
 /* 	Our Categories page
 /* ======================================= */
 
+/* Migrate styles out to separate module */
+@import "partials/modules/_category.less";
+
+
 .category {
 	display: block;
 	margin: 0 0 32px 0;
@@ -669,7 +534,7 @@ footer {
 /* 	Upload page
 /* ======================================= */
 
-/* Migrate home styles out to separate module */
+/* Migrate styles out to separate module */
 @import "partials/_upload.less";
 
 #upload-page, #about-us-page {
