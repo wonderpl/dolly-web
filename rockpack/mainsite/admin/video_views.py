@@ -68,6 +68,16 @@ class VideoInstanceLocaleMetaFormAdmin(InlineFormAdmin):
     form_columns = ('id', 'locale_rel')
 
 
+class WYSIWYGTextAreaWidget(wtf.widgets.TextArea):
+    def __call__(self, field, **kwargs):
+        kwargs.setdefault('class_', 'ckeditor')
+        return super(WYSIWYGTextAreaWidget, self).__call__(field, **kwargs)
+
+
+class WYSIWYGTextAreaField(wtf.TextAreaField):
+    widget = WYSIWYGTextAreaWidget()
+
+
 class VideoView(AdminModelView):
     model = models.Video
 
@@ -77,6 +87,7 @@ class VideoView(AdminModelView):
     column_searchable_list = ('title',)
     form_excluded_columns = ('date_updated', 'instances', 'restrictions')
     inline_models = (models.VideoThumbnail,)
+    form_overrides = dict(description=WYSIWYGTextAreaField)
 
     def after_model_change(self, form, model, is_created):
         if use_elasticsearch():

@@ -1,5 +1,7 @@
 {% extends original_edit_master %}
 {% block tail %}
 {{ super() }}
+<script src="{{ config.ASSETS_URL }}/assets/admin/ckeditor/ckeditor.js"></script>
+</script>
 {% include 'admin/rockpack-tags.js' %}
 {% endblock %}
