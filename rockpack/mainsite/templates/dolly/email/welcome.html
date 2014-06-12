@@ -14,9 +14,9 @@
     img{max-width:100%;height:auto;line-height:100%;text-decoration:none;border:0;outline:none}
     table{border-spacing:0}
     table td{border-collapse:collapse}
-    a{text-decoration:none;color:#51B464 !important;border-bottom:1px solid #55AA65}
-    h1 a,h2 a,h3 a,h4 a,h5 a,h6 a{font-weight:inherit;color:inherit;border:none}
-    a img{border:0 none}
+    a{text-decoration:none !important;color:#51B464 !important;border-bottom:1px solid #55AA65}
+    h1 a,h2 a,h3 a,h4 a,h5 a,h6 a{font-weight:inherit !important;color:inherit !important;border:none !important}
+    a img{border:0 none !important}
     hr{height:0;margin-bottom:23px;border:0 solid #d2dadf;border-bottom-width:1px;border-bottom-style:solid}
     @media screen and (max-width: 480px) {
       table[class="container"]{width: 92% !important;}td[class="container-padding"]{padding-left:12px !important;padding-right:12px !important}
@@ -58,9 +58,8 @@
           </tr>
           <tr>
             <td colspan="100%" align="center" valign="top" class="container-padding" bgcolor="#fff" style="width:100% !important;padding-left:24px;padding-right:24px;background-color:#fff;">
-
               <h1 style="margin:0;margin-bottom:32px;font-weight:800;font-size:24px;line-height:32px;font-family:'Lucida Grande','Lucida Sans Unicode','Lucida Sans',Geneva,Verdana,sans-serif;word-break:normal;">Dear {{ user.display_name }},</h1>
-              <p class="lede" style="margin:0;margin-bottom:28px;font-size:18px;line-height:28px;font-family:Georgia,Cambria,'Times New Roman',Times,serif;text-align:left;color:#777782"><font face="Georgia" color="#777782">Welcome to <a href="{{ url_for('homepage') }}" target="_blank">Wonder PL</a>, the world&rsquo;s first ad-free video magazine, designed to give you the most beautiful video experience curated just for you.</p>
+              <p class="lede" style="margin:0;margin-bottom:28px;font-size:18px;line-height:28px;font-family:Georgia,Cambria,'Times New Roman',Times,serif;text-align:left;color:#777782"><font face="Georgia" color="#777782">Welcome to <a href="{{ url_for('homepage') }}" target="_blank" style="text-decoration:none !important;color:#51B464 !important;border-bottom:1px solid #55AA65">Wonder PL</a>, the world&rsquo;s first ad-free video magazine, designed to give you the most beautiful video experience curated just for you.</p>
               <h2 style="margin:0;margin-bottom:28px;font-weight:400;font-size:22px;line-height:28px;font-family:'Lucida Grande','Lucida Sans Unicode','Lucida Sans',Geneva,Verdana,sans-serif;word-break:normal;text-align:center;">Wonder PL is the place to watch and share the videos that matter.</h2>
               <p style="margin:0;margin-bottom:24px;font-size:16px;line-height:24px;font-family:Georgia,Cambria,'Times New Roman',Times,serif;text-align:left;color:#777782;"><font face="Georgia" color="#777782">Tune out the noise that is cluttering your smartphone and life, and tune into the good stuff.</p>
               <p style="margin:0;margin-bottom:24px;font-size:16px;line-height:24px;font-family:Georgia,Cambria,'Times New Roman',Times,serif;text-align:left;color:#777782;"><font face="Georgia" color="#777782">We&rsquo;re here to help you discover only quality videos across food, the mind, wellness, entertainment, culture and home &amp; family.</p>
@@ -72,19 +71,19 @@
                     <a href="{{ url_for('share_redirect_root') }}?c=ch979hiEf_IObzFiLHs1-DHA">
                       <img src="{{ config.EMAIL_ASSETS_URL }}/assets/dolly/img/emails/welcome-gbc.jpg" width="120" height="120" style="display:block;margin:0 auto 12px auto" />
                     </a>
-                    <p style="margin:0;margin-bottom:22px;font-size:14px;line-height:22px;text-align:center;"><a href="{{ url_for('share_redirect_root') }}?c=ch979hiEf_IObzFiLHs1-DHA">Great British Chefs</a></p>
+                    <p style="margin:0;margin-bottom:22px;font-size:14px;line-height:22px;text-align:center;"><a href="{{ url_for('share_redirect_root') }}?c=ch979hiEf_IObzFiLHs1-DHA" style="text-decoration:none !important;color:#51B464 !important;border-bottom:1px solid #55AA65">Great British Chefs</a></p>
                   </td>
                   <td colspan="3" valign="top" width="width:33.3333%" style="width:33.3333%;vertical-align:top;padding:0 12px">
                     <a href="{{ url_for('share_redirect_root') }}?c=chvX7Sk_KTF266TpziNLrsiA">
                       <img src="{{ config.EMAIL_ASSETS_URL }}/assets/dolly/img/emails/welcome-ny-times.jpg" width="120" height="120" style="display:block;margin:0 auto 12px auto" />
                     </a>
-                    <p style="margin:0;margin-bottom:22px;font-size:14px;line-height:22px;text-align:center;"><a href="{{ url_for('share_redirect_root') }}?c=ch979hiEf_IObzFiLHs1-DHA">New York Times</a></p>
+                    <p style="margin:0;margin-bottom:22px;font-size:14px;line-height:22px;text-align:center;"><a href="{{ url_for('share_redirect_root') }}?c=ch979hiEf_IObzFiLHs1-DHA" style="text-decoration:none !important;color:#51B464 !important;border-bottom:1px solid #55AA65">New York Times</a></p>
                   </td>
                   <td colspan="3" valign="top" width="width:33.3333%" style="width:33.3333%;vertical-align:top;padding:0 12px">
                     <a href="{{ url_for('share_redirect_root') }}?c=chECnC4qg2eyXn6AGxny7uxg">
                       <img src="{{ config.EMAIL_ASSETS_URL }}/assets/dolly/img/emails/welcome-stash.jpg" width="120" height="120" style="display:block;margin:0 auto 12px auto" />
                     </a>
-                    <p style="margin:0;margin-bottom:22px;font-size:14px;line-height:22px;text-align:center;"><a href="{{ url_for('share_redirect_root') }}?c=ch979hiEf_IObzFiLHs1-DHA">Stash Media</a></p>
+                    <p style="margin:0;margin-bottom:22px;font-size:14px;line-height:22px;text-align:center;"><a href="{{ url_for('share_redirect_root') }}?c=ch979hiEf_IObzFiLHs1-DHA" style="text-decoration:none !important;color:#51B464 !important;border-bottom:1px solid #55AA65">Stash Media</a></p>
                   </td>
                 </tr>
                 <tr style="font-size:14px;line-height:22px;color:#777782">
@@ -92,19 +91,19 @@
                     <a href="{{ url_for('share_redirect_root') }}?c=chIrlHCJwWvKxngpCEoqlW1A">
                       <img src="{{ config.EMAIL_ASSETS_URL }}/assets/dolly/img/emails/welcome-bodyism.jpg" width="120" height="120" style="display:block;margin:0 auto 12px auto" />
                     </a>
-                    <p style="margin:0;margin-bottom:22px;font-size:14px;line-height:22px;text-align:center;"><a href="{{ url_for('share_redirect_root') }}?c=ch979hiEf_IObzFiLHs1-DHA">Bodyism</a></p>
+                    <p style="margin:0;margin-bottom:22px;font-size:14px;line-height:22px;text-align:center;"><a href="{{ url_for('share_redirect_root') }}?c=ch979hiEf_IObzFiLHs1-DHA" style="text-decoration:none !important;color:#51B464 !important;border-bottom:1px solid #55AA65">Bodyism</a></p>
                   </td>
                   <td colspan="3" valign="top" width="width:33.3333%" style="width:33.3333%;vertical-align:top;padding:0 12px">
                     <a href="{{ url_for('share_redirect_root') }}?c=chuwXUtaT8krA0mce8eFKE4g">
                       <img src="{{ config.EMAIL_ASSETS_URL }}/assets/dolly/img/emails/welcome-bloomberg-tv.jpg" width="120" height="120" style="display:block;margin:0 auto 12px auto" />
                     </a>
-                    <p style="margin:0;margin-bottom:22px;font-size:14px;line-height:22px;text-align:center;"><a href="{{ url_for('share_redirect_root') }}?c=ch979hiEf_IObzFiLHs1-DHA">Bloomberg TV</a></p>
+                    <p style="margin:0;margin-bottom:22px;font-size:14px;line-height:22px;text-align:center;"><a href="{{ url_for('share_redirect_root') }}?c=ch979hiEf_IObzFiLHs1-DHA" style="text-decoration:none !important;color:#51B464 !important;border-bottom:1px solid #55AA65">Bloomberg TV</a></p>
                   </td>
                   <td colspan="3" valign="top" width="width:33.3333%" style="width:33.3333%;vertical-align:top;padding:0 12px">
                     <a href="{{ url_for('share_redirect_root') }}?c=ch5tdDuBDgI8qL6Ylc259k_w">
                       <img src="{{ config.EMAIL_ASSETS_URL }}/assets/dolly/img/emails/welcome-forbes.jpg" width="120" height="120" style="display:block;margin:0 auto 12px auto" />
                     </a>
-                    <p style="margin:0;margin-bottom:22px;font-size:14px;line-height:22px;text-align:center;"><a href="{{ url_for('share_redirect_root') }}?c=ch979hiEf_IObzFiLHs1-DHA">Forbes Women</a></p>
+                    <p style="margin:0;margin-bottom:22px;font-size:14px;line-height:22px;text-align:center;"><a href="{{ url_for('share_redirect_root') }}?c=ch979hiEf_IObzFiLHs1-DHA" style="text-decoration:none !important;color:#51B464 !important;border-bottom:1px solid #55AA65">Forbes Women</a></p>
                   </td>
 
                 </tr>
