@@ -1,11 +1,11 @@
 .logos {
   text-align: center;
-  .as-tablet({
+  @media screen and (min-width: 768px) and (max-width: 959px) {
     margin-bottom: 40px;
-  });
-  .as-desktop({
+  }
+  @media screen and (min-width: 960px) {
     margin-bottom: 40px;
-  });
+  }
 }
 
 .logos__text {
@@ -13,52 +13,52 @@
   color: @headinggrey;
   font-weight: 200;
   margin-bottom: 20px;
-  .as-desktop({
+  @media screen and (min-width: 960px) {
     margin-bottom: 40px;
-  });
-  .as-tablet({
+  }
+  @media screen and (min-width: 768px) and (max-width: 959px) {
     margin-bottom: 40px;
-  });
+  }
 }
 
 .logos__logo {
   max-width: 80%;
   max-height: 120px;
   margin: 20px 10%;
-  .as-tablet({
+  @media screen and (min-width: 768px) and (max-width: 959px) {
     display: block;
     max-height: 180px;
     max-width: 300px;
     margin: 0 auto 20px;
-  });
-  .as-desktop({
+  }
+  @media screen and (min-width: 960px) {
     display: block;
     max-height: 180px;
     max-width: 300px;
     margin: 0 auto 20px;
-  });
+  }
 }
 
 .logos__logo--inline {
-  .as-tablet({
+  @media screen and (min-width: 768px) and (max-width: 959px) {
     display: inline-block;
     margin-left: 60px;
     margin-right: 60px;
-  });
-  .as-desktop({
+  }
+  @media screen and (min-width: 960px) {
     display: inline-block;
     margin-left: 60px;
     margin-right: 60px;
-  });
+  }
 }
 
 .logos__logo--backboard {
   background: #ccc;
   padding: 2px;
-  .as-tablet({
+  @media screen and (min-width: 768px) and (max-width: 959px) {
     padding: 10px;
-  });
-  .as-desktop({
+  }
+  @media screen and (min-width: 960px) {
     padding: 10px;
-  });
+  }
 }

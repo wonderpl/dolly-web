@@ -20,12 +20,12 @@
     margin: 0 0 0 0;
   }
 
-  .as-tablet({
+  @media screen and (min-width: 768px) and (max-width: 959px) {
     background-size: 100% auto;
-  });
-  .as-desktop({
+  }
+  @media screen and (min-width: 960px) {
     background-size: 100% auto;
-  });
+  }
 }
 
 .splash__content {
@@ -33,16 +33,16 @@
   height: 200px;
   margin: 0 auto;
   max-width: 350px;
-  .as-tablet({
+  @media screen and (min-width: 768px) and (max-width: 959px) {
     position: static;
     height: 370px;
     max-width: 500px;
-  });
-  .as-desktop({
+  }
+  @media screen and (min-width: 960px) {
     position: static;
     height: 500px;
     max-width: 600px;
-  });
+  }
 }
 
 .splash__text {
@@ -57,28 +57,28 @@
   font-size: 20px;
   line-height: 28px;
   margin: 0;
-  .as-tablet({
+  @media screen and (min-width: 768px) and (max-width: 959px) {
     padding-top: 100px;
     font-size: 28px;
     line-height: 36px;
-  });
-  .as-desktop({
+  }
+  @media screen and (min-width: 960px) {
     padding-top: 200px;
     font-size: 36px;
     line-height: 44px;
-  });
+  }
 }
 
 .splash__tagline {
   font-size: 14px;
   line-height: 24px;
   .splash__text;
-  .as-tablet({
+  @media screen and (min-width: 768px) and (max-width: 959px) {
     font-size: 24px;
     line-height: 34px;
-  });
-  .as-desktop({
+  }
+  @media screen and (min-width: 960px) {
     font-size: 24px;
     line-height: 34px;
-  });
+  }
 }

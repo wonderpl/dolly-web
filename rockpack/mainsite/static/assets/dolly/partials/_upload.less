@@ -1,14 +1,14 @@
 .upload {
   text-align: center;
   padding: 0 10%;
-  .as-desktop({
+  @media screen and (min-width: 960px) {
     width: 960px;
     margin: 0 auto;
     padding: 0;
-  });
-  .as-tablet({
+  }
+  @media screen and (min-width: 768px) and (max-width: 959px) {
     padding: 0;
-  });
+  }
 }
 
 .upload__title {
@@ -23,16 +23,16 @@
   line-height: 26px;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  .as-desktop({
+  @media screen and (min-width: 960px) {
     font-size: 20px;
     line-height: 26px;
     padding: 0 30%;
-  });
-  .as-tablet({
+  }
+  @media screen and (min-width: 768px) and (max-width: 959px) {
     font-size: 20px;
     line-height: 26px;
     padding: 0 30%;
-  });
+  }
 }
 
 .upload__header {
@@ -46,10 +46,10 @@
   color: @grey;
   font-size: 20px;
   line-height: 26px;
-  .as-desktop({
+  @media screen and (min-width: 960px) {
     font-size: 20px;
     line-height: 26px;
-  });
+  }
 }
 
 .upload__features-contact a { display: block; }
@@ -83,16 +83,16 @@
   background: linear-gradient(to bottom,  rgba(112,121,123,1) 65%,rgba(101,110,111,1) 100%); /* W3C */
   filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#70797b', endColorstr='#656e6f',GradientType=0 ); /* IE6-9 */
 
-  .as-tablet({
+  @media screen and (min-width: 768px) and (max-width: 959px) {
     font-size: 18px;
     line-height: 26px;
     width: 230px;
     max-width: none;
-  });
-  .as-desktop({
+  }
+  @media screen and (min-width: 960px) {
     font-size: 18px;
     line-height: 26px;
     width: 230px;
     max-width: none;
-  });
+  }
 }
