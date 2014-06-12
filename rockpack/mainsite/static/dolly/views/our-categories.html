@@ -1,90 +1,66 @@
 
 <div ng-controller="PageCtrl">
 
-	<div class="section">
-		<div class="inner page-intro">
-			<h1 class="f-sans">Our Categories</h1>
-			<ul class="anchor-nav">
-        <li><a class="scroll-anchor-link" href="#culture">Culture</a></li>
-				<li><a class="scroll-anchor-link" href="#mind">Mind</a></li>
-        <li><a class="scroll-anchor-link" href="#food">Food</a></li>
-        <li><a class="scroll-anchor-link" href="#wellness">Wellness</a></li>
-        <li><a class="scroll-anchor-link" href="#home-and-family">Home &amp; Family</a></li>
-				<li><a class="scroll-anchor-link" href="#entertainment">Entertainment</a></li>
-			</ul>
-		</div>
-	</div>
+  <section class="categories" id="anchor-culture">
 
-	<div class="section category">
-		<div class="inner">
-			<span id="anchor-culture"></span>
-			<div class="icon">
-				<img ng-src="((assets_url))/assets/dolly/img/categories-icon-culture-v1.jpg" />
-			</div>
-			<h3 class="f-sans">Culture</h3>
-			<p class="f-serif">From fine artists to filmmakers, from authors to designers. <br/>Enjoy a feast of inspiration.</p>
-			<p class="f-serif category__sub-category">Culture Shock - The Arts - Architecture <span class="category__sub-category-amp">&amp;</span> Design - News Stand - Literature - Animation <span class="category__sub-category-amp">&amp;</span> Shorts - Fashion - Galleries</p>
-		</div>
-	</div>
+    <h1 class="categories__title">Our Categories</h1>
 
-  <div class="section category">
-    <div class="inner">
-      <span id="anchor-mind"></span>
-      <div class="icon">
-        <img ng-src="((assets_url))/assets/dolly/img/categories-icon-mind-v1.jpg" />
-      </div>
-      <h3 class="f-sans">Mind</h3>
-      <p class="f-serif">From entrepreneurs to mentors, from instigators to innovators. <br/>Stay ahead of the curve.</p>
-      <p class="f-serif category__sub-category">Inspiration - Education - Life Skills - Causes - Business</p>
-    </div>
-  </div>
+    <ul class="categories__nav anchor-nav">
+      <li><a class="scroll-anchor-link categories__nav-item" href="#culture">Culture</a></li>
+      <li><a class="scroll-anchor-link categories__nav-item" href="#mind">Mind</a></li>
+      <li><a class="scroll-anchor-link categories__nav-item" href="#food">Food</a></li>
+      <li><a class="scroll-anchor-link categories__nav-item" href="#wellness">Wellness</a></li>
+      <li><a class="scroll-anchor-link categories__nav-item" href="#home-and-family">Home &amp; Family</a></li>
+      <li><a class="scroll-anchor-link categories__nav-item" href="#entertainment">Entertainment</a></li>
+    </ul>
 
-	<div class="section category">
-		<div class="inner">
-			<span id="anchor-food"></span>
-			<div class="icon">
-				<img ng-src="((assets_url))/assets/dolly/img/categories-icon-food-v1.jpg" />
-			</div>
-			<h3 class="f-sans">Food</h3>
-			<p class="f-serif">From Five Star Chefs to local artisans. <br/>Learn tricks of the trade from true connoisseurs.</p>
-			<p class="f-serif category__sub-category">Baking - Chefs <span class="category__sub-category-amp">&amp;</span> Recipes - Wine <span class="category__sub-category-amp">&amp;</span> Drink - Eat Well</p>
-		</div>
-	</div>
+    <article class="categories__category" id="anchor-culture">
+      <img class="categories__icon" ng-src="((assets_url))/assets/dolly/img/categories-icon-culture-v1.jpg" />
+      <h3 class="categories__header">Culture</h3>
+      <p class="categories__description">From fine artists to filmmakers, from authors to designers. <br/>Enjoy a feast of inspiration.</p>
+      <p class="categories__subcategory">The Arts &middot; Literature &middot; Fashion &middot; Men&apos;s Fashion &middot; Museums <span class="categories__subcategory-amp">&amp;</span> Galleries</p>
+    </article>
 
-	<div class="section category">
-		<div class="inner">
-			<span id="anchor-wellness"></span>
-			<div class="icon">
-				<img ng-src="((assets_url))/assets/dolly/img/categories-icon-wellness-v1.jpg" />
-			</div>
-			<h3 class="f-sans">Wellness</h3>
-			<p class="f-serif">From yoga and meditation to beauty and fitness. <br/>Let the wisdom of experts guide and nourish you.</p>
-			<p class="f-serif category__sub-category">Wellness - Fitness - Beauty - Yoga <span class="category__sub-category-amp">&amp;</span> Meditation </p>
-		</div>
-	</div>
+    <article class="categories__category" id="anchor-mind">
+      <img class="categories__icon" ng-src="((assets_url))/assets/dolly/img/categories-icon-mind-v1.jpg" />
+      <h3 class="categories__header">The Mind</h3>
+      <p class="categories__description">From entrepreneurs to mentors, from instigators to innovators.</p>
+      <p class="categories__description">Stay ahead of the curve.</p>
+      <p class="categories__subcategory">Inspirational Technology &middot; Lifelong Learning &middot; Business &middot; Travel <span class="categories__subcategory-amp">&amp;</span> Adventure &middot; Nature <span class="categories__subcategory-amp">&amp;</span> Science</p>
+    </article>
 
-	<div class="section category">
-		<div class="inner">
-			<span id="anchor-home-and-family"></span>
-			<div class="icon">
-				<img ng-src="((assets_url))/assets/dolly/img/categories-icon-home-and-family-v1.jpg" />
-			</div>
-			<h3 class="f-sans">Home &amp; Family</h3>
-			<p class="f-serif">From parenting and gardening, to interior design and DIY. <br/>Creative spark starts here.</p>
-			<p class="f-serif category__sub-category">Homes <span class="category__sub-category-amp">&amp;</span> Interiors - How-To - iNanny - Environment</p>
-		</div>
-	</div>
+    <article class="categories__category" id="anchor-food">
+      <img class="categories__icon" ng-src="((assets_url))/assets/dolly/img/categories-icon-food-v1.jpg" />
+      <h3 class="categories__header">Food</h3>
+      <p class="categories__description">From Five Star Chefs to local artisans.</p>
+      <p class="categories__description">Learn tricks of the trade from true connoisseurs.</p>
+      <p class="categories__subcategory">Baking &middot; Chefs <span class="categories__subcategory-amp">&amp;</span> Recipes &middot; Wine <span class="categories__subcategory-amp">&amp;</span> Drink</p>
+    </article>
 
-	<div class="section category">
-		<div class="inner">
-			<span id="anchor-entertainment"></span>
-			<div class="icon">
-				<img ng-src="((assets_url))/assets/dolly/img/categories-icon-entertainment-v1.jpg" />
-			</div>
-			<h3 class="f-sans">Entertainment</h3>
-			<p class="f-serif">From tastemakers to musicians, from trendsetters to jetsetters. <br/>Discover the here and now.</p>
-			<p class="f-serif category__sub-category">Vintage Videos - Music - Interviews - Classic Clips</p>
-		</div>
-	</div>
+    <article class="categories__category" id="anchor-wellness">
+      <img class="categories__icon" ng-src="((assets_url))/assets/dolly/img/categories-icon-wellness-v1.jpg" />
+      <h3 class="categories__header">Wellness</h3>
+      <p class="categories__description">From yoga and meditation to beauty and fitness.</p>
+      <p class="categories__description">Let the wisdom of experts guide and nourish you.</p>
+      <p class="categories__subcategory">Wellness &middot; Beauty &middot; Athlete&apos;s Corner</p>
+    </article>
+
+    <article class="categories__category" id="anchor-home-and-family">
+      <img class="categories__icon" ng-src="((assets_url))/assets/dolly/img/categories-icon-home-and-family-v1.jpg" />
+      <h3 class="categories__header">Home &amp; Family</h3>
+      <p class="categories__description">From parenting and gardening, to interior design and DIY.</p>
+      <p class="categories__description">Creative spark starts here.</p>
+      <p class="categories__subcategory">Parenting, Homes, <span class="categories__subcategory-amp">&amp;</span> Gardens &middot; How&mdash;To &middot; For The Kids &middot; Causes</p>
+    </article>
+
+    <article class="categories__category" id="anchor-entertainment">
+      <img class="categories__icon" ng-src="((assets_url))/assets/dolly/img/categories-icon-entertainment-v1.jpg" />
+      <h3 class="categories__header">Entertainment</h3>
+      <p class="categories__description">From tastemakers to musicians, from trendsetters to jetsetters.</p>
+      <p class="categories__description">Discover the here and now.</p>
+      <p class="categories__subcategory">Animation <span class="categories__subcategory-amp">&amp;</span> Vintage Videos &middot; Music &middot; Comedy <span class="categories__subcategory-amp">&amp;</span> Talk Shows &middot; Shorts &middot; Newstand &middot; Showreels</p>
+    </article>
+
+  </section>
 
 </div>
