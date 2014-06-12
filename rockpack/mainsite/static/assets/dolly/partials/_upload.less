@@ -21,7 +21,14 @@
   .f-serif;
   font-size: 20px;
   line-height: 26px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
   .as-desktop({
+    font-size: 20px;
+    line-height: 26px;
+    padding: 0 30%;
+  });
+  .as-tablet({
     font-size: 20px;
     line-height: 26px;
     padding: 0 30%;
@@ -56,23 +63,34 @@
   display: inline-block;
   color: white;
   background: @grey;
-  padding: 20px 10px;
+  padding: 12px 12px;
   width: 100%;
   max-width: 250px;
-  height: 170px;
+  height: 180px;
   margin: 1px;
   font-size: 15px;
   line-height: 23px;
   overflow: hidden;
   font-weight: 200;
+  border-radius: 3px;
+
+  background: rgb(112,121,123); /* Old browsers */
+  background: -moz-linear-gradient(top,  rgba(112,121,123,1) 65%, rgba(101,110,111,1) 100%); /* FF3.6+ */
+  background: -webkit-gradient(linear, left top, left bottom, color-stop(65%,rgba(112,121,123,1)), color-stop(100%,rgba(101,110,111,1))); /* Chrome,Safari4+ */
+  background: -webkit-linear-gradient(top,  rgba(112,121,123,1) 65%,rgba(101,110,111,1) 100%); /* Chrome10+,Safari5.1+ */
+  background: -o-linear-gradient(top,  rgba(112,121,123,1) 65%,rgba(101,110,111,1) 100%); /* Opera 11.10+ */
+  background: -ms-linear-gradient(top,  rgba(112,121,123,1) 65%,rgba(101,110,111,1) 100%); /* IE10+ */
+  background: linear-gradient(to bottom,  rgba(112,121,123,1) 65%,rgba(101,110,111,1) 100%); /* W3C */
+  filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#70797b', endColorstr='#656e6f',GradientType=0 ); /* IE6-9 */
+
   .as-tablet({
-    font-size: 16px;
+    font-size: 18px;
     line-height: 26px;
     width: 230px;
     max-width: none;
   });
   .as-desktop({
-    font-size: 16px;
+    font-size: 18px;
     line-height: 26px;
     width: 230px;
     max-width: none;
