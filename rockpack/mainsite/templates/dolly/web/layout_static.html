@@ -1,4 +1,4 @@
-{% extends "web/layout.html" %}	
+{% extends "web/layout.html" %}
 {% block google_maps_api %}{% endblock %}
 
 {% block dolly_angular_lib %}{% endblock %}
@@ -12,7 +12,7 @@
 {% block body_attributes %}class="dolly"{% endblock %}
 
 {% block body %}
-  
+
   {% block header_static %}
     {% include 'web/partials/header-static.html' %}
   {% endblock %}
@@ -27,13 +27,19 @@
   {% endblock %}
 
 	{% block scripts_footer %}
-	  {% assets filters="rjsmin", output="gen/dolly.static.lib.%(version)s.js", 
+	  {% assets filters="rjsmin", output="gen/dolly.static.lib.%(version)s.js",
 	    "assets/vendor/js/jquery-1.10.1.min.js"
 	  %}<script type="text/javascript" src="{{ ASSET_URL }}"></script>{% endassets %}
-	  {% assets filters="rjsmin", output="gen/dolly.static.%(version)s.js", 
+	  {% assets filters="rjsmin", output="gen/dolly.static.%(version)s.js",
 	    "dolly/static.js"
 	  %}<script type="text/javascript" src="{{ ASSET_URL }}"></script>{% endassets %}
 	{% endblock %}
+{% endblock %}
+
+{% block typekit_fonts %}
+  {# Ensure typekit is loaded on static pages #}
+  <script type="text/javascript" src="//use.typekit.net/twx7lpv.js"></script>
+  <script type="text/javascript">try{Typekit.load();}catch(e){}</script>
 {% endblock %}
 
 {% block google_analytics %}
