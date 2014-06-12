@@ -6,81 +6,60 @@
 		<div class="inner page-intro">
 			<h1 class="f-sans">About Us</h1>
 			<ul class="anchor-nav">
-				<li><a class="scroll-anchor-link" href="#team">Team</a></li>
-				<li><a class="scroll-anchor-link" href="#logos">Logos</a></li>
-				<li><a class="scroll-anchor-link" href="#contact-us">Contact Us</a></li>
-				<li><a class="scroll-anchor-link" href="#careers">Careers</a></li>
+				<li><a class="scroll-anchor-link" href="#team">Team</a></li><!--
+				--><li><a class="scroll-anchor-link" href="#logos">Logos</a></li><!--
+				--><li><a class="scroll-anchor-link" href="#contact-us">Contact Us</a></li><!--
+				--><li><a class="scroll-anchor-link" href="#careers">Careers</a></li>
 			</ul>
 		</div>
 	</div>
 
-	<div class="section about-us">
-		<div class="inner padding bottom">
-			<span id="anchor-team"></span>
-			<h2 class="f-sans black">Team</h2>
-            <p class="standout f-serif">Wonder PL is brought to you by a hard working, talented team of developers, creatives and film makers.</p>
-            <p class="standout f-serif">We are creating a media platform that is better, one that has the power to instruct, inspire and fill people’s lives with wonder.</p>
-            <p class="standout f-serif">We care about our content providers. To produce a quality platform requires a different mind set and orientation, down to every design decision through to winning editorial. We want them to flourish here and build meaningful connections with consumers and brands.</p>
-            <p class="standout f-serif">There is more to do, and we need your help to do it. Write to us with your suggestions, tell us what you think about the new designs and features, or just say hi. Get in touch with us at <a href="mailto:hello@wonderpl.com">hello@wonderpl.com</a>.</p>
-		    <p class="standout f-serif">Read more about our team on <a href="http://www.linkedin.com/company/wonder-pl" target="_blank">LinkedIn</a></p>
-        </div>
-	</div>
+  <section class="team" id="anchor-team">
+    <h2 class="team__title f-sans black">Team</h2>
+    <p class="team__text standout f-serif">Wonder PL is brought to you by a hard working, talented team of developers, creatives and film makers.</p>
+    <p class="team__text standout f-serif">We are creating a media platform that is better, one that has the power to instruct, inspire and fill people’s lives with wonder.</p>
+    <p class="team__text standout f-serif">We care about our content providers. To produce a quality platform requires a different mind set and orientation, down to every design decision through to winning editorial. We want them to flourish here and build meaningful connections with consumers and brands.</p>
+    <p class="team__text standout f-serif">There is more to do, and we need your help to do it. Write to us with your suggestions, tell us what you think about the new designs and features, or just say hi. Get in touch with us at <a href="mailto:hello@wonderpl.com">hello@wonderpl.com</a>.</p>
+    <p class="team__text standout f-serif">Read more about our team on <a href="http://www.linkedin.com/company/wonder-pl" target="_blank">LinkedIn</a></p>
+  </section>
 
-	<div class="section gradient pink">
-		<div class="inner centered">
-			<span id="anchor-logos"></span>
-			<h2 class="f-sans">Logos</h2>
-			<div class="clear"></div>
-			<div class="inner third-width">
-				<img class="logo" ng-src="(( assets_url ))/assets/dolly/img/about-us-logos-1.png" />
-			</div><!--
-		--><div class="inner third-width">
-				<img class="logo" ng-src="(( assets_url ))/assets/dolly/img/about-us-logos-3.png" />
-			</div><!--
-		--><div class="inner third-width">
-				<img class="logo" ng-src="(( assets_url ))/assets/dolly/img/about-us-logos-2.png" />
-			</div>
-		</div>
-	</div>
+  <section id="anchor-logos" class="logos">
+    <h2 class="logos__text">Logos</h2>
+    <img class="logos__logo logos__logo--inline" ng-src="(( assets_url ))/assets/dolly/img/about-us-logos-1.png" />
+    <img class="logos__logo logos__logo--inline logos__logo--backboard" ng-src="(( assets_url ))/assets/dolly/img/about-us-logos-2.png" />
+    <img class="logos__logo" ng-src="(( assets_url ))/assets/dolly/img/about-us-logos-3.png" />
+  </section>
 
-	<div class="section">
-		<div class="inner padding bottom">
-			<div class="inner third-width centered">
-				<span id="anchor-contact-us"></span>
-				<h2 class="f-sans">Contact Us</h2>
-				<p class="f-serif italic"><a href="mailto:hello@wonderpl.com">hello@wonderpl.com</a></p>
-			</div><!--
-			--><div class="inner third-width centered">
-				<h2 class="f-sans">London</h2>
-				<p class="f-serif italic">9 Thorpe Close
-					<br/>Portobello Road
-					<br/>London W10 5XL</p>
-			</div><!--
-			--><div class="inner third-width centered">
-				<h2 class="f-sans">New York Representative Office</h2>
-				<p class="f-serif italic">20 Jay Street
-					<br/>Suite 311B, Brooklyn
-					<br/>New York 11201</p>
-			</div>
-		</div>
-	</div>
 
-	<div class="section">
-		<div class="inner half-width centered left">
-			<div class="google-maps-directive margin bottom padding bottom" data-lat="51.518662" data-long="-0.207372"></div>
-		</div><!--
-		--><div class="inner half-width centered right">
-			<div class="google-maps-directive margin bottom padding bottom" data-lat="40.704007" data-long="-73.986759"></div>
-		</div>
-	</div>
+  <section id="anchor-contact-us" class="contact-us">
+    <h2 class="contact-us__title">Contact Us</h2>
+    <section class="contact-us__location">
+      <h2 class="contact-us__location-name">London</h2>
+      <p class="contact-us__location-address">
+        <span class="contact-us__location-address-line">9 Thorpe Close</span>
+        <span class="contact-us__location-address-line">Portobello Road</span>
+        <span class="contact-us__location-address-line">London W10 5XL</span>
+      </p>
+      <div class="contact-us__location-map-container">
+        <div class="google-maps-directive" data-lat="51.518662" data-long="-0.207372"></div>
+      </div>
+    </section>
+    <section class="contact-us__location">
+      <h2 class="contact-us__location-name">New York Representative Office</h2>
+      <p class="contact-us__location-address">
+        <span class="contact-us__location-address-line">20 Jay Street</span>
+        <span class="contact-us__location-address-line">Suite 311B, Brooklyn</span>
+        <span class="contact-us__location-address-line">New York 11201</span>
+      </p>
+      <div class="contact-us__location-map-container">
+        <div class="google-maps-directive" data-lat="40.704007" data-long="-73.986759"></div>
+      </div>
+    </section>
+  </section>
 
-	<div class="section about-us">
-		<div class="inner">
-			<span id="anchor-careers"></span>
-			<h2 class="f-sans">Careers</h2>
-			<p class="standout f-serif">We are always looking for Wonderful team members.</p>
-			<p class="standout f-serif">If you would like to join us, please send your CV to <a href="mailto:careers@wonderpl.com">careers@wonderpl.com</a>.</p>
-		</div>
-	</div>
+  <section id="anchor-careers" class="careers">
+    <h2 class="careers__title">Careers</h2>
+    <p class="careers__text">We are always looking for Wonderful team members. If you would like to join us, please send your CV to <a href="mailto:careers@wonderpl.com">careers@wonderpl.com</a>.</p>
+  </section>
 
 </div>

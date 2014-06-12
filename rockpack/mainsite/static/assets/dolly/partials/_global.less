@@ -259,7 +259,8 @@ a {
 }
 
 ul.anchor-nav {
-	displas: block;
+  .f-sans;
+	display: block;
 	margin: 0 0 52px 0;
 }
 
@@ -279,38 +280,16 @@ ul.anchor-nav {
 
 @import "partials/modules/_header.less";
 
-footer {
-	border-top: 1px solid #D2DADF;
-	background: #fff;
-
-	h3 {
-		font-size: 18px;
-		line-height: 32px;
-		font-weight: 300;
-	}
-
-	div.top {
-		// background: transparent url('/static/assets/dolly/img/header-logo-grey-bars-retina.png') left 15px no-repeat;
-		// background-size: 145px auto;
-	}
-}
-
-.trademark {
-	display: block;
-	p {
-		font-size: 11px;
-		line-height: 19px;
-		text-align: center;
-	}
-}
+@import "partials/modules/_footer.less";
 
 /* 	Home page
 /* ======================================= */
 
 /* Migrate styles out to separate module */
 @import "partials/modules/_screenshots.less";
-@import "partials/modules/_home_quote.less";
-@import "partials/modules/_home_splash.less";
+@import "partials/modules/_quote.less";
+@import "partials/modules/_splash.less";
+@import "partials/modules/_logos.less";
 
 #home-sponsors {
 
@@ -675,6 +654,10 @@ footer {
 /* 	About us page
 /* ======================================= */
 
+@import "partials/modules/_team.less";
+@import "partials/modules/_contact-us.less";
+@import "partials/modules/_careers.less";
+
 .inner {
 	img.logo {
 		display: block;
@@ -685,7 +668,7 @@ footer {
 
 .google-maps-directive {
 	width: 100%;
-	height: 420px;
+	height: 200px;
 	position: relative;
 	display: block;
 
