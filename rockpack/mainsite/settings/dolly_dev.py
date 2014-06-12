@@ -101,5 +101,5 @@ SHARE_MESSAGE_MAP = dict(
 )
 
 PUSH_NOTIFICATION_MAP = dict(
-    joined=('user', "Your Facebook friend %@ has joined Wonder PL"),
+    joined=('user', "Your friend %@ has joined Wonder PL"),
 )

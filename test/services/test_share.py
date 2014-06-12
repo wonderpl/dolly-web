@@ -1,12 +1,14 @@
 import re
+import uuid
 from urlparse import urlparse
 from flask import json
 from rockpack.mainsite import app
 from rockpack.mainsite.services.video.models import Channel
 from rockpack.mainsite.services.user.models import UserNotification
+from rockpack.mainsite.services.oauth.models import ExternalFriend
 from test import base
 from ..test_decorators import skip_if_dolly, skip_unless_config, patch_send_email
-from ..test_helpers import get_auth_header
+from ..test_helpers import get_auth_header, get_client_auth_header
 from ..fixtures import ChannelData, VideoInstanceData, UserData
 
 
@@ -87,6 +89,90 @@ class TestShare(base.RockPackTestCase):
             self.assertIn('umts=foo', r.headers['Location'])
 
         self.app.config['SHARE_REDIRECT_PASSTHROUGH_PARAMS'] = []
+
+    @patch_send_email()
+    def test_reverse_relation_for_late_registered_user(self, send_email):
+        recipient_email = 'noreply+unregistered_user@wonderpl.com'
+
+        # Send and email then register emailed user
+
+        with self.app.test_client() as client:
+            sender = self.create_test_user()
+            r = client.post(
+                '/ws/share/email/',
+                data=json.dumps(dict(
+                    object_type='channel',
+                    object_id=ChannelData.channel1.id,
+                    external_uid=recipient_email,
+                    external_system='email',
+                    email=recipient_email,
+                )),
+                content_type='application/json',
+                headers=[get_auth_header(sender.id)])
+            self.assertEquals(r.status_code, 204, r.data)
+
+        with self.app.test_request_context():
+            with self.app.test_client() as client:
+                r = client.post(
+                    '/ws/register/',
+                    headers=[get_client_auth_header()],
+                    data=dict(
+                        username=uuid.uuid4().hex,
+                        password='barbar',
+                        first_name='foo',
+                        last_name='bar',
+                        date_of_birth='2000-01-01',
+                        locale='en-us',
+                        email=recipient_email))
+
+                user_id = json.loads(r.data)['user_id']
+
+        ExternalFriend.query.filter(
+            ExternalFriend.user == user_id,
+            ExternalFriend.email == sender.email
+        ).one()
+
+    @patch_send_email()
+    def test_reverse_relation_for_registered_user(self, send_email):
+        # Email registered user
+
+        recipient_email = 'noreply+registered_user@wonderpl.com'
+
+        with self.app.test_request_context():
+            with self.app.test_client() as client:
+                r = client.post(
+                    '/ws/register/',
+                    headers=[get_client_auth_header()],
+                    data=dict(
+                        username=uuid.uuid4().hex,
+                        password='barbar',
+                        first_name='foo',
+                        last_name='bar',
+                        date_of_birth='2000-01-01',
+                        locale='en-us',
+                        email=recipient_email))
+
+                user_id = json.loads(r.data)['user_id']
+
+        with self.app.test_client() as client:
+            sender = self.create_test_user()
+            r = client.post(
+                '/ws/share/email/',
+                data=json.dumps(dict(
+                    object_type='channel',
+                    object_id=ChannelData.channel1.id,
+                    external_uid=recipient_email,
+                    external_system='email',
+                    email=recipient_email,
+                )),
+                content_type='application/json',
+                headers=[get_auth_header(sender.id)])
+            self.assertEquals(r.status_code, 204, r.data)
+
+        ExternalFriend.query.filter(
+            ExternalFriend.user == user_id,
+            ExternalFriend.email == sender.email
+        ).one()
 
     @patch_send_email()
     def test_channel_share_email(self, send_email):
