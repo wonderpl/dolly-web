@@ -1,3 +1,4 @@
+import re
 from datetime import datetime
 from flask import json
 from sqlalchemy import (
@@ -200,10 +201,14 @@ class Video(db.Model):
 
         sm = video.description.split(EXTRA_META_KEYWORD, 1)
 
+        strip_html_tags = lambda x: re.sub('</.*?>', '', x)
+
         if len(sm) > 1:
             lines = []
             for line in sm[1].split('\n'):
-                lines.append(line.strip())
+                line = strip_html_tags(line)
+                if line:
+                    lines.append(line.replace(u'\xa0', u'').strip())
 
             try:
                 return json.loads(''.join(lines))
@@ -803,10 +808,13 @@ def _update_most_influential(instance_id):
         VideoInstance.most_influential == True,
         VideoInstance.video == instance.video).first()
 
-    if not source_instance and not most_influential_instance:
-        # This must be the first instance for that video.
-        # Set as most influential
-        instance.most_influential == True
+    if not source_instance:
+        if not most_influential_instance:
+            # This must be the first instance for that video.
+            # Set as most influential
+            instance.most_influential == True
+        # ... else we've come through a path that isn't setting
+        # most influential. Let's just drop out then.
         return
 
     elif most_influential_instance \

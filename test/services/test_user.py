@@ -990,6 +990,8 @@ class TestUserContent(base.RockPackTestCase):
             self.assertEquals(notification['message']['video']['id'], video.id)
 
     def test_registration_notifications(self):
+        message_prefix = "Your friend"
+
         with self.app.test_client() as client:
             self.app.test_request_context().push()
             user1 = self.create_test_user().id
@@ -1016,7 +1018,38 @@ class TestUserContent(base.RockPackTestCase):
                 cron_cmds.send_push_notifications(user1)
                 alert = _send_apns_message.call_args[0][2]['alert']
                 self.assertIn('Fn Ln', alert['loc-args'])
-                self.assertIn('Your Facebook friend', alert['loc-key'])
+                self.assertIn(message_prefix, alert['loc-key'])
+
+            if app.config.get('DOLLY'):
+                # Emailed user test
+                user3 = self.create_test_user().id
+                recipient_email = 'noreply+{}@wonderpl.com'.format(uuid.uuid4().hex)
+                ExternalFriend(
+                    user=user3,
+                    external_system='email',
+                    external_uid=recipient_email,
+                    email=recipient_email).save()
+
+                user4 = self.create_test_user(first_name="Mo", last_name="Bacon", email=recipient_email)
+                self._add_apns_token(user3)
+
+                cron_cmds.create_new_registration_notifications()
+                UserNotification.query.session.commit()
+
+                r = client.get(
+                    '/ws/{}/notifications/'.format(user3),
+                    headers=[get_auth_header(user3)])
+                self.assertEquals(r.status_code, 200)
+
+                notification, = json.loads(r.data)['notifications']['items']
+                self.assertEquals(notification['message_type'], 'joined')
+                self.assertEquals(notification['message']['user']['id'], user4.id)
+
+                with patch.object(cron_cmds, '_send_apns_message') as _send_apns_message:
+                    cron_cmds.send_push_notifications(user3)
+                    alert = _send_apns_message.call_args[0][2]['alert']
+                    self.assertIn('Mo Bacon', alert['loc-args'])
+                    self.assertIn(message_prefix, alert['loc-key'])
 
     def test_subscription_notification(self):
         with self.app.test_client() as client:

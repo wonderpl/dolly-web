@@ -10,7 +10,7 @@ from rockpack.mainsite.helpers import lazy_gettext as _
 from rockpack.mainsite.helpers.forms import naughty_word_validator
 from rockpack.mainsite.helpers.db import get_column_property, get_column_validators
 from rockpack.mainsite.helpers.urls import url_for
-from rockpack.mainsite.core.dbapi import commit_on_success
+from rockpack.mainsite.core.dbapi import commit_on_success, db
 from rockpack.mainsite.core.token import create_access_token
 from rockpack.mainsite.core.email import send_email, env as email_env
 from rockpack.mainsite.core.oauth.decorators import check_client_authorization
@@ -65,6 +65,21 @@ def _register_user(form):
         gender=form.gender.data or None,
         locale=form.locale.data)
     record_user_event(user.username, 'registration succeeded', user=user)
+
+    # Check if anyone has emailed this person before
+    senders = models.ExternalFriend.query.filter(
+        models.ExternalFriend.external_system == 'email',
+        models.ExternalFriend.email == user.email).join(
+            User,
+            User.id == models.ExternalFriend.user
+        ).with_entities(User)
+
+    if senders.count():
+        db.session.flush()  # Get the user id before the commit
+        from rockpack.mainsite.services.share import api
+        for sender in senders:
+            api.create_reverse_email_friend_association(sender, user)
+
     return user
 
 

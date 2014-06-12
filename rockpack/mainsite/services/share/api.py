@@ -8,6 +8,7 @@ from rockpack.mainsite import app
 from rockpack.mainsite.core import email
 from rockpack.mainsite.core.webservice import WebService, expose_ajax, ajax_create_response
 from rockpack.mainsite.core.oauth.decorators import check_authorization
+from rockpack.mainsite.core.dbapi import db
 from rockpack.mainsite.background_sqs_processor import background_on_sqs
 from rockpack.mainsite.services.user import commands
 from rockpack.mainsite.services.video.models import Channel, Video, VideoInstance
@@ -79,6 +80,30 @@ def share_content(userid, object_type, object_id, recipient_email):
             push_message_args = [user.display_name]
             deeplink_url = urlparse.urlparse(object.resource_url).path.lstrip('/ws/')
             commands.complex_push_notification(token, push_message, push_message_args, url=deeplink_url)
+
+        # Create an association the other way
+        try:
+            create_reverse_email_friend_association(user, recipient_user)
+        except Exception as e:
+            app.logger.error('Failed to create reverse email association: %s', e)
+            db.session.rollback()
+        else:
+            db.session.commit()
+
+
+def create_reverse_email_friend_association(sender, recipient):
+    if not ExternalFriend.query.filter(
+        ExternalFriend.external_system == 'email',
+        ExternalFriend.user == recipient.id,
+        ExternalFriend.external_uid == sender.email
+    ).count():
+
+        ExternalFriend(
+            user=recipient.id,
+            external_system='email',
+            external_uid=sender.email,
+            name=sender.display_name,
+            email=sender.email).add()
 
 
 class ShareForm(Form):

@@ -1,31 +1,98 @@
 .upload {
-
+  text-align: center;
+  padding: 0 10%;
+  .as-desktop({
+    width: 960px;
+    margin: 0 auto;
+    padding: 0;
+  });
+  .as-tablet({
+    padding: 0;
+  });
 }
 
-.upload__features-list {
-  margin: 0 auto;
-  text-align: left;
-  width: 70%;
-  padding: 0;
-  font-size: 15px;
-  line-height: 23px;
-  .as-tablet({
-    padding: 0 6%;
-    font-size: 18px;
-    line-height: 24px;
-  });
+.upload__title {
+  .f-sans;
+  color: @headinggrey;
+  font-weight: 200;
+}
+
+.upload__description {
+  .f-serif;
+  font-size: 20px;
+  line-height: 26px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
   .as-desktop({
-    padding: 0 6%;
-    font-size: 18px;
-    line-height: 24px;
+    font-size: 20px;
+    line-height: 26px;
+    padding: 0 30%;
   });
+  .as-tablet({
+    font-size: 20px;
+    line-height: 26px;
+    padding: 0 30%;
+  });
+}
+
+.upload__header {
+  .f-sans;
+  font-weight: 200;
+  margin: 40px 0;
+}
+
+.upload__features-contact {
+  .f-serif;
+  color: @grey;
+  font-size: 20px;
+  line-height: 26px;
+  .as-desktop({
+    font-size: 20px;
+    line-height: 26px;
+  });
+}
+
+.upload__features-contact a { display: block; }
+
+.upload__features-list {
+  margin: 0 auto 100px;
 }
 
 .upload__features-list-item {
-  list-style-type: decimal;
-  margin-bottom: 0.5em;
-}
+  text-align: center;
+  display: inline-block;
+  color: white;
+  background: @grey;
+  padding: 12px 12px;
+  width: 100%;
+  max-width: 250px;
+  height: 180px;
+  margin: 1px;
+  font-size: 15px;
+  line-height: 23px;
+  overflow: hidden;
+  font-weight: 200;
+  border-radius: 3px;
 
-.upload__text  {
+  background: rgb(112,121,123); /* Old browsers */
+  background: -moz-linear-gradient(top,  rgba(112,121,123,1) 65%, rgba(101,110,111,1) 100%); /* FF3.6+ */
+  background: -webkit-gradient(linear, left top, left bottom, color-stop(65%,rgba(112,121,123,1)), color-stop(100%,rgba(101,110,111,1))); /* Chrome,Safari4+ */
+  background: -webkit-linear-gradient(top,  rgba(112,121,123,1) 65%,rgba(101,110,111,1) 100%); /* Chrome10+,Safari5.1+ */
+  background: -o-linear-gradient(top,  rgba(112,121,123,1) 65%,rgba(101,110,111,1) 100%); /* Opera 11.10+ */
+  background: -ms-linear-gradient(top,  rgba(112,121,123,1) 65%,rgba(101,110,111,1) 100%); /* IE10+ */
+  background: linear-gradient(to bottom,  rgba(112,121,123,1) 65%,rgba(101,110,111,1) 100%); /* W3C */
+  filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#70797b', endColorstr='#656e6f',GradientType=0 ); /* IE6-9 */
 
+  .as-tablet({
+    font-size: 18px;
+    line-height: 26px;
+    width: 230px;
+    max-width: none;
+  });
+  .as-desktop({
+    font-size: 18px;
+    line-height: 26px;
+    width: 230px;
+    max-width: none;
+  });
 }
