@@ -26,7 +26,8 @@ class UserView(AdminModelView):
     edit_template = 'admin/user_edit_with_password_reset.html'
     child_links = (('Channels', 'channel', None),)
 
-    form_excluded_columns = ('channels', 'flags', 'activity', 'external_friends', 'user_promotion', 'video_instance_rel')
+    form_excluded_columns = ('date_updated', 'channels', 'flags', 'activity', 'external_friends', 'user_promotion', 'video_instance_rel')
+
     form_args = dict(
         username=dict(validators=[wtf.validators.Regexp('^\w{3,50}$', message='alphanumeric only')]),
         first_name=dict(validators=[wtf.validators.Optional()]),
