@@ -385,7 +385,7 @@ def check_share_notifications(date_from, date_to, user_notifications=None):
                     UserNotification.date_created >= date_from,
                     UserNotification.date_created < date_to,
                     UserNotification.message_type == type
-                ).values(UserNotification.user, None)
+                ).values(UserNotification.user, UserNotification.message_type)
             )
 
 
