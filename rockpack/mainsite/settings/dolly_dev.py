@@ -102,4 +102,6 @@ SHARE_MESSAGE_MAP = dict(
 
 PUSH_NOTIFICATION_MAP = dict(
     joined=('user', "Your friend %@ has joined Wonder PL"),
+    channel_shared=('channel', '%@ shared a collection with you'),
+    video_shared=('video', '%@ shared a video with you'),
 )

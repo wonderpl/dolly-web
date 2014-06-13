@@ -189,11 +189,9 @@ def send_push_notifications(user):
     except KeyError:
         push_message_args = []
 
-    badge = None if app.config.get('DOLLY') else count
-
     return complex_push_notification(
         token, push_message, push_message_args,
-        badge=badge, id=notification.id, url=deeplink_url)
+        badge=count, id=notification.id, url=deeplink_url)
 
 
 def create_unavailable_notifications(date_from=None, date_to=None, user_notifications=None):
@@ -375,6 +373,20 @@ def create_commmenter_notification(date_from=None, date_to=None, user_notificati
                 _add_user_notification(user.id, date_added, type, body)
                 if user_notifications is not None and type in app.config['PUSH_NOTIFICATION_MAP']:
                     user_notifications.setdefault(user.id, None)
+
+
+def check_share_notifications(date_from, date_to, user_notifications=None):
+    # The share notification records are created in share.api.share_content
+    # but we check here if any should trigger a push notification.
+    for type in 'channel_shared', 'video_shared':
+        if user_notifications is not None and type in app.config['PUSH_NOTIFICATION_MAP']:
+            user_notifications.update(
+                UserNotification.query.filter(
+                    UserNotification.date_created >= date_from,
+                    UserNotification.date_created < date_to,
+                    UserNotification.message_type == type
+                ).values(UserNotification.user, None)
+            )
 
 
 def remove_old_notifications():
@@ -761,6 +773,7 @@ def update_user_notifications(date_from, date_to):
         create_unavailable_notifications(date_from, date_to, user_notifications)
     create_new_registration_notifications(date_from, date_to, user_notifications)
     create_commmenter_notification(date_from, date_to, user_notifications)
+    check_share_notifications(date_from, date_to, user_notifications)
     remove_old_notifications()
     # apns needs the notification ids, so we need to
     # commit first before we continue
