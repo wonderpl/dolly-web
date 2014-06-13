@@ -63,13 +63,13 @@
               <p style="margin:0;margin-bottom:24px;font-size:16px;line-height:24px;font-family:Georgia,Cambria,'Times New Roman',Times,serif;text-align:left;color:#777782;text-align:center;"><font face="Georgia" color="#777782">{{ object.description }}</font></p>
               <hr />
               {% for video in top_videos %}
-              <h2 style="margin:0;margin-bottom:12px;font-weight:800;font-size:24px;line-height:32px;font-family:'Lucida Grande','Lucida Sans Unicode','Lucida Sans',Geneva,Verdana,sans-serif;word-break:normal;color:#2e2e32;">{{ video.video_rel.title }}</h2>
-              <a href="{{ link.url }}?video={{ video.id }}" border="0" style="display:block;margin:0;margin-bottom:24px;border:none;outline:none">
-                <img src="{{ video.default_thumbnail }}" border="0" alt="{{ video.video_rel.title }}" style="display:block;width:100%;height:auto;margin:0 auto;border:none;outline:none" />
-              </a>
-              {% if video.video_rel.description %}
-              <p style="margin:0;margin-bottom:24px;font-size:16px;line-height:24px"><font face="Georgia" color="#777782">{{ video.video_rel.description }}</font></p>
-              {% endif %}
+                <h2 style="margin:0;margin-bottom:12px;font-weight:800;font-size:24px;line-height:32px;font-family:'Lucida Grande','Lucida Sans Unicode','Lucida Sans',Geneva,Verdana,sans-serif;word-break:normal;color:#2e2e32;">{{ video.video_rel.title }}</h2>
+                <a href="{{ link.url }}?video={{ video.id }}" border="0" style="display:block;margin:0;margin-bottom:24px;border:none;outline:none">
+                  <img src="{{ video.default_thumbnail }}" border="0" alt="{{ video.video_rel.title }}" style="display:block;width:100%;height:auto;margin:0 auto;border:none;outline:none" />
+                </a>
+                {% if video.video_rel.description %}
+                <p style="margin:0;margin-bottom:24px;font-size:16px;line-height:24px"><font face="Georgia" color="#777782">{{ video.video_rel.description|truncate(128) }}</font></p>
+                {% endif %}
               {% endfor %}
               <p class="btn-center" style="display:block;width:100%;margin-top:48px;margin-bottom:48px;text-align:center;"><a href="{{ link.url }}" class="btn" style="margin:0 auto;padding:8px 18px;font-weight:400;font-family:'Lucida Grande','Lucida Sans Unicode','Lucida Sans',Geneva,Verdana,sans-serif;color:#fff !important;text-align:center;background-color:#51b364;border:none;border-radius:100px;cursor:pointer;" border="0">Watch &amp; Read More</a></p>
             </td>
@@ -87,12 +87,12 @@
           {% else %}{# VIDEO #}
           <tr>
             <td colspan="100%" align="center" valign="top" class="container-padding" bgcolor="#fff" style="width:100% !important;padding-left:24px;padding-right:24px;background-color:#fff;">
-              <h1 style="margin:0;margin-bottom:12px;font-weight:800;font-size:24px;line-height:32px;font-family:'Lucida Grande','Lucida Sans Unicode','Lucida Sans',Geneva,Verdana,sans-serif;word-break:normal;color:#2e2e32;">{{ object.video_rel.title }}</font></h1>
+              <h1 style="margin:0;margin-bottom:12px;font-weight:800;font-size:24px;line-height:32px;font-family:'Lucida Grande','Lucida Sans Unicode','Lucida Sans',Geneva,Verdana,sans-serif;word-break:normal;color:#2e2e32;">{{ object.video_rel.title }}</h1>
               <a href="{{ link.url }}" border="0" class="video-thumb" style="display:block;margin:0;margin-bottom:12px;border:none;outline:none;">
                 <img src="{{ object.default_thumbnail }}" border="0" alt="" class="video-img" style="display:block;width:100%;height:auto;margin:0 auto;border:none;outline:none" />
               </a>
               {% if object.video_rel.description %}
-              <p style="margin:0;margin-bottom:24px;font-size:16px;line-height:24px;font-family:Georgia,Cambria,'Times New Roman',Times,serif;text-align:left;color:#777782;"><font face="Georgia" color="#777782">{{ object.video_rel.description }}</font></p>
+              <p style="margin:0;margin-bottom:24px;font-size:16px;line-height:24px;font-family:Georgia,Cambria,'Times New Roman',Times,serif;text-align:left;color:#777782;"><font face="Georgia" color="#777782">{{ object.video_rel.description|truncate(512) }}</font></p>
               {% endif %}
               <p class="btn-center" style="display:block;width:100%;margin-top:48px;margin-bottom:48px;text-align:center;"><a href="{{ link.url }}" class="btn" style="margin:0 auto;padding:8px 18px;font-weight:400;font-family:'Lucida Grande','Lucida Sans Unicode','Lucida Sans',Geneva,Verdana,sans-serif;color:#fff !important;text-align:center;background-color:#51b364;border:none;border-radius:100px;cursor:pointer;" border="0">Watch &amp; Read More</a></p>
             </td>

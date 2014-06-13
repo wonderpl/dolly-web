@@ -132,7 +132,7 @@ class ChannelData(DataSet):
         owner = UserData.test_user_a.id
         title = 'channel #1'
         public = True
-        description = ''
+        description = '''The Modern Man's Guide to Culture, Style, Entertainment, And Fitness.'''
         cover = RockpackCoverArtData.comic_cover.cover
         category = 4
         subscriber_count = 34
@@ -264,6 +264,17 @@ class VideoData(DataSet):
         source = 1
         source_videoid = 'lBFBbm1Nudc'
         date_published = datetime(2013, 1, 1, 0, 0, 0)
+        description = u'''
+            <p>
+            Sure, we all enjoy great video, but is it too much to ask to see only the great ones and none of the rest?
+            </p>
+            <p>
+            We don't think so.
+            </p>
+            <p>
+            Every video on Rockpack is here because someone has loved it enough to put it into a pack. Because each pack is curated, it's easy to find similar videos as well as the people who share your taste.
+            </p>
+        '''
 
     class video2:
         id = 'RP000001USUDEQUDJGLR3UZUOF5LH667PLVGHSX6'
