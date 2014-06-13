@@ -18,5 +18,5 @@ raven>=3.1.17
 blinker>=1.2
 requests>=1.1.0
 pyes==0.20.1
-apns-client
+apns-client==0.1.8
 gdata>=2.0
