@@ -1,0 +1,74 @@
+.player {
+
+}
+
+.player__title {
+  font-size: 24px;
+  line-height: 34px;
+  color: @headinggrey;
+  max-width: 960px;
+  width: 100%;
+  margin: 0 auto;
+  margin-bottom: 10px;
+}
+
+.player__video {
+  text-align: left;
+}
+
+.player__link {
+  border: solid 1px @green;
+  display: none;
+  padding: 10px;
+  margin: 20px 0;
+  border-radius: 20px;
+  color: @green;
+}
+
+.player__link.visible {
+  display: inline-block;
+}
+
+.player__description {
+  .f-serif;
+  margin: 0 30% 40px;
+  text-align: left;
+  font-size: 20px;
+  line-height: 30px;
+}
+
+.player__share-embed-panel {
+  height: 0;
+  padding: 0 16px;
+  overflow: hidden;
+  transition: height .4s, padding .4s ease-out;
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.player__share-embed-panel.open {
+  height: 90px;
+  padding: 16px;
+}
+
+.player__share-control {
+  display: inline-block;
+  height: 24px;
+  width: 24px;
+  cursor: pointer;
+  margin: 0 5px;
+}
+
+.player__share-control-embed {
+  background: transparent url('/static/assets/dolly/img/web-lite/embed-icon.png') center top no-repeat;
+}
+
+.player__share-control-twitter {
+  background: transparent url('/static/assets/dolly/img/web-lite/twitter-icon.png') center top no-repeat;
+}
+
+.player__share-control-facebook {
+  background: transparent url('/static/assets/dolly/img/web-lite/facebook-icon.png') center top no-repeat;
+}

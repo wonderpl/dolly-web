@@ -1,30 +1,28 @@
 
-<div class="top f-centered">
-	<div class="avatar">
-		<img ng-src="(( user.avatar_thumbnail_url ))" alt="">
-	</div>
-	<h3 class="f-sans"><span class="strong">(( user.display_name )) </span>shared this with you</h3>
-</div>
+<section class="player">
+  <h3 class="player__title">(( videos[currentvideo].title ))</h3>
 
-<div id="player-wrapper">
-	<div class="web-lite-player" id="wonderplayer"></div>	
-</div><!-- player wrapper houses the directive -->
+  <div id="player-wrapper" class="player__video">
+    <div class="web-lite-player" id="wonderplayer"></div>
+  </div>
 
-<div class="bottom f-centered">
-	
-	<h3 class="f-sans">(( videos[currentvideo].title ))</h3>
-	<div class="interactive">
-		<a ng-click="shareTwitter()" class="weblite-icon-twitter"></a>
-		<a ng-click="shareFacebook()" class="weblite-icon-facebook"></a>
-		<a ng-click="toggleEmbedOptions($event)" class="weblite-icon-embed"></a>
-	</div>
-	<div class="embed-options" ng-class="{ open: embedOptionsShowing }">
-		<div class="row">
-			<label>Embed code:</label>
-			<div class="input-wrapper">
-				<input id="embed-link" type="text" value="<iframe src=&quot;(( embedurl ))&quot; width=&quot;100%&quot; height=&quot;100%&quot; frameborder=&quot;0&quot; allowfullscreen></iframe>" class="f-sans right-rounded">	
-				<!-- <span class=" right-rounded" ng-click="copyToClipboard()"></span> -->
-			</div>
-		</div>
-	</div>
-</div>
+  <section class="player__share-controls">
+    <a ng-click="toggleEmbedOptions($event)" class="weblite-icon-embed player__share-control player__share-control-embed"></a>
+    <a ng-click="shareFacebook()" class="weblite-icon-facebook player__share-control player__share-control-facebook"></a>
+    <a ng-click="shareTwitter()" class="weblite-icon-twitter player__share-control player__share-control-twitter"></a>
+    <div class="player__share-embed-panel embed-options" ng-class="{ open : embedOptionsShowing }">
+      <div class="row">
+        <label>Embed code:</label>
+        <div class="input-wrapper">
+          <input id="embed-link" type="text" value="<iframe src=&quot;(( embedurl ))&quot; width=&quot;100%&quot; height=&quot;100%&quot; frameborder=&quot;0&quot; allowfullscreen></iframe>" class="f-sans right-rounded">
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <a class="player__link" ng-class="{ visible : videos[currentvideo].link_url }" href="(( videos[currentvideo].link_url ))">(( videos[currentvideo].link_title ))</a>
+
+  <p class="player__description">(( videos[currentvideo].video.description ))</p>
+<!--   <p class="player__description">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus convallis velit ac velit faucibus egestas. Nulla laoreet metus cursus eleifend vestibulum. Donec a justo adipiscing, aliquam nisi at, suscipit dui. Sed lobortis sapien vitae sollicitudin sagittis. </p>
+ -->
+</section>

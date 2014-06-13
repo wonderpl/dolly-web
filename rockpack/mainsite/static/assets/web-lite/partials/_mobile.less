@@ -20,7 +20,7 @@ body {
 }
 
 #player {
-	padding-top: 70px;
+	padding-top: 40px;
 }
 
 header {
@@ -80,18 +80,13 @@ header {
 footer {
 	display: block;
 	width: 100%;
-	background: @lilac;
-	color: #fff;
+	color: #black;
 	position: relative;
 	z-index: 1000;
 
-	a {
-		color: #fff;
-	}
-
 	.trim {
 		display: block;
-		
+
 		.left {
 			display: block;
 			width: 100%;
@@ -100,10 +95,71 @@ footer {
 		}
 		.middle, .right {
 			padding: 3px;
-			display: inline-block;
+			display: block;
 			vertical-align: top;
 			font-size: 11px;
 			margin: 0 0 12px 0;
 		}
 	}
+}
+
+.app-store {
+  padding-bottom: 20px;
+  margin: 0;
+}
+
+.app-store__text {
+  font-size: 16px;
+  line-height: 24px;
+}
+
+.web-lite__logo {
+  margin: 20px auto 0;
+}
+
+.player__description {
+  font-size: 20px;
+  line-height: 30px;
+  margin-left: 10%;
+  margin-right: 10%;
+}
+
+.player__share-controls {
+  margin-bottom: 20px;
+}
+
+.player__title {
+  font-size: 20px;
+  line-height: 30px;
+}
+
+.collection__list {
+  margin: 0;
+  text-align: center;
+}
+
+.collection__list-item {
+  padding-top: 20px;
+  padding-bottom: 20px;
+}
+
+.collection__list-item-title {
+  display: block;
+  width: 90%;
+  max-width: 400px;
+  margin: 10px auto 0 auto;
+}
+
+.collection__list-item-image {
+  display: block;
+  max-width: 100%;
+  margin: 0 auto 20px;
+}
+
+.page-footer__affiliates {
+  display: block;
+}
+
+.collection__all-videos-link {
+  padding-bottom: 20px;
 }

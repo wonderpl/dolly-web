@@ -38,7 +38,7 @@ a {
 	&:hover, &:active, &:focus {
 		outline: none;
 		color: inherit;
-		// color: @lilac;	
+		// color: @lilac;
 	}
 }
 
@@ -91,7 +91,9 @@ header {
 #player-wrapper {
 	display: block;
 	position: relative;
-	margin: 0 0 32px 0;
+	margin: 0 auto 32px;
+  max-width: 960px;
+  width: 100%;
 }
 
 #wonderplayer {
@@ -107,7 +109,7 @@ header {
 	&:before {
 		content: '';
 		display: block;
-		padding-top: 56.25%;	
+		padding-top: 56.25%;
 	}
 
 	iframe {
@@ -177,7 +179,7 @@ header {
 			font-style: normal;
 			// span {
 			// 	color: #787878;
-			// 	font-size: 16px;	
+			// 	font-size: 16px;
 			// }
 		}
 	}
@@ -246,9 +248,6 @@ header {
 #channel {
 	max-width: 960px;
 	margin: 0 auto;
-	display: block;
-	position: relative;
-	padding: 0 0 120px 0;
 
 	h4 {
 		padding: 0 6%;
@@ -298,7 +297,7 @@ header {
 		cursor: pointer;
 		padding: 0 5px;
 		&.left {
-			left: 0;	
+			left: 0;
 		}
 
 		&.right {
