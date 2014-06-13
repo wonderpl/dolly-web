@@ -325,10 +325,10 @@ def create_new_registration_notifications(date_from=None, date_to=None, user_not
         ).with_entities(FriendUser.id, User)
 
         if date_from:
-            new_email_users = new_users.filter(User.date_joined >= date_from)
+            new_email_users = new_email_users.filter(User.date_joined >= date_from)
 
         if date_to:
-            new_email_users = new_users.filter(User.date_joined < date_to)
+            new_email_users = new_email_users.filter(User.date_joined < date_to)
 
         for friend, user in new_email_users:
             friend, message_type, message = joined_message(friend, user)
