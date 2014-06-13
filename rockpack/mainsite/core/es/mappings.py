@@ -323,7 +323,7 @@ user_mapping = {
     }
 }
 
-channel_settings = {
+user_settings = {
     "analysis": {
         "analyzer": {
             "folded_snowball": {
@@ -434,10 +434,10 @@ channel_mapping = {
 
 
 if app.config.get('DOLLY'):
-    channel_mapping['properties']['title'] = {
+    user_mapping['properties']['display_name'] = {
         "type": "multi_field",
         "fields": {
-            "title": {"type": "string", "analyzer": "snowball"},
+            "display_name": {"type": "string", "analyzer": "snowball"},
             "folded": {"type": "string", "analyzer": "folded_snowball"}
         }
     }

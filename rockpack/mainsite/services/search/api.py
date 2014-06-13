@@ -154,8 +154,11 @@ class SearchWS(WebService):
         if use_elasticsearch():
             us = UserSearch()
             us.set_paging(offset, limit)
-            us.add_text('username', search_term)
-            us.add_text('display_name', search_term)
+            if app.config.get('DOLLY'):
+                us.search_terms(search_term)
+            else:
+                us.add_text('username', search_term)
+                us.add_text('display_name', search_term)
             return dict(users=dict(items=us.users(), total=us.total))
 
         users = User.query.filter(func.lower(User.username).like(search_term))

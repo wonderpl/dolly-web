@@ -45,7 +45,7 @@ class ESObjectIndexer(object):
 
     if app.config.get('DOLLY'):
         indexes['video']['settings'] = mappings.video_settings
-        indexes['channel']['settings'] = mappings.channel_settings
+        indexes['user']['settings'] = mappings.user_settings
 
     aliases = {
         'channel': mappings.CHANNEL_ALIAS,

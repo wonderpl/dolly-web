@@ -427,22 +427,13 @@ class ChannelSearch(EntitySearch, CategoryMixin, MediaSortMixin):
 
     def search_terms(self, phrase):
         if phrase:
-            if app.config.get('DOLLY'):
-                query = pyes.StringQuery(
-                    phrase,
-                    default_operator='AND',
-                    search_fields=['title^10', 'title.folded', 'video_terms', 'keywords'],
-                    analyzer='snowball',
-                    minimum_should_match=0
-                )
-            else:
-                query = pyes.StringQuery(
-                    phrase,
-                    default_operator='AND',
-                    search_fields=['title^10', 'video_terms', 'keywords'],
-                    analyzer='snowball',
-                    minimum_should_match=0
-                )
+            query = pyes.StringQuery(
+                phrase,
+                default_operator='AND',
+                search_fields=['title^10', 'video_terms', 'keywords'],
+                analyzer='snowball',
+                minimum_should_match=0
+            )
             self._add_term_occurs(query, MUST)
             query = pyes.TextQuery(
                 'video_terms',
@@ -710,6 +701,17 @@ class UserSearch(EntitySearch, CategoryMixin):
                 script='1000000000000000000'
             )
         )
+
+    def search_terms(self, phrase):
+        if phrase:
+            if app.config.get('DOLLY'):
+                query = pyes.StringQuery(
+                    phrase,
+                    default_operator='AND',
+                    search_fields=['display_name', 'display_name.folded', 'username'],
+                    minimum_should_match=1
+                )
+                self._add_term_occurs(query, MUST)
 
     def users(self, include_promo=False):
         if not self._user_results:
