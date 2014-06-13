@@ -2,10 +2,12 @@ import re
 import uuid
 from urlparse import urlparse
 from flask import json
+from jinja2.filters import do_striptags
+from mock import patch
 from rockpack.mainsite import app
 from rockpack.mainsite.services.video.models import Channel
 from rockpack.mainsite.services.user.models import UserNotification
-from rockpack.mainsite.services.oauth.models import ExternalFriend
+from rockpack.mainsite.services.oauth.models import ExternalFriend, ExternalToken
 from test import base
 from ..test_decorators import skip_if_dolly, skip_unless_config, patch_send_email
 from ..test_helpers import get_auth_header, get_client_auth_header
@@ -174,6 +176,36 @@ class TestShare(base.RockPackTestCase):
             ExternalFriend.email == sender.email
         ).one()
 
+    def test_share_push_notification(self):
+        user = self.create_test_user()
+        ExternalToken(
+            user=user.id,
+            external_system='apns',
+            external_token='xxx',
+            external_uid=user.id,
+        ).save()
+        with self.app.test_client() as client:
+            r = client.post(
+                '/ws/share/email/',
+                data=json.dumps(dict(
+                    object_type='video_instance',
+                    object_id=VideoInstanceData.video_instance1.id,
+                    email=user.email,
+                    external_system='email',
+                    external_uid=user.email,
+                )),
+                content_type='application/json',
+                headers=[get_auth_header(UserData.test_user_a.id)])
+            self.assertEquals(r.status_code, 204, r.data)
+
+        from rockpack.mainsite.services.user import commands
+        import apnsclient
+        with patch.object(apnsclient.APNs, 'send', lambda o, m: apnsclient.Result(m)):
+            message = commands.send_push_notifications(user).message
+            self.assertIn('shared a video with you', message.alert['loc-key'])
+            self.assertIn(VideoInstanceData.video_instance1.id, message.payload['url'])
+            self.assertGreater(message.badge, 0)
+
     @patch_send_email()
     def test_channel_share_email(self, send_email):
         with self.app.test_client() as client:
@@ -195,7 +227,7 @@ class TestShare(base.RockPackTestCase):
         self.assertEquals(send_email.call_count, 1)
         self.assertEquals(send_email.call_args[0][0], recipient)
         if self.app.config.get('DOLLY'):
-            self.assertIn('subscribed as %s.' % recipient, send_email.call_args[0][1])
+            self.assertIn('subscribed as %s.' % recipient, do_striptags(send_email.call_args[0][1]))
 
         notifications = UserNotification.query.filter_by(
             user=UserData.test_user_a.id, message_type='channel_shared')

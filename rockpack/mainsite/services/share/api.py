@@ -1,5 +1,4 @@
 from datetime import datetime
-import urlparse
 import wtforms as wtf
 from sqlalchemy import func
 from flask import abort, g, json
@@ -72,14 +71,6 @@ def share_content(userid, object_type, object_id, recipient_email):
             message_type=message_type,
             message=json.dumps(message_body, separators=(',', ':')),
         ).save()
-
-        # Send push notification
-        token = commands.get_apns_token(recipient_user.id)
-        if token:
-            push_message = '%@ shared a ' + OBJECT_NAME_MAP[object_type] + ' with you'
-            push_message_args = [user.display_name]
-            deeplink_url = urlparse.urlparse(object.resource_url).path.lstrip('/ws/')
-            commands.complex_push_notification(token, push_message, push_message_args, url=deeplink_url)
 
         # Create an association the other way
         try:

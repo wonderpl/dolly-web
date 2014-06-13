@@ -1,10 +1,10 @@
 import json
 import time
 import uuid
-import cgi
 import urlparse
 from datetime import datetime, timedelta
 from mock import patch
+from jinja2.filters import do_striptags
 from rockpack.mainsite import app
 from rockpack.mainsite.services.video.models import Channel
 from rockpack.mainsite.services.oauth.api import FacebookUser
@@ -1165,7 +1165,7 @@ class TestEmail(base.RockPackTestCase):
                 self.assertIn('<title>Welcome', body)
                 self.assertIn('{}'.format(user.display_name), body)
                 self.assertIn('To ensure our emails reach your inbox please make sure to add {}'.format(
-                    cgi.escape(app.config['DEFAULT_EMAIL_SOURCE'])), body)
+                    app.config['DEFAULT_EMAIL_SOURCE']), do_striptags(body))
 
                 user2 = self.create_test_user(date_joined=datetime(2100, 2, 2))
                 commands.create_registration_emails(datetime(2100, 2, 1), datetime(2100, 2, 10))
