@@ -13,10 +13,10 @@
 			link: function( scope, elem, attrs ) {
 
 				$rootScope.playerElem = elem;
-				scope.YTReady = false; 
+				scope.YTReady = false;
 
 				scope.getYTReady = function () {
-					var q = $q.defer();					
+					var q = $q.defer();
 
 					scope.YTReadyCheck = $interval(function( count ){
 						if ( window.YTReady === true ) {
