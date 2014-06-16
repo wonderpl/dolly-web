@@ -1,24 +1,23 @@
 
+<section class="collection">
 
-<!-- <h3>Browse (( owner.display_name|firstName ))'s channel</h3> -->
+  <h3 class="collection__title">Videos in this Collection</h3>
 
-<div class="scroll-outer-wrapper" ng-class="{ 'touch': touchDevice && ( wW < 768 ) }">
-	<a ng-click="page('left')" class="weblite-icon-left paging left" ng-class="{ 'disabled': currentpage == 0 }"></a>
-	<a ng-click="page('right')" class="weblite-icon-right paging right" ng-class="{ 'disabled': currentpage == items-1 }"></a>
-	<div class="scroll-inner-wrapper">
-		<ul class="channel-list">
-			<li ng-repeat="video in videos.items">
-				<a href="/channel/-/(( channel_data.id ))/?video=(( video.id ))" ng-click="changeVideo($event, $index, video.id)">
-					<img data-src="(( video.video.thumbnail_url ))" class="video-thumbnail" width="220" height="124" />
-					<span>(( video.title ))</span>
-				</a>
-			</li>
-		</ul>
-	</div>	
-</div>
+  <ul class="collection__list">
+    <li ng-repeat="video in videos.items | limitTo:3" class="collection__list-item">
+      <a class="collection__list-item-link" href="/channel/-/(( channel_data.id ))/?video=(( video.id ))" ng-click="changeVideo($event, $index, video.id)">
+        <img data-src="(( video.video.thumbnail_url ))" class="video-thumbnail collection__list-item-image" width="110" height="62" />
+        <!-- currently playing icon -->
+        <span class="collection__list-item-title" ng-class="{ active:video.isActive }">(( video.title ))</span>
+      </a>
+    </li>
+  </ul>
 
+  <a class="collection__all-videos-link" href="(( itunesLink ))&amp;ct={% if selected_video %}video{% else %}channel{% endif %}" target="_blank">
+    <img ng-class="{ visible : owner.avatar_thumbnail_url }" src="(( owner.avatar_thumbnail_url ))" class="collection__all-videos-image" alt="(( owner.display_name ))" title="(( owner.display_name ))" />
+    <p class="collection__all-videos-text">
+      View all videos in this collection
+    </p>
+  </a>
 
-<!-- <h4 class="f-sans">This is the enticing copy that someone has to come up with to encourage the viewer to download the app.</h4>
-<a href="#" class="download">Download Wonder</a> -->
-
-<div class="clear"></div>
+</section>

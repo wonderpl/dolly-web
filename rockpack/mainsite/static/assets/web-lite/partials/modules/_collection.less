@@ -1,0 +1,96 @@
+.collection {
+  margin-bottom: 40px;
+}
+
+.collection__title {
+  font-variant: small-caps;
+  text-transform: uppercase;
+  color: black;
+  font-size: 12px;
+  line-height: 22px;
+  letter-spacing: 0.2em;
+}
+
+.collection__list {
+  margin: 0 20%;
+  text-align: left;
+  padding-bottom: 30px;
+}
+
+.collection__list-item {
+  border-top: solid 1px @lightgrey;
+  display: block;
+  padding: 10px 0;
+  clear: both;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.collection__list-item:first-child {
+  border-top: none;
+}
+
+.collection__list-item-title {
+  color: @headinggrey;
+  display: inline-block;
+  width: 70%;
+  vertical-align: top;
+  margin-left: 2%;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+.collection__list-item-title.active {
+  color: @green;
+}
+
+.collection__list-item-title.active:before {
+  content: '';
+  display:inline-block;
+  width: 0;
+  height: 0;
+  border-top: 5px solid transparent;
+  border-bottom: 5px solid transparent;
+  border-left: 10px solid green;
+  margin-top: 2px;
+  margin-right: 5px;
+}
+
+.collection__list-item-image {
+  display: inline-block;
+}
+
+.collection__list-item-link {
+  display: block;
+  position: relative;
+  min-height: 62px;
+  overflow: hidden;
+}
+
+.collection__all-videos-link {
+  display: block;
+  margin: 0 20%;
+  border-bottom:  solid 1px @lightgrey;
+  padding-bottom: 40px;
+}
+
+.collection__all-videos-image.visible {
+  display: inline-block;
+}
+
+.collection__all-videos-image {
+  display: none;
+  height: 40px;
+  width: 40px;
+}
+
+.collection__all-videos-text {
+  .f-serif;
+  display: inline-block;
+  width: 120px;
+  text-align: left;
+  margin-left: 10px;
+  color: @green;
+  font-style: italic;
+  font-weight: 800;
+}
