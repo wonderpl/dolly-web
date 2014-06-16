@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="format-detection" content="telephone=no">
 
-  <title>{{ user.display_name }} shared a {{ object_type_name }} with you on Wonder PL</title>
+  <title>{{ user.display_name }} recommended this {{ object_type_name }} for you on Wonder PL</title>
 <style type="text/css">
     #outlook a{padding:0;}body.outlook p{display:inline !important}
     body{width:100% !important}.ReadMsgBody{width:100%;background-color:#fff}.ExternalClass{width:100%;background-color:#fff}.ExternalClass,.ExternalClass p,.ExternalClass span,.ExternalClass font,.ExternalClass td,.ExternalClass div{line-height:100%}
@@ -57,7 +57,7 @@
           </tr>
           {% if object_type == "channel" %}
           <tr>
-            <td colspan="100%" align="center" valign="top" class="container-padding" bgcolor="#fff" style="width:100% !important;padding-left:24px;padding-right:24px;background-color:#fff;">
+            <td colspan="100%" align="left" valign="top" class="container-padding" bgcolor="#fff" style="width:100% !important;padding-left:24px;padding-right:24px;background-color:#fff;">
               <p style="margin:0;margin-bottom:12px;font-size:14px;line-height:20px;font-family:Georgia,Cambria,'Times New Roman',Times,serif;text-align:left;color:#777782;text-align:center;"><font face="Georgia" color="#777782">A collection of {{ object.video_count }} great new video{% if object.video_count != 1 %}s{% endif %}</font></p>
               <h1 style="margin:0;margin-bottom:18px;font-weight:800;font-size:24px;line-height:32px;font-family:'Lucida Grande','Lucida Sans Unicode','Lucida Sans',Geneva,Verdana,sans-serif;word-break:normal;text-align:center;color:#2e2e32;">{% filter upper %}{{ object.title }}{% endfilter %}</h1>
               <p style="margin:0;margin-bottom:24px;font-size:16px;line-height:24px;font-family:Georgia,Cambria,'Times New Roman',Times,serif;text-align:left;color:#777782;text-align:center;"><font face="Georgia" color="#777782">{{ object.description }}</font></p>
@@ -86,7 +86,7 @@
           </tr>
           {% else %}{# VIDEO #}
           <tr>
-            <td colspan="100%" align="center" valign="top" class="container-padding" bgcolor="#fff" style="width:100% !important;padding-left:24px;padding-right:24px;background-color:#fff;">
+            <td colspan="100%" align="left" valign="top" class="container-padding" bgcolor="#fff" style="width:100% !important;padding-left:24px;padding-right:24px;background-color:#fff;">
               <h1 style="margin:0;margin-bottom:12px;font-weight:800;font-size:24px;line-height:32px;font-family:'Lucida Grande','Lucida Sans Unicode','Lucida Sans',Geneva,Verdana,sans-serif;word-break:normal;text-align:left;color:#2e2e32;">{{ object.video_rel.title }}</h1>
               <a href="{{ link.url }}" border="0" class="video-thumb" style="display:block;margin:0;margin-bottom:12px;border:none;outline:none;">
                 <img src="{{ object.default_thumbnail }}" border="0" alt="" class="video-img" style="display:block;width:100%;height:auto;margin:0 auto;border:none;outline:none" />
