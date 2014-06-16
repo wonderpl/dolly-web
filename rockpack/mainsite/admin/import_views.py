@@ -24,6 +24,10 @@ from .models import AdminLogRecord
 from .base import AdminView
 
 
+class PickerForm(form.BaseForm):
+    video = wtf.TextField()
+
+
 class ImportForm(form.BaseForm):
     source = form.Select2Field(coerce=int, validators=[wtf.validators.Required()])
     type = form.Select2Field(choices=(('video', 'Video'), ('user', 'User'), ('playlist', 'Playlist')),
@@ -316,6 +320,18 @@ class ImportView(AdminView):
             return jsonify(VideoInstance.query.join(Video).filter(VideoInstance.id == request.args.get('instance_id')).values(VideoInstance.video, Video.title))
         return jsonify(Video.query.filter(Video.id.like(vid + '%')).values(Video.id, Video.title))
 
+    @expose('/video_instance.js')
+    def video_instances(self):
+        vid = request.args.get('prefix', '')
+        result = jsonify({id: {"channel": channel, "title": title} for id, channel, title in
+                          VideoInstance.query.join(
+                              Video,
+                              (Video.id == VideoInstance.video) &
+                              (VideoInstance.deleted == False)
+                          ).filter(Video.title.like(vid + '%')).values(
+                              VideoInstance.id, VideoInstance.channel, Video.title)})
+        return result
+
     @expose('/tags.js')
     def tags(self):
         prefix = request.args.get('prefix', '')
@@ -394,6 +410,14 @@ class UploadAcceptForm(form.BaseForm):
                 self.owner_username = owner
             else:
                 raise ValidationError('Channel not found')
+
+
+class ShareLinkView(AdminView):
+
+    @expose('/', ['GET'])
+    def things(self):
+        ctx = {'form': PickerForm()}
+        return self.render('admin/share_link_picker.html', **ctx)
 
 
 class UploadView(AdminView):

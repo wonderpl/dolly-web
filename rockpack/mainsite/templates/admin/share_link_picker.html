@@ -1,0 +1,77 @@
+{% extends 'admin/model/edit.html' %}
+{% import 'admin/lib.html' as lib with context %}
+
+{% block body %}
+    <h2>Share link selector</h2>
+    <p>Email campaign tracking token <input type="text" id="share_tracking"/> <i>*campaign token will <strong>not</strong> be appended to existing share links below</i></p>
+    <form>
+            <fieldset>
+                {{ lib.render_form_fields(form) }}
+            </fieldset>
+    </form>
+
+    <div id="share_links">
+    </div>
+
+{% endblock %}
+
+{% block tail %}
+  <script src="/admin/static/admin/js/form.js"></script>
+  {% include 'admin/rockpack-tags.js' %}
+  <script>
+      var urlparse = function(ident) {
+          var subs = location.search.substring(1).split('&')
+          for (var i = 0; i < subs.length; i++) {
+              var sub = subs[i].split('=');
+              if (sub[0] == ident) { return sub[1]; }
+          }
+          return ""
+    };
+    $(function () {
+      var videoField = $('#video');
+
+      function videoDataToResults (data, page) {
+        var results = $.map(data, function (dict, id) {
+          return {id:"http://share.wonderpl.com/s?c=" + dict['channel'] + "&v=" + id, text:dict['title']};
+        });
+        return {results: results};
+      }
+
+      videoField.select2({
+        _placeholder: 'Search for video',
+        minimumInputLength: 5,
+        minimumResultsForSearch: 10,
+        ajax: {
+          url: '{{ url_for("import.video_instances") }}',
+          data: function (term, page) {
+            return {prefix: term};
+          },
+          results: videoDataToResults
+        },
+        width: 'element',
+        dropdownCssClass: 'bigdrop'
+      }).on('change', function (e) {
+          var div = document.createElement('div');
+          div.id = 'div' + e.val; // alter the id from what the video select is using
+          var full_link = "<input type=\"text\" style=\"border:none; background:transparent; outline: none;\" onClick=\"this.select();\" value=\"" + e.val;
+          if ($('#share_tracking').val() != "") {
+            full_link = full_link + "&utm_medium=email&utm_source=newsletter&utm_campaign=" + $('#share_tracking').val();
+          };
+          full_link = full_link + "\"/><span>" + " " + e.added.text + "</span>";
+          div.innerHTML = full_link;
+          document.getElementById("share_links").appendChild(div);
+      });
+    })
+  </script>
+  <style>
+    .add-new {
+      font-style: italic
+    }
+    .add-new:before {
+      content: '('
+    }
+    .add-new:after {
+      content: ')'
+    }
+  </style>
+{% endblock %}
