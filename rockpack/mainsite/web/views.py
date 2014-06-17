@@ -243,7 +243,10 @@ def _share_redirect(data):
             **web_channel_data(data['channel'], load_video=data.get('video'))
         )
 
-    if request.user_agent.platform == 'ios' or request.args.get('interstitial') == 'true':
+    # Show the interstitial redirect if it's an iOS device but not if it's
+    # the webview in the Facebook app.
+    if ((request.user_agent.platform == 'ios' and 'FBAN/FBIOS' not in request.user_agent.string)
+            or request.args.get('interstitial') == 'true'):
         return render_template(
             'web/app_interstitial.html',
             redirect_url=redirect_url,
