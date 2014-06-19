@@ -38,6 +38,22 @@
   	var videoData = {{ video_data|tojson }},
   	    ooyalaPlayerId = "{{ config.OOYALA_PLAYER_ID }}";
   </script>
+  <style>
+    {%- if request.args.get('rgb') %}
+    #wonder-wrapper #wonder-controls {
+      background: rgba({{ request.args.get('rgb') }}, 0.43);
+    }
+    {% endif -%}
+    {%- if video_data.video.customLogoPath %}
+    #wonder-wrapper #wonder-controls a.wonder-logo,
+    #wonder-wrapper #wonder-controls button.wonder-logo {
+      background-image: url('{{ video_data.video.customLogoPath }}');
+    }
+    {% endif -%}
+  </style>
+  <style>
+
+  </style>
 {% endblock %}
 
 {% block body_attributes %}class="embedded"{% endblock %}>
