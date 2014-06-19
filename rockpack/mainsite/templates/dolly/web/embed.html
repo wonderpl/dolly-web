@@ -11,9 +11,9 @@
 {# end un-needed blocks #}
 
 {% block page_css %}
-  {% assets filters="less,cssmin", output="gen/wonderplayer_css.%(version)s.css", 
-  	depends="assets/wonderplayer/partials/_*.less", 
-  	"assets/wonderplayer/main.less" 
+  {% assets filters="less,cssmin", output="gen/wonderplayer_css.%(version)s.css",
+  	depends="assets/wonderplayer/partials/_*.less",
+  	"assets/wonderplayer/main.less"
   %}
   <style>
   {{ include_static_inline(ASSET_URL) }}
@@ -22,9 +22,9 @@
 
   {# Conditional stylesheet for IE8 and below #}
   <!--[if lte IE 10]>
-  {% assets filters="less,cssmin", output="gen/wonderplayer_ie_css.%(version)s.css", 
-    depends="assets/wonderplayer/partials/_*.less", 
-    "assets/wonderplayer/ie.less" 
+  {% assets filters="less,cssmin", output="gen/wonderplayer_ie_css.%(version)s.css",
+    depends="assets/wonderplayer/partials/_*.less",
+    "assets/wonderplayer/ie.less"
   %}
   <style>
   {{ include_static_inline(ASSET_URL) }}
@@ -43,11 +43,11 @@
 {% block body_attributes %}class="embedded"{% endblock %}>
 
 {% block body %}
- 
+
  <div id='ooyalaplayer'></div>
 
   {% block scripts_footer %}
-  
+
     <script type="text/javascript">
       var ua = window.navigator.userAgent.toLowerCase(), operacheck = ua.indexOf('opera') && ua.indexOf('opr/');
       document.write('<scr'+'ipt type="text/javascript" src="//player.ooyala.com/v3/{{ config.OOYALA_PLAYER_ID }}' + ( operacheck === -1 ? '?platform=html5-priority' : "" ) + '"><\/sc'+'ript>');
@@ -59,16 +59,15 @@
     %}<script type="text/javascript">{{ include_static_inline(ASSET_URL) }}</script>{% endassets %}
 
   	<script type="text/javascript">
-  		OO.ready(function() { 
+  		OO.ready(function() {
   			window.wonder = OO.Player.create(
   				'ooyalaplayer', videoData.video.source_id,
   				{
   					flashParams: { hide: 'all' },
   					wmode: 'opaque',
-  					autoplay: false,
   					layout: 'chromeless'
-  				} 
-  			); 
+  				}
+  			);
   		});
   	</script>
   {% endblock %}

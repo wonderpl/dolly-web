@@ -47,16 +47,16 @@ OO.plugin("WonderUIModule", function (OO) {
     // This section contains the HTML content to be used as the UI
     // '<a href="#" class="rewind wonder-rewind icon-ccw"></a>' +
     // '<span class="f-thin f-uppercase"></span>' +
-    // '<a class="wonder-play-big"></a>' + 
-    var wonder_template = 
+    // '<a class="wonder-play-big"></a>' +
+    var wonder_template =
         '<div id="wonder-poster" class="loading">' +
             '<img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAYAAAAeP4ixAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAyNpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuNS1jMDE0IDc5LjE1MTQ4MSwgMjAxMy8wMy8xMy0xMjowOToxNSAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RSZWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZVJlZiMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIENDIChNYWNpbnRvc2gpIiB4bXBNTTpJbnN0YW5jZUlEPSJ4bXAuaWlkOjNGRUU0MzZGNkVGMTExRTNBQ0EzQjkyRDVDNTJFOTJCIiB4bXBNTTpEb2N1bWVudElEPSJ4bXAuZGlkOjNGRUU0MzcwNkVGMTExRTNBQ0EzQjkyRDVDNTJFOTJCIj4gPHhtcE1NOkRlcml2ZWRGcm9tIHN0UmVmOmluc3RhbmNlSUQ9InhtcC5paWQ6M0ZFRTQzNkQ2RUYxMTFFM0FDQTNCOTJENUM1MkU5MkIiIHN0UmVmOmRvY3VtZW50SUQ9InhtcC5kaWQ6M0ZFRTQzNkU2RUYxMTFFM0FDQTNCOTJENUM1MkU5MkIiLz4gPC9yZGY6RGVzY3JpcHRpb24+IDwvcmRmOlJERj4gPC94OnhtcG1ldGE+IDw/eHBhY2tldCBlbmQ9InIiPz62H+JlAAAARUlEQVR42uzPQREAAAgDINc/9Mzg14MGpO18EBERERERERERERERERERERERERERERERERERERERERERERERERGRixVgABLFlZ3XwPXxAAAAAElFTkSuQmCC" alt="" id="wonder-poster"/>' +
             // '<table width="100%" height="100%" cellpadding="0" cellspacing="0"><tr><td width="100%" height="100%" align="center" valign="middle"><span></span></td></tr></table>' +
         '</div>' +
-        '<div id="wonder-loader" class="show f-sans f-uppercase"><span></span></div>' + 
-        '<div id="wonder-controls">' + 
-            '<a class="play wonder-play player-icon-play"></a>' + 
-            '<a class="pause wonder-pause player-icon-pause hidden"></a>' + 
+        '<div id="wonder-loader" class="show f-sans f-uppercase"><span></span></div>' +
+        '<div id="wonder-controls">' +
+            '<a class="play wonder-play player-icon-play"></a>' +
+            '<a class="pause wonder-pause player-icon-pause hidden"></a>' +
             '<a class="volume wonder-volume vol-3">' +
                 '<img class="vol-1" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAC0AAAAoCAYAAABq13MpAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAGBJREFUeNrs17EJgFAMBND/HcZacC+ntLJyo5gRxEYO3sGVgVeEQGZVjbQsIzDQ0NDQ0NDQ0NDQ0Jnoq7unodfukbge55eh+eNju3XvNLTrAQ0NDQ0NDQ0NDQ39Lo8AAwCo8wyaUULIQwAAAABJRU5ErkJggg==" />' +
                 '<img class="vol-2" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAC0AAAAoCAYAAABq13MpAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAATNJREFUeNrsmLFKA0EQhnOaQlKo4APEwkIQsRILX8BO0iZV0BfIS1ilsbC2UcFW0EJs1CdQLKxTBCs9bEzwcP2OXGBykOOu2lmYHz7YKRa+O2Z3joucc7XQslALMCZt0iZt0iZt0vPyBCewXnlnOsY9EbtJfqEPjbJ7I4/fHjGsiPoFDuBDc3tcwo+od+AWGprbI6UJz242Z5rbY5oleID9rE5gG941X3kjaItWqcNRCPf0AK5FfRjKcLkT642iA6lJeijWEayFIJ1/s0kI0rti/V00ZLRIL0JX1I/pCNEu3csO3zQXmidiSgcSMRHfoF60x6fsFlzlRvgY9jSP8S9YFfUfHMO55q+819wDtMoI+5a+h084hU24KbvRZ3sswzijUiL7a2rSJm3SJm3SJk3+BRgA8LFe4j8YonoAAAAASUVORK5CYII=" />' +
@@ -119,7 +119,7 @@ OO.plugin("WonderUIModule", function (OO) {
 
     // Build the UI
     _.onPlayerCreate = function (event, elementId, params) {
-        
+
         // Wrap the player element
         _.wrapper = document.createElement('div');
         _.wrapper.setAttribute('id', 'wonder-wrapper');
@@ -178,11 +178,11 @@ OO.plugin("WonderUIModule", function (OO) {
             _.listen(_.elements.scrubber_handle_vid, 'mousemove', _.interaction);
             _.listen(_.elements.scrubber_vol, 'mousemove', _.interaction);
             _.listen(_.elements.scrubber_progress_vol, 'mousemove', _.interaction);
-            _.listen(_.elements.scrubber_handle_vol, 'mousemove', _.interaction);        
+            _.listen(_.elements.scrubber_handle_vol, 'mousemove', _.interaction);
         }
 
         // Prevent window scroll
-        window.onkeydown = function(e) { 
+        window.onkeydown = function(e) {
             if ( e.keyCode == 32 ) {
                 _.togglePlay();
             }
@@ -191,30 +191,30 @@ OO.plugin("WonderUIModule", function (OO) {
 
         if ( !_.ie8 ) {
             document.addEventListener("fullscreenchange", function () {
-                if ( document.fullscreen === false ) { 
+                if ( document.fullscreen === false ) {
                     _.state.fullscreen = false;
                 }
             }, false);
-             
+
             document.addEventListener("mozfullscreenchange", function () {
-                if ( document.mozFullScreen === false ) { 
+                if ( document.mozFullScreen === false ) {
                     _.state.fullscreen = false;
                 }
             }, false);
-             
+
             document.addEventListener("webkitfullscreenchange", function () {
-                if ( document.webkitIsFullScreen === false ) { 
+                if ( document.webkitIsFullScreen === false ) {
                     _.state.fullscreen = false;
                 }
             }, false);
-             
+
             document.addEventListener("msfullscreenchange", function () {
-                if ( document.msFullscreenElement === false ) { 
+                if ( document.msFullscreenElement === false ) {
                     _.state.fullscreen = false;
                 }
             }, false);
         }
-        
+
         // Listen for interaction on the actual UI contols
         _.listen(_.elements.playbutton, 'click', _.play);
         _.listen(_.elements.pausebutton, 'click', _.pause);
@@ -229,11 +229,11 @@ OO.plugin("WonderUIModule", function (OO) {
             if ( _.ios5 === false ) {
                 _.listen(_.elements.scrubber_trans, 'touchstart', _.touchDown);
                 _.listen(_.elements.scrubber_trans, 'touchmove', _.scrubTouch);
-                _.listen(_.elements.scrubber_trans, 'touchleave', _.scrubUp);                
+                _.listen(_.elements.scrubber_trans, 'touchleave', _.scrubUp);
             } else {
                 _.listen(_.elements.scrubber_trans[0], 'touchstart', _.mouseDown);
                 _.listen(_.elements.scrubber_trans[0], 'touchmove', _.scrubTouch);
-                _.listen(_.elements.scrubber_trans[0], 'touchleave', _.scrubUp);                
+                _.listen(_.elements.scrubber_trans[0], 'touchleave', _.scrubUp);
             }
         } else {
             _.listen(_.elements.loader, 'click', _.togglePlay);
@@ -258,11 +258,11 @@ OO.plugin("WonderUIModule", function (OO) {
         if ( _.ios5 === true ) {
             _.addClass( _.elements.poster, 'ios5' );
         }
-        
+
         Conduit.add('updateTimers', _.updateTimers);
         Conduit.add('bufferTick', _.bufferTick);
         if ( _.ie8 === false && _.flash === false ) {
-            Conduit.add('moveBufferBar', _.moveBufferBar);    
+            Conduit.add('moveBufferBar', _.moveBufferBar);
         }
         Conduit.add('uiTick', _.uiTick);
         Conduit.add('actionTick', _.actionTick);
@@ -285,7 +285,7 @@ OO.plugin("WonderUIModule", function (OO) {
         _.elements.poster.getElementsByTagName('img')[0].src = _.data.video.thumbnail_url;
 
         _.hideLoader();
-        
+
         if ( _.ie10 ) {
             _.addClass( _.elements.controls, 'ie10' );
         }
@@ -294,7 +294,7 @@ OO.plugin("WonderUIModule", function (OO) {
         setTimeout( function(){
             _.removeClass( _.elements.poster, 'loading' );
         }, 600);
-        
+
         _.flash = ( _.elements.wrapper.getElementsByTagName('object')[0] !== undefined );
 
         if ( document.getElementsByTagName('video').length > 0 ) {
@@ -307,7 +307,7 @@ OO.plugin("WonderUIModule", function (OO) {
             });
             _.listen( _.elements.video, 'webkitendfullscreen', function(e) {
                 _.mb.publish(OO.EVENTS.PAUSE);
-            });            
+            });
         }
 
         _.loaded = true;
@@ -320,14 +320,14 @@ OO.plugin("WonderUIModule", function (OO) {
                 _.loaded = true;
                 _.controlshovered = false;
                 _.played = false;
-                _.mb.publish(OO.EVENTS.PLAY);    
-            }, 200);            
+                _.mb.publish(OO.EVENTS.PLAY);
+            }, 200);
         }
     };
-    
+
     // Event fired off by the OO message bus to indicate the playhead has moved.
     _.onTimeUpdate = function (event, time, duration, buffer, seekrange) {
-        
+
         _.buffer = buffer;
 
         if ( _.scrubbed === true ) {
@@ -342,7 +342,7 @@ OO.plugin("WonderUIModule", function (OO) {
 
         if ( time !== 0 && time !== undefined && _.scrubbed === false) {
             _.timers.buffer = 0;
-            _.hideLoader();            
+            _.hideLoader();
         }
 
     };
@@ -366,7 +366,7 @@ OO.plugin("WonderUIModule", function (OO) {
         _.hideLoader();
         _.state.playing = true;
     };
-    
+
     // Respond to the OO Message bus Pause event
     _.onPause = function () {
         if ( _.state.playing === true ) {
@@ -380,7 +380,7 @@ OO.plugin("WonderUIModule", function (OO) {
 
     _.onSeeked = function (e) {
         if ( _.played === false ) {
-            _.mb.publish(OO.EVENTS.PLAY);    
+            _.mb.publish(OO.EVENTS.PLAY);
         }
     };
 
@@ -389,12 +389,16 @@ OO.plugin("WonderUIModule", function (OO) {
     };
 
     _.onPlayed = function (e) {
-        _.state.playing = false;
-        _.played = true;
-        _.removeClass(_.elements.playbutton, 'hidden');
-        _.addClass(_.elements.pausebutton, 'hidden');
-        _.removeClass( _.elements.poster, 'hide' );
-        _.hideLoader();
+        if ( parseInt(_.getQuery( 'loop' )) === 1 && _.isMobile === false && _.ipad === false ) {
+          _.mb.publish(OO.EVENTS.PLAY);
+        } else {
+          _.state.playing = false;
+          _.played = true;
+          _.removeClass(_.elements.playbutton, 'hidden');
+          _.addClass(_.elements.pausebutton, 'hidden');
+          _.removeClass( _.elements.poster, 'hide' );
+          _.hideLoader();
+        }
     };
 
     _.togglePlay = function (e) {
@@ -405,7 +409,7 @@ OO.plugin("WonderUIModule", function (OO) {
                 _.pause();
             } else {
                 _.play();
-            }    
+            }
         }
     };
 
@@ -433,7 +437,7 @@ OO.plugin("WonderUIModule", function (OO) {
         if ( _.loaded === true ) {
             _.controlshovered = true;
             _.played = false;
-            _.mb.publish(OO.EVENTS.PLAY);    
+            _.mb.publish(OO.EVENTS.PLAY);
         }
     };
 
@@ -441,7 +445,7 @@ OO.plugin("WonderUIModule", function (OO) {
         _.prevent(e);
         if ( _.loaded === true ) {
             _.controlshovered = true;
-            _.mb.publish(OO.EVENTS.PAUSE);    
+            _.mb.publish(OO.EVENTS.PAUSE);
         }
     };
 
@@ -460,7 +464,7 @@ OO.plugin("WonderUIModule", function (OO) {
                 _.seek(_.time-30);
             } else {
                 _.seek(0);
-            }    
+            }
         }
     };
 
@@ -475,7 +479,7 @@ OO.plugin("WonderUIModule", function (OO) {
     };
 
     _.fullscreen = function (e) {
-        _.prevent(e); 
+        _.prevent(e);
 
         if ( _.ipad === true ) {
 
@@ -486,7 +490,7 @@ OO.plugin("WonderUIModule", function (OO) {
             } else if ( _.elements.video.webkitDisplayingFullscreen === false ) {
                 _.elements.video.webkitEnterFullscreen();
                 _.addClass(_.elements.wrapper, 'fullscreen');
-                _.state.fullscreen = true;                
+                _.state.fullscreen = true;
             } else {
                 document.webkitExitFullscreen();
                 _.removeClass(_.elements.wrapper, 'fullscreen');
@@ -520,7 +524,7 @@ OO.plugin("WonderUIModule", function (OO) {
     _.mouseDown = function(e) {
         _.prevent(e);
         if ( _.loaded === true ) {
-            
+
             if ( _.mousetarget === 'vid' ) {
                 _.play();
             }
@@ -533,7 +537,7 @@ OO.plugin("WonderUIModule", function (OO) {
     _.touchDown = function(e) {
         _.prevent(e);
         if ( _.loaded === true ) {
-            
+
             if ( _.mousetarget === 'vid' ) {
                 _.play();
             }
@@ -550,7 +554,7 @@ OO.plugin("WonderUIModule", function (OO) {
             _.mousedown = false;
             if ( _.mousetarget === 'vid' ) {
                 _.play();
-            } 
+            }
             _.mousetarget = undefined;
         }
     };
@@ -571,29 +575,29 @@ OO.plugin("WonderUIModule", function (OO) {
                 if ( scrubtype === 'vid' ) {
                     var rect = _.elements.scrubber_vid.getBoundingClientRect();
                     percentage = x - rect.left;
-                    percentage = ((percentage/(rect.right - rect.left)) * 100 );                    
+                    percentage = ((percentage/(rect.right - rect.left)) * 100 );
                     if ( percentage <= 0 ) {
-                        _.scrubVid(0);                        
+                        _.scrubVid(0);
                     } else if ( percentage >= 100 ) {
                         _.scrubVid(100);
                     } else {
-                        _.scrubVid(percentage);    
+                        _.scrubVid(percentage);
                     }
                 } else if ( scrubtype === 'vol' ) {
                     var rect = _.elements.scrubber_vol.getBoundingClientRect();
                     percentage = y - rect.bottom;
                     percentage = ((percentage/(rect.bottom - rect.top)) * 100 );
                     if ( percentage <= -100 ) {
-                        _.scrubVol(100);                        
+                        _.scrubVol(100);
                     } else if ( percentage >= 0 ) {
                         _.scrubVol(0);
                     } else {
-                        _.scrubVol(Math.abs(percentage));    
+                        _.scrubVol(Math.abs(percentage));
                     }
                 }
 
             },10);
-            
+
             return false;
         }
     };
@@ -616,22 +620,22 @@ OO.plugin("WonderUIModule", function (OO) {
                     percentage = x - rect.left;
                     percentage = ((percentage/(rect.right - rect.left)) * 100 );
                     if ( percentage <= 0 ) {
-                        _.scrubVid(0);                        
+                        _.scrubVid(0);
                     } else if ( percentage >= 100 ) {
                         _.scrubVid(100);
                     } else {
-                        _.scrubVid(percentage);    
+                        _.scrubVid(percentage);
                     }
                 } else if ( scrubtype === 'vol' ) {
                     var rect = _.elements.scrubber_vol.getBoundingClientRect();
                     percentage = y - rect.bottom;
                     percentage = ((percentage/(rect.bottom - rect.top)) * 100 );
                     if ( percentage <= -100 ) {
-                        _.scrubVol(100);                        
+                        _.scrubVol(100);
                     } else if ( percentage >= 0 ) {
                         _.scrubVol(0);
                     } else {
-                        _.scrubVol(Math.abs(percentage));    
+                        _.scrubVol(Math.abs(percentage));
                     }
                 }
 
@@ -679,23 +683,23 @@ OO.plugin("WonderUIModule", function (OO) {
     _.hideUI = function () {
         _.addClass( _.elements.controls, 'hide' );
         _.removeClass( _.elements.controls, 'show' );
-        _.removeClass( _.elements.scrubber_vol, 'vol-visible' );   
-        _.removeClass( _.elements.scrubber_target_vol, 'vol-visible' );   
+        _.removeClass( _.elements.scrubber_vol, 'vol-visible' );
+        _.removeClass( _.elements.scrubber_target_vol, 'vol-visible' );
         _.addClass( _.elements.loader, 'no-cursor');
     };
 
-    // A user interaction has been detected, show the UI and 
+    // A user interaction has been detected, show the UI and
     // set a timer to hide it again
     _.interaction = function (e) {
         if ( _.controlshovered === false ) {
             _.showUI();
-            _.timers.interaction = 0;            
+            _.timers.interaction = 0;
         }
     };
 
     _.actionTick = function () {
         if ( _.timers.seek === 10 ) {
-            _.seek( _.newtime );    
+            _.seek( _.newtime );
             _.time = _.newtime;
         }
     };
@@ -709,13 +713,13 @@ OO.plugin("WonderUIModule", function (OO) {
             _.elements.scrubber_timer.innerHTML = _.getTime( _.newtime );
             _.showLoader();
         } else if ( _.loaded === true && _.time !== undefined && _.scrubbed === false && _.timers.seek > 60 ) {
-            var percentage = ( (_.time/_.duration) * 100 ) + '%';        
+            var percentage = ( (_.time/_.duration) * 100 ) + '%';
             _.elements.scrubber_progress_vid.style.width = percentage;
             _.elements.scrubber_handle_vid.style.left = percentage;
             _.elements.scrubber_timer.style.left = percentage;
             _.elements.scrubber_timer.innerHTML = _.getTime( _.time );
         }
-        
+
         // Check if the volume has changed
         if ( _.currentvolume != _.newvolume ) {
             _.currentvolume = _.newvolume;
@@ -737,14 +741,14 @@ OO.plugin("WonderUIModule", function (OO) {
         // Update the time
         if ( _.state.playing === false ) {
             _.displayTime = _.getTime(_.duration);
-        } else {    
+        } else {
             _.displayTime = _.getTime(_.time);
         }
         _.elements.timer.innerHTML = _.displayTime;
 
         if ( _.timers.interaction === 40 ) {
             if ( _.isTouchDevice() === false && _.controlshovered === false ) {
-                _.hideUI();         
+                _.hideUI();
             }
         }
     };
@@ -761,7 +765,7 @@ OO.plugin("WonderUIModule", function (OO) {
     _.moveBufferBar = function () {
         if ( _.timers.buffer === 10 && _.loaded === true && _.buffer !== undefined ) {
             var percentage = ( (_.buffer/_.duration) * 100 ) + '%';
-            _.elements.scrubber_buffer.style.width = percentage;            
+            _.elements.scrubber_buffer.style.width = percentage;
         }
     };
 
@@ -837,13 +841,13 @@ OO.plugin("WonderUIModule", function (OO) {
         for ( var i = 0; i < els.length; i++ ) {
             if ( els[i].className.indexOf( cl ) !== -1 ) {
                 if ( els[i].className.indexOf( cl + ' ' ) !== -1 ) {
-                    els[i].className = els[i].className.replace( cl + ' ', '' );         
+                    els[i].className = els[i].className.replace( cl + ' ', '' );
                 } else if ( els[i].className.indexOf( ' ' + cl ) !== -1 ) {
                     els[i].className = els[i].className.replace( ' ' + cl, '' );
                 } else if ( els[i].className.length === cl.length ) {
                     els[i].className = '';
                 }
-            }    
+            }
         };
     };
 
@@ -872,7 +876,7 @@ OO.plugin("WonderUIModule", function (OO) {
                 e.stopPropagation();
             } else {
                 e.returnValue = false;
-            }            
+            }
         }
     };
 
@@ -887,17 +891,17 @@ OO.plugin("WonderUIModule", function (OO) {
                 return (arr.length > 0) ? arr : null;
             } else {
                 arr = Array.prototype.slice.call(document.getElementsByTagName(target));
-                return (arr.length > 0) ? arr : null; 
+                return (arr.length > 0) ? arr : null;
             }
         } else if (_.isNode(target) || _.isElement(target) ) {
             return [target];
         } else if (typeof target === 'object') {
             try {
-                return (target.length > 0 ) ? Array.prototype.slice.call(target) : null;    
+                return (target.length > 0 ) ? Array.prototype.slice.call(target) : null;
             } catch(e){
                 return target;
             }
-            
+
         }
     };
 
@@ -926,19 +930,19 @@ OO.plugin("WonderUIModule", function (OO) {
     _.isMobileDevice = function () {
         var check = true;
         (function(a){if(/(android|bb\d+|meego).+mobile|avantgo|bada\/|blackberry|blazer|compal|elaine|fennec|hiptop|iemobile|ip(hone|od)|iris|kindle|lge |maemo|midp|mmp|netfront|opera m(ob|in)i|palm( os)?|phone|p(ixi|re)\/|plucker|pocket|psp|series(4|6)0|symbian|treo|up\.(browser|link)|vodafone|wap|windows (ce|phone)|xda|xiino/i.test(a)||/1207|6310|6590|3gso|4thp|50[1-6]i|770s|802s|a wa|abac|ac(er|oo|s\-)|ai(ko|rn)|al(av|ca|co)|amoi|an(ex|ny|yw)|aptu|ar(ch|go)|as(te|us)|attw|au(di|\-m|r |s )|avan|be(ck|ll|nq)|bi(lb|rd)|bl(ac|az)|br(e|v)w|bumb|bw\-(n|u)|c55\/|capi|ccwa|cdm\-|cell|chtm|cldc|cmd\-|co(mp|nd)|craw|da(it|ll|ng)|dbte|dc\-s|devi|dica|dmob|do(c|p)o|ds(12|\-d)|el(49|ai)|em(l2|ul)|er(ic|k0)|esl8|ez([4-7]0|os|wa|ze)|fetc|fly(\-|_)|g1 u|g560|gene|gf\-5|g\-mo|go(\.w|od)|gr(ad|un)|haie|hcit|hd\-(m|p|t)|hei\-|hi(pt|ta)|hp( i|ip)|hs\-c|ht(c(\-| |_|a|g|p|s|t)|tp)|hu(aw|tc)|i\-(20|go|ma)|i230|iac( |\-|\/)|ibro|idea|ig01|ikom|im1k|inno|ipaq|iris|ja(t|v)a|jbro|jemu|jigs|kddi|keji|kgt( |\/)|klon|kpt |kwc\-|kyo(c|k)|le(no|xi)|lg( g|\/(k|l|u)|50|54|\-[a-w])|libw|lynx|m1\-w|m3ga|m50\/|ma(te|ui|xo)|mc(01|21|ca)|m\-cr|me(rc|ri)|mi(o8|oa|ts)|mmef|mo(01|02|bi|de|do|t(\-| |o|v)|zz)|mt(50|p1|v )|mwbp|mywa|n10[0-2]|n20[2-3]|n30(0|2)|n50(0|2|5)|n7(0(0|1)|10)|ne((c|m)\-|on|tf|wf|wg|wt)|nok(6|i)|nzph|o2im|op(ti|wv)|oran|owg1|p800|pan(a|d|t)|pdxg|pg(13|\-([1-8]|c))|phil|pire|pl(ay|uc)|pn\-2|po(ck|rt|se)|prox|psio|pt\-g|qa\-a|qc(07|12|21|32|60|\-[2-7]|i\-)|qtek|r380|r600|raks|rim9|ro(ve|zo)|s55\/|sa(ge|ma|mm|ms|ny|va)|sc(01|h\-|oo|p\-)|sdk\/|se(c(\-|0|1)|47|mc|nd|ri)|sgh\-|shar|sie(\-|m)|sk\-0|sl(45|id)|sm(al|ar|b3|it|t5)|so(ft|ny)|sp(01|h\-|v\-|v )|sy(01|mb)|t2(18|50)|t6(00|10|18)|ta(gt|lk)|tcl\-|tdg\-|tel(i|m)|tim\-|t\-mo|to(pl|sh)|ts(70|m\-|m3|m5)|tx\-9|up(\.b|g1|si)|utst|v400|v750|veri|vi(rg|te)|vk(40|5[0-3]|\-v)|vm40|voda|vulc|vx(52|53|60|61|70|80|81|83|85|98)|w3c(\-| )|webc|whit|wi(g |nc|nw)|wmlb|wonu|x700|yas\-|your|zeto|zte\-/i.test(a.substr(0,4)))check = false})(navigator.userAgent||navigator.vendor||window.opera);
-        return !check;        
+        return !check;
     };
 
 
     //Returns true if it is a DOM node
     _.isNode = function (o){
       return (
-        typeof Node === "object" ? o instanceof Node : 
+        typeof Node === "object" ? o instanceof Node :
         o && typeof o === "object" && typeof o.nodeType === "number" && typeof o.nodeName==="string"
       );
     }
 
-    //Returns true if it is a DOM element    
+    //Returns true if it is a DOM element
     _.isElement = function (o){
       return (
         typeof HTMLElement === "object" ? o instanceof HTMLElement : //DOM2
@@ -969,7 +973,7 @@ OO.plugin("WonderUIModule", function (OO) {
     _.attach = (function (ev, fn) {
         if (window.addEventListener) {
             return function(ev, fn) {
-                this.addEventListener(ev, fn, false);    
+                this.addEventListener(ev, fn, false);
             };
         } else if (window.attachEvent) {
             return function(ev, fn) {
