@@ -314,15 +314,15 @@ OO.plugin("WonderUIModule", function (OO) {
     };
 
     _.autoPlay = function() {
-
-        if ( parseInt(_.getQuery( 'autoplay' )) === 1 && _.isMobile === false && _.ipad === false ) {
-            setTimeout( function() {
-                _.loaded = true;
-                _.controlshovered = false;
-                _.played = false;
-                _.mb.publish(OO.EVENTS.PLAY);
-            }, 200);
-        }
+      var autoplayVideo = (parseInt(_.data.video.loop, 10) === 1);
+      if ( autoplayVideo && _.isMobile === false && _.ipad === false ) {
+        setTimeout( function() {
+          _.loaded = true;
+          _.controlshovered = false;
+          _.played = false;
+          _.mb.publish(OO.EVENTS.PLAY);
+        }, 200);
+      }
     };
 
     // Event fired off by the OO message bus to indicate the playhead has moved.
@@ -389,7 +389,8 @@ OO.plugin("WonderUIModule", function (OO) {
     };
 
     _.onPlayed = function (e) {
-        if ( parseInt(_.getQuery( 'loop' )) === 1 && _.isMobile === false && _.ipad === false ) {
+        var loopVideo = (parseInt(_.data.video.loop, 10) === 1);
+        if ( loopVideo && _.isMobile === false && _.ipad === false ) {
           _.mb.publish(OO.EVENTS.PLAY);
         } else {
           _.state.playing = false;
