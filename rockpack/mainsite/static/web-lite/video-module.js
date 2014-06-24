@@ -112,7 +112,13 @@ OO.plugin("WonderUIModule", function (OO) {
         _.mb.subscribe(OO.EVENTS.PLAYER_EMBEDDED, 'wonder', _.hideLoader);
         _.mb.subscribe(OO.EVENTS.PLAYBACK_READY, 'wonder', _.autoPlay);
 
+        _.applySettings();
     };
+
+    _.applySettings = function () {
+
+      _.showControls = !!(_.getQuery('controls'));
+    }
 
     /*  Message bus event subscriber callbacks
     /* ======================================= */
@@ -748,7 +754,7 @@ OO.plugin("WonderUIModule", function (OO) {
         _.elements.timer.innerHTML = _.displayTime;
 
         if ( _.timers.interaction === 40 ) {
-            if ( _.isTouchDevice() === false && _.controlshovered === false ) {
+            if ( _.isTouchDevice() === false && _.controlshovered === false && _.showControls === false) {
                 _.hideUI();
             }
         }
