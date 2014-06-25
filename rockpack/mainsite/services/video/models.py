@@ -8,7 +8,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import relationship, aliased, lazyload
 from sqlalchemy.orm.attributes import get_history
 from rockpack.mainsite import app, cache
-from rockpack.mainsite.core.dbapi import db, defer_except, commit_on_success
+from rockpack.mainsite.core.dbapi import db, defer_except, commit_on_success, readonly_session
 from rockpack.mainsite.helpers import lazy_gettext as _
 from rockpack.mainsite.helpers.db import add_base64_pk, add_video_pk, insert_new_only, ImageType, BoxType
 from rockpack.mainsite.helpers.urls import url_for
@@ -784,6 +784,57 @@ def get_influential_count_by_instance(instance_id):
         return result[0]
 
 
+def set_most_influential_for_video(video_ids):
+    child = aliased(VideoInstance, name='child')
+    query = readonly_session.query(
+        VideoInstance.id,
+        VideoInstance.video,
+        child.source_channel,
+        func.count(VideoInstance.id)
+    ).outerjoin(
+        child,
+        (VideoInstance.video == child.video) &
+        (VideoInstance.channel == child.source_channel)
+    ).join(
+        Video,
+        (Video.id == VideoInstance.video) &
+        (Video.visible == True) &
+        (VideoInstance.deleted == False)
+    ).join(
+        Channel,
+        (Channel.id == VideoInstance.channel) &
+        (Channel.public == True)
+    )
+
+    query = query.filter(Video.id.in_(video_ids))
+
+    query = query.group_by(VideoInstance.id, VideoInstance.video, child.source_channel)
+
+    instance_counts = {}
+    influential_index = {}
+
+    for _id, video, source_channel, count in query.yield_per(6000):
+        # Set the count for the video instance
+        instance_counts[(_id, video)] = count
+        # If the count is higher for the same video that
+        # the previous instance, mark this instance as the
+        # influential one for this video
+        i_id, i_count = influential_index.get(video, [None, 0])
+
+        # Count will always be at least 1
+        # but should really be zero if no children
+        if not source_channel and count == 1:
+            count = 0
+        if (count > i_count) or\
+                (count == i_count) and not source_channel:
+            influential_index.update({video: (_id, count,)})
+
+    for (_id, video), count in instance_counts.iteritems():
+        if influential_index.get(video, '')[0] == _id:
+            VideoInstance.query.filter(VideoInstance.id == _id).update({'most_influential': True})
+            break
+
+
 @background_on_sqs
 @commit_on_success
 def _update_most_influential(instance_id):
@@ -800,13 +851,36 @@ def _update_most_influential(instance_id):
         app.logger.warning('Failed to run _update_most_influential for instance %s', instance_id)
         return
 
+    if instance.deleted and instance.most_influential and not instance.channel.public and not instance.video.public:
+        instance.most_influential = False
+        VideoInstance.query.session.add(instance)
+        set_most_influential_for_video([instance.video])
+        return
+
+    # If we're most influential and we're deleted
+    # we should promote another to the throne
+    if instance.most_influential and instance.deleted:
+        pass
+
     source_instance = VideoInstance.query.filter(
         VideoInstance.video == instance.video,
-        VideoInstance.channel == instance.source_channel).first()
+        VideoInstance.channel == instance.source_channel,
+        VideoInstance.deleted == False
+    ).join(
+        Channel,
+        (Channel.id == VideoInstance.channel) &
+        (Channel.public == True)
+    ).first()
 
     most_influential_instance = VideoInstance.query.filter(
         VideoInstance.most_influential == True,
-        VideoInstance.video == instance.video).first()
+        VideoInstance.video == instance.video,
+        VideoInstance.deleted == False
+    ).join(
+        Channel,
+        (Channel.id == VideoInstance.channel) &
+        (Channel.public == True)
+    ).first()
 
     if not source_instance:
         if not most_influential_instance:

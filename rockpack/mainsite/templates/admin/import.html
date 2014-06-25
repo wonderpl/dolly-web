@@ -24,6 +24,7 @@
       {{ form.errors.__all__ }}
     </div>
     {% endif %}
+
     <div class="import_form">
         <form action="" method="POST" class="form-horizontal" enctype="multipart/form-data">
             <fieldset>
@@ -36,6 +37,8 @@
                     <div class="controls">
                         {% if form.commit.data %}
                         <input type="submit" class="btn btn-primary btn-large" value="{{ _gettext('Submit') }}" />
+                            <input type="button" style="background-color: #ffcc00" class="btn btn-primary btn-large supercharge" value="{{ _gettext('SUPERCHARGE') }}" />
+                        <span id="supercharge_error"></span>
                         {% else %}
                         <input type="submit" class="btn btn-primary btn-large" value="{{ _gettext('Preview') }}" />
                         {% endif %}
@@ -72,6 +75,33 @@
   <script src="/admin/static/admin/js/form.js"></script>
   {% include 'admin/rockpack-tags.js' %}
   <script>
+    {% if import_preview %}
+    var foo = '';
+    $('.supercharge').click(function() {
+            $.ajax({
+            type: 'POST',
+            url: '{{ url_for(".supercharge") }}',
+            data: {'type': $('.form-horizontal')[0].type.value,
+                'id': $('.form-horizontal')[0].id.value,
+                'title': "{{ import_preview.videos[0].title }}",
+                'category': $('.form-horizontal')[0].category.value,
+                'channel': $('.form-horizontal')[0].channel.value,
+                'source': $('.form-horizontal')[0].source.value,
+                'user': $('.form-horizontal')[0].user.value},
+            success: function(data, text) {
+                $('#supercharge_error').text('Queued for SUPERCHARGING. You may go now.');
+            },
+            error: function(request, status, error) {
+                console.log(request);
+                console.log(status);
+                foo = request;
+                console.log(error);
+                $('#supercharge_error').text(request.responseText);
+            }
+        });
+    });
+    {% endif %}
+
       var urlparse = function(ident) {
           var subs = location.search.substring(1).split('&')
           for (var i = 0; i < subs.length; i++) {
