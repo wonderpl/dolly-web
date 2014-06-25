@@ -81,7 +81,7 @@
               {% else %}
               <img src="{{ config.EMAIL_ASSETS_URL }}/assets/dolly/img/emails/avatar-small.png" style="display:block;margin-right:12px;margin-bottom:24px;border-radius:40px;outline:none" border="0" width="40" height="40" alt="" align="left" />
               {% endif %}
-              <p style="margin:0;margin-bottom:24px;font-size:13px;line-height:18px;font-style:italic"><font face="Georgia" color="#777782"><strong>{{ user.display_name }}</strong> shared a {{ object_type_name }} with you.</font></p>
+              <p style="margin:0;margin-bottom:24px;font-size:13px;line-height:18px;font-style:italic"><font face="Georgia" color="#777782"><strong>{{ user.display_name }}</strong> recommended this {{ object_type_name }} for you.</font></p>
             </td>
           </tr>
           {% else %}{# VIDEO #}
@@ -104,7 +104,7 @@
               {% else %}
               <img src="{{ config.EMAIL_ASSETS_URL }}/assets/dolly/img/emails/avatar-small.png" style="display:block;margin-right:12px;margin-bottom:24px;border-radius:40px;outline:none" border="0" width="40" height="40" alt="{{ user.display_name }}" align="left" />
               {% endif %}
-              <p style="margin:0;margin-bottom:24px;font-size:13px;line-height:18px;font-style:italic"><font face="Georgia" color="#777782"><strong>{{ user.display_name }}</strong> shared a {{ object_type_name }} with you.</font></p>
+              <p style="margin:0;margin-bottom:24px;font-size:13px;line-height:18px;font-style:italic"><font face="Georgia" color="#777782"><strong>{{ user.display_name }}</strong> recommended this {{ object_type_name }} for you.</font></p>
             </td>
           </tr>
           {% endif %}

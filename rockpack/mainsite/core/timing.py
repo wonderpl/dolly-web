@@ -19,9 +19,12 @@ def record_timing(name, value):
         log.info('%s: %dms', name, value * 1000)
 
 
-def record_counter(name, value):
+def record_counter(name, value, gauge=False):
     if statsd_client:
-        statsd_client.update_stats(name, value)
+        if gauge:
+            statsd_client.gauge(name, value)
+        else:
+            statsd_client.update_stats(name, value)
     else:
         log.info('%s: %d', name, value)
 
