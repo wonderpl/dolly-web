@@ -14,6 +14,7 @@ from rockpack.mainsite.core import email
 from rockpack.mainsite.core.token import create_unsubscribe_token
 from rockpack.mainsite.core.apns import push_client
 from rockpack.mainsite.helpers.urls import url_tracking_context
+from rockpack.mainsite.background_sqs_processor import background_on_sqs
 from rockpack.mainsite.services.oauth import facebook
 from rockpack.mainsite.services.oauth.models import ExternalFriend, ExternalToken
 from rockpack.mainsite.services.share.models import ShareLink
@@ -218,6 +219,61 @@ def create_unavailable_notifications(date_from=None, date_to=None, user_notifica
             user_notifications.setdefault(user, None)
 
 
+@background_on_sqs
+def recommend_for_influencers(instance, user):
+    if not user.is_influencer:
+        influencer_instances = VideoInstance.query.join(
+            Channel,
+            (Channel.id == VideoInstance.channel) &
+            (Channel.public == True)
+        ).join(
+            User,
+            (User.id == Channel.owner)
+            (User.is_influencer == True)
+        ).filter(
+            VideoInstance.instance.video == instance.video
+        )
+
+        if influencer_instances.count() > 0:
+            subscription_friend = Channel.query.\
+                join(Subscription, Subscription.channel == Channel.id).\
+                filter(Subscription.user == user).\
+                with_entities(Channel.owner.label('friendid'), Subscription.user.label('userid'))
+
+            email_friend = ExternalFriend.query.\
+                join(User,
+                     (ExternalFriend.email == User.email) &
+                     (ExternalFriend.external_system == 'email')).\
+                filter(ExternalFriend.user == user).\
+                with_entities(User.id.label('friendid'),
+                              ExternalFriend.user.label('userid'))
+
+            external_friend = ExternalToken.query.\
+                join(ExternalFriend,
+                    (ExternalFriend.external_system == ExternalToken.external_system) &
+                    (ExternalFriend.external_uid == ExternalToken.external_uid)).\
+                filter(ExternalFriend.user == user).\
+                with_entities(ExternalToken.user.label('friendid'),
+                              ExternalFriend.user.label('userid'))
+
+            unioned = subscription_friend.union_all(email_friend, external_friend).subquery()
+
+            # Fetch the user's friends to email
+            User.query.join(
+                unioned, unioned.c.friend == User.id
+            ).join(
+                UserActivity,
+                (UserActivity.user == unioned.c.friend) &
+                (UserActivity.object_type == 'video_instance') &
+                (UserActivity.object_id != instance.id)
+            ).with_entities(User)
+
+            for friend in User:
+                app.logger.info(
+                    'Influencer-starred instance %s sending to %s from %s',
+                    instance.id, friend.id, user.id)
+
+
 def create_new_repack_notifications(date_from=None, date_to=None, user_notifications=None):
     packer_channel = aliased(Channel, name="source_channel")
     packer_user = aliased(User, name="packer_user")
@@ -245,6 +301,9 @@ def create_new_repack_notifications(date_from=None, date_to=None, user_notificat
         activity_window = activity_window.filter(VideoInstance.date_added < date_to)
 
     for video_instance, packer_channel, repacker_channel, repacker in activity_window:
+        if video_instance.is_favourite:
+            recommend_for_influencers(video_instance.id, repacker.id)
+
         user, type, body = repack_message(repacker, repacker_channel, video_instance)
 
         _add_user_notification(packer_channel.owner, video_instance.date_added, type, body)
