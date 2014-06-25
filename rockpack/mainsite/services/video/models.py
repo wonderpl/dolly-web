@@ -851,7 +851,7 @@ def _update_most_influential(instance_id):
         app.logger.warning('Failed to run _update_most_influential for instance %s', instance_id)
         return
 
-    if instance.deleted or not instance.channel_rel.public or not instance.video_rel.visible:
+    if instance.deleted or not instance.video_channel.public or not instance.video_rel.visible:
         if instance.most_influential:
             instance.most_influential = False
             VideoInstance.query.session.add(instance)
