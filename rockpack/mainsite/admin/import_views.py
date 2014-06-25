@@ -581,5 +581,5 @@ def supercharge(title, category, channel, user, video_id):
         app.logger.warning('Tried removing file %s: %s', file_path, str(e))
 
     # Let ooyala know it's there
-    # notify_ooyala(title, category, channel, user, username, s3_path)
+    notify_ooyala(title, category, channel, user, username, s3_path)
     return True
