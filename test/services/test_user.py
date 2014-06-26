@@ -465,9 +465,7 @@ class TestUserContent(base.RockPackTestCase):
         with patch.object(cron_cmds, 'influencer_starred_email') as mock_method:
             with self.app.test_request_context():
                 with self.app.test_client() as client:
-                    influencer = self.create_test_user()
-                    influencer.is_influencer = True
-                    User.query.session.commit()
+                    influencer = self.create_test_user(is_influencer=True)
 
                     user = self.create_test_user()
 
@@ -502,6 +500,9 @@ class TestUserContent(base.RockPackTestCase):
                     cron_cmds.create_new_activity_notifications(date_from, date_to)
 
             self.assertEquals(mock_method.call_count, 1)
+            self.assertEquals(mock_method.call_args_list[0][0][0].id, user.id)
+            self.assertEquals(mock_method.call_args_list[0][0][1].id, user3.id)
+            self.assertEquals(mock_method.call_args_list[0][0][2].id, instance_id)
 
     @skip_unless_config('ELASTICSEARCH_URL')
     def test_content_feed(self):

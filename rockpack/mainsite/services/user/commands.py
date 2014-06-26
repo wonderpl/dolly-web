@@ -352,12 +352,9 @@ def create_new_activity_notifications(date_from=None, date_to=None, user_notific
                                 activity.id, action, getattr(object, 'id', None))
                 if object:
                     user, type, body = get_message(activity, object)
+
                     if action == 'star':
-                        my_instance = VideoInstance.query.filter(
-                            VideoInstance.video == object.video,
-                            VideoInstance.is_favourite == True).first()
-                        if my_instance:
-                            recommend_for_influencers(my_instance.id, activity.user)
+                        recommend_for_influencers(object.id, activity.user)
 
                     if user == activity.user:
                         # Don't send notifications to self
