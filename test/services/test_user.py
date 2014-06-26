@@ -461,6 +461,48 @@ class TestUserContent(base.RockPackTestCase):
         self.assertEquals(r.status_code, 201)
         return token
 
+    def test_starred_influencer_email(self):
+        with patch.object(cron_cmds, 'influencer_starred_email') as mock_method:
+            with self.app.test_request_context():
+                with self.app.test_client() as client:
+                    influencer = self.create_test_user()
+                    influencer.is_influencer = True
+                    User.query.session.commit()
+
+                    user = self.create_test_user()
+
+                    # Create a couple of friends
+                    user3 = self.create_test_user()
+                    user4 = self.create_test_user()
+
+                    ExternalFriend(user=user.id, external_system='email', external_uid='u3',
+                                   name='u3', avatar_url='', email=user3.email).save()
+
+                    ExternalFriend(user=user.id, external_system='email', external_uid='u4',
+                                   name='u4', avatar_url='', email=user4.email).save()
+
+                    instance_id = VideoInstanceData.video_instance1.id
+
+                    # Staring action
+                    client.post('/ws/{}/activity/'.format(influencer.id),
+                                data={'action': 'star', 'object_id': instance_id},
+                                headers=[get_auth_header(influencer.id)])
+
+                    client.post('/ws/{}/activity/'.format(user.id),
+                                data={'action': 'star', 'object_id': instance_id},
+                                headers=[get_auth_header(user.id)])
+
+                    # Set one of the friends as having viewed the video
+                    UserActivity(user=user4.id, action='view', locale='en-us',
+                                 object_type='video_instance', object_id=instance_id).save()
+
+                    date_from, date_to = datetime(2012, 1, 1), datetime(2020, 1, 1)
+
+                    # Only one of the friends (of the two) should get an email
+                    cron_cmds.create_new_activity_notifications(date_from, date_to)
+
+            self.assertEquals(mock_method.call_count, 1)
+
     @skip_unless_config('ELASTICSEARCH_URL')
     def test_content_feed(self):
         with self.app.test_client() as client:

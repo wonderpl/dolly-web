@@ -851,17 +851,14 @@ def _update_most_influential(instance_id):
         app.logger.warning('Failed to run _update_most_influential for instance %s', instance_id)
         return
 
+    # If we're most influential and we're deleted
+    # we should promote another to the throne
     if instance.deleted or not instance.video_channel.public or not instance.video_rel.visible:
         if instance.most_influential:
             instance.most_influential = False
             VideoInstance.query.session.add(instance)
             set_most_influential_for_video([instance.video])
         return
-
-    # If we're most influential and we're deleted
-    # we should promote another to the throne
-    if instance.most_influential and instance.deleted:
-        pass
 
     source_instance = VideoInstance.query.filter(
         VideoInstance.video == instance.video,
@@ -887,7 +884,7 @@ def _update_most_influential(instance_id):
         if not most_influential_instance:
             # This must be the first instance for that video.
             # Set as most influential
-            instance.most_influential == True
+            instance.most_influential = True
         # ... else we've come through a path that isn't setting
         # most influential. Let's just drop out then.
         return
