@@ -1,9 +1,10 @@
-from flask import request
+from datetime import datetime
+from flask import request, json
 from rockpack.mainsite import app
 from rockpack.mainsite.core import youtube
 from rockpack.mainsite.core.webservice import WebService, expose, secure_view
 from rockpack.mainsite.core.dbapi import commit_on_success
-from rockpack.mainsite.services.video.models import Video
+from rockpack.mainsite.services.video.models import Video, VideoThumbnail, Source
 from .models import Subscription
 
 
@@ -18,9 +19,31 @@ def subscribe(hub, topic, channel_id):
 @commit_on_success
 def update_channel_videos(channel, data):
     playlist = youtube.parse_atom_playlist_data(data)
-    source = 1  # XXX: Get this dynamically?
+    source = Source.label_to_id('youtube')
     Video.add_videos(playlist.videos, source)
     channel.add_videos(playlist.videos)
+
+
+@commit_on_success
+def update_romeo_videos(data):
+    vdata = data['video']
+    assert vdata['source'] == 'ooyala'
+    source = Source.label_to_id(vdata['source'])
+
+    # update existing or create new
+    key = dict(source=source, source_videoid=vdata['source_id'])
+    video = Video.query.filter_by(**key).first() or Video(**key).add()
+
+    video.title = data['title']
+    video.description = vdata['description']
+    video.duration = vdata['duration']
+    video.date_published = datetime.strptime(
+        vdata['source_date_uploaded'][:19], '%Y-%m-%dT%H:%M:%S')
+    video.source_username = vdata['source_username']
+    video.link_url = vdata['link_url']
+    video.link_title = vdata['link_title']
+    video.category = data['category']
+    video.thumbnails = [VideoThumbnail(**t) for t in data['thumbnails']]
 
 
 class PubSubHubbubWS(WebService):
@@ -40,10 +63,14 @@ class PubSubHubbubWS(WebService):
                     'topic', 'verify_token', 'lease_seconds', 'challenge']
             response = subs.verify(*args)
             return (response, 200) if response else ('', 404)
-        elif request.mimetype == 'application/atom+xml':
+        elif request.mimetype in ('application/atom+xml', 'application/json'):
             sig = request.headers.get('X-Hub-Signature')
             if sig and subs.check_signature(sig, request.data):
-                update_channel_videos(subs.channel, request.data)
+                if 'romeo.wonderpl.com' in subs.topic:
+                    update_romeo_videos(json.loads(request.data))
+                else:
+                    # assume youtube
+                    update_channel_videos(subs.channel, request.data)
             else:
                 app.logger.warning('Failed to validate signature %s', sig)
             return '', 204
