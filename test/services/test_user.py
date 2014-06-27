@@ -462,47 +462,73 @@ class TestUserContent(base.RockPackTestCase):
         return token
 
     def test_starred_influencer_email(self):
-        with patch.object(cron_cmds, 'influencer_starred_email') as mock_method:
-            with self.app.test_request_context():
-                with self.app.test_client() as client:
-                    influencer = self.create_test_user(is_influencer=True)
+        with self.app.test_request_context():
+            with self.app.test_client() as client:
+                influencer = self.create_test_user(is_influencer=True)
 
-                    user = self.create_test_user()
+                user = self.create_test_user()
 
-                    # Create a couple of friends
-                    user3 = self.create_test_user()
-                    user4 = self.create_test_user()
+                # Create a couple of friends
+                user3 = self.create_test_user()
+                user3id = user3.id  # We need these when the session expires
+                user3email = user3.email  # ^^
 
-                    ExternalFriend(user=user.id, external_system='email', external_uid='u3',
-                                   name='u3', avatar_url='', email=user3.email).save()
+                user4 = self.create_test_user()
 
-                    ExternalFriend(user=user.id, external_system='email', external_uid='u4',
-                                   name='u4', avatar_url='', email=user4.email).save()
+                ExternalFriend(user=user.id, external_system='email', external_uid='u3',
+                               name='u3', avatar_url='', email=user3.email).save()
 
-                    instance_id = VideoInstanceData.video_instance1.id
+                ExternalFriend(user=user.id, external_system='email', external_uid='u4',
+                               name='u4', avatar_url='', email=user4.email).save()
 
-                    # Staring action
-                    client.post('/ws/{}/activity/'.format(influencer.id),
-                                data={'action': 'star', 'object_id': instance_id},
-                                headers=[get_auth_header(influencer.id)])
+                instance_id = VideoInstanceData.video_instance1.id
+                video_id = VideoInstanceData.video_instance1.video
 
-                    client.post('/ws/{}/activity/'.format(user.id),
-                                data={'action': 'star', 'object_id': instance_id},
-                                headers=[get_auth_header(user.id)])
+                # Staring action
+                client.post('/ws/{}/activity/'.format(influencer.id),
+                            data={'action': 'star', 'object_id': instance_id},
+                            headers=[get_auth_header(influencer.id)])
 
-                    # Set one of the friends as having viewed the video
-                    UserActivity(user=user4.id, action='view', locale='en-us',
-                                 object_type='video_instance', object_id=instance_id).save()
+                client.post('/ws/{}/activity/'.format(user.id),
+                            data={'action': 'star', 'object_id': instance_id},
+                            headers=[get_auth_header(user.id)])
 
-                    date_from, date_to = datetime(2012, 1, 1), datetime(2020, 1, 1)
+                # Set one of the friends as having viewed the video
+                UserActivity(user=user4.id, action='view', locale='en-us',
+                             object_type='video_instance', object_id=instance_id).save()
 
-                    # Only one of the friends (of the two) should get an email
-                    cron_cmds.create_new_activity_notifications(date_from, date_to)
+                date_from, date_to = datetime(2012, 1, 1), datetime(2020, 1, 1)
 
-            self.assertEquals(mock_method.call_count, 1)
-            self.assertEquals(mock_method.call_args_list[0][0][0].id, user.id)
-            self.assertEquals(mock_method.call_args_list[0][0][1].id, user3.id)
-            self.assertEquals(mock_method.call_args_list[0][0][2].id, instance_id)
+                # Only one of the friends (of the two) should get an email
+                cron_cmds.create_new_activity_notifications(date_from, date_to)
+
+                date_from = datetime.utcnow()
+                time.sleep(2)
+
+        ua = UserActivity.query.filter_by(action='recommended')
+        self.assertEquals(ua.count(), 1)
+        a = ua.first()
+        self.assertEquals(a.user, user3id)
+        self.assertEquals(a.object_id, video_id)
+
+        with self.app.test_request_context():
+            with self.app.test_client() as client:
+
+                # Add a separate friend for user 3 outside of the main group
+                user5 = self.create_test_user()
+                ExternalFriend(user=user5.id, external_system='email', external_uid='u5',
+                               name='u5', avatar_url='', email=user3email).save()
+
+                # User 5 stars same video
+                client.post('/ws/{}/activity/'.format(user5.id),
+                            data={'action': 'star', 'object_id': instance_id},
+                            headers=[get_auth_header(user5.id)])
+
+                cron_cmds.create_new_activity_notifications(date_from, date_to)
+
+        # User 3 shouldn't have another email
+        ua = UserActivity.query.filter_by(action='recommended')
+        self.assertEquals(ua.count(), 1)
 
     @skip_unless_config('ELASTICSEARCH_URL')
     def test_content_feed(self):

@@ -220,12 +220,22 @@ def create_unavailable_notifications(date_from=None, date_to=None, user_notifica
 
 
 def influencer_starred_email(sender, recipient, video_instance):
-    app.logger.info(
-        'Influencer-starred instance %s sending to %s from %s',
-        video_instance.id, recipient.id, sender.id)
+    #TODO: do something here for real
+    pass
+
+
+def influencer_starred_activity(userid, videoid):
+    UserActivity(
+        user=userid,
+        action='recommended',
+        object_type='video',
+        object_id=videoid,
+        tracking_code=None
+    ).add()
 
 
 @background_on_sqs
+@commit_on_success
 def recommend_for_influencers(instance_id, user_id):
     user = User.query.get(user_id)
     if user and not user.is_influencer:
@@ -277,18 +287,30 @@ def recommend_for_influencers(instance_id, user_id):
             ).outerjoin(
                 UserActivity,
                 (UserActivity.user == User.id) &
-                (UserActivity.object_type == 'video_instance') &
-                (UserActivity.action == 'view') &
+                (
+                    (
+                        (UserActivity.object_type == 'video_instance') &
+                        (UserActivity.action == 'view')
+                    ) |
+                    (
+                        (UserActivity.object_type == 'video') &
+                        (UserActivity.action == 'recommended')
+                    )
+                ) &
                 (UserActivity.user == unioned.c.friendid)
             ).outerjoin(
                 VideoInstance,
-                (VideoInstance.id == UserActivity.object_id) &
-                (VideoInstance.video == instance.video)
+                (VideoInstance.video == instance.video) &
+                (
+                    (VideoInstance.id == UserActivity.object_id) |
+                    (VideoInstance.video == UserActivity.object_id)
+                )
             ).group_by(User).with_entities(User, func.count(VideoInstance.video))
 
             for friend, count in friends:
                 if count == 0:
                     influencer_starred_email(user, friend, instance)
+                    influencer_starred_activity(friend.id, instance.video)
 
 
 def create_new_repack_notifications(date_from=None, date_to=None, user_notifications=None):
