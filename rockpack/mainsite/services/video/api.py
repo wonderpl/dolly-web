@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta
 import wtforms as wtf
 from flask import request, abort
 from flask.ext.wtf import Form
@@ -6,6 +7,7 @@ from collections import defaultdict
 from sqlalchemy import func, null
 from sqlalchemy.orm import contains_eager, lazyload
 from sqlalchemy.sql.expression import desc
+from sqlalchemy.orm.exc import NoResultFound
 from rockpack.mainsite import app
 from rockpack.mainsite.core import ooyala
 from rockpack.mainsite.core.dbapi import readonly_session, db, commit_on_success
@@ -349,6 +351,38 @@ class VideoWS(WebService):
         if not form.validate():
             abort(400, form_errors=form.errors)
         save_player_error(form.video_instance.data, form.error.data)
+
+    @expose_ajax('/<video_instance_id>/activity/', methods=['POST'])
+    @commit_on_success
+    def anon_activity(self, video_instance_id):
+
+        def add_instance(video_instance_id):
+            instance = models.VideoInstanceAnonActivity(
+                remote_address=request.remote_addr,
+                object_id=video_instance_id)
+            instance.add()
+            return instance
+
+        try:
+            models.VideoInstanceAnonActivity.query.filter(
+                models.VideoInstanceAnonActivity.remote_address == request.remote_addr,
+                models.VideoInstanceAnonActivity.object_id == video_instance_id,
+                models.VideoInstanceAnonActivity.date_added > (datetime.utcnow() - timedelta(hours=24))
+            ).one()
+        except NoResultFound:
+            add_instance(video_instance_id)
+        else:
+            # Nothing to do here; dupe for the day.
+            return
+
+        from rockpack.mainsite.services.user.api import (increment_video_instance_counts,
+                                                         _get_action_incrementer)
+
+        video_id = models.VideoInstance.query.filter(
+            models.VideoInstance.id == video_instance_id).value(models.VideoInstance.video)
+
+        column, value, incr = _get_action_incrementer('view')
+        increment_video_instance_counts(video_id, video_instance_id, 'en-us', incr, column)
 
 
 class ChannelWS(WebService):

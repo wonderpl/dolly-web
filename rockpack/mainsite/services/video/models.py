@@ -401,6 +401,16 @@ class VideoInstanceComment(db.Model):
     resource_url = property(get_resource_url)
 
 
+class VideoInstanceAnonActivity(db.Model):
+
+    __tablename__ = 'video_instance_anon_activity'
+
+    id = Column(Integer, primary_key=True)
+    remote_address = Column(String(15), nullable=False)
+    object_id = Column(CHAR(24), nullable=False)
+    date_added = Column(DateTime(), nullable=False, default=func.now())
+
+
 class Channel(db.Model):
     """ A channel, which can contain many videos """
 
