@@ -1,10 +1,14 @@
 
 
 <div ng-controller="PageCtrl">
-  <div id="home-splash">
-    <div class="inner">
+  <div id="home-splash" class="splash">
+    <div class="splash__content">
+      <p class="splash__title">Wonder PL is the place to watch and share videos that matter to you</p>
+      <p class="splash__tagline">Handpicked from the quality names you know<br />And those you are about to discover&hellip;</p>
     </div>
   </div>
+
+
 
   <div id="press-logos">
     <div class="inner">
@@ -17,53 +21,58 @@
     </div>
   </div>
 
-  <div id="home-description">
+  <div id="home-description" class="home-quote">
     <div class="inner">
-      <p class="standout f-serif">Welcome to Wonder PL. We think people are looking for simplicity, authenticity, inspiration and real community. So we created a home for the world's best video content to share with a discerning audience. One that cares about quality and deserves a viewing experience free from clutter.</p>
+        <blockquote>
+          <p class="f-serif home-quote__text">&ldquo;Being encapsulated in one app, away from all the noise, with internal exploration with the flick of a finger, Wonder PL is a wondrous place to consume top quality entertainment.&rdquo;</p>
+          <cite class="home-quote__cite">&mdash;Cool Hunting</cite>
+        </blockquote>
     </div>
   </div>
 
-  <div class="section" id="home-partners">
-    <div class="inner">
-      <h2 class="f-sans">Some Of Our Exclusive Partners</h2>
+  <section class="screenshots">
 
-      <ul>
-        <li>
-          <img ng-src="((assets_url))/assets/dolly/img/home-inge-v1.jpg" />
-          <h3 class="f-serif">Inge Solheim</h3>
-          <p class="f-serif">Polar Consultant, adventure guide, hobby philosopher. Optimist.</p>
-        </li><!--
-        --><li>
-          <img ng-src="((assets_url))/assets/dolly/img/home-nfb-v1.jpg" />
-          <h3 class="f-serif">National Film Board Of Canada</h3>
-          <p class="f-serif">From documentaries to animations and experimental films to fiction.</p>
-        </li><!--
-        --><li>
-          <img ng-src="((assets_url))/assets/dolly/img/home-tom-v1.jpg" />
-          <h3 class="f-serif">Tom Aikens</h3>
-          <p class="f-serif">Recipes from Tom's Kitchens across London.</p>
-        </li>
-      </ul>
+    <p class="screenshots__text">Watch the experts and learn the tricks of the trade from recipes by world renowed chefs to the latest technology innovations.</p>
 
-    </div>
-  </div>
+    <figure class="screenshots__figure screenshots__figure--inline">
+      <img class="screenshots__image" ng-src="((assets_url))/assets/dolly/img/home/iphone-discover.jpg" alt="discover" />
+      <figcaption class="screenshots__caption">
+        <p class="screenshots__caption-header">Discover</p>
+      </figcaption>
+    </figure>
 
-  <div id="home-ipad">
-    <div class="inner">
-      <img ng-src="((assets_url))/assets/dolly/img/home-ipad-v2.jpg" />
-    </div>
-  </div>
+    <figure class="screenshots__figure screenshots__figure--inline">
+      <img class="screenshots__image" ng-src="((assets_url))/assets/dolly/img/home/iphone-creatives.jpg" alt="follow creatives" />
+      <figcaption class="screenshots__caption">
+        <p class="screenshots__caption-header">Follow Creatives&hellip;</p>
+      </figcaption>
+    </figure>
 
-  <div id="home-mood-minder">
-    <div class="inner">
-      <div class="iphone">
-        <img ng-src="((assets_url))/assets/dolly/img/home-iphone-v1.jpg" />  
-      </div>
-      <div class="centered">
-        <h3 class="f-sans">Our Mood-Minder</h3>
-        <p class="f-serif">How are you feeling today? In need of some inspiration or looking for something healthy to cook? Our Mood-Minder lets you search for videos based on how you’re feeling. Just download the app, give the wheel a spin, sit back and enjoy.</p>
-      </div>
-      <div class="clear"></div>
-    </div>
-  </div>
+    <figure class="screenshots__figure screenshots__figure--inline">
+      <img class="screenshots__image" ng-src="((assets_url))/assets/dolly/img/home/iphone-thought-leaders.jpg" alt="thought leaders" />
+      <figcaption class="screenshots__caption">
+        <p class="screenshots__caption-header">&hellip;And Thought Leaders</p>
+      </figcaption>
+    </figure>
+
+    <figure class="screenshots__figure">
+      <img class="screenshots__image screenshots__image--left" ng-src="((assets_url))/assets/dolly/img/home/ipad-watch-learn.jpg" alt="watch and learn" />
+      <figcaption class="screenshots__caption screenshots__caption--right screenshots__caption--vertical-middle">
+        <p class="screenshots__caption-header">Watch &amp; Learn</p>
+        <p class="screenshots__caption-subheader">Scroll through ingredients, commentary and opinions while watching videos.</p>
+      </figcaption>
+    </figure>
+
+    <figure class="screenshots__figure">
+      <img class="screenshots__image screenshots__image--right" ng-src="((assets_url))/assets/dolly/img/home/ipad-shop-motion.jpg" alt="shop motion" />
+      <figcaption class="screenshots__caption screenshots__caption--left screenshots__caption--vertical-middle">
+        <p class="screenshots__caption-header">Shop Motion</p>
+        <p class="screenshots__caption-subheader">Ever watched something and wanted to buy the dress, book or shoes? With one touch, it&apos;s yours.</p>
+      </figcaption>
+    </figure>
+
+    <p class="screenshots__text">Fill Your Life With Wonder</p>
+
+  </section>
+
 </div>

@@ -55,10 +55,10 @@ class LoggingListBulker(pyes.models.ListBulker):
         return 'es.listbulker.' + name
 
     def log_flush_count(self):
-        timing.record_counter(self.metric('flush_count_per_forced'), self.flush_count)
+        timing.record_counter(self.metric('flush_count_per_forced'), self.flush_count, gauge=True)
 
     def log_bulk_size(self):
-        timing.record_counter(self.metric('bulk_size'), self.data_size)
+        timing.record_counter(self.metric('bulk_size'), self.data_size, gauge=True)
 
     def log_timer(self):
         timing.record_timing(self.metric('elapsed_time'), self.flush_timer.elapsed)

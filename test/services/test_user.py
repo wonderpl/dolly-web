@@ -1,10 +1,10 @@
 import json
 import time
 import uuid
-import cgi
 import urlparse
 from datetime import datetime, timedelta
 from mock import patch
+from jinja2.filters import do_striptags
 from rockpack.mainsite import app
 from rockpack.mainsite.services.video.models import Channel
 from rockpack.mainsite.services.oauth.api import FacebookUser
@@ -460,6 +460,49 @@ class TestUserContent(base.RockPackTestCase):
         )
         self.assertEquals(r.status_code, 201)
         return token
+
+    def test_starred_influencer_email(self):
+        with patch.object(cron_cmds, 'influencer_starred_email') as mock_method:
+            with self.app.test_request_context():
+                with self.app.test_client() as client:
+                    influencer = self.create_test_user(is_influencer=True)
+
+                    user = self.create_test_user()
+
+                    # Create a couple of friends
+                    user3 = self.create_test_user()
+                    user4 = self.create_test_user()
+
+                    ExternalFriend(user=user.id, external_system='email', external_uid='u3',
+                                   name='u3', avatar_url='', email=user3.email).save()
+
+                    ExternalFriend(user=user.id, external_system='email', external_uid='u4',
+                                   name='u4', avatar_url='', email=user4.email).save()
+
+                    instance_id = VideoInstanceData.video_instance1.id
+
+                    # Staring action
+                    client.post('/ws/{}/activity/'.format(influencer.id),
+                                data={'action': 'star', 'object_id': instance_id},
+                                headers=[get_auth_header(influencer.id)])
+
+                    client.post('/ws/{}/activity/'.format(user.id),
+                                data={'action': 'star', 'object_id': instance_id},
+                                headers=[get_auth_header(user.id)])
+
+                    # Set one of the friends as having viewed the video
+                    UserActivity(user=user4.id, action='view', locale='en-us',
+                                 object_type='video_instance', object_id=instance_id).save()
+
+                    date_from, date_to = datetime(2012, 1, 1), datetime(2020, 1, 1)
+
+                    # Only one of the friends (of the two) should get an email
+                    cron_cmds.create_new_activity_notifications(date_from, date_to)
+
+            self.assertEquals(mock_method.call_count, 1)
+            self.assertEquals(mock_method.call_args_list[0][0][0].id, user.id)
+            self.assertEquals(mock_method.call_args_list[0][0][1].id, user3.id)
+            self.assertEquals(mock_method.call_args_list[0][0][2].id, instance_id)
 
     @skip_unless_config('ELASTICSEARCH_URL')
     def test_content_feed(self):
@@ -990,6 +1033,8 @@ class TestUserContent(base.RockPackTestCase):
             self.assertEquals(notification['message']['video']['id'], video.id)
 
     def test_registration_notifications(self):
+        message_prefix = "Your friend"
+
         with self.app.test_client() as client:
             self.app.test_request_context().push()
             user1 = self.create_test_user().id
@@ -1016,7 +1061,38 @@ class TestUserContent(base.RockPackTestCase):
                 cron_cmds.send_push_notifications(user1)
                 alert = _send_apns_message.call_args[0][2]['alert']
                 self.assertIn('Fn Ln', alert['loc-args'])
-                self.assertIn('Your Facebook friend', alert['loc-key'])
+                self.assertIn(message_prefix, alert['loc-key'])
+
+            if app.config.get('DOLLY'):
+                # Emailed user test
+                user3 = self.create_test_user().id
+                recipient_email = 'noreply+{}@wonderpl.com'.format(uuid.uuid4().hex)
+                ExternalFriend(
+                    user=user3,
+                    external_system='email',
+                    external_uid=recipient_email,
+                    email=recipient_email).save()
+
+                user4 = self.create_test_user(first_name="Mo", last_name="Bacon", email=recipient_email)
+                self._add_apns_token(user3)
+
+                cron_cmds.create_new_registration_notifications()
+                UserNotification.query.session.commit()
+
+                r = client.get(
+                    '/ws/{}/notifications/'.format(user3),
+                    headers=[get_auth_header(user3)])
+                self.assertEquals(r.status_code, 200)
+
+                notification, = json.loads(r.data)['notifications']['items']
+                self.assertEquals(notification['message_type'], 'joined')
+                self.assertEquals(notification['message']['user']['id'], user4.id)
+
+                with patch.object(cron_cmds, '_send_apns_message') as _send_apns_message:
+                    cron_cmds.send_push_notifications(user3)
+                    alert = _send_apns_message.call_args[0][2]['alert']
+                    self.assertIn('Mo Bacon', alert['loc-args'])
+                    self.assertIn(message_prefix, alert['loc-key'])
 
     def test_subscription_notification(self):
         with self.app.test_client() as client:
@@ -1132,7 +1208,7 @@ class TestEmail(base.RockPackTestCase):
                 self.assertIn('<title>Welcome', body)
                 self.assertIn('{}'.format(user.display_name), body)
                 self.assertIn('To ensure our emails reach your inbox please make sure to add {}'.format(
-                    cgi.escape(app.config['DEFAULT_EMAIL_SOURCE'])), body)
+                    app.config['DEFAULT_EMAIL_SOURCE']), do_striptags(body))
 
                 user2 = self.create_test_user(date_joined=datetime(2100, 2, 2))
                 commands.create_registration_emails(datetime(2100, 2, 1), datetime(2100, 2, 10))

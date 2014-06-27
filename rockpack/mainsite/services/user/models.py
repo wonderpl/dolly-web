@@ -48,6 +48,7 @@ class User(db.Model):
     brand_profile_cover = Column(ImageType('BRAND_PROFILE'))
     description = Column(String(100))
     site_url = Column(String(1024))
+    is_influencer = Column(Boolean, nullable=False, server_default='false', default=False)
 
     locale = Column(ForeignKey('locale.id'), nullable=False, server_default='')
 

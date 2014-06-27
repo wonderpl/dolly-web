@@ -68,6 +68,16 @@ class VideoInstanceLocaleMetaFormAdmin(InlineFormAdmin):
     form_columns = ('id', 'locale_rel')
 
 
+class WYSIWYGTextAreaWidget(wtf.widgets.TextArea):
+    def __call__(self, field, **kwargs):
+        kwargs.setdefault('class_', 'ckeditor')
+        return super(WYSIWYGTextAreaWidget, self).__call__(field, **kwargs)
+
+
+class WYSIWYGTextAreaField(wtf.TextAreaField):
+    widget = WYSIWYGTextAreaWidget()
+
+
 class VideoView(AdminModelView):
     model = models.Video
 
@@ -77,6 +87,7 @@ class VideoView(AdminModelView):
     column_searchable_list = ('title',)
     form_excluded_columns = ('date_updated', 'instances', 'restrictions')
     inline_models = (models.VideoThumbnail,)
+    form_overrides = dict(description=WYSIWYGTextAreaField)
 
     def after_model_change(self, form, model, is_created):
         if use_elasticsearch():
@@ -109,7 +120,7 @@ class VideoInstanceView(AdminModelView):
     column_list = ('video_rel', 'video_channel', 'date_added', 'category_rel', 'thumbnail')
     column_formatters = dict(thumbnail=_format_video_thumbnail, video_rel=_format_video_instance_link)
     column_filters = ('channel', 'video', 'video_rel', 'metas', 'category_rel')
-    form_excluded_columns = ('metas', 'videoinstancecomments', 'original_channel_owner_rel')
+    form_excluded_columns = ('date_updated', 'metas', 'videoinstancecomments', 'original_channel_owner_rel')
     form_ajax_refs = dict(
         video_rel={'fields': (models.Video.title,)},
         video_channel={'fields': (models.Channel.title,)},

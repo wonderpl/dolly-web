@@ -14,6 +14,7 @@ from rockpack.mainsite.core import email
 from rockpack.mainsite.core.token import create_unsubscribe_token
 from rockpack.mainsite.core.apns import push_client
 from rockpack.mainsite.helpers.urls import url_tracking_context
+from rockpack.mainsite.background_sqs_processor import background_on_sqs
 from rockpack.mainsite.services.oauth import facebook
 from rockpack.mainsite.services.oauth.models import ExternalFriend, ExternalToken
 from rockpack.mainsite.services.share.models import ShareLink
@@ -189,11 +190,9 @@ def send_push_notifications(user):
     except KeyError:
         push_message_args = []
 
-    badge = None if app.config.get('DOLLY') else count
-
     return complex_push_notification(
         token, push_message, push_message_args,
-        badge=badge, id=notification.id, url=deeplink_url)
+        badge=count, id=notification.id, url=deeplink_url)
 
 
 def create_unavailable_notifications(date_from=None, date_to=None, user_notifications=None):
@@ -218,6 +217,78 @@ def create_unavailable_notifications(date_from=None, date_to=None, user_notifica
         _add_user_notification(user, video.date_updated, message_type, message)
         if user_notifications is not None and message_type in app.config['PUSH_NOTIFICATION_MAP']:
             user_notifications.setdefault(user, None)
+
+
+def influencer_starred_email(sender, recipient, video_instance):
+    app.logger.info(
+        'Influencer-starred instance %s sending to %s from %s',
+        video_instance.id, recipient.id, sender.id)
+
+
+@background_on_sqs
+def recommend_for_influencers(instance_id, user_id):
+    user = User.query.get(user_id)
+    if user and not user.is_influencer:
+        instance = VideoInstance.query.get(instance_id)
+        if not instance:
+            app.logger.warning('Invalid instance_id %s', instance_id)
+            return
+
+        influencer_instances = VideoInstance.query.join(
+            Channel,
+            (Channel.id == VideoInstance.channel) &
+            (Channel.public == True)
+        ).join(
+            User,
+            (User.id == Channel.owner) &
+            (User.is_influencer == True)
+        ).filter(
+            VideoInstance.video == instance.video
+        )
+
+        if influencer_instances.count() > 0:
+            subscription_friend = Channel.query.\
+                join(Subscription, Subscription.channel == Channel.id).\
+                filter(Subscription.user == user.id).\
+                with_entities(Channel.owner.label('friendid'), Subscription.user.label('userid'))
+
+            email_friend = ExternalFriend.query.\
+                join(User,
+                     (ExternalFriend.email == User.email) &
+                     (ExternalFriend.external_system == 'email')).\
+                filter(ExternalFriend.user == user.id).\
+                with_entities(User.id.label('friendid'),
+                              ExternalFriend.user.label('userid'))
+
+            external_friend = ExternalToken.query.\
+                join(ExternalFriend,
+                    (ExternalFriend.external_system == ExternalToken.external_system) &
+                    (ExternalFriend.external_uid == ExternalToken.external_uid)).\
+                filter(ExternalFriend.user == user.id).\
+                with_entities(ExternalToken.user.label('friendid'),
+                              ExternalFriend.user.label('userid'))
+
+            unioned = subscription_friend.union_all(email_friend, external_friend).subquery()
+
+            # Fetch the user's friends to email
+            friends = User.query.join(
+                unioned,
+                unioned.c.friendid == User.id
+            ).outerjoin(
+                UserActivity,
+                (UserActivity.user == User.id) &
+                (UserActivity.object_type == 'video_instance') &
+                (UserActivity.action == 'view') &
+                (UserActivity.user == unioned.c.friendid)
+            ).outerjoin(
+                VideoInstance,
+                (VideoInstance.id == UserActivity.object_id) &
+                (VideoInstance.video == instance.video)
+            ).group_by(User).with_entities(User, func.count(VideoInstance.video))
+
+            for friend, count in friends:
+                if count == 0:
+                    influencer_starred_email(user, friend, instance)
 
 
 def create_new_repack_notifications(date_from=None, date_to=None, user_notifications=None):
@@ -247,6 +318,7 @@ def create_new_repack_notifications(date_from=None, date_to=None, user_notificat
         activity_window = activity_window.filter(VideoInstance.date_added < date_to)
 
     for video_instance, packer_channel, repacker_channel, repacker in activity_window:
+
         user, type, body = repack_message(repacker, repacker_channel, video_instance)
 
         _add_user_notification(packer_channel.owner, video_instance.date_added, type, body)
@@ -280,6 +352,10 @@ def create_new_activity_notifications(date_from=None, date_to=None, user_notific
                                 activity.id, action, getattr(object, 'id', None))
                 if object:
                     user, type, body = get_message(activity, object)
+
+                    if action == 'star':
+                        recommend_for_influencers(object.id, activity.user)
+
                     if user == activity.user:
                         # Don't send notifications to self
                         continue
@@ -293,16 +369,44 @@ def create_new_registration_notifications(date_from=None, date_to=None, user_not
         (ExternalToken.user == User.id) &
         (ExternalToken.external_system == 'facebook'))
     ).options(contains_eager(User.external_tokens))
+
     if date_from:
         new_users = new_users.filter(User.date_joined >= date_from)
+
     if date_to:
         new_users = new_users.filter(User.date_joined < date_to)
+
     for user in new_users:
         token = user.external_tokens[0]
         friends = ExternalFriend.query.\
             filter_by(external_system=token.external_system, external_uid=token.external_uid).\
             values(ExternalFriend.user)
         for friend, in friends:
+            friend, message_type, message = joined_message(friend, user)
+            _add_user_notification(friend, user.date_joined, message_type, message)
+            if user_notifications is not None and message_type in app.config['PUSH_NOTIFICATION_MAP']:
+                user_notifications.setdefault(friend, None)
+
+    if app.config.get('DOLLY'):
+
+        FriendUser = aliased(User)
+
+        new_email_users = User.query.join(
+            ExternalFriend,
+            (ExternalFriend.email == User.email) &
+            (ExternalFriend.external_system == 'email')
+        ).join(
+            FriendUser,
+            ExternalFriend.user == FriendUser.id
+        ).with_entities(FriendUser.id, User)
+
+        if date_from:
+            new_email_users = new_email_users.filter(User.date_joined >= date_from)
+
+        if date_to:
+            new_email_users = new_email_users.filter(User.date_joined < date_to)
+
+        for friend, user in new_email_users:
             friend, message_type, message = joined_message(friend, user)
             _add_user_notification(friend, user.date_joined, message_type, message)
             if user_notifications is not None and message_type in app.config['PUSH_NOTIFICATION_MAP']:
@@ -347,6 +451,20 @@ def create_commmenter_notification(date_from=None, date_to=None, user_notificati
                 _add_user_notification(user.id, date_added, type, body)
                 if user_notifications is not None and type in app.config['PUSH_NOTIFICATION_MAP']:
                     user_notifications.setdefault(user.id, None)
+
+
+def check_share_notifications(date_from, date_to, user_notifications=None):
+    # The share notification records are created in share.api.share_content
+    # but we check here if any should trigger a push notification.
+    for type in 'channel_shared', 'video_shared':
+        if user_notifications is not None and type in app.config['PUSH_NOTIFICATION_MAP']:
+            user_notifications.update(
+                UserNotification.query.filter(
+                    UserNotification.date_created >= date_from,
+                    UserNotification.date_created < date_to,
+                    UserNotification.message_type == type
+                ).values(UserNotification.user, UserNotification.message_type)
+            )
 
 
 def remove_old_notifications():
@@ -733,6 +851,7 @@ def update_user_notifications(date_from, date_to):
         create_unavailable_notifications(date_from, date_to, user_notifications)
     create_new_registration_notifications(date_from, date_to, user_notifications)
     create_commmenter_notification(date_from, date_to, user_notifications)
+    check_share_notifications(date_from, date_to, user_notifications)
     remove_old_notifications()
     # apns needs the notification ids, so we need to
     # commit first before we continue

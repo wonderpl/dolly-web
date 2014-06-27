@@ -497,3 +497,43 @@ class TopVideosStatsView(TableStatsView):
 
     def split_row(self, row):
         return [self.video_item(*row[:2])], row[2:]
+
+
+class ClickToMoreStatsView(TableStatsView):
+
+    counts = 'video',
+
+    def get_table_head(self):
+        return [dict(id='date', type=date), dict(id='video count', type=int)]
+
+    def get_query(self, date_from, date_to):
+        from rockpack.mainsite.services.video.models import Video
+
+        dates = readonly_session.query(
+            func.date(Video.date_added).distinct().label('date_added')
+        ).filter(
+            Video.date_added.between(date_from, date_to)
+        ).subquery()
+
+        counts = readonly_session.query(
+            func.date(Video.date_added).label('date_added'),
+            func.count().label('count')
+        ).filter(
+            Video.link_title.isnot(None)
+        ).group_by(
+            func.date(Video.date_added)
+        ).subquery()
+
+        query = readonly_session.query(
+            dates.c.date_added,
+            func.sum(counts.c.count)
+        ).filter(
+            counts.c.date_added < dates.c.date_added
+        ).group_by(
+            dates.c.date_added
+        )
+
+        return query
+
+    def split_row(self, row):
+        return [row[0]], row[1:]

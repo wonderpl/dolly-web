@@ -1,138 +1,65 @@
 
 
 <div ng-controller="PageCtrl" class="f-centered" id="about-us-page">
-	
+
 	<div class="section">
 		<div class="inner page-intro">
 			<h1 class="f-sans">About Us</h1>
 			<ul class="anchor-nav">
-				<li><a class="scroll-anchor-link" href="#team">Team</a></li>
-				<li><a class="scroll-anchor-link" href="#partners">Partners</a></li>
-				<li><a class="scroll-anchor-link" href="#press">Press</a></li>
-				<li><a class="scroll-anchor-link" href="#logos">Logos</a></li>
-				<li><a class="scroll-anchor-link" href="#contact-us">Contact Us</a></li>
-				<li><a class="scroll-anchor-link" href="#careers">Careers</a></li>
+				<li><a class="scroll-anchor-link" href="#team">Team</a></li><!--
+				--><li><a class="scroll-anchor-link" href="#logos">Logos</a></li><!--
+				--><li><a class="scroll-anchor-link" href="#contact-us">Contact Us</a></li><!--
+				--><li><a class="scroll-anchor-link" href="#careers">Careers</a></li>
 			</ul>
 		</div>
 	</div>
 
-	<div class="section about-us">
-		<div class="inner padding bottom">
-			<span id="anchor-team"></span>
-			<h2 class="f-sans black">Team</h2>
-			<p class="standout f-serif">Wonder PL is brought to you by the hard working, talented team behind the world’s fastest growing video curation app of its kind - Rockpack.</p>
-			<p class="standout f-serif">Video is and will continue to be the way we express ourselves. People are looking for inspiration. We want to live better, feel better and be better.  We want to fill your lives and minds with Wonder.</p>
-			<p class="standout f-serif">Read more about our team on <a href="http://www.linkedin.com/company/wonder-pl" target="_blank">LinkedIn</a></p>
-			<p>&nbsp;</p>	
-		</div>
-	</div>
+  <section class="team" id="anchor-team">
+    <h2 class="team__title f-sans black">Team</h2>
+    <p class="team__text standout f-serif">Wonder PL is brought to you by a hard working, talented team of developers, creatives and film makers.</p>
+    <p class="team__text standout f-serif">We are creating a media platform that is better, one that has the power to instruct, inspire and fill people’s lives with wonder.</p>
+    <p class="team__text standout f-serif">We care about our content providers. To produce a quality platform requires a different mind set and orientation, down to every design decision through to winning editorial. We want them to flourish here and build meaningful connections with consumers and brands.</p>
+    <p class="team__text standout f-serif">There is more to do, and we need your help to do it. Write to us with your suggestions, tell us what you think about the new designs and features, or just say hi. Get in touch with us at <a href="mailto:hello@wonderpl.com">hello@wonderpl.com</a>.</p>
+    <p class="team__text standout f-serif">Read more about our team on <a href="http://www.linkedin.com/company/wonder-pl" target="_blank">LinkedIn</a></p>
+  </section>
 
-	
-	<div id="press-logos" class="section about-us">
-	    <div class="inner padding bottom">
-	    	<span id="anchor-press"></span>
-			<h2 class="f-sans black">Press</h2>
-			<a href="http://www.stuff.tv/3ds/fully-charged-pono-takes-money-angry-birds-takes-epic-turn-and-new-contender-takes-youtube/news" class="inline-block" target="_blank"><img ng-src="((assets_url))/assets/dolly/img/home-press-stuff.jpg" class="inline-block" /></a>
-			<a href="http://www.coolhunting.com/tech/wonder-pl.php" class="inline-block" target="_blank"><img ng-src="((assets_url))/assets/dolly/img/home-press-cool-hunting.png" class="inline-block" /></a>
-			<a href="http://video.cnbc.com/gallery/?video=3000256311" class="inline-block" target="_blank"><img ng-src="((assets_url))/assets/dolly/img/home-press-cnbc.jpg" class="inline-block" /></a>
-			<a href="((assets_url))/assets/dolly/docs/red-herring-press-release.pdf" class="inline-block" target="_blank"><img ng-src="((assets_url))/assets/dolly/img/home-press-red-herring.png" class="inline-block red-herring" /></a>
-			<a href="http://uk.reuters.com/video/2014/03/14/reuters-on-the-road-a-world-of-video-won?videoId=293403310&videoChannel=78" class="inline-block" target="_blank"><img ng-src="((assets_url))/assets/dolly/img/home-press-reuters.png" class="inline-block" /></a>
-			<a href="http://thenextweb.com/apps/2014/03/13/wonder-wants-take-youtube-new-ad-free-video-platform-exclusive-lifestyle-content/" class="inline-block" target="_blank"><img ng-src="((assets_url))/assets/dolly/img/home-press-tnw.jpg" class="inline-block" /></a>
-			<p class="standout f-serif italic"><a href="((assets_url))/assets/dolly/docs/wonder-pl-press-release-v2.pdf" target="_blank">Click here to download our Press Release</a></p>
-	    </div>
-	</div>
+  <section id="anchor-logos" class="logos">
+    <h2 class="logos__text">Logos</h2>
+    <img class="logos__logo logos__logo--inline" ng-src="(( assets_url ))/assets/dolly/img/about-us-logos-1.png" />
+    <img class="logos__logo logos__logo--inline logos__logo--backboard" ng-src="(( assets_url ))/assets/dolly/img/about-us-logos-2.png" />
+    <img class="logos__logo" ng-src="(( assets_url ))/assets/dolly/img/about-us-logos-4.png" />
+  </section>
 
 
-	<div class="section about-us">
-		<div class="inner">
-			<span id="anchor-partners"></span>
-			<h2 class="f-sans">Partners</h2>
-			<p class="standout f-serif">Here at Wonder PL, we have partnered with some of the world's biggest and best companies to bring you the services, tools and content you deserve.</p>
-			<p>&nbsp;</p>
-		</div>
-	</div>
+  <section id="anchor-contact-us" class="contact-us">
+    <h2 class="contact-us__title">Contact Us</h2>
+    <section class="contact-us__location">
+      <h2 class="contact-us__location-name">London</h2>
+      <p class="contact-us__location-address">
+        <span class="contact-us__location-address-line">9 Thorpe Close</span>
+        <span class="contact-us__location-address-line">Portobello Road</span>
+        <span class="contact-us__location-address-line">London W10 5XL</span>
+      </p>
+      <div class="contact-us__location-map-container">
+        <div class="google-maps-directive" data-lat="51.518662" data-long="-0.207372"></div>
+      </div>
+    </section>
+    <section class="contact-us__location">
+      <h2 class="contact-us__location-name">New York Representative Office</h2>
+      <p class="contact-us__location-address">
+        <span class="contact-us__location-address-line">20 Jay Street</span>
+        <span class="contact-us__location-address-line">Suite 311B, Brooklyn</span>
+        <span class="contact-us__location-address-line">New York 11201</span>
+      </p>
+      <div class="contact-us__location-map-container">
+        <div class="google-maps-directive" data-lat="40.704007" data-long="-73.986759"></div>
+      </div>
+    </section>
+  </section>
 
-	<div class="section partner">
-		<div class="inner">
-			<div class="icon">
-				<a><img ng-src="((assets_url))/assets/dolly/img/footer-logos-ooyala.png" /></a>
-			</div>
-			<p class="standout f-serif italic">No one wants their viewing experience ruined by banner ads and ugly overlays. With Ooyala, the world's premium provider of streaming services, we will provide a clean viewing experience. Ooyala powers sites such as ESPN and American Express.</p>
-		</div>
-	</div>
-	<div class="section partner">
-		<div class="inner">
-			<div class="icon">
-				<a><img ng-src="((assets_url))/assets/dolly/img/footer-logos-epidemic.png" /></a>
-			</div>
-			<p class="standout f-serif italic">Epidemic Sound is the world's largest collection of music for use in video production. One of the founders, Peer Anstrom, holds the world record for most entries on the US Billboard/iTunes charts.</p>
-			<p class="standout f-serif italic">You can use the complete Epidemic Sound catalog for free in your productions.</p>
-		</div>
-	</div>
-	<div class="section partner">
-		<div class="inner padding bottom">
-			<div class="icon">
-				<a><img ng-src="((assets_url))/assets/dolly/img/footer-logos-culture-shock.png" /></a>
-			</div>
-			<p class="standout f-serif italic">Culture Shock is a New York City-based creative agency recognised for pioneering approaches to art and technology.  We are working with them to provide on the edge art content and create a home where artists and film-makers can thrive.</p>
-		</div>
-	</div>
-
-	<div class="section gradient pink">
-		<div class="inner centered">
-			<span id="anchor-logos"></span>
-			<h2 class="f-sans">Logos</h2>
-			<div class="clear"></div>
-			<div class="inner third-width">
-				<img class="logo" ng-src="(( assets_url ))/assets/dolly/img/about-us-logos-1.png" />
-			</div><!--
-		--><div class="inner third-width">
-				<img class="logo" ng-src="(( assets_url ))/assets/dolly/img/about-us-logos-3.png" />
-			</div><!--
-		--><div class="inner third-width">
-				<img class="logo" ng-src="(( assets_url ))/assets/dolly/img/about-us-logos-2.png" />
-			</div>
-		</div>
-	</div>
-
-	<div class="section">
-		<div class="inner padding bottom">
-			<div class="inner third-width centered">
-				<span id="anchor-contact-us"></span>
-				<h2 class="f-sans">Contact Us</h2>
-				<p class="f-serif italic"><a href="mailto:hello@wonderpl.com">hello@wonderpl.com</a></p>
-			</div><!--
-			--><div class="inner third-width centered">
-				<h2 class="f-sans">London</h2>
-				<p class="f-serif italic">9 Thorpe Close
-					<br/>Portobello Road
-					<br/>London W10 5XL</p>
-			</div><!--
-			--><div class="inner third-width centered">
-				<h2 class="f-sans">New York Representative Office</h2>
-				<p class="f-serif italic">20 Jay Street
-					<br/>Suite 311B, Brooklyn
-					<br/>New York 11201</p>
-			</div>
-		</div>
-	</div>
-
-	<div class="section">
-		<div class="inner half-width centered left">
-			<div class="google-maps-directive margin bottom padding bottom" data-lat="51.518662" data-long="-0.207372"></div>
-		</div><!--
-		--><div class="inner half-width centered right">
-			<div class="google-maps-directive margin bottom padding bottom" data-lat="40.704007" data-long="-73.986759"></div>
-		</div>
-	</div>
-
-	<div class="section about-us">
-		<div class="inner">
-			<span id="anchor-careers"></span>
-			<h2 class="f-sans">Careers</h2>
-			<p class="standout f-serif">We are always looking for Wonderful team members.</p>
-			<p class="standout f-serif">If you would like to join us, please send your CV to <a href="mailto:careers@wonderpl.com">careers@wonderpl.com</a>.</p>
-		</div>
-	</div>
+  <section id="anchor-careers" class="careers">
+    <h2 class="careers__title">Careers</h2>
+    <p class="careers__text">We are always looking for Wonderful team members. If you would like to join us, please send your CV to <a href="mailto:careers@wonderpl.com">careers@wonderpl.com</a>.</p>
+  </section>
 
 </div>

@@ -1,5 +1,7 @@
 import re
+import os
 import logging
+import subprocess
 from datetime import date
 from cStringIO import StringIO
 from werkzeug import MultiDict
@@ -12,7 +14,8 @@ from wtforms.validators import ValidationError
 from rockpack.mainsite import app, requests
 from rockpack.mainsite.core.dbapi import commit_on_success, db
 from rockpack.mainsite.core import youtube, ooyala
-from rockpack.mainsite.core.s3 import s3connection
+from rockpack.mainsite.core.s3 import s3connection, S3Uploader
+from rockpack.mainsite.background_sqs_processor import background_on_sqs
 from rockpack.mainsite.helpers.db import resize_and_upload
 from rockpack.mainsite.services.pubsubhubbub.api import subscribe
 from rockpack.mainsite.services.video.models import (
@@ -22,6 +25,10 @@ from rockpack.mainsite.services.user.models import User
 from rockpack.mainsite.services.oauth.api import RockRegistrationForm, send_password_reset
 from .models import AdminLogRecord
 from .base import AdminView
+
+
+class PickerForm(form.BaseForm):
+    video = wtf.TextField()
 
 
 class ImportForm(form.BaseForm):
@@ -275,6 +282,39 @@ class ImportView(AdminView):
 
         return self.render('admin/import.html', **ctx)
 
+    @expose('/supercharge', ('POST',))
+    def supercharge(self):
+        data = (request.form or request.args).copy()
+
+        # Ugly reverse mapping of source labels
+        source = data.get('source')
+        if source:
+            for id, label in Source.get_form_choices():
+                if source == label:
+                    data['source'] = id
+        form = ImportForm(data, csrf_enabled=False)
+        form.source.choices = list(Source.get_form_choices())
+        form.category.choices = [(-1, '')] +\
+            list(Category.get_form_choices(data.get('locale') or 'en-us', True))
+
+        errors = {}
+        if form.validate():
+            if form.category.data < 0:
+                errors.update({'category': 'Missing category'})
+            elif not form.user.data:
+                errors.update({'user': 'Missing user'})
+            elif not form.channel.data:
+                errors.update({'channel': 'Missing channel'})
+            elif form.type.data != 'video':
+                errors.update({'type': 'Type should be Video'})
+            elif int(form.source.data) != 1:
+                errors.update({'source': 'Source should be YouTube'})
+            else:
+                supercharge(request.form['title'], form.category.data,
+                            form.channel.data, form.user.data, form.id.data)
+                return jsonify([]), 202
+        return jsonify({'error': form.errors or errors}), 400
+
     @expose('/users.js')
     def users(self):
         exact_name = request.args.get('exact_name', '')
@@ -315,6 +355,18 @@ class ImportView(AdminView):
         if request.args.get('instance_id'):
             return jsonify(VideoInstance.query.join(Video).filter(VideoInstance.id == request.args.get('instance_id')).values(VideoInstance.video, Video.title))
         return jsonify(Video.query.filter(Video.id.like(vid + '%')).values(Video.id, Video.title))
+
+    @expose('/video_instance.js')
+    def video_instances(self):
+        vid = request.args.get('prefix', '')
+        result = jsonify({id: {"channel": channel, "title": title} for id, channel, title in
+                          VideoInstance.query.join(
+                              Video,
+                              (Video.id == VideoInstance.video) &
+                              (VideoInstance.deleted == False)
+                          ).filter(Video.title.like(vid + '%')).values(
+                              VideoInstance.id, VideoInstance.channel, Video.title)})
+        return result
 
     @expose('/tags.js')
     def tags(self):
@@ -396,6 +448,14 @@ class UploadAcceptForm(form.BaseForm):
                 raise ValidationError('Channel not found')
 
 
+class ShareLinkView(AdminView):
+
+    @expose('/', ['GET'])
+    def things(self):
+        ctx = {'form': PickerForm()}
+        return self.render('admin/share_link_picker.html', **ctx)
+
+
 class UploadView(AdminView):
 
     path_prefix = 'upload/'
@@ -469,3 +529,57 @@ class UploadView(AdminView):
         self.bucket.copy_key(dst, self.bucket.name, src)
         self.bucket.delete_key(src)
         return dst
+
+
+def notify_ooyala(title, category, channel, user, username, path):
+    data = dict(
+        user=user,
+        channel=channel,
+        title=title,
+        category=category,
+        path=path)
+    metadata = dict(label=username, **data)
+    dst = path
+    ooyala.create_asset_in_background(dst, metadata)
+
+
+def put_to_s3(local_path, username, filename):
+    path = 'video/%s/%s' % (username, filename)
+    up = S3Uploader()
+    up.bucket = up.conn.get_bucket(app.config['VIDEO_S3_BUCKET'])
+    up.put_from_filename(local_path, path)
+    return path
+
+
+def expropriate(filename):
+    file_path = '/tmp/%s' % filename
+    try:
+        app.logger.info('Supercharging %s', file_path)
+        subprocess.check_output(['youtube-dl', filename, '-f', 'mp4', '-o', file_path])
+    except subprocess.CalledProcessError, e:
+        app.logger.error('youtube-dl failed with: %s', e.output)
+        return False
+    else:
+        return file_path
+
+
+@background_on_sqs
+def supercharge(title, category, channel, user, video_id):
+    # Fetch the video
+    file_path = expropriate(video_id)
+    if not file_path:
+        return False
+
+    username = User.query.get(user).username
+    # Stick it on S3
+    s3_path = put_to_s3(file_path, username, video_id)
+
+    # Cleanup
+    try:
+        os.remove(file_path)
+    except OSError, e:
+        app.logger.warning('Tried removing file %s: %s', file_path, str(e))
+
+    # Let ooyala know it's there
+    notify_ooyala(title, category, channel, user, username, s3_path)
+    return True

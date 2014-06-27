@@ -13,7 +13,8 @@ DATABASE_URL = 'postgresql://mainsite:%s@db1/dolly' % DB_PASSWORD
 GOOGLE_CONSUMER_KEY = '981375550038-dbckr7s2hb5rsaohj9j4fhl0cbu4col7.apps.googleusercontent.com'
 GOOGLE_CONSUMER_SECRET = _decrypt('d3So=\x9e\xa7\x02\x97\xd5`\x1a\xae\x8f\xc5\xd1\xc3D\x07\x8fr"\xa1\x81')
 
-OOYALA_SECRET = _decrypt('UE\xec\x0c\xfe\x00\x0c\x84\xa1\x88\xf3<\xbc\x19</\x18s4\x8a\xa5#\xec\x0e\x89\xa3\xb7\x15\xc0i\xaeS~\x8f#5\xc4\xea\xab\x96')
+OOYALA_API_KEY = '4za3UxOvGxUX76P98NO8TKv4aX2V.j9gKk'
+OOYALA_SECRET = _decrypt('{9\x8c\xaaQ\xde\xdc\xb6+@%p\xf5\xd3l\xbd\xe2\x13\xf6utQk"\x16\xcal\xc3\xe8O9\x0bTN\x8d/I\x11Q\x90')
 
 DEFAULT_EMAIL_SOURCE = 'Wonder PL <noreply@dev.wonderpl.com>'
 EMAIL_TEMPLATE_PATH = 'templates/dolly/email'
@@ -101,5 +102,7 @@ SHARE_MESSAGE_MAP = dict(
 )
 
 PUSH_NOTIFICATION_MAP = dict(
-    joined=('user', "Your Facebook friend %@ has joined Wonder PL"),
+    joined=('user', "Your friend %@ has joined Wonder PL"),
+    channel_shared=('channel', '%@ shared a collection with you'),
+    video_shared=('video', '%@ shared a video with you'),
 )

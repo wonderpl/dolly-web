@@ -136,11 +136,13 @@ SHARE_MESSAGE_MAP = dict(
 
 PUSH_NOTIFICATION_MAP = dict(
     subscribed=('channel', "%@ has subscribed to your channel"),
-    joined=('user', "Your Facebook friend %@ has joined Rockpack"),
+    joined=('user', "Your friend %@ has joined Rockpack"),
     repack=('video', "%@ has re-packed one of your videos"),
     #unavailable=('video', "One of your videos is no longer available"),
     comment_mention=('video', "%@ has mentioned you in a comment"),
     starred=('video', "%@ has liked your video"),
+    channel_shared=('channel', '%@ shared a channel with you'),
+    video_shared=('video', '%@ shared a video with you'),
 )
 
 # Keep as True until app is updated to use /ws/complete/all/ instead.

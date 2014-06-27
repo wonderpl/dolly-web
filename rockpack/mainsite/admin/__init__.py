@@ -26,6 +26,8 @@ def setup_admin(app):
     admin.add_view(import_views.ImportView(name='Import', endpoint='import', category='Import'))
     admin.add_view(import_views.UploadView(name='Review Uploads', endpoint='review', category='Import'))
     if app.config.get('DOLLY'):
+        admin.add_view(import_views.ShareLinkView(name='Share Link Picker', endpoint='sharelinkpicker', category='Content'))
+    if app.config.get('DOLLY'):
         admin.add_view(ranking_views.UserRankingView(name='Ranking', endpoint='ranking'))
     else:
         admin.add_view(ranking_views.RankingView(name='Ranking', endpoint='ranking'))
