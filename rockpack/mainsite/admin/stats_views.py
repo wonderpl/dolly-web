@@ -1,3 +1,4 @@
+from math import ceil
 from datetime import datetime, date, time, timedelta
 from sqlalchemy import func, between, literal, text, Integer
 from sqlalchemy.orm import aliased
@@ -225,9 +226,18 @@ class RetentionStatsView(StatsView):
         else:
             activity_model, activity_date = UserAccountEvent, UserAccountEvent.event_date
 
-        cohort = func.date_part('week', User.date_joined)
-        cohort_label = func.max(func.date(User.date_joined))
-        weeks_active = (func.date_part('week', activity_date) - cohort).label('weeks_active')
+        try:
+            interval_count = int(request.args['interval_count'])
+        except Exception:
+            interval_count = 10
+
+        interval = request.args.get('interval')
+        if interval not in ('week', 'month'):
+            interval = 'week'
+
+        cohort = func.date_part(interval, User.date_joined)
+        cohort_label = func.min(func.date(User.date_joined))
+        active_interval = (func.date_part(interval, activity_date) - cohort).label('active_interval')
 
         q = readonly_session.query(User).filter(
             User.date_joined > LAUNCHDATE, User.refresh_token != '')
@@ -243,29 +253,29 @@ class RetentionStatsView(StatsView):
                 text("interval '%d years'" % age2)
             ))
 
-        totals = dict(q.group_by(cohort).values(cohort_label, func.count('*')))
         active_users = dict(
             ((c, int(w)), u) for c, w, u in
             q.join(
                 activity_model,
                 (activity_model.user == User.id) &
-                (activity_date > User.date_joined)
-            ).group_by(cohort, weeks_active).values(
-                cohort_label, weeks_active, func.count(func.distinct(activity_model.user))
+                (activity_date >= User.date_joined)
+            ).group_by(cohort, active_interval).values(
+                cohort, active_interval, func.count(func.distinct(activity_model.user))
             )
         )
 
         table = Table(
             [dict(id='cohort', type=date)] +
-            [dict(id='week%d' % i, type=str) for i in range(10)]
+            [dict(id='%s%d' % (interval, i), type=str) for i in range(interval_count)]
         )
 
-        for c, t in sorted(totals.items()):
+        totals = q.group_by(cohort).order_by(cohort)
+        for c, l, t in totals.values(cohort, cohort_label, func.count()):
             data = []
-            for i in range(10):
+            for i in range(interval_count):
                 a = active_users.get((c, i), '')
-                data.append(a and '%s%% (%s)' % (a * 100 / t, a))
-            table.append([c] + data)
+                data.append(a and '%d%% (%d)' % (ceil(a * 100.0 / t), a))
+            table.append([l] + data)
 
         return self.render('admin/retention_stats.html', data=table.encode())
 
