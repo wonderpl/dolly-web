@@ -74,8 +74,9 @@
     </script>
 
   	<script type="text/javascript">
+      var player = null;
   		OO.ready(function() {
-  			window.wonder = OO.Player.create(
+  			player = window.wonder = OO.Player.create(
   				'ooyalaplayer', videoData.video.source_id,
   				{
   					flashParams: { hide: 'all' },

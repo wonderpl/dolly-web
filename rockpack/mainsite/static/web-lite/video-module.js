@@ -228,6 +228,10 @@ OO.plugin("WonderUIModule", function (OO) {
         _.listen(_.elements.fullscreenbutton, 'touchend', _.fullscreen);
         _.listen(_.elements.volumebutton, 'click', _.volume);
 
+        if ( _.showControls ) {
+          _.addClass(_.elements.controls, 'show');
+        }
+
         // Decide which listeners to use for the scrubbers.
         if ( _.isTouchDevice() ) {
             _.addClass(_.elements.controls, 'show');
