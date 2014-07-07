@@ -19,6 +19,7 @@ from rockpack.mainsite.background_sqs_processor import background_on_sqs
 from rockpack.mainsite.services.user.models import User, UserAccountEvent, username_exists, GENDERS
 from rockpack.mainsite.services.video.models import Locale
 from . import facebook, models
+import twitter
 
 
 def record_user_event(username, type, value='', user=None, commit=False):
@@ -69,10 +70,11 @@ def _register_user(form):
     # Check if anyone has emailed this person before
     senders = models.ExternalFriend.query.filter(
         models.ExternalFriend.external_system == 'email',
-        models.ExternalFriend.email == user.email).join(
-            User,
-            User.id == models.ExternalFriend.user
-        ).with_entities(User)
+        models.ExternalFriend.email == user.email
+    ).join(
+        User,
+        User.id == models.ExternalFriend.user
+    ).with_entities(User)
 
     if senders.count():
         db.session.flush()  # Get the user id before the commit
@@ -406,6 +408,48 @@ class FacebookUser(ExternalUser):
     @property
     def avatar(self):
         r = requests.get(facebook.FACEBOOK_PICTURE_URL % self.id)
+        if r.status_code == 200 and r.headers.get('content-type', '').startswith('image/'):
+            return StringIO(r.content)
+        return ''
+
+
+class TwitterUser(ExternalUser):
+
+    @staticmethod
+    def is_handler_for(external_system):
+        return external_system == 'twitter'
+
+    def _verify(self):
+        token_key, token_secret = self._token.split(':', 1)
+        api = twitter.Api(
+            consumer_key=app.config['TWITTER_CONSUMER_KEY'],
+            consumer_secret=app.config['TWITTER_CONSUMER_SECRET'],
+            access_token_key=token_key,
+            access_token_secret=token_secret,
+        )
+        return api.VerifyCredentials()
+
+    def _get_external_data(self):
+        return self._user_data or self._verify()
+
+    def _validate_token(self):
+        static_data = dict(
+            expires_at=4102444800,  # Twitter tokens don't expire
+            scopes=['read'],        # set at app configuration
+        )
+        self._user_data = self._verify()
+        return dict(static_data.items() + self._user_data.items())
+
+    def get_new_token(self):
+        return self
+
+    username = property(lambda x: x._user_data.get('screen_name'))
+    first_name = property(lambda x: x._user_data.get('name'))
+    cover_image = property(lambda x: x._user_data.get('profile_background_image_url'))
+
+    @property
+    def avatar(self):
+        r = requests.get(self._user_data['profile_image_url'])
         if r.status_code == 200 and r.headers.get('content-type', '').startswith('image/'):
             return StringIO(r.content)
         return ''

@@ -162,3 +162,13 @@ class ExternalFriend(db.Model):
 
         cls.query.filter_by(user=userid, external_system='facebook').delete()
         cls.query.session.add_all(external_friends.values())
+
+    @classmethod
+    @commit_on_success
+    def populate_twitter_friends(cls, userid):
+        pass
+
+    @classmethod
+    def populate_friends(cls, userid):
+        cls.populate_facebook_friends(userid)
+        cls.populate_twitter_friends(userid)

@@ -1665,9 +1665,9 @@ class UserWS(WebService):
                 ExternalFriend.last_shared_date.isnot(None))
         else:
             try:
-                ExternalFriend.populate_facebook_friends(userid)
+                ExternalFriend.populate_friends(userid)
             except IntegrityError:
-                # Concurrent call to populate_facebook_friends
+                # Concurrent call to populate_friends
                 pass
             friends = ExternalFriend.query.filter_by(user=userid)
         friends = friends.all()

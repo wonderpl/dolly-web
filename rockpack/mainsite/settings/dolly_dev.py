@@ -50,6 +50,9 @@ FACEBOOK_APP_ID = '573323026048639'
 FACEBOOK_APP_SECRET = _decrypt('0\xa9\xf4=)\xa9\x0cC#\xda \xa2\xe1.\xf8)R\x04\xf4\x9b\x0c\xb9x\x0f\xc1\xb7\xd5\xfb=\xfb\xef\xc1')
 FACEBOOK_APP_NAMESPACE = 'wonderpl-dev'
 
+TWITTER_CONSUMER_KEY = 'bVc3883tOUt6fr0cWp5A5HcWV'
+TWITTER_CONSUMER_SECRET = _decrypt('@D\x9dp\xf9\xca\x18o\xbb\x95\xa4\xf31\xe8\x1c\x91\x08\x9ep\x9b\x89V%\xbd\x88D\xe8\xb0GB3\\\x0f1t\x1d\xb4S\x87\x11\xd9\x83\xd3-Q\xe4W\x08rD')
+
 SERVER_NAME = 'dev.wonderpl.com'
 SECURE_SUBDOMAIN = 'secure'
 ADMIN_SUBDOMAIN = 'secure'

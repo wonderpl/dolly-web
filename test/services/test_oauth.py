@@ -44,6 +44,26 @@ FACEBOOK_GRAPH_DATA = {
     'id': '100005340012137'}
 
 
+TWITTER_DATA = {
+    'created_at': u'Fri Mar 08 18:11:42 +0000 2013',
+    'followers_count': 1,
+    'id': 1252401133,
+    'lang': u'en',
+    'location': u'London',
+    'name': u'Paul Egan',
+    'profile_background_color': u'C0DEED',
+    'profile_background_image_url': u'http://abs.twimg.com/images/themes/theme1/bg.png',
+    'profile_background_tile': False,
+    'profile_banner_url': u'https://pbs.twimg.com/profile_banners/1252401133/1404317810',
+    'profile_image_url': u'https://pbs.twimg.com/profile_images/378800000150844731/5182cbb8a688ec3f6f1f5d11bc6830c4_normal.png',
+    'profile_link_color': u'0084B4',
+    'profile_sidebar_fill_color': u'DDEEF6',
+    'profile_text_color': u'333333',
+    'protected': False,
+    'screen_name': u'paulegan_rp'
+}
+
+
 class HeadersTestCase(base.RockPackTestCase):
 
     def _call_url(self, client, path, headers=None,
@@ -270,6 +290,40 @@ class RegisterTestCase(base.RockPackTestCase):
             self.assertEquals(1, et.count(), 'should only be one token for user')
             et = et.one()
             self.assertEquals(long_lived_fb_token, et.external_token, 'token should be updated')
+
+    @patch('twitter.Api.VerifyCredentials')
+    def test_twitter_login_registration(self, verify_credentials):
+        twitter_data = TWITTER_DATA.copy()
+        twitter_data['id'] = uuid.uuid4().hex
+        verify_credentials.return_value = twitter_data
+
+        with self.app.test_client() as client:
+            token_key, token_secret = 'kkkkkkkk', 'sssssss'
+            for registered in True, False:
+                r = client.post(
+                    '/ws/login/external/',
+                    headers=[get_client_auth_header()],
+                    data=dict(
+                        external_system='twitter',
+                        external_token=token_key + ':' + token_secret
+                    )
+                )
+                self.assertEquals(200, r.status_code)
+                creds = json.loads(r.data)
+                self.assertEquals(creds['registered'], registered)
+
+            r = client.get(
+                creds['resource_url'],
+                headers=[('Authorization', creds['token_type'] + ' ' + creds['access_token'])]
+            )
+            data = json.loads(r.data)
+            self.assertEquals(data['username'], TWITTER_DATA['screen_name'])
+            self.assertEquals(data['display_name'], TWITTER_DATA['name'])
+            self.assertTrue(data['avatar_thumbnail_url'])
+
+            token = ExternalToken.query.filter_by(user=creds['user_id']).one()
+            self.assertEquals(token.external_uid, twitter_data['id'])
+            self.assertIn('read', token.permissions)
 
     @patch('rockpack.mainsite.services.oauth.api.FacebookUser._get_external_data')
     def test_unauthorized_facebook_registration(self, _get_external_data):
