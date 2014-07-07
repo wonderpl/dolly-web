@@ -199,7 +199,7 @@ class ActivityStatsView(StatsView):
         from rockpack.mainsite.services.user.models import UserActivity
         table = Table([dict(id='date', type=date)] +
                       [dict(id=i, type=long) for i in
-                       'Total', 'Unique Users', 'Views', 'Subscriptions', 'Plusses', 'Likes'])
+                       'Total', 'Unique Users', 'Views', 'Subscriptions', 'Follow Alls', 'Plusses', 'Likes'])
         table.extend(
             readonly_session.query(UserActivity).filter(UserActivity.date_actioned > LAUNCHDATE).
             group_by('1').order_by('1').
@@ -209,6 +209,7 @@ class ActivityStatsView(StatsView):
                 func.count(func.distinct(UserActivity.user)),
                 func.sum(func.cast(UserActivity.action == 'view', Integer)),
                 func.sum(func.cast(UserActivity.action == 'subscribe', Integer)),
+                func.sum(func.cast(UserActivity.action == 'subscribe_all', Integer)),
                 func.sum(func.cast(UserActivity.action == 'select', Integer)),
                 func.sum(func.cast(UserActivity.action == 'star', Integer))
             )
