@@ -295,7 +295,7 @@ class RegisterTestCase(base.RockPackTestCase):
     def test_twitter_login_registration(self, verify_credentials):
         twitter_data = TWITTER_DATA.copy()
         twitter_data['id'] = uuid.uuid4().hex
-        verify_credentials.return_value = twitter_data
+        verify_credentials.return_value = type('U', (object,), {'AsDict': lambda s: twitter_data})()
 
         with self.app.test_client() as client:
             token_key, token_secret = 'kkkkkkkk', 'sssssss'

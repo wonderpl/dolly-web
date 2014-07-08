@@ -322,7 +322,7 @@ class ExternalUser(AbstractTokenManager):
         else:
             abort(400, error='unauthorized_client')
 
-    id = property(lambda x: x._user_data.get('id'))
+    id = property(lambda x: str(x._user_data['id']) if 'id' in x._user_data else None)
     username = property(lambda x: x._user_data.get('username'))
     first_name = property(lambda x: x._user_data.get('first_name', ''))
     last_name = property(lambda x: x._user_data.get('last_name', ''))
@@ -427,7 +427,7 @@ class TwitterUser(ExternalUser):
             access_token_key=token_key,
             access_token_secret=token_secret,
         )
-        return api.VerifyCredentials()
+        return api.VerifyCredentials().AsDict()
 
     def _get_external_data(self):
         return self._user_data or self._verify()
@@ -472,7 +472,6 @@ class RomeoUser(ExternalUser):
         # All Romeo tokens are long lived
         return self
 
-    id = property(lambda x: str(x._user_data.get('id')))
     avatar = ''
 
 
