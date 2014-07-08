@@ -9,6 +9,7 @@ from rockpack.mainsite.helpers import lazy_gettext as _
 from rockpack.mainsite.helpers.urls import url_for
 from rockpack.mainsite.services.user.models import User, EXTERNAL_SYSTEM_NAMES
 from . import exceptions, facebook
+import twitter
 
 
 class TokenExistsException(Exception):
@@ -32,6 +33,10 @@ class ExternalToken(db.Model):
 
     def __unicode__(self):
         return '{} token for user <{}>'.format(self.external_system, self.user)
+
+    @property
+    def key(self):
+        return self.external_system, self.external_uid
 
     @classmethod
     def user_from_token(cls, external_system, token):
@@ -113,62 +118,103 @@ class ExternalFriend(db.Model):
 
     @classmethod
     @commit_on_success
-    def populate_facebook_friends(cls, userid, with_devices=True):
-        """Update ExternalFriend mapping for facebook friends of the specified user"""
-        # Don't update if existing data is less than an hour old or if no token available
-        delta = ExternalFriend.query.filter_by(user=userid).value(
-            func.now() - func.max(ExternalFriend.date_updated))
-        if delta and (delta.days * 86400) + delta.seconds < 3600:
-            return
-        token = ExternalToken.query.filter_by(
-            user=userid, external_system='facebook').first()
+    def _populate_friends(cls, system, userid, with_devices=True):
+        Fetcher = _external_friend_systems[system]
+
+        token = ExternalToken.query.filter_by(user=userid, external_system=system).first()
         if not token:
             return
 
         last_shared_date = dict(
-            cls.query.filter_by(user=userid, external_system='facebook').
-            filter(cls.last_shared_date != None).values('external_uid', 'last_shared_date'))
+            cls.query.filter_by(user=userid, external_system=system).
+            filter(cls.last_shared_date != None).
+            values('external_uid', 'last_shared_date')
+        )
 
-        graph = facebook.GraphAPI(token.external_token)
-        # XXX: Paging not handled. If a user has more than 1000 friends, tough!
+        fetcher = Fetcher(token)
         try:
-            friends = graph.get_connections(token.external_uid, 'friends', limit=1000)
+            friends = fetcher.get_friends()
         except:
-            app.logger.exception('Unable to get connections for facebook user: %s (%s)',
-                                 userid, token.external_uid)
+            app.logger.exception('Unable to get %s connections for user: %s (%s)',
+                                 system, userid, token.external_uid)
             return
+
         external_friends = {}
-        for friend in friends['data']:
+        for friend in friends:
             if not friend.get('name'):    # Ignore friends for whom we don't have a name
                 continue
             external_friends[friend['id']] = cls(
                 user=userid,
-                external_system='facebook',
+                external_system=system,
                 external_uid=friend['id'],
                 name=friend['name'],
-                avatar_url=facebook.FACEBOOK_PICTURE_URL % friend['id'],
-                has_ios_device=False,
+                avatar_url=friend['avatar_url'],
+                has_ios_device=None,
                 last_shared_date=last_shared_date.get(friend['id']),
             )
         if not external_friends:
             return
 
-        if with_devices:
-            userdata = graph.get_objects(external_friends.keys(), fields='devices,picture.type(large)')
+        if with_devices and hasattr(fetcher, 'get_user_detail'):
+            userdata = fetcher.get_user_detail(external_friends.keys())
             for id, data in userdata.items():
                 external_friends[id].has_ios_device =\
                     any(d['os'] == 'iOS' for d in data.get('devices', []))
                 external_friends[id].avatar_url = data['picture']['data']['url']
 
-        cls.query.filter_by(user=userid, external_system='facebook').delete()
+        cls.query.filter_by(user=userid, external_system=system).delete()
         cls.query.session.add_all(external_friends.values())
 
     @classmethod
-    @commit_on_success
-    def populate_twitter_friends(cls, userid):
-        pass
+    def populate_facebook_friends(cls, userid):
+        cls._populate_friends('facebook', userid)
 
     @classmethod
     def populate_friends(cls, userid):
-        cls.populate_facebook_friends(userid)
-        cls.populate_twitter_friends(userid)
+        # Don't update if existing data if less than an hour old
+        delta = ExternalFriend.query.filter_by(user=userid).value(
+            func.now() - func.max(ExternalFriend.date_updated))
+        if delta and (delta.days * 86400) + delta.seconds < 3600:
+            return
+
+        for system in _external_friend_systems:
+            cls._populate_friends(system, userid)
+
+
+class _FacebookFriendFetcher(object):
+
+    def __init__(self, external_token):
+        self.api = facebook.GraphAPI(external_token.external_token)
+        self.uid = external_token.external_uid
+
+    def get_friends(self):
+        friends = self.api.get_connections(self.uid, 'friends', limit=1000)
+        for friend in friends['data']:
+            friend['avatar_url'] = facebook.FACEBOOK_PICTURE_URL % friend['id']
+            yield friend
+
+    def get_user_detail(self, userids):
+        return self.api.get_objects(userids, fields='devices,picture.type(large)')
+
+
+class _TwitterFriendFetcher(object):
+
+    def __init__(self, external_token):
+        token_key, token_secret = external_token.external_token.split(':', 1)
+        self.api = twitter.Api(
+            consumer_key=app.config['TWITTER_CONSUMER_KEY'],
+            consumer_secret=app.config['TWITTER_CONSUMER_SECRET'],
+            access_token_key=token_key,
+            access_token_secret=token_secret,
+        )
+
+    def get_friends(self):
+        for friend in self.api.GetFriends(count=1000, skip_status=True):
+            yield dict(
+                id=str(friend.id),
+                name=friend.name,
+                avatar_url=friend.profile_image_url,
+            )
+
+
+_external_friend_systems = dict(facebook=_FacebookFriendFetcher, twitter=_TwitterFriendFetcher)

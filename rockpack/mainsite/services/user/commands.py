@@ -389,7 +389,7 @@ def create_new_activity_notifications(date_from=None, date_to=None, user_notific
 def create_new_registration_notifications(date_from=None, date_to=None, user_notifications=None):
     new_users = User.query.join(ExternalToken, (
         (ExternalToken.user == User.id) &
-        (ExternalToken.external_system == 'facebook'))
+        (ExternalToken.external_system != 'apns'))
     ).options(contains_eager(User.external_tokens))
 
     if date_from:

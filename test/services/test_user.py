@@ -3,7 +3,7 @@ import time
 import uuid
 import urlparse
 from datetime import datetime, timedelta
-from mock import patch
+from mock import patch, DEFAULT
 from jinja2.filters import do_striptags
 from rockpack.mainsite import app
 from rockpack.mainsite.services.video.models import Channel
@@ -1205,6 +1205,60 @@ class TestUserContent(base.RockPackTestCase):
             self.assertIn(
                 ('open', channel['tracking_code']),
                 UserActivity.query.filter_by(user=user.id).values('action', 'tracking_code'))
+
+
+class TestFriends(base.RockPackTestCase):
+
+    def _save_token(self, userid, system, uid):
+        return ExternalToken(
+            user=userid,
+            external_system=system,
+            external_uid=uid,
+            external_token='xxx:yyy',
+        ).save()
+
+    def _check_friends(self, user, friend):
+        with self.app.test_client() as client:
+            r = client.get(
+                '/ws/{}/friends/'.format(user.id),
+                headers=[get_auth_header(user.id)])
+            self.assertEquals(r.status_code, 200)
+            reg, notreg = sorted(json.loads(r.data)['users']['items'],
+                                 key=lambda x: x['external_uid'])
+
+            self.assertEquals(reg['display_name'], friend.display_name)
+            self.assertEquals(reg.get('email'), friend.email)
+            self.assertIsNotNone(reg.get('resource_url'))
+
+            self.assertEquals(notreg['display_name'], 'test #3')
+            self.assertIsNone(notreg.get('email'))
+            self.assertIsNone(notreg.get('resource_url'))
+
+    def test_get_facebook_friends(self):
+        user = self.create_test_user()
+        self._save_token(user.id, 'facebook', '1')
+        friend = self.create_test_user()
+        self._save_token(friend.id, 'facebook', '2')
+        patches = {'get_connections': DEFAULT, 'get_objects': DEFAULT}
+        with patch.multiple('rockpack.mainsite.services.oauth.facebook.GraphAPI', **patches) as p:
+            p['get_connections'].return_value = dict(data=[
+                dict(id='2', name='test #2'), dict(id='3', name='test #3')])
+            self._check_friends(user, friend)
+            self.assertEquals(p['get_connections'].call_args[0], ('1', 'friends'))
+
+    def test_get_twitter_friends(self):
+        user = self.create_test_user()
+        self._save_token(user.id, 'twitter', '1')
+        friend = self.create_test_user()
+        self._save_token(friend.id, 'twitter', '2')
+        with patch('twitter.Api.GetFriends') as get_friends:
+            get_friends.return_value = [
+                type('U', (object,), u)() for u in
+                dict(id=2, name='test #2', profile_image_url='img.png'),
+                dict(id=3, name='test #3', profile_image_url='img.png')
+            ]
+            self._check_friends(user, friend)
+            self.assertGreater(get_friends.call_count, 0)
 
 
 class TestEmail(base.RockPackTestCase):

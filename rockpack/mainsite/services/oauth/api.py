@@ -420,25 +420,41 @@ class TwitterUser(ExternalUser):
         return external_system == 'twitter'
 
     def _verify(self):
-        token_key, token_secret = self._token.split(':', 1)
-        api = twitter.Api(
-            consumer_key=app.config['TWITTER_CONSUMER_KEY'],
-            consumer_secret=app.config['TWITTER_CONSUMER_SECRET'],
-            access_token_key=token_key,
-            access_token_secret=token_secret,
-        )
-        return api.VerifyCredentials().AsDict()
+        if not hasattr(self, '_verification_data'):
+            try:
+                token_key, token_secret = self._token.split(':', 1)
+            except ValueError:
+                self._verification_data = None
+            else:
+                api = twitter.Api(
+                    consumer_key=app.config['TWITTER_CONSUMER_KEY'],
+                    consumer_secret=app.config['TWITTER_CONSUMER_SECRET'],
+                    access_token_key=token_key,
+                    access_token_secret=token_secret,
+                )
+                try:
+                    data = api.VerifyCredentials()
+                except twitter.TwitterError as e:
+                    if e.message[0]['code'] in (89, 32, 215):    # Invalid or expired token
+                        self._verification_data = None
+                    else:
+                        raise
+                else:
+                    self._verification_data = data.AsDict()
+        return self._verification_data
 
     def _get_external_data(self):
-        return self._user_data or self._verify()
+        return self._verify()
 
     def _validate_token(self):
+        data = self._verify()
+        if not data:
+            return
         static_data = dict(
             expires_at=4102444800,  # Twitter tokens don't expire
             scopes=['read'],        # set at app configuration
         )
-        self._user_data = self._verify()
-        return dict(static_data.items() + self._user_data.items())
+        return dict(static_data.items() + data.items())
 
     def get_new_token(self):
         return self

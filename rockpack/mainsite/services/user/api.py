@@ -1671,25 +1671,27 @@ class UserWS(WebService):
                 pass
             friends = ExternalFriend.query.filter_by(user=userid)
         friends = friends.all()
-        rockpack_friends = dict(
-            (('facebook', user.external_tokens[0].external_uid), user)
-            for user in User.query.join(ExternalToken, (
-                (ExternalToken.user == User.id) &
-                (ExternalToken.external_system == 'facebook') &
-                (ExternalToken.external_uid.in_(
-                    set(f.external_uid for f in friends if f.external_system == 'facebook')))
-            )).options(contains_eager(User.external_tokens))
+        registered_friends = dict(
+            (user.external_tokens[0].key, user)
+            for user in User.query.join(
+                ExternalToken
+            ).join(
+                ExternalFriend,
+                (ExternalFriend.external_system == ExternalToken.external_system) &
+                (ExternalFriend.external_uid == ExternalToken.external_uid) &
+                (ExternalFriend.user == userid)
+            )
         )
-        rockpack_friends.update(
+        registered_friends.update(
             (('email', user.email), user)
             for user in User.query.filter(
                 User.email.in_(set(f.email for f in friends if f.external_system == 'email')))
         )
         items = []
-        added_rockpack_users = {}
+        added_registered_users = {}
         for friend in friends:
             uid = friend.email if friend.external_system == 'email' else friend.external_uid
-            rockpack_user = rockpack_friends.get((friend.external_system, uid))
+            registered_user = registered_friends.get((friend.external_system, uid))
             last_shared_date = friend.last_shared_date and friend.last_shared_date.isoformat()
             item = dict(
                 display_name=friend.name,
@@ -1699,21 +1701,21 @@ class UserWS(WebService):
                 email=friend.email,
                 last_shared_date=last_shared_date,
             )
-            if rockpack_user:
+            if registered_user:
                 # Avoid duplicating users via facebook & email mappings, but update last_shared_date
-                added_item = added_rockpack_users.get(rockpack_user.id)
+                added_item = added_registered_users.get(registered_user.id)
                 if added_item:
                     if added_item['last_shared_date'] < last_shared_date:
                         added_item['last_shared_date'] = last_shared_date
                     continue
                 else:
-                    added_rockpack_users[rockpack_user.id] = item
+                    added_registered_users[registered_user.id] = item
                 item.update(
-                    id=rockpack_user.id,
-                    resource_url=rockpack_user.get_resource_url(),
-                    display_name=rockpack_user.display_name,
-                    avatar_thumbnail_url=rockpack_user.avatar.url,
-                    email=rockpack_user.email or friend.email,
+                    id=registered_user.id,
+                    resource_url=registered_user.get_resource_url(),
+                    display_name=registered_user.display_name,
+                    avatar_thumbnail_url=registered_user.avatar.url,
+                    email=registered_user.email or friend.email,
                 )
             if friend.has_ios_device:
                 item.update(
