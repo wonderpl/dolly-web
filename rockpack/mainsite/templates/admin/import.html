@@ -83,7 +83,7 @@
             url: '{{ url_for(".supercharge") }}',
             data: {'type': $('.form-horizontal')[0].type.value,
                 'id': $('.form-horizontal')[0].id.value,
-                'title': "{{ import_preview.videos[0].title }}",
+                'title': {{ import_preview.videos[0].title|tojson }},
                 'category': $('.form-horizontal')[0].category.value,
                 'channel': $('.form-horizontal')[0].channel.value,
                 'source': $('.form-horizontal')[0].source.value,
