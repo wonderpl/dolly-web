@@ -926,6 +926,7 @@ class TestUserContent(base.RockPackTestCase):
                     self.assertEquals(message['channel']['resource_url'], channel.resource_url)
                 else:
                     self.assertEquals(message['video']['id'], video.id)
+                    self.assertEquals(message['video']['title'], video.video_rel.title)
                     self.assertEquals(message['video']['channel']['id'], channel.id)
 
     def test_no_comment_mention_no_notifications(self):
