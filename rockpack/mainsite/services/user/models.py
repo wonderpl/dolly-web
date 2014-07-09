@@ -143,7 +143,7 @@ class User(db.Model):
         username = cls.query.filter(
             func.lower(cls.username).like('{}%'.format(source_name.lower()))
         ).order_by("username desc").limit(1).value('username')
-        match = re.findall(r"[a-zA-Z]+|\d+", username or source_name)
+        match = re.findall(r"[a-zA-Z_]+|\d+", username or source_name)
 
         try:
             postfix_number = int(match[-1])
