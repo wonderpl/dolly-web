@@ -7,7 +7,7 @@ from rockpack.mainsite import app
 from rockpack.mainsite.core import email
 from rockpack.mainsite.core.webservice import WebService, expose_ajax, ajax_create_response
 from rockpack.mainsite.core.oauth.decorators import check_authorization
-from rockpack.mainsite.core.dbapi import db
+from rockpack.mainsite.core.dbapi import db, commit_on_success
 from rockpack.mainsite.background_sqs_processor import background_on_sqs
 from rockpack.mainsite.services.user import commands
 from rockpack.mainsite.services.video.models import Channel, Video, VideoInstance
@@ -152,6 +152,7 @@ class ShareWS(WebService):
 
     @expose_ajax('/email/', methods=['POST'], secure=True)
     @check_authorization()
+    @commit_on_success
     def email_share(self):
         form = EmailShareForm(csrf_enabled=False, user=g.authorized.userid, locale=self.get_locale())
         if not form.validate():
@@ -171,5 +172,5 @@ class ShareWS(WebService):
                 friendval['name'] = form.name.data
             updated = ExternalFriend.query.filter_by(**friendkey).update(friendval)
             if not updated and form.external_system.data == 'email':
-                ExternalFriend(**dict(friendkey, **friendval)).save()
+                ExternalFriend(**dict(friendkey, **friendval)).add()
         share_content(g.authorized.userid, form.object_type.data, form.object_id.data, form.email.data)
