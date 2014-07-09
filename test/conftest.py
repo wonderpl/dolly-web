@@ -6,6 +6,7 @@ def pytest_configure(config):
 
     from rockpack.mainsite import app, init_app
 
+    app.config['TESTING'] = True
     app.config['FORCE_INDEX_INSERT_REFRESH'] = True
     app.config['DATABASE_URL'] = app.config.get('TEST_DATABASE_URL', 'sqlite://')
 

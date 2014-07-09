@@ -463,7 +463,6 @@ def username_exists(username):
 @background_on_sqs
 def _update_user(userid, just_registered=False):
     user = User.query.get(userid)
-    #app.logger.debug('updating user %s (new=%s): %s', userid, just_registered, user)
 
     if just_registered and 'AUTO_FOLLOW_USERS' in app.config:
         locales = app.config['ENABLED_LOCALES']
@@ -475,13 +474,17 @@ def _update_user(userid, just_registered=False):
             except Exception:
                 app.logger.warning('Unable to subscribe to %s', ownerid)
 
+    if just_registered and not app.config.get('TESTING'):
+        from rockpack.mainsite.services.oauth.models import ExternalFriend
+        ExternalFriend.populate_friends(userid)
+
 
 @models_committed.connect_via(app)
 def on_models_committed(sender, changes):
     for obj, change in changes:
         if isinstance(obj, User):
-            if change in ('update', 'insert'):
-                _update_user(obj.id, just_registered=change == 'insert')
+            if change == 'insert':
+                _update_user(obj.id, just_registered=True)
 
 
 event.listen(User, 'before_insert', lambda m, c, t: add_base64_pk(m, c, t))
