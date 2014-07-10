@@ -518,7 +518,7 @@ class LoginWS(WebService):
             abort(400, form_errors=form.errors)
 
         external_user = ExternalTokenManager(**form.data)
-        if not external_user.token_is_valid:
+        if not (external_user and external_user.token_is_valid):
             abort(400, error='unauthorized_client')
 
         # Since the call to Facebook to validate the token can take a while, it's

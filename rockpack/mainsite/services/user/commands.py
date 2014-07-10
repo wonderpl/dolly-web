@@ -47,6 +47,7 @@ def _notification_channel_info(channel, own=True):
 def _notification_video_info(video_instance, channel):
     return dict(
         id=video_instance.id,
+        title=video_instance.video_rel.title,
         resource_url=video_instance.resource_url,
         thumbnail_url=video_instance.default_thumbnail,
         channel=dict(

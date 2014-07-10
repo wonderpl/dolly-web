@@ -1010,6 +1010,7 @@ Cache-Control: private, max-age=60
     "message": {
      "video": {
       "id": "VIDEOINSTANCEID",
+      "title": "video title",
       "resource_url": "http://path/to/video/resource/url/",
       "thumbnail_url": "http://i.ytimg.com/vi/m04evx91lh8/mqdefault.jpg",
       "channel": {
