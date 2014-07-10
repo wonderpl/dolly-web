@@ -2,119 +2,114 @@
 <html lang="en">
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="initial-scale=1.0">
   <meta name="format-detection" content="telephone=no">
 
   <title>{{ user.display_name }} recommended this {{ object_type_name }} for you on Wonder PL</title>
-<style type="text/css">
-    #outlook a{padding:0;}body.outlook p{display:inline !important}
-    body{width:100% !important}.ReadMsgBody{width:100%;background-color:#fff}.ExternalClass{width:100%;background-color:#fff}.ExternalClass,.ExternalClass p,.ExternalClass span,.ExternalClass font,.ExternalClass td,.ExternalClass div{line-height:100%}
-    body{-webkit-text-size-adjust:none;-ms-text-size-adjust:none}
-    body{margin:0;padding:0}
-    img{max-width:100%;height:auto;line-height:100%;text-decoration:none;border:0;outline:none}
+  <style type="text/css">
+    .ReadMsgBody{width:100%;background-color:#fff}
+    .ExternalClass{width:100%;background-color:#fff}
+    .ExternalClass,.ExternalClass p,.ExternalClass span,.ExternalClass font,.ExternalClass td,.ExternalClass div{line-height:100%}
+    body{-webkit-text-size-adjust:none; -ms-text-size-adjust:none}
+    body{margin:0; padding:0}
+    a:link{color:#51B464}
+    a:visited{color:#63CD77}
+    a:hover{color:#429D53}
     table{border-spacing:0}
     table td{border-collapse:collapse}
-    a{text-decoration:none;color:#51B464 !important;border-bottom:1px solid #55AA65}
-    h1 a,h2 a,h3 a,h4 a,h5 a,h6 a{font-weight:inherit;color:inherit;border:none}
-    a img{border:0 none}
-    hr{height:0;margin-bottom:23px;border:0 solid #d2dadf;border-bottom-width:1px;border-bottom-style:solid}
-    @media screen and (max-width: 480px) {
-      table[class="container"]{width: 92% !important;}td[class="container-padding"]{padding-left:12px !important;padding-right:12px !important}
-    }
-   
-    h1,h2{margin:0;font-family:'Lucida Grande','Lucida Sans Unicode','Lucida Sans',Geneva,Verdana,sans-serif;text-align:left;}
-    h1{margin-bottom:32px;font-size:24px;line-height:32px;font-weight:800;color:#2e2e32!important;}
-    h2{margin-bottom:28px;font-size:22px;line-height:28px;font-weight:400;color:#2e2e32!important;}
-  
-    p.lede,p.lead,p{margin:0;font-family:Georgia,Cambria,'Times New Roman',Times,serif;text-align:left;color:#777782;}
-    p.lede,p.lead{margin-bottom:28px;font-size:18px;line-height:28px;}
-    p{margin-bottom:24px;font-size:16px;line-height:24px;}
-
-    a:link,a:visited,div a{font-weight:normal;}
-    a:hover.video-thumb,a:active.video-thumb,a:focused.video-thumb{text-decoration:none;border:none;outline:none;}
-    a.video-thumb{display:block;margin:0;margin-bottom:12px;}
-
-    img.video-img{display:block;width:100%;height:auto;margin:0 auto;border:none;outline:none;}
-
-    .container{max-width:480px;}
-    .container-padding{width:100%;padding-left:24px;padding-right:24px;background-color:#fff;}
-
-    #outlook a.btn{display:inline !important}
-    a.btn{display:inline-block;overflow:visible;vertical-align:middle;margin:0;padding:8px 18px;font-weight:400;font-family:"Lucida Grande","Lucida Sans Unicode","Lucida Sans",Geneva,Verdana,sans-serif;color:#fff;text-align:center;background-color:#51b364;border:none;border-radius:100px;cursor:pointer;}
-    a:hover.btn,a:active.btn,a:focus.btn,a:visited.btn{text-decoration:none;}
-
-    .btn-center{display:block;width:100%;margin-bottom:24px;text-align:center}
-    .btn-center a.btn{margin:0 auto}
+    .yshortcuts a{border-bottom:none !important}
+    @media screen and (max-width: 600px){table[class="container"]{width:95% !important}}
+    @media screen and (max-width: 480px){td[class="container-padding"]{padding-left:12px !important;padding-right:12px !important}}
   </style>
 </head>
-<body style="margin:0;padding:0;" bgcolor="#fff" topmargin="0" leftmargin="0" marginwidth="0" marginheight="0" offset="0">
+<body style="margin:0; padding:10px 0;" bgcolor="#fff" leftmargin="0" topmargin="0" marginwidth="0" marginheight="0">
+  <br>
   <table border="0" width="100%" height="100%" cellpadding="0" cellspacing="0" bgcolor="#fff">
     <tr>
-      <td align="center" valign="top" bgcolor="#fff" style="background-color:#fff">
-        <table border="0" width="480" cellpadding="0" cellspacing="0" class="container" bgcolor="#fff">
+      <td align="center" valign="top" bgcolor="#fff" style="background-color:#fff;">
+        <table border="0" width="528" cellpadding="0" cellspacing="0" class="container" bgcolor="#fff">
           <tr>
             {% include "header.html" %}
           </tr>
+
           {% if object_type == "channel" %}
           <tr>
-            <td colspan="100%" align="left" valign="top" class="container-padding" bgcolor="#fff" style="width:100% !important;padding-left:24px;padding-right:24px;background-color:#fff;">
-              <p style="margin:0;margin-bottom:12px;font-size:14px;line-height:20px;font-family:Georgia,Cambria,'Times New Roman',Times,serif;text-align:left;color:#777782;text-align:center;"><font face="Georgia" color="#777782">A collection of {{ object.video_count }} great new video{% if object.video_count != 1 %}s{% endif %}</font></p>
-              <h1 style="margin:0;margin-bottom:18px;font-weight:800;font-size:24px;line-height:32px;font-family:'Lucida Grande','Lucida Sans Unicode','Lucida Sans',Geneva,Verdana,sans-serif;word-break:normal;text-align:center;color:#2e2e32;">{% filter upper %}{{ object.title }}{% endfilter %}</h1>
-              <p style="margin:0;margin-bottom:24px;font-size:16px;line-height:24px;font-family:Georgia,Cambria,'Times New Roman',Times,serif;text-align:left;color:#777782;text-align:center;"><font face="Georgia" color="#777782">{{ object.description }}</font></p>
-              <hr />
-              {% for video in top_videos %}
-                <h2 style="margin:0;margin-bottom:12px;font-weight:800;font-size:24px;line-height:32px;font-family:'Lucida Grande','Lucida Sans Unicode','Lucida Sans',Geneva,Verdana,sans-serif;word-break:normal;text-align:left;color:#2e2e32;">{{ video.video_rel.title }}</h2>
-                <a href="{{ link.url }}?video={{ video.id }}" border="0" style="display:block;margin:0;margin-bottom:24px;border:none;outline:none">
-                  <img src="{{ video.default_thumbnail }}" border="0" alt="{{ video.video_rel.title }}" style="display:block;width:100%;height:auto;margin:0 auto;border:none;outline:none" />
-                </a>
-                {% if video.video_rel.description %}
-                <p style="margin:0;margin-bottom:36px;font-size:22px;line-height:36px;font-family:Georgia,Cambria,'Times New Roman',Times,serif;text-align:left;color:#333;"><font face="Georgia" color="#333">{{ video.video_rel.description|truncate(128) }}</font></p>
-                {% endif %}
-              {% endfor %}
-              <p class="btn-center" style="display:block;width:100%;margin-top:48px;margin-bottom:48px;text-align:center;"><a href="{{ link.url }}" class="btn" style="margin:0 auto;padding:8px 18px;font-weight:400;font-family:'Lucida Grande','Lucida Sans Unicode','Lucida Sans',Geneva,Verdana,sans-serif;color:#fff !important;text-align:center;background-color:#51b364;border:none;border-radius:100px;cursor:pointer;" border="0">Watch &amp; Read More</a></p>
-            </td>
-          </tr>
-          <tr>
-            <td colspan="100%" align="center" valign="top" style="width:75%;margin:0 auto;padding:0 12.5%;" bgcolor="#fff">
+            <td class="container-padding" bgcolor="#fff" style="background-color:#fff;padding-left:24px;padding-right:24px;font-size:16px;line-height:1.5;font-family:Georgia,Times,'Times New Roman',serif;color:#70797b;">
+              <div style="width: 100%; overflow: hidden; font-style: italic; font-family: Georgia, Times, 'Times New Roman', serif; color: #70797b; text-align: center;">
+                A collection of {{ object.video_count }} great new video{% if object.video_count != 1 %}s{% endif %}
+              </div><br>
+              <div style="font-weight:bold;font-size:28px;line-height:1.35;font-family:'Lucida Grande','Lucida Sans Unicode','Lucida Sans',Geneva,Verdana,sans-serif;text-align:center;color:#111">
+                {% filter upper %}{{ object.title.capitalize() }}{% endfilter %}
+              </div><br>
+              <div style="text-align:center;">
+                {{ object.description }}
+              </div><br>
+              <hr style="height:0;margin:0;border:0 solid #d2dadf;border-bottom-width:1px">
+              <br>
               {% if user.avatar.url %}
-              <img src="{{ user.avatar.url }}" style="display:block;margin-right:12px;margin-bottom:24px;border-radius:40px;outline:none" border="0" width="40" height="40" alt="" align="left" />
+              <div style="width:100%;overflow:hidden;text-align:center;">
+                <img src="{{ user.avatar.url }}" alt="{{ user.display_name }}" width="66" height="66" style="display:block;max-width:none;width:66px;height:auto;margin:0 auto;border-radius:100%;"/>
+              </div><br>
               {% else %}
-              <img src="{{ config.EMAIL_ASSETS_URL }}/assets/dolly/img/emails/avatar-small.png" style="display:block;margin-right:12px;margin-bottom:24px;border-radius:40px;outline:none" border="0" width="40" height="40" alt="" align="left" />
+              <div style="width:100%;overflow:hidden;text-align:center;">
+                <img src="{{ config.EMAIL_ASSETS_URL }}/assets/dolly/img/emails/avatar-small.png" alt="{{ user.display_name }}" width="66" height="66" style="display:block;max-width:none;width:66px;height:auto;margin: 0 auto;border-radius:100%;"/>
+              </div><br>
               {% endif %}
-              <p style="margin:0;margin-bottom:24px;font-size:13px;line-height:18px;font-style:italic"><font face="Georgia" color="#777782"><strong>{{ user.display_name }}</strong> recommended this {{ object_type_name }} for you.</font></p>
+              <div style="width: 100%; overflow: hidden; font-style: italic; font-family: Georgia, Times, 'Times New Roman', serif; color: #70797b; text-align: center;">
+                <b>{{ user.display_name }}</b> recommended this {{ object_type_name }} for you.
+              </div><br>
+              {% for video in top_videos %}
+              <div style="font-weight: bold; font-size: 28px; line-height: 1.35; font-family: 'Lucida Grande', 'Lucida Sans Unicode', 'Lucida Sans', Geneva, Verdana, sans-serif; color: #111">
+                {{ video.video_rel.title }}
+              </div><br>
+              <a href="{{ link.url }}?video={{ video.id }}" border="0" class="video-thumb" style="display:block;margin:0;border:none;outline:none;">
+                <img src="{{ video.default_thumbnail }}" border="0" alt="{{ video.video_rel.title }}"width="480" height="250" class="video-img" style="display:block;width:100%;height:auto;margin:0 auto;border:none;outline:none" />
+              </a><br>
+              {% if video.video_rel.description %}
+              {{ video.video_rel.description|truncate(20) }}<br><br>
+              {% endif %}
+              {% endfor %}
+              <p class="btn-center" style="display:block;width:100%;text-align:center;"><a href="{{ link.url }}" class="btn" style="margin:0 auto;padding:10px 20px;font-weight:400;font-family:'Lucida Grande','Lucida Sans Unicode','Lucida Sans',Geneva,Verdana,sans-serif;color:#fff !important;text-align:center;text-decoration:none;background-color:#51b364;border:none;border-radius:100px;cursor:pointer;" border="0">Watch &amp; Read More</a></p><br>
             </td>
           </tr>
           {% else %}{# VIDEO #}
           <tr>
-            <td colspan="100%" align="left" valign="top" class="container-padding" bgcolor="#fff" style="width:100% !important;padding-left:24px;padding-right:24px;background-color:#fff;">
-              <h1 style="margin:0;margin-bottom:12px;font-weight:800;font-size:24px;line-height:32px;font-family:'Lucida Grande','Lucida Sans Unicode','Lucida Sans',Geneva,Verdana,sans-serif;word-break:normal;text-align:left;color:#2e2e32;">{{ object.video_rel.title }}</h1>
-              <a href="{{ link.url }}" border="0" class="video-thumb" style="display:block;margin:0;margin-bottom:12px;border:none;outline:none;">
-                <img src="{{ object.default_thumbnail }}" border="0" alt="" class="video-img" style="display:block;width:100%;height:auto;margin:0 auto;border:none;outline:none" />
-              </a>
-              {% if object.video_rel.description %}
-              <p style="margin:0;margin-bottom:36px;font-size:22px;line-height:36px;font-family:Georgia,Cambria,'Times New Roman',Times,serif;text-align:left;color:#333;"><font face="Georgia" color="#333">{{ object.video_rel.description|truncate(512) }}</font></p>
-              {% endif %}
-              <p class="btn-center" style="display:block;width:100%;margin-top:48px;margin-bottom:48px;text-align:center;"><a href="{{ link.url }}" class="btn" style="margin:0 auto;padding:8px 18px;font-weight:400;font-family:'Lucida Grande','Lucida Sans Unicode','Lucida Sans',Geneva,Verdana,sans-serif;color:#fff !important;text-align:center;background-color:#51b364;border:none;border-radius:100px;cursor:pointer;" border="0">Watch &amp; Read More</a></p>
-            </td>
-          </tr>
-          <tr>
-            <td colspan="100%" align="center" valign="top" style="width:75%;margin:0 auto;padding:0 12.5%;" bgcolor="#fff">
+            <td class="container-padding" bgcolor="#fff" style="background-color:#fff;padding-left:24px;padding-right:24px;font-size:16px;line-height:1.5;font-family:Georgia,Times,'Times New Roman',serif;color:#70797b;">
               {% if user.avatar.url %}
-              <img src="{{ user.avatar.url }}" style="display:block;margin-right:12px;margin-bottom:24px;border-radius:40px;outline:none" border="0" width="40" height="40" alt="" align="left" />
+              <div style="width: 100%; overflow: hidden; text-align: center;">
+                <img src="{{ user.avatar.url }}" alt="{{ user.display_name }}" width="66" height="66" style="display: block; max-width: none; width: 66px; height: auto; margin: 0 auto; border-radius: 100%;"/>
+              </div><br>
               {% else %}
-              <img src="{{ config.EMAIL_ASSETS_URL }}/assets/dolly/img/emails/avatar-small.png" style="display:block;margin-right:12px;margin-bottom:24px;border-radius:40px;outline:none" border="0" width="40" height="40" alt="{{ user.display_name }}" align="left" />
+              <div style="width: 100%; overflow: hidden; text-align: center;">
+                <img src="{{ config.EMAIL_ASSETS_URL }}/assets/dolly/img/emails/avatar-small.png" alt="{{ user.display_name }}" width="66" height="66" style="display: block; max-width: none; width: 66px; height: auto; margin: 0 auto; border-radius: 100%;"/>
+              </div><br>
               {% endif %}
-              <p style="margin:0;margin-bottom:24px;font-size:13px;line-height:18px;font-style:italic"><font face="Georgia" color="#777782"><strong>{{ user.display_name }}</strong> recommended this {{ object_type_name }} for you.</font></p>
+              <div style="width: 100%; overflow: hidden; font-style: italic; font-family: Georgia, Times, 'Times New Roman', serif; color: #70797b; text-align: center;">
+                <b>{{ user.display_name }}</b> recommended this {{ object_type_name }} for you.
+              </div><br>
+              <div style="font-weight: bold; font-size: 28px; line-height: 1.35; font-family: 'Lucida Grande', 'Lucida Sans Unicode', 'Lucida Sans', Geneva, Verdana, sans-serif; color: #111">
+                {{ object.video_rel.title }}
+              </div><br>
+              <a href="{{ link.url }}" border="0" class="video-thumb" style="display:block;margin:0;border:none;outline:none;">
+                <img src="{{ object.default_thumbnail }}" border="0" alt="{{ object.video_rel.title }}" width="480" height="250" class="video-img" style="display:block;width:100%;height:auto;margin:0 auto;border:none;outline:none" />
+              </a><br>
+              {% if object.video_rel.description %}
+              {{ object.video_rel.description|truncate(20) }}<br><br>
+              {% endif %}
+              <p class="btn-center" style="display:block;width:100%;text-align:center;"><a href="{{ link.url }}" class="btn" style="margin:0 auto;padding:10px 20px;font-weight:400;font-family:'Lucida Grande','Lucida Sans Unicode','Lucida Sans',Geneva,Verdana,sans-serif;color:#fff !important;text-align:center;text-decoration:none;background-color:#51b364;border:none;border-radius:100px;cursor:pointer;" border="0">Watch &amp; Read More</a></p><br>
             </td>
           </tr>
           {% endif %}
           <tr>
-            <td colspan="100%" align="center" valign="top" class="container-padding" bgcolor="#fff" style="width:100% !important;padding-left:24px;padding-right:24px;background-color:#fff;">
-              <hr />
-              <h3 style="margin:0;margin-bottom:12px;font-weight:400;font-size:18px;line-height:28px;font-family:'Lucida Grande','Lucida Sans Unicode','Lucida Sans',Geneva,Verdana,sans-serif;word-break:normal;color:#2e2e32;text-align:center;">Watch and share what matters.<br />Download the app here:</h3>
-              <a href="{{ config.ITUNES_APP_LINK }}&ct=shareemail" border="0" style="display:block;margin:0;margin-bottom:48px;border:none;outline:none">
-                <img src="{{ config.EMAIL_ASSETS_URL }}/assets/dolly/img/emails/shared-app-store.png" border="0" alt="" style="display:block;width:135px;height:40px;margin:0;margin:0 auto;border:none !important;outline:none"/>
-              </a>
+            <td class="container-padding" bgcolor="#fff" style="background-color:#fff;padding-left:24px;padding-right:24px;font-size:16px;line-height:1.5;font-family:Georgia,Times,'Times New Roman',serif;color:#70797b;">
+              <hr style="height:0;margin:0;border:0 solid #d2dadf;border-bottom-width:1px">
+              <br>
+              <div style="font-size:20px;line-height:1.5;font-family:'Lucida Grande','Lucida Sans Unicode','Lucida Sans',Geneva,Verdana,sans-serif;text-align:center;color:#111">
+                Watch and share what matters.<br>Download the app here:
+              </div><br>
+              <a href="{{ config.ITUNES_APP_LINK }}&ct=shareemail" border="0" style="display:block;margin:0;border:none;outline:none">
+                <img src="{{ config.EMAIL_ASSETS_URL }}/assets/dolly/img/emails/app-store-badge@2x.png" width="135" height="40" border="0" alt="Download the App in the app store now." style="display:block;width:135px;height:40px;margin:0;margin:0 auto;border:none;outline:none"/>
+              </a><br>
             </td>
           </tr>
           <tr>
