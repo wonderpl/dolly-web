@@ -125,10 +125,11 @@ class ExternalFriend(db.Model):
         if not token:
             return
 
-        last_shared_date = dict(
+        existing_data = dict(
+            (r[0], r[1:]) for r in
             cls.query.filter_by(user=userid, external_system=system).
             filter(cls.last_shared_date != None).
-            values('external_uid', 'last_shared_date')
+            values('external_uid', 'email', 'last_shared_date')
         )
 
         fetcher = Fetcher(token)
@@ -143,6 +144,10 @@ class ExternalFriend(db.Model):
         for friend in friends:
             if not friend.get('name'):    # Ignore friends for whom we don't have a name
                 continue
+            try:
+                email, last_shared_date = existing_data[friend['id']]
+            except KeyError:
+                email, last_shared_date = None, None
             external_friends[friend['id']] = cls(
                 user=userid,
                 external_system=system,
@@ -150,7 +155,8 @@ class ExternalFriend(db.Model):
                 name=friend['name'],
                 avatar_url=friend['avatar_url'],
                 has_ios_device=None,
-                last_shared_date=last_shared_date.get(friend['id']),
+                email=email,
+                last_shared_date=last_shared_date,
             )
         if not external_friends:
             return
