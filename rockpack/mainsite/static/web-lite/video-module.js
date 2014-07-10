@@ -281,7 +281,9 @@ OO.plugin("WonderUIModule", function (OO) {
     _.onContentReady = function (event, content) {
 
         _.info = content;
-        _.elements.poster.getElementsByTagName('img')[0].src = content.promo || content.promo_image;
+
+        _.elements.poster.getElementsByTagName('img')[0].src = _.data.video.thumbnail_url;
+
         _.hideLoader();
         
         if ( _.ie10 ) {
