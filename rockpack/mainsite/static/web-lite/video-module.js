@@ -273,7 +273,7 @@ OO.plugin("WonderUIModule", function (OO) {
         Conduit.setFPS(25);
         Conduit.start();
 
-        _.elements.poster.getElementsByTagName('span')[0].innerHTML = (_.data.title.replace(/_/g,' '));
+        // _.elements.poster.getElementsByTagName('span')[0].innerHTML = (_.data.title.replace(/_/g,' '));
         _.duration = _.data.video.duration;
     };
 
