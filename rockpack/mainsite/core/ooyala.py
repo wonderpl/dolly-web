@@ -134,4 +134,10 @@ def create_asset(s3path, metadata):
 
 @background_on_sqs
 def create_asset_in_background(s3path, metadata):
-    create_asset(s3path, metadata)
+    try:
+        create_asset(s3path, metadata)
+    except Exception as e:
+        if hasattr(e, 'response') and 'error: duplicate' in e.response.content:
+            app.logger.error('Duplicate content: "%s": %s', s3path, e.response.content)
+        else:
+            raise
