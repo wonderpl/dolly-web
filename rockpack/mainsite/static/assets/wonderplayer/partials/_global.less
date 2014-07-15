@@ -50,7 +50,7 @@ body, html {
 	// &:before {
 	// 	content: '';
 	// 	display: block;
-	// 	padding-top: 56.25%;	
+	// 	padding-top: 56.25%;
 	// }
 
 	iframe {
@@ -100,7 +100,7 @@ body, html {
 	&:before {
 		// content: '';
 		// display: block;
-		// padding-top: 56.25%;	
+		// padding-top: 56.25%;
 	}
 
 	&.fullscreen {
@@ -112,7 +112,7 @@ body, html {
 		margin: auto;
 		max-width: 100%;
 	}
-	
+
 	object {
 		z-index: -1;
 		position: relative;
@@ -142,7 +142,7 @@ body, html {
 	&.no-poster iframe {
 		z-index: 500;
 	}
-	
+
 	#wonder-poster {
 		display: block;
 		width: 100%;
@@ -158,7 +158,7 @@ body, html {
 		-moz-user-select: none;     /* Firefox all */
 		-ms-user-select: none;      /* IE 10+ */
 		-o-user-select: none;
-		user-select: none;     
+		user-select: none;
 
 		&:after {
 			// background: black;
@@ -220,7 +220,7 @@ body, html {
 
 			&:after {
 				content: 'your video is loading';
-				display: block;					
+				display: block;
 				filter: alpha(opacity=0);
 				opacity: 0;
 				text-align: center;
@@ -246,7 +246,7 @@ body, html {
 
 		&.hide {
 			display: none;
-		}	
+		}
 	}
 
 	#wonder-poster.ios5 span:after{
@@ -274,7 +274,7 @@ body, html {
 		-moz-user-select: none;     /* Firefox all */
 		-ms-user-select: none;      /* IE 10+ */
 		-o-user-select: none;
-		user-select: none;     
+		user-select: none;
 		-webkit-tap-highlight-color: rgba(0,0,0,0);
 		cursor: pointer;
 
@@ -422,7 +422,7 @@ body, html {
 					border: none;
 					outline: none;
 				}
-	
+
 				&.vol-0 img {
 					display: none;
 				}
@@ -475,7 +475,7 @@ body, html {
 				background-size: 18px auto;
 			}
 		}
-	
+
 		span.wonder-timer {
 			display: block;
 			width: 55px;
@@ -543,7 +543,7 @@ body, html {
 					border-radius: 100px;
 					filter: alpha(opacity=0);
 					opacity: 0;
-				}	
+				}
 
 				&.loading {
 					&:after {
@@ -614,7 +614,7 @@ body, html {
 				left: 0px;
 			}
 		}
-	
+
 		.scrubber-buffer {
 			width: 0%;
 			height: 100%;
@@ -634,7 +634,7 @@ body, html {
 				display: none;
 			}
 		}
-	
+
 		.scrubber-timer {
 			display: block;
 			position: absolute;
@@ -676,11 +676,11 @@ body, html {
 				right: 0;
 				margin: auto;
 				bottom: -6px;
-				width: 0; 
-				height: 0; 
+				width: 0;
+				height: 0;
 				border-left: 6px solid transparent;
-				border-right: 6px solid transparent; 
-				border-top: 6px solid black; 
+				border-right: 6px solid transparent;
+				border-top: 6px solid black;
 			}
 		}
 
@@ -700,7 +700,7 @@ body, html {
 				top: -8px;
 				margin-left: -9px;
 			}
-	
+
 			&.vol {
 				bottom: 0%;
 				left: -8px;
@@ -713,7 +713,7 @@ body, html {
 			position: absolute;
 			margin: 0 auto;
 			z-index: 20;
-			
+
 			&.vid {
 				width: 47%;
 				height: 100%;
@@ -780,6 +780,30 @@ body, html {
 		}
 	}
 
+  #wonder-controls.no-logo {
+    .wonder-logo {
+      display:none;
+    }
+    .wonder-volume {
+
+    }
+    .wonder-timer {
+
+    }
+    .scrubber.vid {
+
+    }
+    .scrubber-target.vid {
+
+    }
+    .scrubber.vol {
+
+    }
+    .scrubber-target.vol {
+
+    }
+  }
+
 	&:hover, &:active, &:focus {
 		#wonder-controls {
 			bottom: 0px;
@@ -796,7 +820,7 @@ body, html {
 }
 
 .blur {
-	-webkit-filter: blur(6px); -moz-filter: blur(6px); -o-filter: blur(6px); -ms-filter: blur(6px); filter: blur(6px);	
+	-webkit-filter: blur(6px); -moz-filter: blur(6px); -o-filter: blur(6px); -ms-filter: blur(6px); filter: blur(6px);
 	margin: -1px;
     -webkit-backface-visibility: hidden;
     -webkit-transform: translateZ(0) scale(1.0, 1.0);

@@ -55,22 +55,49 @@
 
     {% assets filters="rjsmin", output="gen/video-module.%(version)s.js",
       "web-lite/conduit.js",
-      "web-lite/video-module.js"
+      "web-lite/video-module.js",
+      "web-lite/vendor/jquery-1.11.0.min.js"
     %}<script type="text/javascript">{{ include_static_inline(ASSET_URL) }}</script>{% endassets %}
 
     <script type="text/javascript">
-      (function(){
-        var rgb = videoData.video.rgb;
-        var logo = videoData.video.logo;
-        var style = '';
-        if (rgb) { style += '#wonder-wrapper #wonder-controls { background: rgba(' + rgb + ', 0.43);'; }
-        if (logo) { style += '#wonder-wrapper #wonder-controls a.wonder-logo, #wonder-wrapper #wonder-controls button.wonder-logo { background-image: url(' + logo + '); }'; }
-        if (style) {
-          var styleEl = document.createElement('style');
-          styleEl.innerHTML = style;
-          document.head.appendChild(styleEl);
+
+      function colorControls () {
+
+        var rgb = JSON.parse(videoData.video.source_player_parameters.rgb);
+        console.log(rgb);
+
+        var svg = '<svg xmlns="http://www.w3.org/2000/svg" style="height: 0; width: 0;" id="ColourSvg"><filter id="ColourFilter" color-interpolation-filters="sRGB"><feComponentTransfer><feFuncR class="brightness red" type="linear" slope="1"/><feFuncG class="brightness green" type="linear" slope="1"/><feFuncB class="brightness blue" type="linear" slope="1"/></feComponentTransfer></filter></svg>';
+        var style = '<style id="ColourStyle">.filtered { -webkit-filter : url("#ColourFilter"); -webkit-transform: translate3d(0px,0px,0px); -webkit-backface-visibility: hidden; -webkit-perspective: 1000; }</style>';
+
+        var $filteredControls = $('.wonder-play, .wonder-pause, .wonder-volume, .wonder-logo, .wonder-fullscreen, .scrubber-handle');
+        $filteredControls.addClass('filtered');
+
+        var $svg = $('#ColourSvg');
+        if (!$svg.length) {
+          $svg = $(svg);
+          $('body').prepend($svg);
         }
-      })();
+
+        var $style = $('#ColourStyle');
+        if (!$style.length) {
+          $style = $(style);
+          $('head').append($style);
+        }
+
+        $svg.find('.red').attr('slope', rgb.r/255);
+        $svg.find('.green').attr('slope', rgb.g/255);
+        $svg.find('.blue').attr('slope', rgb.b/255);
+
+        console.log($svg);
+      }
+
+      function hideLogo () {
+        var hideLogo = videoData.video.source_player_parameters.hideLogo;
+        var controls = document.getElementById('wonder-controls');
+        if (controls && hideLogo) {
+          controls.className = controls.className + " no-logo";
+        }
+      }
     </script>
 
   	<script type="text/javascript">
@@ -84,8 +111,12 @@
   					layout: 'chromeless'
   				}
   			);
+        hideLogo();
+        colorControls();
   		});
   	</script>
+
+
   {% endblock %}
 {% endblock %}
 

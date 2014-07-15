@@ -717,6 +717,11 @@ OO.plugin("WonderUIModule", function (OO) {
 
     _.uiTick = function () {
 
+      // console.log('_.loaded : ', _.loaded);
+      // console.log('_.time : ', _.time);
+      // console.log('_.scrubbed', _.scrubbed);
+      // console.log('_.timers.seek', _.timers.seek);
+
         if ( _.scrubbed === true ) {
             _.elements.scrubber_progress_vid.style.width = _.videoPercentage + '%';
             _.elements.scrubber_handle_vid.style.left = _.videoPercentage + '%';
@@ -724,7 +729,14 @@ OO.plugin("WonderUIModule", function (OO) {
             _.elements.scrubber_timer.innerHTML = _.getTime( _.newtime );
             _.showLoader();
         } else if ( _.loaded === true && _.time !== undefined && _.scrubbed === false && _.timers.seek > 60 ) {
+
             var percentage = ( (_.time/_.duration) * 100 ) + '%';
+
+            // console.log(_.time);
+            // console.log(_.duration);
+
+            // console.log(percentage);
+
             _.elements.scrubber_progress_vid.style.width = percentage;
             _.elements.scrubber_handle_vid.style.left = percentage;
             _.elements.scrubber_timer.style.left = percentage;
