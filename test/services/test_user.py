@@ -1245,7 +1245,7 @@ class TestFriends(base.RockPackTestCase):
             p['get_connections'].return_value = dict(data=[
                 dict(id='2', name='test #2'), dict(id='3', name='test #3')])
             self._check_friends(user, friend)
-            self.assertEquals(p['get_connections'].call_args[0], ('1', 'friends'))
+            self.assertEquals(p['get_connections'].call_args[0], ('me', 'friends'))
 
     def test_get_twitter_friends(self):
         user = self.create_test_user()

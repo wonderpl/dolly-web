@@ -194,7 +194,7 @@ class _FacebookFriendFetcher(object):
         self.uid = external_token.external_uid
 
     def get_friends(self):
-        friends = self.api.get_connections(self.uid, 'friends', limit=1000)
+        friends = self.api.get_connections('me', 'friends', limit=1000)
         for friend in friends['data']:
             friend['avatar_url'] = facebook.FACEBOOK_PICTURE_URL % friend['id']
             yield friend
