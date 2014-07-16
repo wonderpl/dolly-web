@@ -344,7 +344,8 @@ def add_videos_to_channel(channel, instance_list, locale, delete_existing=False,
         elif not existing and Channel.should_be_public(channel, True, added):
             channel.public = True
 
-    return added.values()
+    # return only those instances that are new
+    return [i for i in added.values() if i.id is None]
 
 
 def _user_list(paging, **filters):
@@ -1461,8 +1462,10 @@ class UserWS(WebService):
         if request.json is None or not isinstance(request.json, list):
             abort(400, message=_('List can be empty, but must be present'))
 
-        add_videos_to_channel(channel, request.json, self.get_locale(),
-                              request.method == 'PUT')
+        added = add_videos_to_channel(channel, request.json, self.get_locale(),
+                                      request.method == 'PUT')
+        if request.method == 'POST' and len(added) == 1:
+            return ajax_create_response(added[0])
 
     @expose_ajax('/<userid>/channels/<channelid>/videos/<videoid>/', cache_age=60)
     def channel_video_instance(self, userid, channelid, videoid):
