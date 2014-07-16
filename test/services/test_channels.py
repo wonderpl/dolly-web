@@ -572,7 +572,7 @@ class ChannelCreateTestCase(base.RockPackTestCase):
                 content_type='application/json',
                 headers=[get_auth_header(user.id)]
             )
-            self.assertEquals(r.status_code, 204)
+            self.assertIn(r.status_code, (201, 204))
             channel = models.Channel.query.get(new_ch.id)
             self.assertTrue(channel.public, 'channel should be public')
             self.assertIsNotNone(channel.date_published)
@@ -776,7 +776,7 @@ class ChannelCreateTestCase(base.RockPackTestCase):
                 content_type='application/json',
                 headers=[get_auth_header(user_id)]
             )
-            self.assertEquals(r.status_code, 204)
+            self.assertIn(r.status_code, (201, 204))
 
             for title, category, cover, public in (
                     ('test', '', '', False),
