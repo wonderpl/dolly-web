@@ -215,6 +215,7 @@ class User(db.Model):
             gender=eu.gender,
             avatar=avatar,
             date_of_birth=eu.dob,
+            description=eu.description,
             locale=locale,
         )
 

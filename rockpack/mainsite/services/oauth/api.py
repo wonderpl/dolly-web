@@ -328,6 +328,7 @@ class ExternalUser(AbstractTokenManager):
     last_name = property(lambda x: x._user_data.get('last_name', ''))
     display_name = property(lambda x: x._user_data.get('name', ''))
     email = property(lambda x: x._user_data.get('email', ''))
+    description = property(lambda x: x._user_data.get('description', ''))
 
     @property
     def meta(self):
@@ -465,7 +466,8 @@ class TwitterUser(ExternalUser):
 
     @property
     def avatar(self):
-        r = requests.get(self._user_data['profile_image_url'])
+        image_url = self._user_data['profile_image_url'].replace('_normal.', '.')
+        r = requests.get(image_url)
         if r.status_code == 200 and r.headers.get('content-type', '').startswith('image/'):
             return StringIO(r.content)
         return ''
