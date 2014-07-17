@@ -14,7 +14,6 @@ from rockpack.mainsite.core import email
 from rockpack.mainsite.core.token import create_unsubscribe_token
 from rockpack.mainsite.core.apns import push_client
 from rockpack.mainsite.helpers.urls import url_tracking_context
-from rockpack.mainsite.background_sqs_processor import background_on_sqs
 from rockpack.mainsite.services.oauth import facebook
 from rockpack.mainsite.services.oauth.models import ExternalFriend, ExternalToken
 from rockpack.mainsite.services.share.models import ShareLink
@@ -221,7 +220,7 @@ def create_unavailable_notifications(date_from=None, date_to=None, user_notifica
 
 
 def influencer_starred_email(sender, recipient, video_instance):
-    #TODO: do something here for real
+    # TODO: do something here for real
     pass
 
 
@@ -235,7 +234,6 @@ def influencer_starred_activity(userid, videoid):
     ).add()
 
 
-@background_on_sqs
 @commit_on_success
 def recommend_for_influencers(instance_id, user_id):
     user = User.query.get(user_id)
@@ -273,8 +271,8 @@ def recommend_for_influencers(instance_id, user_id):
 
             external_friend = ExternalToken.query.\
                 join(ExternalFriend,
-                    (ExternalFriend.external_system == ExternalToken.external_system) &
-                    (ExternalFriend.external_uid == ExternalToken.external_uid)).\
+                     (ExternalFriend.external_system == ExternalToken.external_system) &
+                     (ExternalFriend.external_uid == ExternalToken.external_uid)).\
                 filter(ExternalFriend.user == user.id).\
                 with_entities(ExternalToken.user.label('friendid'),
                               ExternalFriend.user.label('userid'))
@@ -349,6 +347,16 @@ def create_new_repack_notifications(date_from=None, date_to=None, user_notificat
             user_notifications.setdefault(packer_channel.owner, None)
 
 
+def create_influencer_notifications(date_from=None, date_to=None, user_notifications=None):
+    activity = UserActivity.query.filter(
+        UserActivity.date_actioned.between(date_from, date_to),
+        UserActivity.action == 'star',
+    )
+
+    for instance_id, user_id in activity.values('object_id', 'user'):
+        recommend_for_influencers(instance_id, user_id)
+
+
 def create_new_activity_notifications(date_from=None, date_to=None, user_notifications=None):
     activity_notification_map = dict(
         # map action -> activity list, object model, message function
@@ -375,9 +383,6 @@ def create_new_activity_notifications(date_from=None, date_to=None, user_notific
                                 activity.id, action, getattr(object, 'id', None))
                 if object:
                     user, type, body = get_message(activity, object)
-
-                    if action == 'star':
-                        recommend_for_influencers(object.id, activity.user)
 
                     if user == activity.user:
                         # Don't send notifications to self
@@ -522,8 +527,8 @@ def update_video_feed_item_stars(date_from, date_to):
 
     external_friend = ExternalToken.query.\
         join(ExternalFriend,
-            (ExternalFriend.external_system == ExternalToken.external_system) &
-            (ExternalFriend.external_uid == ExternalToken.external_uid)).\
+             (ExternalFriend.external_system == ExternalToken.external_system) &
+             (ExternalFriend.external_uid == ExternalToken.external_uid)).\
         with_entities(ExternalToken.user.label('friendid'),
                       ExternalFriend.user.label('userid'))
 
@@ -531,8 +536,8 @@ def update_video_feed_item_stars(date_from, date_to):
 
     feed_items = UserContentFeed.query.\
         join(UserActivity,
-            (UserActivity.action == 'star') &
-            (UserActivity.date_actioned.between(date_from, date_to))).\
+             (UserActivity.action == 'star') &
+             (UserActivity.date_actioned.between(date_from, date_to))).\
         join(unioned, unioned.c.userid == UserContentFeed.user).\
         filter((UserActivity.user == unioned.c.friendid) &
                (UserContentFeed.user != UserActivity.user) &
@@ -605,7 +610,8 @@ def create_new_channel_feed_items(date_from, date_to):
             notification_groups.setdefault(channel, set()).add(user)
             notify_users.update({user: None})
 
-    [notify_users.update({user: token}) for user, token in
+    [
+        notify_users.update({user: token}) for user, token in
         ExternalToken.query.filter(
             ExternalToken.external_system == 'apns', ExternalToken.user.in_(notify_users.keys())
         ).values(ExternalToken.user, ExternalToken.external_token)]
@@ -868,7 +874,9 @@ def update_apns_tokens():
 def update_user_notifications(date_from, date_to):
     """Update user notifications based on recent activity."""
     user_notifications = {}
-    if not app.config.get('DOLLY'):
+    if app.config.get('DOLLY'):
+        create_influencer_notifications(date_from, date_to, user_notifications)
+    else:
         create_new_activity_notifications(date_from, date_to, user_notifications)
         create_new_repack_notifications(date_from, date_to, user_notifications)
         create_unavailable_notifications(date_from, date_to, user_notifications)

@@ -500,7 +500,7 @@ class TestUserContent(base.RockPackTestCase):
                 date_from, date_to = datetime(2012, 1, 1), datetime(2020, 1, 1)
 
                 # Only one of the friends (of the two) should get an email
-                cron_cmds.create_new_activity_notifications(date_from, date_to)
+                cron_cmds.create_influencer_notifications(date_from, date_to)
 
                 date_from = datetime.utcnow()
                 time.sleep(2)
@@ -524,7 +524,7 @@ class TestUserContent(base.RockPackTestCase):
                             data={'action': 'star', 'object_id': instance_id},
                             headers=[get_auth_header(user5.id)])
 
-                cron_cmds.create_new_activity_notifications(date_from, date_to)
+                cron_cmds.create_influencer_notifications(date_from, date_to)
 
         # User 3 shouldn't have another email
         ua = UserActivity.query.filter_by(action='recommended')
