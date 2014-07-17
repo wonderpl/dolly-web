@@ -353,7 +353,7 @@ def create_influencer_notifications(date_from=None, date_to=None, user_notificat
         UserActivity.action == 'star',
     )
 
-    for instance_id, user_id in activity.values('object_id', 'user'):
+    for instance_id, user_id in activity.values(UserActivity.object_id, UserActivity.user):
         recommend_for_influencers(instance_id, user_id)
 
 
