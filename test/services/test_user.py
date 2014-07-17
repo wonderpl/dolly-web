@@ -1237,26 +1237,26 @@ class TestFriends(base.RockPackTestCase):
 
     def test_get_facebook_friends(self):
         user = self.create_test_user()
-        self._save_token(user.id, 'facebook', '1')
+        self._save_token(user.id, 'facebook', '41')
         friend = self.create_test_user()
-        self._save_token(friend.id, 'facebook', '2')
+        self._save_token(friend.id, 'facebook', '42')
         patches = {'get_connections': DEFAULT, 'get_objects': DEFAULT}
         with patch.multiple('rockpack.mainsite.services.oauth.facebook.GraphAPI', **patches) as p:
             p['get_connections'].return_value = dict(data=[
-                dict(id='2', name='test #2'), dict(id='3', name='test #3')])
+                dict(id='42', name='test #2'), dict(id='43', name='test #3')])
             self._check_friends(user, friend)
             self.assertEquals(p['get_connections'].call_args[0], ('me', 'friends'))
 
     def test_get_twitter_friends(self):
         user = self.create_test_user()
-        self._save_token(user.id, 'twitter', '1')
+        self._save_token(user.id, 'twitter', '41')
         friend = self.create_test_user()
-        self._save_token(friend.id, 'twitter', '2')
+        self._save_token(friend.id, 'twitter', '42')
         with patch('twitter.Api.GetFriends') as get_friends:
             get_friends.return_value = [
                 type('U', (object,), u)() for u in
-                dict(id=2, name='test #2', profile_image_url='img.png'),
-                dict(id=3, name='test #3', profile_image_url='img.png')
+                dict(id=42, name='test #2', profile_image_url='img.png'),
+                dict(id=43, name='test #3', profile_image_url='img.png')
             ]
             self._check_friends(user, friend)
             self.assertGreater(get_friends.call_count, 0)
