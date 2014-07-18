@@ -61,7 +61,7 @@ def _register_user(form):
         first_name=form.first_name.data,
         last_name=form.last_name.data,
         date_of_birth=form.date_of_birth.data,
-        email=form.email.data,
+        email=form.email.data.lower(),
         password=form.password.data,
         gender=form.gender.data or None,
         locale=form.locale.data)

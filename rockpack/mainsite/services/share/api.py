@@ -165,7 +165,7 @@ class ShareWS(WebService):
                 external_uid=form.external_uid.data,
             )
             friendval = dict(
-                email=form.email.data,
+                email=form.email.data.lower(),
                 last_shared_date=datetime.utcnow(),
             )
             if form.name.data:
