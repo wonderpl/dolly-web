@@ -324,8 +324,25 @@ OO.plugin("WonderUIModule", function (OO) {
     };
 
     _.autoPlay = function() {
-      var autoplayVideo = (parseInt(_.data.video.loop, 10) === 1);
-      if ( autoplayVideo && _.isMobile === false && _.ipad === false ) {
+
+      // user setting
+      var autoplaySetting = (parseInt(_.data.video.loop, 10) === 1);
+
+      var autoplayQueryString = _.getQuery( 'autoplay' );
+
+      var autoplayQueryStringParsed = parseInt(autoplayQueryString, 10);
+
+      var autoplayQueryStringValue = isNaN(autoplayQueryStringParsed) ? null : autoplayQueryStringParsed;
+
+      // query string value is true or false or not set
+      var autoplayQueryStringValue = autoplayQueryStringValue === null ? null : !!autoplayQueryStringValue;
+
+      // use query string if set
+      var autoplay = autoplayQueryStringValue === null ? autoplaySetting : autoplayQueryStringValue;
+
+      var autoplaySuitable = (_.isMobile === false && _.ipad === false);
+
+      if ( autoplay && autoplaySuitable ) {
         setTimeout( function() {
           _.loaded = true;
           _.controlshovered = false;

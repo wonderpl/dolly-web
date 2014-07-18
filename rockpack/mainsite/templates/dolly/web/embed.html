@@ -53,6 +53,10 @@
       document.write('<scr'+'ipt type="text/javascript" src="//player.ooyala.com/v3/{{ config.OOYALA_PLAYER_ID }}' + ( operacheck === -1 ? '?platform=html5-priority' : "" ) + '"><\/sc'+'ript>');
     </script>
 
+    {#
+      JQuery is only used for creation of SVG elements below and nowhere else.
+      Remove as unneccessary if possible.
+    #}
     {% assets filters="rjsmin", output="gen/video-module.%(version)s.js",
       "web-lite/conduit.js",
       "web-lite/video-module.js",
@@ -61,6 +65,7 @@
 
     <script type="text/javascript">
 
+      // JQuery is being used here only, purely for the creation of complex elements
       function colorControls () {
 
         var rgb = JSON.parse(videoData.video.source_player_parameters.rgb);
@@ -89,7 +94,6 @@
       }
 
       function hideLogo () {
-        console.log(videoData.video.source_player_parameters);
         var hideLogo = videoData.video.source_player_parameters.hideLogo === "True" ? true : false;
         var controls = document.getElementById('wonder-controls');
         if (controls && hideLogo) {
