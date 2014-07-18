@@ -7,7 +7,7 @@ from sqlalchemy import func, text, TIME, distinct, or_
 from rockpack.mainsite import app
 from rockpack.mainsite.manager import manager, job_control
 from rockpack.mainsite.core.es import mappings, api
-from rockpack.mainsite.core.es import es_connection, helpers
+from rockpack.mainsite.core.es import es_connection
 from rockpack.mainsite.core.dbapi import commit_on_success
 from rockpack.mainsite.core.youtube import batch_query, _parse_datetime
 from rockpack.mainsite.helpers.http import get_external_resource
@@ -140,15 +140,20 @@ def process_video_instance_queue(date_from=None, date_to=None):
     from rockpack.mainsite.services.user.api import add_videos_to_channel
     records = VideoInstanceQueue.query.filter(
         VideoInstanceQueue.new_instance == None,
-        VideoInstanceQueue.date_scheduled < date_to
+        VideoInstanceQueue.date_scheduled < date_to,
+        (VideoInstanceQueue.tags == None) | (VideoInstanceQueue.tags != 'duplicate')
     )
     for record in records:
         added = add_videos_to_channel(record.target_channel_rel, [record.source_instance],
                                       None, tags=record.tags)
         if added:
             record.new_instance = added[0].id
-        app.logger.info('Processed queue. Added %s to %s: %s',
-                        record.source_instance, record.target_channel, record.new_instance)
+            app.logger.info('Processed queue. Added %s to %s: %s',
+                            record.source_instance, record.target_channel, record.new_instance)
+        else:
+            record.tags = 'duplicate'
+            app.logger.info('Processed queue. Failed to add %s to %s: duplicate',
+                            record.source_instance, record.target_channel)
 
 
 @manager.cron_command(interval=86400)
@@ -207,7 +212,6 @@ def check_video_player_errors(date_from=None, date_to=None):
 @manager.command
 def update_video_data(start):
     """Query youtube for updated video data."""
-    #start = '2013-06-08'
     get_youtube_video_data(Video.query, start)
 
 
@@ -228,8 +232,6 @@ def get_youtube_video_data(video_qs, start):
                 if 'noembed' in [e.tag for e in entry.extension_elements]:
                     app.logger.info('%s: marked not visible: noembed', id)
                     videos[id].visible = False
-                #group = [e for e in entry.extension_elements if e.tag == 'group'][0]
-                #print id, [(c.attributes, c.text) for c in group.children if c.tag == 'restriction']
             elif entry.batch_status.code == '404':
                 app.logger.info('%s: marked not visible: %s', id, entry.batch_status.reason)
                 if not videos[id].source_username:
