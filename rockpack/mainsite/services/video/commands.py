@@ -145,7 +145,8 @@ def process_video_instance_queue(date_from=None, date_to=None):
     for record in records:
         added = add_videos_to_channel(record.target_channel_rel, [record.source_instance],
                                       None, tags=record.tags)
-        record.new_instance = added[0].id
+        if added:
+            record.new_instance = added[0].id
         app.logger.info('Processed queue. Added %s to %s: %s',
                         record.source_instance, record.target_channel, record.new_instance)
 
