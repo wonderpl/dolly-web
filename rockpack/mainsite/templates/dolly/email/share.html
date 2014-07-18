@@ -66,7 +66,7 @@
                 <img src="{{ video.default_thumbnail }}" border="0" alt="{{ video.video_rel.title }}"width="480" height="250" class="video-img" style="display:block;width:100%;height:auto;margin:0 auto;border:none;outline:none" />
               </a><br>
               {% if video.video_rel.description %}
-              {{ video.video_rel.description|truncate(20) }}<br><br>
+              {{ video.video_rel.description|truncate(128) }}<br><br>
               {% endif %}
               {% endfor %}
               <p class="btn-center" style="display:block;width:100%;text-align:center;"><a href="{{ link.url }}" class="btn" style="margin:0 auto;padding:10px 20px;font-weight:400;font-family:'Lucida Grande','Lucida Sans Unicode','Lucida Sans',Geneva,Verdana,sans-serif;color:#fff !important;text-align:center;text-decoration:none;background-color:#51b364;border:none;border-radius:100px;cursor:pointer;" border="0">Watch &amp; Read More</a></p><br>
@@ -94,7 +94,7 @@
                 <img src="{{ object.default_thumbnail }}" border="0" alt="{{ object.video_rel.title }}" width="480" height="250" class="video-img" style="display:block;width:100%;height:auto;margin:0 auto;border:none;outline:none" />
               </a><br>
               {% if object.video_rel.description %}
-              {{ object.video_rel.description|truncate(20) }}<br><br>
+              {{ object.video_rel.description|truncate(512) }}<br><br>
               {% endif %}
               <p class="btn-center" style="display:block;width:100%;text-align:center;"><a href="{{ link.url }}" class="btn" style="margin:0 auto;padding:10px 20px;font-weight:400;font-family:'Lucida Grande','Lucida Sans Unicode','Lucida Sans',Geneva,Verdana,sans-serif;color:#fff !important;text-align:center;text-decoration:none;background-color:#51b364;border:none;border-radius:100px;cursor:pointer;" border="0">Watch &amp; Read More</a></p><br>
             </td>
