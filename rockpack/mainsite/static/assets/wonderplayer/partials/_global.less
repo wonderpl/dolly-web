@@ -781,26 +781,34 @@ body, html {
 	}
 
   #wonder-controls.no-logo {
-    .wonder-logo {
-      display:none;
-    }
-    .wonder-volume {
-
-    }
-    .wonder-timer {
-
-    }
-    .scrubber.vid {
-
-    }
-    .scrubber-target.vid {
-
-    }
-    .scrubber.vol {
-
-    }
-    .scrubber-target.vol {
-
+    @media (min-width: 960px) {
+      .wonder-logo {
+        display:none;
+      }
+      .wonder-volume {
+        transition: left 0.4s ease-in-out;
+        left: 88.5%
+      }
+      .wonder-timer {
+        transition: left 0.4s ease-in-out;
+        left: 79.5%;
+      }
+      .scrubber.vid {
+        transition: width 0.4s ease-in-out;
+        width: 67%;
+      }
+      .scrubber-target.vid {
+        transition: width 0.4s ease-in-out;
+        width: 71%;
+      }
+      .scrubber.vol {
+        transition: right 0.4s ease-in-out;
+        right: 8.5%;
+      }
+      .scrubber-target.vol {
+        transition: right 0.4s ease-in-out;
+        right: 8.5%;
+      }
     }
   }
 
