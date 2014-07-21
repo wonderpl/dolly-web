@@ -145,8 +145,10 @@ def email_validator():
 
 def email_registered_validator():
     def _registered(form, field):
-        if User.query.filter_by(email=field.data).count():
-            raise wtf.ValidationError(_('Email address already registered.'))
+        if field.data:
+            field.data = field.data.lower()
+            if User.query.filter_by(email=field.data).count():
+                raise wtf.ValidationError(_('Email address already registered.'))
     return _registered
 
 
