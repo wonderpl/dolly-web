@@ -1,0 +1,16 @@
+{% extends 'share.html' %}
+
+{% block title %}{{ senders[0].display_name }} and {{ senders[1].display_name }} recommended this {{ object_type_name }} for you on Wonder PL{% endblock %}
+
+{% block video_sender_header %}
+<div style="width: 100%; overflow: hidden; text-align: center;">
+  {% for sender in senders %}
+    {{ avatar_url(sender, display='inline') }}
+  {% endfor %}
+</div>
+<br/>
+<div style="width: 100%; overflow: hidden; font-style: italic; font-family: Georgia, Times, 'Times New Roman', serif; color: #70797b; text-align: center;">
+  <b>{{ senders[0].display_name }}</b> and <b>{{ senders[1].display_name }}</b> recommended this {{ object_type_name }} on Wonder PL.
+</div>
+  <br/>
+{% endblock %}

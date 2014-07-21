@@ -461,15 +461,16 @@ class TestUserContent(base.RockPackTestCase):
         self.assertEquals(r.status_code, 201)
         return token
 
-    def test_starred_influencer_email(self):
+    def _test_influencer_email(self, send_email, **user_args):
         with self.app.test_request_context():
             with self.app.test_client() as client:
-                influencer = self.create_test_user(is_influencer=True)
+                influencer = self.create_test_user(first_name='Mr', last_name='Influential',
+                                                   is_influencer=True)
 
                 user = self.create_test_user()
 
                 # Create a couple of friends
-                user3 = self.create_test_user()
+                user3 = self.create_test_user(**user_args)
                 user3id = user3.id  # We need these when the session expires
                 user3email = user3.email  # ^^
 
@@ -501,6 +502,10 @@ class TestUserContent(base.RockPackTestCase):
 
                 # Only one of the friends (of the two) should get an email
                 cron_cmds.create_influencer_notifications(date_from, date_to)
+                if send_email:
+                    ((recipient, body), ctx), = send_email.call_args_list
+                    self.assertEquals(recipient, user3.email)
+                    self.assertIn(VideoData.video1.title, body)
 
                 date_from = datetime.utcnow()
                 time.sleep(2)
@@ -525,10 +530,23 @@ class TestUserContent(base.RockPackTestCase):
                             headers=[get_auth_header(user5.id)])
 
                 cron_cmds.create_influencer_notifications(date_from, date_to)
+                if send_email:
+                    # Still only 1 call since first pass
+                    self.assertEquals(send_email.call_count, 1)
 
         # User 3 shouldn't have another email
         ua = UserActivity.query.filter_by(action='recommended')
         self.assertEquals(ua.count(), 1)
+
+    @skip_if_rockpack
+    @patch_send_email()
+    def test_influencer_email(self, send_email):
+        self._test_influencer_email(send_email)
+
+    @skip_unless_config('TEST_INFLUENCER_EMAIL')
+    def test_influencer_email_wo_patch(self):
+        self._test_influencer_email(
+            None, email=app.config['TEST_INFLUENCER_EMAIL'])
 
     @skip_unless_config('ELASTICSEARCH_URL')
     def test_content_feed(self):

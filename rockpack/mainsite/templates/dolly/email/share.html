@@ -1,3 +1,19 @@
+{%- macro avatar_url(user, display='block') %}
+  <img src="{{ user.avatar.url|default(config.EMAIL_ASSETS_URL + '/assets/dolly/img/emails/avatar-small.png', True) }}"
+       alt="" width="66" height="66" style="display: {{ display }}; max-width: none; width: 66px; height: auto; margin: 0 auto; border-radius: 100%;"/>
+{% endmacro %}
+
+{%- macro sender_header() %}
+  <div style="width: 100%; overflow: hidden; text-align: center;">
+  {{ avatar_url(sender) }}
+  </div>
+  <br/>
+  <div style="width: 100%; overflow: hidden; font-style: italic; font-family: Georgia, Times, 'Times New Roman', serif; color: #70797b; text-align: center;">
+    <b>{{ sender.display_name }}</b> recommended this {{ object_type_name }} for you.
+  </div>
+  <br/>
+{% endmacro %}
+
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html lang="en">
 <head>
@@ -5,7 +21,7 @@
   <meta name="viewport" content="initial-scale=1.0">
   <meta name="format-detection" content="telephone=no">
 
-  <title>{{ user.display_name }} recommended this {{ object_type_name }} for you on Wonder PL</title>
+  <title>{% block title %}{{ sender.display_name }} recommended this {{ object_type_name }} for you on Wonder PL{% endblock %}</title>
   <style type="text/css">
     .ReadMsgBody{width:100%;background-color:#fff}
     .ExternalClass{width:100%;background-color:#fff}
@@ -46,18 +62,7 @@
               </div><br>
               <hr style="height:0;margin:0;border:0 solid #d2dadf;border-bottom-width:1px">
               <br>
-              {% if user.avatar.url %}
-              <div style="width:100%;overflow:hidden;text-align:center;">
-                <img src="{{ user.avatar.url }}" alt="{{ user.display_name }}" width="66" height="66" style="display:block;max-width:none;width:66px;height:auto;margin:0 auto;border-radius:100%;"/>
-              </div><br>
-              {% else %}
-              <div style="width:100%;overflow:hidden;text-align:center;">
-                <img src="{{ config.EMAIL_ASSETS_URL }}/assets/dolly/img/emails/avatar-small.png" alt="{{ user.display_name }}" width="66" height="66" style="display:block;max-width:none;width:66px;height:auto;margin: 0 auto;border-radius:100%;"/>
-              </div><br>
-              {% endif %}
-              <div style="width: 100%; overflow: hidden; font-style: italic; font-family: Georgia, Times, 'Times New Roman', serif; color: #70797b; text-align: center;">
-                <b>{{ user.display_name }}</b> recommended this {{ object_type_name }} for you.
-              </div><br>
+              {{ sender_header() }}
               {% for video in top_videos %}
               <div style="font-weight: bold; font-size: 28px; line-height: 1.35; font-family: 'Lucida Grande', 'Lucida Sans Unicode', 'Lucida Sans', Geneva, Verdana, sans-serif; color: #111">
                 {{ video.video_rel.title }}
@@ -75,18 +80,9 @@
           {% else %}{# VIDEO #}
           <tr>
             <td class="container-padding" bgcolor="#fff" style="background-color:#fff;padding-left:24px;padding-right:24px;font-size:16px;line-height:1.5;font-family:Georgia,Times,'Times New Roman',serif;color:#70797b;">
-              {% if user.avatar.url %}
-              <div style="width: 100%; overflow: hidden; text-align: center;">
-                <img src="{{ user.avatar.url }}" alt="{{ user.display_name }}" width="66" height="66" style="display: block; max-width: none; width: 66px; height: auto; margin: 0 auto; border-radius: 100%;"/>
-              </div><br>
-              {% else %}
-              <div style="width: 100%; overflow: hidden; text-align: center;">
-                <img src="{{ config.EMAIL_ASSETS_URL }}/assets/dolly/img/emails/avatar-small.png" alt="{{ user.display_name }}" width="66" height="66" style="display: block; max-width: none; width: 66px; height: auto; margin: 0 auto; border-radius: 100%;"/>
-              </div><br>
-              {% endif %}
-              <div style="width: 100%; overflow: hidden; font-style: italic; font-family: Georgia, Times, 'Times New Roman', serif; color: #70797b; text-align: center;">
-                <b>{{ user.display_name }}</b> recommended this {{ object_type_name }} for you.
-              </div><br>
+              {% block video_sender_header %}
+              {{ sender_header() }}
+              {% endblock %}
               <div style="font-weight: bold; font-size: 28px; line-height: 1.35; font-family: 'Lucida Grande', 'Lucida Sans Unicode', 'Lucida Sans', Geneva, Verdana, sans-serif; color: #111">
                 {{ object.video_rel.title }}
               </div><br>

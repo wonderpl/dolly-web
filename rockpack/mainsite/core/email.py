@@ -1,5 +1,6 @@
 import re
 import boto
+import uuid
 from jinja2 import Environment, PackageLoader
 from rockpack.mainsite import app
 from rockpack.mainsite.helpers.urls import url_for
@@ -15,8 +16,13 @@ if _assets_url.startswith('//'):
 app.config['EMAIL_ASSETS_URL'] = _assets_url
 
 
+def _tracker_client_id(email):
+    # See https://developers.google.com/analytics/devguides/collection/protocol/v1/parameters#cid
+    return uuid.uuid3(app.config['EMAIL_TRACKER_NS'], str(email))
+
+
 env = Environment(loader=PackageLoader('rockpack.mainsite', app.config['EMAIL_TEMPLATE_PATH']))
-env.globals.update(config=app.config, url_for=url_for)
+env.globals.update(config=app.config, url_for=url_for, tracker_client_id=_tracker_client_id)
 
 
 def send_email(recipient, body, subject=None, format='html'):

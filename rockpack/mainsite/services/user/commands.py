@@ -219,9 +219,19 @@ def create_unavailable_notifications(date_from=None, date_to=None, user_notifica
             user_notifications.setdefault(user, None)
 
 
-def influencer_starred_email(sender, recipient, video_instance):
-    # TODO: do something here for real
-    pass
+def influencer_starred_email(recipient, sender, infuencer_id, video_instance):
+    influencer = User.query.get(infuencer_id)
+    link = ShareLink.create(sender.id, 'video_instance', video_instance.id)
+    ctx = dict(
+        sender=sender,
+        link=link,
+        object_type='video_instance',
+        object_type_name='video',
+        object=video_instance,
+        senders=[sender, influencer],
+    )
+    template = email.env.get_template('video_recommendation.html')
+    _send_email_or_log(recipient, template, **ctx)
 
 
 def influencer_starred_activity(userid, videoid):
@@ -243,19 +253,21 @@ def recommend_for_influencers(instance_id, user_id):
             app.logger.warning('Invalid instance_id %s', instance_id)
             return
 
-        influencer_instances = VideoInstance.query.join(
-            Channel,
-            (Channel.id == VideoInstance.channel) &
-            (Channel.public == True)
-        ).join(
-            User,
-            (User.id == Channel.owner) &
-            (User.is_influencer == True)
-        ).filter(
-            VideoInstance.video == instance.video
+        influencer_videos = dict(
+            VideoInstance.query.join(
+                Channel,
+                (Channel.id == VideoInstance.channel) &
+                (Channel.public == True)
+            ).join(
+                User,
+                (User.id == Channel.owner) &
+                (User.is_influencer == True)
+            ).filter(
+                VideoInstance.video == instance.video
+            ).values(VideoInstance.video, User.id)
         )
 
-        if influencer_instances.count() > 0:
+        if influencer_videos > 0:
             subscription_friend = Channel.query.\
                 join(Subscription, Subscription.channel == Channel.id).\
                 filter(Subscription.user == user.id).\
@@ -283,6 +295,8 @@ def recommend_for_influencers(instance_id, user_id):
             friends = User.query.join(
                 unioned,
                 unioned.c.friendid == User.id
+            ).filter(
+                User.email != ''
             ).outerjoin(
                 UserActivity,
                 (UserActivity.user == User.id) &
@@ -308,7 +322,8 @@ def recommend_for_influencers(instance_id, user_id):
 
             for friend, count in friends:
                 if count == 0:
-                    influencer_starred_email(user, friend, instance)
+                    influencer_starred_email(
+                        friend, user, influencer_videos[instance.video], instance)
                     influencer_starred_activity(friend.id, instance.video)
 
 

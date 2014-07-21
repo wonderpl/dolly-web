@@ -46,7 +46,7 @@ def share_content(userid, object_type, object_id, recipient_email):
         top_videos = []
     body = template.render(
         recipient=recipient_email,
-        user=user,
+        sender=user,
         link=link,
         object_type=object_type,
         object_type_name=OBJECT_NAME_MAP[object_type],
