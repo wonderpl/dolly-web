@@ -368,17 +368,23 @@ class ChannelDisplayTestCase(BaseUserTestCase):
 
         self.wait_for_es()
 
-        # Check own channels are ordered by date_created
-        r = self.get(self.urls['user'], token=self.token)
-        created_order = ['Favorites', '2', 'updated', '0']
-        if 'WATCH_LATER_CHANNEL' in app.config:
-            created_order.insert(1, app.config['WATCH_LATER_CHANNEL'][0])
-        self.assertEquals([c['title'] for c in r['channels']['items']], created_order)
+        if app.config.get('DOLLY'):
+            # Check channels are in alphabetical order
+            r = self.get('{}/ws/{}/'.format(self.default_base_url, user['id']))
+            self.assertEquals([c['title'] for c in r['channels']['items']],
+                              ['Favorites', '0', '2', 'updated'])
+        else:
+            # Check own channels are ordered by date_created
+            r = self.get(self.urls['user'], token=self.token)
+            created_order = ['Favorites', '2', 'updated', '0']
+            if 'WATCH_LATER_CHANNEL' in app.config:
+                created_order.insert(1, app.config['WATCH_LATER_CHANNEL'][0])
+            self.assertEquals([c['title'] for c in r['channels']['items']], created_order)
 
-        # Check public channels are order by date_updated
-        r = self.get('{}/ws/{}/'.format(self.default_base_url, user['id']))
-        self.assertEquals([c['title'] for c in r['channels']['items']],
-                          ['Favorites', 'updated', '2', '0'])
+            # Check public channels are order by date_updated
+            r = self.get('{}/ws/{}/'.format(self.default_base_url, user['id']))
+            self.assertEquals([c['title'] for c in r['channels']['items']],
+                              ['Favorites', 'updated', '2', '0'])
 
     @skip_unless_config('WATCH_LATER_CHANNEL')
     def test_watch_later(self):

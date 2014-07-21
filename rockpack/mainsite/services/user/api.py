@@ -538,11 +538,18 @@ def user_channels(userid, locale, paging, own=True):
         VideoInstance,
         (VideoInstance.channel == Channel.id) &
         (VideoInstance.deleted == False)
-    ).order_by(
-        Channel.favourite.desc(),
-        Channel.date_added.desc() if own else Channel.date_updated.desc(),
-        Channel.public.desc(),
-    ).with_entities(Channel, func.count(VideoInstance.id)).group_by(Channel.id)
+    ).order_by(Channel.favourite.desc())
+
+    if app.config.get('DOLLY'):
+        channels = channels.order_by(func.lower(Channel.title))
+    else:
+        channels = channels.order_by(
+            Channel.date_added.desc() if own else Channel.date_updated.desc(),
+            Channel.public.desc(),
+        )
+
+    channels = channels.with_entities(
+        Channel, func.count(VideoInstance.id)).group_by(Channel.id)
 
     items = [
         video_api.channel_dict(channel, position, with_owner=False, owner_url=own,
@@ -1089,7 +1096,10 @@ class UserWS(WebService):
             offset, limit = self.get_page()
             ch.set_paging(offset, limit)
             ch.favourite_sort('desc')
-            ch.add_sort('date_updated')
+            if app.config.get('DOLLY'):
+                ch.add_sort('title.raw', 'asc')
+            else:
+                ch.add_sort('date_updated')
             ch.add_term('owner', user['id'])
             user.setdefault('channels', {})['items'] =\
                 ch.channels(with_owners=False, add_tracking=add_tracking)

@@ -441,6 +441,14 @@ if app.config.get('DOLLY'):
             "folded": {"type": "string", "analyzer": "folded_snowball"}
         }
     }
+    # Allow sorting on channel title:
+    channel_mapping['properties']['title'] = {
+        "type": "multi_field",
+        "fields": {
+            "title": {"type": "string", "analyzer": "snowball"},
+            "raw": {"type": "string", "index": "not_analyzed"}
+        }
+    }
 
 suggest_mapping = {
     "dynamic": "strict",
