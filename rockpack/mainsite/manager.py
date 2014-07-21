@@ -1,10 +1,12 @@
 import os
 import sys
 import logging
+from glob import glob
 from datetime import datetime
 from functools import wraps
 from sqlalchemy import func
 from flask.ext.script import Manager as BaseManager
+from flask.ext.script.commands import Server
 from flask.ext.assets import ManageAssets
 from rockpack.mainsite import app, init_app
 from rockpack.mainsite.core.dbapi import commit_on_success
@@ -16,9 +18,14 @@ from rockpack.mainsite.services.base.models import JobControl
 class Manager(BaseManager):
     def __init__(self, app):
         super(Manager, self).__init__(app)
-        self.add_command("assets", ManageAssets())
+        self.add_command('assets', ManageAssets())
+        self.add_command('runserver', Server(extra_files=self.get_reloader_extra_files()))
         self.logger = app.logger.manager.getLogger('command')
         self._cron_commands = {}
+
+    def get_reloader_extra_files(self):
+        from rockpack.mainsite import settings
+        return glob(os.path.join(os.path.dirname(settings.__file__), '*.py'))
 
     def cron_command(self, interval=None):
         def decorator(f):
