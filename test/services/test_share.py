@@ -44,19 +44,18 @@ class TestShare(base.RockPackTestCase):
             self.assertIn(ChannelData.channel1.id, r.headers['Location'])
 
     def test_video_share_link(self):
-        data = self._get_share_link(None, 'video_instance', VideoInstanceData.video_instance2.id)
+        app.config['SHARE_MESSAGE_MAP']['video_instance']['message'] =\
+            '"{0[title]}" {0[content_owner]}'
 
-        self.assertEquals(
-            'I found "Primer" on Rockpack and thought you might like it too.',
-            data['message_email'],
-            'Video title should be in the email message'
-        )
+        data = self._get_share_link(None, 'video_instance', VideoInstanceData.video_instance3.id)
+
+        self.assertEquals(data['message'], '"Another 48hrs" @test123')
 
         # Confirm link redirects to channel
         with self.app.test_client() as client:
             r = client.get(urlparse(data['resource_url']).path)
-            self.assertIn('/%s/' % VideoInstanceData.video_instance2.channel, r.headers['Location'])
-            self.assertIn('video=%s' % VideoInstanceData.video_instance2.id, r.headers['Location'])
+            self.assertIn('/%s/' % VideoInstanceData.video_instance3.channel, r.headers['Location'])
+            self.assertIn('video=%s' % VideoInstanceData.video_instance3.id, r.headers['Location'])
 
     @skip_if_dolly
     def test_search_video_share_link(self):

@@ -7,9 +7,9 @@ from sqlalchemy import (
     Text, Enum, CHAR, PrimaryKeyConstraint, event, func, between, text)
 from sqlalchemy.orm import relationship
 from werkzeug.security import generate_password_hash, check_password_hash
-from flask import g
+from flask import g, json
 from flask.ext.sqlalchemy import models_committed
-from rockpack.mainsite import app
+from rockpack.mainsite import app, cache
 from rockpack.mainsite.core.token import create_access_token
 from rockpack.mainsite.core.dbapi import db
 from rockpack.mainsite.helpers.db import ImageType, add_base64_pk, resize_and_upload
@@ -95,6 +95,19 @@ class User(db.Model):
     @property
     def brand(self):
         return bool(self.brand_profile_cover)
+
+    @property
+    @cache.memoize(14400)
+    def twitter_screenname(self):
+        from rockpack.mainsite.services.oauth.models import ExternalToken
+        meta = ExternalToken.query.filter_by(
+            user=self.id, external_system='twitter').value('meta')
+        if meta:
+            try:
+                return json.loads(meta)['screen_name']
+            except (ValueError, KeyError):
+                pass
+        return ''   # Returning None would cause the cache to be checked again
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)

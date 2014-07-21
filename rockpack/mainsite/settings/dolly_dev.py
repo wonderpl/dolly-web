@@ -52,6 +52,8 @@ FACEBOOK_APP_NAMESPACE = 'wonderpl-dev'
 
 TWITTER_CONSUMER_KEY = 'bVc3883tOUt6fr0cWp5A5HcWV'
 TWITTER_CONSUMER_SECRET = _decrypt('@D\x9dp\xf9\xca\x18o\xbb\x95\xa4\xf31\xe8\x1c\x91\x08\x9ep\x9b\x89V%\xbd\x88D\xe8\xb0GB3\\\x0f1t\x1d\xb4S\x87\x11\xd9\x83\xd3-Q\xe4W\x08rD')
+TWITTER_ACCESS_TOKEN_KEY = '1252401133-Z925Wz9NPC5nY17qcb7AXAEbUOWUVu1dpntvwbD'
+TWITTER_ACCESS_TOKEN_SECRET = _decrypt('A\xa3\x1d-q{#\xc2y\x1d \x12\xbb\xb5\x0c\xea5\xff\xad#7\x98\\Y\x0c\x19\x7f:\xea`Q X:\xe6\xed\xf2~k\x82\xdd\xaee\xdd\x9b')
 
 SERVER_NAME = 'dev.wonderpl.com'
 SECURE_SUBDOMAIN = 'secure'
@@ -93,7 +95,7 @@ SHARE_MESSAGE_MAP = dict(
     video_instance=dict(
         message=u"I found \"{0[title]}\" on Wonder PL and thought you might like it too.",
         message_email=u"I found \"{0[title]}\" on Wonder PL and thought you might like it too.",
-        message_twitter=u"What a wonderful video! @WeAreWonderPL",
+        message_twitter=u"Watch \"{0[title]}\" by {0[content_owner]} on @WeAreWonderPL",
         message_facebook=u"Look what I found on Wonder PL",
     ),
     channel=dict(

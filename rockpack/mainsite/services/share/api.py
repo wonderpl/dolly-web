@@ -121,10 +121,16 @@ class ShareForm(Form):
 
     def get_message_map(self):
         type = self.object_type.data
-        ctx = dict(
-            title=(self.object.video_rel.title if type == 'video_instance'
-                   else self.object.title),
-        )
+        if type == 'video_instance':
+            content_owner = self.object.get_original_channel_owner() or \
+                self.object.video_channel.owner_rel
+            if content_owner.twitter_screenname:
+                content_owner_name = '@' + content_owner.twitter_screenname
+            else:
+                content_owner_name = content_owner.display_name
+            ctx = dict(title=self.object.video_rel.title, content_owner=content_owner_name)
+        else:
+            ctx = dict(title=self.object.title)
         return dict((k, v.format(ctx))
                     for k, v in app.config['SHARE_MESSAGE_MAP'][type].iteritems())
 

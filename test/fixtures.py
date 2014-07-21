@@ -6,6 +6,7 @@ from rockpack.mainsite import app
 from rockpack.mainsite.core.dbapi import db
 from rockpack.mainsite.services.cover_art.models import RockpackCoverArt
 from rockpack.mainsite.services.video import models as video_models
+from rockpack.mainsite.services.oauth import models as oauth_models
 from rockpack.mainsite.services.user.models import User
 
 
@@ -124,6 +125,15 @@ class UserData(DataSet):
         is_active = True
         refresh_token = ''
         locale = LocaleData.US.id
+
+
+class ExternalTokenData(DataSet):
+    class token_twitter_user_b:
+        user = UserData.test_user_b.id
+        external_system = 'twitter'
+        external_uid = '123'
+        external_token = 'xxx'
+        meta = '{"screen_name":"test123"}'
 
 
 class ChannelData(DataSet):
@@ -401,6 +411,7 @@ def install(*args):
             'VideoData': video_models.Video,
             'VideoInstanceData': video_models.VideoInstance,
             'MoodData': video_models.Mood,
+            'ExternalTokenData': oauth_models.ExternalToken,
         },
         session=db.session,
     )

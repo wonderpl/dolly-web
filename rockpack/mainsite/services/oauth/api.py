@@ -456,6 +456,7 @@ class TwitterUser(ExternalUser):
         static_data = dict(
             expires_at=4102444800,  # Twitter tokens don't expire
             scopes=['read'],        # set at app configuration
+            metadata=dict(screen_name=data['screen_name']),
         )
         return dict(static_data.items() + data.items())
 

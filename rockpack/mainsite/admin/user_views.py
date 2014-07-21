@@ -1,12 +1,14 @@
 import wtforms as wtf
-from flask import request, jsonify
+from flask import request, url_for, redirect, flash, json, jsonify
 from flask.ext.admin import expose
+from rockpack.mainsite import app
 from rockpack.mainsite.services.user import models
 from rockpack.mainsite.services.oauth import models as auth_models
 from rockpack.mainsite.services.cover_art import models as coverart_models
 from rockpack.mainsite.services.video import models as video_models
 from .auth.models import AdminUser
 from .base import AdminModelView
+import twitter
 
 
 class AdminUserView(AdminModelView):
@@ -52,6 +54,40 @@ class UserView(AdminModelView):
                 channel.public = False
                 channel.save()
 
+    @expose('/twitter_screenname/', methods=['POST'])
+    def twitter_screenname(self):
+        userid = request.form['user_id']
+        screen_name = request.form['screenname']
+        redirect_url = url_for('user.edit_view') + '?id=' + userid
+
+        if auth_models.ExternalToken.query.filter_by(
+                user=userid, external_system='twitter').count():
+            flash('User already has Twitter record', 'error')
+            return redirect(redirect_url)
+
+        api = twitter.Api(
+            consumer_key=app.config['TWITTER_CONSUMER_KEY'],
+            consumer_secret=app.config['TWITTER_CONSUMER_SECRET'],
+            access_token_key=app.config['TWITTER_ACCESS_TOKEN_KEY'],
+            access_token_secret=app.config['TWITTER_ACCESS_TOKEN_SECRET'])
+        try:
+            external_uid = api.GetUser(screen_name=screen_name).id
+        except:
+            app.logger.exception('Error fetching twitter data for "%s"', screen_name)
+            flash('Unable to fetch Twitter user data', 'error')
+            return redirect(redirect_url)
+
+        auth_models.ExternalToken(
+            user=userid,
+            external_system='twitter',
+            external_uid=external_uid,
+            external_token='xxx',
+            expires='2100-01-01',
+            meta=json.dumps(dict(screen_name=screen_name))
+        ).save()
+
+        return redirect(redirect_url + '#external_tokens-0')
+
 
 class UserCoverArtView(AdminModelView):
     model = coverart_models.UserCoverArt
@@ -93,7 +129,6 @@ class ExternalTokenView(AdminModelView):
     model = auth_models.ExternalToken
 
     column_list = ('user_rel', 'external_system', 'external_uid')
-    #column_filters = ('external_system',)
     column_searchable_list = (models.User.username, 'external_uid')
 
     form_ajax_refs = dict(
