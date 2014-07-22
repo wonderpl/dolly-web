@@ -318,7 +318,7 @@ def recommend_for_influencers(instance_id, user_id):
                     (VideoInstance.id == UserActivity.object_id) |
                     (VideoInstance.video == UserActivity.object_id)
                 )
-            ).group_by(User).with_entities(User, func.count(VideoInstance.video))
+            ).group_by(User.id).with_entities(User, func.count(VideoInstance.video))
 
             for friend, count in friends:
                 if count == 0:
