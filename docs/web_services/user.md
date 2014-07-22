@@ -716,6 +716,75 @@ HTTP/1.1 204 NO CONTENT
 Content-Type: application/json
 ```
 
+User Videos
+===========
+
+To get a list of videos for all channels owner by a user:
+
+```http
+GET /ws/USERID/videos/?locale=LOCALE&location=COUNTRYCODE&start=START&size=SIZE HTTP/1.1
+```
+
+Parameter      | Required? | Value             | Description
+:------------- | :-------- | :---------------- | :----------
+locale         | yes       | IETF language tag | Some videos may be excluded if not marked as visible for the specified locale
+location       | no        | ISO-3166 code     | Geographic location is used to filter videos not available in the specified country
+start          | no        | 0-based integer   | Used for paging through the video items
+size           | no        | video page size   | Number of videos to return - 100 by default
+
+Returns a list of videos, including channel data with each record:
+
+```http
+HTTP/1.1 200 OK
+Cache-Control: public, max-age=600
+Content-Type: application/json
+
+{
+ "videos": {
+  "total": 7,
+  "items": [
+   {
+    "id": "vipQHO0QBir_D-8ZDY2HIvLA",
+    "position": 0,
+    "title": "The Art of Awkward Conversation: The Pub",
+    "date_added": "2014-02-12T21:57:03.557235",
+    "category": "",
+    "child_instance_count": 1,
+    "label": "Latest",
+    "tracking_code": "profile-videos 0",
+    "public": true,
+    "video": {
+     "id": "RP000001IDF7PLZFH4EYPBJ7HBPYD4IJX2UGSMEB",
+     "source": "youtube",
+     "source_id": "SG37B_Aoc2g",
+     "source_username": "notebookfilmstube",
+     "source_date_uploaded": "2012-11-16T14:36:26",
+     "thumbnail_url": "http://i.ytimg.com/vi/SG37B_Aoc2g/mqdefault.jpg",
+     "duration": 273,
+     "description": "",
+     "view_count": 0,
+     "star_count": 0
+    },
+    "comments": {
+     "total": 0
+    },
+    "channel": {
+     "id": "chDPRyuMtgbDr9KNTXZXcRAA",
+     "resource_url": "http://path/to/channel/resource/",
+     "title": "Favorites",
+     "owner": {
+      "id": "Zwpnw4Nxcx_sdl-PoGL1TQ",
+      "resource_url": "http://path/to/owner/resource/",
+      "display_name": "Paul Egan",
+      "avatar_thumbnail_url": "http://path/to/avatar/img.jpg"
+     }
+    }
+   }
+  ]
+ }
+}
+```
+
 Channel Videos
 ==============
 
@@ -944,6 +1013,20 @@ tracking_code  | no        | string                                 | The value 
 HTTP/1.1 204 NO CONTENT
 Content-Type: application/json
 ```
+
+The following services include a tracking code in the response:
+
+Service              | Url                               | Code Prefix
+:------------------- | :-------------------------------- | :----------
+User browse          | /ws/users/                        | user-browse
+User search          | /ws/search/users/                 | user-search
+Video search         | /ws/search/videos/                | video-search
+User                 | /ws/USERID/                       | profile
+User videos          | /ws/USERID/videos/                | profile-videos
+User channels        | /ws/USERID/channels/              | profile-channels
+Feed                 | /ws/USERID/content_feed/          | feed
+Notifications        | /ws/USERID/notifications/         | notification
+User Recommendations | /ws/USERID/user_recommendations/  | user-recommendations
 
 ### Retrieve
 

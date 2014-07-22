@@ -116,11 +116,13 @@ def _send_apns_message(user, token, message):
         app.logger.exception('Failed to send push notification: %d', message.get('id', 0))
 
 
-def _process_apns_broadcast(users, alert, url=None):
+def _process_apns_broadcast(users, alert, url=None, tracking_code=None):
     # Fake notification id passed because iOS app won't follow url without it :-(
     message = dict(alert=alert, id=0)
     if url:
         message['url'] = _apns_url(url)
+    if tracking_code:
+        message['tracking_code'] = tracking_code
     # batch push calls into chunks of 100 (unique) tokens
     for tokens in izip_longest(*[(t for u, t in users)] * 100, fillvalue=None):
         _send_apns_message('batch', filter(None, set(tokens)), message)
@@ -135,19 +137,17 @@ def _add_user_notification(user, date_created, message_type, message_body):
     ).add()
 
 
-def complex_push_notification(token, push_message, push_message_args, badge=None, id=None, url=None):
+def complex_push_notification(token, push_message, push_message_args, **kwargs):
     message = dict(
         alert={
             "loc-key": push_message,
             "loc-args": push_message_args
         }
     )
-    if badge is not None:
-        message.update({'badge': badge})
-    if id is not None:
-        message.update({'id': id})
-    if url is not None:
-        message.update({'url': url})
+    message.update(kwargs)
+    for key, value in message.iteritems():
+        if value is None:
+            del message[key]
     return _send_apns_message(token.user, token.external_token, message)
 
 
@@ -192,7 +192,8 @@ def send_push_notifications(user):
 
     return complex_push_notification(
         token, push_message, push_message_args,
-        badge=count, id=notification.id, url=deeplink_url)
+        badge=count, id=notification.id, url=deeplink_url,
+        tracking_code='apns %s' % notification.message_type)
 
 
 def create_unavailable_notifications(date_from=None, date_to=None, user_notifications=None):
@@ -267,7 +268,7 @@ def recommend_for_influencers(instance_id, user_id):
             ).values(VideoInstance.video, User.id)
         )
 
-        if influencer_videos > 0:
+        if influencer_videos:
             subscription_friend = Channel.query.\
                 join(Subscription, Subscription.channel == Channel.id).\
                 filter(Subscription.user == user.id).\
@@ -960,7 +961,8 @@ def process_broadcast_messages(date_from, date_to):
 
         if message.external_system == 'apns':
             users = message.get_users().values(User.id, ExternalToken.external_token)
-            _process_apns_broadcast(users, message.message, url)
+            _process_apns_broadcast(users, message.message, url,
+                                    tracking_code='apns bcast %d' % message.id)
 
         app.logger.info('Processed broadcast message: %s', message.label)
         message.date_processed = datetime.utcnow()

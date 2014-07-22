@@ -1,14 +1,10 @@
 import pyes
 from urlparse import urljoin
-from flask import json
-from . import mappings
-from . import es_connection
-from . import exceptions
-from . import filters
-from rockpack.mainsite.core.es.api import ESObjectIndexer
 from rockpack.mainsite import app
+from rockpack.mainsite.core.es.api import ESObjectIndexer
 from rockpack.mainsite.helpers.urls import url_for
 from rockpack.mainsite.services.video.models import Source, Video
+from . import mappings, es_connection, exceptions, filters
 
 
 DEFAULT_FILTERS = []  # [filters.locale_filter]
@@ -486,7 +482,7 @@ class VideoSearch(EntitySearch, CategoryMixin, MediaSortMixin):
         if log_cache:
             app.logger.warning("Missing channels '%s' during mapping", str(log_cache))
 
-    def _format_results(self, videos, with_channels=True, with_stars=False):
+    def _format_results(self, videos, with_channels=True, with_stars=False, add_tracking=None):
         vlist = []
         channel_list = set()
         IMAGE_CDN = app.config.get('IMAGE_CDN', '')
@@ -545,10 +541,12 @@ class VideoSearch(EntitySearch, CategoryMixin, MediaSortMixin):
                     }
                 })
 
-            if with_stars:
-                video['recent_user_stars'] = v.get('recent_user_stars', [])
             if v.category:
                 video['category'] = max(v.category) if isinstance(v.category, list) else v.category
+            if with_stars:
+                video['recent_user_stars'] = v.get('recent_user_stars', [])
+            if add_tracking:
+                add_tracking(video)
 
             channel_list.add(v.channel)
             vlist.append(video)
@@ -576,14 +574,15 @@ class VideoSearch(EntitySearch, CategoryMixin, MediaSortMixin):
         if country:
             self._exclusion_filters.append(filters.country_restriction(country))
 
-    def videos(self, with_channels=False, with_stars=False):
+    def videos(self, with_channels=False, with_stars=False, add_tracking=None):
         if not self._video_results:
             if app.config.get('DOLLY'):
                 # Ensure videos aren't displayed that have
                 # a date_added in the future
                 self._exclusion_filters.append(filters.filter_by_date_added())
             r = self.results()
-            self._video_results = self._format_results(r, with_channels=with_channels, with_stars=with_stars)
+            self._video_results = self._format_results(
+                r, with_channels=with_channels, with_stars=with_stars, add_tracking=add_tracking)
         return self._video_results
 
 
@@ -623,7 +622,7 @@ class UserSearch(EntitySearch, CategoryMixin):
             position = UserSearch._check_position(user_list, position, max_check)
         return position
 
-    def _format_results(self, users, include_promo=False):
+    def _format_results(self, users, include_promo=False, add_tracking=None):
         user_list = range(self.paging[1])
         IMAGE_CDN = app.config.get('IMAGE_CDN', '')
         BASE_URL = url_for('basews.discover')
@@ -641,7 +640,7 @@ class UserSearch(EntitySearch, CategoryMixin):
                 subscriber_count=user.subscriber_count,
                 subscription_count=user.subscription_count,
                 promotion=user.promotion
-                #categories=getattr(user, 'category', []) or []
+                # categories=getattr(user, 'category', []) or []
             )
 
             if user.brand:
@@ -661,15 +660,16 @@ class UserSearch(EntitySearch, CategoryMixin):
                 # promoted slots filled before we process the non
                 # promoted ones
                 try:
-                    this_position = self._get_position(u)
+                    promo_position = self._get_position(u)
                 except UserSearch.PositionOutsideOffsetError:
                     # We don't want to include this user
                     pass
                 else:
-                    if this_position is not None:
-                        u['position'] = this_position
-                        user_list[this_position] = u
+                    if promo_position is not None:
+                        u['position'] = promo_position
+                        user_list[promo_position] = u
             else:
+                promo_position = None
                 position = self._check_position(user_list, position, self.paging[1] - 1)
                 u['position'] = position + self.paging[0]
                 user_list[position] = u
@@ -677,6 +677,10 @@ class UserSearch(EntitySearch, CategoryMixin):
                 # Incrementing the counter for
                 # non-promoted channels
                 position += 1
+
+            if add_tracking:
+                add_tracking(u, extra=('promoted-%d' % promo_position)
+                             if promo_position is not None else None)
 
         # We may have empty positions so lets strip these
         user_list = filter(lambda x: not isinstance(x, int), user_list)
@@ -713,7 +717,7 @@ class UserSearch(EntitySearch, CategoryMixin):
                 )
                 self._add_term_occurs(query, MUST)
 
-    def users(self, include_promo=False):
+    def users(self, include_promo=False, add_tracking=None):
         if not self._user_results:
             # XXX: hack for promotions - we need at least 20
             # positions and then return the correct amount
@@ -722,7 +726,8 @@ class UserSearch(EntitySearch, CategoryMixin):
                 self._real_paging = self.paging
                 self.paging = 0, 20
             r = self.results()
-            self._user_results = self._format_results(r, include_promo=include_promo)
+            self._user_results = self._format_results(
+                r, include_promo=include_promo, add_tracking=add_tracking)
 
         return self._user_results
 

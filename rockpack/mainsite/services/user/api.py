@@ -391,7 +391,8 @@ def _notification_list(userid, paging):
             # pre-formatted json directly into the response
             message=json.loads(notification.message),
             read=bool(notification.date_read),
-        ) for notification in notifications
+            tracking_code='notification %d %s' % (position, notification.message_type),
+        ) for position, notification in enumerate(notifications, offset)
         if not typefilter or notification.message_type in typefilter]
     return items, total
 
@@ -525,7 +526,7 @@ def user_subscriptions_users(userid, locale, paging):
 
 
 def user_channels(userid, locale, paging, own=True):
-    add_tracking = partial(_add_tracking, prefix='ownprofile' if own else 'profile')
+    add_tracking = partial(_add_tracking, prefix=('own-' if own else '') + 'profile-channels')
 
     channels = Channel.query.options(lazyload('owner_rel'), lazyload('category_rel')).\
         filter_by(owner=userid, deleted=False)
@@ -638,8 +639,9 @@ def check_present(form, field):
         raise ValidationError(_('This field is required, but can be an empty string.'))
 
 
-def _add_tracking(item, prefix=None):
-    item['tracking_code'] = ' '.join(filter(None, map(str, [prefix, item.get('position')])))
+def _add_tracking(item, prefix=None, **extra):
+    parts = filter(lambda i: i is not None, [prefix, item.get('position')] + extra.values())
+    item['tracking_code'] = ' '.join(map(str, parts))
 
 
 # Patch BooleanField process_formdata so that passed in values
@@ -966,6 +968,7 @@ def _user_recommendations(userid, locale, paging):
             avatar_thumbnail_url=user.avatar.url,
             description=user.description,
             category=rec.category,
+            tracking_code='user-recommendations %d priority-%d' % (position, rec.priority),
         ))
     return items, total
 
@@ -1029,9 +1032,10 @@ def _channel_videos(channelid, locale, paging, own=False):
     return items, total
 
 
-def _user_videos(userid, locale, paging):
+def _user_videos(userid, locale, paging, add_tracking=None):
     return video_api.get_local_videos(
-        locale, paging, owner=userid, with_channel=True, date_order=True)
+        locale, paging, owner=userid, with_channel=True,
+        add_tracking=add_tracking, date_order=True)
 
 
 def _channel_info_response(channel, locale, paging, owner_url):
@@ -1079,7 +1083,10 @@ class UserWS(WebService):
                 except ValueError:
                     abort(400)
             u.add_term('category', category)
-            return dict(users=dict(items=u.users(), total=u.total))
+            tracking_suffix = category and 'cat-%s' % category
+            items = u.users(add_tracking=partial(
+                _add_tracking, prefix='user-browse', suffix=tracking_suffix))
+            return dict(users=dict(items=items, total=u.total))
 
     @expose_ajax('/<userid>/', cache_age=600, secure=False)
     def user_info(self, userid):
@@ -1109,6 +1116,7 @@ class UserWS(WebService):
             user['channels'] =\
                 user_channels(userid, self.get_locale(), self.get_page(), own=False)
             user['subscription_count'] = _user_subscriptions_query(userid).count()
+        user['tracking_code'] = 'profile'
         return user
 
     @expose_ajax('/<userid>/', cache_private=True)
@@ -1138,6 +1146,7 @@ class UserWS(WebService):
         info['subscriptions']['updates'] = url_for('userws.recent_videos', userid=userid)
         info['notifications'].update(unread_count=_notification_unread_count(userid))
         info['subscription_count'] = _user_subscriptions_query(userid).count()
+        info['tracking_code'] = 'own-profile'
         return info
 
     @expose_ajax('/<userid>/display_fullname/', methods=('PUT',))
@@ -1315,6 +1324,7 @@ class UserWS(WebService):
 
     @expose_ajax('/<userid>/videos/', cache_age=600, secure=False)
     def user_videos(self, userid):
+        add_tracking = partial(_add_tracking, prefix='profile-videos')
         if use_elasticsearch():
             location = request.args.get('location')
             vs = es_search.VideoSearch(self.get_locale())
@@ -1324,16 +1334,20 @@ class UserWS(WebService):
                 vs.check_country_allowed(location.upper())
             vs.date_sort('desc')
             vs.set_paging(*self.get_page())
-            items = vs.videos()
+            items = vs.videos(add_tracking=add_tracking)
             total = vs.total
         else:
-            items, total = _user_videos(userid, self.get_locale(), self.get_page())
+            items, total = _user_videos(userid, self.get_locale(), self.get_page(),
+                                        add_tracking=add_tracking)
         return dict(videos=dict(items=items, total=total))
 
     @expose_ajax('/<userid>/videos/', cache_private=True)
     @check_authorization(self_auth=True)
     def owner_user_videos(self, userid):
-        return dict(videos=_user_videos(userid, self.get_locale(), self.get_page()))
+        items, total = _user_videos(
+            userid, self.get_locale(), self.get_page(),
+            add_tracking=partial(_add_tracking, prefix='own-profile-videos'))
+        return dict(videos=dict(items=items, total=total))
 
     @expose_ajax('/<userid>/channels/', cache_private=True)
     @check_authorization(self_auth=True)

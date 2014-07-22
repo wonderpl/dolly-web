@@ -1,0 +1,43 @@
+digraph tracking {
+	label = "Dolly tracking flows";
+	concentrate = true;
+	splines = true;
+
+	edge [color=orange];
+
+	subgraph cluster0 {
+		label = Content;
+		color = grey;
+		node [shape=circle,fixedsize=true,width=1];
+		USER -> CHANNEL -> VIDEO;
+	}
+
+	subgraph cluster1 {
+		label = Screens;
+		color = grey;
+		node [shape=box,fixedsize=true];
+
+		Profile -> { USER }
+		Feed -> { USER; CHANNEL; VIDEO }
+		Activity -> { USER; CHANNEL; VIDEO }
+		Onboarding -> { USER }
+
+		subgraph cluster2 {
+			label = Discover;
+			Browse -> { USER }
+			Search -> { USER; VIDEO; }
+		}
+	}
+
+	{
+		"PN/DL" -> { USER; CHANNEL; VIDEO }
+	}
+
+	{
+		edge [color=lightgrey];
+		node [fontcolor=grey,fontsize=10,shape=none];
+		USER -> { subscribe_all; unsubscribe_all }
+		CHANNEL -> { subscribe; unsubscribe }
+		VIDEO -> { star; unstar; view; select }
+	}
+}

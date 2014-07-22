@@ -172,7 +172,8 @@ def video_dict(instance):
     return data
 
 
-def get_local_videos(loc, paging, with_channel=True, with_comments=False, include_invisible=False, readonly_db=False, **filters):
+def get_local_videos(loc, paging, with_channel=True, with_comments=False, include_invisible=False,
+                     readonly_db=False, add_tracking=None, **filters):
     session = readonly_session if readonly_db else db.session
     videos = session.query(
         models.VideoInstance,
@@ -241,6 +242,8 @@ def get_local_videos(loc, paging, with_channel=True, with_comments=False, includ
             item['comments'] = dict(count=comment_count)
         if with_channel:
             item['channel'] = channel_dict(video.video_channel)
+        if add_tracking:
+            add_tracking(item)
         data.append(item)
     return data, total
 
@@ -393,7 +396,7 @@ class ChannelWS(WebService):
     def channel_list(self):
         def add_tracking(channel, extra=None):
             channel['tracking_code'] = ' '.join(filter(None, (
-                'browse',
+                'channel-browse',
                 str(channel['position']),
                 category and 'cat-%s' % category,
                 extra)))

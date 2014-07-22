@@ -61,6 +61,9 @@ class SearchWS(WebService):
     @escape_and_retry
     def search_videos(self):
         """Search youtube videos."""
+        def _add_tracking(item, extra=None):
+            item['tracking_code'] = 'video-search %d' % item['position']
+
         order = 'published' if request.args.get('order') == 'latest' else None
         start, size = self.get_page()
         region = self.get_locale().split('-')[1]
@@ -83,7 +86,7 @@ class SearchWS(WebService):
             start, size = self.get_page()
             vs.set_paging(offset=start, limit=size)
             total = vs.total
-            return total, vs.videos()
+            return total, vs.videos(add_tracking=_add_tracking)
 
         items = []
         query = request.args.get('q', '')
@@ -149,6 +152,9 @@ class SearchWS(WebService):
     @expose_ajax('/users/', cache_age=300)
     @escape_and_retry
     def search_users(self):
+        def _add_tracking(item, extra=None):
+            item['tracking_code'] = 'user-search %d' % item['position']
+
         search_term = request.args.get('q', '').lower()
         offset, limit = self.get_page()
         if use_elasticsearch():
@@ -159,7 +165,8 @@ class SearchWS(WebService):
             else:
                 us.add_text('username', search_term)
                 us.add_text('display_name', search_term)
-            return dict(users=dict(items=us.users(), total=us.total))
+            items = us.users(add_tracking=_add_tracking)
+            return dict(users=dict(items=items, total=us.total))
 
         users = User.query.filter(func.lower(User.username).like(search_term))
         count = users.count()
