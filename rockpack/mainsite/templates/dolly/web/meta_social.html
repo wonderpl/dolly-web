@@ -1,5 +1,5 @@
 {%- with %}
-{% set title_prefix = '"%s" on ' % selected_video.title if selected_video else '' %}
+{% set title_prefix = '"%s" in ' % selected_video.title if selected_video else '' %}
 {% set title = '%s"%s" collection on Wonder PL' % (title_prefix, channel_data.title) -%}
 <title>{{ title }}</title>
 
