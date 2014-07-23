@@ -1,4 +1,5 @@
 from datetime import datetime
+from sqlalchemy.exc import IntegrityError
 from flask import request, json
 from rockpack.mainsite import app
 from rockpack.mainsite.core import youtube
@@ -17,11 +18,27 @@ def subscribe(hub, topic, channel_id):
 
 
 @commit_on_success
-def update_channel_videos(channel, data):
+def _update_channel_videos(channel, data):
     playlist = youtube.parse_atom_playlist_data(data)
     source = Source.label_to_id('youtube')
     Video.add_videos(playlist.videos, source)
     channel.add_videos(playlist.videos)
+
+
+def update_channel_videos(channel, data):
+    # pubsubhubbub.appspot.com often duplicates the same update request
+    # and since it can take a while to parse a big feed request we can
+    # get duplicate key errors when the concurrent transactions are committed.
+    for retry in 1, 0:
+        try:
+            _update_channel_videos(channel, data)
+        except IntegrityError:
+            if retry:
+                continue
+            else:
+                raise
+        else:
+            break
 
 
 @commit_on_success
