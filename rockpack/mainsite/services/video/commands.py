@@ -305,3 +305,15 @@ def set_original_channel_owner():
             VideoInstance.id != original_instance,
             VideoInstance.original_channel_owner.is_(None)
         ).update({VideoInstance.original_channel_owner: original_channel_owner})
+
+
+@manager.command
+def touch(object_id):
+    type_map = {'RP': Video, 'vi': VideoInstance, 'ch': Channel}
+    type = type_map.get(object_id[:2], User)
+    object = type.query.get(object_id)
+    if object:
+        object.date_updated = datetime.utcnow()
+        object.save()
+    else:
+        print '%r not found' % type(id=object_id)
