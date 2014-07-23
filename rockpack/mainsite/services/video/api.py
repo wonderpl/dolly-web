@@ -272,7 +272,6 @@ class VideoWS(WebService):
             data, total = get_local_videos(self.get_locale(), self.get_page(), star_order=True, **request.args)
             return dict(videos=dict(items=data, total=total))
 
-        location = request.args.get('location')
         date_order = request.args.get('date_order')
         if app.config.get('DOLLY'):
             date_order = 'desc'
@@ -300,8 +299,9 @@ class VideoWS(WebService):
             vs.star_order_sort(request.args.get('star_order'))
             vs.date_sort(date_order)
 
+        location = self.get_location()
         if location:
-            vs.check_country_allowed(location.upper())
+            vs.check_country_allowed(location)
 
         videos = vs.videos(with_channels=True)
         total = vs.total

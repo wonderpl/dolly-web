@@ -973,15 +973,14 @@ def _user_recommendations(userid, locale, paging):
     return items, total
 
 
-def _video_recommendations(userid, locale, paging):
-    location = request.args.get('location')
+def _video_recommendations(userid, locale, paging, location):
     mood = request.args.get('mood')
     if use_elasticsearch():
         vs = es_search.VideoSearch(locale)
         if mood:
             vs.add_term('tags', 'mood-' + mood)
         if location:
-            vs.check_country_allowed(location.upper())
+            vs.check_country_allowed(location)
         vs.random_sort()
         vs.set_paging(*paging)
         return vs.videos(with_channels=True), vs.total
@@ -1326,12 +1325,12 @@ class UserWS(WebService):
     def user_videos(self, userid):
         add_tracking = partial(_add_tracking, prefix='profile-videos')
         if use_elasticsearch():
-            location = request.args.get('location')
             vs = es_search.VideoSearch(self.get_locale())
             resource_url = urlparse(url_for('userws.user_info', userid=userid)).path
             vs.add_term('owner.resource_url', resource_url)
+            location = self.get_location()
             if location:
-                vs.check_country_allowed(location.upper())
+                vs.check_country_allowed(location)
             vs.date_sort('desc')
             vs.set_paging(*self.get_page())
             items = vs.videos(add_tracking=add_tracking)
@@ -1376,9 +1375,9 @@ class UserWS(WebService):
         if use_elasticsearch():
             ch = es_search.ChannelSearch(self.get_locale())
             ch.add_id(channelid)
-            location = request.args.get('location')
+            location = self.get_location()
             if location:
-                ch.check_country_allowed(location.upper())
+                ch.check_country_allowed(location)
             ch.set_paging()
             size, limit = self.get_page()
             if not ch.channels(with_videos=True, with_owners=True, video_paging=(size, limit)):
@@ -1452,11 +1451,11 @@ class UserWS(WebService):
     @expose_ajax('/<userid>/channels/<channelid>/videos/', cache_age=600, secure=False)
     def channel_videos(self, userid, channelid):
         if use_elasticsearch():
-            location = request.args.get('location')
             vs = es_search.VideoSearch(self.get_locale())
             vs.add_term('channel', [channelid])
+            location = self.get_location()
             if location:
-                vs.check_country_allowed(location.upper())
+                vs.check_country_allowed(location)
             vs.add_sort('position', 'asc')
             vs.date_sort('desc')
             vs.add_sort('video.date_published', 'desc')
@@ -1643,7 +1642,8 @@ class UserWS(WebService):
     @expose_ajax('/<userid>/video_recommendations/', cache_age=3600, cache_private=True)
     @check_authorization(self_auth=True)
     def video_recommendations(self, userid):
-        items, total = _video_recommendations(userid, self.get_locale(), self.get_page())
+        items, total = _video_recommendations(
+            userid, self.get_locale(), self.get_page(), self.get_location())
         return dict(videos=dict(items=items, total=total))
 
     @expose_ajax('/<userid>/user_recommendations/', cache_age=3600, cache_private=True)

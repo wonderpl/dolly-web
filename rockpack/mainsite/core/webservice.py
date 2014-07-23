@@ -171,6 +171,12 @@ class WebService(object):
         requested = request.args.get('locale')
         return requested if requested in locales else locales[0]
 
+    def get_location(self):
+        # Ensure location is like a country code (e.g. "GB", "US")
+        requested = request.args.get('location', '')
+        if requested.isalpha() and len(requested) == 2:
+            return requested.upper()
+
     def get_page(self, default_size=''):
         """Check request for valid start & size args."""
         try:
