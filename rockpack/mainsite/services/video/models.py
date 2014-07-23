@@ -962,8 +962,9 @@ def channel_visibility_change(mapper, connection, target):
         get_history(target, 'deleted').has_changes() or
             get_history(target, 'visible').has_changes()):
 
-        instances = VideoInstance.query.filter(VideoInstance.channel == target.id).values('id')
-        update_video_instance_date_updated([i[0] for i in instances], visible=_channel_is_public(target))
+        instances = list(VideoInstance.query.filter(VideoInstance.channel == target.id).values('id'))
+        if instances:
+            update_video_instance_date_updated([i[0] for i in instances], visible=_channel_is_public(target))
 
 
 @event.listens_for(VideoInstance, 'before_insert')
@@ -986,8 +987,9 @@ def video_instance_date_update_trigger_from_meta(mapper, connection, target):
 
 @event.listens_for(Video, 'after_update')
 def video_instance_date_update_trigger_from_video(mapper, connection, target):
-    instances = VideoInstance.query.filter(VideoInstance.video == target.id).values('id')
-    update_video_instance_date_updated([i[0] for i in instances], visible=target.visible)
+    instances = list(VideoInstance.query.filter(VideoInstance.video == target.id).values('id'))
+    if instances:
+        update_video_instance_date_updated([i[0] for i in instances], visible=target.visible)
 
 
 @background_on_sqs
