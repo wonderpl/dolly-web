@@ -21,6 +21,12 @@ from rockpack.mainsite.core.es.api import (
     ESVideoAttributeMap, update_user_categories, update_user_subscription_count)
 
 
+def main_category(cat_count_map):
+    """Return the category that has more than 60% of the count."""
+    threshold = sum(cat_count_map.values()) * 0.6
+    return next((cat for cat, count in cat_count_map.iteritems() if count >= threshold), None)
+
+
 def start_flush_timer(func):
     @wraps(func)
     def decorator(*args, **kwargs):
@@ -729,10 +735,7 @@ class DBImport(object):
         ec = ESChannel.updater(bulk=True)
         for channel_id, c_map in category_map.iteritems():
             ec.set_document_id(channel_id)
-            ec.add_field(
-                'category',
-                max(((count, cat) for cat, count in c_map.items()))
-            )
+            ec.add_field('category', main_category(c_map))
             ec.update()
             ec.reset()
 

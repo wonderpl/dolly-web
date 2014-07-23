@@ -1,6 +1,7 @@
 from rockpack.mainsite import app
 from rockpack.mainsite.services.video import models
 from rockpack.mainsite.core.dbapi import db, commit_on_success
+from .helpers import main_category
 from . import api
 
 
@@ -86,17 +87,10 @@ def _category_channel_mapping(channel_ids):
 
 
 def update_average_channel_category(channelid, cat_count_map):
-    try:
-        cat = next(cat for cat, count in cat_count_map.items() if count >= sum(cat_count_map.values()) * 0.6)
-    except StopIteration:
-        cat = []
-
     # Update the database
-    qcat = cat or None
-    c = models.Channel.query.get(channelid)
-    if qcat != c.category:
-        c.category = qcat
-    return qcat
+    category = main_category(cat_count_map)
+    models.Channel.query.get(channelid).category = category
+    return category
 
 
 def update_potential_categories(channelid, category_map):
