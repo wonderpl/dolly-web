@@ -260,6 +260,8 @@ FEEDBACK_RECIPIENT = 'feedback@rockpack.com'
 REACTIVATION_EMAIL_TRACKING_PARAMS = dict(utm_medium='email', utm_campaign='react')
 REACTIVATION_THRESHOLD_DAYS = 7
 
+RECOMMENDATION_EMAIL_TRACKING_PARAMS = dict(utm_medium='email', utm_campaign='recom')
+
 SQS_REGION = 'eu-west-1'
 SQS_CRON_QUEUE = 'mainsite-cron'
 SQS_EMAIL_QUEUE = 'mainsite-email'

@@ -506,6 +506,7 @@ class TestUserContent(base.RockPackTestCase):
                     ((recipient, body), ctx), = send_email.call_args_list
                     self.assertEquals(recipient, user3.email)
                     self.assertIn(VideoData.video1.title, body)
+                    self.assertIn('/unsubscribe/?utm_campaign=rec', body)
 
                 date_from = datetime.utcnow()
                 time.sleep(2)

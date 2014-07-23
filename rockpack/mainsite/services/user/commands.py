@@ -221,6 +221,9 @@ def create_unavailable_notifications(date_from=None, date_to=None, user_notifica
 
 
 def influencer_starred_email(recipient, sender, infuencer_id, video_instance):
+    listid = app.config.get('RECOMMENDATION_EMAIL_LISTID', 2)
+    if any(f for f in recipient.flags if f.flag in ('bouncing', 'unsub%d' % listid)):
+        return
     influencer = User.query.get(infuencer_id)
     link = ShareLink.create(sender.id, 'video_instance', video_instance.id)
     ctx = dict(
@@ -230,9 +233,12 @@ def influencer_starred_email(recipient, sender, infuencer_id, video_instance):
         object_type_name='video',
         object=video_instance,
         senders=[sender, influencer],
+        unsubscribe_token=create_unsubscribe_token(listid, recipient.id)
     )
-    template = email.env.get_template('video_recommendation.html')
-    _send_email_or_log(recipient, template, **ctx)
+    tracking_params = app.config.get('RECOMMENDATION_EMAIL_TRACKING_PARAMS')
+    with url_tracking_context(tracking_params):
+        template = email.env.get_template('video_recommendation.html')
+        _send_email_or_log(recipient, template, **ctx)
 
 
 def influencer_starred_activity(userid, videoid):
