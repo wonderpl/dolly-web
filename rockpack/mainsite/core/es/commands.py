@@ -1,4 +1,5 @@
 import time
+from datetime import timedelta
 from functools import wraps
 from rockpack.mainsite import app
 from rockpack.mainsite.manager import manager, job_control
@@ -17,12 +18,21 @@ def timer(func):
 @manager.cron_command(interval=60)
 @job_control
 def update_indexes(date_from=None, date_to=None):
-    """ Updates all data in all indexes """
-    start = time.time()
-    helpers.full_user_import(start=date_from, stop=date_to)
-    helpers.full_channel_import(start=date_from, stop=date_to)
-    helpers.full_video_import(start=date_from, stop=date_to)
-    app.logger.info('Ran update_indexes in %ds', time.time() - start)
+    """Updates all data in all indexes"""
+    start_time = time.time()
+    # Split up into 60 second intervals
+    start = date_to
+    while start > date_from:
+        stop = start
+        start -= timedelta(seconds=100)
+        if start < date_from:
+            start = date_from
+        app.logger.info('Index update interval: %s -> %s (%ds)',
+                        start.time(), stop.time(), (stop - start).seconds)
+        helpers.full_user_import(start=start, stop=stop)
+        helpers.full_channel_import(start=start, stop=stop)
+        helpers.full_video_import(start=start, stop=stop)
+    app.logger.info('Ran update_indexes in %ds', time.time() - start_time)
 
 
 @manager.command

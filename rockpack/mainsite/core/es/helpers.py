@@ -240,7 +240,8 @@ def full_video_import(start=None, stop=None, prefix=None):
     imp.import_videos(prefix=prefix, start=start, stop=stop, automatic_flush=False)
     imp.import_dolly_video_owners(prefix=prefix, start=start, stop=stop, automatic_flush=False)
     imp.import_video_stars(prefix=prefix, automatic_flush=False, start=start, stop=stop)
-    imp.import_comment_counts(prefix=prefix, automatic_flush=False, start=start, stop=stop)
+    # Comments support disabled
+    # imp.import_comment_counts(prefix=prefix, automatic_flush=False, start=start, stop=stop)
 
     api.ESVideo.flush()
 
@@ -270,9 +271,9 @@ class DBImport(object):
 
             total = users.count()
 
-            app.logger.debug('importing {} users'.format(total))
+            app.logger.info('importing %d users', total)
 
-            start = time.time()
+            start_time = time.time()
             count = 1
             for users in users.yield_per(6000):
                 api.add_user_to_index(users, bulk=True, no_check=True)
@@ -283,7 +284,7 @@ class DBImport(object):
             if automatic_flush:
                 self.conn.flush_bulk(forced=True)
 
-            app.logger.debug('finished in {}'.format(time.time() - start, 'seconds'))
+            app.logger.debug('finished in %d seconds', time.time() - start_time)
 
     def import_channels(self, start=None, stop=None, automatic_flush=True):
         from rockpack.mainsite.services.video.models import Channel, VideoInstance, Video
@@ -302,12 +303,13 @@ class DBImport(object):
             if start:
                 channels = channels.filter(Channel.date_updated.between(start, stop))
 
-            app.logger.debug('importing {} PUBLIC channels\r'.format(channels.count()))
+            total = channels.count()
 
-            func_start = time.time()
+            app.logger.info('importing %d channels', total)
+
+            start_time = time.time()
             ec = ESChannel.inserter(bulk=True)
             count = 1
-            total = channels.count()
 
             query = VideoInstance.query.join(
                 Video,
@@ -337,7 +339,7 @@ class DBImport(object):
             if automatic_flush:
                 ec.flush_bulk()
 
-            app.logger.debug('finished in {} seconds'.format(time.time() - func_start))
+            app.logger.debug('finished in %d seconds', time.time() - start_time)
 
     def import_search_suggestions(self):
         from rockpack.mainsite.services.video.models import Video
@@ -391,8 +393,8 @@ class DBImport(object):
                 query = query.filter(VideoInstance.date_updated.between(start, stop))
 
             total = query.count()
-            app.logger.debug('importing {} videos'.format(total))
-            start_timer = time.time()
+            app.logger.info('importing %d videos', total)
+            start_time = time.time()
             done = 1
 
             ev = ESVideo.inserter(bulk=True)
@@ -439,7 +441,7 @@ class DBImport(object):
             if automatic_flush:
                 ev.flush_bulk()
 
-            app.logger.debug('finished in {} seconds'.format(time.time() - start_timer))
+            app.logger.debug('finished in %d seconds', time.time() - start_time)
 
     def import_channel_video_counts(self, channel_ids):
         if channel_ids:
@@ -520,6 +522,8 @@ class DBImport(object):
                 if app.logger.isEnabledFor(logging.DEBUG):
                     self.print_percent_complete(done, total)
                 done += 1
+
+            app.logger.info('Video owner size: %d', done)
 
             if automatic_flush:
                 self.conn.flush_bulk(forced=True)
@@ -662,6 +666,7 @@ class DBImport(object):
                 query = query.filter(UserActivity.object_id.like(prefix.replace('_', '\\_') + '%'))
 
             ec = ESVideo.updater(bulk=True)
+            done = 1
             for instance_id, group in groupby(query.yield_per(200).values(UserActivity.object_id, UserActivity.user), lambda x: x[0]):
                 try:
                     ec.set_document_id(instance_id)
@@ -674,6 +679,9 @@ class DBImport(object):
                     pass
                 finally:
                     ec.reset()
+                done += 1
+
+            app.logger.info('Video star size: %d', done)
 
             if automatic_flush:
                 self.conn.flush_bulk(forced=True)
@@ -732,6 +740,8 @@ class DBImport(object):
             current_count = channel_cat_counts.setdefault(instance_cat, 0)
             channel_cat_counts[instance_cat] = current_count + 1
 
+        app.logger.info('Channel category map size: %d', len(category_map))
+
         ec = ESChannel.updater(bulk=True)
         for channel_id, c_map in category_map.iteritems():
             ec.set_document_id(channel_id)
@@ -761,11 +771,13 @@ class DBImport(object):
         channel_terms = {}
 
         total = 0
-        start = time.time()
+        start_time = time.time()
 
         app.logger.debug('Building data ...')
         for v in query.yield_per(600):
             channel_terms.setdefault(v.channel, []).append(v.video_rel.title)
+
+        app.logger.info('Channel terms size: %d', len(channel_terms))
 
         app.logger.debug('Updating records in es ...')
         for c_id, terms_list in channel_terms.iteritems():
@@ -786,7 +798,7 @@ class DBImport(object):
 
         if automatic_flush:
             self.conn.flush_bulk(forced=True)
-        app.logger.debug('%s finished in %s seconds', total, time.time() - start)
+        app.logger.debug('%s finished in %s seconds', total, time.time() - start_time)
 
     def import_channel_share(self, automatic_flush=True):
         from rockpack.mainsite.services.share.models import ShareLink
@@ -795,7 +807,7 @@ class DBImport(object):
 
         total = 0
         missing = 0
-        start = time.time()
+        start_time = time.time()
 
         def _normalised(val, max_val, min_val):
             try:
@@ -946,4 +958,4 @@ class DBImport(object):
             if automatic_flush:
                 ESChannel.flush()
 
-        app.logger.debug('%s total updates in two passes. finished in %s seconds (%s channels not in es)', total, time.time() - start, missing)
+        app.logger.debug('%s total updates in two passes. finished in %s seconds (%s channels not in es)', total, time.time() - start_time, missing)

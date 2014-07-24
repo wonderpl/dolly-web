@@ -245,7 +245,7 @@ class ESObject(object):
         # If the value dict passed in here contains all the keys, we'll assume an overwrite.
         # If there is a mismatch, we'll assume only particular nested fields are being
         # changed and used bracket-notation set them.
-        if not "." in field and isinstance(value, dict):
+        if "." not in field and isinstance(value, dict):
             for k in self.indexer.mapping['properties'][field]['properties'].keys():
                 if k not in value.keys():
                     return construct_update_string('ctx._source.%s' % field, value)
@@ -843,7 +843,9 @@ def update_user_subscription_count(userids=None, start=None, stop=None, automati
 
     subscription_count = subscription_count.with_entities(Subscription.user, func.count(Subscription.channel)).group_by(Subscription.user)
 
+    size = 0
     for userid, count in subscription_count:
+        size += 1
         try:
             es_connection.update(
                 ESObjectIndexer.indexes['user']['index'],
@@ -854,6 +856,8 @@ def update_user_subscription_count(userids=None, start=None, stop=None, automati
         except pyes.exceptions.ElasticSearchException, e:
             app.logger.warning('Could not update subscription count for %s: %s: %s',
                                userid, e, e.result['error'])
+
+    app.logger.info('Subscription count update size: %d', size)
 
     if automatic_flush:
         es_connection.flush_bulk(forced=True)
@@ -926,6 +930,8 @@ def get_users_categories(user_ids=None, start=None, stop=None):
             category_map.setdefault(user, []).append(channel.category)
         else:
             category_map.setdefault(user, [])
+
+    app.logger.info('User category map size: %d', len(category_map))
 
     return category_map
 
