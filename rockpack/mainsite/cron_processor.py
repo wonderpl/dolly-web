@@ -6,6 +6,7 @@ from datetime import datetime, timedelta
 from sqlalchemy import func
 from rockpack.mainsite import app, init_app
 from rockpack.mainsite.core.dbapi import db
+from rockpack.mainsite.core.es import discover_cluster_nodes
 from rockpack.mainsite.core.timing import record_timing
 from rockpack.mainsite.manager import manager
 from rockpack.mainsite.services.base.models import JobControl
@@ -71,6 +72,9 @@ def run():
     if 'SENTRY_DSN' in app.config:
         from raven.contrib.flask import Sentry
         Sentry(app, logging=app.config.get('SENTRY_ENABLE_LOGGING'), level=logging.WARN)
+
+    # Use ES cluster nodes directly for batch jobs
+    discover_cluster_nodes()
 
     while True:
         with app.app_context():

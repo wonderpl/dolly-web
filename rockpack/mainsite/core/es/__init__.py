@@ -124,6 +124,20 @@ def get_es_connection(timeout=app.config.get('ELASTICSEARCH_TIMEOUT', 60)):
     return pyes.ES(es_url, timeout=timeout, bulker_class=LoggingListBulker)
 
 
+def discover_cluster_nodes(prefix='es'):
+    if not es_connection:
+        return
+    new_servers = []
+    for node in es_connection.cluster_nodes()['nodes'].values():
+        if node['name'].startswith(prefix):
+            server = node['http_address'].replace("]", "").replace("inet[", "http:/")
+            new_servers.append(server)
+    if new_servers:
+        app.logger.info('Setting ES servers: %s', ', '.join(new_servers))
+        es_connection.servers = new_servers
+        es_connection._check_servers()
+
+
 # Monkey patch reindex capability on to the ES()
 pyes.ES.reindex = pyes_reindex
 es_connection = get_es_connection()
