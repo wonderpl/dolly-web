@@ -114,7 +114,7 @@ SHARE_MESSAGE_MAP = dict(
     video_instance=dict(
         message=u"I found \"{0[title]}\" on Wonder PL and thought you might like it too.",
         message_email=u"I found \"{0[title]}\" on Wonder PL and thought you might like it too.",
-        message_twitter=u"What a wonderful video! @WeAreWonderPL",
+        message_twitter=u"Watch \"{0[title]}\" by {0[content_owner]} on @WeAreWonderPL",
         message_facebook=u"Look what I found on Wonder PL",
     ),
     channel=dict(
