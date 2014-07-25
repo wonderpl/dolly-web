@@ -5,7 +5,7 @@
 {% block video_sender_header %}
 <div style="width: 100%; overflow: hidden; text-align: center;">
   {% for sender in senders %}
-    {{ avatar_url(sender, display='inline') }}
+    {{ avatar_url(sender, display='inline', css_extra='' if loop.first else 'margin-left: 24px;') }}
   {% endfor %}
 </div>
 <br/>

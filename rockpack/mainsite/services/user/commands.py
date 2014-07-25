@@ -220,11 +220,15 @@ def create_unavailable_notifications(date_from=None, date_to=None, user_notifica
             user_notifications.setdefault(user, None)
 
 
-def influencer_starred_email(recipient, sender, infuencer_id, video_instance):
+def influencer_starred_email(recipient, sender, influencer_id, video_instance):
+    if recipient.id in (sender.id, influencer_id):
+        return
+
     listid = app.config.get('RECOMMENDATION_EMAIL_LISTID', 2)
     if any(f for f in recipient.flags if f.flag in ('bouncing', 'unsub%d' % listid)):
         return
-    influencer = User.query.get(infuencer_id)
+
+    influencer = User.query.get(influencer_id)
     link = ShareLink.create(sender.id, 'video_instance', video_instance.id)
     ctx = dict(
         sender=sender,

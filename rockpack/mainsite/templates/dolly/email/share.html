@@ -1,6 +1,6 @@
-{%- macro avatar_url(user, display='block') %}
+{%- macro avatar_url(user, display='block', css_extra='') %}
   <img src="{{ user.avatar.url|default(config.EMAIL_ASSETS_URL + '/assets/dolly/img/emails/avatar-small.png', True) }}"
-       alt="" width="66" height="66" style="display: {{ display }}; max-width: none; width: 66px; height: auto; margin: 0 auto; border-radius: 100%;"/>
+       alt="" width="66" height="66" style="display: {{ display }}; max-width: none; width: 66px; height: auto; margin: 0 auto; border-radius: 100%; {{ css_extra }}"/>
 {% endmacro %}
 
 {%- macro sender_header() %}
