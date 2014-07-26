@@ -1,5 +1,6 @@
-import pyes
+import os
 import time
+import pyes
 from flask import request
 from rockpack.mainsite import app
 from rockpack.mainsite.core import timing
@@ -133,9 +134,15 @@ def discover_cluster_nodes(prefix='es'):
             server = node['http_address'].replace("]", "").replace("inet[", "http:/")
             new_servers.append(server)
     if new_servers:
-        app.logger.info('Setting ES servers: %s', ', '.join(new_servers))
+        app.logger.info('Setting ES servers for process %d: %s',
+                        os.getpid(), ', '.join(new_servers))
         es_connection.servers = new_servers
         es_connection._check_servers()
+        es_connection._init_connection()
+        pyes.connection_http.POOL_MANAGER.clear()
+    else:
+        app.logger.warning('No additional ES servers found for process %d',
+                           os.getpid())
 
 
 # Monkey patch reindex capability on to the ES()
