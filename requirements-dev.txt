@@ -1,4 +1,6 @@
+flake8>=2
 pytest>=2.4
+mock>=1
 fixture>=1.4
 cssmin>=0.1.4
 PyYAML>=3.1
