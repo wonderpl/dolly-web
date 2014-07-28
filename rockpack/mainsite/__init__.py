@@ -24,11 +24,7 @@ if app.config.get('USE_GEVENT'):
     patch_psycopg()
     import grequests as requests
 else:
-    import requests
-
-
-# for pyflakes
-requests
+    import requests     # NOQA
 
 
 # Patch werkzeug UserAgentParser to support rockpack app

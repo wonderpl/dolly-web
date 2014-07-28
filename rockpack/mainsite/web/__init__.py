@@ -6,10 +6,10 @@ from jinja2 import Markup
 from rockpack.mainsite import app
 
 # Init app routes
-from .views import homepage
+from .views import homepage     # NOQA
 
 # Init angular templates
-import rockpack.mainsite.web.filters.angulartemplates
+import rockpack.mainsite.web.filters.angulartemplates   # NOQA
 
 
 def _map_adapter_get_host(self, domain_part):

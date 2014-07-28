@@ -20,8 +20,6 @@ def _run_call(message):
     except Exception:
         app.logger.exception('Unable to run background function %s', message['function'])
         return False
-    #else:
-    #    app.logger.debug('Ran background function %s', message['function'])
 
 
 @app.teardown_request

@@ -158,7 +158,8 @@ class GraphAPI(object):
         We translate args to a valid query string. If post_args is given,
         we send a POST request to the given path with the given arguments.
         """
-        if not args: args = {}
+        if not args:
+            args = {}
         if self.access_token:
             if post_args is not None:
                 post_args["access_token"] = self.access_token
@@ -218,7 +219,8 @@ def get_user_from_cookie(cookies, app_id, app_secret):
         return get_user_from_oauth_cookie(cookie, app_id, app_secret)
 
     cookie = cookies.get("fbs_" + app_id, "")
-    if not cookie: return None
+    if not cookie:
+        return None
     args = dict((k, v[-1]) for k, v in cgi.parse_qs(cookie.strip('"')).items())
     payload = "".join(k + "=" + args[k] for k in sorted(args.keys())
                       if k != "sig")
@@ -249,10 +251,10 @@ def _token_request(**kwargs):
 
 def renew_token(token, app_id, app_secret):
     return _token_request(
-                grant_type='fb_exchange_token',
-                fb_exchange_token=token,
-                client_id=app_id,
-                client_secret=app_secret)
+        grant_type='fb_exchange_token',
+        fb_exchange_token=token,
+        client_id=app_id,
+        client_secret=app_secret)
 
 
 def validate_token(token, app_id, app_secret):
@@ -268,17 +270,16 @@ def validate_token(token, app_id, app_secret):
         return token_response['data']
 
 
-
 def get_user_from_oauth_cookie(cookie, app_id, app_secret):
     cookie_data = parse_signed_cookie(cookie, app_secret)
     if not cookie_data:
         return
 
     token, expires = _token_request(
-                        code=cookie_data['code'],
-                        redirect_uri='',
-                        client_id=app_id,
-                        client_secret=app_secret)
+        code=cookie_data['code'],
+        redirect_uri='',
+        client_id=app_id,
+        client_secret=app_secret)
 
     return dict(access_token=token, uid=cookie_data['user_id'])
 

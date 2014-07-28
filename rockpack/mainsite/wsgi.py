@@ -1,6 +1,6 @@
 # Hack to prevent import lock issue
 # http://code.google.com/p/modwsgi/issues/detail?id=177
-import _strptime
+import _strptime    # NOQA
 
 import logging
 from werkzeug.contrib.fixers import ProxyFix

@@ -125,7 +125,6 @@ class VideoInstanceView(AdminModelView):
         video_rel={'fields': (models.Video.title,)},
         video_channel={'fields': (models.Channel.title,)},
     )
-    #inline_models = (VideoInstanceLocaleMetaFormAdmin(models.VideoInstanceLocaleMeta),)
 
     def after_model_change(self, form, model, is_created):
         if use_elasticsearch():

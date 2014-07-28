@@ -1,6 +1,12 @@
-# load _decrypt function from ROCKPACK_SETTINGS file
 import os
-execfile(os.environ['ROCKPACK_SETTINGS'])
+
+_decrypt = lambda x: x
+try:
+    # Try to load _decrypt function from ROCKPACK_SETTINGS file
+    execfile(os.environ['ROCKPACK_SETTINGS'])
+except (IOError, KeyError):
+    pass
+
 
 DOLLY = True
 
@@ -8,7 +14,6 @@ SECRET_KEY = _decrypt(':~l2\xc7\xc5\xe38\x91\xc5\x9fcu\xf7\x15\xe8\x1d\x11\xe7!\
 
 DB_PASSWORD = _decrypt('o\xa9\xe7\xc5\x08\x03L3')
 DATABASE_URL = 'postgresql://mainsite:%s@db1/dolly' % DB_PASSWORD
-#SLAVE_DATABASE_URL = None
 
 GOOGLE_CONSUMER_KEY = '981375550038-dbckr7s2hb5rsaohj9j4fhl0cbu4col7.apps.googleusercontent.com'
 GOOGLE_CONSUMER_SECRET = _decrypt('d3So=\x9e\xa7\x02\x97\xd5`\x1a\xae\x8f\xc5\xd1\xc3D\x07\x8fr"\xa1\x81')

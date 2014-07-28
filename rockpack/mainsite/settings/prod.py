@@ -1,6 +1,11 @@
-# load _decrypt function from ROCKPACK_SETTINGS file
 import os
-execfile(os.environ['ROCKPACK_SETTINGS'])
+
+_decrypt = lambda x: x
+try:
+    # Try to load _decrypt function from ROCKPACK_SETTINGS file
+    execfile(os.environ['ROCKPACK_SETTINGS'])
+except (IOError, KeyError):
+    pass
 
 
 SECRET_KEY = _decrypt('\xf0\xf9+(\x1f\x84\x06\xa84\x1b\xc6\x1d\xc4m\xc6F\xc9\xf7W\xd9\xc0b%\x9a#\x95\xc4\x1f\x8e\xe4_w\xa5\xf4\x87\xc4\xf3\x1a\xc2,\x05)h\x9d\xc9\x81\x13L\x1a\x19\xfd x?\xea\x7f\x82\xf99W]v\x87\xed')
@@ -35,8 +40,6 @@ ENABLE_TIMINGS = True
 SQS_REGION = 'us-east-1'
 
 DISABLED_CRON_JOBS = ('update_user_promotions', 'process_video_instance_queue')
-
-#USE_GEVENT = True
 
 # Credentials for rockpack prod app on facebook
 FACEBOOK_APP_ID = '217008995103822'

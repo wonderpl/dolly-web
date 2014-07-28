@@ -1,13 +1,17 @@
-# load _decrypt function from ROCKPACK_SETTINGS file
 import os
-execfile(os.environ['ROCKPACK_SETTINGS'])
+
+_decrypt = lambda x: x
+try:
+    # Try to load _decrypt function from ROCKPACK_SETTINGS file
+    execfile(os.environ['ROCKPACK_SETTINGS'])
+except (IOError, KeyError):
+    pass
 
 
 SECRET_KEY = _decrypt('&\xa9C\xe3<j\x0f\xe3\xe6\x8e\t\x04\x81\x1d[b\x87\xcf2\xe4U\x90\x00d\x004\x9d2\xfa\xff\x19\xfc\x9cH\x98PX7\xbfh\xec\x08{LTr|\xae\x92u\x04+\x9a\xe5\x8e\x17\xear\x9c\x02\x1c\x97\xe3\x8c')
 
 DB_PASSWORD = _decrypt('(\x80JE\x9b\xd7\xb0\xd9')
 DATABASE_URL = 'postgresql://mainsite:%s@db1/rockpack' % DB_PASSWORD
-#SLAVE_DATABASE_URL = None
 
 GOOGLE_CONSUMER_KEY = '981375550038-dbckr7s2hb5rsaohj9j4fhl0cbu4col7.apps.googleusercontent.com'
 GOOGLE_CONSUMER_SECRET = _decrypt('#w\x81\xcf\x95K "\xe3\x10\xa8\xd0\x84\xf9\xee\xe5\xea]\x90\x9dw\x9b\xd9\xb2')
@@ -37,5 +41,3 @@ DISABLED_CRON_JOBS = (
 STATSD_HOST = 'admin'
 
 ENABLE_TIMINGS = True
-
-#USE_GEVENT = True

@@ -49,6 +49,7 @@ _con = session.get_connection(
     passphrase=app.config['APNS_PASSPHRASE']
 )
 
+
 def _feedback_con():
     return session.new_connection(
         app.config['APNS_FEEDBACK_TYPE'],

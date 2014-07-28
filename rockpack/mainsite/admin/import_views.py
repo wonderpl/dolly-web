@@ -359,13 +359,22 @@ class ImportView(AdminView):
     @expose('/video_instance.js')
     def video_instances(self):
         vid = request.args.get('prefix', '')
-        result = jsonify({id: {"channel": channel, "title": title} for id, channel, title in
-                          VideoInstance.query.join(
-                              Video,
-                              (Video.id == VideoInstance.video) &
-                              (VideoInstance.deleted == False)
-                          ).filter(Video.title.like(vid + '%')).values(
-                              VideoInstance.id, VideoInstance.channel, Video.title)})
+        result = jsonify(
+            {
+                id:
+                    {"channel": channel, "title": title}
+                    for id, channel, title in
+                    VideoInstance.query.join(
+                        Video,
+                        (Video.id == VideoInstance.video) &
+                        (VideoInstance.deleted == False)
+                    ).filter(
+                        Video.title.like(vid + '%')
+                    ).values(
+                        VideoInstance.id, VideoInstance.channel, Video.title
+                    )
+            }
+        )
         return result
 
     @expose('/tags.js')

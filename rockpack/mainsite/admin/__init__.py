@@ -5,8 +5,7 @@ from .base import AdminView, AdminModelView
 
 def setup_admin(app):
     # init commands:
-    from . import commands
-    commands    # for pyflakes
+    from . import commands  # NOQA
 
     subdomain = app.config.get('ADMIN_SUBDOMAIN')
     admin_name = app.config.get('ADMIN_NAME', 'Rockpack Admin')

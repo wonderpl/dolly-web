@@ -1,6 +1,12 @@
-# load _decrypt function from ROCKPACK_SETTINGS file
 import os
-execfile(os.environ['ROCKPACK_SETTINGS'])
+
+_decrypt = lambda x: x
+try:
+    # Try to load _decrypt function from ROCKPACK_SETTINGS file
+    execfile(os.environ['ROCKPACK_SETTINGS'])
+except (IOError, KeyError):
+    pass
+
 
 DOLLY = True
 

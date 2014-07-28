@@ -211,7 +211,7 @@ def _get_video_data_v3(youtube_data, playlist=None):
         source_listid=playlist,
         title=snippet['title'],
         # http://code.google.com/p/gdata-issues/issues/detail?id=4294
-        #duration=snippet['duration'],
+        # duration=snippet['duration'],
     )
     video.source_category = None
     video.source_view_count = None
