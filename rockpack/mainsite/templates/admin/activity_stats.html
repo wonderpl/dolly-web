@@ -11,4 +11,13 @@
   }
   {% endcall %}
 </div>
+
+<h3>Activity Detail</h3>
+<div>
+  {% call chart('Activity Detail', activity_data, 'Table') %}
+  {
+    alternatingRowStyle: false
+  }
+  {% endcall %}
+</div>
 {% endblock %}

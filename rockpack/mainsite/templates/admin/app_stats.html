@@ -12,4 +12,13 @@
   }
   {% endcall %}
 </div>
+
+<h3>Registrations Detail</h3>
+<div>
+  {% call chart('Registrations Detail', reg_data, 'Table') %}
+  {
+    alternatingRowStyle: false
+  }
+  {% endcall %}
+</div>
 {% endblock %}

@@ -201,9 +201,11 @@ class ActivityStatsView(StatsView):
                       [dict(id=i, type=long) for i in
                        'Total', 'Unique Users', 'Views', 'Subscriptions', 'Follow Alls', 'Plusses', 'Likes'])
         table.extend(
-            readonly_session.query(UserActivity).filter(UserActivity.date_actioned > LAUNCHDATE).
-            group_by('1').order_by('1').
-            values(
+            readonly_session.query(UserActivity).
+            filter(
+                UserActivity.date_actioned > LAUNCHDATE,
+                UserActivity.action != 'recommended',
+            ).group_by('1').order_by('1').values(
                 func.date(UserActivity.date_actioned),
                 func.count('*'),
                 func.count(func.distinct(UserActivity.user)),
