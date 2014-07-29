@@ -445,7 +445,7 @@ def create_new_registration_notifications(date_from=None, date_to=None, user_not
 
         FriendUser = aliased(User)
 
-        new_email_users = User.query.join(
+        new_email_users = User.query.filter(User.email != '').join(
             ExternalFriend,
             (ExternalFriend.email == User.email) &
             (ExternalFriend.external_system == 'email')
