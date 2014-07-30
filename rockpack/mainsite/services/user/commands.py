@@ -145,7 +145,7 @@ def complex_push_notification(token, push_message, push_message_args, **kwargs):
         }
     )
     message.update(kwargs)
-    for key, value in message.iteritems():
+    for key, value in message.items():
         if value is None:
             del message[key]
     return _send_apns_message(token.user, token.external_token, message)
@@ -1199,3 +1199,21 @@ def load_users_into_mailchimp():
         app.logger.error('Error loading users into mailchimp: %s', response['errors'][0]['error'])
     else:
         app.logger.info('Loaded users into mailchimp: %d added, %d updated', response['add_count'], response['update_count'])
+
+
+@manager.command
+def send_push_notification(user, message, video=None, badge_count=None, tracking_code=None):
+    userid = User.query.filter_by(username=user).value('id')
+    token = get_apns_token(userid or user)
+    if not token or token.external_token == 'ffff':
+        print 'User with valid APNS token not found'
+        return
+
+    if video:
+        video = VideoInstance.query.get(video)
+        url = _apns_url(video.resource_url)
+    else:
+        url = None
+
+    complex_push_notification(token, message, [], url=url,
+                              badge=badge_count, tracking_code=tracking_code)
