@@ -281,8 +281,8 @@ def recommend_for_influencers(instance_id, user_id):
         if influencer_videos:
             subscription_friend = Channel.query.\
                 join(Subscription, Subscription.channel == Channel.id).\
-                filter(Subscription.user == user.id).\
-                with_entities(Channel.owner.label('friendid'), Subscription.user.label('userid'))
+                filter(Channel.owner == user.id).\
+                with_entities(Subscription.user.label('friendid'), Channel.owner.label('userid'))
 
             email_friend = ExternalFriend.query.\
                 join(User,
