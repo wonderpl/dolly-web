@@ -29,7 +29,7 @@ def update_channel_videos(channel, data):
     # pubsubhubbub.appspot.com often duplicates the same update request
     # and since it can take a while to parse a big feed request we can
     # get duplicate key errors when the concurrent transactions are committed.
-    for retry in 1, 0:
+    for retry in 2, 1, 0:
         try:
             _update_channel_videos(channel, data)
         except IntegrityError:
