@@ -135,9 +135,9 @@ class ExternalFriend(db.Model):
         fetcher = Fetcher(token)
         try:
             friends = fetcher.get_friends()
-        except:
-            app.logger.exception('Unable to get %s connections for user: %s (%s)',
-                                 system, userid, token.external_uid)
+        except Exception as e:
+            app.logger.warning('Unable to get %s connections for user: %s (%s): %s',
+                               system, userid, token.external_uid, e)
             return
 
         external_friends = {}
