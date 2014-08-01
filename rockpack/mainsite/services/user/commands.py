@@ -14,6 +14,7 @@ from rockpack.mainsite.core import email
 from rockpack.mainsite.core.token import create_unsubscribe_token
 from rockpack.mainsite.core.apns import push_client
 from rockpack.mainsite.helpers.urls import url_tracking_context
+from rockpack.mainsite.services import search
 from rockpack.mainsite.services.oauth import facebook
 from rockpack.mainsite.services.oauth.models import ExternalFriend, ExternalToken
 from rockpack.mainsite.services.share.models import ShareLink
@@ -814,6 +815,8 @@ def send_facebook_likes(date_from, date_to):
     # has a valid Facebook publish_actions token and has facebook_autopost_star enabled.
     activity = UserActivity.query.filter(
         UserActivity.action == 'star',
+        UserActivity.object_type == 'video_instance',
+        UserActivity.object_id.notlike(search.api.VIDEO_INSTANCE_PREFIX + '%'),
         UserActivity.date_actioned.between(date_from, date_to)
     ).join(
         UserFlag,
