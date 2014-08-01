@@ -325,7 +325,7 @@ class ImportView(AdminView):
             return jsonify(User.query.filter(
                 func.lower(User.username).like(prefix + '%')
             ).values(User.id, User.username))
-        return []
+        return jsonify([])
 
     @expose('/channels.js')
     def channels(self):
@@ -347,7 +347,7 @@ class ImportView(AdminView):
                 Channel.public == True,
                 func.lower(Channel.title).like(prefix + '%')
             ).values(Channel.id, Channel.title))
-        return []
+        return jsonify([])
 
     @expose('/video.js')
     def videos(self):
