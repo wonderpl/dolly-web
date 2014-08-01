@@ -103,13 +103,29 @@ def _apns_url(url):
     return urlparse.urlparse(url).path.lstrip('/ws/')
 
 
+def _remove_invalid_tokens(failed):
+    for token, (failure_code, failure_message) in failed.items():
+        if failure_message == 'Invalid token':
+            query = ExternalToken.query.filter_by(
+                external_system='apns',
+                external_token=token
+            )
+            app.logger.info('Removing invalid APNS token for %s (%s)',
+                            *query.join(User).values(User.id, User.username).next())
+            query.delete(False)
+
+
 def _send_apns_message(user, token, message):
     try:
         srv = push_client.APNs(push_client.connection)
         result = srv.send(push_client.Message(token, **message))
-        if result.errors or result.failed:
-            app.logger.error('Failed to send message to %s: %r: %r: %r',
-                             user, message, result.errors, result.failed)
+        if result.errors:
+            app.logger.error('Failed to send message to %s: %r: %r',
+                             user, message, result.errors)
+        elif result.failed:
+            app.logger.warning('Failed to send message to %s: %r: %r',
+                               user, message, result.failed)
+            _remove_invalid_tokens(result.failed)
         else:
             app.logger.info('Sent message to %s: %r', user, message)
         return result
