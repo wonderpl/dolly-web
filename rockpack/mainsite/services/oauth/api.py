@@ -622,13 +622,15 @@ class FacebookWS(WebService):
                 request.form['signed_request'],
                 app.config['FACEBOOK_APP_SECRET']
             )
-            token = models.ExternalToken.query.filter_by(
-                external_system='facebook',
-                external_uid=data['user_id']
-            ).one()
+            uid = data['user_id']
         except Exception:
             app.logger.exception('Unable to parse facebook deauth: %s', request.form)
         else:
-            token.expires = '2001-01-01'    # sometime in the past
-            token.user_rel.reset_refresh_token()
-            token.save()
+            token = models.ExternalToken.query.filter_by(
+                external_system='facebook',
+                external_uid=uid
+            ).first()
+            if token:
+                token.expires = '2001-01-01'    # sometime in the past
+                token.user_rel.reset_refresh_token()
+                token.save()
