@@ -3,9 +3,9 @@ from datetime import timedelta
 from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, Enum, DateTime, func
 from sqlalchemy.orm import relationship, exc
 from flask import abort
+from wonder.common.i18n import lazy_gettext as _
 from rockpack.mainsite import app
 from rockpack.mainsite.core.dbapi import db, commit_on_success
-from rockpack.mainsite.helpers import lazy_gettext as _
 from rockpack.mainsite.helpers.urls import url_for
 from rockpack.mainsite.services.user.models import User, EXTERNAL_SYSTEM_NAMES
 from . import exceptions, facebook

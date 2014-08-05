@@ -11,11 +11,11 @@ from flask import request, url_for, redirect, flash, jsonify
 from flask.ext import login
 from flask.ext.admin import expose, form
 from wtforms.validators import ValidationError
+from wonder.common.sqs import background_on_sqs
 from rockpack.mainsite import app, requests
 from rockpack.mainsite.core.dbapi import commit_on_success, db
 from rockpack.mainsite.core import youtube, ooyala
 from rockpack.mainsite.core.s3 import s3connection, S3Uploader
-from rockpack.mainsite.background_sqs_processor import background_on_sqs
 from rockpack.mainsite.helpers.db import resize_and_upload
 from rockpack.mainsite.services.pubsubhubbub.api import subscribe
 from rockpack.mainsite.services.video.models import (

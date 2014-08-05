@@ -57,8 +57,6 @@ STATSD_HOST = 'admin'
 
 ENABLE_TIMINGS = True
 
-SQS_REGION = 'us-east-1'
-
 ENABLED_LOCALES = ('en-us',)
 
 ADMIN_NAME = 'Wonder Place Admin'
@@ -104,10 +102,9 @@ ITUNES_CONNECT_VENDORID = '86088300'
 ITUNES_CONNECT_APPLEID = 'bot@wonderpl.com'
 ITUNES_CONNECT_PASSWORD = _decrypt('\x01\xbdZBAe\x87I\xd3\xcf')
 
-SQS_CRON_QUEUE = 'dolly-mainsite-cron'
-SQS_EMAIL_QUEUE = 'dolly-mainsite-email'
-SQS_BACKGROUND_QUEUE = 'dolly-mainsite-background'
-SQS_ELASTICSEARCH_QUEUE = 'dolly-mainsite-es'
+ENABLE_BACKGROUND_SQS = True
+SQS_REGION = 'us-east-1'
+SQS_QUEUE_NAME_PREFIX = 'dolly-mainsite-'
 
 DISABLED_CRON_JOBS = ('import_google_movies', 'update_recommender')
 

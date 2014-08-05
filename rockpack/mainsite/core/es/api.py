@@ -6,14 +6,12 @@ from ast import literal_eval
 from urlparse import urlparse
 from sqlalchemy import func, distinct
 from sqlalchemy.orm import lazyload, contains_eager
-from . import mappings
-from . import es_connection
-from . import use_elasticsearch
-from . import exceptions
+from wonder.common.sqs import background_on_sqs
 from rockpack.mainsite import app, cache
 from rockpack.mainsite.helpers.db import ImageType
 from rockpack.mainsite.core.dbapi import db, readonly_session
-from rockpack.mainsite.background_sqs_processor import background_on_sqs
+from . import mappings, es_connection, use_elasticsearch, exceptions
+
 
 logger = logging.getLogger(__name__)
 

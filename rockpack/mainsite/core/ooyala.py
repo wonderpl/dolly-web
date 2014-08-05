@@ -6,9 +6,9 @@ from hashlib import sha256
 from urlparse import urljoin
 from collections import namedtuple
 from flask import json
+from wonder.common.sqs import background_on_sqs
 from rockpack.mainsite import app, requests
 from rockpack.mainsite.core.s3 import s3connection
-from rockpack.mainsite.background_sqs_processor import background_on_sqs
 from rockpack.mainsite.services.video.models import Video, VideoThumbnail
 
 

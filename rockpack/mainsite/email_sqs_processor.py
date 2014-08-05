@@ -1,13 +1,14 @@
 from flask import json
 from boto.sqs.message import RawMessage
+from wonder.common.sqs import SqsProcessor
 from rockpack.mainsite import app
 from rockpack.mainsite.services.user.models import User
-from rockpack.mainsite.sqs_processor import SqsProcessor
+from rockpack.mainsite.cron_processor import create_app
 
 
 class EmailSqsProcessor(SqsProcessor):
 
-    queue_name = app.config['SQS_EMAIL_QUEUE']
+    queue_name = 'email'
     message_class = RawMessage
 
     def process_message(self, message):
@@ -37,4 +38,4 @@ class EmailSqsProcessor(SqsProcessor):
 
 
 if __name__ == '__main__':
-    EmailSqsProcessor().run()
+    EmailSqsProcessor(create_app).run()

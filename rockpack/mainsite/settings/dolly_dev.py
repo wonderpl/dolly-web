@@ -82,10 +82,8 @@ APNS_PASSPHRASE = 'wonder'
 
 AUTH_HEADER_SANITY_CHECK = True
 
-SQS_CRON_QUEUE = 'dolly-mainsite-cron'
-SQS_EMAIL_QUEUE = 'dolly-mainsite-email'
-SQS_BACKGROUND_QUEUE = 'dolly-mainsite-background'
-SQS_ELASTICSEARCH_QUEUE = 'dolly-mainsite-es'
+SQS_QUEUE_NAME_PREFIX = 'dolly-mainsite-'
+ENABLE_BACKGROUND_SQS = True
 
 DISABLED_CRON_JOBS = (
     'import_google_movies', 'import_itunes_downloads', 'process_broadcast_messages',

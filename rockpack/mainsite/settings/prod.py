@@ -30,14 +30,12 @@ SENTRY_ENABLE_LOGGING = 30  # logging.WARNING
 
 ELASTICSEARCH_URL = 'http://localhost:9200'
 
-SQS_BACKGROUND_QUEUE = 'mainsite-background'
-SQS_ELASTICSEARCH_QUEUE = 'es-video-update'
+ENABLE_BACKGROUND_SQS = True
+SQS_REGION = 'us-east-1'
 
 STATSD_HOST = 'admin'
 
 ENABLE_TIMINGS = True
-
-SQS_REGION = 'us-east-1'
 
 DISABLED_CRON_JOBS = ('update_user_promotions', 'process_video_instance_queue')
 

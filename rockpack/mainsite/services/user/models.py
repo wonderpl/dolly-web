@@ -9,12 +9,12 @@ from sqlalchemy.orm import relationship
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask import g, json
 from flask.ext.sqlalchemy import models_committed
+from wonder.common.sqs import background_on_sqs
 from rockpack.mainsite import app, cache
 from rockpack.mainsite.core.token import create_access_token
 from rockpack.mainsite.core.dbapi import db
 from rockpack.mainsite.helpers.db import ImageType, add_base64_pk, resize_and_upload
 from rockpack.mainsite.helpers.urls import url_for
-from rockpack.mainsite.background_sqs_processor import background_on_sqs
 
 
 VISIBLE_USER_FLAGS = 'facebook_autopost_star', 'facebook_autopost_add'

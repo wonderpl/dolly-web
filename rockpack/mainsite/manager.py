@@ -1,46 +1,18 @@
 import os
 import sys
 import logging
-from glob import glob
 from datetime import datetime
 from functools import wraps
 from sqlalchemy import func
-from flask.ext.script import Manager as BaseManager
-from flask.ext.script.commands import Server
-from flask.ext.assets import ManageAssets
-from rockpack.mainsite import app, init_app
+from wonder.common.commands import Manager
+from rockpack.mainsite import app, init_app, settings
 from rockpack.mainsite.core.dbapi import commit_on_success
 from rockpack.mainsite.helpers.db import resize_and_upload
 from rockpack.mainsite.helpers.http import get_external_resource
 from rockpack.mainsite.services.base.models import JobControl
 
 
-class Manager(BaseManager):
-    def __init__(self, app):
-        super(Manager, self).__init__(app)
-        self.add_command('assets', ManageAssets())
-        self.add_command('runserver', Server(extra_files=self.get_reloader_extra_files()))
-        self.logger = app.logger.manager.getLogger('command')
-        self._cron_commands = {}
-
-    def get_reloader_extra_files(self):
-        from rockpack.mainsite import settings
-        return glob(os.path.join(os.path.dirname(settings.__file__), '*.py'))
-
-    def cron_command(self, interval=None):
-        def decorator(f):
-            self._cron_commands[f.__name__] = interval
-            return self.command(f)
-        return decorator
-
-    def get_cron_commands(self):
-        return self._cron_commands
-
-    def handle(self, prog, args=None):
-        logging.basicConfig(level=logging.INFO if app.debug else logging.WARN)
-        return super(Manager, self).handle(prog, args)
-
-manager = Manager(app)
+manager = Manager(app, reloader_extra_files=settings)
 
 
 def job_control(f):
@@ -213,19 +185,6 @@ def upload_default_image(fieldname, filename, name=None):
     model, fieldname, cfgkey = _parse_fieldname(fieldname)
     with open(filename) as img:
         resize_and_upload(img, cfgkey, name=name)
-
-
-@manager.command
-def seed_cron_queue(commands=None):
-    """Seed the cron SQS queue with a message for the specified jobs."""
-    from rockpack.mainsite.cron_sqs_processor import CronSqsProcessor
-    CronSqsProcessor.init_messages(commands and commands.split(','))
-
-
-@manager.command
-def clean_cron_queue():
-    from rockpack.mainsite.cron_sqs_processor import CronSqsProcessor
-    CronSqsProcessor.clean_messages()
 
 
 @manager.option('--channel')

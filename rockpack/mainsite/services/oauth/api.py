@@ -5,8 +5,10 @@ from sqlalchemy.exc import IntegrityError
 import wtforms as wtf
 from flask import request, abort, g, json
 from flask.ext.wtf import Form
+from wonder.common.forms import email_validator
+from wonder.common.i18n import lazy_gettext as _
+from wonder.common.sqs import background_on_sqs
 from rockpack.mainsite import app, requests
-from rockpack.mainsite.helpers import lazy_gettext as _
 from rockpack.mainsite.helpers.forms import naughty_word_validator
 from rockpack.mainsite.helpers.db import get_column_property, get_column_validators
 from rockpack.mainsite.helpers.urls import url_for
@@ -15,7 +17,6 @@ from rockpack.mainsite.core.token import create_access_token
 from rockpack.mainsite.core.email import send_email, env as email_env
 from rockpack.mainsite.core.oauth.decorators import check_client_authorization
 from rockpack.mainsite.core.webservice import WebService, expose_ajax, secure_view
-from rockpack.mainsite.background_sqs_processor import background_on_sqs
 from rockpack.mainsite.services.user.models import User, UserAccountEvent, username_exists, GENDERS
 from rockpack.mainsite.services.video.models import Locale
 from . import facebook, models
@@ -130,16 +131,6 @@ def username_validator():
         elif exists:
             raise wtf.ValidationError(_('"%s" already taken.') % field.data)
         naughty_word_validator(form, field)
-    return _valid
-
-
-def email_validator():
-    # Additional address validation for SES - doesn't like foo@bar.com. or foo@bar..com
-    def _valid(form, field):
-        if not field.data:
-            return
-        if field.data.endswith('.') or ' ' in field.data or '..' in field.data.rsplit('@', 1)[-1]:
-            raise wtf.ValidationError(_('Invalid email address.'))
     return _valid
 
 

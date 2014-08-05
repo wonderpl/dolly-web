@@ -7,13 +7,13 @@ from sqlalchemy import (
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import relationship, aliased, lazyload
 from sqlalchemy.orm.attributes import get_history
+from wonder.common.i18n import lazy_gettext as _
+from wonder.common.sqs import background_on_sqs
 from rockpack.mainsite import app, cache
 from rockpack.mainsite.core.dbapi import db, defer_except, commit_on_success, readonly_session
-from rockpack.mainsite.helpers import lazy_gettext as _
 from rockpack.mainsite.helpers.db import add_base64_pk, add_video_pk, insert_new_only, ImageType, BoxType
 from rockpack.mainsite.helpers.urls import url_for
 from rockpack.mainsite.services.user.models import User
-from rockpack.mainsite.background_sqs_processor import background_on_sqs
 
 
 EXTRA_META_KEYWORD = 'EXTRA_META'

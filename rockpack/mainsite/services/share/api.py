@@ -3,19 +3,19 @@ import wtforms as wtf
 from sqlalchemy import func
 from flask import abort, g, json
 from flask.ext.wtf import Form
+from wonder.common.forms import email_validator
+from wonder.common.sqs import background_on_sqs
 from rockpack.mainsite import app
 from rockpack.mainsite.core import email
 from rockpack.mainsite.core.webservice import WebService, expose_ajax, ajax_create_response
 from rockpack.mainsite.core.oauth.decorators import check_authorization
 from rockpack.mainsite.core.dbapi import db, commit_on_success
-from rockpack.mainsite.background_sqs_processor import background_on_sqs
 from rockpack.mainsite.services.user import commands
 from rockpack.mainsite.services.video.models import Channel, Video, VideoInstance
 from rockpack.mainsite.services.user.api import save_video_activity
 from rockpack.mainsite.services.user.models import EXTERNAL_SYSTEM_NAMES, User, UserNotification
 from rockpack.mainsite.services.search.api import VIDEO_INSTANCE_PREFIX
 from rockpack.mainsite.services.oauth.models import ExternalFriend
-from rockpack.mainsite.services.oauth.api import email_validator
 from .models import ShareLink
 
 

@@ -11,6 +11,7 @@ from flask import abort, request, json, g
 from flask.ext.wtf import Form
 from rockpack.mainsite.core.apns import push_client
 from wtforms.validators import ValidationError
+from wonder.common.i18n import lazy_gettext as _
 from rockpack.mainsite import app
 from rockpack.mainsite.core.dbapi import commit_on_success
 from rockpack.mainsite.core.webservice import WebService, expose_ajax, ajax_create_response, process_image
@@ -18,7 +19,6 @@ from rockpack.mainsite.core.oauth.decorators import check_authorization
 from rockpack.mainsite.core import youtube, ooyala
 from rockpack.mainsite.core.es import use_elasticsearch, search as es_search, api as es_api
 from rockpack.mainsite.core import recommender
-from rockpack.mainsite.helpers import lazy_gettext as _
 from rockpack.mainsite.helpers.forms import naughty_word_validator
 from rockpack.mainsite.helpers.urls import url_for, url_to_endpoint
 from rockpack.mainsite.helpers.db import gen_videoid, make_id, get_column_validators, get_box_value

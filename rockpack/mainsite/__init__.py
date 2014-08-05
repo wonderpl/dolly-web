@@ -57,7 +57,8 @@ SERVICES = (
     'rockpack.mainsite.core.es'
 )
 REGISTER_SETUPS = (
-    ('rockpack.mainsite.core.timing', 'setup_timing'),
+    ('wonder.common.timing', 'init_app'),
+    ('wonder.common.sqs', 'init_app'),
     ('rockpack.mainsite.core.webservice', 'setup_abort_mapping'),
     ('rockpack.mainsite.core.webservice', 'setup_middleware'),
     ('rockpack.mainsite.admin.auth', 'setup_auth'),

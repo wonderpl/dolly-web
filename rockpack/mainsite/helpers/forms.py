@@ -1,7 +1,7 @@
 import re
 from pkg_resources import resource_string
 from wtforms.validators import ValidationError
-from rockpack.mainsite.helpers import lazy_gettext as _
+from wonder.common.i18n import lazy_gettext as _
 
 
 NAUGHTY_WORDS = dict((word, 1) for word in

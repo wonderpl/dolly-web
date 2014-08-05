@@ -1,5 +1,3 @@
-
-
 try:
     import GeoIP
     geoip = GeoIP.open('/usr/share/GeoIP/GeoIP.dat', GeoIP.GEOIP_MEMORY_CACHE)
@@ -7,8 +5,3 @@ try:
     get_country_code_from_address = geoip.country_code_by_addr
 except Exception:
     get_country_code_from_address = lambda x: None
-
-
-# Placeholder
-def lazy_gettext(message):
-    return message

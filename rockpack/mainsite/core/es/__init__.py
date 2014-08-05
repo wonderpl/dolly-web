@@ -2,8 +2,8 @@ import os
 import time
 import pyes
 from flask import request
+from wonder.common import timing
 from rockpack.mainsite import app
-from rockpack.mainsite.core import timing
 
 
 es_url = app.config.get('ELASTICSEARCH_URL')

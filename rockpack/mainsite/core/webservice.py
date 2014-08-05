@@ -5,7 +5,8 @@ from functools import wraps
 from collections import namedtuple
 from werkzeug.exceptions import HTTPException, Unauthorized, BadRequest, Forbidden
 from flask import Blueprint, Response, request, current_app, abort, json
-from rockpack.mainsite.helpers import get_country_code_from_address, lazy_gettext as _
+from wonder.common.i18n import lazy_gettext as _
+from rockpack.mainsite.helpers import get_country_code_from_address
 from rockpack.mainsite.helpers.http import cache_for
 from rockpack.mainsite.helpers.db import resize_and_upload
 

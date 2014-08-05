@@ -29,8 +29,7 @@ SENTRY_ENABLE_LOGGING = 30  # logging.WARNING
 
 ELASTICSEARCH_URL = 'http://es1:9200'
 
-SQS_BACKGROUND_QUEUE = 'mainsite-background'
-SQS_ELASTICSEARCH_QUEUE = 'es-video-update'
+ENABLE_BACKGROUND_SQS = True
 
 DISABLED_CRON_JOBS = (
     'import_google_movies', 'import_itunes_downloads', 'process_broadcast_messages',

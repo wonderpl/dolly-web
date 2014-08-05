@@ -1,0 +1,3 @@
+[submodule "wonder-common"]
+	path = wonder-common
+	url = ../wonder-common.git
