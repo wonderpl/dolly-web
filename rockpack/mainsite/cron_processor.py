@@ -3,6 +3,7 @@ from wonder.common.cron import CronProcessor
 from rockpack.mainsite import app, init_app
 from rockpack.mainsite.manager import manager
 from rockpack.mainsite.services.base.models import JobControl
+from rockpack.mainsite.core.dbapi import db
 from rockpack.mainsite.core.es import discover_cluster_nodes
 
 
@@ -22,4 +23,4 @@ def create_app():
 
 
 if __name__ == '__main__':
-    CronProcessor(manager, JobControl, create_app).run()
+    CronProcessor(db, manager, JobControl, create_app).run()
