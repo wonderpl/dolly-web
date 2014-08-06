@@ -485,7 +485,7 @@ class RomeoUser(ExternalUser):
     def _get_external_data(self):
         r = requests.get(app.config['ROMEO_ACCOUNT_VERIFY_URL'],
                          allow_redirects=False,
-                         cookies=dict(session=self.token))
+                         cookies=dict(romeo=self.token))
         if r.status_code == 200:
             return r.json()
 
