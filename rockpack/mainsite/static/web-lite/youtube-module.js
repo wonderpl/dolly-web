@@ -21,7 +21,7 @@
             playing: false,
             fullscreen: false
         },
-        
+
         // UI vars
         mousedown: false,
         mousetarget: undefined,
@@ -55,7 +55,7 @@
         _.elements.controls = d.getElementById('wonder-controls');
         // _.elements.poster = d.getElementById('wonder-poster');
         _.elements.loader = d.getElementById('wonder-loader');
-        
+
         // Main buttons
         _.elements.playbutton = d.querySelector('.wonder-play');
         _.elements.ytplaybutton = d.querySelector('.yt-play-button');
@@ -103,11 +103,11 @@
             _.listen(_.elements.scrubber_handle_vid, 'mousemove', _.interaction);
             _.listen(_.elements.scrubber_vol, 'mousemove', _.interaction);
             _.listen(_.elements.scrubber_progress_vol, 'mousemove', _.interaction);
-            _.listen(_.elements.scrubber_handle_vol, 'mousemove', _.interaction);    
+            _.listen(_.elements.scrubber_handle_vol, 'mousemove', _.interaction);
         }
 
         // Prevent window scroll
-        window.onkeydown = function(e) { 
+        window.onkeydown = function(e) {
             if ( e.keyCode == 32 ) {
                 _.togglePlay();
             }
@@ -116,25 +116,25 @@
 
         if ( !_.ie8 ) {
             document.addEventListener("fullscreenchange", function () {
-                if ( document.fullscreen === false && _.state.fullscreen === true ) { 
+                if ( document.fullscreen === false && _.state.fullscreen === true ) {
                     _.fullscreen();
                 }
             }, false);
-             
+
             document.addEventListener("mozfullscreenchange", function () {
-                if ( document.mozFullScreen === false && _.state.fullscreen === true ) { 
+                if ( document.mozFullScreen === false && _.state.fullscreen === true ) {
                     _.fullscreen();
                 }
             }, false);
-             
+
             document.addEventListener("webkitfullscreenchange", function () {
-                if ( document.webkitIsFullScreen === false && _.state.fullscreen === true ) { 
+                if ( document.webkitIsFullScreen === false && _.state.fullscreen === true ) {
                     _.fullscreen();
                 }
             }, false);
-             
+
             document.addEventListener("msfullscreenchange", function () {
-                if ( document.msFullscreenElement === false && _.state.fullscreen === true ) { 
+                if ( document.msFullscreenElement === false && _.state.fullscreen === true ) {
                     _.fullscreen();
                 }
             }, false);
@@ -153,11 +153,11 @@
             if ( _.ios5 === false ) {
                 _.listen(_.elements.scrubber_trans, 'touchstart', _.touchDown);
                 _.listen(_.elements.scrubber_trans, 'touchmove', _.scrubTouch);
-                _.listen(_.elements.scrubber_trans, 'touchleave', _.scrubUp);                
+                _.listen(_.elements.scrubber_trans, 'touchleave', _.scrubUp);
             } else {
                 _.listen(_.elements.scrubber_trans[0], 'touchstart', _.touchDown);
                 _.listen(_.elements.scrubber_trans[0], 'touchmove', _.scrubTouch);
-                _.listen(_.elements.scrubber_trans[0], 'touchleave', _.scrubUp);                
+                _.listen(_.elements.scrubber_trans[0], 'touchleave', _.scrubUp);
             }
         } else {
             _.listen(_.elements.loader, 'click', _.togglePlay);
@@ -187,18 +187,18 @@
         if ( _.isMobile === true || _.ipad === true ) {
             _.addClass( _.elements.ytplaybutton, 'show' );
         }
-        
+
         _.addClass( _.elements.controls, 'controls-disabled' );
         Conduit.add('yttick', _.ytTick);
         Conduit.add('updateTimers', _.updateTimers);
         Conduit.add('bufferTick', _.bufferTick);
         if ( _.ie8 === false && _.flash === false ) {
-            Conduit.add('moveBufferBar', _.moveBufferBar);    
+            Conduit.add('moveBufferBar', _.moveBufferBar);
         }
         Conduit.add('uiTick', _.uiTick);
         Conduit.add('actionTick', _.actionTick);
         if ( _.ie8 === true ) {
-            Conduit.add('ieTick', _.ieTick);    
+            Conduit.add('ieTick', _.ieTick);
         }
 
         Conduit.setFPS(25);
@@ -209,13 +209,13 @@
     _.onContentReady = function () {
         setTimeout( function() {
             if ( 'getCurrentTime' in _.player ) {
-                _.time = _.player.getCurrentTime();        
+                _.time = _.player.getCurrentTime();
             }
 
             if ( _.ie10 ) {
                 _.addClass( _.elements.controls, 'ie10' );
             }
-            
+
             _.duration = _.data.video.duration;
             _.state.playing = false;
             _.hideLoader();
@@ -292,7 +292,7 @@
         _.hideLoader();
         _.state.playing = true;
     };
-    
+
     _.autoPlay = function() {
 
         if ( _.isMobile === false && _.ipad === false ) {
@@ -301,7 +301,7 @@
                 _.controlshovered = false;
                 _.played = false;
                 _.play();
-            }, 200);            
+            }, 200);
         }
 
     };
@@ -336,7 +336,7 @@
         // console.log('onseeked event fired');
         _.scrubbed = false;
         if ( _.played === false ) {
-            // _.mb.publish(OO.EVENTS.PLAY);    
+            // _.mb.publish(OO.EVENTS.PLAY);
             _.onPlay();
         }
     };
@@ -362,7 +362,7 @@
                 _.pause();
             } else {
                 _.play();
-            }    
+            }
         }
     };
 
@@ -386,7 +386,7 @@
             _.played = false;
             _.removeClass( _.elements.ytplaybutton, 'show' );
             _.player.playVideo();
-            // _.mb.publish(OO.EVENTS.PLAY);    
+            // _.mb.publish(OO.EVENTS.PLAY);
             _.onPlay();
         }
     };
@@ -395,7 +395,7 @@
         _.prevent(e);
         if ( _.loaded === true ) {
             _.player.pauseVideo();
-            // _.mb.publish(OO.EVENTS.PAUSE);    
+            // _.mb.publish(OO.EVENTS.PAUSE);
             _.onPause();
         }
     };
@@ -415,7 +415,7 @@
                 _.seek(_.time-30);
             } else {
                 _.seek(0);
-            }    
+            }
         }
     };
 
@@ -425,7 +425,7 @@
     };
 
     _.fullscreen = function (e) {
-        _.prevent(e); 
+        _.prevent(e);
 
         if ( _.isMobile === true || _.ipad === true ) {
             if ( _.state.fullscreen === false ) {
@@ -494,7 +494,7 @@
             _.mousedown = false;
             if ( _.mousetarget === 'vid' ) {
                 _.play();
-            } 
+            }
             _.mousetarget = undefined;
         }
     };
@@ -515,29 +515,29 @@
                 if ( scrubtype === 'vid' ) {
                     var rect = _.elements.scrubber_vid.getBoundingClientRect();
                     percentage = x - rect.left;
-                    percentage = ((percentage/(rect.right - rect.left)) * 100 );                    
+                    percentage = ((percentage/(rect.right - rect.left)) * 100 );
                     if ( percentage <= 0 ) {
-                        _.scrubVid(0);                        
+                        _.scrubVid(0);
                     } else if ( percentage >= 100 ) {
                         _.scrubVid(100);
                     } else {
-                        _.scrubVid(percentage);    
+                        _.scrubVid(percentage);
                     }
                 } else if ( scrubtype === 'vol' ) {
                     var rect = _.elements.scrubber_vol.getBoundingClientRect();
                     percentage = y - rect.bottom;
                     percentage = ((percentage/(rect.bottom - rect.top)) * 100 );
                     if ( percentage <= -100 ) {
-                        _.scrubVol(100);                        
+                        _.scrubVol(100);
                     } else if ( percentage >= 0 ) {
                         _.scrubVol(0);
                     } else {
-                        _.scrubVol(Math.abs(percentage));    
+                        _.scrubVol(Math.abs(percentage));
                     }
                 }
 
             },10);
-            
+
             return false;
         }
     };
@@ -560,22 +560,22 @@
                     percentage = x - rect.left;
                     percentage = ((percentage/(rect.right - rect.left)) * 100 );
                     if ( percentage <= 0 ) {
-                        _.scrubVid(0);                        
+                        _.scrubVid(0);
                     } else if ( percentage >= 100 ) {
                         _.scrubVid(100);
                     } else {
-                        _.scrubVid(percentage);    
+                        _.scrubVid(percentage);
                     }
                 } else if ( scrubtype === 'vol' ) {
                     var rect = _.elements.scrubber_vol.getBoundingClientRect();
                     percentage = y - rect.bottom;
                     percentage = ((percentage/(rect.bottom - rect.top)) * 100 );
                     if ( percentage <= -100 ) {
-                        _.scrubVol(100);                        
+                        _.scrubVol(100);
                     } else if ( percentage >= 0 ) {
                         _.scrubVol(0);
                     } else {
-                        _.scrubVol(Math.abs(percentage));    
+                        _.scrubVol(Math.abs(percentage));
                     }
                 }
 
@@ -624,23 +624,23 @@
     _.hideUI = function () {
         _.addClass( _.elements.controls, 'hide' );
         _.removeClass( _.elements.controls, 'show' );
-        _.removeClass( _.elements.scrubber_vol, 'vol-visible' );   
-        _.removeClass( _.elements.scrubber_target_vol, 'vol-visible' );   
+        _.removeClass( _.elements.scrubber_vol, 'vol-visible' );
+        _.removeClass( _.elements.scrubber_target_vol, 'vol-visible' );
     };
 
-    // A user interaction has been detected, show the UI and 
+    // A user interaction has been detected, show the UI and
     // set a timer to hide it again
     _.interaction = function () {
         if ( _.controlshovered === false ) {
             _.showUI();
-            _.timers.interaction = 0;            
+            _.timers.interaction = 0;
         }
     };
 
     _.actionTick = function () {
         if ( _.timers.seek === 10 ) {
             console.log( _.newtime );
-            _.seek( _.newtime );    
+            _.seek( _.newtime );
             _.time = _.newtime;
         }
     };
@@ -654,25 +654,25 @@
             _.elements.scrubber_timer.innerHTML = _.getTime( _.newtime );
             _.showLoader();
         } else if ( _.loaded === true && _.time !== undefined && _.scrubbed === false && _.timers.seek > 60 ) {
-            var percentage = ( (_.time/_.duration) * 100 ) + '%';        
+            var percentage = ( (_.time/_.duration) * 100 ) + '%';
             _.elements.scrubber_progress_vid.style.width = percentage;
             _.elements.scrubber_handle_vid.style.left = percentage;
             _.elements.scrubber_timer.style.left = percentage;
             _.elements.scrubber_timer.innerHTML = _.getTime( _.time );
         }
-        
+
         // Check if the volume has changed
         if ( _.currentvolume != _.newvolume ) {
             _.currentvolume = _.newvolume;
 
             if ( _.newvolume === 0 ) {
-                _.elements.volumebutton.className = 'volume wonder-volume vol-0';
+                _.elements.volumebutton.className = 'filtered volume wonder-volume vol-0';
             } else if ( _.newvolume > 0 && _.newvolume <= 33 ) {
-                _.elements.volumebutton.className = 'volume wonder-volume vol-1';
+                _.elements.volumebutton.className = 'filtered volume wonder-volume vol-1';
             } else if ( _.newvolume > 33 && _.newvolume <= 65 ) {
-                _.elements.volumebutton.className = 'volume wonder-volume vol-2';
+                _.elements.volumebutton.className = 'filtered volume wonder-volume vol-2';
             } else {
-                _.elements.volumebutton.className = 'volume wonder-volume vol-3';
+                _.elements.volumebutton.className = 'filtered volume wonder-volume vol-3';
             }
 
             _.elements.scrubber_progress_vol.style.height = ( _.newvolume ) + '%';
@@ -682,14 +682,14 @@
         // Update the time
         if ( _.state.playing === false ) {
             _.displayTime = _.getTime(_.duration);
-        } else {    
+        } else {
             _.displayTime = _.getTime(_.time);
         }
         _.elements.timer.innerHTML = _.displayTime;
 
         if ( _.timers.interaction === 40 ) {
             if ( _.isTouchDevice() === false && _.controlshovered === false ) {
-                _.hideUI();         
+                _.hideUI();
             }
         }
     };
@@ -706,7 +706,7 @@
     _.moveBufferBar = function () {
         if ( _.timers.buffer === 10 && _.loaded === true && _.buffer !== undefined ) {
             var percentage = ( (_.buffer/_.duration) * 100 ) + '%';
-            _.elements.scrubber_buffer.style.width = percentage;            
+            _.elements.scrubber_buffer.style.width = percentage;
         }
     };
 
@@ -737,7 +737,7 @@
     };
 
     _.ytTick = function () {
-        if ( _.loaded === true ) { 
+        if ( _.loaded === true ) {
             if ( 'getCurrentTime' in _.player ) {
                 var time = _.player.getCurrentTime();
             }
@@ -750,8 +750,8 @@
             _.time = time;
             if ( _.time !== 0 && _.time !== undefined ) {
                 _.timers.buffer = 0;
-                _.hideLoader();            
-            }       
+                _.hideLoader();
+            }
         }
     };
 
@@ -818,13 +818,13 @@
         for ( var i = 0; i < els.length; i++ ) {
             if ( els[i].className.indexOf( cl ) !== -1 ) {
                 if ( els[i].className.indexOf( cl + ' ' ) !== -1 ) {
-                    els[i].className = els[i].className.replace( cl + ' ', '' );         
+                    els[i].className = els[i].className.replace( cl + ' ', '' );
                 } else if ( els[i].className.indexOf( ' ' + cl ) !== -1 ) {
                     els[i].className = els[i].className.replace( ' ' + cl, '' );
                 } else if ( els[i].className.length === cl.length ) {
                     els[i].className = '';
                 }
-            }    
+            }
         };
     };
 
@@ -853,7 +853,7 @@
                 e.stopPropagation();
             } else {
                 e.returnValue = false;
-            }            
+            }
         }
     };
 
@@ -868,17 +868,17 @@
                 return (arr.length > 0) ? arr : null;
             } else {
                 arr = Array.prototype.slice.call(document.getElementsByTagName(target));
-                return (arr.length > 0) ? arr : null; 
+                return (arr.length > 0) ? arr : null;
             }
         } else if (_.isNode(target) || _.isElement(target) ) {
             return [target];
         } else if (typeof target === 'object') {
             try {
-                return (target.length > 0 ) ? Array.prototype.slice.call(target) : null;    
+                return (target.length > 0 ) ? Array.prototype.slice.call(target) : null;
             } catch(e){
                 return target;
             }
-            
+
         }
     };
 
@@ -899,12 +899,12 @@
     //Returns true if it is a DOM node
     _.isNode = function (o){
       return (
-        typeof Node === "object" ? o instanceof Node : 
+        typeof Node === "object" ? o instanceof Node :
         o && typeof o === "object" && typeof o.nodeType === "number" && typeof o.nodeName==="string"
       );
     }
 
-    //Returns true if it is a DOM element    
+    //Returns true if it is a DOM element
     _.isElement = function (o){
       return (
         typeof HTMLElement === "object" ? o instanceof HTMLElement : //DOM2
@@ -935,7 +935,7 @@
     _.attach = (function (ev, fn) {
         if (window.addEventListener) {
             return function(ev, fn) {
-                this.addEventListener(ev, fn, false);    
+                this.addEventListener(ev, fn, false);
             };
         } else if (window.attachEvent) {
             return function(ev, fn) {

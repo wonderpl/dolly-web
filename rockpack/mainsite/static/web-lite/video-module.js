@@ -765,13 +765,13 @@ OO.plugin("WonderUIModule", function (OO) {
             _.currentvolume = _.newvolume;
 
             if ( _.newvolume === 0 ) {
-                _.elements.volumebutton.className = 'volume wonder-volume vol-0';
+                _.elements.volumebutton.className = 'filtered volume wonder-volume vol-0';
             } else if ( _.newvolume > 0 && _.newvolume <= 0.33 ) {
-                _.elements.volumebutton.className = 'volume wonder-volume vol-1';
+                _.elements.volumebutton.className = 'filtered volume wonder-volume vol-1';
             } else if ( _.newvolume > 0.33 && _.newvolume <= 0.65 ) {
-                _.elements.volumebutton.className = 'volume wonder-volume vol-2';
+                _.elements.volumebutton.className = 'filtered volume wonder-volume vol-2';
             } else {
-                _.elements.volumebutton.className = 'volume wonder-volume vol-3';
+                _.elements.volumebutton.className = 'filtered volume wonder-volume vol-3';
             }
 
             _.elements.scrubber_progress_vol.style.height = ( _.newvolume * 100 ) + '%';
