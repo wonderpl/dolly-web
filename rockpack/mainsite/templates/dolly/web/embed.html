@@ -100,6 +100,32 @@
           controls.className = controls.className + " no-logo";
         }
       }
+
+      function showBuyButton () {
+        var showBuyButton = videoData.video.source_player_parameters.showBuyButton === "True" ? true : false;
+        var wrapper = document.getElementById('wonder-wrapper');
+        if (wrapper && showBuyButton) {
+          wrapper.className = wrapper.className + " show-buy-button";
+        }
+      }
+
+      function showDescriptionButton () {
+        var showDescriptionButton = videoData.video.source_player_parameters.showDescriptionButton === "True" ? true : false;
+        var wrapper = document.getElementById('wonder-wrapper');
+        if (wrapper && showDescriptionButton) {
+          wrapper.className = wrapper.className + " show-description-button";
+        }
+      }
+
+      function bindButtons () {
+        var descriptionButton = document.getElementById('wonder-description-button');
+        var videoDescription = document.getElementById('wonder-video-description');
+        descriptionButton.addEventListener('click', function() {
+          console.log(videoData.video);
+          videoDescription.innerHTML = videoData.video.description;
+          videoDescription.className = "active";
+        }, false);
+      }
     </script>
 
   	<script type="text/javascript">
@@ -114,7 +140,10 @@
   				}
   			);
         hideLogo();
+        showBuyButton();
+        showDescriptionButton();
         colorControls();
+        bindButtons();
   		});
   	</script>
 
