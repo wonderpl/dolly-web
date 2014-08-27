@@ -104,7 +104,9 @@
       function showBuyButton () {
         var showBuyButton = videoData.video.source_player_parameters.showBuyButton === "True" ? true : false;
         var wrapper = document.getElementById('wonder-wrapper');
-        if (wrapper && showBuyButton) {
+        if (wrapper && showBuyButton && videoData.video.link_title && videoData.video.link_url) {
+          showBuyButton.innerHTML = videoData.video.link_title;
+          showBuyButton.href = videoData.video.link_url;
           wrapper.className = wrapper.className + " show-buy-button";
         }
       }
@@ -112,7 +114,7 @@
       function showDescriptionButton () {
         var showDescriptionButton = videoData.video.source_player_parameters.showDescriptionButton === "True" ? true : false;
         var wrapper = document.getElementById('wonder-wrapper');
-        if (wrapper && showDescriptionButton) {
+        if (wrapper && showDescriptionButton && videoData.video.link_title) {
           wrapper.className = wrapper.className + " show-description-button";
         }
       }
