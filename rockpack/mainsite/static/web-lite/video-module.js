@@ -55,7 +55,10 @@ OO.plugin("WonderUIModule", function (OO) {
         '</div>' +
         '<button id="wonder-buy-button" class="btn video-overlay-button video-buy-button js-video-buy">Buy</button>' +
         '<button id="wonder-description-button" class="btn video-overlay-button video-description-button js-video-description">Description</button>' +
-        '<div id="wonder-video-description"></div>' +
+        '<div id="wonder-video-description">' +
+          '<div id="wonder-video-description-close">x</div>' +
+          '<div id="wonder-video-description-content"></div>' +
+        '</div>' +
         '<div id="wonder-loader" class="show f-sans f-uppercase"><span></span></div>' +
         '<div id="wonder-controls">' +
             '<a class="play wonder-play player-icon-play"></a>' +

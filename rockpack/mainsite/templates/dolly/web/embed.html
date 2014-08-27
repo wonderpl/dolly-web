@@ -120,10 +120,15 @@
       function bindButtons () {
         var descriptionButton = document.getElementById('wonder-description-button');
         var videoDescription = document.getElementById('wonder-video-description');
+        var videoDescriptionContent = document.getElementById('wonder-video-description-content');
+        var closeDescription = document.getElementById('wonder-video-description-close');
         descriptionButton.addEventListener('click', function() {
           console.log(videoData.video);
-          videoDescription.innerHTML = videoData.video.description;
           videoDescription.className = "active";
+          videoDescriptionContent.innerHTML = videoData.video.description;
+        }, false);
+        closeDescription.addEventListener('click', function() {
+          videoDescription.className = "";
         }, false);
       }
     </script>
