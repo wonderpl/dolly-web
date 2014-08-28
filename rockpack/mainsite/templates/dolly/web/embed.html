@@ -93,6 +93,10 @@
         $svg.find('.blue').attr('slope', rgb.b/255);
       }
 
+      function isOnlyWhiteSpaceContent (data) {
+        return !!!$('<div></div>').html(data).text().replace(/\s/g, "").trim();
+      }
+
       function hideLogo () {
         var hideLogo = videoData.video.source_player_parameters.hideLogo === "True" ? true : false;
         var controls = document.getElementById('wonder-controls');
@@ -104,9 +108,10 @@
       function showBuyButton () {
         var showBuyButton = videoData.video.source_player_parameters.showBuyButton === "True" ? true : false;
         var wrapper = document.getElementById('wonder-wrapper');
+        var buyButton = document.getElementById('wonder-buy-button');
         if (wrapper && showBuyButton && videoData.video.link_title && videoData.video.link_url) {
-          showBuyButton.innerHTML = videoData.video.link_title;
-          showBuyButton.href = videoData.video.link_url;
+          buyButton.innerHTML = videoData.video.link_title;
+          buyButton.href = videoData.video.link_url;
           wrapper.className = wrapper.className + " show-buy-button";
         }
       }
@@ -114,7 +119,9 @@
       function showDescriptionButton () {
         var showDescriptionButton = videoData.video.source_player_parameters.showDescriptionButton === "True" ? true : false;
         var wrapper = document.getElementById('wonder-wrapper');
-        if (wrapper && showDescriptionButton && videoData.video.link_title) {
+        console.log(videoData.video.description);
+        console.log(isOnlyWhiteSpaceContent(videoData.video.description));
+        if (wrapper && showDescriptionButton && !isOnlyWhiteSpaceContent(videoData.video.description)) {
           wrapper.className = wrapper.className + " show-description-button";
         }
       }

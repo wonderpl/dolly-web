@@ -346,8 +346,12 @@ body, html {
     border: none;
     cursor: pointer;
 
-    font-weight: 400;
-    font-size: 0.875em;
+    font-variant: small-caps;
+    font-weight: 600;
+    font-size: 0.75em;
+    text-transform: lowercase;
+    letter-spacing: 0.1em;
+
     font-family: "Proxima Nova", AvenirNext-Regular, Helmet, Freesans, "Helvetica Neue", Helvetica, Arial, sans-serif;
     color: #70797b;
     border: 1px solid #70797b;
@@ -367,7 +371,8 @@ body, html {
     &:active,
     &:focus {
       border-color: #b7bcbd;
-      background-color: #70797b;
+      background-color: #b7bcbd;
+      color: #70797b;
     }
   }
 
