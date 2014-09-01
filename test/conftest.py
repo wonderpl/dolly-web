@@ -37,7 +37,7 @@ def pytest_configure(config):
 
     dbapi.sync_database(drop_all=True)
 
-    from rockpack.mainsite.core import timing
+    from wonder.common import timing
     timing.log.level = 50
 
     from test.test_helpers import install_mocks

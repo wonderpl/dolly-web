@@ -175,7 +175,8 @@ class TestShare(base.RockPackTestCase):
             ExternalFriend.email == sender.email
         ).one()
 
-    def test_share_push_notification(self):
+    @patch_send_email()
+    def test_share_push_notification(self, send_email):
         user = self.create_test_user()
         ExternalToken(
             user=user.id,
