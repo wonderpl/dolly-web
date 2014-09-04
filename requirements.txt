@@ -7,7 +7,7 @@ Flask-WTF>=0.9
 Flask-Login>=0.2
 Flask-Rauth>=0.3.2
 Flask-Cache>=0.11
-rauth>=0.4.17
+rauth==0.4.17
 Flask-Script>=0.6
 Flask-Assets>=0.9
 boto>=2.7.0
