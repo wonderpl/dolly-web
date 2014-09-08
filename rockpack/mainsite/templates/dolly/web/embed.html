@@ -140,24 +140,26 @@
       }
     </script>
 
-  	<script type="text/javascript">
-      var player = null;
-  		OO.ready(function() {
-  			player = window.wonder = OO.Player.create(
-  				'ooyalaplayer', videoData.video.source_id,
-  				{
-  					flashParams: { hide: 'all' },
-  					wmode: 'opaque',
-  					layout: 'chromeless'
-  				}
-  			);
+    <script type="text/javascript">
+      var player = null,
+        analyticsTags = (location.search.match(/\botag=(\w+)/g) || []).map(function (i) {return i.substring(5)});
+      OO.ready(function() {
+        player = window.wonder = OO.Player.create(
+          'ooyalaplayer', videoData.video.source_id,
+          {
+            analytics: { tags: analyticsTags },
+            flashParams: { hide: 'all' },
+            wmode: 'opaque',
+            layout: 'chromeless'
+          }
+        );
         hideLogo();
         showBuyButton();
         showDescriptionButton();
         colorControls();
         bindButtons();
-  		});
-  	</script>
+      });
+    </script>
 
 
   {% endblock %}
