@@ -236,7 +236,7 @@ def _share_redirect(data):
     if request.args.get('rockpack_redirect') == 'true':
         return redirect(_rockpack_protocol_url(redirect_url), 302)
 
-    if data.get('social_bot'):
+    if data.get('head_only'):
         return render_template(
             'web/social_agents.html',
             canonical_url=data['share_url'],
@@ -283,7 +283,7 @@ def share_redirect(linkid):
                      for ua in ('twitterbot', 'facebookexternalhit'))
     data = link.process_redirect(increment_click_count=not social_bot)
     data.update(
-        social_bot=social_bot,
+        head_only=social_bot or 'Prefer-Html-Meta-Tags' in request.headers,
         share_url=url_for('share_redirect', linkid=linkid),
     )
     return _share_redirect(data)
