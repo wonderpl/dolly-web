@@ -119,8 +119,6 @@
       function showDescriptionButton () {
         var showDescriptionButton = videoData.video.source_player_parameters.showDescriptionButton === "True" ? true : false;
         var wrapper = document.getElementById('wonder-wrapper');
-        console.log(videoData.video.description);
-        console.log(isOnlyWhiteSpaceContent(videoData.video.description));
         if (wrapper && showDescriptionButton && !isOnlyWhiteSpaceContent(videoData.video.description)) {
           wrapper.className = wrapper.className + " show-description-button";
         }
