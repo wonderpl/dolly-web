@@ -224,7 +224,8 @@ def _rockpack_protocol_url(url):
 def _share_redirect(data):
     # Add additional query params to url
     pt_params = app.config.get('SHARE_REDIRECT_PASSTHROUGH_PARAMS', [])
-    params = [(k, request.args[k]) for k in pt_params if k in request.args]
+    pt_params = [(k, request.args[k]) for k in pt_params if k in request.args]
+    params = list(pt_params)  # copy to preserve original params
     if 'user' in data:
         params.append(('shareuser', data['user']))
     ua_str = request.user_agent.string
@@ -239,7 +240,7 @@ def _share_redirect(data):
     if data.get('head_only'):
         return render_template(
             'web/social_agents.html',
-            canonical_url=data['share_url'],
+            canonical_url=_update_qs(data['share_url'], pt_params),
             **web_channel_data(data['channel'], load_video=data.get('video'))
         )
 
@@ -254,6 +255,12 @@ def _share_redirect(data):
         )
 
     return redirect(redirect_url, 302)
+
+
+def _is_share_bot():
+    social_bot = any(ua in request.user_agent.string.lower()
+                     for ua in ('twitterbot', 'facebookexternalhit'))
+    return social_bot or 'Prefer-Html-Meta-Tags' in request.headers
 
 
 if app.config.get('SHARE_SUBDOMAIN'):
@@ -272,6 +279,7 @@ def share_redirect_root():
     if video:
         url += '?video=' + video
     share_url = url_for('share_redirect_root') + '?c=%s&v=%s' % (channel, video)
+    head_only = _is_share_bot()
     return _share_redirect(locals())
 
 
@@ -279,11 +287,10 @@ def share_redirect_root():
 @cache_for(seconds=86400, private=True, vary='User-Agent')
 def share_redirect(linkid):
     link = ShareLink.query.get_or_404(linkid)
-    social_bot = any(ua in request.user_agent.string.lower()
-                     for ua in ('twitterbot', 'facebookexternalhit'))
-    data = link.process_redirect(increment_click_count=not social_bot)
+    is_bot = _is_share_bot()
+    data = link.process_redirect(increment_click_count=not is_bot)
     data.update(
-        head_only=social_bot or 'Prefer-Html-Meta-Tags' in request.headers,
+        head_only=is_bot,
         share_url=url_for('share_redirect', linkid=linkid),
     )
     return _share_redirect(data)
