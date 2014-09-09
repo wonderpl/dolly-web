@@ -33,13 +33,14 @@
 {% endif %}
 {% if selected_video.video.source == 'ooyala' %}
 {% if request.args.get('embed') != 'flash' %}
-<meta property="og:video" content="{{ url_for('embed', contentid=selected_video.id) }}" />
-<meta property="og:video:secure_url" content="{{ url_for('embed_secure', contentid=selected_video.id) }}" />
+<meta property="og:video" content="{{ url_for('embed', contentid=selected_video.id) }}?otag=src_og" />
+<meta property="og:video:secure_url" content="{{ url_for('embed_secure', contentid=selected_video.id) }}?otag=src_og" />
 <meta property="og:video:type" content="text/html" />
 {% else %}
 {% set flash_url = 'http://player.ooyala.com/player.swf?keepEmbedCode=true' +
        '&embedCode=' + selected_video.video.source_id +
-       '&videoPcode=' + config.OOYALA_PLAYER_ID
+       '&videoPcode=' + config.OOYALA_PLAYER_ID +
+       '&options[analytics.tags]=src_og'
 %}
 <meta property="og:video" content="{{ flash_url }}">
 <meta property="og:video:secure_url" content="{{ flash_url.replace('http:', 'https:') }}">
@@ -65,7 +66,7 @@
 {% elif selected_video.video.source == 'ooyala_' %}
 <meta name="twitter:player" content="https://player.ooyala.com/tframe.html?embedCode={{ selected_video.video.source_id }}&pbid={{ config.OOYALA_PLAYER_ID }}" />
 {% else %}
-<meta name="twitter:player" content="{{ url_for('embed_secure', contentid=selected_video.id) }}" />
+<meta name="twitter:player" content="{{ url_for('embed_secure', contentid=selected_video.id) }}?otag=src_tw" />
 {% endif %}
 <meta name="twitter:player:width" content="1280" />
 <meta name="twitter:player:height" content="720" />
