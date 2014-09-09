@@ -235,7 +235,7 @@ class Video(db.Model):
             return 'http://i.ytimg.com/vi/%s/mqdefault.jpg' % self.source_videoid
         # TODO: Denormalise this?
         for width, url in sorted((t.width, t.url) for t in self.thumbnails):
-            if width >= 320:
+            if width >= 640:
                 return url
 
     @property
