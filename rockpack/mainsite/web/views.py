@@ -188,14 +188,20 @@ def channel(slug, channelid):
 def embed(contentid):
     if app.config.get('DOLLY'):
         if contentid.startswith('vi'):
-            return dict(video_data=ws_request('/ws/-/channels/-/videos/%s/' % contentid))
+            video_data = ws_request('/ws/-/channels/-/videos/%s/' % contentid)
         else:
             try:
                 int(contentid)
             except Exception:
                 abort(404)
             else:
-                return dict(video_data=romeo_ws_request('/api/v/%s' % contentid))
+                video_data = romeo_ws_request('/api/v/%s' % contentid)
+        # XXX: Need to factor this out to somewhere cleaner
+        if request.is_secure:
+            video_data['video']['thumbnail_url'] =\
+                video_data['video']['thumbnail_url'].\
+                replace('http://ak.c.ooyala', 'https://ec.c.ooyala')
+        return dict(video_data=video_data)
     else:
         videoid = request.args.get('video', None)
         return web_channel_data(contentid, load_video=videoid)
