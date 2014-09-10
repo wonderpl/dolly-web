@@ -1,5 +1,25 @@
 {% extends "web/layout.html" %}
 
+{% macro inline_script(url) %}
+{% if use_inline_scripts %}
+  <script type="text/javascript">
+  {{ include_static_inline(url) }}
+  </script>
+{% else %}
+  <script type="text/javascript" src="{{ url }}"></script>
+{% endif %}
+{% endmacro %}
+
+{% macro inline_style(url) %}
+{% if use_inline_scripts %}
+  <style>
+  {{ include_static_inline(url) }}
+  </style>
+{% else %}
+  <link rel="stylesheet" href="{{ url }}"/>
+{% endif %}
+{% endmacro %}
+
 {% block title %}{{ video_data.title }}{% endblock %}
 {# start un-needed blocks #}
 {% block itunes_app_data %}{% endblock %}
@@ -12,12 +32,10 @@
 
 {% block page_css %}
   {% assets filters="less,cssmin", output="gen/wonderplayer_css.%(version)s.css",
-  	depends="assets/wonderplayer/partials/_*.less",
-  	"assets/wonderplayer/main.less"
+    depends="assets/wonderplayer/partials/_*.less",
+    "assets/wonderplayer/main.less"
   %}
-  <style>
-  {{ include_static_inline(ASSET_URL) }}
-  </style>
+  {{ inline_style(ASSET_URL) }}
   {% endassets %}
 
   {# Conditional stylesheet for IE8 and below #}
@@ -26,17 +44,15 @@
     depends="assets/wonderplayer/partials/_*.less",
     "assets/wonderplayer/ie.less"
   %}
-  <style>
-  {{ include_static_inline(ASSET_URL) }}
-  </style>
+  {{ inline_style(ASSET_URL) }}
   {% endassets %}
   <![endif]-->
 {% endblock %}
 
 {% block app_data %}
   <script type="text/javascript">
-  	var videoData = {{ video_data|tojson }},
-  	    ooyalaPlayerId = "{{ config.OOYALA_PLAYER_ID }}";
+    var videoData = {{ video_data|tojson }},
+        ooyalaPlayerId = "{{ config.OOYALA_PLAYER_ID }}";
   </script>
 {% endblock %}
 
@@ -61,7 +77,9 @@
       "web-lite/conduit.js",
       "web-lite/video-module.js",
       "web-lite/vendor/jquery-1.11.0.min.js"
-    %}<script type="text/javascript">{{ include_static_inline(ASSET_URL) }}</script>{% endassets %}
+    %}
+    {{ inline_script(ASSET_URL) }}
+    {% endassets %}
 
     <script type="text/javascript">
 

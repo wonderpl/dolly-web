@@ -186,6 +186,7 @@ def channel(slug, channelid):
 
 @expose_web('/embed/<contentid>/', 'web/embed.html', cache_age=3600, secure='both')
 def embed(contentid):
+    use_inline_scripts = request.args.get('inline', '')[:1] not in ('f', '0')
     if app.config.get('DOLLY'):
         if contentid.startswith('vi'):
             video_data = ws_request('/ws/-/channels/-/videos/%s/' % contentid)
@@ -201,7 +202,7 @@ def embed(contentid):
             video_data['video']['thumbnail_url'] =\
                 video_data['video']['thumbnail_url'].\
                 replace('http://ak.c.ooyala', 'https://ec.c.ooyala')
-        return dict(video_data=video_data)
+        return dict(video_data=video_data, use_inline_scripts=use_inline_scripts)
     else:
         videoid = request.args.get('video', None)
         return web_channel_data(contentid, load_video=videoid)
