@@ -21,6 +21,7 @@
 {% endmacro %}
 
 {% block title %}{{ video_data.title }}{% endblock %}
+
 {# start un-needed blocks #}
 {% block itunes_app_data %}{% endblock %}
 {% block ie_polyfills %}{% endblock %}
@@ -29,6 +30,14 @@
 {% block google_maps_api %}{% endblock %}
 {% block dolly_angular_lib %}{% endblock %}
 {# end un-needed blocks #}
+
+{% block meta_data %}
+<link rel="canonical" href="{{ canonical_url }}" />
+<link
+  rel="alternate" type="application/json+oembed"
+  href="{{ url_for('oembed') }}?url={{ canonical_url }}"
+  title="{{ video_data.title }}" />
+{% endblock %}
 
 {% block page_css %}
   {% assets filters="less,cssmin", output="gen/wonderplayer_css.%(version)s.css",

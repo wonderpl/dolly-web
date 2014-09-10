@@ -12,7 +12,7 @@ from werkzeug.exceptions import NotFound
 from rockpack.mainsite import app, requests
 from rockpack.mainsite.core.token import parse_access_token, parse_unsubscribe_token
 from rockpack.mainsite.core.webservice import JsonReponse
-from rockpack.mainsite.helpers.urls import url_for, slugify
+from rockpack.mainsite.helpers.urls import url_for, slugify, url_to_endpoint
 from rockpack.mainsite.helpers.http import cache_for
 from rockpack.mainsite.services.user.models import User
 from rockpack.mainsite.services.share.models import ShareLink
@@ -186,8 +186,11 @@ def channel(slug, channelid):
 
 @expose_web('/embed/<contentid>/', 'web/embed.html', cache_age=3600, secure='both')
 def embed(contentid):
-    use_inline_scripts = request.args.get('inline', '')[:1] not in ('f', '0')
     if app.config.get('DOLLY'):
+        ctx = dict(
+            canonical_url=url_for('embed', contentid=contentid),
+            use_inline_scripts=request.args.get('inline', '')[:1] not in ('f', '0'),
+        )
         if contentid.startswith('vi'):
             video_data = ws_request('/ws/-/channels/-/videos/%s/' % contentid)
         else:
@@ -202,10 +205,46 @@ def embed(contentid):
             video_data['video']['thumbnail_url'] =\
                 video_data['video']['thumbnail_url'].\
                 replace('http://ak.c.ooyala', 'https://ec.c.ooyala')
-        return dict(video_data=video_data, use_inline_scripts=use_inline_scripts)
+        return dict(video_data=video_data, **ctx)
     else:
         videoid = request.args.get('video', None)
         return web_channel_data(contentid, load_video=videoid)
+
+
+@expose_web('/services/oembed', None, cache_age=3600, secure='both')
+def oembed():
+    # See http://oembed.com/
+    if request.args.get('format', 'json').lower() != 'json':
+        return JsonReponse(dict(message="json format requred"), 501)
+
+    try:
+        endpoint, url_args = url_to_endpoint(request.args['url'])
+        assert endpoint == 'embed', 'Invalid url'
+        video_data = embed(url_args['contentid'])['video_data']
+    except NotFound:
+        return JsonReponse(dict(message='Not found'), 404)
+    except Exception as e:
+        return JsonReponse(dict(message=e.message), 400)
+    else:
+        embed_url = url_for(endpoint, **url_args)
+
+    iframe_html = ('<iframe src="%s" width="1280" height="720" ' +
+                   'frameborder="0" allowfullscreen></iframe>') % embed_url
+
+    data = dict(
+        version='1.0',
+        type='video',
+        title=video_data['title'],
+        description=video_data['video']['description'],
+        thumbnail_url=video_data['video']['thumbnail_url'],
+        duration=video_data['video']['duration'],
+        provider_name='Wonder PL',
+        provider_url='http://wonderpl.com/',
+        width=1280,
+        height=720,
+        html=iframe_html,
+    )
+    return JsonReponse(data)
 
 
 def _update_qs(url, dict_):

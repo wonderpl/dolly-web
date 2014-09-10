@@ -4,6 +4,7 @@ from urllib import urlencode
 from contextlib import contextmanager
 from unicodedata import normalize
 from werkzeug.exceptions import NotFound
+from werkzeug.routing import RequestRedirect
 from flask import current_app, g, url_for as _url_for
 from rockpack.mainsite import app
 
@@ -47,6 +48,8 @@ def url_to_endpoint(url):
     matcher.subdomain = current_app.config.get('API_SUBDOMAIN') or ''
     try:
         return matcher.match(url.path)
+    except RequestRedirect as e:
+        return url_to_endpoint(e.new_url)
     except NotFound:
         return None, {}
 
