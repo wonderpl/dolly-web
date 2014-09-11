@@ -41,15 +41,16 @@ def url_for(*args, **kwargs):
     return url
 
 
-def url_to_endpoint(url):
+def url_to_endpoint(url, api=False):
     url = urlparse.urlsplit(url)
     # XXX: Revisit this and double-check this is "the right thing"!
     matcher = current_app.url_map.bind(url.netloc)
-    matcher.subdomain = current_app.config.get('API_SUBDOMAIN') or ''
+    if api:
+        matcher.subdomain = current_app.config.get('API_SUBDOMAIN') or ''
     try:
         return matcher.match(url.path)
     except RequestRedirect as e:
-        return url_to_endpoint(e.new_url)
+        return url_to_endpoint(e.new_url, api=api)
     except NotFound:
         return None, {}
 

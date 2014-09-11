@@ -1586,7 +1586,7 @@ class UserWS(WebService):
     @expose_ajax('/<userid>/subscriptions/', methods=['POST'])
     @check_authorization(self_auth=True)
     def post_subscriptions(self, userid):
-        endpoint, args = url_to_endpoint(str(request.json))
+        endpoint, args = url_to_endpoint(str(request.json), api=True)
         if endpoint not in ('userws.owner_channel_info', 'userws.channel_info'):
             abort(400, message=_('Invalid channel url'))
         channelid = args['channelid']
