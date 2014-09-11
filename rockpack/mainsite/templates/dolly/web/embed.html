@@ -157,7 +157,6 @@
         var videoDescriptionContent = document.getElementById('wonder-video-description-content');
         var closeDescription = document.getElementById('wonder-video-description-close');
         descriptionButton.addEventListener('click', function() {
-          console.log(videoData.video);
           videoDescription.className = "active";
           videoDescriptionContent.innerHTML = videoData.video.description;
         }, false);

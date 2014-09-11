@@ -234,6 +234,11 @@ OO.plugin("WonderUIModule", function (OO) {
         _.listen(_.elements.fullscreenbutton, 'touchend', _.fullscreen);
         _.listen(_.elements.volumebutton, 'click', _.volume);
 
+
+        // Custom events
+        _.listen(_.elements.wrapper, 'restart', _.restart);
+        // document.dispatchEvent(new CustomEvent("restart", { "detail": "Example of an event" }));
+
         if ( _.showControls ) {
           _.addClass(_.elements.controls, 'show');
         }
@@ -489,6 +494,28 @@ OO.plugin("WonderUIModule", function (OO) {
             _.toggleClass( _.elements.scrubber_vol, 'vol-visible' );
             _.toggleClass( _.elements.scrubber_target_vol, 'vol-visible' );
         }
+    };
+
+    _.stop = function (e) {
+      _.prevent(e);
+      _.mb.publish(OO.EVENTS.SEEK, 0);
+      window.setTimeout(function () {
+        _.mb.publish(OO.EVENTS.PAUSE);
+      }, 1000);
+    };
+
+    _.restart = function (e) {
+      _.prevent(e);
+      if ( _.loaded === true ) {
+        _.stop();
+        window.setTimeout(function () {
+          _.state.playing === false
+          _.removeClass(_.elements.poster, 'hide');
+          _.removeClass(_.elements.playbutton, 'hidden');
+          _.addClass(_.elements.pausebutton, 'hidden');
+          _.timers.interaction = 0;
+        }, 1000);
+      }
     };
 
     _.rewind = function (e) {
