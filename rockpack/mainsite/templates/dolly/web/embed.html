@@ -78,83 +78,13 @@
       document.write('<scr'+'ipt type="text/javascript" src="//player.ooyala.com/v3/{{ config.OOYALA_PLAYER_ID }}' + ( operacheck === -1 ? '?platform=html5-priority' : "" ) + '"><\/sc'+'ript>');
     </script>
 
-    {#
-      JQuery is only used for creation of SVG elements below and nowhere else.
-      Remove as unneccessary if possible.
-    #}
     {% assets filters="rjsmin", output="gen/video-module.%(version)s.js",
       "web-lite/conduit.js",
-      "web-lite/video-module.js"
+      "web-lite/video-module.js",
+      "web-lite/video-module-extensions.js"
     %}
     {{ inline_script(ASSET_URL) }}
     {% endassets %}
-
-    <script type="text/javascript">
-
-      function colorControls () {
-
-        var rgb = JSON.parse(videoData.video.source_player_parameters.rgb);
-
-        var svg = document.getElementById('ColourSvg');
-
-        var red = svg.getElementsByClassName('red')[0];
-        var green = svg.getElementsByClassName('green')[0];
-        var blue = svg.getElementsByClassName('blue')[0];
-
-        red.setAttribute('slope', rgb.r/255);
-        green.setAttribute('slope', rgb.g/255);
-        blue.setAttribute('slope', rgb.b/255);
-
-      }
-
-      function isOnlyWhiteSpaceContent (data) {
-        var div = document.createElement('div');
-        div.innerHTML = data;
-        var content = div.textContent.replace(/\s/g, "").trim();
-        return !!!content;
-      }
-
-      function hideLogo () {
-        var hideLogo = videoData.video.source_player_parameters.hideLogo === "True" ? true : false;
-        var controls = document.getElementById('wonder-controls');
-        if (controls && hideLogo) {
-          controls.className = controls.className + " no-logo";
-        }
-      }
-
-      function showBuyButton () {
-        var showBuyButton = videoData.video.source_player_parameters.showBuyButton === "True" ? true : false;
-        var wrapper = document.getElementById('wonder-wrapper');
-        var buyButton = document.getElementById('wonder-buy-button');
-        if (wrapper && showBuyButton && videoData.video.link_title && videoData.video.link_url) {
-          buyButton.innerHTML = videoData.video.link_title;
-          buyButton.href = videoData.video.link_url;
-          wrapper.className = wrapper.className + " show-buy-button";
-        }
-      }
-
-      function showDescriptionButton () {
-        var showDescriptionButton = videoData.video.source_player_parameters.showDescriptionButton === "True" ? true : false;
-        var wrapper = document.getElementById('wonder-wrapper');
-        if (wrapper && showDescriptionButton && !isOnlyWhiteSpaceContent(videoData.video.description)) {
-          wrapper.className = wrapper.className + " show-description-button";
-        }
-      }
-
-      function bindButtons () {
-        var descriptionButton = document.getElementById('wonder-description-button');
-        var videoDescription = document.getElementById('wonder-video-description');
-        var videoDescriptionContent = document.getElementById('wonder-video-description-content');
-        var closeDescription = document.getElementById('wonder-video-description-close');
-        descriptionButton.addEventListener('click', function() {
-          videoDescription.className = "active";
-          videoDescriptionContent.innerHTML = videoData.video.description;
-        }, false);
-        closeDescription.addEventListener('click', function() {
-          videoDescription.className = "";
-        }, false);
-      }
-    </script>
 
     <script type="text/javascript">
       var player = null,
@@ -169,14 +99,8 @@
             layout: 'chromeless'
           }
         );
-        hideLogo();
-        showBuyButton();
-        showDescriptionButton();
-        colorControls();
-        bindButtons();
       });
     </script>
-
 
   {% endblock %}
 {% endblock %}
