@@ -84,44 +84,34 @@
     #}
     {% assets filters="rjsmin", output="gen/video-module.%(version)s.js",
       "web-lite/conduit.js",
-      "web-lite/video-module.js",
-      "web-lite/vendor/jquery-1.11.0.min.js"
+      "web-lite/video-module.js"
     %}
     {{ inline_script(ASSET_URL) }}
     {% endassets %}
 
     <script type="text/javascript">
 
-      // JQuery is being used here only, purely for the creation of complex elements
       function colorControls () {
 
         var rgb = JSON.parse(videoData.video.source_player_parameters.rgb);
 
-        var svg = '<svg xmlns="http://www.w3.org/2000/svg" style="height: 0; width: 0;" id="ColourSvg"><filter id="ColourFilter" color-interpolation-filters="sRGB"><feComponentTransfer><feFuncR class="brightness red" type="linear" slope="1"/><feFuncG class="brightness green" type="linear" slope="1"/><feFuncB class="brightness blue" type="linear" slope="1"/></feComponentTransfer></filter></svg>';
-        var style = '<style id="ColourStyle">.filtered { -webkit-filter : url("#ColourFilter"); -webkit-transform: translate3d(0px,0px,0px); -webkit-backface-visibility: hidden; -webkit-perspective: 1000; }</style>';
+        var svg = document.getElementById('ColourSvg');
 
-        var $filteredControls = $('.wonder-play, .wonder-pause, .wonder-volume, .wonder-logo, .wonder-fullscreen, .scrubber-handle, .scrubber-progress, .wonder-timer');
-        $filteredControls.addClass('filtered');
+        var red = svg.getElementsByClassName('red')[0];
+        var green = svg.getElementsByClassName('green')[0];
+        var blue = svg.getElementsByClassName('blue')[0];
 
-        var $svg = $('#ColourSvg');
-        if (!$svg.length) {
-          $svg = $(svg);
-          $('body').prepend($svg);
-        }
+        red.setAttribute('slope', rgb.r/255);
+        green.setAttribute('slope', rgb.g/255);
+        blue.setAttribute('slope', rgb.b/255);
 
-        var $style = $('#ColourStyle');
-        if (!$style.length) {
-          $style = $(style);
-          $('head').append($style);
-        }
-
-        $svg.find('.red').attr('slope', rgb.r/255);
-        $svg.find('.green').attr('slope', rgb.g/255);
-        $svg.find('.blue').attr('slope', rgb.b/255);
       }
 
       function isOnlyWhiteSpaceContent (data) {
-        return !!!$('<div></div>').html(data).text().replace(/\s/g, "").trim();
+        var div = document.createElement('div');
+        div.innerHTML = data;
+        var content = div.textContent.replace(/\s/g, "").trim();
+        return !!!content;
       }
 
       function hideLogo () {
