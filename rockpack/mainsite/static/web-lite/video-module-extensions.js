@@ -148,10 +148,10 @@ OO.plugin("WonderUIModuleExtensions", function (OO) {
       var videoDescription = document.getElementById('wonder-video-description');
       var videoDescriptionContent = document.getElementById('wonder-video-description-content');
       var closeDescription = document.getElementById('wonder-video-description-close');
-      descriptionButton.addEventListener('click', function() {
+      descriptionButton.addEventListener('click', (function() {
         videoDescription.className = "active";
         videoDescriptionContent.innerHTML = this.data.video.description;
-      }, false);
+      }).bind(this), false);
       closeDescription.addEventListener('click', function() {
         videoDescription.className = "";
       }, false);

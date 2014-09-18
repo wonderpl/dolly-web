@@ -235,7 +235,6 @@ OO.plugin("WonderUIModule", function (OO) {
         // Custom events
         _.listen(_.elements.wrapper, 'restart', _.restart);
 
-
         _.listen(document, 'video-data-change', _.applyChanges);
 
         if ( _.showControls ) {
