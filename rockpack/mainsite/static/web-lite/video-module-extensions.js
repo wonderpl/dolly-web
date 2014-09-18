@@ -26,8 +26,30 @@ OO.plugin("WonderUIModuleExtensions", function (OO) {
       this.className = this.className + ' ' + newClass;
     },
 
+    removeClass : function(remove) {
+        var newClassName = '';
+        var i;
+        var classes = this.className.split(' ');
+        for(i = 0; i < classes.length; i++) {
+            if(classes[i] !== remove) {
+                newClassName += classes[i] + ' ';
+            }
+        }
+        this.className = newClassName;
+    },
+
     bindEvents : function () {
+      // allow for WonderUIModule to load in OO.EVENTS.PLAYER_CREATED before initialising module
       this._mb.subscribe(OO.EVENTS.PLAYBACK_READY, 'wonder', this.init.bind(this));
+      document.addEventListener('video-data-updated', this.onVideoDataChanged.bind(this));
+    },
+
+    onVideoDataChanged : function () {
+      this.loadData();
+      this.colorControls();
+      this.hideLogo();
+      this.showBuyButton();
+      this.showDescriptionButton();
     },
 
     init : function () {
@@ -89,8 +111,12 @@ OO.plugin("WonderUIModuleExtensions", function (OO) {
     hideLogo : function () {
       var hideLogo = this.data.video.source_player_parameters.hideLogo === "True" ? true : false;
       var controls = document.getElementById('wonder-controls');
-      if (controls && hideLogo) {
-        this.addClass.call(controls, 'no-logo');
+      if (controls) {
+        if (hideLogo) {
+            this.addClass.call(controls, 'no-logo');
+        } else {
+            this.removeClass.call(controls, 'no-logo');
+        }
       }
     },
 
@@ -102,6 +128,8 @@ OO.plugin("WonderUIModuleExtensions", function (OO) {
         buyButton.innerHTML = this.data.video.link_title;
         buyButton.href = this.data.video.link_url;
         this.addClass.call(wrapper, 'show-buy-button');
+      } else {
+        this.removeClass.call(wrapper, 'show-buy-button');
       }
     },
 
@@ -110,6 +138,8 @@ OO.plugin("WonderUIModuleExtensions", function (OO) {
       var wrapper = document.getElementById('wonder-wrapper');
       if (wrapper && showDescriptionButton && !this.isOnlyWhiteSpaceContent(videoData.video.description)) {
         this.addClass.call(wrapper, 'show-description-button');
+      } else {
+        this.removeClass.call(wrapper, 'show-description-button');
       }
     },
 

@@ -234,7 +234,9 @@ OO.plugin("WonderUIModule", function (OO) {
 
         // Custom events
         _.listen(_.elements.wrapper, 'restart', _.restart);
-        // document.dispatchEvent(new CustomEvent("restart", { "detail": "Example of an event" }));
+
+
+        _.listen(document, 'video-data-change', _.applyChanges);
 
         if ( _.showControls ) {
           _.addClass(_.elements.controls, 'show');
@@ -463,6 +465,22 @@ OO.plugin("WonderUIModule", function (OO) {
             _.removeClass( _.elements.loader, 'no-cursor');
             return;
         }
+    };
+
+    // http://stackoverflow.com/a/6842900
+    _.updateData = function setToValue(obj, value, path) {
+        var path = path.split('.'),
+            parent = obj;
+        for (var i = 0; i < path.length -1; i += 1) {
+            parent = parent[path[i]];
+        }
+        parent[path[path.length-1]] = value;
+    };
+
+
+    _.applyChanges = function (e) {
+      _.updateData(_.data, e.detail.data, e.detail.path);
+      document.dispatchEvent(new CustomEvent('video-data-updated'));
     };
 
     /*  UI listener callbacks
