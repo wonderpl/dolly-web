@@ -18,7 +18,7 @@ OO.plugin("WonderUIModuleExtensions", function (OO) {
     ];
 
     this.bindEvents();
-  }
+  };
 
   extensions.prototype = {
 
@@ -121,10 +121,9 @@ OO.plugin("WonderUIModuleExtensions", function (OO) {
     },
 
     showBuyButton : function () {
-      var showBuyButton = this.data.video.source_player_parameters.showBuyButton === "True" ? true : false;
       var wrapper = document.getElementById('wonder-wrapper');
       var buyButton = document.getElementById('wonder-buy-button');
-      if (wrapper && showBuyButton && this.data.video.link_title && this.data.video.link_url) {
+      if (wrapper && this.data.video.link_title && this.data.video.link_url) {
         buyButton.innerHTML = this.data.video.link_title;
         buyButton.href = this.data.video.link_url;
         this.addClass.call(wrapper, 'show-buy-button');
@@ -134,9 +133,8 @@ OO.plugin("WonderUIModuleExtensions", function (OO) {
     },
 
     showDescriptionButton : function () {
-      var showDescriptionButton = this.data.video.source_player_parameters.showDescriptionButton === "True" ? true : false;
       var wrapper = document.getElementById('wonder-wrapper');
-      if (wrapper && showDescriptionButton && !this.isOnlyWhiteSpaceContent(videoData.video.description)) {
+      if (wrapper && !this.isOnlyWhiteSpaceContent(videoData.video.description)) {
         this.addClass.call(wrapper, 'show-description-button');
       } else {
         this.removeClass.call(wrapper, 'show-description-button');

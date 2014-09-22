@@ -121,7 +121,7 @@ OO.plugin("WonderUIModule", function (OO) {
     _.applySettings = function () {
 
       _.showControls = !!(_.getQuery('controls'));
-    }
+    };
 
     /*  Message bus event subscriber callbacks
     /* ======================================= */
