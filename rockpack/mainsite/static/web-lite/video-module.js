@@ -195,7 +195,7 @@ OO.plugin("WonderUIModule", function (OO) {
             if ( e.keyCode == 32 ) {
                 _.togglePlay();
             }
-            return !(e.keyCode == 32);
+            return (e.keyCode !== 32);
         };
 
         if ( !_.ie8 ) {
@@ -344,7 +344,7 @@ OO.plugin("WonderUIModule", function (OO) {
       var autoplayQueryStringValue = isNaN(autoplayQueryStringParsed) ? null : autoplayQueryStringParsed;
 
       // query string value is true or false or not set
-      var autoplayQueryStringValue = autoplayQueryStringValue === null ? null : !!autoplayQueryStringValue;
+      autoplayQueryStringValue = autoplayQueryStringValue === null ? null : !!autoplayQueryStringValue;
 
       // use query string if set
       var autoplay = autoplayQueryStringValue === null ? autoplaySetting : autoplayQueryStringValue;
@@ -468,8 +468,8 @@ OO.plugin("WonderUIModule", function (OO) {
 
     // http://stackoverflow.com/a/6842900
     _.updateData = function setToValue(obj, value, path) {
-        var path = path.split('.'),
-            parent = obj;
+        path = path.split('.');
+        var parent = obj;
         for (var i = 0; i < path.length -1; i += 1) {
             parent = parent[path[i]];
         }

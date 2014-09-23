@@ -91,7 +91,7 @@ OO.plugin("WonderUIModuleExtensions", function (OO) {
     },
 
     colorControls : function () {
-      var rgb = JSON.parse(this.data.video.source_player_parameters.rgb);
+      var rgb = JSON.parse(this.data.video.source_player_parameters.rgb) || { r: 255, g: 255, b: 255 };
       var svg = document.getElementById('ColourSvg');
       var red = document.querySelector('.red');
       var green = document.querySelector('.green');
