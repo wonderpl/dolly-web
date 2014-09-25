@@ -527,7 +527,7 @@ class Channel(db.Model):
                     return
                 if isinstance(first, basestring):
                     first = Video.query.get(first)
-                self.cover = first.default_thumbnail
+                self.cover = first.default_thumbnail or ''
             except Exception:
                 app.logger.exception('Unable to set cover from video: %s', self.id)
 
