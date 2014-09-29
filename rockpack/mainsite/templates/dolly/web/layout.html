@@ -77,10 +77,8 @@
 
   {% block app_data %}
     <script type="text/javascript">
-      var injectorUrl = '{{injectorUrl}}',
-          itunesLink = '{{config.ITUNES_APP_LINK}}',
-          assets_url = '{{config.ASSETS_URL}}',
-          top_channels = {{top_channels|tojson|safe}};
+      var itunesLink = '{{config.ITUNES_APP_LINK}}',
+          assets_url = '{{config.ASSETS_URL}}';
     </script>
   {% endblock %}
 

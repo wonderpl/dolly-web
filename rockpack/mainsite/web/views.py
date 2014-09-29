@@ -78,6 +78,11 @@ if app.config.get('ADMIN_SUBDOMAIN'):
                      lambda: redirect('/admin/'), subdomain=app.config['ADMIN_SUBDOMAIN'])
 
 
+@expose_web('/wonder-discover', 'web/home.html', cache_age=3600)
+def wonder_discover():
+    return dict()
+
+
 @expose_web('/fullweb', 'web/fullweb.html', cache_age=3600)
 def fullweb():
     if app.config.get('ENABLE_FULLWEB', False):
