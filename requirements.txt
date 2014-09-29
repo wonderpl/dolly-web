@@ -20,3 +20,4 @@ pyes==0.20.1
 apns-client==0.1.8
 gdata>=2.0
 python-twitter>=1.3
+wtforms==1.0.5
