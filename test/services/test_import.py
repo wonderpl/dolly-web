@@ -21,7 +21,7 @@ class ImportFromYoutubeTestCase(base.RockPackTestCase):
     data_video = {
         'source': 1,
         'type': 'video',
-        'id': 'oruNL3TXmlc',
+        'id': 'F2KD1Q6Q_f4',
         'locale': 'en-us',
         'category': 1,
         'commit': 1,
