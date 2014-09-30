@@ -451,7 +451,8 @@ OO.plugin("WonderUIModule", function (OO) {
 
         _.info = content;
 
-        _.elements.poster.getElementsByTagName('img')[0].src = _.data.video.thumbnail_url;
+        if (_.data.video.thumbnail_url)
+            _.elements.poster.getElementsByTagName('img')[0].src = _.data.video.thumbnail_url;
 
         _.hideLoader();
 
