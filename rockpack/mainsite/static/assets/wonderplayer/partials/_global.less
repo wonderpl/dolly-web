@@ -381,6 +381,11 @@ body, html {
     right: 12px;
     z-index: 400;
     display: none;
+    transition: display .15s ease-out;
+    &.show {
+    	display: block;
+    	transition: display .15s ease-in;
+    }
   }
 
   .video-buy-button {
@@ -937,6 +942,8 @@ body, html {
     -webkit-backface-visibility: hidden;
     -webkit-transform: translateZ(0) scale(1.0, 1.0);
 }
+
+
 
 
 /*

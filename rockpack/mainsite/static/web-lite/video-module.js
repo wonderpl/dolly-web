@@ -123,8 +123,150 @@ OO.plugin("WonderUIModule", function (OO) {
       _.showControls = !!(_.getQuery('controls'));
     };
 
-    /*  Message bus event subscriber callbacks
-    /* ======================================= */
+    //
+    // Romeo integration
+    //
+    _.initRomeoIntegration = function () {
+        _.filteredClass = 'filtered';
+        _.filteredElements = [
+            'wonder-play',
+            'wonder-pause',
+            'wonder-volume',
+            'wonder-logo',
+            'wonder-fullscreen',
+            'scrubber-handle',
+            'scrubber-progress',
+            'wonder-timer'
+        ];
+
+        _.createElements();
+        _.applyFilterClass();
+        _.onVideoDataChanged();
+        _.bindButtons();
+        document.addEventListener('video-data-updated', _.onVideoDataChanged);
+    };
+
+    _.onVideoDataChanged = function () {
+        _.colorControls();
+        _.hideLogo();
+        _.showBuyButton();
+        _.showDescriptionButton();
+    };
+
+    _.createElements = function () {
+        var svg = '<svg xmlns="http://www.w3.org/2000/svg" style="height: 0; width: 0;" id="ColourSvg"><filter id="ColourFilter" color-interpolation-filters="sRGB"><feComponentTransfer><feFuncR class="brightness red" type="linear" slope="1"/><feFuncG class="brightness green" type="linear" slope="1"/><feFuncB class="brightness blue" type="linear" slope="1"/></feComponentTransfer></filter></svg>';
+        var style = '<style id="ColourStyle">.filtered { -webkit-filter : url("#ColourFilter"); -webkit-transform: translate3d(0px,0px,0px); -webkit-backface-visibility: hidden; -webkit-perspective: 1000; }</style>';
+        var buyButton = '<a id="wonder-buy-button" class="btn video-overlay-button video-buy-button js-video-buy" target="_top">Buy</a>';
+        var descriptionButton = '<a id="wonder-description-button" class="btn video-overlay-button video-description-button js-video-description">Description</a>';
+        var description = '<div id="wonder-video-description"><div id="wonder-video-description-close">x</div><div id="wonder-video-description-content"></div></div>';
+        var poster = document.getElementById('wonder-poster');
+        poster.insertAdjacentHTML('beforebegin', buyButton);
+        poster.insertAdjacentHTML('beforebegin', descriptionButton);
+        poster.insertAdjacentHTML('beforebegin', description);
+        document.body.insertAdjacentHTML('beforeend', svg);
+        document.head.insertAdjacentHTML('beforeend', style);
+    };
+
+    _.applyFilterClass = function () {
+        var elements = this.filteredElements;
+        var l = elements.length;
+        while (l--) {
+            var elementToFilter = document.getElementsByClassName(elements[l])[0];
+            _.addClass(elementToFilter, _.filteredClass);
+        }
+    };
+
+    _.colorControls = function () {
+      var rgb = { r: 255, g: 255, b: 255 };
+      if (_.data.video && _.data.video.source_player_parameters && _.data.video.source_player_parameters.rgb)
+        rgb = JSON.parse(_.data.video.source_player_parameters.rgb);
+      var svg = document.getElementById('ColourSvg');
+      var red = document.querySelector('.red');
+      var green = document.querySelector('.green');
+      var blue = document.querySelector('.blue');
+      red.setAttribute('slope', rgb.r/255);
+      green.setAttribute('slope', rgb.g/255);
+      blue.setAttribute('slope', rgb.b/255);
+    };
+
+    _.hideLogo = function () {
+        var hideLogo = false;
+        if (_.data.video && _.data.video.source_player_parameters && _.data.video.source_player_parameters.hideLogo)
+            hideLogo = (_.data.video.source_player_parameters.hideLogo === "True");
+        var controls = document.getElementById('wonder-controls');
+        if (controls) {
+            if (hideLogo) {
+                _.addClass(controls, 'no-logo');
+            } else {
+                _.removeClass(controls, 'no-logo');
+            }
+        }
+    };
+
+    _.showBuyButton = function () {
+        var buyButton = document.getElementById('wonder-buy-button');
+        if (buyButton && _.data.video.link_title && _.data.video.link_url) {
+            buyButton.innerHTML = _.data.video.link_title;
+            buyButton.href = _.data.video.link_url;
+            _.elements.buyButton = buyButton;
+            if ( _.hasClass( _.elements.controls, 'show' ) ) {
+                _.removeClass(buyButton, 'hide');
+                _.addClass(buyButton, 'show');
+            }
+            else {
+                _.removeClass(buyButton, 'show');
+                _.addClass(buyButton, 'hide');
+            }
+        }
+        else {
+            _.removeClass(buyButton, 'show');
+            _.addClass(buyButton, 'hide');
+            _.elements.buyButton = void(0);
+        }
+    };
+
+    _.showDescriptionButton = function () {
+        var descriptionButton = document.getElementById('wonder-description-button');
+        if (descriptionButton && !_.isOnlyWhiteSpaceContent(_.data.video.description)) {
+            _.elements.descriptionButton = descriptionButton;
+            if ( _.hasClass( _.elements.controls, 'show' ) ) {
+                _.removeClass(descriptionButton, 'hide');
+                _.addClass(descriptionButton, 'show');
+            }
+            else {
+                _.removeClass(descriptionButton, 'show');
+                _.addClass(descriptionButton, 'hide');
+            }
+        } else {
+            _.removeClass(descriptionButton, 'show');
+            _.addClass(descriptionButton, 'hide');
+            _.elements.descriptionButton = void(0);
+        }
+    };
+
+    _.isOnlyWhiteSpaceContent = function (data) {
+        var div = document.createElement('div');
+        div.innerHTML = data;
+        var content = div.textContent.replace(/\s/g, "").trim();
+        return !content;
+    };
+
+    _.bindButtons = function () {
+        var descriptionButton = document.getElementById('wonder-description-button');
+        var videoDescription = document.getElementById('wonder-video-description');
+        var videoDescriptionContent = document.getElementById('wonder-video-description-content');
+        var closeDescription = document.getElementById('wonder-video-description-close');
+        descriptionButton.addEventListener('click', (function() {
+            videoDescription.className = "active";
+            videoDescriptionContent.innerHTML = _.data.video.description;
+        }), false);
+        closeDescription.addEventListener('click', function() {
+            videoDescription.className = "";
+        }, false);
+    };
+
+    //  Message bus event subscriber callbacks
+    // =======================================
 
     // Build the UI
     _.onPlayerCreate = function (event, elementId, params) {
@@ -239,11 +381,19 @@ OO.plugin("WonderUIModule", function (OO) {
 
         if ( _.showControls ) {
           _.addClass(_.elements.controls, 'show');
+          if (_.elements.descriptionButton)
+            _.addClass(_.elements.descriptionButton, 'show');
+          if (_.elements.buyButton)
+            _.addClass(_.elements.buyButton, 'show');
         }
 
         // Decide which listeners to use for the scrubbers.
         if ( _.isTouchDevice() ) {
             _.addClass(_.elements.controls, 'show');
+            if (_.elements.descriptionButton)
+                _.addClass(_.elements.descriptionButton, 'show');
+            if (_.elements.buyButton)
+                _.addClass(_.elements.buyButton, 'show');
             _.listen(_.elements.loader, 'click', _.toggleControls);
             if ( _.ios5 === false ) {
                 _.listen(_.elements.scrubber_trans, 'touchstart', _.touchDown);
@@ -359,6 +509,9 @@ OO.plugin("WonderUIModule", function (OO) {
           _.mb.publish(OO.EVENTS.PLAY);
         }, 200);
       }
+
+      // Start romeo integration
+      _.initRomeoIntegration();
     };
 
     // Event fired off by the OO message bus to indicate the playhead has moved.
@@ -452,15 +605,32 @@ OO.plugin("WonderUIModule", function (OO) {
 
     _.toggleControls = function (e) {
         _.prevent(e);
-
         if ( _.hasClass( _.elements.controls, 'show' ) ) {
             _.removeClass( _.elements.controls, 'show' );
             _.addClass( _.elements.controls, 'hide' );
             _.addClass( _.elements.loader, 'no-cursor');
+
+            if (_.elements.descriptionButton) {
+                _.removeClass(_.elements.descriptionButton, 'show');
+                _.addClass(_.elements.descriptionButton, 'hide');
+            }
+            if (_.elements.buyButton) {
+                _.removeClass(_.elements.buyButton, 'show');
+                _.addClass(_.elements.buyButton, 'hide');
+            }
             return;
         } else {
-            _.removeClass( _.elements.controls, 'show' );
+            _.removeClass( _.elements.controls, 'hide' );
             _.addClass( _.elements.controls, 'show' );
+
+            if (_.elements.descriptionButton) {
+                _.removeClass(_.elements.descriptionButton, 'hide');
+                _.addClass(_.elements.descriptionButton, 'show');
+            }
+            if (_.elements.buyButton) {
+                _.removeClass(_.elements.buyButton, 'hide');
+                _.addClass(_.elements.buyButton, 'show');
+            }
             _.removeClass( _.elements.loader, 'no-cursor');
             return;
         }
@@ -523,7 +693,7 @@ OO.plugin("WonderUIModule", function (OO) {
       if ( _.loaded === true ) {
         _.stop();
         window.setTimeout(function () {
-          _.state.playing === false
+          _.state.playing === false;
           _.removeClass(_.elements.poster, 'hide');
           _.removeClass(_.elements.playbutton, 'hidden');
           _.addClass(_.elements.pausebutton, 'hidden');
@@ -751,6 +921,15 @@ OO.plugin("WonderUIModule", function (OO) {
     // Show the controls
     _.showUI = function () {
         _.addClass( _.elements.controls, 'show' );
+
+        if (_.elements.descriptionButton) {
+            _.removeClass(_.elements.descriptionButton, 'hide');
+            _.addClass(_.elements.descriptionButton, 'show');
+        }
+        if (_.elements.buyButton) {
+            _.removeClass(_.elements.buyButton, 'hide');
+            _.addClass(_.elements.buyButton, 'show');
+        }
         _.removeClass( _.elements.controls, 'hide' );
         _.removeClass( _.elements.loader, 'no-cursor');
     };
@@ -761,6 +940,14 @@ OO.plugin("WonderUIModule", function (OO) {
         _.removeClass( _.elements.scrubber_vol, 'vol-visible' );
         _.removeClass( _.elements.scrubber_target_vol, 'vol-visible' );
         _.addClass( _.elements.loader, 'no-cursor');
+        if (_.elements.descriptionButton) {
+            _.removeClass(_.elements.descriptionButton, 'show');
+            _.addClass(_.elements.descriptionButton, 'hide');
+        }
+        if (_.elements.buyButton) {
+            _.removeClass(_.elements.buyButton, 'show');
+            _.addClass(_.elements.buyButton, 'hide');
+        }
     };
 
     // A user interaction has been detected, show the UI and
