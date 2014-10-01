@@ -87,7 +87,10 @@
 
     <script type="text/javascript">
       var player = null,
-        analyticsTags = (location.search.match(/\botag=(\w+)/g) || []).map(function (i) {return i.substring(5)});
+        analyticsTags = (location.search.match(/\botag=(\w+)/g) || []);
+      for (var i = 0; i < analyticsTags.length; i++) {
+        analyticsTags[i] = analyticsTags[i].substring(5);
+      }
       OO.ready(function() {
         player = window.wonder = OO.Player.create(
           'ooyalaplayer', videoData.video.source_id,
