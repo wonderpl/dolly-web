@@ -80,8 +80,7 @@
 
     {% assets filters="rjsmin", output="gen/video-module.%(version)s.js",
       "web-lite/conduit.js",
-      "web-lite/video-module.js",
-      "web-lite/video-module-extensions.js"
+      "web-lite/video-module.js"
     %}
     {{ inline_script(ASSET_URL) }}
     {% endassets %}
