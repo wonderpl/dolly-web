@@ -415,6 +415,9 @@ OO.plugin("WonderUIModule", function (OO) {
             _.listen(_.elements.controls, 'mouseleave', function(){
                 _.controlshovered = false;
             });
+            _.listen(_.elements.controls, 'mouseout', function(){
+                _.controlshovered = false;
+            });
             _.listen(_.elements.controls, 'mouseenter', function(){
                 _.controlshovered = true;
             });
