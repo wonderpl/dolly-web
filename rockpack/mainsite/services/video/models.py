@@ -543,7 +543,14 @@ class Channel(db.Model):
             )
             for v in videos
         ]
-        existing = dict(VideoInstance.query.filter_by(channel=self.id).values('video', 'id'))
+        channel_instances = VideoInstance.query.filter_by(channel=self.id)
+        # undelete any deleted instances:
+        channel_instances.filter(VideoInstance.video.in_(
+            [i.video for i in instances])).update(
+                {VideoInstance.deleted: False,
+                 VideoInstance.date_updated: func.now()}, False)
+
+        existing = dict(channel_instances.values('video', 'id'))
         self.query.session.add_all(i for i in instances if i.video not in existing)
 
         self.set_cover_fallback(videos)

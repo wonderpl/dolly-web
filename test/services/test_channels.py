@@ -902,6 +902,40 @@ class ChannelVideoTestCase(base.RockPackTestCase):
             [(VideoData.video2.id, 0)]
         )
 
+    def test_add_remove_favourites(self):
+        def _post_activity(action, instance_id):
+            with self.app.test_client() as client:
+                r = client.post(
+                    '/ws/{}/activity/'.format(user_id),
+                    data=json.dumps(dict(action=action, video_instance=instance_id)),
+                    content_type='application/json',
+                    headers=[get_auth_header(user_id)]
+                )
+                self.assertEquals(r.status_code, 200)
+                data = json.loads(r.data)
+
+                videos = models.VideoInstance.query.filter_by(
+                    channel=channel_id, deleted=False).values('video', 'id')
+                return data['recently_starred'], dict(videos)
+
+        user_id = self.create_test_user().id
+        channel_id = models.Channel.query.filter_by(owner=user_id, favourite=True).value('id')
+
+        # star
+        recently_starred, favourites = _post_activity('star', VideoInstanceData.video_instance2.id)
+        self.assertEquals(len(recently_starred), 1)
+        self.assertIn(VideoData.video2.id, favourites)
+
+        # unstar
+        recently_starred, favourites = _post_activity('unstar', VideoInstanceData.video_instance2.id)
+        self.assertEquals(len(recently_starred), 0)
+        self.assertItemsEqual([], favourites)
+
+        # star again
+        recently_starred, favourites = _post_activity('star', VideoInstanceData.video_instance2.id)
+        self.assertEquals(len(recently_starred), 1)
+        self.assertIn(VideoData.video2.id, favourites)
+
     @skip_if_rockpack
     @skip_unless_config('ELASTICSEARCH_URL')
     def test_video_comments(self):
