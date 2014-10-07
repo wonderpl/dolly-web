@@ -246,7 +246,7 @@ def influencer_starred_email(recipient, sender, influencer_id, video_instance):
         return
 
     influencer = User.query.get(influencer_id)
-    link = ShareLink.create(sender.id, 'video_instance', video_instance.id)
+    link = ShareLink.get_or_create(sender.id, 'video_instance', video_instance.id)[0]
     ctx = dict(
         sender=sender,
         link=link,
@@ -809,7 +809,7 @@ def create_ping_emails(listid, template_path, threshold_days, tracking_params, d
 
 
 def _post_facebook_story(user, object_type, object_id, token, action, explicit=False):
-    url = ShareLink.create(user, object_type, object_id).url
+    url = ShareLink.get_or_create(user, object_type, object_id)[0].url
     if action.startswith('og'):
         post_args = dict(object=url)
     elif object_type == 'channel':

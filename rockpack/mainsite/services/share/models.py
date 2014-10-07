@@ -41,6 +41,16 @@ class ShareLink(db.Model):
         return link
 
     @classmethod
+    def get_or_create(cls, user, object_type, object_id):
+        link = cls.query.filter_by(
+            user=user, object_type=object_type, object_id=object_id
+        ).first()
+        if link:
+            return link, False
+        else:
+            return cls.create(user, object_type, object_id), True
+
+    @classmethod
     @commit_on_success
     def increment_click_count(cls, id):
         cls.query.filter_by(id=id).update({cls.click_count: cls.click_count + 1})

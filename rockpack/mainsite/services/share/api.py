@@ -153,8 +153,12 @@ class ShareWS(WebService):
         form = ShareForm(csrf_enabled=False, user=g.authorized.userid, locale=self.get_locale())
         if not form.validate():
             abort(400, form_errors=form.errors)
-        link = ShareLink.create(g.authorized.userid, form.object_type.data, form.object_id.data)
-        return ajax_create_response(link, form.get_message_map())
+        link, created = ShareLink.get_or_create(
+            g.authorized.userid, form.object_type.data, form.object_id.data)
+        if created:
+            return ajax_create_response(link, form.get_message_map())
+        else:
+            return dict(resource_url=link.url, **form.get_message_map())
 
     @expose_ajax('/email/', methods=['POST'], secure=True)
     @check_authorization()
