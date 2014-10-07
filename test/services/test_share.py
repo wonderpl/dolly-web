@@ -28,7 +28,7 @@ class TestShare(base.RockPackTestCase):
                 content_type='application/json',
                 headers=[get_auth_header(userid)])
 
-            self.assertEquals(r.status_code, 201, r.data)
+            self.assertIn(r.status_code, (200, 201), r.data)
             data = json.loads(r.data)
             self.assertIn('/s/', data['resource_url'])
             self.assertEquals(data['resource_url'], r.headers['Location'])
