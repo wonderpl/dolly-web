@@ -105,9 +105,9 @@ class ChannelViewCountPopulation(base.RockPackTestCase):
             self.wait_for_es()
 
         with self.app.test_request_context():
-            #self.wait_for_es()
+            # self.wait_for_es()
             result = search_video(videoid)
-            #self.assertEquals(1, result['video']['star_count'])
+            # self.assertEquals(1, result['video']['star_count'])
 
             with self.app.test_client() as client:
                 client.post(
@@ -275,7 +275,7 @@ class ChannelDisplayTestCase(BaseUserTestCase):
                 owned_resource = r['resource_url']
                 params = dict(q='music', size=1)
                 if self.app.config.get('DOLLY'):
-                    #XXX: Search isnt' going to work with ES off
+                    # XXX: Search isnt' going to work with ES off
                     # since we don't search over yt so attach
                     # a video manually
                     client.post(
@@ -870,6 +870,37 @@ class ChannelVideoTestCase(base.RockPackTestCase):
                 (VideoData.video3.id, 0),
                 (VideoData.video2.id, 1),
             ])
+
+    def test_add_remove_videos(self):
+        def _put_and_check_videos(instance_ids, video_positions):
+            with self.app.test_client() as client:
+                r = client.put(
+                    '/ws/{}/channels/{}/videos/'.format(user_id, channel_id),
+                    data=json.dumps(instance_ids),
+                    content_type='application/json',
+                    headers=[get_auth_header(user_id)]
+                )
+                self.assertEquals(r.status_code, 204)
+
+                positions = models.VideoInstance.query.filter_by(
+                    channel=channel_id, deleted=False).values('video', 'position')
+                self.assertItemsEqual(positions, video_positions)
+
+        user_id = self.create_test_user().id
+        channel_id = models.Channel.query.filter_by(owner=user_id).value('id')
+
+        # add
+        _put_and_check_videos(
+            [VideoInstanceData.video_instance2.id, VideoInstanceData.video_instance3.id],
+            [(VideoData.video2.id, 0), (VideoData.video3.id, 1)]
+        )
+        # remove
+        _put_and_check_videos([], [])
+        # add again
+        _put_and_check_videos(
+            [VideoInstanceData.video_instance2.id],
+            [(VideoData.video2.id, 0)]
+        )
 
     @skip_if_rockpack
     @skip_unless_config('ELASTICSEARCH_URL')

@@ -321,6 +321,7 @@ def add_videos_to_channel(channel, instance_list, locale, delete_existing=False,
                     channel=channel.id,
                     source_channel=video_source,
                     original_channel_owner=original_channel_owner)
+            instance.deleted = False
             instance.position = position
             instance.category = videoidmap[video_id]
             instance.is_favourite = channel.favourite
