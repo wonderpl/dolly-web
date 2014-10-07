@@ -20,6 +20,7 @@
 <meta property="fb:app_id" content="{{ config.FACEBOOK_APP_ID }}" />
 <meta property="og:site_name" content="Wonder PL" />
 <meta property="og:url" content="{{ canonical_url or channel_data.canonical_url }}" />
+<meta property="og:locale" content="{{ request.args.fb_locale|default('en_US', True) }}" />
 {% if selected_video %}
 <meta property="og:type" content="video.other" />
 <meta property="og:title" content="{{ selected_video.title }}" />
