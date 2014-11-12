@@ -1,8 +1,10 @@
 import time
-from datetime import timedelta
+from datetime import datetime, timedelta
 from functools import wraps
 from rockpack.mainsite import app
-from rockpack.mainsite.manager import manager, job_control
+from rockpack.mainsite.manager import manager
+from rockpack.mainsite.services.base.models import JobControl
+from rockpack.mainsite.core.dbapi import commit_on_success
 from rockpack.mainsite.core.es import helpers
 
 
@@ -15,24 +17,26 @@ def timer(func):
     return wrapper
 
 
-@manager.cron_command(interval=60)
-@job_control
-def update_indexes(date_from=None, date_to=None):
+@manager.cron_command(interval=5)
+@commit_on_success
+def update_indexes():
     """Updates all data in all indexes"""
+    job_control = JobControl.query.get('update_indexes')
+    start = job_control.last_run
+    stop = start + timedelta(seconds=60)
+    if stop > datetime.utcnow():
+        return
+
+    app.logger.info('Index update interval: %s -> %s (%ds)',
+                    start.time(), stop.time(), (stop - start).seconds)
+
     start_time = time.time()
-    # Split up into 60 second intervals
-    start = date_to
-    while start > date_from:
-        stop = start
-        start -= timedelta(seconds=100)
-        if start < date_from:
-            start = date_from
-        app.logger.info('Index update interval: %s -> %s (%ds)',
-                        start.time(), stop.time(), (stop - start).seconds)
-        helpers.full_user_import(start=start, stop=stop)
-        helpers.full_channel_import(start=start, stop=stop)
-        helpers.full_video_import(start=start, stop=stop)
+    helpers.full_user_import(start=start, stop=stop)
+    helpers.full_channel_import(start=start, stop=stop)
+    helpers.full_video_import(start=start, stop=stop)
     app.logger.info('Ran update_indexes in %ds', time.time() - start_time)
+
+    job_control.last_run = stop
 
 
 @manager.command
