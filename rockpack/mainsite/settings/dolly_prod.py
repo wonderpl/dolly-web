@@ -54,6 +54,7 @@ SENTRY_ENABLE_LOGGING = 30  # logging.WARNING
 ELASTICSEARCH_URL = 'http://localhost:9200'
 
 STATSD_HOST = 'admin'
+STATSD_PREFIX = 'dolly.mainsite'
 
 ENABLE_TIMINGS = True
 

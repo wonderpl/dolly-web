@@ -1,6 +1,7 @@
 import time
 from datetime import datetime, timedelta
 from functools import wraps
+from wonder.common.timing import record_timing
 from rockpack.mainsite import app
 from rockpack.mainsite.manager import manager
 from rockpack.mainsite.services.base.models import JobControl
@@ -24,17 +25,20 @@ def update_indexes():
     job_control = JobControl.query.get('update_indexes')
     start = job_control.last_run
     stop = start + timedelta(seconds=60)
-    if stop > datetime.utcnow():
+    delay = datetime.utcnow() - stop
+    if delay < timedelta(0):
         return
 
-    app.logger.info('Index update interval: %s -> %s (%ds)',
-                    start.time(), stop.time(), (stop - start).seconds)
+    app.logger.info('update_indexes: from %s to %s', start, stop)
 
     start_time = time.time()
     helpers.full_user_import(start=start, stop=stop)
     helpers.full_channel_import(start=start, stop=stop)
     helpers.full_video_import(start=start, stop=stop)
-    app.logger.info('Ran update_indexes in %ds', time.time() - start_time)
+
+    app.logger.info('update_indexes: ran in %ds: delay %ds',
+                    time.time() - start_time, delay.total_seconds())
+    record_timing('cron_processor.update_indexes.delay', delay.total_seconds())
 
     job_control.last_run = stop
 
